@@ -1,0 +1,193 @@
+;std.replicode
+
+;mapping objects -> r-code
+!class sys; forward declaration.
+!class (_obj :x res:~ms sln:~nb ijt:ms ejt:ms org:sid hst:sys :y mks:[])
+!class (head[] tpl:[::ptn] inputs:in_sec prods)
+!class (fun (_obj head:head nil))
+!class (_react_obj (_obj {head:head act:~nb tsc:ms csm:nb sig:nb nfc:nb nfr:nb} :x))
+!class (pgm (_react_obj nil))
+!class (|pgm (_react_obj nil))
+!class (fmd (_react_obj cer:nb))
+!class (imd (_react_obj cer:nb))
+!class (in_sec[] inputs:[] timings:[] guards:[])
+!class (_model_inputs initial_state:in_sec :x)
+!class (fmd_inputs[] (_model_inputs actions:in_sec))
+!class (imd_inputs[] (_model_inputs target_state:in_sec))
+!class (ptn skel: guards:[])
+!class (|ptn skel: guards:[])
+!class (prod_sub_sec[] guards:[] prods:[])
+!class (gol tpl:[] (_obj target_state:head nil))
+!class (|gol tpl:[] (_obj target_state:head nil))
+!class (sys (_obj head:[ctr:head upr:nb spr:nb sinks:[] drains:[] auto_eject:nb sln_thr:nb act_thr:nb sln_oor:nb sln_boost:nb
+sln_thr_boost:nb sln_rlx_time:ms act_oor:nb act_boost:nb act_thr_boost:nb act_rlx_time:nb sln_dec:nb sln_dec_prd:nb
+act_dec:nb act_dec_prd:nb sln_del_thr:nb act_del_thr:nb] act:~nb))
+!class (int dest:sid src:sid sln:nb act:nb)
+!class (cmd (_obj head:[function:fid device:did args:[]] nil))
+!class (ent (_obj nil nil))
+!class (smr (_obj nil nil))
+!class (dev sln:~nb act:~nb mks:[])
+
+;mapping operator opcodes -> r-atoms
+!op (_now):ms
+!op (equ : :):
+!op (neq : :):
+!op (gtr : :):
+!op (lsr : :):
+!op (gte : :):
+!op (lse : :):
+!op (add : :):
+!op (sub : :):
+!op (mul :nb :nb):nb
+!op (div :nb :nb):nb
+!op (dis :nb :nb):nb
+!op (ln :nb):nb
+!op (exp :nb):nb
+!op (log :nb):nb
+!op (e10 :nb):nb
+!op (syn :):
+!op (ins : :[]):
+!op (app: :[]):
+!op (red :[] :[]):[]
+!op (|red :[] :[]):[]
+!op (com :[] :[]):[]
+!op (spl :[] :[]):[]
+!op (mrg :[] :[]):[]
+!op (rpl :[] :[]):[]
+!op (ptc : :[]):
+
+;mapping devices -> r-atoms
+!def exe 0x8B000000; the executive.
+
+;mapping sub-systems -> r-atoms
+!def main 0x8A000000; the main sub-system.
+
+;mapping device functions -> r-atoms
+!dfn (_inj :)
+!dfn (_eje :)
+!dfn (_rep :)
+!dfn (_mod : :nb :nb)
+!dfn (_set : :nb :nb)
+!dfn (_new_class :)
+!dfn (_new_int :int)
+!dfn (_del_class :)
+!dfn (_del_int :int)
+!dfn (_bwd :[] :nb :ms)
+!dfn (_fwd :nb :ms)
+!dfn (_ldc :st)
+!dfn (_swp :sys :nb)
+!dfn (_ntf :nb :nb)
+!dfn (_new_sys :sid :nb)
+!dfn (_del_sys :sid)
+!dfn (_new_obj :sid :)
+!dfn (_new_dev :st :nb)
+!dfn (_del_dev :sid)
+!dfn (_new_spc)
+!dfn (_del_spc :nb)
+!dfn (_new_prj :nb :nb :nb)
+!dfn (_del_prj :nb :nb)
+!dfn (_mod_act :nb :nb :nb)
+!dfn (_mod_act_thr :nb :nb)
+!dfn (_act_ : :nb)
+!dfn (_sln_ : :nb)
+!dfn (_del_ :)
+!dfn (_start :nb :ms)
+!dfn (_suspend)
+!dfn (_resume)
+!dfn (_stop)
+
+;device functions aliases
+!def (CALL function device args) (cmd [function device args] 100 1 |ms |ms |sid |sid |[])
+
+!def (inj args) (CALL _inj exe args)
+!def (set args) (CALL _set exe args)
+!def (rep args) (CALL _rep exe args)
+!def (mod args) (CALL _mod exe args)
+!def (set args) (CALL _set exe args)
+!def (new_class args) (CALL _new_class exe args)
+!def (new_int args) (CALL _new_int exe args)
+!def (del_class args) (CALL _del_class exe args)
+!def (del_int args) (CALL _del_int exe args)
+!def (bwd args) (CALL _bwd exe args)
+!def (fwd args) (CALL _fwd exe args)
+!def (ldc args) (CALL _ldc exe args)
+!def (swp args) (CALL _swp exe args)
+!def (ntf args) (CALL _ntf exe args)
+!def (new_sys args) (CALL _new_sys exe args)
+!def (del_sys args) (CALL _del_sys exe args)
+!def (new_obj args) (CALL _new_obj exe args)
+!def (new_dev args) (CALL _new_dev exe args)
+!def (del_dev args) (CALL _del_dev exe args)
+!def (new_spc args) (CALL _new_spc exe args)
+!def (del_spc args) (CALL _del_spc exe args)
+!def (new_prj args) (CALL _new_prj exe args)
+!def (del_prj args) (CALL _del_prj exe args)
+!def (mod_act args) (CALL _mod_act exe args)
+!def (mod_act_thr args) (CALL _mod_act_thr exe args)
+
+;operator aliases
+!def now (_now)
+!def = equ
+!def <> neq
+!def > gtr
+!def < lsr
+!def <= gte
+!def => lse
+!def + add
+!def - sub
+!def * mul
+!def \ syn
+
+;various constants
+!counter __constant 0
+
+!def OFF __constant
+!def ON __constant
+
+;parameters for tuning the behavior of reactive objects
+
+;member sig
+!def SIGNAL_OFF __constant; disables signaling by the sub-system
+!def SIGNAL_ON __constant; enables signaling by the sub-system
+!def SILENT __constant; no notification upon production
+!def NOTIFY __constant; notification upon productions
+
+;member csm
+!def CONSUME __constant; inputs objects are consumed
+!def PASS __constant; input objects are passed to offsprings
+
+;parameter for sub-systems
+!def AUTO_EJECT_OFF __constant
+!def AUTO_EJECT_ON __constant
+
+;constants for _ntf
+!def INJ __constant
+!def EJE __constant
+!def MOD __constant
+!def SET __constant
+!def BWD __constant
+!def FWD __constant
+!def NEW_CLASS __constant
+!def DEL_CLASS __constant
+!def NEW_INT __constant
+!def DEL_INT __constant
+!def NEW_DEV __constant
+!def DEL_DEV __constant
+!def NEW_SPC __constant
+!def DEL_SPC __constant
+!def NEW_PRJ __constant
+!def DEL_PRJ __constant
+!def MOD_ACT __constant
+!def MOD_ACT_THR __constant
+!def _ACT __constant
+!def _SLN __constant
+!def _DEL __constant
+!def STOP __constant
+
+;mapping markers -> r-code
+!class (mk.pro (_obj {code: args:[]} nil))
+!class (mk.xet (_obj {proc:mk.pro prod:[] dur:nb} nil))
+!class (mk.hyp (_obj {data sim_run:smr} nil))
+!class (mk.sim (_obj proc:mk.pro nil))
+!class (mk.pre (_obj {data: cer:nb} nil))
+!class (mk.isa (_obj {inst: class: cer:nb} nil))
