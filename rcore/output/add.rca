@@ -1,0 +1,20 @@
+	set(3)
+	float(3.0)
+	iptr(addNT)
+	iptr(addTN)
+addNN:
+	float(3.0)
+	float(1.0)
+	float(2.0)
+addNT:
+	timestamp
+	bits(00000001)
+	bits(000f4240)
+addTN:
+	timestamp
+	bits(00000001)
+	bits(001e8480)
+ts1:
+	timestamp
+	bits(00000001)
+	bits(00000000)

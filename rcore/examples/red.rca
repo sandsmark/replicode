@@ -1,0 +1,79 @@
+;(red
+	red
+	iptr(numbers)
+	iptr(productions)
+;	[13 14]
+numbers:
+	set(2)
+	float(13)
+	float(14)
+;	[] ; productions
+productions:
+	set(2)
+	iptr(ps1)
+	iptr(ps2)
+;		[] ; production sub-section #1
+ps1:
+	set(2)
+	iptr(guards1)
+	iptr(prods1)
+;			[] ; guards #1
+guards1:
+	set(1)
+	iptr(guards1.1)
+;				(ptn x: |[])
+guards1.1:
+	ptn
+Lx:	wildcard
+	set(0)
+;			[] ; productions #1
+prods1:
+	set(2)
+	iptr(prods1.1)
+	iptr(prods1.2)
+;				[1 x]
+prods1.1:
+	set(2)
+	float(1)
+	vptr(Lx)
+;				[2 x]
+prods1.2:
+	set(2)
+	float(2)
+	vptr(Lx)
+;		[] ; production sub-section #2
+ps2:
+	set(2)
+	iptr(guards2)
+	iptr(prods2)
+;			[] ; guards #2
+guards2:
+	set(1)
+	iptr(guards2.1)
+;				(ptn x: [(< x 14) (> x 10)])
+guards2.1:
+	ptn
+Lx1:	wildcard
+	iptr(guards2.1.1)
+guards2.1.1:
+	set(2)
+	iptr(guards2.1.1.1)
+	iptr(guards2.1.1.2)
+guards2.1.1.1:
+	lsr
+	vptr(Lx1)
+	float(14)
+guards2.1.1.2:
+	gtr
+	vptr(Lx1)
+	float(10)
+;			[] ; productions #2
+prods2:
+	set(1)
+	iptr(prods2.1)
+;				[3 x]
+prods2.1:
+	set(2)
+	float(3)
+	vptr(Lx1)
+; )

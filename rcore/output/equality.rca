@@ -1,0 +1,49 @@
+	set(6)
+	boolean(yes)
+	boolean(no)
+	boolean(yes)
+	boolean(no)
+	boolean(yes)
+	boolean(no)
+equYes:
+	boolean(yes)
+	float(1)
+	float(1)
+equNo:
+	boolean(no)
+	float(1)
+	float(2)
+neqYes:
+	boolean(yes)
+	float(1)
+	float(2)
+neqNo:
+	boolean(no)
+	float(1)
+	float(1)
+equSetYes:
+	boolean(yes)
+	iptr(set1)
+	iptr(set2)
+set1:
+	set(2)
+	float(1)
+	float(3)
+set2:
+	set(2)
+	float(1)
+	float(3)
+equSetNo:
+	boolean(no)
+	iptr(set3)
+	iptr(set4)
+set3:
+	set(3)
+	float(1)
+	float(2)
+	float(3)
+set4:
+	set(3)
+	float(1)
+	float(2)
+	float(3.0001)

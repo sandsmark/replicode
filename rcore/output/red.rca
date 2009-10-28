@@ -1,0 +1,107 @@
+;(red
+	iptr(result)
+	iptr(numbers)
+	undefined
+;	[13 14]
+numbers:
+	set(2)
+	float(13)
+	float(14)
+;	[] ; productions
+productions:
+	undefined
+	undefined
+	undefined
+;		[] ; production sub-section #1
+ps1:
+	undefined
+	undefined
+	undefined
+;			[] ; guards #1
+guards1:
+	undefined
+	undefined
+;				(ptn x: |[])
+guards1.1:
+	undefined
+Lx:	float(14)
+	undefined
+;			[] ; productions #1
+prods1:
+	undefined
+	undefined
+	undefined
+;				[1 x]
+prods1.1:
+	set(2)
+	float(1)
+	float(14)
+;				[2 x]
+prods1.2:
+	set(2)
+	float(2)
+	float(14)
+;		[] ; production sub-section #2
+ps2:
+	undefined
+	undefined
+	undefined
+;			[] ; guards #2
+guards2:
+	undefined
+	undefined
+;				(ptn x: [(< x 14) (> x 10)])
+guards2.1:
+	undefined
+Lx1:	float(14)
+	undefined
+guards2.1.1:
+	undefined
+	undefined
+	undefined
+guards2.1.1.1:
+	boolean(no)
+	float(14)
+	float(14)
+guards2.1.1.2:
+	boolean(yes)
+	float(13)
+	float(10)
+;			[] ; productions #2
+prods2:
+	undefined
+	undefined
+;				[3 x]
+prods2.1:
+	set(2)
+	float(3)
+	float(13)
+; )
+; result set
+r1:
+	set(2)
+	float(1)
+	float(13)
+r2:
+	set(2)
+	float(2)
+	float(13)
+r3:
+	set(2)
+	float(3)
+	float(13)
+r4:
+	set(2)
+	float(1)
+	float(14)
+r5:
+	set(2)
+	float(2)
+	float(14)
+result:
+	set(5)
+	iptr(r1)
+	iptr(r2)
+	iptr(r3)
+	iptr(r4)
+	iptr(r5)

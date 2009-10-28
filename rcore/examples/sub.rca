@@ -1,0 +1,19 @@
+	set(2)
+	iptr(subNN)
+	iptr(subTT)
+subNN:
+	sub
+	float(3.0)
+	float(1.0)
+subTT:
+	sub
+	iptr(ts2)
+	iptr(ts1)
+ts1:
+	timestamp
+	bits(00000000)
+	bits(001e8480)
+ts2:
+	timestamp
+	bits(00000000)
+	bits(000f4240)

@@ -1,0 +1,29 @@
+s:
+	set(3)
+	iptr(ip1)
+	iptr(vp1)
+	iptr(cp1)
+ip1:
+	add
+	float(3.0)
+	iptr(ip1.1)
+ip1.1:
+	add
+	float(1.0)
+	float(1.0)
+vp1:
+	add
+	float(3.0)
+	vptr(vp1.1)
+vp1.1:
+	add
+	float(1.0)
+	float(1.0)
+cp1:
+	add
+	float(1.0)
+	iptr(cp1.1)
+cp1.1:
+	cptr(2)
+	vptr(s)
+	bits(00000001)
