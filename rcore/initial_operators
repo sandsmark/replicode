@@ -1,9 +1,0 @@
-!op (_now):ms 
-!op (= : :): 
-!op (<> : :): 
-!op (> :nb :nb): 
-!op (< :nb :nb): 
-!op (>= :nb :nb): 
-!op (<= :nb :nb): 
-!op (+ : :): 
-!op (- : :): 

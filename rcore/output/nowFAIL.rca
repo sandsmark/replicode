@@ -1,5 +1,0 @@
-	iptr(n)
-n:
-	timestamp
-	bits(00000000)
-	bits(00000000)
