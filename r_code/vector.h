@@ -18,6 +18,7 @@ namespace	r_code{
 			return	std::vector<T>::operator [](i);
 		}
 		void	push_back(T	t){	std::vector<T>::push_back(t);	}
+		std::vector<T>	*as_std(){	return	this;	}
 	};
 }
 

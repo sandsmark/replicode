@@ -135,9 +135,19 @@ namespace	r_comp{
 		return	1+pointer_indexes.size()*3;
 	}
 
-	void	RelocationSegment::addEntry(uint32	referenced_object_index,uint32	referencing_object_index,int32	referencing_view_index,uint32	reference_pointer_index){
+	void	RelocationSegment::addObjectReference(uint32	referenced_object_index,uint32	referencing_object_index,uint32	reference_pointer_index){
+
+		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,-1,reference_pointer_index));
+	}
+
+	void	RelocationSegment::addViewReference(uint32	referenced_object_index,uint32	referencing_object_index,int32	referencing_view_index,uint32	reference_pointer_index){
 
 		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,referencing_view_index,reference_pointer_index));
+	}
+
+	void	RelocationSegment::addMarkerReference(uint32	referenced_object_index,uint32	referencing_object_index,uint32	reference_pointer_index){
+
+		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,-2,reference_pointer_index));
 	}
 	
 	void	RelocationSegment::write(word32	*data){
@@ -207,10 +217,5 @@ namespace	r_comp{
 		code_segment.objects.push_back(object);
 		object_map.objects.push_back(map_offset);
 		map_offset+=object->getSize();
-	}
-
-	void	Image::addGlobalReference(const	std::string	label,Class	&_class){
-		
-		relocation_segment.entries[code_segment.objects.size()]=RelocationSegment::Entry();
 	}
 }

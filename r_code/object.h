@@ -18,22 +18,31 @@ namespace	r_code{
 		virtual	void	trace()=0;
 	};
 
+	class	View;
+
 	class	dll_export	SysView:
 	public	ImageObject{
 	public:
+		SysView();
+		SysView(View	*source);
+
 		void	write(word32	*data);
 		void	read(word32		*data);
 		uint32	getSize()	const;
 		void	trace();
 	};
 
+	class	Object;
+
 	class	dll_export	SysObject:
 	public	ImageObject{
 	public:
 		r_code::vector<uint32>		marker_set;		//	indexes in the relocation segment
 		r_code::vector<SysView	*>	view_set;
+		uint32						relocation_index;	//	used for storing Objects in a r_comp::Image
 
 		SysObject();
+		SysObject(Object	*source,uint32	relocation_index);
 		~SysObject();
 
 		void	write(word32	*data);
@@ -52,18 +61,29 @@ namespace	r_code{
 		r_code::vector<Object	*>	marker_set;
 		r_code::vector<Object	*>	reference_set;
 		r_code::vector<View	*>		view_set;
+
+		Object();
+		Object(SysObject	*source);
+		~Object();
 	};
 
 	class	dll_export	Group:
 	public	Object{
 	public:
 		r_code::vector<Object	*>	member_set;
+
+		Group();
+		~Group();
 	};
 
 	class	dll_export	View{
 	public:
 		r_code::vector<Atom>		code;
 		r_code::vector<Object	*>	reference_set;
+
+		View();
+		View(SysView	*source);
+		~View();
 	};
 }
 

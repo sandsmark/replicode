@@ -5,6 +5,15 @@
 
 namespace	r_code{
 
+	SysView::SysView(){
+	}
+
+	SysView::SysView(View	*source){
+
+		for(uint32	i=0;i<source->code.size();++i)
+			code[i]=source->code[i];
+	}
+
 	void	SysView::write(word32	*data){
 
 		data[0]=code.size();
@@ -51,6 +60,16 @@ namespace	r_code{
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	SysObject::SysObject(){
+	}
+
+	SysObject::SysObject(Object	*source,uint32	relocation_index):relocation_index(relocation_index){
+
+		uint32	i;
+		for(i=0;i<source->code.size();++i)
+			code[i]=source->code[i];
+
+		for(i=0;i<source->view_set.size();++i)
+			view_set[i]=new	SysView(source->view_set[i]);
 	}
 
 	SysObject::~SysObject(){
@@ -159,11 +178,44 @@ namespace	r_code{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	Object::Object(){
+	}
+
+	Object::Object(SysObject	*source){
+
+		uint32	i;
+		for(i=0;i<source->code.size();++i)
+			code[i]=source->code[i];
+
+		for(i=0;i<source->view_set.size();++i)
+			view_set[i]=new	View(source->view_set[i]);
+	}
+
+	Object::~Object(){
+
+		for(uint32	i=0;i<view_set.size();++i)
+			delete	view_set[i];
+	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	Group::Group(){
+	}
+
+	Group::~Group(){
+	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	View::View(){
+	}
 
+	View::View(SysView	*source){
+
+		for(uint32	i=0;i<source->code.size();++i)
+			code[i]=source->code[i];
+	}
+
+	View::~View(){
+	}
 }

@@ -2,6 +2,8 @@
 #include	"../r_comp/compiler.h"
 #include	"../r_comp/preprocessor.h"
 
+#include	"../r_exec/mem.h"
+
 #include	<iostream>
 
 
@@ -44,83 +46,61 @@ int32	main(int	argc,char	**argv){
 
 		image->trace();
 		source_code.close();
-
+/*
 		//	Loading code from the image into memory then into the r_exec::Mem
 		//	Instantiate objects and views
-		//	r_code::vector<r_code::Object	*>	ram_objects;
-		//	uint32	i;
-		//	for(i=0;i<_image->code_segment.objects.size();++i){
-
-			//	ram_objects[i]=new	r_code::Object(_image->code_segment.objects[i]);
-			//	for(uint32	j=0;j<_image->code_segment.objects[i]->view_set.size();++j){
-
-				//	ram_objects[i]->view_set[j]=new	r_code::View(image->code_segment.objects[i]->view_set[j]);
-			//	}
-		//	}
+		r_code::vector<r_code::Object	*>	ram_objects;
+		uint32	i;
+		for(i=0;i<_image->code_segment.objects.size();++i)
+			ram_objects[i]=new	r_code::Object(_image->code_segment.objects[i]);
 		//	Translate indices into pointers
-		//	for(i=0;i<ram_objects.size();++i){
+		for(i=0;i<_image->relocation_segment.entries.size();++i){	//	for each allocated object, write its address in the reference set of the objects or views that reference it
 
-			//	uint32	j;
-			//	for(j=0;j<ram_objects[i]->reference_set.size();++j){
-			//
-			//		ram_objects[i]->reference_set[j]=ram_object[ram_objects[i]->reference_set[j]];
-			//	}
-			//	for(j=0;j<ram_objects[i]->view_set.size();++j){
-			//	
-			//		for(uint32	k=0;k<ram_objects[i]->view_set[j]->reference_set.size();++k){
-			//
-			//			ram_objects[i]->view_set[j]->reference_set[k]=ram_object[ram_objects[i]->view_set[j]->reference_set[k]];
-			//		}
-			//	}
-			//	for(j=0;j<ram_objects[i]->marker_set.size();++j){
-			//	
-			//		ram_objects[i]->marker_set[j]=ram_object[ram_objects[i]->marker_set[j]];
-			//	}
-			//	Also, populate group's member_set
-			//	...
-		//	}
+			r_code::Object	*referenced_object=ram_objects[i];
+			RelocationSegment::Entry	e=_image->relocation_segment.entries[i];
+			for(uint32	j=0;j<e.pointer_indexes.size();++j){
+
+				RelocationSegment::PointerIndex	p=e.pointer_indexes[j];
+				r_code::Object	*object=ram_objects[p.object_index];
+				if(p.view_index==-1)
+					object->reference_set[p.pointer_index]=referenced_object;
+				else
+					object->view_set[p.view_index]->reference_set[p.pointer_index]=referenced_object;
+			}
+			//	- put marker addresses in each object's marker set (marker sets are subsets of reference sets)
+			//	- no need to do the same for members in groups: the Mem shall do it itself
+		}
 		//	Load objects in the r_exec::Mem
-		//	for(i=0;i<ram_objects.size();++i){
+			for(i=0;i<ram_objects.size();++i){
 
-			//	r_exec::Mem::Get()->receive(&ram_objects[i]);
-		//	}
+				r_exec::Mem::Get()->receive(ram_objects[i]);
+				//	for testing without the Mem; otherwise: ram_objects.clear();
+				r_exec::Mem::Get()->getObjects(ram_objects.as_std());
+			}
 
 		//	Loading code from memory to an r_comp::Image
-		//	r_comp::Image	*_image=new	r_comp::Image();
-		//	unordered_map<,uint32>	ptrs_to_indices;
-		//	for(i=0;i<ram_objects.size();++i){
-		//
-		//		ptrs_to_indices[ram_objects[i]]=i;
-		//		SysObject	*sys_object=ram_objects[i]->asSysObject();
-		//		_image->addObject(sys_object);
-		//	}
+		r_comp::Image	*_image=new	r_comp::Image();
+		UNORDERED_MAP<Object	*,uint32>	ptrs_to_indices;
+		for(i=0;i<ram_objects.size();++i){
+		
+			SysObject	*sys_object=new	SysObject(ram_objects[i],i);
+			_image->addObject(sys_object);
+			ptrs_to_indices[ram_objects[i]]=i;
+		}
 		//	Translate pointers into indices
-		//	for(i=0;i<_image->code_segment.size();++i){
-		//
-		//		ptrs_to_indices[ram_objects[i]]=i;
-		//		SysObject	*sys_object=r_image->code_segment[i];
-		//		uint32	j;
-			//	for(j=0;j<sys_object->reference_set.size();++j){
-			//
-			//		sys_object->reference_set[j]=ptrs_to_indices.find(r_image->code_segment[sys_object->reference_set[j]]).second;
-			//	}
-			//	for(j=0;j<sys_object->view_set.size();++j){
-			//	
-			//		for(uint32	k=0;k<sys_object->view_set[j]->reference_set.size();++k){
-			//
-			//			sys_object->view_set[j]->reference_set[k]=ptrs_to_indices.find(r_image->code_segment[sys_object->view_set[j]->reference_set[k]]).second;
-			//		}
-			//	}
-			//	for(j=0;j<sys_object->marker_set.size();++j){
-			//	
-			//		ram_objects[i]->marker_set[j]=ptrs_to_indices.find(r_image->code_segment[sys_object->marker_set[j]]).second;
-			//	}
-			//	Also, translate ptrs in group's member_set into indices
-			//	...
-		//	}
+		for(i=0;i<_image->code_segment.objects.size();++i){	//	for each sys_object, valuate the reference set and marker set, plus reference set of views
 
-		//	N.B.: reloc segment seems useless!
-
+			SysObject	*sys_object=_image->code_segment.objects[i];
+			uint32	j;
+			for(j=0;j<ram_objects[i]->reference_set.size();++j)
+				_image->relocation_segment.addObjectReference(ptrs_to_indices.find(ram_objects[i]->reference_set[j])->second,i,j);
+			for(j=0;j<ram_objects[i]->view_set.size();++j)
+				for(uint32	k=0;k<ram_objects[i]->view_set[j]->reference_set.size();++k)
+					_image->relocation_segment.addViewReference(ptrs_to_indices.find(ram_objects[i]->view_set[j]->reference_set[k])->second,i,j,k);
+			for(j=0;j<ram_objects[i]->marker_set.size();++j)
+				_image->relocation_segment.addMarkerReference(ptrs_to_indices.find(ram_objects[i]->marker_set[j])->second,i,j);
+		}
+*/
 		//decompiler.decompile(image,&decompiled_code);	//	this is to be called when the image comes from disk/network: not ready yet
 
 		decompiler.decompile(_image,&decompiled_code);	//	uses the direct output form the compiler (instead of the r_code::Image): we can do that since there's no streaming of the image (disk/network), and _image is available

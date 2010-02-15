@@ -105,11 +105,8 @@ namespace	r_comp{
 		}else{
 
 			current_object=new	SysObject();
-			if(lbl){
-
+			if(lbl)
 				global_references[l]=Reference(_image->code_segment.objects.size(),current_class);
-				_image->addGlobalReference(l,current_class);
-			}
 		}
 
 		OUTPUT<<current_class.str_opcode;
@@ -2313,7 +2310,10 @@ return_arity_error:
 
 			if(write){
 
-				_image->relocation_segment.addEntry(current_object->reference_set[index],current_object_index,current_view_index,write_index);
+				if(current_view_index==-1)
+					_image->relocation_segment.addObjectReference(current_object->reference_set[index],current_object_index,write_index);
+				else
+					_image->relocation_segment.addViewReference(current_object->reference_set[index],current_object_index,current_view_index,write_index);
 				current_object->code[write_index]=Atom::RPointer(index);
 			}
 			return	true;
@@ -2347,7 +2347,10 @@ return_arity_error:
 
 			if(write){
 
-				_image->relocation_segment.addEntry(v[0],current_object_index,current_view_index,write_index);
+				if(current_view_index==-1)
+					_image->relocation_segment.addObjectReference(v[0],current_object_index,write_index);
+				else
+					_image->relocation_segment.addViewReference(v[0],current_object_index,current_view_index,write_index);
 				current_object->code[write_index]=Atom::IPointer(extent_index);
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::RPointer(v[0]);

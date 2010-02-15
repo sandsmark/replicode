@@ -39,7 +39,7 @@ namespace	r_code{
 	//						- reference set:
 	//							- pointers to the relocation segment, i.e. indexes of relocation entries
 	//		- relocation segment:
-	//			- number of entries
+	//			- number of entries (same number as in object map)
 	//			- list of entries
 	//			the index of an entry in the relocation segment is the index of the referenced object (RO) in the code segment
 	//				- entry:

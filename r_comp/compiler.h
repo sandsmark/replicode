@@ -57,7 +57,6 @@ namespace	r_comp{
 		UNORDERED_MAP<std::string,Reference>	global_references;	//	labels declared outside sys-objects. translate to reference pointers
 		bool	getReferenceIndex(const	std::string	reference_name,const	ReturnType	t,ImageObject	*object,uint16	&index,Class	*&_class);	//	index points to the reference set
 																																					//	return false when not found
-
 		//	utility
 		bool	read_nil(uint16	write_index,uint16	&extent_index,bool	write);
 		bool	read_nil_set(uint16	write_index,uint16	&extent_index,bool	write);

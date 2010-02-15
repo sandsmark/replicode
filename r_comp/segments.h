@@ -65,7 +65,7 @@ namespace	r_comp{
 
 	class	dll_export	RelocationSegment{
 	public:
-		class	PointerIndex{
+		class	dll_export	PointerIndex{
 		public:
 			uint32	object_index;	//	index of a referencing object in CodeSegment::objects
 			int32	view_index;		//	index of a view in the object's view set
@@ -73,7 +73,7 @@ namespace	r_comp{
 			PointerIndex();
 			PointerIndex(uint32	object_index,int32	view_index,uint32	pointer_index);
 		};
-		class	Entry{
+		class	dll_export	Entry{
 		public:
 			r_code::vector<PointerIndex>	pointer_indexes;	//	indexes of the pointers referencing the object
 			void	write(word32	*data);
@@ -83,10 +83,16 @@ namespace	r_comp{
 
 		r_code::vector<Entry>	entries;
 
-		void	addEntry(uint32	referenced_object_index,
-						uint32	referencing_object_index,
-						int32	referencing_view_index,
-						uint32	reference_pointer_index);
+		void	addObjectReference(uint32	referenced_object_index,
+									uint32	referencing_object_index,
+									uint32	reference_pointer_index);
+		void	addViewReference(uint32	referenced_object_index,
+									uint32	referencing_object_index,
+									int32	referencing_view_index,
+									uint32	reference_pointer_index);
+		void	addMarkerReference(uint32	referenced_object_index,
+									uint32	referencing_object_index,
+									uint32	reference_pointer_index);
 
 		void	write(word32	*data);
 		void	read(word32		*data);
@@ -105,8 +111,7 @@ namespace	r_comp{
 		Image();
 
 		void	addObject(SysObject	*object);
-		void	addGlobalReference(const	std::string,Class	&_class);
-
+		
 		void	write(r_code::Image	*image);
 		void	read(r_code::Image	*image);
 	};
