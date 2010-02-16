@@ -1,4 +1,5 @@
 #include	"compiler.h"
+#include <string.h>
 
 
 namespace	r_comp{

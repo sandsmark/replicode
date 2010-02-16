@@ -14,7 +14,7 @@ namespace	r_code{
 		T	&operator	[](uint32	i){
 
 			if(i>=size())
-				resize(i+1);
+				std::vector<T>::resize(i+1);
 			return	std::vector<T>::operator [](i);
 		}
 		void	push_back(T	t){	std::vector<T>::push_back(t);	}

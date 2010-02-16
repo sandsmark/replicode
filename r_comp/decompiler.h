@@ -24,7 +24,7 @@ namespace	r_comp{
 		std::string	get_variable_name(uint16	index,bool	postfix);	//	associates iptr/vptr indexes to names; inserts them in out_stream if necessary; when postfix==true, a trailing ':' is added
 
 		UNORDERED_MAP<uint16,std::string>	object_names;				//	in the form class_namexxx where xxx is an integer representing the order of appearence of the object in the image; N.B.: root:0 self:1 stdin:2 stdout:3
-		std::string	Decompiler::get_object_name(uint16	index);			//	retrieves the name of an object
+		std::string	get_object_name(uint16	index);			//	retrieves the name of an object
 
 		void	write_indent(uint16	i);
 		void	write_expression_head(uint16	read_index);						//	decodes the leading atom of an expression

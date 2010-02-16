@@ -9,138 +9,138 @@ namespace	r_code{
 	uint8	Atom::Timestamp_data=0;
 	uint8	Atom::String_data=0;
 
-	inline	Atom	Atom::Float(float32	f){
+		Atom	Atom::Float(float32	f){
 
 		uint32	_f=*reinterpret_cast<uint32*>(&f);
 		return	Atom(_f>>1);
 	}
 
-	inline	Atom	Atom::UndefinedFloat(){
+		Atom	Atom::UndefinedFloat(){
 		
 		return	Atom(0x3FFFFFFF);
 	}
 
-	inline	Atom	Atom::Nil(){
+		Atom	Atom::Nil(){
 		
 		return	Atom(NIL<<24);
 	}
 
-	inline	Atom	Atom::Boolean(bool	value){
+		Atom	Atom::Boolean(bool	value){
 		
 		return	Atom((BOOLEAN_<<24)+value);
 	}
 
-	inline	Atom	Atom::UndefinedBoolean(){
+		Atom	Atom::UndefinedBoolean(){
 		
 		return	Atom(0x81FFFFFF);
 	}
 
-	inline	Atom	Atom::Wildcard(){
+		Atom	Atom::Wildcard(){
 		
 		return	Atom(WILDCARD<<24);
 	}
 
-	inline	Atom	Atom::TailWildcard(){
+		Atom	Atom::TailWildcard(){
 		
 		return	Atom(T_WILDCARD<<24);
 	}
 
-	inline	Atom	Atom::IPointer(uint16	index){
+		Atom	Atom::IPointer(uint16	index){
 		
 		return	Atom((I_PTR<<24)+index);
 	}
 
-	inline	Atom	Atom::VLPointer(uint16	index){
+		Atom	Atom::VLPointer(uint16	index){
 		
 		return	Atom((VL_PTR<<24)+index);
 	}
 
-	inline	Atom	Atom::RPointer(uint16	index){
+		Atom	Atom::RPointer(uint16	index){
 		
 		return	Atom((R_PTR<<24)+index);
 	}
 
-	inline	Atom	Atom::This(){
+		Atom	Atom::This(){
 		
 		return	Atom(THIS<<24);
 	}
 
-	inline	Atom	Atom::View(){
+		Atom	Atom::View(){
 		
 		return	Atom(VIEW<<24);
 	}
 
-	inline	Atom	Atom::Mks(){
+		Atom	Atom::Mks(){
 		
 		return	Atom(MKS<<24);
 	}
 
-	inline	Atom	Atom::Vws(){
+		Atom	Atom::Vws(){
 		
 		return	Atom(VWS<<24);
 	}
 
-	inline	Atom	Atom::SSet(uint16 opcode,uint16	elementCount){
+		Atom	Atom::SSet(uint16 opcode,uint16	elementCount){
 		
 		return	Atom((S_SET<<24)+(opcode<<8)+elementCount);
 	}
 
-	inline	Atom	Atom::Set(uint16	elementCount){
+		Atom	Atom::Set(uint16	elementCount){
 		
 		return	Atom((SET<<24)+elementCount);
 	}
 
-	inline	Atom	Atom::CPointer(uint8	elementCount){
+		Atom	Atom::CPointer(uint8	elementCount){
 		
 		return	Atom((C_PTR<<24)+elementCount);
 	}
 
-	inline	Atom	Atom::Object(uint16	opcode,uint8	arity){
+		Atom	Atom::Object(uint16	opcode,uint8	arity){
 		
 		return	Atom((OBJECT<<24)+(opcode<<8)+arity);
 	}
 
-	inline	Atom	Atom::Marker(uint16	opcode,uint8	arity){
+		Atom	Atom::Marker(uint16	opcode,uint8	arity){
 		
 		return	Atom((MARKER<<24)+(opcode<<8)+arity);
 	}
 
-	inline	Atom	Atom::Operator(uint16	opcode,uint8	arity){
+		Atom	Atom::Operator(uint16	opcode,uint8	arity){
 		
 		return	Atom((OPERATOR<<24)+(opcode<<8)+arity);
 	}
 
-	inline	Atom	Atom::Node(uint8	nodeID){
+		Atom	Atom::Node(uint8	nodeID){
 		
 		return	Atom((NODE<<24)+(nodeID<<8));
 	}
 
-	inline	Atom	Atom::UndefinedNode(){
+		Atom	Atom::UndefinedNode(){
 		
 		return	Atom(0xA0FFFFFF);
 	}
 
-	inline	Atom	Atom::Device(uint8	nodeID,uint8	classID,uint8	devID){
+		Atom	Atom::Device(uint8	nodeID,uint8	classID,uint8	devID){
 		
 		return	Atom((DEVICE<<24)+(nodeID<<16)+(classID<<8)+devID);
 	}
 
-	inline	Atom	Atom::UndefinedDevice(){
+		Atom	Atom::UndefinedDevice(){
 		
 		return	Atom(0xA1FFFFFF);
 	}
 
-	inline	Atom	Atom::DeviceFunction(uint16	opcode){
+		Atom	Atom::DeviceFunction(uint16	opcode){
 		
 		return	Atom((DEVICE_FUNCTION<<24)+(opcode<<8));
 	}
 
-	inline	Atom	Atom::UndefinedDeviceFunction(){
+		Atom	Atom::UndefinedDeviceFunction(){
 		
 		return	Atom(0xA2FFFFFF);
 	}
 
-	inline	Atom	Atom::String(uint16	characterCount){
+		Atom	Atom::String(uint16	characterCount){
 		
 		uint8	blocks=characterCount/4;
 		if(characterCount%4)
@@ -148,55 +148,55 @@ namespace	r_code{
 		return	Atom((STRING<<24)+(blocks<<16)+characterCount);
 	}
 
-	inline	Atom	Atom::UndefinedString(){
+		Atom	Atom::UndefinedString(){
 		
 		return	Atom(0xC6FFFFFF);
 	}
 
-	inline	Atom	Atom::Timestamp(){
+		Atom	Atom::Timestamp(){
 		
 		return	Atom(TIMESTAMP<<24);
 	}
 
-	inline	Atom	Atom::UndefinedTimestamp(){
+		Atom	Atom::UndefinedTimestamp(){
 		
 		return	Atom(0xC7FFFFFF);
 	}
 
-	inline	Atom	Atom::Forever(){
+		Atom	Atom::Forever(){
 
 		return	Atom(0xC7FFFFF0);
 	}
 
-	inline	Atom::Atom(uint32	a):atom(a){
+		Atom::Atom(uint32	a):atom(a){
 	}
 
-	inline	Atom::~Atom(){
+		Atom::~Atom(){
 	}
 
-	inline	Atom	&Atom::operator	=(const	Atom&	a){
+		Atom	&Atom::operator	=(const	Atom&	a){
 		
 		atom=a.atom;
 		return	*this;
 	}
 
-	inline	bool	Atom::operator	==(const	Atom&	a)	const{
+		bool	Atom::operator	==(const	Atom&	a)	const{
 		
 		return	atom==a.atom;
 	}
 
-	inline	bool	Atom::operator	!=(const	Atom&	a)	const{
+		bool	Atom::operator	!=(const	Atom&	a)	const{
 		
 		return	atom!=a.atom;
 	}
 
 
-	inline	uint8	Atom::getDescriptor()	const{
+		uint8	Atom::getDescriptor()	const{
 
 		return	atom>>24;
 	}
 
-	inline	bool	Atom::isPointer()	const{
+		bool	Atom::isPointer()	const{
 
 		switch(getDescriptor()){
 		case I_PTR:
@@ -210,17 +210,17 @@ namespace	r_code{
 		}
 	}
 
-	inline	bool	Atom::isStructural()	const{
+		bool	Atom::isStructural()	const{
 
 		return	(atom	&	0xC0000000)==0xC0000000;
 	}
 
-	inline	bool	Atom::isFloat()	const{
+		bool	Atom::isFloat()	const{
 
 		return	atom>>31==0;
 	}
 
-	inline	bool	Atom::readsAsNil()	const{
+		bool	Atom::readsAsNil()	const{
 
 		return	atom==0x3FFFFFFF	||
 				atom==0x81FFFFFF	||
@@ -232,23 +232,23 @@ namespace	r_code{
 				atom==0xC7FFFFFF;
 	}
 
-	inline	float32	Atom::asFloat()	const{
+		float32	Atom::asFloat()	const{
 
 		int32	a=atom<<1;
 		return	*reinterpret_cast<float32	*>(&a);
 	}
 
-	inline	bool	Atom::asBoolean()	const{
+		bool	Atom::asBoolean()	const{
 
 		return	atom	&	0x000000FF;
 	}
 
-	inline	uint16	Atom::asIndex()	const{
+		uint16	Atom::asIndex()	const{
 
 		return	atom	&	0x0000FFFF;
 	}
 
-	inline	uint16	Atom::getAtomCount()	const{
+		uint16	Atom::getAtomCount()	const{
 
 		if(isStructural()){
 		
@@ -265,22 +265,22 @@ namespace	r_code{
 			return	0;
 	}
 
-	inline	uint16	Atom::asOpcode()	const{
+		uint16	Atom::asOpcode()	const{
 
 		return	(atom>>8)	&	0x0000FFFF;
 	}
 
-	inline	uint8	Atom::getNodeID()	const{
+		uint8	Atom::getNodeID()	const{
 
 		return	(atom	&	0x00FF0000)>>16;
 	}
 
-	inline	uint8	Atom::getClassID()	const{
+		uint8	Atom::getClassID()	const{
 
 		return	(atom	&	0x0000FF00)>>8;
 	}
 
-	inline	uint8	Atom::getDeviceID()	const{
+		uint8	Atom::getDeviceID()	const{
 
 		return	atom	&	0x000000FF;
 	}

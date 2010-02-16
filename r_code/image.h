@@ -67,7 +67,7 @@ namespace	r_code{
 	//
 	//	Def segment is private to the compiler: the only requirement is to keep def segment aligned on 4 bytes.
 	class	dll_export	Image{
-	friend	r_comp::Image;
+	friend	class r_comp::Image;
 	private:
 		uint32	def_size;
 		uint32	map_size;

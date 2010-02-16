@@ -60,7 +60,7 @@ namespace	r_comp{
 	public:
 		CompilerOutput():std::ostream(NULL){}
 		template<typename	T>	std::ostream&	operator	<<(T	&t){
-			if(Output)
+			if(1) // njt: was if (Output); HACK for linux compatibility
 				return	std::cout<<t;
 			return	*this;
 		}
