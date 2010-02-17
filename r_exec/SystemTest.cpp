@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <vector>
 #include "../r_code/types.h"
+#include "hash_containers"
 
 namespace r_exec {
 
@@ -68,7 +69,7 @@ using namespace r_exec;
 int main(int argc, char** argv)
 {
 	TestReceiver test;
-	Mem* mem = Mem::create(&test);
+	Mem* mem = Mem::create(UNORDERED_MAP<string, r_code::Atom>(), vector<r_code::Object*>(), &test);
 	vector<Object*> objects;
 	vector<vector<Atom> > views;
 	for (int i = 1; i < argc; ++i)

@@ -70,9 +70,9 @@
 		#include <ext/hash_map>
 		#include <ext/hash_set>
 		#define UNORDERED_MAP __gnu_cxx::hash_map
-		#define		UNORDERED_SET	std::hash_set
-		#define		UNORDERED_MULTIMAP	std::hash_multimap
-		#define		UNORDERED_MULTISET	std::hash_multiset
+		#define		UNORDERED_SET	__gnu_cxx::hash_set
+		#define		UNORDERED_MULTIMAP	__gnu_cxx::hash_multimap
+		#define		UNORDERED_MULTISET	__gnu_cxx::hash_multiset
 	#endif
 
 	#define dll_export __attribute((visibility("default")))

@@ -4,13 +4,14 @@
 #include "mbrane_imports/utils.h"
 #include "opcodes.h"
 #include <math.h>
+#include <stdio.h>
 
 using namespace std;
 using r_code::Atom;
 namespace r_exec { namespace MemImpl {
 
 
-	Impl::Impl(ObjectReceiver *output_)
+	Impl::Impl(ObjectReceiver *output_, vector<r_code::Object*> objects)
 		:output(output_)
 	{
 		core = Core::create();
@@ -369,7 +370,7 @@ namespace r_exec { namespace MemImpl {
 	{
 		prepareForCopy(dest);
 		
-		dest.input.push_back(Atom::Object(OPCODE_GROUP, ARITY_GROUP));
+		dest.input.push_back(opcodeRegister["grp"]);
 		for (const float* f = values; f != &lastValueSentinel; ++f) {
 			dest.input.push_back(Atom::Float(*f));
 		}
@@ -556,9 +557,9 @@ namespace r_exec { namespace MemImpl {
 					saliencyLowValueThreshold,
 					saliencyHighValueThreshold,
 					saliencyValueNotificationPeriod,
-					SALIENCY_CHANGE,
-					SALIENCY_LOW_VALUE,
-					SALIENCY_HIGH_VALUE,
+					MARKER_SALIENCY_CHANGE,
+					MARKER_SALIENCY_LOW_VALUE,
+					MARKER_SALIENCY_HIGH_VALUE,
 					view
 				);
 				processNotifications(
@@ -570,8 +571,8 @@ namespace r_exec { namespace MemImpl {
 					resilienceHighValueThreshold,
 					resilienceValueNotificationPeriod,
 					-1,
-					RESILIENCE_LOW_VALUE,
-					RESILIENCE_HIGH_VALUE,
+					MARKER_RESILIENCE_LOW_VALUE,
+					MARKER_RESILIENCE_HIGH_VALUE,
 					view
 				);
 				if (view->object->type == REACTIVE) {
@@ -583,9 +584,9 @@ namespace r_exec { namespace MemImpl {
 						activationLowValueThreshold,
 						activationHighValueThreshold,
 						activationValueNotificationPeriod,
-						ACTIVATION_CHANGE,
-						ACTIVATION_LOW_VALUE,
-						ACTIVATION_HIGH_VALUE,
+						MARKER_ACTIVATION_CHANGE,
+						MARKER_ACTIVATION_LOW_VALUE,
+						MARKER_ACTIVATION_HIGH_VALUE,
 						view
 					);
 				}
@@ -826,12 +827,15 @@ namespace r_exec { namespace MemImpl {
 	}
 }
 
+UNORDERED_MAP<std::string, r_code::Atom> opcodeRegister;
+
 Mem* Mem::create(
 	UNORDERED_MAP<std::string, r_code::Atom> classes,
 	std::vector<r_code::Object*> objects,
 	ObjectReceiver *r
 ) {
-	return new MemImpl::Impl(r);
+	opcodeRegister = classes;
+	return new MemImpl::Impl(r, objects);
 }
 
 Object* Object::create(std::vector<Atom> atoms, std::vector<Object*> references)
@@ -841,7 +845,7 @@ Object* Object::create(std::vector<Atom> atoms, std::vector<Object*> references)
 		obj->references.push_back( reinterpret_cast<MemImpl::ObjectBase*>(references[i]));
 	obj->atoms = atoms;
 	int opcode = atoms[0].asOpcode();
-	if (opcode == OPCODE_IPGM || opcode == OPCODE_IFMD || opcode == OPCODE_IIMD)
+	if (opcode == OPCODE_IPGM)
 		obj->type = MemImpl::ObjectBase::REACTIVE;
 	return obj;
 

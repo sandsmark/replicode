@@ -77,11 +77,14 @@ int32	main(int	argc,char	**argv){
 		for (it = _image->definition_segment->classes.begin(); it != _image->definition_segment->classes.end(); ++it) {
 			classes.insert(make_pair(it->first, it->second.atom));
 		}
+		for (it = _image->definition_segment->sys_classes.begin(); it != _image->definition_segment->sys_classes.end(); ++it) {
+			classes.insert(make_pair(it->first, it->second.atom));
+		}
 
 		delete	_image;
 
 		//	Create the mem with objects defined in ram_objects
-#if 0
+#if 1
 		r_exec::Mem* mem = r_exec::Mem::create(
 			classes,
 			*ram_objects.as_std(),

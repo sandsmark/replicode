@@ -1,8 +1,9 @@
-#ifndef __HASH_CONTAINERS_H
-#define __HASH_CONTAINERS_H
+#ifndef __HASH_CONTAINERS_H__
+#define __HASH_CONTAINERS_H__
 #include "../r_code/types.h"
 
 #ifndef LINUX
+using namespace __gnu_cxx;
 namespace __gnu_cxx {
 	template<class T>
 		struct hash<const T*>
@@ -15,6 +16,13 @@ namespace __gnu_cxx {
 		{
 			size_t operator()(T* __p) const
 			{ return reinterpret_cast<size_t>(__p); }
+		};
+	template<>
+		struct hash<std::string>
+		{
+		  size_t
+		  operator()(const std::string __s) const
+		  { return __stl_hash_string(__s.c_str()); }
 		};
 }
 #endif

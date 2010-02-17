@@ -231,7 +231,7 @@ namespace MemImpl {
 	struct Impl : public Mem
 	{
 		// implementation of Mem interface
-		Impl(ObjectReceiver *receiver_);
+		Impl(ObjectReceiver *receiver_, std::vector<r_code::Object*> objects);
 		~Impl();
 		void receive(
 			Object *object,
