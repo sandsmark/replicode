@@ -166,13 +166,13 @@ namespace	r_code{
 			uint32	j;
 			for(j=0;j<view_set[k]->code.size();++i,++j){
 
-				std::cout<<i<<" ";
+				std::cout<<j<<" ";
 				view_set[k]->code[j].trace();
 				std::cout<<std::endl;
 			}
 			std::cout<<"-reference set-"<<std::endl;
 			for(j=0;j<view_set[k]->reference_set.size();++i,++j)
-				std::cout<<i<<" "<<view_set[k]->reference_set[j]<<std::endl;
+				std::cout<<j<<" "<<view_set[k]->reference_set[j]<<std::endl;
 		}
 	}
 
