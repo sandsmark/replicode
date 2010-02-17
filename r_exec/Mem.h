@@ -25,15 +25,21 @@
  
 #ifndef __MEM_H
 #define __MEM_H
+#include <vector>
 #include "fwd.h"
 #include "Asynchronous.h"
 #include "ObjectReceiver.h"
+#include "../r_code/object.h"
 
 namespace r_exec {
 
 // BUGS: suspend/resume doesn't work; simplify or ask eric for assist
 struct Mem : public ObjectReceiver, public Asynchronous {	
-	static Mem* create(ObjectReceiver* output);
+	static Mem* create(
+		UNORDERED_MAP<std::string, r_code::Atom> classes,
+		std::vector<r_code::Object*> objects,
+		ObjectReceiver* output
+	);
 	virtual ~Mem() {}
 };
 

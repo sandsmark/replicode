@@ -138,7 +138,7 @@ void _operator_red(ExecutionContext& context, bool matchOrNotMatch)
 {
 	context.beginResultSet();
 
-	hash_set<Expression, Ehash> produced;
+	UNORDERED_SET<Expression, Ehash> produced;
 	Expression inputs(context.evaluateOperand(1));
 	ExecutionContext productions(context.xchild(2));
 	for (int i = 1; i <= inputs.head().getAtomCount(); ++i) {

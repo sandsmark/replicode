@@ -61,10 +61,18 @@
 	#include	<list>
 	#if defined LINUX
 		#include	<unordered_map>
+		#include	<unordered_set>
 		#define		UNORDERED_MAP	std::unordered_map
+		#define		UNORDERED_SET	std::unordered_set
+		#define		UNORDERED_MULTIMAP	std::unordered_multimap
+		#define		UNORDERED_MULTISET	std::unordered_multiset
 	#else
 		#include <ext/hash_map>
+		#include <ext/hash_set>
 		#define UNORDERED_MAP __gnu_cxx::hash_map
+		#define		UNORDERED_SET	std::hash_set
+		#define		UNORDERED_MULTIMAP	std::hash_multimap
+		#define		UNORDERED_MULTISET	std::hash_multiset
 	#endif
 
 	#define dll_export __attribute((visibility("default")))

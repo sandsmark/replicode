@@ -2,7 +2,7 @@
 #include	"../r_comp/compiler.h"
 #include	"../r_comp/preprocessor.h"
 
-#include	"../r_exec/mem.h"
+#include	"../r_exec/Mem.h"
 
 #include	<iostream>
 
@@ -70,14 +70,21 @@ int32	main(int	argc,char	**argv){
 			//	- put marker addresses in each object's marker set (marker sets are subsets of reference sets)
 			//	- no need to do the same for members in groups: the Mem shall do it itself
 		}
-		//	Load objects in the r_exec::Mem
-			for(i=0;i<ram_objects.size();++i){
-
-				r_exec::Mem::Get()->receive(ram_objects[i]);
-				//	for testing without the Mem; otherwise: ram_objects.clear();
-				// r_exec::Mem::Get()->getObjects(ram_objects.as_std());
-			}
-
+		// Translate the compiler's class table to give just an Atom for use by the Mem
+		UNORDERED_MAP<std::string, r_code::Atom> classes;
+		UNORDERED_MAP<std::string, r_comp::Class>::iterator it;
+		for (it = _image->definition_segment.classes.begin(); it != _image->definition_segment.classes.end(); ++it) {
+			classes.insert(make_pair(it->first, it->second.atom));
+		}
+		//	Create the mem with objects defined in ram_objects
+#if 0
+		r_exec::Mem* mem = r_exec::Mem::create(
+			classes,
+			*ram_objects.as_std(),
+			0
+		);
+#endif
+					
 		//	Loading code from memory to an r_comp::Image
 		r_comp::Image	*_image=new	r_comp::Image();
 		UNORDERED_MAP<Object	*,uint32>	ptrs_to_indices;

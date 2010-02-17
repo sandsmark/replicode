@@ -90,9 +90,9 @@ namespace CoreImpl {
 			InputQueueEntry(Object *o, InputType t) :object(o), type(t) {} 
 		};
 		
-		typedef hash_map<Object*, Program> ProgramHash;
-		typedef hash_map<ReductionInstance*, InputMatcher, ReductionInstance::ptr_hash> InputHash;
-		typedef	hash_multimap<int, InputMatcher*> InputTable;
+		typedef UNORDERED_MAP<Object*, Program> ProgramHash;
+		typedef UNORDERED_MAP<ReductionInstance*, InputMatcher, ReductionInstance::ptr_hash> InputHash;
+		typedef	UNORDERED_MULTIMAP<int, InputMatcher*> InputTable;
 		typedef std::deque<InputQueueEntry> InputQueue;
 		typedef std::deque<InputJob> InputJobQueue;
 		typedef std::deque<OverlayJob> OverlayJobQueue;
@@ -130,7 +130,7 @@ namespace CoreImpl {
 		static thread_ret thread_function_call work(void* args);
 		Core::Instance* createInstance(Group* group);
 		
-		hash_set<Instance*> instances;
+		UNORDERED_SET<Instance*> instances;
 		
 		bool suspendRequested;
 		int numRunningThreads;

@@ -1,8 +1,8 @@
 #ifndef __HASH_CONTAINERS_H
 #define __HASH_CONTAINERS_H
-#include <ext/hash_map>
-#include <ext/hash_set>
+#include "../r_code/types.h"
 
+#ifndef LINUX
 namespace __gnu_cxx {
 	template<class T>
 		struct hash<const T*>
@@ -17,8 +17,6 @@ namespace __gnu_cxx {
 			{ return reinterpret_cast<size_t>(__p); }
 		};
 }
-using __gnu_cxx::hash_map;
-using __gnu_cxx::hash_multimap;
-using __gnu_cxx::hash_set;
+#endif
 
 #endif

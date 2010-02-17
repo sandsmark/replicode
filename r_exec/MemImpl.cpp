@@ -212,7 +212,7 @@ namespace r_exec { namespace MemImpl {
 			dest.value.resize(dest.input.size());
 		Expression result(&dest, dest.value.size());
 		dest.value.push_back(Atom::Set(markers.size()));
-		for (MarkerStore::iterator it = markers.begin(); it != markers.end(); ++it) {
+		for (MarkerStore::const_iterator it = markers.begin(); it != markers.end(); ++it) {
 			dest.value.push_back(Atom::RPointer(dest.references.size()));
 			dest.references.push_back(*it);
 		}
@@ -826,8 +826,11 @@ namespace r_exec { namespace MemImpl {
 	}
 }
 
-Mem* Mem::create(ObjectReceiver *r)
-{
+Mem* Mem::create(
+	UNORDERED_MAP<std::string, r_code::Atom> classes,
+	std::vector<r_code::Object*> objects,
+	ObjectReceiver *r
+) {
 	return new MemImpl::Impl(r);
 }
 

@@ -88,8 +88,8 @@ namespace MemImpl {
 		Expression copyViewInternal(ReductionInstance& dest, const ViewImpl* view) const;
 		void prepareForCopy(ReductionInstance& dest) const;
 		
-		typedef hash_map<const Group*, ViewImpl*> ViewStore;
-		typedef hash_set<ObjectImpl*> MarkerStore;
+		typedef UNORDERED_MAP<const Group*, ViewImpl*> ViewStore;
+		typedef UNORDERED_SET<ObjectImpl*> MarkerStore;
 		int refCount;
 		MarkerStore markers;
 		ViewStore views;
@@ -206,8 +206,8 @@ namespace MemImpl {
 		GroupImpl* notificationGroup;
 		
 		// non-exposed members
-		typedef hash_map<const ObjectBase*, ViewImpl*> ContentStore;
-		typedef hash_set<ViewImpl*, ViewImpl::object_hash, ViewImpl::equal_object> SalientStore;
+		typedef UNORDERED_MAP<const ObjectBase*, ViewImpl*> ContentStore;
+		typedef UNORDERED_SET<ViewImpl*, ViewImpl::object_hash, ViewImpl::equal_object> SalientStore;
 		
 		Core::Instance* coreInstance;
 		Mem* mem;
@@ -262,8 +262,8 @@ namespace MemImpl {
 		typedef std::vector<InsertionQueueEntry> InsertionStore;
 		InsertionStore insertionQueue;
 
-		typedef hash_map<const Group*, GroupImpl*> GroupStore;
-		typedef hash_set<ObjectImpl*, ObjectImpl::hash, ObjectImpl::equal_object> ObjectStore;
+		typedef UNORDERED_MAP<const Group*, GroupImpl*> GroupStore;
+		typedef UNORDERED_SET<ObjectImpl*, ObjectImpl::hash, ObjectImpl::equal_object> ObjectStore;
 		
 		mBrane::Thread *runThread;
 		static thread_ret thread_function_call run(void* args);
