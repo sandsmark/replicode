@@ -908,7 +908,7 @@ Preprocessor::~Preprocessor(){
 		delete	root;
 }
 
-bool	Preprocessor::process(r_comp::Image		*&_image,
+bool	Preprocessor::process(DefinitionSegment		*definition_segment,
 							  std::istream			*stream,
 							  std::ostringstream	*outstream,
 							  std::string			*error){
@@ -958,18 +958,17 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 	HardCodedPreprocessor::~HardCodedPreprocessor(){
 	}
 
-	bool	HardCodedPreprocessor::process(r_comp::Image		*&_image,
+	bool	HardCodedPreprocessor::process(DefinitionSegment	*definition_segment,
 											std::istream		*stream,
 											std::ostringstream	*outstream,
 											std::string			*error){
 
-		_image=new	r_comp::Image();
 		uint16	class_opcode=0;	//	shared with sys_classes
 		uint16	function_opcode=0;
 		uint16	operator_opcode=0;
 
 		std::vector<StructureMember>	r_expr;
-		_image->definition_segment.classes[std::string("expr")]=Class(Atom::Object(class_opcode,0),"expr",r_expr);	//	to read expression in sets, special case: see read_expression()
+		definition_segment->classes[std::string("expr")]=Class(Atom::Object(class_opcode,0),"expr",r_expr);	//	to read expression in sets, special case: see read_expression()
 		++class_opcode;
 
 		//	everything below shall be filled by the preprocessor
@@ -1018,8 +1017,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_view.push_back(StructureMember(&Compiler::read_expression,"grp"));
 		r_view.push_back(StructureMember(&Compiler::read_any,"org"));
 
-		_image->definition_segment.class_names[class_opcode]="view";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.classes[std::string("view")]=Class(Atom::SSet(class_opcode,5),"view",r_view);
+		definition_segment->class_names[class_opcode]="view";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("view")]=Class(Atom::SSet(class_opcode,5),"view",r_view);
 		++class_opcode;
 
 		//	react_view
@@ -1031,8 +1030,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_react_view.push_back(StructureMember(&Compiler::read_any,"org"));
 		r_react_view.push_back(StructureMember(&Compiler::read_number,"act"));
 
-		_image->definition_segment.class_names[class_opcode]="react_view";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.classes[std::string("react_view")]=Class(Atom::SSet(class_opcode,6),"react_view",r_react_view);
+		definition_segment->class_names[class_opcode]="react_view";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("react_view")]=Class(Atom::SSet(class_opcode,6),"react_view",r_react_view);
 		++class_opcode;
 		
 		//	ptn
@@ -1040,8 +1039,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_ptn.push_back(StructureMember(&Compiler::read_expression,"skel"));
 		r_ptn.push_back(StructureMember(&Compiler::read_set,"guards","expr",StructureMember::EXPRESSION));	//	reads a set of expressions
 
-		_image->definition_segment.class_names[class_opcode]="ptn";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.classes[std::string("ptn")]=Class(Atom::Object(class_opcode,2),"ptn",r_ptn);
+		definition_segment->class_names[class_opcode]="ptn";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("ptn")]=Class(Atom::Object(class_opcode,2),"ptn",r_ptn);
 		++class_opcode;
 
 		//	_in_sec
@@ -1050,8 +1049,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"timings","expr",StructureMember::EXPRESSION));	//	reads a set of expressions
 		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"guards","expr",StructureMember::EXPRESSION));		//	reads a set of expressions
 
-		_image->definition_segment.class_names[class_opcode]="_in_sec";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.classes[std::string("_in_sec")]=Class(Atom::SSet(class_opcode,3),"_in_sec",r__ins_sec);
+		definition_segment->class_names[class_opcode]="_in_sec";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("_in_sec")]=Class(Atom::SSet(class_opcode,3),"_in_sec",r__ins_sec);
 		++class_opcode;
 
 		//	cmd
@@ -1060,8 +1059,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_cmd.push_back(StructureMember(&Compiler::read_device,"device"));
 		r_cmd.push_back(StructureMember(&Compiler::read_set,"args"));
 
-		_image->definition_segment.class_names[class_opcode]="cmd";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.classes[std::string("cmd")]=Class(Atom::Object(class_opcode,3),"cmd",r_cmd);
+		definition_segment->class_names[class_opcode]="cmd";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("cmd")]=Class(Atom::Object(class_opcode,3),"cmd",r_cmd);
 		++class_opcode;
 
 		//	val_pair
@@ -1069,8 +1068,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_val_pair.push_back(StructureMember(&Compiler::read_any,"value"));
 		r_val_pair.push_back(StructureMember(&Compiler::read_number,"index"));
 
-		_image->definition_segment.class_names[class_opcode]="val_pair";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.classes[std::string("val_pair")]=Class(Atom::Object(class_opcode,2),"val_pair",r_val_pair);
+		definition_segment->class_names[class_opcode]="val_pair";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("val_pair")]=Class(Atom::Object(class_opcode,2),"val_pair",r_val_pair);
 		++class_opcode;
 
 		//	vec3: non-standard (i.e. does not belong to std.replicode), only for testing
@@ -1079,8 +1078,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_vec3.push_back(StructureMember(&Compiler::read_number,"y"));
 		r_vec3.push_back(StructureMember(&Compiler::read_number,"z"));
 
-		_image->definition_segment.class_names[class_opcode]="vec3";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.classes[std::string("vec3")]=Class(Atom::Object(class_opcode,3),"vec3",r_vec3);
+		definition_segment->class_names[class_opcode]="vec3";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("vec3")]=Class(Atom::Object(class_opcode,3),"vec3",r_vec3);
 		++class_opcode;
 		
 		//	sys-classes /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1098,8 +1097,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_pgm.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_pgm.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		_image->definition_segment.class_names[class_opcode]="pgm";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.sys_classes[std::string("pgm")]=Class(Atom::Object(class_opcode,11),"pgm",r_pgm);
+		definition_segment->class_names[class_opcode]="pgm";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("pgm")]=Class(Atom::Object(class_opcode,11),"pgm",r_pgm);
 		++class_opcode;
 
 		//	ipgm
@@ -1111,8 +1110,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_ipgm.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_ipgm.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		_image->definition_segment.class_names[class_opcode]="ipgm";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.sys_classes[std::string("ipgm")]=Class(Atom::Object(class_opcode,6),"ipgm",r_ipgm);
+		definition_segment->class_names[class_opcode]="ipgm";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("ipgm")]=Class(Atom::Object(class_opcode,6),"ipgm",r_ipgm);
 		++class_opcode;
 
 		//	ent
@@ -1122,8 +1121,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_ent.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_ent.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		_image->definition_segment.class_names[class_opcode]="ent";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.sys_classes[std::string("ent")]=Class(Atom::Object(class_opcode,4),"ent",r_ent);
+		definition_segment->class_names[class_opcode]="ent";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("ent")]=Class(Atom::Object(class_opcode,4),"ent",r_ent);
 		++class_opcode;
 
 		//	grp
@@ -1165,8 +1164,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_grp.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_grp.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		_image->definition_segment.class_names[class_opcode]="grp";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.sys_classes[std::string("grp")]=Class(Atom::Object(class_opcode,36),"grp",r_grp);
+		definition_segment->class_names[class_opcode]="grp";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("grp")]=Class(Atom::Object(class_opcode,36),"grp",r_grp);
 		++class_opcode;
 
 		//	mk.position: non-standard
@@ -1178,8 +1177,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_mk_position.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_mk_position.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		_image->definition_segment.class_names[class_opcode]="mk.position";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.sys_classes[std::string("mk.position")]=Class(Atom::Object(class_opcode,6),"mk.position",r_mk_position);
+		definition_segment->class_names[class_opcode]="mk.position";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.position")]=Class(Atom::Object(class_opcode,6),"mk.position",r_mk_position);
 		++class_opcode;
 
 		//	mk.last_known: non-standard
@@ -1190,8 +1189,8 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_mk_last_known.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_mk_last_known.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		_image->definition_segment.class_names[class_opcode]="mk.last_known";
-		_image->definition_segment.classes_by_opcodes[class_opcode]=_image->definition_segment.sys_classes[std::string("mk.last_known")]=Class(Atom::Object(class_opcode,5),"mk.last_known",r_mk_last_known);
+		definition_segment->class_names[class_opcode]="mk.last_known";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.last_known")]=Class(Atom::Object(class_opcode,5),"mk.last_known",r_mk_last_known);
 		++class_opcode;
 
 		//	utilities /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1229,48 +1228,48 @@ bool	Preprocessor::process(r_comp::Image		*&_image,
 		r_ms_ms.push_back(StructureMember(&Compiler::read_timestamp,""));
 
 		//	operators /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		_image->definition_segment.classes[std::string("_now")]=Class(Atom::Operator(operator_opcode++,0),"_now",r_null,TIMESTAMP);
-		_image->definition_segment.operator_names.push_back("_now");
-		_image->definition_segment.classes[std::string("add")]=Class(Atom::Operator(operator_opcode++,2),"add",r_any_any,ANY);
-		_image->definition_segment.operator_names.push_back("add");
-		_image->definition_segment.classes[std::string("sub")]=Class(Atom::Operator(operator_opcode++,2),"sub",r_any_any,ANY);
-		_image->definition_segment.operator_names.push_back("sub");
-		_image->definition_segment.classes[std::string("mul")]=Class(Atom::Operator(operator_opcode++,2),"mul",r_nb_nb,NUMBER);
-		_image->definition_segment.operator_names.push_back("mul");
-		_image->definition_segment.classes[std::string("div")]=Class(Atom::Operator(operator_opcode++,2),"div",r_nb_nb,NUMBER);
-		_image->definition_segment.operator_names.push_back("div");
-		_image->definition_segment.classes[std::string("gtr")]=Class(Atom::Operator(operator_opcode++,2),"gtr",r_any_any,BOOLEAN);
-		_image->definition_segment.operator_names.push_back("gtr");
-		_image->definition_segment.classes[std::string("lse")]=Class(Atom::Operator(operator_opcode++,2),"lse",r_any_any,BOOLEAN);
-		_image->definition_segment.operator_names.push_back("lse");
-		_image->definition_segment.classes[std::string("lsr")]=Class(Atom::Operator(operator_opcode++,2),"lsr",r_any_any,BOOLEAN);
-		_image->definition_segment.operator_names.push_back("lsr");
-		_image->definition_segment.classes[std::string("gte")]=Class(Atom::Operator(operator_opcode++,2),"gte",r_any_any,BOOLEAN);
-		_image->definition_segment.operator_names.push_back("gte");
-		_image->definition_segment.classes[std::string("equ")]=Class(Atom::Operator(operator_opcode++,2),"equ",r_any_any,BOOLEAN);
-		_image->definition_segment.operator_names.push_back("equ");
-		_image->definition_segment.classes[std::string("neq")]=Class(Atom::Operator(operator_opcode++,2),"neq",r_any_any,BOOLEAN);
-		_image->definition_segment.operator_names.push_back("neq");
-		_image->definition_segment.classes[std::string("syn")]=Class(Atom::Operator(operator_opcode++,1),"syn",r_any,ANY);
-		_image->definition_segment.operator_names.push_back("syn");
-		_image->definition_segment.classes[std::string("red")]=Class(Atom::Operator(operator_opcode++,3),"red",r_set_set_set,SET);
-		_image->definition_segment.operator_names.push_back("red");
-		_image->definition_segment.classes[std::string("ins")]=Class(Atom::Operator(operator_opcode++,2),"ins",r_any_set,ANY);
-		_image->definition_segment.operator_names.push_back("ins");
-		_image->definition_segment.classes[std::string("at")]=Class(Atom::Operator(operator_opcode++,2),"at",r_set_nb,ANY);
-		_image->definition_segment.operator_names.push_back("at");
+		definition_segment->classes[std::string("_now")]=Class(Atom::Operator(operator_opcode++,0),"_now",r_null,TIMESTAMP);
+		definition_segment->operator_names.push_back("_now");
+		definition_segment->classes[std::string("add")]=Class(Atom::Operator(operator_opcode++,2),"add",r_any_any,ANY);
+		definition_segment->operator_names.push_back("add");
+		definition_segment->classes[std::string("sub")]=Class(Atom::Operator(operator_opcode++,2),"sub",r_any_any,ANY);
+		definition_segment->operator_names.push_back("sub");
+		definition_segment->classes[std::string("mul")]=Class(Atom::Operator(operator_opcode++,2),"mul",r_nb_nb,NUMBER);
+		definition_segment->operator_names.push_back("mul");
+		definition_segment->classes[std::string("div")]=Class(Atom::Operator(operator_opcode++,2),"div",r_nb_nb,NUMBER);
+		definition_segment->operator_names.push_back("div");
+		definition_segment->classes[std::string("gtr")]=Class(Atom::Operator(operator_opcode++,2),"gtr",r_any_any,BOOLEAN);
+		definition_segment->operator_names.push_back("gtr");
+		definition_segment->classes[std::string("lse")]=Class(Atom::Operator(operator_opcode++,2),"lse",r_any_any,BOOLEAN);
+		definition_segment->operator_names.push_back("lse");
+		definition_segment->classes[std::string("lsr")]=Class(Atom::Operator(operator_opcode++,2),"lsr",r_any_any,BOOLEAN);
+		definition_segment->operator_names.push_back("lsr");
+		definition_segment->classes[std::string("gte")]=Class(Atom::Operator(operator_opcode++,2),"gte",r_any_any,BOOLEAN);
+		definition_segment->operator_names.push_back("gte");
+		definition_segment->classes[std::string("equ")]=Class(Atom::Operator(operator_opcode++,2),"equ",r_any_any,BOOLEAN);
+		definition_segment->operator_names.push_back("equ");
+		definition_segment->classes[std::string("neq")]=Class(Atom::Operator(operator_opcode++,2),"neq",r_any_any,BOOLEAN);
+		definition_segment->operator_names.push_back("neq");
+		definition_segment->classes[std::string("syn")]=Class(Atom::Operator(operator_opcode++,1),"syn",r_any,ANY);
+		definition_segment->operator_names.push_back("syn");
+		definition_segment->classes[std::string("red")]=Class(Atom::Operator(operator_opcode++,3),"red",r_set_set_set,SET);
+		definition_segment->operator_names.push_back("red");
+		definition_segment->classes[std::string("ins")]=Class(Atom::Operator(operator_opcode++,2),"ins",r_any_set,ANY);
+		definition_segment->operator_names.push_back("ins");
+		definition_segment->classes[std::string("at")]=Class(Atom::Operator(operator_opcode++,2),"at",r_set_nb,ANY);
+		definition_segment->operator_names.push_back("at");
 
 		//	functions /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		_image->definition_segment.classes[std::string("_inj")]=Class(Atom::DeviceFunction(function_opcode++),"_inj",r_set);
-		_image->definition_segment.function_names.push_back("_inj");
-		_image->definition_segment.classes[std::string("_eje")]=Class(Atom::DeviceFunction(function_opcode++),"_eje",r_set);
-		_image->definition_segment.function_names.push_back("_eje");
-		_image->definition_segment.classes[std::string("_mod")]=Class(Atom::DeviceFunction(function_opcode++),"_mod",r_set);
-		_image->definition_segment.function_names.push_back("_mod");
-		_image->definition_segment.classes[std::string("_set")]=Class(Atom::DeviceFunction(function_opcode++),"_set",r_set);
-		_image->definition_segment.function_names.push_back("_set");
-		_image->definition_segment.classes[std::string("_start")]=Class(Atom::DeviceFunction(function_opcode++),"_start",r_set);
-		_image->definition_segment.function_names.push_back("_start");
+		definition_segment->classes[std::string("_inj")]=Class(Atom::DeviceFunction(function_opcode++),"_inj",r_set);
+		definition_segment->function_names.push_back("_inj");
+		definition_segment->classes[std::string("_eje")]=Class(Atom::DeviceFunction(function_opcode++),"_eje",r_set);
+		definition_segment->function_names.push_back("_eje");
+		definition_segment->classes[std::string("_mod")]=Class(Atom::DeviceFunction(function_opcode++),"_mod",r_set);
+		definition_segment->function_names.push_back("_mod");
+		definition_segment->classes[std::string("_set")]=Class(Atom::DeviceFunction(function_opcode++),"_set",r_set);
+		definition_segment->function_names.push_back("_set");
+		definition_segment->classes[std::string("_start")]=Class(Atom::DeviceFunction(function_opcode++),"_start",r_set);
+		definition_segment->function_names.push_back("_start");
 
 		return	true;
 	}

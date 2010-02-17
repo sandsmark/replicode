@@ -187,9 +187,12 @@ namespace	r_comp{
 	Image::Image():map_offset(0){
 	}
 
+	Image::Image(DefinitionSegment	*definition_segment):map_offset(0),definition_segment(definition_segment){
+	}
+
 	void	Image::write(r_code::Image *image){
 
-		image->def_size=definition_segment.getSize();
+		image->def_size=definition_segment->getSize();
 		image->map_size=object_map.getSize();
 		image->code_size=code_segment.getSize();
 		image->reloc_size=relocation_segment.getSize();
@@ -198,7 +201,7 @@ namespace	r_comp{
 
 		object_map.shift(image->def_size+image->map_size);
 
-		definition_segment.write(image->data);
+		definition_segment->write(image->data);
 		object_map.write(image->data+image->def_size);
 		code_segment.write(image->data+image->def_size+image->map_size);
 		relocation_segment.write(image->data+image->def_size+image->map_size+image->code_size);
@@ -206,7 +209,7 @@ namespace	r_comp{
 
 	void	Image::read(r_code::Image *image){
 
-		definition_segment.read(image->data,image->def_size);
+		definition_segment->read(image->data,image->def_size);
 		object_map.read(image->data+image->def_size,image->map_size);
 		code_segment.read(image->data+image->def_size+image->map_size,image->map_size);
 		relocation_segment.read(image->data+image->def_size+image->map_size+image->code_size);

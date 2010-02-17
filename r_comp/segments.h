@@ -103,12 +103,13 @@ namespace	r_comp{
 	private:
 		uint32	map_offset;
 	public:
-		DefinitionSegment	definition_segment;
+		DefinitionSegment	*definition_segment;
 		ObjectMap			object_map;
 		CodeSegment			code_segment;
 		RelocationSegment	relocation_segment;
 
 		Image();
+		Image(DefinitionSegment	*definition_segment);
 
 		void	addObject(SysObject	*object);
 		

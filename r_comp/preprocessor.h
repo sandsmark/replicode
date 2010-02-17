@@ -81,7 +81,7 @@ namespace	r_comp{
 
 		Preprocessor();
 		~Preprocessor();
-		bool	process(r_comp::Image		*&_image,	//	process will allocate _image fill _image->definition_segment
+		bool	process(DefinitionSegment	*definition_segment,	//	process will fill definition_segment
 						std::istream		*stream,	//	if an ifstream, stream must be open
 						std::ostringstream	*outstream,	//	output stream=input stream where macros are expanded
 						std::string			*error);	//	set when function fails, e.g. returns false
@@ -93,7 +93,7 @@ namespace	r_comp{
 	public:
 		HardCodedPreprocessor();
 		~HardCodedPreprocessor();
-		bool	process(r_comp::Image		*&_image,	//	process will allocate _image fill _image->definition_segment
+		bool	process(DefinitionSegment	*definition_segment,	//	process will fill definition_segment
 						std::istream		*stream,	//	if an ifstream, stream must be open
 						std::ostringstream	*outstream,	//	output stream=input stream where macros are expanded
 						std::string			*error);	//	set when function fails, e.g. returns false
