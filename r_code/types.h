@@ -12,7 +12,7 @@
 #elif defined(__GNUC__)
 	#if __GNUC__ == 4
 		#if __GNUC_MINOR__ < 3
-			#error "GNU C++ 4.3 or later is required to compile this program"
+//			#error "GNU C++ 4.3 or later is required to compile this program"
 		#endif
 	#endif
 
@@ -48,7 +48,7 @@
 	#pragma	warning(disable:	4530)	//	warning: exception disabled
 	#pragma	warning(disable:	4996)	//	warning: this function may be unsafe
 	#pragma	warning(disable:	4800)	//	warning: forcing value to bool
-#elif defined LINUX
+#elif defined LINUX || defined OSX
 	#define dll
 	#include	<iostream>
 	#include	<string>
@@ -59,8 +59,13 @@
 	#include	<stdlib.h>
 	#include	<vector>
 	#include	<list>
-	#include	<unordered_map>
-	#define		UNORDERED_MAP	std::unordered_map
+	#if defined LINUX
+		#include	<unordered_map>
+		#define		UNORDERED_MAP	std::unordered_map
+	#else
+		#include <ext/hash_map>
+		#define UNORDERED_MAP __gnu_cxx::hash_map
+	#endif
 
 	#define dll_export __attribute((visibility("default")))
 	#define dll_import __attribute((visibility("default")))
@@ -78,8 +83,6 @@
 #endif
 
 #define	NEWLINE	'\n'
-
-namespace	r_code{
 
 #define	WORD32_MASK					0xFFFFFFFF
 
@@ -132,6 +135,8 @@ namespace	r_code{
 	#define	WORD_MASK					0xFFFFFFFFFFFFFFFF
 
 #endif
+
+namespace	r_code{
 
 #if defined	WINDOWS
 	typedef	HINSTANCE						shared_object;

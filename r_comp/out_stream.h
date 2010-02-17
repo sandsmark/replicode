@@ -70,7 +70,7 @@ namespace	r_comp{
 
 	#ifdef	DEBUG
 		#define	OUTPUT	CompilerOutput()
-	#elif
+	#else
 		#define	OUTPUT	NoStream()
 	#endif
 }

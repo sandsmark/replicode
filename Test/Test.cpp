@@ -46,7 +46,7 @@ int32	main(int	argc,char	**argv){
 
 		image->trace();
 		source_code.close();
-/*
+#if 1
 		//	Loading code from the image into memory then into the r_exec::Mem
 		//	Instantiate objects and views
 		r_code::vector<r_code::Object	*>	ram_objects;
@@ -75,7 +75,7 @@ int32	main(int	argc,char	**argv){
 
 				r_exec::Mem::Get()->receive(ram_objects[i]);
 				//	for testing without the Mem; otherwise: ram_objects.clear();
-				r_exec::Mem::Get()->getObjects(ram_objects.as_std());
+				// r_exec::Mem::Get()->getObjects(ram_objects.as_std());
 			}
 
 		//	Loading code from memory to an r_comp::Image
@@ -100,7 +100,7 @@ int32	main(int	argc,char	**argv){
 			for(j=0;j<ram_objects[i]->marker_set.size();++j)
 				_image->relocation_segment.addMarkerReference(ptrs_to_indices.find(ram_objects[i]->marker_set[j])->second,i,j);
 		}
-*/
+#endif
 		//decompiler.decompile(image,&decompiled_code);	//	this is to be called when the image comes from disk/network: not ready yet
 
 		decompiler.decompile(_image,&decompiled_code);	//	uses the direct output form the compiler (instead of the r_code::Image): we can do that since there's no streaming of the image (disk/network), and _image is available
