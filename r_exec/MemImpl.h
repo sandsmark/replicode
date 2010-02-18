@@ -269,8 +269,10 @@ namespace MemImpl {
 		static thread_ret thread_function_call run(void* args);
 		ObjectReceiver *output;
 		Core* core;
-		GroupImpl* inputGroup;
-		GroupImpl* outputGroup;
+		GroupImpl* rootGroup;
+		GroupImpl* stdinGroup;
+		GroupImpl* stdoutGroup;
+		ObjectImpl* self;
 		GroupStore groups;
 		ObjectStore objects;
 		

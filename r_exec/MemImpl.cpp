@@ -11,14 +11,18 @@ using r_code::Atom;
 namespace r_exec { namespace MemImpl {
 
 
-	Impl::Impl(ObjectReceiver *output_, vector<r_code::Object*> objects)
+	Impl::Impl(ObjectReceiver *output_, vector<r_code::Object*> objects_)
 		:output(output_)
 	{
 		core = Core::create();
-		inputGroup = new GroupImpl(core, this);
-		outputGroup = new GroupImpl(core, this);
-		groups[inputGroup] = inputGroup;
-		groups[outputGroup] = outputGroup;
+		rootGroup = new GroupImpl(core, this);
+		stdinGroup = new GroupImpl(core, this);
+		stdoutGroup = new GroupImpl(core, this);
+		self = new ObjectImpl();
+		groups[rootGroup] = rootGroup;
+		groups[stdinGroup] = stdinGroup;
+		groups[stdoutGroup] = stdoutGroup;
+		objects.insert(self);
 		
 		int64 now = mBrane::Time::Get();
 		nextResilienceUpdate = now + resilienceUpdatePeriod;
@@ -38,7 +42,7 @@ namespace r_exec { namespace MemImpl {
 		Destination dest
 	) {
 		receiveInternal(object, viewData, node_id,
-			dest == ObjectReceiver::INPUT_GROUP ? inputGroup : outputGroup);
+			dest == ObjectReceiver::INPUT_GROUP ? stdinGroup : stdoutGroup);
 	}
 	
 	void Impl::receiveInternal(
