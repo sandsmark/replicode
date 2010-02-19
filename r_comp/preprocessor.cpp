@@ -1069,7 +1069,7 @@ bool	Preprocessor::process(DefinitionSegment		*definition_segment,
 		r_val_pair.push_back(StructureMember(&Compiler::read_number,"index"));
 
 		definition_segment->class_names[class_opcode]="val_pair";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("val_pair")]=Class(Atom::Object(class_opcode,2),"val_pair",r_val_pair);
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("val_pair")]=Class(Atom::SSet(class_opcode,2),"val_pair",r_val_pair);
 		++class_opcode;
 
 		//	vec3: non-standard (i.e. does not belong to std.replicode), only for testing
@@ -1104,7 +1104,7 @@ bool	Preprocessor::process(DefinitionSegment		*definition_segment,
 		//	ipgm
 		std::vector<StructureMember>	r_ipgm;
 		r_ipgm.push_back(StructureMember(&Compiler::read_any,"code"));
-		r_ipgm.push_back(StructureMember(&Compiler::read_set,"args","val_pair",StructureMember::EXPRESSION));	//	reads a set of value pairs
+		r_ipgm.push_back(StructureMember(&Compiler::read_set,"args","val_pair",StructureMember::SET));	//	reads a set of value pairs
 		r_ipgm.push_back(StructureMember(&Compiler::read_view,"vw","react_view"));
 		r_ipgm.push_back(StructureMember(&Compiler::read_mks,"mks"));
 		r_ipgm.push_back(StructureMember(&Compiler::read_vws,"vws"));

@@ -210,11 +210,11 @@ namespace	r_comp{
 		}else
 			OUTPUT<<"|[]";
 		OUTPUT<<"\n\n";
-/*
+
 		OUTPUT<<"OBJECT\n";
 		sys_object->trace();uint32	a;std::cin>>a;
 		OUTPUT<<"\n";
-*/
+
 		_image->addObject(sys_object);
 		return	true;
 	}
@@ -425,6 +425,11 @@ return_false:
 			case	'[':
 			case	']':
 			case	'.':
+				if(s=="mk"){
+
+					s+='.';
+					break;
+				}
 				in_stream->seekg(i);
 				return	false;
 			default:
@@ -1559,7 +1564,7 @@ return_arity_error:
 
 			current_object->code[write_index]=Atom::IPointer(extent_index);
 			uint16	element_count;
-			if(p.atom.getDescriptor()==Atom::S_SET){
+			if(p.atom.getDescriptor()==Atom::S_SET	&&	p.use_as!=StructureMember::SET){
 
 				element_count=p.atom.getAtomCount();
 				current_object->code[extent_index++]=p.atom;

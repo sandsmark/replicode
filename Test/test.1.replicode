@@ -1,6 +1,4 @@
-; test1.replicode
-; no pre-processor
-; self, root, stdin and stdout shall be defined in std.replicode
+; test
 
 root:(grp
 1; upr
@@ -191,7 +189,8 @@ P2:(pgm
 
 iP2:(ipgm
 P2; code
-|[]; args
+[]; args
+   [nil 1]
 |[]; view
 |[]; mks
 |[]; vws
@@ -200,3 +199,27 @@ P2; code
 
 []
    [(_now) 1 300000us stdin nil 1]
+
+O1:(mk.position
+self
+(vec3 3 3 3)
+|[]
+|[]
+|[]
+0
+)
+
+[]
+   [(_now) 1 500000us stdin nil]
+
+O2:(mk.position
+self
+(vec3 5 5 5)
+|[]
+|[]
+|[]
+0
+)
+
+[]
+   [(_now) 1 800000us stdin nil]
