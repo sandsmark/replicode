@@ -180,6 +180,7 @@ namespace CoreImpl {
 	
 	void Instance::doActivate(Object *program)
 	{
+		printf("activate %p, %p\n", this, program);
 		Program& p = programs[program];
 		program->copy(p.programRI);
 		// TODO: connect template arguments
@@ -192,12 +193,12 @@ namespace CoreImpl {
 			if (it == inputMatchers.end()) {
 				// This is a new input matcher.
 				inputs[i]->retain();
-				im = &inputMatchers[inputs[i]];
+				im = inputMatchers[inputs[i]] = new InputMatcher();
 				inputTable.insert(make_pair(getFirstAtom(inputs[i]), im));
 			} else {
 				// This input matcher is already known to this Instance.
 				delete inputs[i];
-				im = &(it->second);
+				im = it->second;
 			}
 			
 			// At this point, im points to the correct InputMatcher for this
@@ -247,6 +248,7 @@ namespace CoreImpl {
 	
 	void Instance::salientObject(Object* object)
 	{
+		printf("salient object %p, %p\n", this, object);
 		onInput(InputQueueEntry(object, InputQueueEntry::SALIENT));
 	}
 	

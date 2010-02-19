@@ -6,24 +6,68 @@
 #include <math.h>
 #include <stdio.h>
 
+namespace r_exec {
 using namespace std;
 using r_code::Atom;
-namespace r_exec { namespace MemImpl {
+namespace MemImpl {
 
+
+	void error(const char* s)
+	{
+		fprintf(stderr, "%s\n", s);
+		exit(1);
+	}
 
 	Impl::Impl(ObjectReceiver *output_, vector<r_code::Object*> objects_)
 		:output(output_)
 	{
+		UNORDERED_MAP<r_code::Object*, Object*> insertedObjects;
+
+		for (int i = 0; i < objects_.size(); ++i) {
+			r_code::Object* o = objects_[i];
+			vector<Object*> refs;
+			for (int j = 0; j < o->reference_set.size(); ++j) {
+				if (o->reference_set[j] == o)
+					continue; // HACK! workaround for groups with ntf_grp set
+				Object* r = insertedObjects[o->reference_set[j]];
+				if (!r)
+					error("can't locate object for reference");
+				refs.push_back(r);
+			}
+
+			Object* _o = Object::create(*o->code.as_std(), refs);
+			ObjectBase* __o = reinterpret_cast<ObjectBase*>(_o);
+			insertedObjects[o] = _o;
+			for (int j = 0; j < o->view_set.size(); ++j) {
+				r_code::View* v = o->view_set[j];
+				if (v->reference_set.size() > 0) {
+					GroupImpl* grp = reinterpret_cast<GroupImpl*>(insertedObjects[v->reference_set[0]]);
+					if (!grp || grp->type != ObjectBase::GROUP)
+						error("invalid group for view");
+					// TODO: get just the relevant atoms
+					receiveInternal(_o, *v->code.as_std(), 0, grp);
+				}
+			}
+			if (__o->type == ObjectBase::GROUP) {
+				GroupImpl* g = reinterpret_cast<GroupImpl*>(__o);
+				groups[g] = g;
+				switch(i) {
+					case 0: rootGroup = g; break;
+					case 2: stdinGroup = g; break;
+					case 3: stdoutGroup = g; break;
+				}
+			} else {
+				ObjectImpl* ___o = reinterpret_cast<ObjectImpl*>(__o);
+				objects.insert(___o);
+				if (i == 1)
+					self = ___o;
+			}
+		}
+
+		if (!rootGroup || !self || !stdinGroup || !stdoutGroup)
+			error("definition of standard groups and object invalid");
+
 		core = Core::create();
-		rootGroup = new GroupImpl(core, this);
-		stdinGroup = new GroupImpl(core, this);
-		stdoutGroup = new GroupImpl(core, this);
-		self = new ObjectImpl();
-		groups[rootGroup] = rootGroup;
-		groups[stdinGroup] = stdinGroup;
-		groups[stdoutGroup] = stdoutGroup;
-		objects.insert(self);
-		
 		int64 now = mBrane::Time::Get();
 		nextResilienceUpdate = now + resilienceUpdatePeriod;
 		nextGeneralUpdate = now + baseUpdatePeriod;
@@ -75,7 +119,7 @@ namespace r_exec { namespace MemImpl {
 	{
 		Impl* this_ = reinterpret_cast<Impl*>(args);
 		for (;;) {
-			this_->runThread->Sleep(500);
+			this_->runThread->Sleep(10);
 			this_->update();
 		}
 	}
@@ -117,6 +161,10 @@ namespace r_exec { namespace MemImpl {
 		}
 		
 		for (it = groups.begin(); it != groups.end(); ++it) {
+			if (!it->second->coreInstance)
+				it->second->coreInstance = core->createInstance(it->second);
+			if (!it->second->mem)
+				it->second->mem = this;
 			it->second->updateControlValues(updateGeneral, resilienceDecrease);
 			it->second->processNewViews();
 			it->second->processStatusChangesAndUpdateStatistics();
@@ -168,6 +216,13 @@ namespace r_exec { namespace MemImpl {
 	
 	void newView(ViewImpl* view)
 	{
+/*
+		view->saliency.valueAtLastChangePeriod = view->saliency.value;
+		view->saliency.lowValueNotified = view->saliency.highValueNotified = false;
+		view->resilience.lowValueNotified = view->resilience.highValueNotified = false;
+		view->activationOrVisibility.valueAtLastChangePeriod = view->activationOrVisibility.value;
+		view->activationOrVisibility.lowValueNotified = view->activationOrVisibility.highValueNotified = false;
+*/
 		view->isExisting = false;
 		view->isSalient = false;
 		view->isActive = false;
@@ -356,11 +411,27 @@ namespace r_exec { namespace MemImpl {
 		dest.copies.push_back(co);
 	}
 	
-	GroupImpl::GroupImpl(Core* core, Mem* mem_)
+	GroupImpl::GroupImpl(vector<r_code::Atom>& atoms, vector<Object*>& references)
 	{
 		type = GROUP;
-		coreInstance = core->createInstance(this);
-		mem = mem_;
+		int i;
+		if (atoms.size() != 6 + (&lastValueSentinel - values))
+			error("wrong number of elements for group");
+		float* f;
+		for (i = 1, f = values; f != &lastValueSentinel; ++i, ++f) {
+			if (!atoms[i].isFloat())
+				error("unexpected non-number");
+			*f = atoms[i].asFloat();
+		}
+		if (references.size() > 0)
+			notificationGroup = reinterpret_cast<GroupImpl*>(references[0]);
+		else
+			notificationGroup = 0;
+		i += 4; // NTF_GRP, VW, MKS, VWS
+		propagationSaliencyThreshold = atoms[i].asFloat();
+
+		coreInstance = 0;
+		mem = 0;
 		numGeneralUpdatesSkipped = 0;
 		updateCounter = 0;
 	}
@@ -786,8 +857,10 @@ namespace r_exec { namespace MemImpl {
 	Expression ObjectImpl::copy(ReductionInstance& dest) const
 	{
 		prepareForCopy(dest);
+		Expression result(&dest, dest.input.size());
 		for (vector<Atom>::const_iterator it = atoms.begin(); it != atoms.end(); ++it)
 			dest.input.push_back(*it);
+		return result;
 	}
 
 	Object* ObjectImpl::getReference(int index) const
@@ -844,14 +917,20 @@ Mem* Mem::create(
 
 Object* Object::create(std::vector<Atom> atoms, std::vector<Object*> references)
 {
-	MemImpl::ObjectImpl* obj = new MemImpl::ObjectImpl();
-	for (int i = 0; i < references.size(); ++i)
-		obj->references.push_back( reinterpret_cast<MemImpl::ObjectBase*>(references[i]));
-	obj->atoms = atoms;
-	int opcode = atoms[0].asOpcode();
-	if (opcode == OPCODE_IPGM)
-		obj->type = MemImpl::ObjectBase::REACTIVE;
-	return obj;
-
-} 
- }
+	if (atoms[0] == opcodeRegister["grp"]) {
+		MemImpl::GroupImpl* obj = new MemImpl::GroupImpl(atoms, references);
+		return obj;
+	} else {
+		MemImpl::ObjectImpl* obj = new MemImpl::ObjectImpl();
+		for (int i = 0; i < references.size(); ++i)
+			obj->references.push_back( reinterpret_cast<MemImpl::ObjectBase*>(references[i]));
+		obj->atoms = atoms;
+		int opcode = atoms[0].asOpcode();
+		if (opcode == OPCODE_IPGM)
+			obj->type = MemImpl::ObjectBase::REACTIVE;
+		else
+			obj->type = MemImpl::ObjectBase::OBJECT;
+		return obj;
+	}
+}
+}

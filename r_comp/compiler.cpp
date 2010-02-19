@@ -212,7 +212,7 @@ namespace	r_comp{
 		OUTPUT<<"\n\n";
 
 		OUTPUT<<"OBJECT\n";
-		sys_object->trace();uint32	a;std::cin>>a;
+		sys_object->trace();//uint32	a;std::cin>>a;
 		OUTPUT<<"\n";
 
 		_image->addObject(sys_object);

@@ -43,6 +43,7 @@ namespace CoreImpl {
 		struct Program;
 		
 		struct InputMatcher {
+			InputMatcher() :inputPattern(0) {}
 			ReductionInstance* inputPattern;
 			struct Output {
 				Program *program;
@@ -51,6 +52,8 @@ namespace CoreImpl {
 			typedef std::vector<Output> OutputSet;
 			OutputSet outputs;
 			~InputMatcher() { inputPattern->release(); }
+		private:
+			InputMatcher(const InputMatcher&);
 		};
 		
 		// TODO: anti-program
@@ -91,7 +94,7 @@ namespace CoreImpl {
 		};
 		
 		typedef UNORDERED_MAP<Object*, Program> ProgramHash;
-		typedef UNORDERED_MAP<ReductionInstance*, InputMatcher, ReductionInstance::ptr_hash> InputHash;
+		typedef UNORDERED_MAP<ReductionInstance*, InputMatcher*, ReductionInstance::ptr_hash> InputHash;
 		typedef	UNORDERED_MULTIMAP<int, InputMatcher*> InputTable;
 		typedef std::deque<InputQueueEntry> InputQueue;
 		typedef std::deque<InputJob> InputJobQueue;

@@ -100,7 +100,7 @@ namespace MemImpl {
 	struct ObjectImpl : public ObjectBase
 	{
 		~ObjectImpl();
-		ObjectImpl() { type = OBJECT; hash_value = 0; }
+		ObjectImpl() :hash_value(0) {}
 		Expression copy(ReductionInstance& dest) const;
 		Object* getReference(int index) const;
 		const Group* asGroup() const { return 0; }
@@ -116,7 +116,7 @@ namespace MemImpl {
 	struct GroupImpl : public ObjectBase, public Group
 	{
 		~GroupImpl();
-		GroupImpl(Core* core, Mem* mem);
+		GroupImpl(std::vector<r_code::Atom>& atoms, std::vector<Object*>& references);
 		Expression copy(ReductionInstance& dest) const;
 		Object* getReference(int index) const;
 		const Group* asGroup() const;
