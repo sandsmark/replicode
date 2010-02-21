@@ -158,9 +158,9 @@ namespace MemImpl {
 		//       values[1] == activationThreshold,
 		// etc.
 		
-		// WARNING! When making changes to the structure, examine:
+		// WARNING! When making changes to this structure, examine:
 		//   GroupImpl::copy
-		//   TODO
+		//   GroupImpl::GroupImpl
 		// to see if the assumptions made about the ordering of values
 		//  are still correct.
 		union {
@@ -210,7 +210,7 @@ namespace MemImpl {
 		typedef UNORDERED_SET<ViewImpl*, ViewImpl::object_hash, ViewImpl::equal_object> SalientStore;
 		
 		Core::Instance* coreInstance;
-		Mem* mem;
+		Impl* mem;
 		MediatedValueAccumulator mediations[7];
 		ContentStore content;
 		std::vector<ReductionInstance*> reductions;

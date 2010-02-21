@@ -44,8 +44,17 @@ namespace MemImpl {
 					GroupImpl* grp = reinterpret_cast<GroupImpl*>(insertedObjects[v->reference_set[0]]);
 					if (!grp || grp->type != ObjectBase::GROUP)
 						error("invalid group for view");
-					// TODO: get just the relevant atoms
-					receiveInternal(_o, *v->code.as_std(), 0, grp);
+					int numAtoms = v->code[0].getAtomCount();
+					vector<r_code::Atom> translatedViewData;
+					translatedViewData.push_back(v->code[2]); // sln
+					int16 n = v->code[3].asIndex();
+					int64 t = (static_cast<int64>(v->code[n].atom) << 32) + v->code[n+1].atom;
+					translatedViewData.push_back(r_code::Atom::Float(n));
+					if (numAtoms >= 6)
+						translatedViewData.push_back(v->code[6]);
+					if (numAtoms >= 7)
+						translatedViewData.push_back(v->code[7]);
+					receiveInternal(_o, translatedViewData, 0, grp);
 				}
 			}
 			if (__o->type == ObjectBase::GROUP) {
@@ -216,13 +225,11 @@ namespace MemImpl {
 	
 	void newView(ViewImpl* view)
 	{
-/*
 		view->saliency.valueAtLastChangePeriod = view->saliency.value;
 		view->saliency.lowValueNotified = view->saliency.highValueNotified = false;
 		view->resilience.lowValueNotified = view->resilience.highValueNotified = false;
 		view->activationOrVisibility.valueAtLastChangePeriod = view->activationOrVisibility.value;
 		view->activationOrVisibility.lowValueNotified = view->activationOrVisibility.highValueNotified = false;
-*/
 		view->isExisting = false;
 		view->isSalient = false;
 		view->isActive = false;
@@ -488,11 +495,13 @@ namespace MemImpl {
 			view->activationOrVisibility.value = viewExpr.child(6).head().asFloat();
 		if (viewExpr.head().getAtomCount() >= 7)
 			view->copyOnVisibility = viewExpr.child(7).head().asFloat();
-		// TODO: check for _inj or _eje
-		if (1) {
+		if (command.child(1).head() == opcodeRegister["_inj"]) {
 			newView(view);
 		} else {
-			// TODO: _eje
+			int node_id = args.child(3).head().asFloat();
+			// NOTE: need to supply proper view data when output->receive() becomes adequate
+			mem->output->receive(object, vector<r_code::Atom>(), node_id,
+				(view->group == mem->stdinGroup) ? ObjectReceiver::INPUT_GROUP : ObjectReceiver::OUTPUT_GROUP);
 		}
 	}
 	
@@ -504,13 +513,24 @@ namespace MemImpl {
 	void GroupImpl::processCommands()
 	{
 		for (vector<ReductionInstance*>::iterator it = reductions.begin(); it != reductions.end(); ++it) {
-			Expression ip(*it, 0, true);
-			Expression commands(ip.child(1).child(3));
+			Expression ipgm(*it, 0, true);
+			Expression pgm(ipgm.child(1));
+			// TODO: generate mk.rdx or mk.|rdx, if appropriate
+			Expression commands(pgm.child(3));
 			for (int i = 1; i <= commands.head().getAtomCount(); ++i) {
 				Expression command(commands.child(i));
-				// TODO: check for which command is to be done
-				processInjectionOrEjection(*it, command);
-				processModOrSet(*it, command);
+				if (command.head() == opcodeRegister["cmd"]) {
+					if (command.child(2).head() == 0xA1000000) { // HACK; fix when supported by preprocessor
+						r_code::Atom cmdCode = command.child(1).head();
+
+						if (cmdCode == opcodeRegister["_inj"]
+						 || cmdCode == opcodeRegister["_eje"])
+							processInjectionOrEjection(*it, command);
+						else if (cmdCode == opcodeRegister["_mod"]
+						      || cmdCode == opcodeRegister["_set"])
+							processModOrSet(*it, command);
+					}
+				}
 			}
 		}
 	}
@@ -528,6 +548,7 @@ namespace MemImpl {
 		markerView->originNodeID = 0;
 		markerView->injectionTime = mBrane::Time::Get();
 		markerView->saliency.value = 1;
+		printf("adding notification %p for object %p in group %p\n", markerView, obj, group);
 		newView(markerView);
 	}
 	

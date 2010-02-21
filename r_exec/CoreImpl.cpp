@@ -183,8 +183,37 @@ namespace CoreImpl {
 		printf("activate %p, %p\n", this, program);
 		Program& p = programs[program];
 		program->copy(p.programRI);
-		// TODO: connect template arguments
-		// TODO: initialize timeScope
+
+		// connect template arguments
+		p.programRI.syncSizes();
+		Expression ipgm(&p.programRI, 0, false);
+		Expression pgm = ipgm.child(1);
+		Expression templates(pgm.child(1));
+		Expression argpairs(ipgm.child(2));
+		vector<bool> foundArg(templates.head().getAtomCount());
+		int numPairs = argpairs.head().getAtomCount();
+		for (int i = 1; i <= numPairs; ++i) {
+			Expression pair(argpairs.child(i));
+			int n = pair.child(2).head().asFloat();
+			if (n <= foundArg.size()) {
+				foundArg[n-1] = true;
+				Expression t(templates.child(n));
+				ExecutionContext tx(t);
+				tx.setResult(pair.child(1).iptr());
+			}
+		}
+		
+		bool foundAllTemplateParameters = true;
+		for (int i = 0; i < foundArg.size(); ++i) {
+			if (!foundArg[i])
+				foundAllTemplateParameters = false;
+		}
+
+		if (!foundAllTemplateParameters) {
+			return;
+		}
+
+		p.timeScope = pgm.child(4).head().asFloat();
 		
 		std::vector<ReductionInstance*> inputs = getInputs(program);
 		for (size_t i = 0; i < inputs.size(); ++i) {
@@ -194,7 +223,8 @@ namespace CoreImpl {
 				// This is a new input matcher.
 				inputs[i]->retain();
 				im = inputMatchers[inputs[i]] = new InputMatcher();
-				inputTable.insert(make_pair(getFirstAtom(inputs[i]), im));
+				int32 a = getFirstAtom(inputs[i]);
+				inputTable.insert(make_pair(a, im));
 			} else {
 				// This input matcher is already known to this Instance.
 				delete inputs[i];

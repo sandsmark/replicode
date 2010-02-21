@@ -33,6 +33,8 @@ struct Core : public Asynchronous {
 		// of the active programs in the Instance.  The result of processing is
 		// returned asynchronously, by a call to Group::reductionComplete() 
 		virtual void salientObject(Object* object) = 0;
+
+		// TODO: signaling period for input-less reactive objects
 	};
 	static Core* create();
 	virtual ~Core() {}

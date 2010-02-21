@@ -66,7 +66,6 @@ namespace CoreImpl {
 			std::vector<InputMatcher*> inputMatchers;
 			std::vector<MatchedInputs> matchSets;
 			int64 timeScope;
-			// signalling period isn't in the notes... what happened?
 		};
 
 		struct InputJob : public Job {

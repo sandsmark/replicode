@@ -83,7 +83,6 @@ ReductionInstance* ReductionInstance::reduce(std::vector<ReductionInstance*> inp
 	if (!allGuardsMet) {
 		return 0;
 	} else {
-		// TODO: notifications
 		Expression productions(head.child(3));
 		int numProductions = productions.head().getAtomCount();
 		for (int i = 1; i <= numProductions; ++i) {
@@ -228,6 +227,14 @@ void ReductionInstance::merge(ExecutionContext location, ReductionInstance* ri)
 			}
 		}
 	}
+}
+
+void ReductionInstance::syncSizes()
+{
+	if (input.size() < value.size())
+		input.resize(value.size());
+	else
+		value.resize(input.size());
 }
 
 Object* ReductionInstance::objectForExpression(Expression expr)

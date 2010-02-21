@@ -32,6 +32,7 @@ public:
 	ReductionInstance* split(ExecutionContext location);
 	void merge(ExecutionContext location, ReductionInstance* ri);
 	Object* objectForExpression(Expression expr);
+	void syncSizes(); // enlarges the value or input array to make them the same size
 	size_t hash() const;
 private:
 	struct CopiedObject {
