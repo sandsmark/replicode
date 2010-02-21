@@ -136,6 +136,7 @@ size_t Ehash::operator() ( const Expression& x) const
 
 void _operator_red(ExecutionContext& context, bool matchOrNotMatch)
 {
+	// TODO: vws, mks
 	context.beginResultSet();
 
 	UNORDERED_SET<Expression, Ehash> produced;

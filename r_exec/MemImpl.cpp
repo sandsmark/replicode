@@ -537,6 +537,7 @@ namespace MemImpl {
 	
 	void GroupImpl::addNotificationMarker(ObjectImpl* obj, ViewImpl* view)
 	{
+		obj->type = OBJECT;
 		GroupImpl* group = view->group;
 		ViewImpl* markerView = new ViewImpl;
 		markerView->object = obj;
@@ -879,8 +880,25 @@ namespace MemImpl {
 	{
 		prepareForCopy(dest);
 		Expression result(&dest, dest.input.size());
-		for (vector<Atom>::const_iterator it = atoms.begin(); it != atoms.end(); ++it)
-			dest.input.push_back(*it);
+		int pointerOffset = dest.input.size();
+		int referenceOffset = dest.references.size();
+		for (vector<Atom>::const_iterator it = atoms.begin(); it != atoms.end(); ++it) {
+			switch(it->getDescriptor()) {
+				case Atom::I_PTR: dest.input.push_back(Atom::IPointer(it->asIndex() + pointerOffset)); break;
+				case Atom::VL_PTR: dest.input.push_back(Atom::VLPointer(it->asIndex() + pointerOffset)); break;
+				case Atom::R_PTR: {
+					int n = it->asIndex() + referenceOffset;
+					if (dest.references.size() <= n)
+						dest.references.resize(n+1);
+					dest.references[n] = references[it->asIndex()];
+					dest.input.push_back(Atom::RPointer(n));
+					break;
+				}
+				default:
+					dest.input.push_back(*it);
+					break;
+			}
+		}
 		return result;
 	}
 

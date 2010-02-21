@@ -157,12 +157,11 @@ namespace CoreImpl {
 	// to each of the inputs for the supplied program.  The entries start
 	// with refcount == 0, and it's the responsibility of the caller to
 	// either retain or destroy them.
-	vector<ReductionInstance*> getInputs(Object* program)
+	vector<ReductionInstance*> getInputs(ReductionInstance& ri)
 	{
-		ReductionInstance ri;
 		vector<ReductionInstance*> result;
-		Expression head = program->copy(ri);
-		Expression inputs = head.child(2).child(1);
+		Expression head(&ri);
+		Expression inputs = head.child(1).child(2).child(1);
 		int numInputs = inputs.head().getAtomCount();
 		for (int i = 1; i <= numInputs; ++i) {
 			Expression input(inputs.child(i));
@@ -173,11 +172,11 @@ namespace CoreImpl {
 	
 	// getFirstAtom returns the opcode of the first atom in the supplied
 	// ReductionInstance.
-	int getFirstAtom(ReductionInstance* ri)
+	uint32 getFirstAtom(ReductionInstance* ri)
 	{
 		return Expression(ri).head().atom;
 	}
-	
+
 	void Instance::doActivate(Object *program)
 	{
 		printf("activate %p, %p\n", this, program);
@@ -195,11 +194,13 @@ namespace CoreImpl {
 		for (int i = 1; i <= numPairs; ++i) {
 			Expression pair(argpairs.child(i));
 			int n = pair.child(2).head().asFloat();
-			if (n <= foundArg.size()) {
+			if (n > 0 && n <= foundArg.size()) {
 				foundArg[n-1] = true;
 				Expression t(templates.child(n));
 				ExecutionContext tx(t);
 				tx.setResult(pair.child(1).iptr());
+			} else {
+				printf("malformed template parameter %d for %p\n", n, program);
 			}
 		}
 		
@@ -215,7 +216,7 @@ namespace CoreImpl {
 
 		p.timeScope = pgm.child(4).head().asFloat();
 		
-		std::vector<ReductionInstance*> inputs = getInputs(program);
+		std::vector<ReductionInstance*> inputs = getInputs(p.programRI);
 		for (size_t i = 0; i < inputs.size(); ++i) {
 			InputHash::iterator it = inputMatchers.find(inputs[i]);
 			InputMatcher* im = 0;
@@ -223,7 +224,8 @@ namespace CoreImpl {
 				// This is a new input matcher.
 				inputs[i]->retain();
 				im = inputMatchers[inputs[i]] = new InputMatcher();
-				int32 a = getFirstAtom(inputs[i]);
+				im->inputPattern = inputs[i];
+				uint32 a = Expression(inputs[i]).child(1).head().atom; // the first atom of skel
 				inputTable.insert(make_pair(a, im));
 			} else {
 				// This input matcher is already known to this Instance.

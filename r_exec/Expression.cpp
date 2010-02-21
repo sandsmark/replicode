@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "Expression.h"
+#include "Object.h"
 
 namespace r_exec {
 
@@ -16,16 +17,23 @@ Expression Expression::dereference() const
             r.index = head().asIndex();
             r.setValueAddressing(true);
             return r.dereference();
-        case Atom::C_PTR:
-            {
-                Expression p(r.child(1).dereference());
-                for (int i = 2; i <= r.head().getAtomCount(); ++i) {
-                    p = p.child(r.child(i).head().asIndex()).dereference();
-                }
-                return p;
-            }
+		case Atom::C_PTR: {
+			Expression p(r.child(1).dereference());
+			for (int i = 2; i <= r.head().getAtomCount(); ++i) {
+				p = p.child(r.child(i).head().asIndex()).dereference();
+			}
+			return p;
+		}
+        case Atom::R_PTR: {
+			uint16 idx = head().asIndex();
+			Object* o = instance->references[idx];
+			for (int i = instance->firstReusableCopiedObject; i < instance->copies.size(); ++i) {
+				if (instance->copies[i].object == o)
+					return Expression(instance, instance->copies[i].position);
+			}
+			return o->copy(*instance);
+		}
         case Atom::THIS:
-        case Atom::R_PTR:
 			// TODO
             fprintf(stderr, "pointer type %02x NYI\n", head().getDescriptor());
             return r;
@@ -36,6 +44,7 @@ Expression Expression::dereference() const
 
 Expression Expression::copy(ReductionInstance& dest) const
 {
+	dest.syncSizes();
 	// create an empty reference that will become the result
 	Expression result(&dest);
 	result.setValueAddressing(true);

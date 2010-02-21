@@ -19,7 +19,9 @@ void nilSkel(ExecutionContext skel)
 
 bool matchSkel(Expression input, ExecutionContext skel)
 {
+	// TODO: matching view
 	Atom s = skel.head();
+	printf("matchSkel: 0x%08x 0x%08x\n", s.atom, input.head().atom);
 	bool result = true;
 	if (s != input.head() && s != Wild && s != TailWild) {
 		nilSkel(skel);
@@ -27,6 +29,7 @@ bool matchSkel(Expression input, ExecutionContext skel)
 	}
 	skel.setResult(input.head());
 	for (int i = 1; i <= skel.head().getAtomCount(); ++i) {
+		printf("matching child(%d)\n", i);
 		if (!matchSkel(input.child(i), skel.xchild(i)))
 			result = false;
 	}

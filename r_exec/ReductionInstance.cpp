@@ -44,7 +44,7 @@ ReductionInstance* ReductionInstance::reduce(Object* input)
 
 ReductionInstance* ReductionInstance::reduce(std::vector<ReductionInstance*> inputs)
 {
-	// Merge the input Is
+	// Merge the input RIs
 	Expression head(this);
 	Expression inputSection = head.child(1).child(2);
 	Expression inputsExpression = inputSection.child(1);
@@ -55,6 +55,7 @@ ReductionInstance* ReductionInstance::reduce(std::vector<ReductionInstance*> inp
 		Expression value(inputs[i]);
 		value.setValueAddressing(true);
 		merge(ExecutionContext(input), inputs[i]);
+		firstReusableCopiedObject = copies.size();
 	}
 	
 	bool allGuardsMet = true;
@@ -91,6 +92,7 @@ ReductionInstance* ReductionInstance::reduce(std::vector<ReductionInstance*> inp
 		}
 		return new ReductionInstance(*this);
 	}
+	// TODO: copy RI before processing, setResult()s for top-level structure
 }
 
 size_t ReductionInstance::ptr_hash::operator()(const ReductionInstance* ri) const

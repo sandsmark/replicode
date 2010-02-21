@@ -92,7 +92,7 @@ int32	main(int	argc,char	**argv){
 			*ram_objects.as_std(),
 			0
 		);
-		sleep(60);
+		sleep(3600);
 #endif
 					
 		//	Loading code from memory to an r_comp::Image
