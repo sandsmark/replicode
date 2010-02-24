@@ -102,6 +102,8 @@ namespace	r_comp{
 	class	dll_export	Image{
 	private:
 		uint32	map_offset;
+		UNORDERED_MAP<Object	*,uint32>	ptrs_to_indices;	//	used for >> in memory
+		void	buildReferences(SysObject	*sys_object,Object	*object,uint32	object_index);
 	public:
 		DefinitionSegment	*definition_segment;
 		ObjectMap			object_map;
@@ -113,8 +115,13 @@ namespace	r_comp{
 
 		void	addObject(SysObject	*object);
 		
-		void	write(r_code::Image	*image);
-		void	read(r_code::Image	*image);
+		Image	&operator	>>	(r_code::Image	*image);
+		Image	&operator	<<	(r_code::Image	*image);
+
+		Image	&operator	>>	(r_code::vector<Object	*>	&ram_objects);
+		Image	&operator	<<	(r_code::vector<Object	*>	&ram_objects);
+
+		Image	&operator	<<	(Object	*object);
 	};
 }
 

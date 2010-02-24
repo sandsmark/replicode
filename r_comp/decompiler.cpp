@@ -50,7 +50,7 @@ namespace	r_comp{
 
 		out_stream=new	OutStream(stream);
 		_image=new	r_comp::Image();
-		_image->read(image);
+		*_image<<image;
 		decompile(_image,stream);
 		delete	_image;
 	}

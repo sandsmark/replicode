@@ -39,10 +39,9 @@ namespace	r_code{
 	public:
 		r_code::vector<uint32>		marker_set;		//	indexes in the relocation segment
 		r_code::vector<SysView	*>	view_set;
-		uint32						relocation_index;	//	used for storing Objects in a r_comp::Image
 
 		SysObject();
-		SysObject(Object	*source,uint32	relocation_index);
+		SysObject(Object	*source);
 		~SysObject();
 
 		void	write(word32	*data);

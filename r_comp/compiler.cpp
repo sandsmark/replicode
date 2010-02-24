@@ -69,7 +69,7 @@ namespace	r_comp{
 			if(c!=-1)
 				in_stream->putback(c);
 		}
-		_image->write(image);
+		*_image>>image;
 
 		return	true;
 	}

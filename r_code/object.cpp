@@ -62,7 +62,7 @@ namespace	r_code{
 	SysObject::SysObject(){
 	}
 
-	SysObject::SysObject(Object	*source,uint32	relocation_index):relocation_index(relocation_index){
+	SysObject::SysObject(Object	*source){
 
 		uint32	i;
 		for(i=0;i<source->code.size();++i)
