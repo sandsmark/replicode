@@ -977,12 +977,24 @@ bool	Preprocessor::process(DefinitionSegment		*definition_segment,
 		//		react_view
 		//		ptn
 		//		pgm
+		//		|pgm
 		//		ipgm
 		//		cmd
 		//		val_pair
 		//		vec3: for testing only
 		//		ent
 		//		grp
+		//		mk.rdx
+		//		mk.|rdx
+		//		mk.low_sln
+		//		mk.high_sln
+		//		mk.low_act
+		//		mk.high_act
+		//		mk.low_res
+		//		mk.high_res
+		//		mk.sln_chg
+		//		mk.act_chg
+		//		mk.new
 		//		mk.position: for testing only
 		//		mk.last_known: for testing only
 		//	implemented operators:
@@ -1101,6 +1113,11 @@ bool	Preprocessor::process(DefinitionSegment		*definition_segment,
 		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("pgm")]=Class(Atom::Object(class_opcode,11),"pgm",r_pgm);
 		++class_opcode;
 
+		//	|pgm
+		definition_segment->class_names[class_opcode]="|pgm";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("|pgm")]=Class(Atom::Object(class_opcode,11),"|pgm",r_pgm);
+		++class_opcode;
+
 		//	ipgm
 		std::vector<StructureMember>	r_ipgm;
 		r_ipgm.push_back(StructureMember(&Compiler::read_any,"code"));
@@ -1166,6 +1183,96 @@ bool	Preprocessor::process(DefinitionSegment		*definition_segment,
 
 		definition_segment->class_names[class_opcode]="grp";
 		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("grp")]=Class(Atom::Object(class_opcode,36),"grp",r_grp);
+		++class_opcode;
+
+		//	mk.rdx
+		std::vector<StructureMember>	r_rdx;
+		r_rdx.push_back(StructureMember(&Compiler::read_any,"code"));
+		r_rdx.push_back(StructureMember(&Compiler::read_any,"inputs"));
+		r_rdx.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::SET));	//	reads a set of value pairs
+		r_rdx.push_back(StructureMember(&Compiler::read_view,"vw","view"));
+		r_rdx.push_back(StructureMember(&Compiler::read_mks,"mks"));
+		r_rdx.push_back(StructureMember(&Compiler::read_vws,"vws"));
+		r_rdx.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
+
+		definition_segment->class_names[class_opcode]="mk.rdx";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.rdx")]=Class(Atom::Object(class_opcode,7),"mk.rdx",r_rdx);
+		++class_opcode;
+
+		//	mk.|rdx
+		std::vector<StructureMember>	r_ardx;
+		r_ardx.push_back(StructureMember(&Compiler::read_any,"code"));
+		r_ardx.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::SET));	//	reads a set of value pairs
+		r_ardx.push_back(StructureMember(&Compiler::read_view,"vw","view"));
+		r_ardx.push_back(StructureMember(&Compiler::read_mks,"mks"));
+		r_ardx.push_back(StructureMember(&Compiler::read_vws,"vws"));
+		r_ardx.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
+
+		definition_segment->class_names[class_opcode]="mk.|rdx";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.|rdx")]=Class(Atom::Object(class_opcode,6),"mk.|rdx",r_ardx);
+		++class_opcode;
+
+		//	utilities for notification markers
+		std::vector<StructureMember>	r_ntf;
+		r_ntf.push_back(StructureMember(&Compiler::read_any,"obj"));
+		r_ntf.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::SET));	//	reads a set of value pairs
+		r_ntf.push_back(StructureMember(&Compiler::read_view,"vw","view"));
+		r_ntf.push_back(StructureMember(&Compiler::read_mks,"mks"));
+		r_ntf.push_back(StructureMember(&Compiler::read_vws,"vws"));
+		r_ntf.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
+
+		std::vector<StructureMember>	r_ntf_chg;
+		r_ntf_chg.push_back(StructureMember(&Compiler::read_any,"obj"));
+		r_ntf_chg.push_back(StructureMember(&Compiler::read_number,"chg"));
+		r_ntf_chg.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::SET));	//	reads a set of value pairs
+		r_ntf_chg.push_back(StructureMember(&Compiler::read_view,"vw","view"));
+		r_ntf_chg.push_back(StructureMember(&Compiler::read_mks,"mks"));
+		r_ntf_chg.push_back(StructureMember(&Compiler::read_vws,"vws"));
+		r_ntf_chg.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
+
+		//	mk.low_sln
+		definition_segment->class_names[class_opcode]="mk.low_sln";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.low_sln")]=Class(Atom::Object(class_opcode,6),"mk.low_sln",r_ntf);
+		++class_opcode;
+
+		//	mk.high_sln
+		definition_segment->class_names[class_opcode]="mk.high_sln";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.high_sln")]=Class(Atom::Object(class_opcode,6),"mk.high_sln",r_ntf);
+		++class_opcode;
+
+		//	mk.low_act
+		definition_segment->class_names[class_opcode]="mk.low_act";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.low_act")]=Class(Atom::Object(class_opcode,6),"mk.low_act",r_ntf);
+		++class_opcode;
+
+		//	mk.high_act
+		definition_segment->class_names[class_opcode]="mk.high_act";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf);
+		++class_opcode;
+
+		//	mk.low_res
+		definition_segment->class_names[class_opcode]="mk.low_res";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.low_res")]=Class(Atom::Object(class_opcode,6),"mk.low_res",r_ntf);
+		++class_opcode;
+
+		//	mk.high_res
+		definition_segment->class_names[class_opcode]="mk.high_res";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.high_res")]=Class(Atom::Object(class_opcode,6),"mk.high_res",r_ntf);
+		++class_opcode;
+
+		//	mk.sln_chg
+		definition_segment->class_names[class_opcode]="mk.high_act";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf_chg);
+		++class_opcode;
+
+		//	mk.act_chg
+		definition_segment->class_names[class_opcode]="mk.high_act";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf_chg);
+		++class_opcode;
+
+		//	mk.new
+		definition_segment->class_names[class_opcode]="mk.new";
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.new")]=Class(Atom::Object(class_opcode,6),"mk.new",r_ntf);
 		++class_opcode;
 
 		//	mk.position: non-standard
