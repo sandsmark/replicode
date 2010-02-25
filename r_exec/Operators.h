@@ -15,6 +15,7 @@ void operator_now(ExecutionContext& context);
 void operator_sub(ExecutionContext& context);
 void operator_red(ExecutionContext& context);
 void operator_notred(ExecutionContext& context);
+void operator_ins(ExecutionContext& context);
 
 }
 

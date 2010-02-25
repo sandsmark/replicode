@@ -39,6 +39,13 @@ Expression ExecutionContext::evaluate()
 
 			break;
 			}
+		case Atom::OBJECT:
+			{
+			setResult(head());
+			for (int i = 1; i <= head().getAtomCount(); ++i)
+				xchild(i).evaluate();
+			break;
+			}
 		case Atom::I_PTR:
 			{
 			ExecutionContext p(*this);
@@ -53,6 +60,12 @@ Expression ExecutionContext::evaluate()
 			break;
 		case Atom::TIMESTAMP:
 			setResultTimestamp(decodeTimestamp());
+			break;
+		case Atom::DEVICE:
+		case Atom::DEVICE_FUNCTION:
+		case Atom::NIL:
+		case Atom::R_PTR:
+			setResult(head());
 			break;
 		default:
 			if (head().isFloat()) {
@@ -116,6 +129,16 @@ void ExecutionContext::merge(Expression value)
 	if (head().getAtomCount() == value.head().getAtomCount()) {
 		
 	}
+}
+
+void ExecutionContext::pushResultAtom(r_code::Atom a)
+{
+	instance->value.push_back(a);
+}
+
+Expression ExecutionContext::getEndExpression() const
+{
+	return Expression(instance, instance->value.size());
 }
 
 }

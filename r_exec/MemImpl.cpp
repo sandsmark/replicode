@@ -275,8 +275,7 @@ namespace MemImpl {
 	
 	Expression ObjectBase::copyMarkerSet(ReductionInstance& dest) const
 	{
-		if (dest.value.size() < dest.input.size())
-			dest.value.resize(dest.input.size());
+		dest.syncSizes();
 		Expression result(&dest, dest.value.size());
 		dest.value.push_back(Atom::Set(markers.size()));
 		for (MarkerStore::const_iterator it = markers.begin(); it != markers.end(); ++it) {
@@ -296,7 +295,7 @@ namespace MemImpl {
 			viewIndices.push_back(e.getIndex());
 		}
 		
-		dest.value.resize(dest.input.size());
+		dest.syncSizes();
 		Expression result(&dest, dest.value.size());
 		dest.value.push_back(Atom::Set(viewIndices.size()));
 		for (vector<int>::iterator it = viewIndices.begin(); it != viewIndices.end(); ++it) {
@@ -331,7 +330,6 @@ namespace MemImpl {
 					if (it2 != otherGroup->views.end()) {
 						ViewImpl* groupView = it2->second;
 						GroupImpl* groupImpl = groupView->group;
-						// QUESTION: what about c-saliency of otherGroup?
 						if (groupView->activationOrVisibility.value > groupImpl->visibilityThreshold) {
 							float thisSaliency = transformControlValue(
 								groupView->saliency.value,
@@ -373,8 +371,7 @@ namespace MemImpl {
 	
 	Expression ObjectBase::copyViewInternal(ReductionInstance& dest, const ViewImpl* view) const
 	{
-		if (dest.value.size() < dest.input.size())
-			dest.value.resize(dest.input.size());
+		dest.syncSizes();
 		Expression ijt(&dest, dest.value.size());
 		dest.value.push_back(Atom::Timestamp());
 		dest.value.push_back(Atom(view->injectionTime >> 32));
@@ -384,9 +381,20 @@ namespace MemImpl {
 		dest.value.push_back(Atom::Timestamp());
 		dest.value.push_back(Atom(res64 >> 32));
 		dest.value.push_back(Atom(res64));
-		Expression result(&dest, dest.value.size());
-		int numAtoms = (type == OBJECT) ? 5 : (type == REACTIVE) ? 6 : 7;
-		dest.value.push_back(Atom::Set(numAtoms));
+		Expression result(&dest, dest.value.size(), true);
+		uint8 numAtoms;
+		uint16 opcode;
+		if (type == OBJECT) {
+			numAtoms = 5;
+			opcode = opcodeRegister["view"].asOpcode();
+		} else if (type == REACTIVE) {
+			numAtoms = 6;
+			opcode = opcodeRegister["react_view"].asOpcode();
+		} else {
+			numAtoms = 7;
+			opcode = opcodeRegister["grp_view"].asOpcode();
+		}
+		dest.value.push_back(Atom::SSet(opcode, numAtoms));
 		dest.value.push_back(ijt.iptr());
 		dest.value.push_back(Atom::Float(view->saliency.value));
 		dest.value.push_back(res.iptr());
@@ -402,6 +410,7 @@ namespace MemImpl {
 			dest.value.push_back(Atom::Float(view->activationOrVisibility.value));
 		if (type == GROUP)
 			dest.value.push_back(Atom::Float(view->copyOnVisibility));
+		dest.syncSizes();
 		return result;
 	}
 	
@@ -410,8 +419,7 @@ namespace MemImpl {
 		Object* o = const_cast<Object*>(static_cast<const Object*>(this));
 		if (dest.references.size() == 0)
 			dest.references.push_back(o);
-		else if (dest.input.size() < dest.value.size())
-			dest.input.resize(dest.value.size());
+		dest.syncSizes();
 		ReductionInstance::CopiedObject co;
 		co.object = o;
 		co.position = dest.input.size();
@@ -466,6 +474,7 @@ namespace MemImpl {
 		dest.input.push_back(Atom::Mks());
 		dest.input.push_back(Atom::Vws());
 		dest.input.push_back(Atom::Float(propagationSaliencyThreshold));
+		dest.syncSizes();
 	}
 
 	Object* GroupImpl::getReference(int index) const { return 0; }
@@ -482,6 +491,7 @@ namespace MemImpl {
 		Expression args(command.child(3));
 		Expression objectExpr(args.child(1));
 		Expression viewExpr(args.child(2));
+		// TODO: create the object unless it's an exact copy
 		Object* object = ri->objectForExpression(objectExpr);
 		ViewImpl* view = new ViewImpl();
 		view->object = reinterpret_cast<ObjectImpl*>(object);
@@ -513,12 +523,13 @@ namespace MemImpl {
 	void GroupImpl::processCommands()
 	{
 		for (vector<ReductionInstance*>::iterator it = reductions.begin(); it != reductions.end(); ++it) {
-			Expression ipgm(*it, 0, true);
+			Expression ipgm(*it, 0, false); // HACK: use value referencing throughout
 			Expression pgm(ipgm.child(1));
 			// TODO: generate mk.rdx or mk.|rdx, if appropriate
 			Expression commands(pgm.child(3));
 			for (int i = 1; i <= commands.head().getAtomCount(); ++i) {
 				Expression command(commands.child(i));
+				command.setValueAddressing(true);
 				if (command.head() == opcodeRegister["cmd"]) {
 					if (command.child(2).head() == 0xA1000000) { // HACK; fix when supported by preprocessor
 						r_code::Atom cmdCode = command.child(1).head();
@@ -549,6 +560,7 @@ namespace MemImpl {
 		markerView->originNodeID = 0;
 		markerView->injectionTime = mBrane::Time::Get();
 		markerView->saliency.value = 1;
+		markerView->resilience.value = updatePeriod * mem->baseUpdatePeriod;
 		printf("adding notification %p for object %p in group %p\n", markerView, obj, group);
 		newView(markerView);
 	}
@@ -899,6 +911,7 @@ namespace MemImpl {
 					break;
 			}
 		}
+		dest.syncSizes();
 		return result;
 	}
 

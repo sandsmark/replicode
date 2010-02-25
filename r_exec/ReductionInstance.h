@@ -15,7 +15,7 @@ class ReductionInstance {
 	friend class MemImpl::ObjectImpl;
 	friend class MemImpl::GroupImpl;
 public:
-	ReductionInstance() :referenceCount(0), firstReusableCopiedObject(0), hash_value(0) {}
+	ReductionInstance(Group* g) :referenceCount(0), firstReusableCopiedObject(0), hash_value(0), group(g) {}
 	// retain and release are not thread-safe, and do not allow for the
 	// ReductionInstance to change after the first retain().  The reason
 	// for this second restriction is that implementing it would require the
@@ -34,6 +34,8 @@ public:
 	Object* objectForExpression(Expression expr);
 	void syncSizes(); // enlarges the value or input array to make them the same size
 	size_t hash() const;
+	Group* getGroup() { return group; }
+	void debug();
 private:
 	struct CopiedObject {
 		Object* object;
@@ -47,6 +49,7 @@ private:
 	int firstReusableCopiedObject;
 	std::vector<Object*> references;
 	size_t hash_value;
+	Group* group;
 };
 
 }

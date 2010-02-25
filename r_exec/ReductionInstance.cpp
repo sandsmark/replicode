@@ -32,8 +32,8 @@ ReductionInstance* ReductionInstance::reduce(Object* input)
 	ReductionInstance* result = new ReductionInstance(*this);
 	result->referenceCount = 0;
 	result->hash_value = 0;
-	Expression copiedInput = input->copy(*this);
-	Expression re(this);
+	Expression copiedInput = input->copy(*result);
+	Expression re(result);
 	if (match(copiedInput, ExecutionContext(re))) {
 		return result;
 	} else {
@@ -44,9 +44,11 @@ ReductionInstance* ReductionInstance::reduce(Object* input)
 
 ReductionInstance* ReductionInstance::reduce(std::vector<ReductionInstance*> inputs)
 {
+	ReductionInstance* result = new ReductionInstance(*this);
 	// Merge the input RIs
-	Expression head(this);
-	Expression inputSection = head.child(1).child(2);
+	Expression ipgm(result);
+	Expression pgm(ipgm.child(1));
+	Expression inputSection = pgm.child(2);
 	Expression inputsExpression = inputSection.child(1);
 	int numInputs = inputsExpression.head().getAtomCount();
 	assert(numInputs == inputs.size());
@@ -54,7 +56,7 @@ ReductionInstance* ReductionInstance::reduce(std::vector<ReductionInstance*> inp
 		Expression input(inputsExpression.child(i+1));
 		Expression value(inputs[i]);
 		value.setValueAddressing(true);
-		merge(ExecutionContext(input), inputs[i]);
+		result->merge(ExecutionContext(input), inputs[i]);
 		firstReusableCopiedObject = copies.size();
 	}
 	
@@ -82,17 +84,21 @@ ReductionInstance* ReductionInstance::reduce(std::vector<ReductionInstance*> inp
 	}
 	
 	if (!allGuardsMet) {
+		delete result;
 		return 0;
 	} else {
-		Expression productions(head.child(3));
+		ExecutionContext(ipgm).setResult(ipgm.head());
+		ExecutionContext(ipgm).xchild(1).setResult(pgm.iptr());
+		ExecutionContext(pgm).setResult(pgm.head());
+		Expression productions(pgm.child(3));
+		ExecutionContext(productions).setResult(productions.head());
 		int numProductions = productions.head().getAtomCount();
 		for (int i = 1; i <= numProductions; ++i) {
 			Expression production(productions.child(i));
 			ExecutionContext(production).evaluate();
 		}
-		return new ReductionInstance(*this);
+		return result;
 	}
-	// TODO: copy RI before processing, setResult()s for top-level structure
 }
 
 size_t ReductionInstance::ptr_hash::operator()(const ReductionInstance* ri) const
@@ -129,9 +135,12 @@ int maximumIndex(Expression e)
 		}
 		default: {
 			for (int i = 1; i <= numAtoms; ++i) {
-				int n = maximumIndex(e.child(i));
-				if (n > result)
-					result = n;
+				Expression c(e.child(i));
+				if (c.getIndex() > e.getIndex()) {
+					int n = maximumIndex(e.child(i));
+					if (n > result)
+						result = n;
+				}
 			}
 		}
 	}
@@ -140,7 +149,7 @@ int maximumIndex(Expression e)
 
 ReductionInstance* ReductionInstance::split(ExecutionContext location)
 {
-	ReductionInstance* result = new ReductionInstance();
+	ReductionInstance* result = new ReductionInstance(group);
 	int firstIndex = location.getIndex();
 	int lastIndex = maximumIndex(location);
 	
@@ -148,9 +157,10 @@ ReductionInstance* ReductionInstance::split(ExecutionContext location)
 	for (int n = firstIndex; n <= lastIndex; ++n) {
 		result->input.push_back(input[n]);
 	}
+	result->syncSizes();
 	
 	// next, make required changes
-	for (int n = 0; n <= result->input.size(); ++n) {
+	for (int n = 0; n < result->input.size(); ++n) {
 		Atom& a = result->input[n];
 		switch(a.getDescriptor()) {
 			case Atom::I_PTR:
@@ -165,9 +175,9 @@ ReductionInstance* ReductionInstance::split(ExecutionContext location)
 				} else {
 					// make a copy
 					if (a.getDescriptor() == Atom::I_PTR)
-						a = Expression(this, n).copy(*result).iptr();
+						a = Expression(this, a.asIndex()).copy(*result).iptr();
 					else
-						a = Expression(this, n).copy(*result).vptr();
+						a = Expression(this, a.asIndex()).copy(*result).vptr();
 				}
 				break;
 			}
@@ -179,13 +189,17 @@ ReductionInstance* ReductionInstance::split(ExecutionContext location)
 			}
 		}
 	}
+	CopiedObject partial;
+	partial.position = 0;
+	partial.object = objectForExpression(location);
+	result->copies.push_back(partial);
+	result->firstReusableCopiedObject = 1;
 	return result;
 }
 
 void ReductionInstance::merge(ExecutionContext location, ReductionInstance* ri)
 {
-	if (value.size() < input.size())
-		value.resize(input.size());
+	syncSizes();
 	
 	int firstIndex = location.getIndex();
 	int lastIndex = maximumIndex(location);
@@ -241,8 +255,20 @@ void ReductionInstance::syncSizes()
 
 Object* ReductionInstance::objectForExpression(Expression expr)
 {
-	// TODO
-	return 0;
+	Object* result = 0;
+	for (int i = 0; i < copies.size(); ++i) {
+		if (copies[i].position <= expr.getIndex())
+			result = copies[i].object;
+	}
+	return result;
+}
+
+void ReductionInstance::debug()
+{
+	syncSizes();
+	for (int i = 0; i < input.size(); ++i) {
+		printf("[%02x] = input = 0x%08x value = 0x%08x\n", i, input[i].atom, value[i].atom);
+	}
 }
 
 }

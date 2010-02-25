@@ -5,13 +5,14 @@
 #include <algorithm>
 #include "mbrane_imports/utils.h"
 #include "ExecutionContext.h"
+#include "match.h"
 
 using namespace std;
 
 namespace r_exec {
 
 namespace CoreImpl {
-	const int num_threads = 4;
+	const int num_threads = 1; // TODO: increase to 4 for production
 	Impl::Impl()
 		:suspendRequested(true), numRunningThreads(0)
 	{
@@ -32,13 +33,16 @@ namespace CoreImpl {
 			bool progress = true;
 			while (progress) {
 				implMutex.acquire();
-				if (job)
+				if (job) {
 					job->finish();
+					// TODO: make this work: delete job;
+				}
 				if (suspendRequested || activeInstances.empty()) {
 					progress = false;
 				} else {
 					CoreImpl::Instance* topInstance = activeInstances.front();
 					job = topInstance->nextJob();
+					printf("got job %p\n", job);
 					if (!job) {
 						topInstance->isActive = false;
 						activeInstances.pop_front();
@@ -113,6 +117,7 @@ namespace CoreImpl {
 		if (!overlayJobQueue.empty()) {
 			Job* j = new OverlayJob(overlayJobQueue.front());
 			overlayJobQueue.pop_front();
+			printf("nextJob returning overlay job %p\n", j);
 			return j;
 		}
 		while (inputJobQueue.empty()) {
@@ -135,6 +140,7 @@ namespace CoreImpl {
 		}
 		Job* j = new InputJob(inputJobQueue.front());
 		inputJobQueue.pop_front();
+		printf("nextJob returning input job %p\n", j);
 		return j;
 	}
 
@@ -180,7 +186,7 @@ namespace CoreImpl {
 	void Instance::doActivate(Object *program)
 	{
 		printf("activate %p, %p\n", this, program);
-		Program& p = programs[program];
+		Program p(group);
 		program->copy(p.programRI);
 
 		// connect template arguments
@@ -191,14 +197,17 @@ namespace CoreImpl {
 		Expression argpairs(ipgm.child(2));
 		vector<bool> foundArg(templates.head().getAtomCount());
 		int numPairs = argpairs.head().getAtomCount();
+		bool templateParametersMatch = true;
 		for (int i = 1; i <= numPairs; ++i) {
 			Expression pair(argpairs.child(i));
 			int n = pair.child(2).head().asFloat();
 			if (n > 0 && n <= foundArg.size()) {
 				foundArg[n-1] = true;
-				Expression t(templates.child(n));
-				ExecutionContext tx(t);
-				tx.setResult(pair.child(1).iptr());
+				Expression templateArgument(pair.child(1));
+				Expression tpl(templates.child(n));
+				if (!match(templateArgument, ExecutionContext(tpl))) {
+					templateParametersMatch = false;
+				}
 			} else {
 				printf("malformed template parameter %d for %p\n", n, program);
 			}
@@ -210,13 +219,15 @@ namespace CoreImpl {
 				foundAllTemplateParameters = false;
 		}
 
-		if (!foundAllTemplateParameters) {
+		if (!foundAllTemplateParameters || !templateParametersMatch) {
 			return;
 		}
 
 		p.timeScope = pgm.child(4).head().asFloat();
 		
 		std::vector<ReductionInstance*> inputs = getInputs(p.programRI);
+		pair<ProgramHash::iterator, bool> ins = programs.insert(make_pair(program, p));
+
 		for (size_t i = 0; i < inputs.size(); ++i) {
 			InputHash::iterator it = inputMatchers.find(inputs[i]);
 			InputMatcher* im = 0;
@@ -237,10 +248,10 @@ namespace CoreImpl {
 			// input.  Create the bi-directional link between the Program the
 			// InputMatcher.
 			InputMatcher::Output o;
-			o.program = &p;
+			o.program = &ins.first->second;
 			o.inputIndex = i;
 			im->outputs.push_back(o);
-			p.inputMatchers.push_back(im);
+			ins.first->second.inputMatchers.push_back(im);
 		}
 	}
 	
@@ -251,8 +262,11 @@ namespace CoreImpl {
 
 	void Instance::doDeactivate(Object* program)
 	{
+		ProgramHash::iterator it = programs.find(program);
+		if (it == programs.end())
+			return;
+		Program& p = it->second;
 		// TODO: what about running jobs which reference this program?
-		Program& p = programs[program];
 		InputMatcher::OutputSet::iterator itO;
 		for (int i = 0; i < p.inputMatchers.size(); ++i) {
 			InputMatcher* im = p.inputMatchers[i];
@@ -286,7 +300,7 @@ namespace CoreImpl {
 	
 	void Instance::doSalient(Object* object)
 	{
-		ReductionInstance ri;
+		ReductionInstance ri(group);
 		object->copy(ri);
 		int n = getFirstAtom(&ri);
 		pair<InputTable::const_iterator, InputTable::const_iterator> bounds
@@ -320,6 +334,7 @@ namespace CoreImpl {
 	void Instance::OverlayJob::process()
 	{
 		result = programRI->reduce(inputs);
+		printf("done with reducing inputs!\n");
 	}
 	
 	void Instance::OverlayJob::finish()

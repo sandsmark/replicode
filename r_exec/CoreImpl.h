@@ -58,6 +58,7 @@ namespace CoreImpl {
 		
 		// TODO: anti-program
 		struct Program {
+			Program(Group* g) :programRI(g) {}
 			struct MatchedInputs {
 				int64 creationTime;
 				std::vector<ReductionInstance*> matches;

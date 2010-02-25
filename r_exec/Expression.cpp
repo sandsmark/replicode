@@ -21,6 +21,11 @@ Expression Expression::dereference() const
 			Expression p(r.child(1).dereference());
 			for (int i = 2; i <= r.head().getAtomCount(); ++i) {
 				p = p.child(r.child(i).head().asIndex()).dereference();
+				if (p.head() == Atom::VIEW) {
+					Object* o = instance->objectForExpression(*this);
+					Group* g = instance->getGroup();
+					p = o->copyVisibleView(*instance, g);
+				}
 			}
 			return p;
 		}
@@ -48,22 +53,23 @@ Expression Expression::copy(ReductionInstance& dest) const
 	// create an empty reference that will become the result
 	Expression result(&dest);
 	result.setValueAddressing(true);
-	result.index = instance->value.size();
+	result.index = dest.value.size();
 
 	// copy the top-level expression.  At this point it will have back-links
-	instance->value.push_back(head());
+	dest.value.push_back(head());
 	for (int i = 1; i <= head().getAtomCount(); ++i) {
-		instance->value.push_back(child(i).head());
+		dest.value.push_back(child(i, false).head());
 	}
 
 	// copy any children which reside in the value array
 	for (int i = 1; i <= result.head().getAtomCount(); ++i) {
-		Expression c(result.child(i));
+		Expression c(result.child(i, false));
 		if (c.head().getDescriptor() == Atom::I_PTR)
-			result.child(i).head() = c.copy(dest).iptr();
+			c.head() = c.copy(dest).iptr();
 		else if (c.head().getDescriptor() == Atom::VL_PTR)
-			result.child(i).head() = c.copy(dest).vptr();
+			c.head() = c.copy(dest).vptr();
 	}
+	dest.syncSizes();
 	return result;
 }
 

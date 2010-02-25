@@ -2,6 +2,7 @@
 #define __EXPRESSION_H
 
 #include "ReductionInstance.h"
+#include "Object.h"
 
 namespace r_exec {
 
@@ -11,7 +12,7 @@ public:
 	Expression(ReductionInstance *instance_, int index_ = 0, bool isValue_ = false)
 		:instance(instance_), index(index_), isValue(isValue_) {}
 	r_code::Atom& head() const;
-	Expression child(int index) const;
+	Expression child(int index, bool dereference = true) const;
 	int64 decodeTimestamp() const;
 	void setValueAddressing(bool isValue_) { isValue = isValue_; }
 	bool getValueAddressing() const { return isValue; }
@@ -27,13 +28,14 @@ protected:
 	bool isValue;
 };
 
-inline Expression Expression::child(int offset) const {
+inline Expression Expression::child(int offset, bool dereference) const {
     Expression c(*this);
     c.index = index + offset;
-    if (c.head().isPointer())
+    if (dereference && c.head().isPointer()) {
         return c.dereference();
-    else
+	} else {
         return c;
+	}
 }
 
 inline r_code::Atom& Expression::head() const {

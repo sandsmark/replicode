@@ -1,4 +1,5 @@
 #include "match.h"
+#include "Object.h"
 
 namespace r_exec {
 
@@ -17,22 +18,47 @@ void nilSkel(ExecutionContext skel)
 	}
 }
 
+void copyInput(Expression input)
+{
+	printf("copyInput(%x)\n", input.getIndex());
+	ExecutionContext r(input);
+	r.setResult(input.head());
+	for (int i = 1; i <= input.head().getAtomCount(); ++i)
+		copyInput(input.child(i, false));
+	if (input.head().getDescriptor() == Atom::I_PTR)
+		copyInput(Expression(&input.getInstance(), input.head().asIndex()));
+}
+	
 bool matchSkel(Expression input, ExecutionContext skel)
 {
-	// TODO: matching view
 	Atom s = skel.head();
 	printf("matchSkel: 0x%08x 0x%08x\n", s.atom, input.head().atom);
 	bool result = true;
+	if (input.head().getDescriptor() == Atom::VIEW) {
+		Object *o = input.getInstance().objectForExpression(input);
+		input = o->copyVisibleView(input.getInstance(), input.getInstance().getGroup());
+		printf("matchSkel:VIEW input=%08x\n", input.head().atom);
+	}
 	if (s != input.head() && s != Wild && s != TailWild) {
 		nilSkel(skel);
 		return false;
 	}
 	skel.setResult(input.head());
 	for (int i = 1; i <= skel.head().getAtomCount(); ++i) {
-		printf("matching child(%d)\n", i);
-		if (!matchSkel(input.child(i), skel.xchild(i)))
-			result = false;
+		ExecutionContext skelChild = skel.xchild(i);
+		if (skelChild.head() != Wild && skelChild.head() != TailWild) {
+			printf("matching child(%d)\n", i);
+			if (!matchSkel(input.child(i), skelChild))
+				result = false;
+		} else {
+			Expression c(input.child(i, false));
+			skelChild.setResult(c.head());
+			if (!c.getValueAddressing()) {
+				copyInput(c);
+			}
+		}
 	}
+	printf ("matchSkel returning %d\n", result+0);
 	return result;
 }
 

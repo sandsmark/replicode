@@ -6,6 +6,7 @@
 namespace r_exec {
 
 using r_code::Atom;
+using namespace std;
 
 void operator_add(ExecutionContext& context)
 {
@@ -203,6 +204,38 @@ void operator_sub(ExecutionContext& context)
 		double diff = static_cast<float>( lhs.decodeTimestamp() ) - static_cast<float>( rhs.decodeTimestamp() );
 		context.setResult( Atom::Float(diff * 1e-6) );
 	}
+}
+
+void operator_ins(ExecutionContext& context)
+{
+	Expression pgm(context.evaluateOperand(1));
+	Expression templateParameters(context.evaluateOperand(2));
+	int numParameters = templateParameters.head().getAtomCount();
+	vector<Expression> formalParameters;
+	for (int i = 1; i <= numParameters; ++i) {
+		formalParameters.push_back(context.getEndExpression());
+		context.pushResultAtom(opcodeRegister["val_pair"]);
+		context.pushResultAtom(templateParameters.child(i).iptr());
+		context.pushResultAtom(Atom::Float(i));
+	}
+	Expression formalParameterSet = context.getEndExpression();
+	context.pushResultAtom(Atom::Set(numParameters));
+	for (int i = 0; i < formalParameters.size(); ++i)
+		context.pushResultAtom(formalParameters[i].iptr());
+	Expression result(context.getEndExpression());
+	if (pgm.head() == opcodeRegister["pgm"]) {
+		context.pushResultAtom(opcodeRegister["ipgm"]); // TODO: ifmd, iimd
+	} else {
+		printf("ins: unrecognized reactive object type %08x\n", pgm.head().atom);
+		context.pushResultAtom(Atom::Nil());
+	}
+	context.pushResultAtom(pgm.iptr());
+	context.pushResultAtom(formalParameterSet.iptr());
+	context.pushResultAtom(Atom::View());
+	context.pushResultAtom(Atom::Mks());
+	context.pushResultAtom(Atom::Vws());
+	context.pushResultAtom(Atom::Float(0));
+	context.setResult(result.iptr());
 }
 
 }
