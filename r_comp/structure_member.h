@@ -26,7 +26,7 @@ namespace	r_comp{
 		FUNCTION_ID=8
 	}ReturnType;
 
-	typedef	bool	(Compiler::*_Read)(bool	&,bool,const	Class	*,uint16,uint16	&,bool);	//	reads fromt he stream and writes in an object
+	typedef	bool	(Compiler::*_Read)(bool	&,bool,const	Class	*,uint16,uint16	&,bool);	//	reads from the stream and writes in an object
 
 	class	DefinitionSegment;
 	class	StructureMember{

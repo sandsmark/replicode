@@ -899,56 +899,62 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Preprocessor::Preprocessor():root(NULL){
-}
-
-Preprocessor::~Preprocessor(){
-	
-	if(root)
-		delete	root;
-}
-
-bool	Preprocessor::process(DefinitionSegment		*definition_segment,
-							  std::istream			*stream,
-							  std::ostringstream	*outstream,
-							  std::string			*error){
-
-	RepliStruct	*root=new RepliStruct(RepliStruct::Root);
-	uint32	a=0, b=0;
-	if(root->parse(stream,a,b)<0){
-
-		*error=root->printError();
-		return	false;
-	}
-	if(!stream->eof()){
-
-		*error="Code structure error: Unmatched ) or ].\n";
-		return	false;
+	Preprocessor::Preprocessor():root(NULL){
 	}
 
-	//	printf("Replicode:\n\n%s\n",root->print().c_str());
-
-	int32	pass=0,total=0,count;
-	while((count=root->process())>0){
+	Preprocessor::~Preprocessor(){
 		
-		total+=count;
-		pass++;
-	//	printf("Pass %d, %d changes, %d total\n", pass, count, total);
+		if(root)
+			delete	root;
 	}
-	if(count<0){
+
+	bool	Preprocessor::process(DefinitionSegment		*definition_segment,
+								  std::istream			*stream,
+								  std::ostringstream	*outstream,
+								  std::string			*error){
+
+		RepliStruct	*root=new RepliStruct(RepliStruct::Root);
+		uint32	a=0, b=0;
+		if(root->parse(stream,a,b)<0){
+
+			*error=root->printError();
+			return	false;
+		}
+		if(!stream->eof()){
+
+			*error="Code structure error: Unmatched ) or ].\n";
+			return	false;
+		}
+
+		//	printf("Replicode:\n\n%s\n",root->print().c_str());
+
+		int32	pass=0,total=0,count;
+		while((count=root->process())>0){
+			
+			total+=count;
+			pass++;
+		//	printf("Pass %d, %d changes, %d total\n", pass, count, total);
+		}
+		if(count<0){
+
+			*error=root->printError();
+			return	false;
+		}
+		//	printf("Replicode:\n\n%s\n",root->print().c_str());
+
+		*outstream<<root;
+
+		initialize(definition_segment);
 
 		*error=root->printError();
-		return	false;
+		return (error->size()==0);
 	}
-	//	printf("Replicode:\n\n%s\n",root->print().c_str());
 
-	*outstream<<root;
+	void	Preprocessor::initialize(DefinitionSegment	*definition_segment){
 
-	printf("Replicode:\n\n%s\n",outstream->str().c_str());
-
-	*error=root->printError();
-	return (error->size()==0);
-}
+		HardCodedPreprocessor	helper;
+		helper.initialize(definition_segment);
+	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -963,7 +969,14 @@ bool	Preprocessor::process(DefinitionSegment		*definition_segment,
 											std::ostringstream	*outstream,
 											std::string			*error){
 
-		uint16	class_opcode=0;	//	shared with sys_classes
+		initialize(definition_segment);
+		*outstream<<stream->rdbuf();
+		return	true;
+	}
+
+	void	HardCodedPreprocessor::initialize(DefinitionSegment	*definition_segment){
+
+				uint16	class_opcode=0;	//	shared with sys_classes
 		uint16	function_opcode=0;
 		uint16	operator_opcode=0;
 
@@ -1377,7 +1390,5 @@ bool	Preprocessor::process(DefinitionSegment		*definition_segment,
 		definition_segment->function_names.push_back("_set");
 		definition_segment->classes[std::string("_start")]=Class(Atom::DeviceFunction(function_opcode++),"_start",r_set);
 		definition_segment->function_names.push_back("_start");
-
-		return	true;
 	}
 }

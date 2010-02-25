@@ -65,14 +65,6 @@ namespace	r_comp{
 			return	*this;
 		}
 	};
-
-	#define	DEBUG
-
-	#ifdef	DEBUG
-		#define	OUTPUT	CompilerOutput()
-	#else
-		#define	OUTPUT	NoStream()
-	#endif
 }
 
 

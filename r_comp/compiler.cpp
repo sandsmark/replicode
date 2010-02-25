@@ -36,6 +36,18 @@ namespace	r_comp{
 		}
 	}
 
+	void	Compiler::set_arity_error(uint16	expected,uint16	got){
+
+		char	buffer[255];
+		std::string	s="error: got ";
+		sprintf(buffer,"%d",got);
+		s+=buffer;
+		s+=" elements, expected ";
+		sprintf(buffer,"%d",expected);
+		s+=buffer;
+		set_error(s);
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	bool	Compiler::compile(std::istream	*stream,r_comp::Image	*_image,r_code::Image	*&image,std::string	*error){
@@ -84,11 +96,8 @@ namespace	r_comp{
 
 		std::string	l;
 		while(indent(false));
-		if(label(l)){
-
+		if(label(l))
 			lbl=true;
-			OUTPUT<<"lbl_"<<l<<":";
-		}
 		if(!expression_begin(indented)){
 
 			if(lbl)
@@ -110,8 +119,6 @@ namespace	r_comp{
 				global_references[l]=Reference(_image->code_segment.objects.size(),current_class);
 		}
 
-		OUTPUT<<current_class.str_opcode;
-		
 		current_object->code[0]=current_class.atom;
 		if(current_class.atom.getAtomCount()){
 
@@ -122,16 +129,13 @@ namespace	r_comp{
 					set_error("syntax error: missing separator/right_indent after head");
 					return	false;
 				}
-			}else
-				OUTPUT<<" ";
+			}
 			uint16	extent_index=current_class.atom.getAtomCount()+1;
 			if(!expression_tail(indented,current_class,1,extent_index,true))
 				return	false;
 		}
 
 		SysObject	*sys_object=(SysObject	*)current_object;	//	current_object will point to views, if any
-
-		OUTPUT<<"\n\n";
 		
 		//	compile view set
 		//	input format:
@@ -151,7 +155,6 @@ namespace	r_comp{
 				return	false;
 
 			indent(false);
-			OUTPUT<<"[";
 
 			current_class=*current_class.get_member_class(_image->definition_segment,"vw");
 			current_class.use_as=StructureMember::CLASS;
@@ -174,7 +177,6 @@ namespace	r_comp{
 					}else{
 
 						delete	current_object;
-						OUTPUT<<"]";
 						break;
 					}
 				}
@@ -190,13 +192,9 @@ namespace	r_comp{
 								delete	current_object;
 								return	false;
 							}
-						}else
-							OUTPUT<<" ";
-					}else{
-
+						}
+					}else
 						_indented=false;
-						OUTPUT<<" ";
-					}
 				}
 				if(!read_set(_indented,true,&current_class,0,extent_index,true)){
 							
@@ -207,13 +205,9 @@ namespace	r_comp{
 				count++;
 				sys_object->view_set.push_back((SysView	*)current_object);
 			}
-		}else
-			OUTPUT<<"|[]";
-		OUTPUT<<"\n\n";
+		}
 
-		OUTPUT<<"OBJECT\n";
 		sys_object->trace();//uint32	a;std::cin>>a;
-		OUTPUT<<"\n";
 
 		_image->addObject(sys_object);
 		return	true;
@@ -384,19 +378,13 @@ return_false:
 
 	bool	Compiler::separator(bool	pushback){
 
-		if(indent(pushback)){
-
-			if(!pushback)
-				OUTPUT<<" ";
+		if(indent(pushback))
 			return	true;
-		}
 		char	c=(char)in_stream->get();
 		if(c==' '){
 
 			if(pushback)
 				in_stream->putback(c);
-			else
-				OUTPUT<<" ";
 			return	true;
 		}
 		in_stream->clear();
@@ -1283,7 +1271,6 @@ return_false:
 						return	false;
 		}else	if(!op(p,t))
 			return	false;
-		OUTPUT<<"("<<p.str_opcode;
 		if(p.atom.getAtomCount()){
 
 			if(!right_indent(true)){
@@ -1293,8 +1280,7 @@ return_false:
 					set_error("syntax error: missing separator/right_indent after head");
 					return	false;
 				}
-			}else
-				OUTPUT<<" ";
+			}
 		}
 		return	true;
 	}
@@ -1305,7 +1291,6 @@ return_false:
 		if(!object(p))
 			if(!op(p))
 				return	false;
-		OUTPUT<<"("<<p.str_opcode;
 		if(p.atom.getAtomCount()){
 
 			if(!right_indent(true)){
@@ -1315,8 +1300,7 @@ return_false:
 					set_error("syntax error: missing separator/right_indent after head");
 					return	false;
 				}
-			}else
-				OUTPUT<<" ";
+			}
 		}
 		return	true;
 	}
@@ -1341,10 +1325,14 @@ return_false:
 				}
 				if(count==p.atom.getAtomCount())
 					return	true;
-				goto	return_arity_error;
+				set_arity_error(p.atom.getAtomCount(),count);
+				return	false;
 			}
-			if(count>=p.atom.getAtomCount())
-				goto	return_arity_error;
+			if(count>=p.atom.getAtomCount()){
+
+				set_arity_error(p.atom.getAtomCount(),count+1);
+				return	false;
+			}
 			if(count){
 				
 				if(!_indented){
@@ -1356,13 +1344,9 @@ return_false:
 							set_error("syntax error: missing separator between 2 elements");
 							return	false;
 						}
-					}else
-						OUTPUT<<" ";
-				}else{
-
+					}
+				}else
 					_indented=false;
-					OUTPUT<<" ";
-				}
 			}
 			if(entered_pattern	&&	count==0)	//	pattern skeleton begin
 				++state.pattern_lvl;
@@ -1376,16 +1360,6 @@ return_false:
 			++count;
 		}
 		return	false;
-return_arity_error:
-		char	buffer[255];
-		std::string	s="error: got ";
-		sprintf(buffer,"%d",count);
-		s+=buffer;
-		s+=" elements, expected ";
-		sprintf(buffer,"%d",p.atom.getAtomCount());
-		s+=buffer;
-		set_error(s);
-		return	false;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1395,11 +1369,8 @@ return_arity_error:
 		bool	lbl=false;
 		std::streampos	i=in_stream->tellg();
 		std::string	l;
-		if(label(l)){
-
+		if(label(l))
 			lbl=true;
-			OUTPUT<<"lbl_"<<l<<":";
-		}
 		if(!expression_begin(indented)){
 
 			if(lbl)
@@ -1424,7 +1395,6 @@ return_arity_error:
 		}
 		if(!expression_tail(indented,p,tail_write_index,extent_index,write))
 			return	false;
-		OUTPUT<<")";
 		return	true;
 	}
 
@@ -1433,11 +1403,8 @@ return_arity_error:
 		bool	lbl=false;
 		std::streampos	i=in_stream->tellg();
 		std::string	l;
-		if(label(l)){
-
+		if(label(l))
 			lbl=true;
-			OUTPUT<<"lbl_"<<l<<":";
-		}
 		if(!expression_begin(indented)){
 
 			if(lbl)
@@ -1461,7 +1428,6 @@ return_arity_error:
 		}
 		if(!expression_tail(indented,p,tail_write_index,extent_index,write))
 			return	false;
-		OUTPUT<<")";
 		return	true;
 	}
 
@@ -1470,11 +1436,8 @@ return_arity_error:
 		std::streampos	i=in_stream->tellg();
 		bool	lbl=false;
 		std::string	l;
-		if(label(l)){
-
+		if(label(l))
 			lbl=true;
-			OUTPUT<<"lbl_"<<l<<":";
-		}
 		if(!set_begin(indented)){
 
 			if(lbl)
@@ -1484,7 +1447,6 @@ return_arity_error:
 		if(lbl)
 			local_references[l]=Reference(write_index,Class(SET));
 		indent(false);
-		OUTPUT<<"[";
 		uint16	content_write_index=0;
 		if(write){
 
@@ -1500,7 +1462,6 @@ return_arity_error:
 
 			if(set_end(indented)){
 
-				OUTPUT<<"]";
 				if(!count){
 
 					set_error(" syntax error: use |[] for empty sets");
@@ -1519,13 +1480,9 @@ return_arity_error:
 							set_error("syntax error: missing separator between 2 elements");
 							return	false;
 						}
-					}else
-						OUTPUT<<" ";
-				}else{
-
+					}
+				}else
 					_indented=false;
-					OUTPUT<<" ";
-				}
 			}
 			if(!read_any(_indented,false,NULL,content_write_index+count,extent_index,write)){
 			
@@ -1544,11 +1501,8 @@ return_arity_error:
 		std::streampos	i=in_stream->tellg();
 		bool	lbl=false;
 		std::string	l;
-		if(label(l)){
-
+		if(label(l))
 			lbl=true;
-			OUTPUT<<"lbl_"<<l<<":";
-		}
 		if(!set_begin(indented)){
 
 			if(lbl)
@@ -1558,7 +1512,6 @@ return_arity_error:
 		if(lbl)
 			local_references[l]=Reference(write_index,p);
 		indent(false);
-		OUTPUT<<"[";
 		uint16	content_write_index=0;
 		if(write){
 
@@ -1594,8 +1547,7 @@ return_arity_error:
 
 					set_error(" syntax error: use |[] for empty sets");
 					return	false;
-				}else
-					OUTPUT<<"]";
+				}
 				if(count==arity	||	arity==0xFFFF)
 					return	true;
 				if(state.no_arity_check){
@@ -1603,10 +1555,14 @@ return_arity_error:
 					state.no_arity_check=false;
 					return	true;
 				}
-				goto	return_arity_error;
+				set_arity_error(arity,count);
+				return	false;
 			}
-			if(count>=arity)
-				goto	return_arity_error;
+			if(count>=arity){
+
+				set_arity_error(arity,count+1);
+				return	false;
+			}
 			if(count){
 				
 				if(!_indented){
@@ -1618,13 +1574,9 @@ return_arity_error:
 							set_error("syntax error: missing separator between 2 elements");
 							return	false;
 						}
-					}else
-						OUTPUT<<" ";
-				}else{
-
+					}
+				}else
 					_indented=false;
-					OUTPUT<<" ";
-				}
 			}
 			bool	r;
 			switch(p.use_as){
@@ -1651,16 +1603,6 @@ return_arity_error:
 		}
 		in_stream->clear();
 		in_stream->seekg(i);
-		return	false;
-return_arity_error:
-		char	buffer[255];
-		std::string	s="error: got ";
-		sprintf(buffer,"%d",count);
-		s+=buffer;
-		s+=" elements, expected ";
-		sprintf(buffer,"%d",arity);
-		s+=buffer;
-		set_error(s);
 		return	false;
 	}
 
@@ -1754,7 +1696,6 @@ return_arity_error:
 		float32	n;
 		if(number(n)){
 
-			OUTPUT<<n;
 			if(write)
 				current_object->code[write_index]=Atom::Float(n);
 			return	true;
@@ -1787,7 +1728,6 @@ return_arity_error:
 		bool	b;
 		if(boolean(b)){
 
-			OUTPUT<<b;
 			if(write)
 				current_object->code[write_index]=Atom::Boolean(b);
 			return	true;
@@ -1822,7 +1762,6 @@ return_arity_error:
 		uint64	ts;
 		if(timestamp(ts)){
 
-			OUTPUT<<ts;
 			if(write){
 
 				current_object->code[write_index]=Atom::IPointer(extent_index);
@@ -1860,7 +1799,6 @@ return_arity_error:
 		std::string	st;
 		if(str(st)){
 
-			OUTPUT<<"\""<<st<<"\"";
 			if(write){
 
 				uint16	l=(uint16)st.length();
@@ -1912,7 +1850,6 @@ return_arity_error:
 		uint32	h;
 		if(hex(h)	&&	Atom(h).getDescriptor()==Atom::NODE){
 
-			OUTPUT<<std::hex<<h;
 			if(write)
 				current_object->code[write_index]=Atom::Atom(h);
 			return	true;
@@ -1947,7 +1884,6 @@ return_arity_error:
 		uint32	h;
 		if(hex(h)	&&	Atom(h).getDescriptor()==Atom::DEVICE){
 
-			OUTPUT<<std::hex<<h;
 			if(write)
 				current_object->code[write_index]=Atom::Atom(h);
 			return	true;
@@ -1981,7 +1917,6 @@ return_arity_error:
 		Class	_p;
 		if(function(_p)){	//	TODO: _p shall be used to parse the args in the embedding expression
 
-			OUTPUT<<_p.str_opcode;
 			if(write)
 				current_object->code[write_index]=_p.atom;
 			return	true;
@@ -2092,7 +2027,6 @@ return_arity_error:
 		std::streampos	i=in_stream->tellg();
 		if(match_symbol("|[]",false)){
 
-			OUTPUT<<"|[]";
 			if(write)
 				current_object->code[write_index]=Atom::View();
 			return	true;
@@ -2111,7 +2045,6 @@ return_arity_error:
 		std::streampos	i=in_stream->tellg();
 		if(match_symbol("|[]",false)){
 
-			OUTPUT<<"mks";
 			if(write)
 				current_object->code[write_index]=Atom::Mks();
 			return	true;
@@ -2130,7 +2063,6 @@ return_arity_error:
 		std::streampos	i=in_stream->tellg();
 		if(match_symbol("|[]",false)){
 
-			OUTPUT<<"vws";
 			if(write)
 				current_object->code[write_index]=Atom::Vws();
 			return	true;
@@ -2145,7 +2077,6 @@ return_arity_error:
 
 		if(nil()){
 
-			OUTPUT<<"nil";
 			if(write)
 				current_object->code[write_index]=Atom::Nil();
 			return	true;
@@ -2158,7 +2089,6 @@ return_arity_error:
 		std::streampos	i=in_stream->tellg();
 		if(match_symbol("|[]",false)){
 
-			OUTPUT<<"|[]";
 			if(write){
 
 				current_object->code[write_index]=Atom::IPointer(extent_index);
@@ -2174,7 +2104,6 @@ return_arity_error:
 
 		if(nil_nb()){
 
-			OUTPUT<<"|nb";
 			if(write)
 				current_object->code[write_index]=Atom::UndefinedFloat();
 			return	true;
@@ -2186,7 +2115,6 @@ return_arity_error:
 
 		if(nil_us()){
 
-			OUTPUT<<"|us";
 			if(write){
 
 				current_object->code[write_index]=Atom::IPointer(extent_index);
@@ -2203,7 +2131,6 @@ return_arity_error:
 
 		if(forever()){
 
-			OUTPUT<<"forever";
 			if(write){
 
 				current_object->code[write_index]=Atom::IPointer(extent_index);
@@ -2220,7 +2147,6 @@ return_arity_error:
 
 		if(nil_nid()){
 
-			OUTPUT<<"|nid";
 			if(write)
 				current_object->code[write_index]=Atom::UndefinedNode();
 			return	true;
@@ -2232,7 +2158,6 @@ return_arity_error:
 
 		if(nil_did()){
 
-			OUTPUT<<"|did";
 			if(write)
 				current_object->code[write_index]=Atom::UndefinedDevice();
 			return	true;
@@ -2244,7 +2169,6 @@ return_arity_error:
 
 		if(nil_fid()){
 
-			OUTPUT<<"|fid";
 			if(write)
 				current_object->code[write_index]=Atom::UndefinedDeviceFunction();
 			return	true;
@@ -2256,7 +2180,6 @@ return_arity_error:
 
 		if(nil_bl()){
 
-			OUTPUT<<"|bl";
 			if(write)
 				current_object->code[write_index]=Atom::UndefinedBoolean();
 			return	true;
@@ -2268,7 +2191,6 @@ return_arity_error:
 
 		if(nil_st()){
 
-			OUTPUT<<"|st";
 			if(write)
 				current_object->code[write_index]=Atom::UndefinedString();
 			return	true;
@@ -2283,7 +2205,6 @@ return_arity_error:
 
 			if(state.pattern_lvl){
 			
-				OUTPUT<<"var_"<<v<<":";
 				local_references[v]=Reference(write_index,p);
 				if(write)
 					current_object->code[write_index]=Atom::Wildcard();	//	useless in skeleton expressions (already filled up in expression_head); usefull when the skeleton itself is a variable
@@ -2374,7 +2295,6 @@ return_arity_error:
 
 			if(state.pattern_lvl){
 
-				OUTPUT<<":";
 				if(write)
 					current_object->code[write_index]=Atom::Wildcard();
 				return	true;
@@ -2393,7 +2313,6 @@ return_arity_error:
 
 			if(state.pattern_lvl){
 
-				OUTPUT<<"::";
 				if(write)
 					current_object->code[write_index]=Atom::TailWildcard();
 				return	true;

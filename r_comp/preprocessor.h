@@ -76,6 +76,8 @@ namespace	r_comp{
 	};
 
 	class	dll_export	Preprocessor{
+	private:
+		void	initialize(DefinitionSegment	*definition_segment);
 	public:
 		RepliStruct	*root;
 
@@ -90,6 +92,9 @@ namespace	r_comp{
 	//	For development only: hard codes the basic classes, does not expands any macros.
 	//	The output stream is the same as the input stream.
 	class	dll_export	HardCodedPreprocessor{
+	friend	class	Preprocessor;
+	private:
+		void	initialize(DefinitionSegment	*definition_segment);
 	public:
 		HardCodedPreprocessor();
 		~HardCodedPreprocessor();

@@ -5,7 +5,7 @@
 //#include	"../r_exec/Mem.h"
 
 #include	<iostream>
-
+//#define		PREPROCESSOR_TEST
 
 using	namespace	r_comp;
 
@@ -20,26 +20,32 @@ int32	main(int	argc,char	**argv){
 		return	1;
 	}
 
-	//	for decompiling
-	std::ostringstream	decompiled_code;
-
-	//	compile the source code and show the result
 	DefinitionSegment		definition_segment;	//	preprocessor output
+	std::ostringstream		preprocessed_code_out;
+#ifdef	PREPROCESSOR_TEST
+	Preprocessor			preprocessor;
+#else
 	HardCodedPreprocessor	preprocessor;
-	std::ostringstream		preprocessed_code;
-	if(!preprocessor.process(&definition_segment,&source_code,&preprocessed_code,&error)){
+#endif
+	if(!preprocessor.process(&definition_segment,&source_code,&preprocessed_code_out,&error)){
 
 		std::cout<<error;
 		return	2;
 	}
-	r_comp::Image	*_image=new	r_comp::Image(&definition_segment);	//	compiler input
-	r_code::Image	*image;											//	compiler output, decompiler input, r_exec::Mem input
-	Compiler		compiler;
-	Decompiler		decompiler;
-	if(!compiler.compile(&source_code,_image,image,&error)){
+	source_code.close();
+#ifdef	PREPROCESSOR_TEST
+	std::cout<<preprocessed_code_out.str()<<std::endl<<std::endl;
+#endif
+	std::istringstream	preprocessed_code_in(preprocessed_code_out.str());
+	std::cout<<preprocessed_code_in.str()<<std::endl;
+	r_comp::Image		*_image=new	r_comp::Image(&definition_segment);	//	compiler input
+	r_code::Image		*image;											//	compiler output, decompiler input, r_exec::Mem input
+	Compiler			compiler;
+	if(!compiler.compile(&preprocessed_code_in,_image,image,&error)){
 
-		std::cout<<error;
-		source_code.close();
+		std::streampos	i=preprocessed_code_in.tellg();
+		std::cout.write(preprocessed_code_in.str().c_str(),i);
+		std::cout<<" <- "<<error;
 		delete	image;
 		delete	_image;
 		return	3;
@@ -67,9 +73,8 @@ int32	main(int	argc,char	**argv){
 
 		delete	_image;
 		_image=new	r_comp::Image(&definition_segment);
-
-		//	Create the mem with objects defined in ram_objects
 #if 0
+		//	Create the mem with objects defined in ram_objects
 		r_exec::Mem* mem = r_exec::Mem::create(
 			classes,
 			*ram_objects.as_std(),
@@ -80,8 +85,9 @@ int32	main(int	argc,char	**argv){
 		//	Loading code from memory to an r_comp::Image
 		*_image<<ram_objects;	//	all at once; to load one object obj, use: *_image<<obj;	//	this recursively loads all obj dependencies
 #endif
+		Decompiler			decompiler;
+		std::ostringstream	decompiled_code;
 		//decompiler.decompile(image,&decompiled_code);	//	this is to be called when the image comes from disk/network: not ready yet
-
 		decompiler.decompile(_image,&decompiled_code);	//	uses the direct output form the compiler (instead of the r_code::Image): we can do that since there's no streaming of the image (disk/network), and _image is available
 		std::cout<<"\n\n DECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 		delete	image;

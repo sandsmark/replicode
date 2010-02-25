@@ -52,6 +52,7 @@ namespace	r_comp{
 		void	restore_state(State	s);	//	called after failing to read an expression
 
 		void	set_error(std::string	s);
+		void	set_arity_error(uint16	expected,uint16	got);
 
 		UNORDERED_MAP<std::string,Reference>	local_references;	//	labels and variables declared inside objects (cleared before parsing each sys-object): translate to value pointers
 		UNORDERED_MAP<std::string,Reference>	global_references;	//	labels declared outside sys-objects. translate to reference pointers

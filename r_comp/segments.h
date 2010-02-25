@@ -18,14 +18,14 @@ namespace	r_comp{
 	};
 
 	//	All classes below map components of r_code::Image into r_comp::Image.
-	//	Bothe images are equivalent, the latter being easier to work with (uses vectors instead of a contiguous structure, that is r_code::Image::data).
-	//	All read(word32*)/write(word32) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
+	//	Both images are equivalent, the latter being easier to work with (uses vectors instead of a contiguous structure, that is r_code::Image::data).
+	//	All read(word32*,uint32)/write(word32*) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
 
 	class	dll_export	DefinitionSegment{
 	public:
 		DefinitionSegment();
 
-		UNORDERED_MAP<std::string,Class>	classes;
+		UNORDERED_MAP<std::string,Class>	classes;	//	non-sys classes, operators and device functions
 		UNORDERED_MAP<std::string,Class>	sys_classes;
 
 		r_code::vector<std::string>	class_names;		//	classes and sys-classes; does not include set classes
