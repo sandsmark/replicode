@@ -30,6 +30,7 @@ namespace	r_comp{
 
 		void	write(word32	*storage);
 		void	read(word32		*storage);
+		uint32	getSize();
 	};
 }
 

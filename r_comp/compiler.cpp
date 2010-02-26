@@ -96,6 +96,11 @@ namespace	r_comp{
 
 		std::string	l;
 		while(indent(false));
+		char	c=(char)in_stream->get();
+		if(c!=-1)
+			in_stream->putback(c);
+		else
+			return	true;
 		if(label(l))
 			lbl=true;
 		if(!expression_begin(indented)){
@@ -151,12 +156,15 @@ namespace	r_comp{
 		if(!match_symbol("|[]",false)){
 
 			in_stream->seekg(i);
-			if(!set_begin(indented))
+			if(!set_begin(indented)){
+
+				set_error(" error: expected a view set");
 				return	false;
+			}
 
 			indent(false);
 
-			current_class=*current_class.get_member_class(_image->definition_segment,"vw");
+			current_class=*current_class.get_member_class(&_image->definition_segment,"vw");
 			current_class.use_as=StructureMember::CLASS;
 
 			uint16	count=0;
@@ -207,7 +215,7 @@ namespace	r_comp{
 			}
 		}
 
-		sys_object->trace();//uint32	a;std::cin>>a;
+		//sys_object->trace();//uint32	a;std::cin>>a;
 
 		_image->addObject(sys_object);
 		return	true;
@@ -215,7 +223,7 @@ namespace	r_comp{
 
 	bool	Compiler::read(const	StructureMember	&m,bool	&indented,bool	enforce,uint16	write_index,uint16	&extent_index,bool	write){
 
-		if(Class	*p=m.get_class(_image->definition_segment)){
+		if(Class	*p=m.get_class(&_image->definition_segment)){
 
 			p->use_as=m.getIteration();
 			return	(this->*m.read())(indented,enforce,p,write_index,extent_index,write);
@@ -840,7 +848,7 @@ return_false:
 			ReturnType	type;
 			while(member(m)){
 
-				if(!p->get_member_index(_image->definition_segment,m,index,_p)){
+				if(!p->get_member_index(&_image->definition_segment,m,index,_p)){
 
 					set_error(" error: "+m+" is not a member of "+p->str_opcode);
 					break;
@@ -891,7 +899,7 @@ return_false:
 				Class	*_p;
 				while(member(m)){
 
-					if(!p->get_member_index(_image->definition_segment,m,index,_p)){
+					if(!p->get_member_index(&_image->definition_segment,m,index,_p)){
 
 						set_error(" error: "+m+" is not a member of "+p->str_opcode);
 						break;
@@ -942,7 +950,7 @@ return_false:
 				bool	first_member=true;
 				while(member(m)){
 
-					if(!p->get_member_index(_image->definition_segment,m,index,_p)){
+					if(!p->get_member_index(&_image->definition_segment,m,index,_p)){
 
 						set_error(" error: "+m+" is not a member of "+p->str_opcode);
 						break;
@@ -1134,8 +1142,8 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment->classes.find(s);
-		if(it==_image->definition_segment->classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment.classes.find(s);
+		if(it==_image->definition_segment.classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1166,8 +1174,8 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment->sys_classes.find(s);
-		if(it==_image->definition_segment->sys_classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment.sys_classes.find(s);
+		if(it==_image->definition_segment.sys_classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1201,8 +1209,8 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment->sys_classes.find("mk."+s);
-		if(it==_image->definition_segment->sys_classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment.sys_classes.find("mk."+s);
+		if(it==_image->definition_segment.sys_classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1220,8 +1228,8 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment->classes.find(s);
-		if(it==_image->definition_segment->classes.end()	|| (t!=ANY	&&	it->second.type!=ANY	&&	it->second.type!=t)){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment.classes.find(s);
+		if(it==_image->definition_segment.classes.end()	|| (t!=ANY	&&	it->second.type!=ANY	&&	it->second.type!=t)){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1250,8 +1258,8 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment->classes.find(s);
-		if(it==_image->definition_segment->classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment.classes.find(s);
+		if(it==_image->definition_segment.classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1309,7 +1317,7 @@ return_false:
 
 		uint16	count=0;
 		bool	_indented=false;
-		bool	entered_pattern=p.is_pattern(_image->definition_segment);
+		bool	entered_pattern=p.is_pattern(&_image->definition_segment);
 		if(write	&&	state.pattern_lvl)	//	fill up with wildcards that will be overwritten up to ::
 			for(uint16	j=write_index;j<write_index+p.atom.getAtomCount();++j)
 				current_object->code[j]=Atom::Wildcard();

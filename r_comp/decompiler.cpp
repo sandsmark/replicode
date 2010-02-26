@@ -46,15 +46,6 @@ namespace	r_comp{
 		return	it->second;
 	}
 
-	void	Decompiler::decompile(r_code::Image	*image,std::ostringstream	*stream){
-
-		out_stream=new	OutStream(stream);
-		_image=new	r_comp::Image();
-		*_image<<image;
-		decompile(_image,stream);
-		delete	_image;
-	}
-
 	void	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream){
 
 		out_stream=new	OutStream(stream);
@@ -81,7 +72,7 @@ namespace	r_comp{
 			case	3:	s="stdout";break;
 			default:
 				sprintf(buffer,"%d",last_object_ID++);
-				s=_image->definition_segment->getClass(current_object->code[0].asOpcode())->str_opcode;
+				s=_image->definition_segment.getClass(current_object->code[0].asOpcode())->str_opcode;
 				s+=buffer;
 				break;
 			}
@@ -137,11 +128,11 @@ namespace	r_comp{
 
 		switch(current_object->code[read_index].getDescriptor()){
 		case	Atom::OPERATOR:
-			*out_stream<<_image->definition_segment->operator_names[current_object->code[read_index].asOpcode()];
+			*out_stream<<_image->definition_segment.operator_names[current_object->code[read_index].asOpcode()];
 			break;
 		case	Atom::OBJECT:
 		case	Atom::MARKER:
-			*out_stream<<_image->definition_segment->class_names[current_object->code[read_index].asOpcode()];
+			*out_stream<<_image->definition_segment.class_names[current_object->code[read_index].asOpcode()];
 			break;
 		default:
 			*out_stream<<"undefined-class";
@@ -317,7 +308,7 @@ namespace	r_comp{
 
 					std::string	member_name;
 					atom=current_object->code[index+1+i];	//	atom is an internal pointer appearing after the leading atom
-					Class	embedding_class=_image->definition_segment->classes_by_opcodes[opcode];	//	class defining the member
+					Class	embedding_class=_image->definition_segment.classes_by_opcodes[opcode];	//	class defining the member
 					member_name=embedding_class.get_member_name(atom.asIndex());
 					*out_stream<<'.'<<member_name;	
 					if(i<member_count){	//	not the last member, point to next structure
@@ -325,7 +316,7 @@ namespace	r_comp{
 						if(member_name=="vw"){	//	special case: no view structure in the code, vw is just a place holder; vw is the second to last member: write the last member and exit
 
 							atom=current_object->code[index+i+2];	//	atom is the last internal pointer
-							member_name=embedding_class.get_member_class(_image->definition_segment,"vw")->get_member_name(atom.asIndex());
+							member_name=embedding_class.get_member_class(&_image->definition_segment,"vw")->get_member_name(atom.asIndex());
 							*out_stream<<'.'<<member_name;
 							break;
 						}else{	//	regular case: the member points to a structure embedded in the code
@@ -399,7 +390,7 @@ namespace	r_comp{
 			if(a.readsAsNil())
 				out_stream->push("|fid",read_index);
 			else
-				out_stream->push(_image->definition_segment->function_names[a.asOpcode()],read_index);
+				out_stream->push(_image->definition_segment.function_names[a.asOpcode()],read_index);
 			break;
 		case	Atom::VIEW:
 			out_stream->push("vw",read_index);	//	to be consistent with hand-crafted source code, shall be written |[]

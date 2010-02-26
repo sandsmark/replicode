@@ -35,8 +35,7 @@ namespace	r_comp{
 	public:
 		Decompiler();
 		~Decompiler();
-		void	decompile(r_code::Image		*image,std::ostringstream	*stream);
-		void	decompile(r_comp::Image		*image,std::ostringstream	*stream);	//	for development only
+		void	decompile(r_comp::Image		*image,std::ostringstream	*stream);
 	};
 }
 

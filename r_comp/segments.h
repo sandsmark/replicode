@@ -22,6 +22,13 @@ namespace	r_comp{
 	//	All read(word32*,uint32)/write(word32*) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
 
 	class	dll_export	DefinitionSegment{
+	private:
+		uint32	getClassArraySize();
+		uint32	getClassesSize();
+		uint32	getSysClassesSize();
+		uint32	getClassNamesSize();
+		uint32	getOperatorNamesSize();
+		uint32	getFunctionNamesSize();
 	public:
 		DefinitionSegment();
 
@@ -105,13 +112,13 @@ namespace	r_comp{
 		UNORDERED_MAP<Object	*,uint32>	ptrs_to_indices;	//	used for >> in memory
 		void	buildReferences(SysObject	*sys_object,Object	*object,uint32	object_index);
 	public:
-		DefinitionSegment	*definition_segment;
+		DefinitionSegment	definition_segment;
 		ObjectMap			object_map;
 		CodeSegment			code_segment;
 		RelocationSegment	relocation_segment;
 
 		Image();
-		Image(DefinitionSegment	*definition_segment);
+		~Image();
 
 		void	addObject(SysObject	*object);
 		

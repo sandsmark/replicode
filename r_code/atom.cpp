@@ -328,6 +328,16 @@ namespace	r_code{
 				std::cout<<(char)(atom>>16	&&	0x000000FF);
 				std::cout<<(char)(atom>>8	&&	0x000000FF);
 				std::cout<<(char)(atom>>24	&&	0x000000FF);
+				std::string	s;
+				char	*content=(char	*)&atom;
+				for(uint32	i=0;i<4;++i){
+
+					if(content[i]!='\0')
+						s+=content[i];
+					else
+						break;
+				}
+				std::cout<<s.c_str();
 			}else
 				std::cout<<"undef";
 			return;

@@ -77,6 +77,10 @@ namespace	r_code{
 		word32	*getDefSegment()	const;
 		uint32	getDefSegmentSize()	const;
 	public:
+		static	uint32	GetSize(const	std::string	&s);	//	returns the number of word32 need to encode the string
+		static	void	Write(word32	*data,const	std::string	&s);
+		static	void	Read(word32	*data,std::string	&s);
+		
 		Image();
 		~Image();
 

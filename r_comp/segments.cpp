@@ -30,16 +30,214 @@ namespace	r_comp{
 	}
 	
 	void	DefinitionSegment::write(word32	*data){
-		//	TODO
+		
+		data[0]=classes_by_opcodes.size();
+		uint32	i;
+		uint32	offset=1;
+		for(i=0;i<classes_by_opcodes.size();++i){
+
+			classes_by_opcodes[i].write(data+offset);
+			offset+=classes_by_opcodes[i].getSize();
+		}
+
+		data[offset++]=classes.size();
+		UNORDERED_MAP<std::string,Class>::iterator	it=classes.begin();
+		for(;it!=classes.end();++it){
+
+			r_code::Image::Write(data+offset,it->first);
+			offset+=r_code::Image::GetSize(it->first);
+			data[offset]=it->second.atom.asOpcode();
+			offset++;
+		}
+
+		data[offset++]=sys_classes.size();
+		it=sys_classes.begin();
+		for(;it!=sys_classes.end();++it){
+
+			r_code::Image::Write(data+offset,it->first);
+			offset+=r_code::Image::GetSize(it->first);
+			data[offset]=it->second.atom.asOpcode();
+			offset++;
+		}
+
+		data[offset++]=class_names.size();
+		for(i=0;i<class_names.size();++i){
+
+			r_code::Image::Write(data+offset,class_names[i]);
+			offset+=r_code::Image::GetSize(class_names[i]);
+		}
+
+		data[offset++]=operator_names.size();
+		for(i=0;i<operator_names.size();++i){
+
+			r_code::Image::Write(data+offset,operator_names[i]);
+			offset+=r_code::Image::GetSize(operator_names[i]);
+		}
+
+		data[offset++]=function_names.size();
+		for(i=0;i<function_names.size();++i){
+
+			r_code::Image::Write(data+offset,function_names[i]);
+			offset+=r_code::Image::GetSize(function_names[i]);
+		}
 	}
 		
 	void	DefinitionSegment::read(word32	*data,uint32	size){
-		//	TODO
+		
+		uint32	class_count=data[0];
+		uint32	i;
+		uint32	offset=1;
+		for(i=0;i<class_count;++i){
+
+			Class	c;
+			c.read(data+offset);
+			classes_by_opcodes.push_back(c);
+			offset+=c.getSize();
+		}
+
+		uint32	classes_count=data[offset++];
+		for(i=0;i<classes_count;++i){
+
+			std::string	s;
+			r_code::Image::Read(data+offset,s);
+			offset+=r_code::Image::GetSize(s);
+			classes[s]=classes_by_opcodes[data[offset++]];
+		}
+
+		uint32	sys_classes_count=data[offset++];
+		for(i=0;i<sys_classes_count;++i){
+
+			std::string	s;
+			r_code::Image::Read(data+offset,s);
+			offset+=r_code::Image::GetSize(s);
+			sys_classes[s]=classes_by_opcodes[data[offset++]];
+		}
+
+		uint32	class_names_count=data[offset++];
+		for(i=0;i<class_names_count;++i){
+
+			std::string	s;
+			r_code::Image::Read(data+offset,s);
+			class_names.push_back(s);
+			offset+=r_code::Image::GetSize(s);
+		}
+
+		uint32	operator_names_count=data[offset++];
+		for(i=0;i<operator_names_count;++i){
+
+			std::string	s;
+			r_code::Image::Read(data+offset,s);
+			operator_names.push_back(s);
+			offset+=r_code::Image::GetSize(s);
+		}
+
+		uint32	function_names_count=data[offset++];
+		for(i=0;i<function_names_count;++i){
+
+			std::string	s;
+			r_code::Image::Read(data+offset,s);
+			function_names.push_back(s);
+			offset+=r_code::Image::GetSize(s);
+		}
 	}
 
 	uint32	DefinitionSegment::getSize(){
 
-		return	0;	//	TODO
+		return	getClassArraySize()+
+				getClassesSize()+
+				getSysClassesSize()+
+				getClassNamesSize()+
+				getOperatorNamesSize()+
+				getFunctionNamesSize();
+	}
+
+	//	RAM layout:
+	//	- class array
+	//		- number of elements
+	//		- list of classes:
+	//			- atom
+	//			- string (str_opcode)
+	//			- return type
+	//			- usage
+	//			- things to read:
+	//				- number of elements
+	//				- list of structure members:
+	//					- ID of a Compiler::*_Read function
+	//					- return type
+	//					- string (_class)
+	//					- iteration
+	//	- classes:
+	//		- number of elements
+	//		- list of pairs:
+	//			- string
+	//			- index of a class in the class array
+	//	- sys_classes:
+	//		- number of elements
+	//		- list of pairs:
+	//			- string
+	//			- index of a class in the class array
+	//	- class names:
+	//		- number of elements
+	//		- list of strings
+	//	- operator names:
+	//		- number of elements
+	//		- list of strings
+	//	- function names:
+	//		- number of elements
+	//		- list of strings
+	//
+	//	String layout:
+	//		- size in word32
+	//		- list of words: contain the charaacters; the last one is \0; some of the least significant bytes of the last word my be empty
+
+	uint32	DefinitionSegment::getClassArraySize(){
+
+		uint32	size=1;	//	size of the array
+		for(uint32	i=0;i<classes_by_opcodes.size();++i)
+			size+=classes_by_opcodes[i].getSize();
+		return	size;
+	}
+
+	uint32	DefinitionSegment::getClassesSize(){
+
+		uint32	size=1;	//	size of the hash table
+		UNORDERED_MAP<std::string,Class>::iterator	it=classes.begin();
+		for(;it!=classes.end();++it)
+			size+=r_code::Image::GetSize(it->first)+1;	//	+1: index to the class in the class array
+		return	size;
+	}
+
+	uint32	DefinitionSegment::getSysClassesSize(){
+
+		uint32	size=1;	//	size of the hash table
+		UNORDERED_MAP<std::string,Class>::iterator	it=sys_classes.begin();
+		for(;it!=sys_classes.end();++it)
+			size+=r_code::Image::GetSize(it->first)+1;	//	+1: index to the class in the class array
+		return	size;
+	}
+
+	uint32	DefinitionSegment::getClassNamesSize(){
+
+		uint32	size=1;	//	size of the vector
+		for(uint32	i=0;i<class_names.size();++i)
+			size+=r_code::Image::GetSize(class_names[i]);
+		return	size;
+	}
+
+	uint32	DefinitionSegment::getOperatorNamesSize(){
+
+		uint32	size=1;	//	size of the vector
+		for(uint32	i=0;i<operator_names.size();++i)
+			size+=r_code::Image::GetSize(operator_names[i]);
+		return	size;
+	}
+
+	uint32	DefinitionSegment::getFunctionNamesSize(){
+
+		uint32	size=1;	//	size of the vector
+		for(uint32	i=0;i<function_names.size();++i)
+			size+=r_code::Image::GetSize(function_names[i]);
+		return	size;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -187,12 +385,12 @@ namespace	r_comp{
 	Image::Image():map_offset(0){
 	}
 
-	Image::Image(DefinitionSegment	*definition_segment):map_offset(0),definition_segment(definition_segment){
+	Image::~Image(){
 	}
 
 	Image	&Image::operator	>>(r_code::Image *image){
 
-		image->def_size=definition_segment->getSize();
+		image->def_size=definition_segment.getSize();
 		image->map_size=object_map.getSize();
 		image->code_size=code_segment.getSize();
 		image->reloc_size=relocation_segment.getSize();
@@ -201,7 +399,7 @@ namespace	r_comp{
 
 		object_map.shift(image->def_size+image->map_size);
 
-		definition_segment->write(image->data);
+		definition_segment.write(image->data);
 		object_map.write(image->data+image->def_size);
 		code_segment.write(image->data+image->def_size+image->map_size);
 		relocation_segment.write(image->data+image->def_size+image->map_size+image->code_size);
@@ -211,7 +409,7 @@ namespace	r_comp{
 
 	Image	&Image::operator	<<(r_code::Image *image){
 
-		definition_segment->read(image->data,image->def_size);
+		definition_segment.read(image->data,image->def_size);
 		object_map.read(image->data+image->def_size,image->map_size);
 		code_segment.read(image->data+image->def_size+image->map_size,image->map_size);
 		relocation_segment.read(image->data+image->def_size+image->map_size+image->code_size);

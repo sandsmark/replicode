@@ -37,12 +37,28 @@ namespace	r_comp{
 			SET=2			//	iterate using the class in read_set
 		}Iteration;
 	private:
+		typedef	enum{
+			R_ANY=0,
+			R_NUMBER=1,
+			R_TIMESTAMP=2,
+			R_BOOLEAN=3,
+			R_STRING=4,
+			R_NODE=5,
+			R_DEVICE=6,
+			R_FUNCTION=7,
+			R_EXPRESSION=8,
+			R_SET=9,
+			R_VIEW=10,
+			R_MKS=11,
+			R_VWS=12
+		}ReadID;	//	used for serialization
 		_Read		_read;
 		ReturnType	type;
 		std::string	_class;		//	when r==read_set or read_expression, _class specifies the class of said set/expression if one is targeted in particular; otherwise _class==""
 		Iteration	iteration;	//	indicates how to use the _class to read the elements of the set: as an enumeration of types, as a class of expression, or as an enumeration of types to use for reading subsets
 	public:
 		std::string	name;	//	unused for anything but set/object/marker classes
+		StructureMember();
 		StructureMember(_Read		r,			//	compiler's read function
 						std::string	m,			//	member's name
 						std::string	p="",		//	class name of return type if r==Compiler::read_expression or name of the structure to enumerate eleemnts if r==Compiler::read_set
@@ -52,6 +68,10 @@ namespace	r_comp{
 		bool		used_as_expression()	const;
 		Iteration	getIteration()	const;
 		_Read		read()	const;
+
+		void	write(word32	*storage)	const;
+		void	read(word32		*storage);
+		uint32	getSize();
 	};
 }
 
