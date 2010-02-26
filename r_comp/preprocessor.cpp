@@ -42,7 +42,7 @@ uint32	RepliStruct::getIndent(std::istream	*stream){
 
 int32	RepliStruct::parse(std::istream *stream,uint32	&curIndent,uint32	&prevIndent,int32	paramExpect){
 
-	char c = 0, lastc;
+	char c = 0, lastc = 0, lastcc, tc;
 	std::string str, label;
 	RepliStruct* subStruct;
 
@@ -53,6 +53,7 @@ int32	RepliStruct::parse(std::istream *stream,uint32	&curIndent,uint32	&prevInde
 	bool expectSet = false;
 
 	while (!stream->eof()) {
+		lastcc = lastc;
 		lastc = c;
 		c = stream->get();
 	//	printf("%c", c);
@@ -81,7 +82,7 @@ int32	RepliStruct::parse(std::istream *stream,uint32	&curIndent,uint32	&prevInde
 			case 13:
 				// remain inComment?
 				if (inComment) {
-					if (lastc == ' ')
+					if ((lastc == ' ') || ( (lastc == '.') && (lastcc == '.') ) )
 						continue; // continue comment on next line
 					else
 						inComment = false; // end comment
@@ -148,7 +149,7 @@ int32	RepliStruct::parse(std::istream *stream,uint32	&curIndent,uint32	&prevInde
 				else {
 					// act as if we met a space
 					if (str.size() > 0) {
-						if ((cmd.size() > 0) || (type == Set)) {
+						if ((cmd.size() > 0) || (type == Set) || (type == Root)) {
 							subStruct = new RepliStruct(Atom);
 							subStruct->parent = this;
 							args.push_back(subStruct);
@@ -325,7 +326,7 @@ int32	RepliStruct::parse(std::istream *stream,uint32	&curIndent,uint32	&prevInde
 				if (stream->peek() == ']') {
 					stream->get(); // read the ]
 					// if we have a <CR> or <LF> next we may have a line indent set
-					if (stream->peek() < 32)
+					if ( ((tc=stream->peek()) < 32) || (tc == ';') )
 						expectSet = true;
 					else {
 						// this could be a xxx:[] or xxx[]
