@@ -69,7 +69,7 @@ namespace	r_comp{
 			default:
 				if(in_stream->eof())
 					return	true;
-				if(!compile()){
+				if(!read_sys_object()){
 
 					delete	_image;
 					return	false;
@@ -86,7 +86,7 @@ namespace	r_comp{
 		return	true;
 	}
 
-	bool	Compiler::compile(){
+	bool	Compiler::read_sys_object(){
 
 		local_references.clear();
 		bool	indented=false;
@@ -165,7 +165,7 @@ namespace	r_comp{
 			indent(false);
 
 			current_class=*current_class.get_member_class(&_image->definition_segment,"vw");
-			current_class.use_as=StructureMember::CLASS;
+			current_class.use_as=StructureMember::I_CLASS;
 
 			uint16	count=0;
 			bool	_indented=false;
@@ -1525,7 +1525,7 @@ return_false:
 
 			current_object->code[write_index]=Atom::IPointer(extent_index);
 			uint16	element_count;
-			if(p.atom.getDescriptor()==Atom::S_SET	&&	p.use_as!=StructureMember::SET){
+			if(p.atom.getDescriptor()==Atom::S_SET	&&	p.use_as!=StructureMember::I_SET){
 
 				element_count=p.atom.getAtomCount();
 				current_object->code[extent_index++]=p.atom;
@@ -1540,7 +1540,7 @@ return_false:
 		uint16	count=0;
 		bool	_indented=false;
 		uint16	arity=0xFFFF;
-		if(p.use_as==StructureMember::CLASS){	//	undefined arity for unstructured sets
+		if(p.use_as==StructureMember::I_CLASS){	//	undefined arity for unstructured sets
 		
 			arity=p.atom.getAtomCount();
 			if(write)	//	fill up with wildcards that will be overwritten up to ::
@@ -1588,17 +1588,17 @@ return_false:
 			}
 			bool	r;
 			switch(p.use_as){
-			case	StructureMember::EXPRESSION:
+			case	StructureMember::I_EXPRESSION:
 				r=read_expression(_indented,true,&p,content_write_index+count,extent_index,write);
 				break;
-			case	StructureMember::SET:
+			case	StructureMember::I_SET:
 				{
 				Class	_p=p;
-				_p.use_as=StructureMember::CLASS;
+				_p.use_as=StructureMember::I_CLASS;
 				r=read_set(_indented,true,&_p,content_write_index+count,extent_index,write);
 				break;
 				}
-			case	StructureMember::CLASS:
+			case	StructureMember::I_CLASS:
 				r=read(p.things_to_read[count],_indented,true,content_write_index+count,extent_index,write);
 				break;
 			}
@@ -1945,7 +1945,7 @@ return_false:
 
 		if(read_nil(write_index,extent_index,write))
 			return	true;
-		if(p	&&	p->str_opcode!="expr"){
+		if(p	&&	p->str_opcode!=Class::Expression){
 
 			if(read_variable(write_index,extent_index,write,*p))
 				return	true;
@@ -1964,7 +1964,7 @@ return_false:
 			return	true;
 		
 		indented=false;
-		if(p	&&	p->str_opcode!="expr"){
+		if(p	&&	p->str_opcode!=Class::Expression){
 			
 			if(expression(indented,*p,write_index,extent_index,write))
 				return	true;

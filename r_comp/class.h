@@ -12,6 +12,7 @@ namespace	r_comp{
 	private:
 		bool	has_offset()	const;
 	public:
+		static	const	char	*Expression;
 		Class(ReturnType	t=ANY);
 		Class(Atom							atom,
 			std::string						str_opcode,

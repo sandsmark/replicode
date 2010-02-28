@@ -351,10 +351,10 @@ namespace	r_comp{
 	void	RelocationSegment::write(word32	*data){
 
 		data[0]=entries.size();
-		uint32	offset=0;
+		uint32	offset=1;
 		for(uint32	i=0;i<entries.size();++i){
 
-			entries[i].write(data+1+offset);
+			entries[i].write(data+offset);
 			offset+=entries[i].getSize();
 		}
 	}
@@ -362,7 +362,7 @@ namespace	r_comp{
 	void	RelocationSegment::read(word32	*data){
 
 		uint32	entry_count=data[0];
-		uint32	offset=0;
+		uint32	offset=1;
 		for(uint32	i=0;i<entry_count;++i){
 
 			Entry	e;
@@ -497,5 +497,14 @@ namespace	r_comp{
 			}
 		//	for(i=0;j<object->marker_set.size();++i)
 		//		relocation_segment.addMarkerReference(ptrs_to_indices.find(object->marker_set[i])->second,object_index,i);
+	}
+
+	void	Image::removeObjects(){
+
+		object_map.objects.as_std()->clear();
+		for(uint32	i=0;i<code_segment.objects.size();++i)
+			delete	code_segment.objects[i];
+		code_segment.objects.as_std()->clear();
+		relocation_segment.entries.as_std()->clear();
 	}
 }

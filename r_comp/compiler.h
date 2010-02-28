@@ -144,7 +144,7 @@ namespace	r_comp{
 
 		OutStream	*out_stream;
 
-		bool	compile();	//	compiles one object; return false when there is an error
+		bool	read_sys_object();	//	compiles one object; return false when there is an error
 	public:
 		Compiler();
 		~Compiler();

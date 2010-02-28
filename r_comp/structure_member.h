@@ -32,9 +32,9 @@ namespace	r_comp{
 	class	StructureMember{
 	public:
 		typedef	enum{
-			CLASS=0,		//	iterate using the class to enumerate elements
-			EXPRESSION=1,	//	iterate using the class in read_expression
-			SET=2			//	iterate using the class in read_set
+			I_CLASS=0,		//	iterate using the class to enumerate elements
+			I_EXPRESSION=1,	//	iterate using the class in read_expression
+			I_SET=2			//	iterate using the class in read_set
 		}Iteration;
 	private:
 		typedef	enum{
@@ -62,7 +62,7 @@ namespace	r_comp{
 		StructureMember(_Read		r,			//	compiler's read function
 						std::string	m,			//	member's name
 						std::string	p="",		//	class name of return type if r==Compiler::read_expression or name of the structure to enumerate eleemnts if r==Compiler::read_set
-						Iteration	i=CLASS);	//	specified only if r==Compiler::read_set
+						Iteration	i=I_CLASS);	//	specified only if r==Compiler::read_set
 		Class		*get_class(DefinitionSegment	*segment)	const;
 		ReturnType	get_return_type()	const;
 		bool		used_as_expression()	const;

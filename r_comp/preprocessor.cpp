@@ -172,7 +172,7 @@ int32	RepliStruct::parse(std::istream *stream,uint32	&curIndent,uint32	&prevInde
 				if (inComment) continue;
 				// next string is ready
 				if (str.size() > 0) {
-					if ((cmd.size() > 0) || (type == Set)) {
+					if ((cmd.size() > 0) || (type == Set)	||	(type==Development)) {	//	Modification from Eric to have the Development treat tpl vars as atoms instead of a Development.cmd
 						subStruct = new RepliStruct(Atom);
 						subStruct->parent = this;
 						args.push_back(subStruct);
@@ -292,7 +292,7 @@ int32	RepliStruct::parse(std::istream *stream,uint32	&curIndent,uint32	&prevInde
 				}
 				// We met a boundary, act as ' '
 				if (str.size() > 0) {
-					if ((cmd.size() > 0) || (type == Set)) {
+					if ((cmd.size() > 0) || (type == Set)	||	(type==Development)) {	//	Modification from Eric to have the Development treat tpl vars as atoms instead of a Development.cmd
 						subStruct = new RepliStruct(Atom);
 						subStruct->parent = this;
 						args.push_back(subStruct);
@@ -914,7 +914,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 								  std::ostringstream	*outstream,
 								  std::string			*error){
 
-		RepliStruct	*root=new RepliStruct(RepliStruct::Root);
+		root=new RepliStruct(RepliStruct::Root);
 		uint32	a=0, b=0;
 		if(root->parse(stream,a,b)<0){
 
@@ -945,16 +945,273 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 
 		*outstream<<root;
 
-		initialize(definition_segment);
+		this->definition_segment=definition_segment;
+		initialize();
 
 		*error=root->printError();
 		return (error->size()==0);
 	}
 
-	void	Preprocessor::initialize(DefinitionSegment	*definition_segment){
+	bool	Preprocessor::isTemplateClass(RepliStruct	*s){
 
-		HardCodedPreprocessor	helper;
-		helper.initialize(definition_segment);
+		for(std::list<RepliStruct	*>::iterator	j(s->args.begin());j!=s->args.end();++j){
+
+			size_t	p;
+			std::string	name;
+			std::string	type;
+			switch((*j)->type){
+			case	RepliStruct::Atom:
+				if((*j)->cmd==":~")
+					return	true;
+				break;
+			case	RepliStruct::Structure:		//	template instantiation; args are the actual parameters
+			case	RepliStruct::Development:	//	actual template arg as a list of args
+			case	RepliStruct::Set:			//	sets can contain tpl args
+				if(isTemplateClass(*j))
+					return	true;
+				break;
+			default:
+				break;
+			}
+		}
+		return	false;
+	}
+
+	bool	Preprocessor::isSet(std::string	class_name){
+
+		for(std::list<RepliStruct	*>::iterator	i(root->args.begin());i!=root->args.end();++i){
+
+			if((*i)->type!=RepliStruct::Directive	||	(*i)->cmd!="!class")
+				continue;
+			RepliStruct	*s=*(*i)->args.begin();
+			if(s->cmd==class_name)	//	set classes are written class_name[]
+				return	false;
+			if(s->cmd==class_name+"[]")
+				return	true;
+		}
+		return	false;
+	}
+
+	void	Preprocessor::instantiateClass(RepliStruct	*tpl_class,std::list<RepliStruct	*>	&tpl_args,std::string	&instantiated_class_name){
+
+		static	uint32	LastClassID=0;
+		//	remove the trailing []
+		std::string	sset="[]";
+		instantiated_class_name=tpl_class->cmd;
+		size_t	p=instantiated_class_name.find(sset);
+		instantiated_class_name=instantiated_class_name.substr(0,instantiated_class_name.length()-sset.length());
+		//	append an ID to the tpl class name
+		char	buffer[255];
+		sprintf(buffer,"%d",LastClassID++);
+		instantiated_class_name+=buffer;
+
+		std::vector<StructureMember>	members;
+		std::list<RepliStruct	*>		_tpl_args;
+		for(std::list<RepliStruct	*>::reverse_iterator	i=tpl_args.rbegin();i!=tpl_args.rend();++i)
+			_tpl_args.push_back(*i);
+		getMembers(tpl_class,members,_tpl_args,true);
+
+		definition_segment->class_names[class_opcode]=instantiated_class_name;
+		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[instantiated_class_name]=Class(Atom::SSet(class_opcode,members.size()),instantiated_class_name,members);
+		++class_opcode;
+	}
+
+	void	Preprocessor::getMember(std::vector<StructureMember>	&members,RepliStruct	*m,std::list<RepliStruct	*>	&tpl_args,bool	instantiate){
+
+		size_t	p;
+		std::string	name;
+		std::string	type;
+		switch(m->type){
+		case	RepliStruct::Set:
+			name=m->label.substr(0,m->label.length()-1);
+			if(name=="mks")			//	special case
+				members.push_back(StructureMember(&Compiler::read_mks,name));
+			else	if(name=="vws")	//	special case
+				members.push_back(StructureMember(&Compiler::read_vws,name));
+			else	if(m->args.size()==0)	//	anonymous set of anything
+				members.push_back(StructureMember(&Compiler::read_set,name));
+			else{							//	structured set, arg[0].cmd is ::type
+
+				type=(*m->args.begin())->cmd.substr(2,m->cmd.length()-1);
+				if(isSet(type))
+					members.push_back(StructureMember(&Compiler::read_set,name,type,StructureMember::I_SET));
+				else
+					members.push_back(StructureMember(&Compiler::read_set,name,type,StructureMember::I_EXPRESSION));
+			}
+			break;
+		case	RepliStruct::Atom:
+			if(m->cmd=="nil")
+				break;
+			p=m->cmd.find(':');
+			name=m->cmd.substr(0,p);
+			type=m->cmd.substr(p+1,m->cmd.length());
+			if(name=="vw")	//	special case
+				members.push_back(StructureMember(&Compiler::read_view,name,type));
+			else	if(type=="")
+				members.push_back(StructureMember(&Compiler::read_any,name));
+			else	if(type=="nb")
+				members.push_back(StructureMember(&Compiler::read_number,name));
+			else	if(type=="us")
+				members.push_back(StructureMember(&Compiler::read_timestamp,name));
+			else	if(type=="bl")
+				members.push_back(StructureMember(&Compiler::read_boolean,name));
+			else	if(type=="st")
+				members.push_back(StructureMember(&Compiler::read_string,name));
+			else	if(type=="did")
+				members.push_back(StructureMember(&Compiler::read_device,name));
+			else	if(type=="fid")
+				members.push_back(StructureMember(&Compiler::read_function,name));
+			else	if(type=="nid")
+				members.push_back(StructureMember(&Compiler::read_node,name));
+			else	if(type==Class::Expression)
+				members.push_back(StructureMember(&Compiler::read_expression,name));
+			else	if(type=="~"){
+
+				RepliStruct	*_m=tpl_args.back();
+				tpl_args.pop_back();
+				switch(_m->type){
+				case	RepliStruct::Structure:{	//	the tpl arg is an instantiated tpl set class
+					std::string	instantiated_class_name;
+					instantiateClass(template_classes.find(_m->cmd)->second,_m->args,instantiated_class_name);
+					members.push_back(StructureMember(&Compiler::read_set,_m->label.substr(0,_m->label.length()-1),instantiated_class_name,StructureMember::I_CLASS));
+					break;
+				}default:
+					getMember(members,_m,tpl_args,true);
+					break;
+				}
+			}else	//	type is a class name
+				members.push_back(StructureMember(&Compiler::read_expression,name,type));
+			break;
+		case	RepliStruct::Structure:{	//	template instantiation; (*m)->cmd is the template class, (*m)->args are the actual parameters
+			RepliStruct	*template_class=template_classes.find(m->cmd)->second;
+			if(instantiate){
+
+				std::string	instantiated_class_name;
+				instantiateClass(template_class,m->args,instantiated_class_name);
+				members.push_back(StructureMember(&Compiler::read_set,m->label.substr(0,m->label.length()-1),instantiated_class_name,StructureMember::I_CLASS));
+			}else{
+
+				for(std::list<RepliStruct	*>::reverse_iterator	i=m->args.rbegin();i!=m->args.rend();++i)	//	append the passed args to the ones held by m
+					tpl_args.push_back(*i);
+				getMembers(template_class,members,tpl_args,false);
+			}
+			break;
+		}case	RepliStruct::Development:
+		   getMembers(m,members,tpl_args,instantiate);
+		   break;
+		default:
+			break;
+		}
+	}
+
+	void	Preprocessor::getMembers(RepliStruct	*s,std::vector<StructureMember>	&members,std::list<RepliStruct	*>	&tpl_args,bool	instantiate){
+
+		for(std::list<RepliStruct	*>::iterator	j(s->args.begin());j!=s->args.end();++j)
+			getMember(members,*j,tpl_args,instantiate);
+	}
+
+	ReturnType	Preprocessor::getReturnType(RepliStruct	*s){
+
+		if(s->tail==":")
+			return	ANY;
+		else	if(s->tail==":nb")
+			return	NUMBER;
+		else	if(s->tail==":us")
+			return	TIMESTAMP;
+		else	if(s->tail==":bl")
+			return	BOOLEAN;
+		else	if(s->tail==":st")
+			return	STRING;
+		else	if(s->tail==":nid")
+			return	NODE_ID;
+		else	if(s->tail==":did")
+			return	DEVICE_ID;
+		else	if(s->tail==":fid")
+			return	FUNCTION_ID;
+		else	if(s->tail==":[]")
+			return	SET;
+	}
+
+	void	Preprocessor::initialize(){
+
+		class_opcode=0;
+		uint16	function_opcode=0;
+		uint16	operator_opcode=0;
+
+		std::vector<StructureMember>	r_xpr;
+		definition_segment->classes[std::string(Class::Expression)]=Class(Atom::Object(class_opcode,0),Class::Expression,r_xpr);	//	to read unspecified expressions in classes and sets
+		++class_opcode;
+
+		for(std::list<RepliStruct	*>::iterator	i(root->args.begin());i!=root->args.end();++i){
+
+			if((*i)->type!=RepliStruct::Directive)
+				continue;
+
+			RepliStruct	*s=*(*i)->args.begin();
+			std::vector<StructureMember>	members;
+			if((*i)->cmd=="!class"){
+
+				std::string	sset="[]";
+				std::string	class_name=s->cmd;
+				size_t		p=class_name.find(sset);
+				ClassType	class_type=(p==std::string::npos?T_CLASS:T_SET);
+				if(class_type==T_SET)	//	remove the trailing [] since the RepliStructs for instantiated classes do so
+					class_name=class_name.substr(0,class_name.length()-sset.length());
+
+				if(isTemplateClass(s)){
+
+					template_classes[class_name]=s;
+					continue;
+				}
+
+				std::list<RepliStruct	*>	tpl_args;
+				getMembers(s,members,tpl_args,false);
+
+				if(class_type==T_CLASS){	//	find out if the class is a sys class, i.e. has a view
+
+					for(uint32	i=0;i<members.size();++i)
+						if(members[i].read()==&Compiler::read_view){
+
+							class_type=T_SYS_CLASS;
+							break;
+						}
+				}	
+
+				definition_segment->class_names[class_opcode]=class_name;
+				switch(class_type){
+				case	T_SYS_CLASS:
+						definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[class_name]=Class(Atom::Object(class_opcode,members.size()),class_name,members);
+				case	T_CLASS:
+						definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[class_name]=Class(Atom::Object(class_opcode,members.size()),class_name,members);
+					break;
+				case	T_SET:
+					definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[class_name]=Class(Atom::SSet(class_opcode,members.size()),class_name,members);
+					break;
+				default:
+					break;
+				}
+				++class_opcode;
+			}else	if((*i)->cmd=="!op"){
+
+				std::list<RepliStruct	*>	tpl_args;
+				getMembers(s,members,tpl_args,false);
+				ReturnType	return_type=getReturnType(s);
+
+				std::string	operator_name=s->cmd;
+				definition_segment->operator_names.push_back(operator_name);
+				definition_segment->classes[operator_name]=Class(Atom::Operator(operator_opcode,s->args.size()),operator_name,members,return_type);
+				++operator_opcode;
+			}else	if((*i)->cmd=="!dfn"){	//	don't bother to read the members, it's always a set
+
+				std::vector<StructureMember>	r_set;
+				r_set.push_back(StructureMember(&Compiler::read_set,""));
+
+				std::string	function_name=s->cmd;
+				definition_segment->function_names.push_back(function_name);
+				definition_segment->classes[function_name]=Class(Atom::DeviceFunction(function_opcode),function_name,r_set);
+				++function_opcode;
+			}
+		}
 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -977,12 +1234,12 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 
 	void	HardCodedPreprocessor::initialize(DefinitionSegment	*definition_segment){
 
-				uint16	class_opcode=0;	//	shared with sys_classes
+		uint16	class_opcode=0;	//	shared with sys_classes
 		uint16	function_opcode=0;
 		uint16	operator_opcode=0;
 
-		std::vector<StructureMember>	r_expr;
-		definition_segment->classes[std::string("expr")]=Class(Atom::Object(class_opcode,0),"expr",r_expr);	//	to read expression in sets, special case: see read_expression()
+		std::vector<StructureMember>	r_xpr;
+		definition_segment->classes[std::string(Class::Expression)]=Class(Atom::Object(class_opcode,0),Class::Expression,r_xpr);	//	to read expression in sets, special case: see read_expression()
 		++class_opcode;
 
 		//	everything below shall be filled by the preprocessor
@@ -1063,7 +1320,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 		//	ptn
 		std::vector<StructureMember>	r_ptn;
 		r_ptn.push_back(StructureMember(&Compiler::read_expression,"skel"));
-		r_ptn.push_back(StructureMember(&Compiler::read_set,"guards","expr",StructureMember::EXPRESSION));	//	reads a set of expressions
+		r_ptn.push_back(StructureMember(&Compiler::read_set,"guards",Class::Expression,StructureMember::I_EXPRESSION));	//	reads a set of expressions
 
 		definition_segment->class_names[class_opcode]="ptn";
 		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("ptn")]=Class(Atom::Object(class_opcode,2),"ptn",r_ptn);
@@ -1071,9 +1328,9 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 
 		//	_in_sec
 		std::vector<StructureMember>	r__ins_sec;
-		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"inputs","ptn",StructureMember::EXPRESSION));		//	reads a set of patterns
-		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"timings","expr",StructureMember::EXPRESSION));	//	reads a set of expressions
-		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"guards","expr",StructureMember::EXPRESSION));		//	reads a set of expressions
+		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"inputs","ptn",StructureMember::I_EXPRESSION));	//	reads a set of patterns
+		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"timings",Class::Expression,StructureMember::I_EXPRESSION));	//	reads a set of expressions
+		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"guards",Class::Expression,StructureMember::I_EXPRESSION));	//	reads a set of expressions
 
 		definition_segment->class_names[class_opcode]="_in_sec";
 		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("_in_sec")]=Class(Atom::SSet(class_opcode,3),"_in_sec",r__ins_sec);
@@ -1111,9 +1368,9 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 		//	sys-classes /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//	pgm
 		std::vector<StructureMember>	r_pgm;
-		r_pgm.push_back(StructureMember(&Compiler::read_set,"tpl","ptn",StructureMember::EXPRESSION));		//	reads a set of patterns
-		r_pgm.push_back(StructureMember(&Compiler::read_set,"input","_in_sec",StructureMember::CLASS));		//	reads a structured set of class _in_sec 
-		r_pgm.push_back(StructureMember(&Compiler::read_set,"prods","cmd",StructureMember::EXPRESSION));	//	reads a set of commands
+		r_pgm.push_back(StructureMember(&Compiler::read_set,"tpl","ptn",StructureMember::I_EXPRESSION));	//	reads a set of patterns
+		r_pgm.push_back(StructureMember(&Compiler::read_set,"input","_in_sec",StructureMember::I_CLASS));	//	reads a structured set of class _in_sec 
+		r_pgm.push_back(StructureMember(&Compiler::read_set,"prods","cmd",StructureMember::I_EXPRESSION));	//	reads a set of commands
 		r_pgm.push_back(StructureMember(&Compiler::read_timestamp,"tsc"));
 		r_pgm.push_back(StructureMember(&Compiler::read_number,"csm"));
 		r_pgm.push_back(StructureMember(&Compiler::read_number,"sig"));
@@ -1135,7 +1392,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 		//	ipgm
 		std::vector<StructureMember>	r_ipgm;
 		r_ipgm.push_back(StructureMember(&Compiler::read_any,"code"));
-		r_ipgm.push_back(StructureMember(&Compiler::read_set,"args","val_pair",StructureMember::SET));	//	reads a set of value pairs
+		r_ipgm.push_back(StructureMember(&Compiler::read_set,"args","val_pair",StructureMember::I_SET));	//	reads a set of value pairs
 		r_ipgm.push_back(StructureMember(&Compiler::read_view,"vw","react_view"));
 		r_ipgm.push_back(StructureMember(&Compiler::read_mks,"mks"));
 		r_ipgm.push_back(StructureMember(&Compiler::read_vws,"vws"));
@@ -1203,7 +1460,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 		std::vector<StructureMember>	r_rdx;
 		r_rdx.push_back(StructureMember(&Compiler::read_any,"code"));
 		r_rdx.push_back(StructureMember(&Compiler::read_any,"inputs"));
-		r_rdx.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::SET));	//	reads a set of value pairs
+		r_rdx.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::I_SET));	//	reads a set of value pairs
 		r_rdx.push_back(StructureMember(&Compiler::read_view,"vw","view"));
 		r_rdx.push_back(StructureMember(&Compiler::read_mks,"mks"));
 		r_rdx.push_back(StructureMember(&Compiler::read_vws,"vws"));
@@ -1216,7 +1473,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 		//	mk.|rdx
 		std::vector<StructureMember>	r_ardx;
 		r_ardx.push_back(StructureMember(&Compiler::read_any,"code"));
-		r_ardx.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::SET));	//	reads a set of value pairs
+		r_ardx.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::I_SET));	//	reads a set of value pairs
 		r_ardx.push_back(StructureMember(&Compiler::read_view,"vw","view"));
 		r_ardx.push_back(StructureMember(&Compiler::read_mks,"mks"));
 		r_ardx.push_back(StructureMember(&Compiler::read_vws,"vws"));
@@ -1229,7 +1486,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 		//	utilities for notification markers
 		std::vector<StructureMember>	r_ntf;
 		r_ntf.push_back(StructureMember(&Compiler::read_any,"obj"));
-		r_ntf.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::SET));	//	reads a set of value pairs
+		r_ntf.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::I_SET));	//	reads a set of value pairs
 		r_ntf.push_back(StructureMember(&Compiler::read_view,"vw","view"));
 		r_ntf.push_back(StructureMember(&Compiler::read_mks,"mks"));
 		r_ntf.push_back(StructureMember(&Compiler::read_vws,"vws"));
@@ -1238,7 +1495,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 		std::vector<StructureMember>	r_ntf_chg;
 		r_ntf_chg.push_back(StructureMember(&Compiler::read_any,"obj"));
 		r_ntf_chg.push_back(StructureMember(&Compiler::read_number,"chg"));
-		r_ntf_chg.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::SET));	//	reads a set of value pairs
+		r_ntf_chg.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::I_SET));	//	reads a set of value pairs
 		r_ntf_chg.push_back(StructureMember(&Compiler::read_view,"vw","view"));
 		r_ntf_chg.push_back(StructureMember(&Compiler::read_mks,"mks"));
 		r_ntf_chg.push_back(StructureMember(&Compiler::read_vws,"vws"));

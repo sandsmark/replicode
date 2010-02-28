@@ -77,7 +77,21 @@ namespace	r_comp{
 
 	class	dll_export	Preprocessor{
 	private:
-		void	initialize(DefinitionSegment	*definition_segment);
+		typedef	enum{
+			T_CLASS=0,
+			T_SYS_CLASS=1,
+			T_SET=2
+		}ClassType;
+		DefinitionSegment							*definition_segment;
+		uint16										class_opcode;	//	shared with sys_classes
+		UNORDERED_MAP<std::string,RepliStruct	*>	template_classes;
+		void		instantiateClass(RepliStruct	*tpl_class,std::list<RepliStruct	*>	&tpl_args,std::string	&instantiated_class_name);
+		bool		isSet(std::string	class_name);
+		bool		isTemplateClass(RepliStruct	*s);
+		void		getMember(std::vector<StructureMember>	&members,RepliStruct	*m,std::list<RepliStruct	*>	&tpl_args,bool	instantiate);
+		void		getMembers(RepliStruct	*s,std::vector<StructureMember>	&members,std::list<RepliStruct	*>	&tpl_args,bool	instantiate);
+		ReturnType	getReturnType(RepliStruct	*s);
+		void		initialize();	//	init definition_segment
 	public:
 		RepliStruct	*root;
 
@@ -92,7 +106,6 @@ namespace	r_comp{
 	//	For development only: hard codes the basic classes, does not expands any macros.
 	//	The output stream is the same as the input stream.
 	class	dll_export	HardCodedPreprocessor{
-	friend	class	Preprocessor;
 	private:
 		void	initialize(DefinitionSegment	*definition_segment);
 	public:

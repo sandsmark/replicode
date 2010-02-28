@@ -4,6 +4,8 @@
 
 namespace	r_comp{
 
+	const	char	*Class::Expression="xpr";
+
 	bool	Class::has_offset()	const{
 
 		switch(atom.getDescriptor()){
@@ -23,7 +25,7 @@ namespace	r_comp{
 												str_opcode(str_opcode),
 												things_to_read(r),
 												type(t),
-												use_as(StructureMember::CLASS){
+												use_as(StructureMember::I_CLASS){
 	}
 	
 	bool	Class::is_pattern(DefinitionSegment	*segment)	const{

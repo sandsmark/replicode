@@ -129,6 +129,8 @@ namespace	r_comp{
 		Image	&operator	<<	(r_code::vector<Object	*>	&ram_objects);
 
 		Image	&operator	<<	(Object	*object);
+
+		void	removeObjects();
 	};
 }
 

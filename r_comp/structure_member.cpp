@@ -15,14 +15,16 @@ namespace	r_comp{
 													_class(p),
 													iteration(i){
 
-				if(_read==&Compiler::read_number)		type=NUMBER;
+				if(_read==&Compiler::read_any)			type=ANY;
+		else	if(_read==&Compiler::read_number)		type=NUMBER;
+		else	if(_read==&Compiler::read_timestamp)	type=TIMESTAMP;
 		else	if(_read==&Compiler::read_boolean)		type=BOOLEAN;
 		else	if(_read==&Compiler::read_string)		type=STRING;
 		else	if(_read==&Compiler::read_node)			type=NODE_ID;
 		else	if(_read==&Compiler::read_device)		type=DEVICE_ID;
 		else	if(_read==&Compiler::read_function)		type=FUNCTION_ID;
 		else	if(_read==&Compiler::read_expression)	type=ANY;
-		else	if(_read==&Compiler::read_set)			type=(ReturnType)SET;
+		else	if(_read==&Compiler::read_set)			type=ReturnType::SET;
 	}
 		
 	Class	*StructureMember::get_class(DefinitionSegment	*segment)	const{
@@ -37,7 +39,7 @@ namespace	r_comp{
 
 	bool	StructureMember::used_as_expression()	const{
 		
-		return	iteration==EXPRESSION;
+		return	iteration==I_EXPRESSION;
 	}
 
 	StructureMember::Iteration	StructureMember::getIteration()	const{

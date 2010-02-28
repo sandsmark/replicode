@@ -1,0 +1,142 @@
+; std.replicode
+
+;mapping objects -> r-code
+!class (view[] ijt:us sln:nb res:us grp:grp org:)
+!class (grp_view[] ijt:us sln:nb res:us grp:grp org: vis:nb cov:nb)
+!class (react_view[] ijt:us sln:nb res:us grp:grp org: act:nb)
+!class (_obj :~ vw:view mks:[] vws:[::view] psln_thr:nb)
+!class (_grp_obj :~ vw:grp_view mks:[] vws:[::grp_view] psln_thr:nb)
+!class (_ins_react_obj :~ vw:react_view mks:[] vws:[::react_view] psln_thr:nb)
+!class (ptn skel:xpr guards:[::xpr])
+!class (|ptn skel:xpr guards:[::xpr])
+!class (_in_sec[] :~ timings:[::xpr] guards:[::xpr])
+!class (_react_obj (_obj {tpl:[::ptn] :~ prods:[::cmd] tsc:us csm:nb sig:nb nfr:nb :~}))
+!class (pgm (_react_obj input:(_in_sec inputs:[::ptn]) nil))
+!class (|pgm (_react_obj input:(_in_sec inputs:[::ptn]) nil))
+!class (fmd (_react_obj input:(_in_sec {initial_state:(_in_sec inputs:[::ptn]) actions:(_in_sec inputs:[::ptn])}) cer:nb))
+!class (|fmd (_react_obj input:(_in_sec {initial_state:(_in_sec inputs:[::ptn]) actions:(_in_sec inputs:[::ptn])}) cer:nb))
+!class (imd (_react_obj input:(_in_sec {initial_state:(_in_sec inputs:[::ptn]) target_state:(_in_sec inputs:[::ptn])}) cer:nb))
+!class (|imd (_react_obj input:(_in_sec {initial_state:(_in_sec inputs:[::ptn]) target_state:(_in_sec inputs:[::ptn])}) cer:nb))
+!class (grp (_grp_obj {upr:nb spr:nb sln_thr:nb act_thr:nb vis_thr:nb c_sln:nb c_sln_thr:nb c_act:nb c_act_thr:nb dcy_per:nb dcy_tgt:nb dcy_prd:nb sln_chg_thr:nb sln_chg_prd:nb act_chg_thr:nb act_chg_prd:nb avg_sln:nb high_sln:nb low_sln:nb avg_act:nb high_act:nb low_act:nb high_sln_thr:nb low_sln_thr:nb sln_ntf_prd:nb high_act_thr:nb low_act_thr:nb act_ntf_prd:nb high_res_thr:nb low_res_thr:nb res_ntf_prd:nb ntf_grp:grp}))
+!class (gol (_obj {tpl:[::ptn] target_state:(_in_sec inputs:[::ptn])}))
+!class (|gol (_obj {tpl:[::ptn] target_state:(_in_sec inputs:[::ptn])}))
+!class (cmd function:fid device:did args:[])
+!class (ent (_obj nil))
+!class (pro (_obj cmd:cmd))
+!class (dev (_obj nil))
+!class (nod (_obj id:nid))
+!class (val_pair[] value: index:nb)
+!class (ipgm (_ins_react_obj {code: args:[::val_pair]}))
+!class (ifmd (_ins_react_obj {code: args:[::val_pair]}))
+!class (iimd (_ins_react_obj {code: args:[::val_pair]}))
+!class (igol (_obj {code: args:[::val_pair]}))
+
+;mapping markers -> r-code
+!class (mk.xet (_obj {proc: prod:[] dur:us}))
+!class (mk.rdx (_obj {code: inputs:[] prods:[::val_pair]}))
+!class (mk.|rdx (_obj {code: prods:[::val_pair]}))
+!class (mk.low_sln (_obj obj:))
+!class (mk.high_sln (_obj obj:))
+!class (mk.low_act (_obj obj:))
+!class (mk.high_act (_obj obj:))
+!class (mk.low_res (_obj obj:))
+!class (mk.high_res (_obj obj:))
+!class (mk.sln_chg (_obj {obj: chg:nb}))
+!class (mk.act_chg (_obj {obj: chg:nb}))
+!class (mk.new (_obj obj:))
+!class (mk.pre (_obj {data: cer:nb}))
+!class (mk.isa (_obj {inst: class: cer:nb}))
+
+;mapping operator opcodes -> r-atoms
+!op (_now):us
+!op (equ : :):
+!op (neq : :):
+!op (gtr : :):
+!op (lsr : :):
+!op (gte : :):
+!op (lse : :):
+!op (add : :):
+!op (sub : :):
+!op (mul :nb :nb):nb
+!op (div :nb :nb):nb
+!op (dis :nb :nb):nb
+!op (ln :nb):nb
+!op (exp :nb):nb
+!op (log :nb):nb
+!op (e10 :nb):nb
+!op (syn :):
+!op (ins : :[]):
+!op (at :[] :nb):
+!op (red :[] :[] :[]):[]
+!op (com :[] :[]):[]
+!op (spl :[] :[]):[]
+!op (mrg :[] :[]):[]
+!op (ptc : :[] :[]):
+
+;operator aliases
+!def now (_now)
+!def = equ
+!def <> neq
+!def > gtr
+!def < lsr
+!def <= gte
+!def => lse
+!def + add
+!def - sub
+!def * mul
+!def \ syn
+!def @ at
+
+;mapping devices -> r-atoms
+!def exe 0xA2000000; the executive.
+
+;mapping device functions -> r-atoms
+!dfn (_inj : :)
+!dfn (_eje : : :nid)
+!dfn (_mod : :nb)
+!dfn (_set : :nb)
+!dfn (_new_class :)
+!dfn (_del_class :)
+!dfn (_ldc :st)
+!dfn (_swp :nb)
+!dfn (_new_dev :st :nb)
+!dfn (_del_dev :did)
+!dfn (_start :us :us)
+!dfn (_suspend)
+!dfn (_resume)
+!dfn (_stop)
+
+;device functions aliases
+!def (inj args) (cmd _inj exe args)
+!def (eje args) (cmd _eje exe args)
+!def (mod args) (cmd _mod exe args)
+!def (set args) (cmd _set exe args)
+!def (new_class args) (cmd _new_class exe args)
+!def (del_class args) (cmd _del_class exe args)
+!def (ldc args) (cmd _ldc exe args)
+!def (swp args) (cmd _swp exe args)
+!def (new_dev args) (cmd _new_dev exe args)
+!def (del_dev args) (cmd _del_dev exe args)
+!def (start args) (cmd _start exe args)
+!def (stop args) (cmd _stop exe args)
+!def (suspend args) (cmd _suspend exe args)
+!def (resume args) (cmd _resume exe args)
+
+;various constants
+!counter __constant 0
+!def OFF __constant
+!def ON __constant
+
+;parameters for tuning the behavior of reactive objects
+;member nfr
+!def SILENT __constant; no notification upon production
+!def NOTIFY __constant; notification upon productions
+;member csm
+!def CONSUME __constant; inputs objects are consumed
+!def PASS __constant; input objects are passed to offsprings
+
+;parameters for tuning the behavior of groups
+!def DCY_SLN __constant
+!def DCY_SLN_THR __constant
+!def COV_ON __constant
+!def COV_OFF __constant
