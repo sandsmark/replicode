@@ -77,6 +77,7 @@ namespace MemImpl {
 	
 	struct ObjectBase : public Object
 	{
+		ObjectBase() :propagationSaliencyThreshold(0), isNotification(false) {}
 		virtual ~ObjectBase() {}
 		void retain();
 		void release();
@@ -95,6 +96,7 @@ namespace MemImpl {
 		ViewStore views;
 		float propagationSaliencyThreshold;
 		enum {REACTIVE, GROUP, OBJECT} type;
+		bool isNotification;
 	};
 	
 	struct ObjectImpl : public ObjectBase
@@ -125,6 +127,7 @@ namespace MemImpl {
 		
 		// methods used during the update
 		void processCommands();
+			void generateReductionNotification(ReductionInstance* ri);
 			void processInjectionOrEjection(ReductionInstance* ri, Expression command);
 			void processModOrSet(ReductionInstance* ri, Expression command);
 		void updateControlValues(bool updateGeneral, int64 resilienceDecrease);
@@ -167,7 +170,7 @@ namespace MemImpl {
 			float values[1];
 			struct {
 				float updatePeriod;
-				float signallingPeriod;
+				float signalingPeriod;
 				float saliencyThreshold; // mediated
 				float activationThreshold; // mediated
 				float visibilityThreshold; // mediated
@@ -220,12 +223,13 @@ namespace MemImpl {
 		SalientStore combinedNewlySalientContent;
 		
 		int32 numGeneralUpdatesSkipped;
+		int32 numSignalingPeriodsSkipped;
 		int32 updateCounter;
 		bool controlValuesChanged;
-		float sumSaliency;
-		float sumActivation;
-		int numObjects;
-		int numReactiveObjects;
+		float32 sumSaliency;
+		float32 sumActivation;
+		int32 numObjects;
+		int32 numReactiveObjects;
 	};
 	
 	struct Impl : public Mem

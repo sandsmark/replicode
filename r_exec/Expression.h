@@ -31,7 +31,7 @@ protected:
 inline Expression Expression::child(int offset, bool dereference) const {
     Expression c(*this);
     c.index = index + offset;
-    if (dereference && c.head().isPointer()) {
+    if (dereference) {
         return c.dereference();
 	} else {
         return c;

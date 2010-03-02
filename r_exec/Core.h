@@ -34,11 +34,12 @@ struct Core : public Asynchronous {
 		// returned asynchronously, by a call to Group::reductionComplete() 
 		virtual void salientObject(Object* object) = 0;
 
-		// TODO: signaling period for input-less reactive objects
+		virtual void signalProgramsWithNoInputs() = 0;
 	};
 	static Core* create();
 	virtual ~Core() {}
 	virtual Instance* createInstance(Group* group) = 0;
+	// signals the activation of programs which don't have any inputs
 };
 
 }

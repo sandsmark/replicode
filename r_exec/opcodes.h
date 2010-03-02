@@ -20,7 +20,6 @@ extern UNORDERED_MAP<std::string, r_code::Atom> opcodeRegister;
 #define OPCODE_SYN opcodeRegister["syn"].asOpcode()
 #define OPCODE_RED opcodeRegister["red"].asOpcode()
 #define OPCODE_INS opcodeRegister["ins"].asOpcode()
-#define OPCODE_NOTRED opcodeRegister["|red"].asOpcode()
 #define MARKER_REDUCTION opcodeRegister["mk.rdx"].asOpcode()
 #define MARKER_ANTIREDUCTION opcodeRegister["mk.|rdx"].asOpcode()
 #define MARKER_SALIENCY_CHANGE opcodeRegister["mk.sln_chg"].asOpcode()

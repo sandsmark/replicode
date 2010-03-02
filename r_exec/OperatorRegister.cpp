@@ -19,7 +19,6 @@ OperatorRegister::OperatorRegister()
 	operators[OPCODE_SUB] = operator_sub;
 	operators[OPCODE_RED] = operator_red;
 	operators[OPCODE_INS] = operator_ins;
-	//TODO: remove notred and modify red; operators[OPCODE_NOTRED] = operator_notred;
 }
 
 OperatorRegister& theOperatorRegister()

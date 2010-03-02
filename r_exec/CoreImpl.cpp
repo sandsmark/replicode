@@ -23,26 +23,29 @@ namespace CoreImpl {
 		}
 	}
 
+	void doCopy(ReductionInstance* ri)
+	{
+		new ReductionInstance(*ri);
+	}
+
 	void Impl::doWork()
 	{
 		for (;;) {
 			runRelease.acquire();
 			runRelease.release();
-			++numRunningThreads; // TODO: atomic
+			++numRunningThreads;
 			CoreImpl::Instance::Job* job = 0;
 			bool progress = true;
 			while (progress) {
 				implMutex.acquire();
 				if (job) {
 					job->finish();
-					// TODO: make this work: delete job;
 				}
 				if (suspendRequested || activeInstances.empty()) {
 					progress = false;
 				} else {
 					CoreImpl::Instance* topInstance = activeInstances.front();
 					job = topInstance->nextJob();
-					printf("got job %p\n", job);
 					if (!job) {
 						topInstance->isActive = false;
 						activeInstances.pop_front();
@@ -52,7 +55,7 @@ namespace CoreImpl {
 				if (job)
 					job->process();
 			}
-			if (--numRunningThreads == 0) // TODO: atomic
+			if (--numRunningThreads == 0)
 				suspended.release();
 		}
 	}
@@ -72,7 +75,6 @@ namespace CoreImpl {
 
 	void Impl::resume()
 	{
-		printf("coreimpl resume\n");
 		if (suspendRequested) {
 			suspendRequested = false;
 			if (!activeInstances.empty())
@@ -82,11 +84,26 @@ namespace CoreImpl {
 
 	void Impl::suspend()
 	{
-		printf("coreimpl suspend\n");
 		if (!suspendRequested) {
 			suspendRequested = true;
 			if (numRunningThreads > 0)
 				suspended.acquire();
+		}
+	}
+
+	
+	void Instance::signalProgramsWithNoInputs()
+	{
+		for (CoreImpl::Instance::ProgramHash::iterator itP = programs.begin(); itP != programs.end(); ++itP) {
+			Program& p = itP->second;
+			if (p.inputMatchers.size() == 0) {
+				Instance::OverlayJob j;
+				j.instance = this;
+				j.programRI = p.programRI;
+				j.programRI->retain();
+				j.result = 0;
+				overlayJobQueue.push_back(j);
+			}
 		}
 	}
 
@@ -116,8 +133,8 @@ namespace CoreImpl {
 	{
 		if (!overlayJobQueue.empty()) {
 			Job* j = new OverlayJob(overlayJobQueue.front());
+			printf("created new overlay job %p\n", j);
 			overlayJobQueue.pop_front();
-			printf("nextJob returning overlay job %p\n", j);
 			return j;
 		}
 		while (inputJobQueue.empty()) {
@@ -139,8 +156,8 @@ namespace CoreImpl {
 			inputQueue.pop_front();
 		}
 		Job* j = new InputJob(inputJobQueue.front());
+		printf("created new input job %p\n", j);
 		inputJobQueue.pop_front();
-		printf("nextJob returning input job %p\n", j);
 		return j;
 	}
 
@@ -187,11 +204,11 @@ namespace CoreImpl {
 	{
 		printf("activate %p, %p\n", this, program);
 		Program p(group);
-		program->copy(p.programRI);
+		program->copy(*p.programRI);
 
 		// connect template arguments
-		p.programRI.syncSizes();
-		Expression ipgm(&p.programRI, 0, false);
+		p.programRI->syncSizes();
+		Expression ipgm(p.programRI, 0, false);
 		Expression pgm = ipgm.child(1);
 		Expression templates(pgm.child(1));
 		Expression argpairs(ipgm.child(2));
@@ -225,7 +242,7 @@ namespace CoreImpl {
 
 		p.timeScope = pgm.child(4).head().asFloat();
 		
-		std::vector<ReductionInstance*> inputs = getInputs(p.programRI);
+		std::vector<ReductionInstance*> inputs = getInputs(*p.programRI);
 		pair<ProgramHash::iterator, bool> ins = programs.insert(make_pair(program, p));
 
 		for (size_t i = 0; i < inputs.size(); ++i) {
@@ -260,13 +277,13 @@ namespace CoreImpl {
 		onInput(InputQueueEntry(program, InputQueueEntry::DEACTIVATION));
 	}
 
+		
 	void Instance::doDeactivate(Object* program)
 	{
 		ProgramHash::iterator it = programs.find(program);
 		if (it == programs.end())
 			return;
 		Program& p = it->second;
-		// TODO: what about running jobs which reference this program?
 		InputMatcher::OutputSet::iterator itO;
 		for (int i = 0; i < p.inputMatchers.size(); ++i) {
 			InputMatcher* im = p.inputMatchers[i];
@@ -334,7 +351,6 @@ namespace CoreImpl {
 	void Instance::OverlayJob::process()
 	{
 		result = programRI->reduce(inputs);
-		printf("done with reducing inputs!\n");
 	}
 	
 	void Instance::OverlayJob::finish()
@@ -345,7 +361,7 @@ namespace CoreImpl {
 		for (int i = 0; i < inputs.size(); ++i) {
 			inputs[i]->release();
 		}
-		// TODO: decrement program->jobCount, delete program if appropriate
+		programRI->release();
 		delete this;
 	}
 	
@@ -397,7 +413,8 @@ namespace CoreImpl {
 			if (isComplete) {
 				OverlayJob j;
 				j.instance = this;
-				j.programRI = &program->programRI;
+				j.programRI = program->programRI;
+				j.programRI->retain();
 				j.inputs = program->matchSets[iRead].matches;
 				j.result = 0;
 				overlayJobQueue.push_back(j);
@@ -408,6 +425,16 @@ namespace CoreImpl {
 		}
 		program->matchSets.resize(iWrite);
 	}
+	Instance::Program::Program(Group* g) :programRI(new ReductionInstance(g)) { programRI->retain(); }
+	Instance::Program::Program(const Program& p)
+	{
+		programRI = p.programRI;
+		inputMatchers = p.inputMatchers;
+		matchSets = p.matchSets;
+		timeScope = p.timeScope;
+		programRI->retain();
+	}
+	Instance::Program::~Program() { programRI->release(); }
 }
 
 Core* Core::create()

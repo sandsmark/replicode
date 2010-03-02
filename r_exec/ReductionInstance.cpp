@@ -12,7 +12,8 @@ void ReductionInstance::retain()
 {
 	if (referenceCount++ == 0) {
 		for (int i = 0; i < references.size(); ++i) {
-			references[i]->retain();
+			if (references[i] != 0) // HACK
+				references[i]->retain();
 		}
 	}
 }
@@ -21,10 +22,28 @@ void ReductionInstance::release()
 {
 	if (--referenceCount == 0) {
 		for (int i = 0; i < references.size(); ++i) {
-			references[i]->release();
+			if (references[i] != 0)
+				references[i]->release();
 		}
 		delete this;
 	}
+}
+
+ReductionInstance::~ReductionInstance()
+{
+}
+
+ReductionInstance::ReductionInstance(const ReductionInstance& ri)
+{
+	printf("copying ri %p\n", &ri);
+	referenceCount = 0;
+	input = ri.input;
+	value = ri.value;
+	copies = ri.copies;
+	firstReusableCopiedObject = ri.firstReusableCopiedObject;
+	references = ri.references;
+	hash_value = 0;
+	group = ri.group;
 }
 
 ReductionInstance* ReductionInstance::reduce(Object* input)
@@ -45,6 +64,8 @@ ReductionInstance* ReductionInstance::reduce(Object* input)
 ReductionInstance* ReductionInstance::reduce(std::vector<ReductionInstance*> inputs)
 {
 	ReductionInstance* result = new ReductionInstance(*this);
+	result->referenceCount = 0;
+	result->hash_value = 0;
 	// Merge the input RIs
 	Expression ipgm(result);
 	Expression pgm(ipgm.child(1));
@@ -263,11 +284,34 @@ Object* ReductionInstance::objectForExpression(Expression expr)
 	return result;
 }
 
+Object* ReductionInstance::extractObject(Expression expr)
+{
+	// first, check to see if the object is known to exist
+	Object* result = 0;
+	for (int i = 0; i < copies.size(); ++i)
+		if (copies[i].position == expr.getIndex())
+			return copies[i].object;
+	
+	ReductionInstance copyRI(group);
+	expr.copy(copyRI);
+	printf("creating new object\n");
+	copyRI.debug();
+	return Object::create(copyRI.value, copyRI.references);
+}
+
 void ReductionInstance::debug()
 {
 	syncSizes();
+	int copyI = 0;
 	for (int i = 0; i < input.size(); ++i) {
+		if (copyI < copies.size() && copies[copyI].position == i) {
+			printf("COPY[%d]: %p\n", copyI, copies[copyI++].object);
+		}
 		printf("[%02x] = input = 0x%08x value = 0x%08x\n", i, input[i].atom, value[i].atom);
+	}
+
+	for (int i = 0; i < references.size(); ++i) {
+		printf("references[%d] = %p\n", i, references[i]);
 	}
 }
 

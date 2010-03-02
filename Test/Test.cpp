@@ -2,7 +2,7 @@
 #include	"../r_comp/compiler.h"
 #include	"../r_comp/preprocessor.h"
 
-//#include	"../r_exec/Mem.h"
+#include	"../r_exec/Mem.h"
 
 #include	<iostream>
 #define		PREPROCESSOR_TEST
@@ -69,7 +69,7 @@ int32	main(int	argc,char	**argv){
 		_image=new	r_comp::Image();
 		*_image<<image;				//	this stores the ram_objects in the _image
 		_image->removeObjects();	//	remove these objects, to keep only the definiton segment
-#if 0
+#ifdef USE_MEM
 		//	Create the mem with objects defined in ram_objects
 		r_exec::Mem* mem = r_exec::Mem::create(
 			classes,

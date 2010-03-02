@@ -8,6 +8,14 @@ namespace r_exec {
 
 namespace MemImpl { class ObjectImpl; class ObjectBase; class GroupImpl; }
 
+template<class T> class boundsCheckedVector : public std::vector<T> {
+	T& operator[](uint32 i) {
+		if (i >= std::vector<T>::size())
+			printf("out of bounds access\n");
+		return std::vector<T>::operator[](i);
+	}
+};
+		
 class ReductionInstance {
 	friend class Expression;
 	friend class ExecutionContext;
@@ -16,6 +24,8 @@ class ReductionInstance {
 	friend class MemImpl::GroupImpl;
 public:
 	ReductionInstance(Group* g) :referenceCount(0), firstReusableCopiedObject(0), hash_value(0), group(g) {}
+	ReductionInstance(const ReductionInstance& ri);
+	~ReductionInstance();
 	// retain and release are not thread-safe, and do not allow for the
 	// ReductionInstance to change after the first retain().  The reason
 	// for this second restriction is that implementing it would require the
@@ -32,6 +42,7 @@ public:
 	ReductionInstance* split(ExecutionContext location);
 	void merge(ExecutionContext location, ReductionInstance* ri);
 	Object* objectForExpression(Expression expr);
+	Object* extractObject(Expression expr); // generates the object whose head is given
 	void syncSizes(); // enlarges the value or input array to make them the same size
 	size_t hash() const;
 	Group* getGroup() { return group; }

@@ -15,6 +15,7 @@
 #include "mbrane_imports/utils.h"
 #include <deque>
 #include "ReductionInstance.h"
+#include <cstdatomic>
 
 namespace r_exec {
 
@@ -26,6 +27,7 @@ namespace CoreImpl {
 	{
 		// ===== Interface =====
 		struct Job {
+			virtual ~Job() {}
 			virtual void process() = 0; // process is multithread-safe
 			virtual void finish() = 0; // finish() is not multithread-safe;
 				// calls to finish() must be externally serialized.
@@ -37,6 +39,7 @@ namespace CoreImpl {
 		void deactivate(Object* program);
 		void salientObject(Object* object);
 		Job* nextJob();
+		void signalProgramsWithNoInputs();
 		
 		// ===== Structures =====
 		
@@ -58,18 +61,21 @@ namespace CoreImpl {
 		
 		// TODO: anti-program
 		struct Program {
-			Program(Group* g) :programRI(g) {}
+			Program(Group* g);
+			Program(const Program& p);
+			~Program();
 			struct MatchedInputs {
 				int64 creationTime;
 				std::vector<ReductionInstance*> matches;
 			};
-			ReductionInstance programRI;
+			ReductionInstance* programRI;
 			std::vector<InputMatcher*> inputMatchers;
 			std::vector<MatchedInputs> matchSets;
 			int64 timeScope;
 		};
 
 		struct InputJob : public Job {
+			~InputJob() {}
 			Instance* instance;
 			InputMatcher* matcher;
 			Object* input;
@@ -79,6 +85,7 @@ namespace CoreImpl {
 		};
 		
 		struct OverlayJob : public Job {
+			~OverlayJob() {}
 			Instance* instance;
 			ReductionInstance* programRI;
 			std::vector<ReductionInstance*> inputs;
@@ -112,7 +119,7 @@ namespace CoreImpl {
 		bool isActive; // an active instance is one with a non-empty input,
 			// input job, or overlay job queue.  The Core processes active
 			// Instances in FIFO order.
-			
+
 		// ====== Internal Methods ======
 		void onInput(const InputQueueEntry& e);
 		void doActivate(Object* program);
@@ -133,10 +140,10 @@ namespace CoreImpl {
 		static thread_ret thread_function_call work(void* args);
 		Core::Instance* createInstance(Group* group);
 		
-		UNORDERED_SET<Instance*> instances;
+		UNORDERED_SET<CoreImpl::Instance*> instances;
 		
 		bool suspendRequested;
-		int numRunningThreads;
+		std::atomic_uint numRunningThreads;
 		mBrane::Mutex runRelease;
 		mBrane::Mutex suspended;
 		mBrane::Mutex implMutex;

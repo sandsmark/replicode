@@ -135,47 +135,61 @@ size_t Ehash::operator() ( const Expression& x) const
 	return __h;
 }
 
-void _operator_red(ExecutionContext& context, bool matchOrNotMatch)
+void evaluateProductions(ExecutionContext& resultContext, ExecutionContext& prods)
 {
-	// TODO: vws, mks
+	UNORDERED_SET<Expression, Ehash> produced;
+	for (int i = 1; i <= prods.head().getAtomCount(); ++i) {
+		ExecutionContext prod(prods.xchild(i));
+		prod.evaluate();
+
+		Expression prodv = prod;
+		prodv.setValueAddressing(true);
+
+		// see if we've produced this result before
+		if (produced.find(prodv) != produced.end())
+			continue;
+
+		// we will be be over-writing prodv if we re-evaluate this production later, so we must make a copy
+		prodv = prodv.copy(prodv.getInstance());
+
+		// put this produced element into the produced set, so we won't produce it again
+		produced.insert(prodv);
+		resultContext.appendResultSetElement(prodv.iptr());
+	}
+}
+
+void operator_red(ExecutionContext& context)
+{
 	context.beginResultSet();
 
-	UNORDERED_SET<Expression, Ehash> produced;
 	Expression inputs(context.evaluateOperand(1));
-	ExecutionContext productions(context.xchild(2));
+	ExecutionContext positiveSection(context.xchild(2));
+	ExecutionContext negativeSection(context.xchild(3));
 	for (int i = 1; i <= inputs.head().getAtomCount(); ++i) {
 		Expression input(inputs.child(i));
-		for (int j = 1; j <= productions.head().getAtomCount(); ++j) {
-			ExecutionContext pss(productions.xchild(j));
-			if (pss.head().getAtomCount() == 2) {
-				ExecutionContext guards(pss.xchild(1));
-				ExecutionContext prods(pss.xchild(2));
-				bool guardsMatch = true;
-				for (int k = 1; guardsMatch && k <= guards.head().getAtomCount(); ++k) {
-					ExecutionContext guard(guards.xchild(k));
-					if (!match(input, guard))
-						guardsMatch = false;
+		if (positiveSection.head().getAtomCount() == 2) {
+			ExecutionContext positivePatterns(positiveSection.xchild(1));
+			ExecutionContext positiveProds(positiveSection.xchild(2));
+			bool positivePatternsMatch = true;
+			for (int j = 1; positivePatternsMatch && j <= positivePatterns.head().getAtomCount(); ++j) {
+				ExecutionContext pattern(positivePatterns.xchild(j));
+				if (!match(input, pattern))
+					positivePatternsMatch = false;
+			}
+
+			if (positivePatternsMatch) {
+				evaluateProductions(context, positiveProds);
+			} else {
+				bool negativePatternsMatch = true;
+				ExecutionContext negativePatterns(negativeSection.xchild(1));
+				ExecutionContext negativeProds(negativeSection.xchild(2));
+				for (int j = 1; negativePatternsMatch && j <= negativePatterns.head().getAtomCount(); ++j) {
+					ExecutionContext pattern(negativePatterns.xchild(j));
+					if (!match(input, pattern))
+						negativePatternsMatch = false;
 				}
-
-				if (guardsMatch == matchOrNotMatch) {
-					for (int k = 1; k <= prods.head().getAtomCount(); ++k) {
-						ExecutionContext prod(prods.xchild(k));
-						prod.evaluate();
-
-						Expression prodv = prod;
-						prodv.setValueAddressing(true);
-
-						// see if we've produced this result before
-						if (produced.find(prodv) != produced.end())
-							continue;
-
-						// we will be be over-writing prodv if we re-evaluate this production later, so we must make a copy
-						prodv = prodv.copy(prodv.getInstance());
-
-						// put this produced element into the produced set, so we won't produce it again
-						produced.insert(prodv);
-						context.appendResultSetElement(prodv.iptr());
-					}
+				if (negativePatternsMatch) {
+					evaluateProductions(context, negativeProds);
 				}
 			}
 		}
@@ -184,15 +198,6 @@ void _operator_red(ExecutionContext& context, bool matchOrNotMatch)
 	context.endResultSet();
 }
 
-void operator_red(ExecutionContext& context)
-{
-	return _operator_red(context, true);
-}
-
-void operator_notred(ExecutionContext& context)
-{
-	return _operator_red(context, false);
-}
 void operator_sub(ExecutionContext& context)
 {
 	Expression lhs(context.evaluateOperand(1));
@@ -223,8 +228,15 @@ void operator_ins(ExecutionContext& context)
 	for (int i = 0; i < formalParameters.size(); ++i)
 		context.pushResultAtom(formalParameters[i].iptr());
 	Expression result(context.getEndExpression());
-	if (pgm.head() == opcodeRegister["pgm"]) {
-		context.pushResultAtom(opcodeRegister["ipgm"]); // TODO: ifmd, iimd
+	Atom a = pgm.head();
+	if (a == opcodeRegister["pgm"] || a == opcodeRegister["|pgm"]) {
+		context.pushResultAtom(opcodeRegister["ipgm"]);
+	} else if (a == opcodeRegister["fmd"] || a == opcodeRegister["|fmd"]) {
+		context.pushResultAtom(opcodeRegister["ifmd"]);
+	} else if (a == opcodeRegister["imd"] || a == opcodeRegister["|imd"]) {
+		context.pushResultAtom(opcodeRegister["iimd"]);
+	} else if (a == opcodeRegister["gol"] || a == opcodeRegister["|gol"]) {
+		context.pushResultAtom(opcodeRegister["igol"]);
 	} else {
 		printf("ins: unrecognized reactive object type %08x\n", pgm.head().atom);
 		context.pushResultAtom(Atom::Nil());

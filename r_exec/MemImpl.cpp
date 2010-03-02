@@ -27,12 +27,14 @@ namespace MemImpl {
 			r_code::Object* o = objects_[i];
 			vector<Object*> refs;
 			for (int j = 0; j < o->reference_set.size(); ++j) {
-				if (o->reference_set[j] == o)
-					continue; // HACK! workaround for groups with ntf_grp set
-				Object* r = insertedObjects[o->reference_set[j]];
-				if (!r)
-					error("can't locate object for reference");
-				refs.push_back(r);
+				if (o->reference_set[j] == o) {
+					refs.push_back(static_cast<Object*>(0)); // HACK
+				} else {
+					Object* r = insertedObjects[o->reference_set[j]];
+					if (!r)
+						error("can't locate object for reference");
+					refs.push_back(r);
+				}
 			}
 
 			Object* _o = Object::create(*o->code.as_std(), refs);
@@ -40,7 +42,7 @@ namespace MemImpl {
 			insertedObjects[o] = _o;
 			for (int j = 0; j < o->view_set.size(); ++j) {
 				r_code::View* v = o->view_set[j];
-				if (v->reference_set.size() > 0) {
+				if (v->reference_set.size() > 0 && v->reference_set[0] != 0) {
 					GroupImpl* grp = reinterpret_cast<GroupImpl*>(insertedObjects[v->reference_set[0]]);
 					if (!grp || grp->type != ObjectBase::GROUP)
 						error("invalid group for view");
@@ -135,20 +137,16 @@ namespace MemImpl {
 
 	void Impl::resume()
 	{
-		printf("memimpl resuming\n");
 		runThread->resume();
 	}
 
 	void Impl::suspend()
 	{
-		printf("memimpl suspending\n");
 		runThread->suspend();
 	}
 
 	void Impl::update()
 	{
-		printf("memimpl update\n");
-		
 		core->suspend();
 		
 		processInsertions();
@@ -204,6 +202,7 @@ namespace MemImpl {
 
 	ObjectBase* Impl::insertObject(ObjectBase* object)
 	{
+		if (!object) return 0; // HACK
 		if (object->type == ObjectBase::GROUP) {
 			GroupImpl* group = reinterpret_cast<GroupImpl*>(object);
 			group->coreInstance = core->createInstance(group);
@@ -270,7 +269,8 @@ namespace MemImpl {
 	ObjectImpl::~ObjectImpl()
 	{
 		for (vector<ObjectBase*>::iterator it = references.begin(); it != references.end(); ++it)
-			(*it)->release();
+			if (*it != 0) // HACK
+				(*it)->release();
 	}
 	
 	Expression ObjectBase::copyMarkerSet(ReductionInstance& dest) const
@@ -448,6 +448,7 @@ namespace MemImpl {
 		coreInstance = 0;
 		mem = 0;
 		numGeneralUpdatesSkipped = 0;
+		numSignalingPeriodsSkipped = 0;
 		updateCounter = 0;
 	}
 
@@ -491,10 +492,9 @@ namespace MemImpl {
 		Expression args(command.child(3));
 		Expression objectExpr(args.child(1));
 		Expression viewExpr(args.child(2));
-		// TODO: create the object unless it's an exact copy
-		Object* object = ri->objectForExpression(objectExpr);
+		Object* object = ri->extractObject(objectExpr);
 		ViewImpl* view = new ViewImpl();
-		view->object = reinterpret_cast<ObjectImpl*>(object);
+		view->object = reinterpret_cast<ObjectBase*>(object);
 		view->group = reinterpret_cast<GroupImpl*>(ri->references[viewExpr.child(1).head().asIndex()]);
 		view->originGroup = this;
 		view->originNodeID = 0;
@@ -517,15 +517,22 @@ namespace MemImpl {
 	
 	void GroupImpl::processModOrSet(ReductionInstance* ri, Expression command)
 	{
-		// TODO
+		// TODO: mod/set
 	}
 	
+	void GroupImpl::generateReductionNotification(ReductionInstance* ri)
+	{
+		// TODO: generate reduction notification
+	}
+
 	void GroupImpl::processCommands()
 	{
 		for (vector<ReductionInstance*>::iterator it = reductions.begin(); it != reductions.end(); ++it) {
 			Expression ipgm(*it, 0, false); // HACK: use value referencing throughout
 			Expression pgm(ipgm.child(1));
-			// TODO: generate mk.rdx or mk.|rdx, if appropriate
+			if (pgm.child(7).head().asFloat() > 0) {
+				generateReductionNotification(*it);
+			}
 			Expression commands(pgm.child(3));
 			for (int i = 1; i <= commands.head().getAtomCount(); ++i) {
 				Expression command(commands.child(i));
@@ -549,6 +556,7 @@ namespace MemImpl {
 	void GroupImpl::addNotificationMarker(ObjectImpl* obj, ViewImpl* view)
 	{
 		obj->type = OBJECT;
+		obj->isNotification = true;
 		GroupImpl* group = view->group;
 		ViewImpl* markerView = new ViewImpl;
 		markerView->object = obj;
@@ -620,8 +628,14 @@ namespace MemImpl {
 	
 	void GroupImpl::updateControlValues(bool updateGeneral, int64 resilienceDecrease)
 	{
+		if (updateGeneral && ++numSignalingPeriodsSkipped >= signalingPeriod) {
+			numSignalingPeriodsSkipped = 0;
+			coreInstance->signalProgramsWithNoInputs();
+		}
 		if (updateGeneral && ++numGeneralUpdatesSkipped < updatePeriod)
 			updateGeneral = false;
+		else
+			numGeneralUpdatesSkipped = 0;
 		++updateCounter;
 		controlValuesChanged = updateGeneral;
 		if (!updateGeneral && resilienceDecrease == 0)
@@ -658,46 +672,48 @@ namespace MemImpl {
 				if (view->mediations[2].requestCount != 0) {
 					view->activationOrVisibility.value = view->mediations[2].getAndReset();
 				}
-				processNotifications(
-					view->saliency,
-					updateCounter,
-					saliencyChangeNotificationThreshold,
-					saliencyChangeNotificationPeriod,
-					saliencyLowValueThreshold,
-					saliencyHighValueThreshold,
-					saliencyValueNotificationPeriod,
-					MARKER_SALIENCY_CHANGE,
-					MARKER_SALIENCY_LOW_VALUE,
-					MARKER_SALIENCY_HIGH_VALUE,
-					view
-				);
-				processNotifications(
-					view->resilience,
-					updateCounter,
-					1e100,
-					1,
-					resilienceLowValueThreshold,
-					resilienceHighValueThreshold,
-					resilienceValueNotificationPeriod,
-					-1,
-					MARKER_RESILIENCE_LOW_VALUE,
-					MARKER_RESILIENCE_HIGH_VALUE,
-					view
-				);
-				if (view->object->type == REACTIVE) {
+				if (!view->object->isNotification) {
 					processNotifications(
-						view->activationOrVisibility,
+						view->saliency,
 						updateCounter,
-						activationChangeNotificationThreshold,
-						activationChangeNotificationPeriod,
-						activationLowValueThreshold,
-						activationHighValueThreshold,
-						activationValueNotificationPeriod,
-						MARKER_ACTIVATION_CHANGE,
-						MARKER_ACTIVATION_LOW_VALUE,
-						MARKER_ACTIVATION_HIGH_VALUE,
+						saliencyChangeNotificationThreshold,
+						saliencyChangeNotificationPeriod,
+						saliencyLowValueThreshold,
+						saliencyHighValueThreshold,
+						saliencyValueNotificationPeriod,
+						MARKER_SALIENCY_CHANGE,
+						MARKER_SALIENCY_LOW_VALUE,
+						MARKER_SALIENCY_HIGH_VALUE,
 						view
 					);
+					processNotifications(
+						view->resilience,
+						updateCounter,
+						1e100,
+						1,
+						resilienceLowValueThreshold,
+						resilienceHighValueThreshold,
+						resilienceValueNotificationPeriod,
+						-1,
+						MARKER_RESILIENCE_LOW_VALUE,
+						MARKER_RESILIENCE_HIGH_VALUE,
+						view
+					);
+					if (view->object->type == REACTIVE) {
+						processNotifications(
+							view->activationOrVisibility,
+							updateCounter,
+							activationChangeNotificationThreshold,
+							activationChangeNotificationPeriod,
+							activationLowValueThreshold,
+							activationHighValueThreshold,
+							activationValueNotificationPeriod,
+							MARKER_ACTIVATION_CHANGE,
+							MARKER_ACTIVATION_LOW_VALUE,
+							MARKER_ACTIVATION_HIGH_VALUE,
+							view
+						);
+					}
 				}
 			}
 			++it;
@@ -929,6 +945,7 @@ namespace MemImpl {
 			size_t hv = 0;
 			for (int i = 0; i < obj->references.size(); ++i) {
 				const ObjectBase* base = reinterpret_cast<const ObjectBase*>(obj->references[i]);
+				if (!base) continue; // HACK
 				if (base->type == ObjectBase::GROUP)
 					hv = hv * 5 + reinterpret_cast<size_t>(base);
 				else
