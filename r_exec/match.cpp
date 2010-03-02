@@ -58,10 +58,12 @@ bool match(Expression input, ExecutionContext pattern)
 	ExecutionContext skel(pattern.xchild(1));
 	ExecutionContext guards(pattern.xchild(2));
 
+	pattern.setResult(pattern.head());
 	Atom True = Atom::Boolean(true);
 	bool matches = false;
 	if (matchSkel(input, skel)) {
 		matches = true;
+		guards.setResult(guards.head());
 		for (int i = 1; matches && i <= guards.head().getAtomCount(); ++i) {
 			guards.xchild(i).evaluate();
 			Expression result(guards.child(i));

@@ -26,7 +26,7 @@ Expression ExecutionContext::evaluate()
 			for (int i = 1; i <= head().getAtomCount(); ++i)
 				evaluateOperand(i);
 			break;
-		case Atom::C_PTR:
+		case Atom::C_PTR: // TODO: is this right?
 			{
 			// first, copy the c_ptr structure to the value array
 			for (int i = 0; i <= head().getAtomCount(); ++i)
@@ -64,7 +64,7 @@ Expression ExecutionContext::evaluate()
 		case Atom::DEVICE:
 		case Atom::DEVICE_FUNCTION:
 		case Atom::NIL:
-		case Atom::R_PTR:
+		case Atom::R_PTR: // TODO: this can't be right
 			setResult(head());
 			break;
 		default:
@@ -121,13 +121,6 @@ void ExecutionContext::endResultSet()
 		instance->value.push_back(Atom::Set(resultSet.size()));
 		for (size_t i = 0; i < resultSet.size(); ++i)
 			instance->value.push_back(resultSet[i]);
-	}
-}
-
-void ExecutionContext::merge(Expression value)
-{
-	if (head().getAtomCount() == value.head().getAtomCount()) {
-		
 	}
 }
 

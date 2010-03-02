@@ -40,6 +40,7 @@ namespace CoreImpl {
 				implMutex.acquire();
 				if (job) {
 					job->finish();
+					job = 0;
 				}
 				if (suspendRequested || activeInstances.empty()) {
 					progress = false;

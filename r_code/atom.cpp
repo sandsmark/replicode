@@ -249,6 +249,11 @@ namespace	r_code{
 	}
 
 		uint16	Atom::getAtomCount()	const{
+		
+		if (atom == 0xFFFFFFFF) {
+			printf("attempt to get atom count for undefined atom\n");
+			return 0;
+		}
 
 		if(isStructural()){
 		
@@ -260,6 +265,7 @@ namespace	r_code{
 			case	OPERATOR:
 			case	S_SET:	return	atom	&	0x000000FF;
 			case	STRING:	return	(atom	&	0x00FF0000)>>16;
+			case	TIMESTAMP: return 2;
 			}
 		}else
 			return	0;

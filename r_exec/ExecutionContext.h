@@ -11,7 +11,6 @@ public:
 	ExecutionContext(Expression& e) :Expression(e) {}
 	Expression evaluateOperand(int index);
 	Expression evaluate();
-	void merge(Expression value);
 	ExecutionContext xchild(int index) const;
 
 	void setResult(r_code::Atom result);

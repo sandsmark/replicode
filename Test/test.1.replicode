@@ -1,6 +1,6 @@
 ; test
 
-!load c:/work/Replicode/Test/std.replicode
+!load std.replicode
 
 !class (vec3 x:nb y:nb z:nb)
 !class (mk.position (_obj {object: position:vec3}))

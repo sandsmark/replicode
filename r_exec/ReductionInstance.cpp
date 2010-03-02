@@ -196,9 +196,9 @@ ReductionInstance* ReductionInstance::split(ExecutionContext location)
 				} else {
 					// make a copy
 					if (a.getDescriptor() == Atom::I_PTR)
-						a = Expression(this, a.asIndex()).copy(*result).iptr();
+						a = Expression(this, a.asIndex(), true).copy(*result).iptr();
 					else
-						a = Expression(this, a.asIndex()).copy(*result).vptr();
+						a = Expression(this, a.asIndex(), true).copy(*result).vptr();
 				}
 				break;
 			}
@@ -240,9 +240,9 @@ void ReductionInstance::merge(ExecutionContext location, ReductionInstance* ri)
 				} else {
 					// a pointer outside the copied area.  copy it.
 					if (a.getDescriptor() == Atom::I_PTR)
-						a = Expression(ri, n - firstIndex).copy(*this).iptr();
+						a = Expression(ri, n - firstIndex, true).dereference().copy(*this).iptr();
 					else
-						a = Expression(ri, n - firstIndex).copy(*this).vptr();
+						a = Expression(ri, n - firstIndex, true).dereference().copy(*this).vptr();
 				}
 				break;
 			}
@@ -295,7 +295,6 @@ Object* ReductionInstance::extractObject(Expression expr)
 	ReductionInstance copyRI(group);
 	expr.copy(copyRI);
 	printf("creating new object\n");
-	copyRI.debug();
 	return Object::create(copyRI.value, copyRI.references);
 }
 

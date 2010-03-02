@@ -64,12 +64,28 @@ Expression Expression::dereference() const
 
 Expression Expression::copy(ReductionInstance& dest) const
 {
+	printf("Expression: copying %p(%x,%d) -> %p\n", instance, index, isValue, &dest);
+
 	dest.syncSizes();
 	// create an empty reference that will become the result
-	Expression result(&dest);
-	result.setValueAddressing(true);
-	result.index = dest.value.size();
+	Expression result(&dest, dest.value.size(), true);
 
+	// First, check to see if this expression is an exact copy of an existing object
+	for (int i = 0; i < instance->copies.size(); ++i) {
+		if (instance->copies[i].position == index) {
+			Object *o = instance->copies[i].object;
+			int j;
+			for (j = 0; j < dest.references.size(); ++j) {
+				if (dest.references[j] == o)
+					break;
+			}
+			dest.value.push_back(Atom::RPointer(j));
+			if (j == dest.references.size())
+				dest.references.push_back(o);
+			return result;
+		}
+	}
+			
 	// copy the top-level expression.  At this point it will have back-links
 	dest.value.push_back(head());
 	for (int i = 1; i <= head().getAtomCount(); ++i) {
@@ -77,18 +93,21 @@ Expression Expression::copy(ReductionInstance& dest) const
 	}
 
 	// copy any children which reside in the value array
-	for (int i = 1; i <= result.head().getAtomCount(); ++i) {
-		Expression rc(result.child(i, false));
-		Expression c(child(i, false));
-		if (rc.head().getDescriptor() == Atom::I_PTR) {
-			c = Expression(instance, c.head().asIndex(), false);
-			rc.head() = c.copy(dest).iptr();
-		} else if (c.head().getDescriptor() == Atom::VL_PTR) {
-			c = Expression(instance, c.head().asIndex(), false);
-			rc.head() = c.copy(dest).vptr();
+	if (result.head().getDescriptor() != Atom::TIMESTAMP) {
+		for (int i = 1; i <= result.head().getAtomCount(); ++i) {
+			Expression rc(result.child(i, false));
+			Expression c(child(i, false));
+			if (c.head().getDescriptor() == Atom::I_PTR) {
+				c = Expression(instance, c.head().asIndex(), isValue);
+				rc.head() = c.copy(dest).iptr();
+			} else if (c.head().getDescriptor() == Atom::VL_PTR) {
+				c = Expression(instance, c.head().asIndex(), true);
+				rc.head() = c.copy(dest).iptr();
+			}
 		}
 	}
 	dest.syncSizes();
+	printf("copied %p(%x)\n", &dest, result.index);
 	return result;
 }
 
