@@ -36,7 +36,13 @@ bool matchSkel(Expression input, ExecutionContext skel)
 		nilSkel(skel);
 		return false;
 	}
-	skel.setResult(input.head());
+
+	int16 n = input.getReferenceIndex();
+	if (n >= 0) {
+		skel.setResult(Atom::RPointer(n)); // special case: copy the reference to a copy of an object
+	} else {
+		skel.setResult(input.head());
+	}
 	for (int i = 1; i <= skel.head().getAtomCount(); ++i) {
 		ExecutionContext skelChild = skel.xchild(i);
 		if (skelChild.head() != Wild && skelChild.head() != TailWild) {

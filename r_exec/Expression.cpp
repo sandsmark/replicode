@@ -74,14 +74,8 @@ Expression Expression::copy(ReductionInstance& dest) const
 	for (int i = 0; i < instance->copies.size(); ++i) {
 		if (instance->copies[i].position == index) {
 			Object *o = instance->copies[i].object;
-			int j;
-			for (j = 0; j < dest.references.size(); ++j) {
-				if (dest.references[j] == o)
-					break;
-			}
+			int j = dest.getReferenceIndex(o);
 			dest.value.push_back(Atom::RPointer(j));
-			if (j == dest.references.size())
-				dest.references.push_back(o);
 			return result;
 		}
 	}
@@ -97,18 +91,37 @@ Expression Expression::copy(ReductionInstance& dest) const
 		for (int i = 1; i <= result.head().getAtomCount(); ++i) {
 			Expression rc(result.child(i, false));
 			Expression c(child(i, false));
-			if (c.head().getDescriptor() == Atom::I_PTR) {
-				c = Expression(instance, c.head().asIndex(), isValue);
-				rc.head() = c.copy(dest).iptr();
-			} else if (c.head().getDescriptor() == Atom::VL_PTR) {
-				c = Expression(instance, c.head().asIndex(), true);
-				rc.head() = c.copy(dest).iptr();
+			switch(c.head().getDescriptor()) {
+				case Atom::I_PTR:
+					c = Expression(instance, c.head().asIndex(), isValue);
+					rc.head() = c.copy(dest).iptr();
+					break;
+				case Atom::VL_PTR:
+					c = Expression(instance, c.head().asIndex(), true);
+					rc.head() = c.copy(dest).iptr();
+					break;
+				case Atom::R_PTR:
+					if (&dest != instance) {
+						rc.head() = Atom::RPointer(dest.getReferenceIndex(instance->references[c.head().asIndex()]));
+					}
+					break;
 			}
 		}
 	}
 	dest.syncSizes();
 	printf("copied %p(%x)\n", &dest, result.index);
 	return result;
+}
+
+int16 Expression::getReferenceIndex()
+{
+	if (isValue || head().getDescriptor() != Atom::OBJECT)
+		return -1;
+	for (int i = 0; i < instance->copies.size(); ++i) {
+		if (instance->copies[i].position == index)
+			return instance->getReferenceIndex(instance->copies[i].object);
+	}
+	return -1;
 }
 
 }

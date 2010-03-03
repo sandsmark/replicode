@@ -15,8 +15,10 @@
 #include "Object.h"
 #include "Group.h"
 #include "mbrane_imports/utils.h"
+#include <map>
 
-namespace foo { namespace bar { class foo { foo(); }; } }
+using namespace std;
+
 namespace r_exec {
 
 namespace MemImpl {
@@ -211,11 +213,13 @@ namespace MemImpl {
 		// non-exposed members
 		typedef UNORDERED_MAP<const ObjectBase*, ViewImpl*> ContentStore;
 		typedef UNORDERED_SET<ViewImpl*, ViewImpl::object_hash, ViewImpl::equal_object> SalientStore;
+		typedef multimap<int64, ViewImpl*> PendingViewStore;
 		
 		Core::Instance* coreInstance;
 		Impl* mem;
 		MediatedValueAccumulator mediations[7];
 		ContentStore content;
+		PendingViewStore pendingViews;
 		std::vector<ReductionInstance*> reductions;
 		std::vector<ViewImpl*> newContent;
 		std::vector<ViewImpl*> insertedContent;

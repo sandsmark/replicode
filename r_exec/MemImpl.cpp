@@ -722,8 +722,23 @@ namespace MemImpl {
 	
 	void GroupImpl::processNewViews()
 	{
+		// First, check to see if any of the pending views need to be inserted
+		int64 now = mBrane::Time::Get();
+		for (;;) {
+			PendingViewStore::iterator it = pendingViews.begin();
+			if (it == pendingViews.end() || it->second->injectionTime > now)
+				break;
+			newContent.push_back(it->second);
+			pendingViews.erase(it);
+		}
+
 		for (vector<ViewImpl*>::iterator itNew = newContent.begin(); itNew != newContent.end(); ++itNew) {
 			ViewImpl* view = *itNew;
+			if (view->injectionTime > now) {
+				pendingViews.insert(make_pair(view->injectionTime, view));
+				continue;
+			}
+
 			ContentStore::iterator itExisting = content.find(view->object);
 			if (itExisting != content.end()) {
 				ViewImpl* existingView = itExisting->second;

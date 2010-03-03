@@ -43,6 +43,7 @@ public:
 	void merge(ExecutionContext location, ReductionInstance* ri);
 	Object* objectForExpression(Expression expr);
 	Object* extractObject(Expression expr); // generates the object whose head is given
+	int16 getReferenceIndex(Object* o); // finds the index for o, creating a new reference if needed
 	void syncSizes(); // enlarges the value or input array to make them the same size
 	size_t hash() const;
 	Group* getGroup() { return group; }

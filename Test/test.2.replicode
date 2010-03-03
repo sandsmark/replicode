@@ -1,5 +1,11 @@
 ; test
 
+!load std.replicode
+
+!class (vec3 x:nb y:nb z:nb)
+!class (mk.position (_obj {object: position:vec3}))
+!class (mk.last_known (_obj event:))
+
 root:(grp
 1; upr
 1; spr
@@ -40,7 +46,7 @@ root; ntf_grp
 )
 
 []
-   [(_now) 1 forever nil nil]
+   [(_now) 1 forever nil nil 0 0]
 
 self:(ent
 |[]; view
@@ -92,7 +98,7 @@ stdin; ntf_grp
 )
 
 []
-   [(_now) 1 forever root nil]
+   [(_now) 1 forever root nil 0 0]
 
 stdout:(grp
 1; upr
@@ -134,7 +140,7 @@ stdout; ntf_grp
 )
 
 []
-   [(_now) 1 forever root nil]
+   [(_now) 1 forever root nil 0 0]
 
 P1:(pgm
 []; tpl
@@ -200,6 +206,73 @@ P2; code
 []
    [(_now) 1 300000us stdin nil 1]
 
+P3:(pgm
+|[]; tpl
+[]; input
+   []; inputs
+      (ptn l:(mk.last_known ::) |[])
+   |[]; timing
+   |[]; guards
+[]; prods
+   (cmd _eje 0xA1000000 [l l.vw 0])
+1000000us; tsc
+0; csm
+0; sig
+0; nfr
+|[]; view
+|[]; mks
+|[]; vws
+0; psln_thr
+)
+
+|[]
+
+iP3:(ipgm
+P3; code
+|[]; args
+|[]; view
+|[]; mks
+|[]; vws
+0; psln_thr
+)
+
+[]
+   [(_now) 1 forever stdin nil 1]
+
+
+P4:(pgm
+|[]; tpl
+[]; input
+   []; inputs
+      (ptn m:(mk.position b: (vec3 x: y: z:) [t: s: r: g: o:] ::) |[])
+   |[]; timing
+   |[]; guards
+[]; prods
+   (cmd _inj 0xA1000000 [(mk.position b (vec3 (add x 1) y z) |[] |[] |[] 0) [(add t 10000us) s r g o] 0])
+1000000us; tsc
+0; csm
+0; sig
+0; nfr
+|[]; view
+|[]; mks
+|[]; vws
+0; psln_thr
+)
+
+|[]
+
+iP4:(ipgm
+P4; code
+|[]; args
+|[]; view
+|[]; mks
+|[]; vws
+0; psln_thr
+)
+
+[]
+   [(_now) 1 forever stdin nil 1]
+
 O1:(mk.position
 self
 (vec3 3 3 3)
@@ -211,3 +284,4 @@ self
 
 []
    [(_now) 1 500000us stdin nil]
+

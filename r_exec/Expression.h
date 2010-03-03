@@ -22,6 +22,7 @@ public:
 	r_code::Atom iptr() const;
 	r_code::Atom vptr() const;
 	ReductionInstance& getInstance() { return *instance; }
+	int16 getReferenceIndex();
 protected:
 	ReductionInstance *instance;
 	int index;

@@ -298,15 +298,29 @@ Object* ReductionInstance::extractObject(Expression expr)
 	return Object::create(copyRI.value, copyRI.references);
 }
 
+int16 ReductionInstance::getReferenceIndex(Object* o)
+{
+	int i;
+	for (i = 0; i < references.size(); ++i) {
+		if (references[i] == o)
+			return i;
+	}
+	references.push_back(o);
+	return i;
+}
+
 void ReductionInstance::debug()
 {
+	UNORDERED_MAP<int32, std::string> atomNames;
+	for (UNORDERED_MAP<std::string, r_code::Atom>::iterator it = opcodeRegister.begin(); it != opcodeRegister.end(); ++it)
+		atomNames[it->second.atom] = it->first;
 	syncSizes();
 	int copyI = 0;
 	for (int i = 0; i < input.size(); ++i) {
-		if (copyI < copies.size() && copies[copyI].position == i) {
+		if (copyI < copies.size() && copies[copyI].position == i)
 			printf("COPY[%d]: %p\n", copyI, copies[copyI++].object);
-		}
-		printf("[%02x] = input = 0x%08x value = 0x%08x\n", i, input[i].atom, value[i].atom);
+		printf("[%02x] = input = 0x%08x value = 0x%08x (%s,%s)\n", i, input[i].atom, value[i].atom,
+			atomNames[input[i].atom].c_str(), atomNames[value[i].atom].c_str());
 	}
 
 	for (int i = 0; i < references.size(); ++i) {
