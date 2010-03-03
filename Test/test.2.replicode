@@ -244,11 +244,11 @@ P4:(pgm
 |[]; tpl
 []; input
    []; inputs
-      (ptn m:(mk.position b: (vec3 x: y: z:) [t: s: r: g: o:] ::) |[])
+      (ptn m:(mk.position b: (vec3 x: y: z:) [T: s: r: g: o:] ::) |[])
    |[]; timing
    |[]; guards
 []; prods
-   (cmd _inj 0xA1000000 [(mk.position b (vec3 (add x 1) y z) |[] |[] |[] 0) [(add t 10000us) s r g o] 0])
+   (cmd _inj 0xA1000000 [(mk.position b (vec3 (add x 1) y z) |[] |[] |[] 0) [(add T 10000us) s r g o] 0])
 1000000us; tsc
 0; csm
 0; sig

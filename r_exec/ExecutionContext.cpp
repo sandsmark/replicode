@@ -64,7 +64,10 @@ Expression ExecutionContext::evaluate()
 		case Atom::DEVICE:
 		case Atom::DEVICE_FUNCTION:
 		case Atom::NIL:
-		case Atom::R_PTR: // TODO: this can't be right
+		case Atom::VIEW:
+		case Atom::VWS:
+		case Atom::MKS:
+		case Atom::R_PTR:
 			setResult(head());
 			break;
 		default:

@@ -495,20 +495,60 @@ namespace MemImpl {
 		Object* object = ri->extractObject(objectExpr);
 		ViewImpl* view = new ViewImpl();
 		view->object = reinterpret_cast<ObjectBase*>(object);
-		view->group = reinterpret_cast<GroupImpl*>(ri->references[viewExpr.child(1).head().asIndex()]);
+		Atom groupAtom = viewExpr.child(4, false).head();
+		if (groupAtom.getDescriptor() == Atom::R_PTR) {
+			view->group = reinterpret_cast<GroupImpl*>(ri->references[groupAtom.asIndex()]);
+		} else {
+			delete view;
+			delete object;
+			return;
+		}
 		view->originGroup = this;
 		view->originNodeID = 0;
-		view->injectionTime = viewExpr.child(3).decodeTimestamp();
-		view->saliency.value = viewExpr.child(4).head().asFloat();
-		view->resilience.value = viewExpr.child(5).decodeTimestamp();
-		if (viewExpr.head().getAtomCount() >= 6)
-			view->activationOrVisibility.value = viewExpr.child(6).head().asFloat();
-		if (viewExpr.head().getAtomCount() >= 7)
-			view->copyOnVisibility = viewExpr.child(7).head().asFloat();
+		Atom ijtAtom = viewExpr.child(1).head();
+		if (ijtAtom.getDescriptor() == Atom::TIMESTAMP)
+			view->injectionTime = viewExpr.child(1).decodeTimestamp();
+		else if (ijtAtom.isFloat())
+			view->injectionTime = ijtAtom.asFloat();
+		else
+			view->injectionTime = 0;
+
+		Atom slnAtom = viewExpr.child(2).head();
+		if (slnAtom.isFloat())
+			view->saliency.value = slnAtom.asFloat();
+		else
+			view->saliency.value = 0;
+
+		Atom resAtom = viewExpr.child(3).head();
+		if (resAtom.getDescriptor() == Atom::TIMESTAMP)
+			view->resilience.value = viewExpr.child(3).decodeTimestamp();
+		else
+			view->resilience.value = 0;
+
+		if (viewExpr.head().getAtomCount() >= 6) {
+			Atom avAtom = viewExpr.child(6).head();
+			if (avAtom.isFloat())
+				view->activationOrVisibility.value = avAtom.asFloat();
+			else
+				view->activationOrVisibility.value = 0;
+		}
+		if (viewExpr.head().getAtomCount() >= 7) {
+			Atom covAtom = viewExpr.child(7).head();
+			if (covAtom.isFloat())
+				view->copyOnVisibility = covAtom.asFloat();
+			else
+				view->copyOnVisibility = 0;
+		}
+		
 		if (command.child(1).head() == opcodeRegister["_inj"]) {
 			newView(view);
 		} else {
-			int node_id = args.child(3).head().asFloat();
+			Atom a = args.child(3).head();
+			int16 node_id = 0;
+			if (a.getDescriptor() == Atom::NODE)
+				node_id = a.asIndex();
+			else if (a.isFloat())
+				node_id = a.asFloat();
 			// NOTE: need to supply proper view data when output->receive() becomes adequate
 			mem->output->receive(object, vector<r_code::Atom>(), node_id,
 				(view->group == mem->stdinGroup) ? ObjectReceiver::INPUT_GROUP : ObjectReceiver::OUTPUT_GROUP);
@@ -738,6 +778,7 @@ namespace MemImpl {
 				pendingViews.insert(make_pair(view->injectionTime, view));
 				continue;
 			}
+			view->injectionTime = now;
 
 			ContentStore::iterator itExisting = content.find(view->object);
 			if (itExisting != content.end()) {

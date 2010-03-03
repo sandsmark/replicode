@@ -226,7 +226,8 @@ void ReductionInstance::merge(ExecutionContext location, ReductionInstance* ri)
 	int lastIndex = maximumIndex(location);
 	
 	for (int n = firstIndex; n <= lastIndex; ++n) {
-		Atom& a = value[n] = ri->value[n - firstIndex];
+		value[n] = ri->value[n - firstIndex];
+		Atom a = value[n];
 		switch(a.getDescriptor()) {
 			case Atom::I_PTR:
 			case Atom::VL_PTR: {
@@ -234,32 +235,22 @@ void ReductionInstance::merge(ExecutionContext location, ReductionInstance* ri)
 				if (idx <= lastIndex - firstIndex) {
 					// an pointer inside the copied area.  adjust it.
 					if (a.getDescriptor() == Atom::I_PTR)
-						a = Atom::IPointer(idx + firstIndex);
+						value[n] = Atom::IPointer(idx + firstIndex);
 					else
-						a = Atom::VLPointer(idx + firstIndex);
+						value[n] = Atom::VLPointer(idx + firstIndex);
 				} else {
 					// a pointer outside the copied area.  copy it.
 					if (a.getDescriptor() == Atom::I_PTR)
-						a = Expression(ri, n - firstIndex, true).dereference().copy(*this).iptr();
+						value[n] = Expression(ri, n - firstIndex, true).dereference().copy(*this).iptr();
 					else
-						a = Expression(ri, n - firstIndex, true).dereference().copy(*this).vptr();
+						value[n] = Expression(ri, n - firstIndex, true).dereference().copy(*this).vptr();
 				}
 				break;
 			}
 			case Atom::R_PTR: {
 				int old_idx = a.asIndex();
-				bool found = false;
-				for (int i = 0; i < references.size(); ++i) {
-					if (references[i] == ri->references[old_idx]) {
-						a = Atom::RPointer(i);
-						found = true;
-						break;
-					}
-				}
-				if (!found) {
-					a = Atom::RPointer(references.size());
-					references.push_back(ri->references[old_idx]);
-				}
+				int new_idx = getReferenceIndex(ri->references[old_idx]);
+				value[n] = Atom::RPointer(new_idx);
 				break;
 			}
 		}

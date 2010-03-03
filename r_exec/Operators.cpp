@@ -21,6 +21,8 @@ void operator_add(ExecutionContext& context)
 	} else if (lhs.head().getDescriptor() == Atom::TIMESTAMP) {
 		if (rhs.head().isFloat()) {
 			context.setResultTimestamp( lhs.decodeTimestamp() + int(rhs.head().asFloat() * 1e6));
+		} else if (rhs.head().getDescriptor() == Atom::TIMESTAMP) {
+			context.setResultTimestamp( lhs.decodeTimestamp() + rhs.decodeTimestamp() );
 		}
 	}
 }
