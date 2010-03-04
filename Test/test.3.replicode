@@ -179,8 +179,8 @@ P2:(pgm
    |[]; timings
    |[]; guards
 []; productions
-   (cmd _inj 0xA1000000 [(ins P1 [m]) [(_now) 1 100000us stdin nil]])
-   (cmd _inj 0xA1000000 [(ins P2 [b]) [(_now) 1 200000us stdin nil]])
+   (cmd _inj 0xA1000000 [(ins P1 [m]) [(_now) 1 100000us stdin nil 1]])
+   (cmd _inj 0xA1000000 [(ins P2 [b]) [(_now) 1 200000us stdin nil 1]])
 1000000us; tsc
 0; csm
 0; sig
@@ -192,6 +192,20 @@ P2:(pgm
 )
 
 |[]
+
+iP2:(ipgm
+P2; code
+[]; args
+   [nil 1]
+|[]; view
+|[]; mks
+|[]; vws
+0; psln_thr
+)
+
+[]
+   [(_now) 1 300000us stdin nil 1]
+
 
 P3:(pgm
 |[]; tpl
@@ -213,6 +227,19 @@ P3:(pgm
 )
 
 |[]
+
+iP3:(ipgm
+P3; code
+|[]; args
+|[]; view
+|[]; mks
+|[]; vws
+0; psln_thr
+)
+
+[]
+   [(_now) 1 forever stdin nil 1]
+
 
 P4:(pgm
 |[]; tpl

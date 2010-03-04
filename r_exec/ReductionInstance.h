@@ -8,8 +8,13 @@ namespace r_exec {
 
 namespace MemImpl { class ObjectImpl; class ObjectBase; class GroupImpl; }
 
-template<class T> class boundsCheckedVector : public std::vector<T> {
+template<class T> struct boundsCheckedVector : public std::vector<T> {
 	T& operator[](uint32 i) {
+		if (i >= std::vector<T>::size())
+			printf("out of bounds access\n");
+		return std::vector<T>::operator[](i);
+	}
+	const T& operator[](uint32 i) const {
 		if (i >= std::vector<T>::size())
 			printf("out of bounds access\n");
 		return std::vector<T>::operator[](i);
@@ -55,11 +60,11 @@ private:
 	};
 	
 	int referenceCount;
-	std::vector<r_code::Atom> input;
-	std::vector<r_code::Atom> value;
-	std::vector<CopiedObject> copies;
+	boundsCheckedVector<r_code::Atom> input;
+	boundsCheckedVector<r_code::Atom> value;
+	boundsCheckedVector<CopiedObject> copies;
 	int firstReusableCopiedObject;
-	std::vector<Object*> references;
+	boundsCheckedVector<Object*> references;
 	size_t hash_value;
 	Group* group;
 };

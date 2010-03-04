@@ -22,10 +22,18 @@ void copyInput(Expression input)
 {
 	ExecutionContext r(input);
 	r.setResult(input.head());
-	for (int i = 1; i <= input.head().getAtomCount(); ++i)
-		copyInput(input.child(i, false));
-	if (input.head().getDescriptor() == Atom::I_PTR)
-		copyInput(Expression(&input.getInstance(), input.head().asIndex()));
+	switch(input.head().getDescriptor()) {
+		case Atom::I_PTR:
+			copyInput(Expression(&input.getInstance(), input.head().asIndex()));
+			break;
+		case Atom::TIMESTAMP:
+			r.setResultTimestamp(r.decodeTimestamp());
+			break;
+		default:
+			for (int i = 1; i <= input.head().getAtomCount(); ++i)
+				copyInput(input.child(i, false));
+			break;
+	}
 }
 	
 bool matchSkel(Expression input, ExecutionContext skel)

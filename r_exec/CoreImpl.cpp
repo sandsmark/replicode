@@ -174,6 +174,7 @@ namespace CoreImpl {
 	
 	void Instance::activate(Object* program)
 	{
+		printf("activate %p, %p\n", this, program);
 		onInput(InputQueueEntry(program, InputQueueEntry::ACTIVATION));
 	}
 
@@ -203,7 +204,6 @@ namespace CoreImpl {
 
 	void Instance::doActivate(Object *program)
 	{
-		printf("activate %p, %p\n", this, program);
 		Program p(group);
 		program->copy(*p.programRI);
 

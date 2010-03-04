@@ -277,16 +277,17 @@ namespace MemImpl {
 	{
 		dest.syncSizes();
 		Expression result(&dest, dest.value.size());
-		dest.value.push_back(Atom::Set(markers.size()));
+		dest.input.push_back(Atom::Set(markers.size()));
 		for (MarkerStore::const_iterator it = markers.begin(); it != markers.end(); ++it) {
-			dest.value.push_back(Atom::RPointer(dest.references.size()));
-			dest.references.push_back(*it);
+			dest.input.push_back(Atom::RPointer(dest.getReferenceIndex(*it)));
 		}
+		dest.syncSizes();
 		return result;
 	}
 
 	Expression ObjectBase::copyViewSet(ReductionInstance& dest) const
 	{
+		dest.syncSizes();
 		vector<int> viewIndices;
 		ViewStore::const_iterator it;
 		for (it = views.begin(); it != views.end(); ++it) {
@@ -297,10 +298,11 @@ namespace MemImpl {
 		
 		dest.syncSizes();
 		Expression result(&dest, dest.value.size());
-		dest.value.push_back(Atom::Set(viewIndices.size()));
+		dest.input.push_back(Atom::Set(viewIndices.size()));
 		for (vector<int>::iterator it = viewIndices.begin(); it != viewIndices.end(); ++it) {
-			dest.value.push_back(Atom::IPointer(*it));
+			dest.input.push_back(Atom::IPointer(*it));
 		}
+		dest.syncSizes();
 		return result;
 	}
 
@@ -372,16 +374,7 @@ namespace MemImpl {
 	Expression ObjectBase::copyViewInternal(ReductionInstance& dest, const ViewImpl* view) const
 	{
 		dest.syncSizes();
-		Expression ijt(&dest, dest.value.size());
-		dest.value.push_back(Atom::Timestamp());
-		dest.value.push_back(Atom(view->injectionTime >> 32));
-		dest.value.push_back(Atom(view->injectionTime));
-		Expression res(&dest, dest.value.size());
-		int64 res64 = view->resilience.value;
-		dest.value.push_back(Atom::Timestamp());
-		dest.value.push_back(Atom(res64 >> 32));
-		dest.value.push_back(Atom(res64));
-		Expression result(&dest, dest.value.size(), true);
+
 		uint8 numAtoms;
 		uint16 opcode;
 		if (type == OBJECT) {
@@ -394,22 +387,41 @@ namespace MemImpl {
 			numAtoms = 7;
 			opcode = opcodeRegister["grp_view"].asOpcode();
 		}
-		dest.value.push_back(Atom::SSet(opcode, numAtoms));
-		dest.value.push_back(ijt.iptr());
-		dest.value.push_back(Atom::Float(view->saliency.value));
-		dest.value.push_back(res.iptr());
-		dest.value.push_back(Atom::RPointer(dest.references.size()));
+		if (!view) {
+			Expression result(&dest, dest.value.size());
+			dest.input.push_back(Atom::SSet(opcode, numAtoms));
+			for (int i = 0; i < numAtoms; ++i) 
+				dest.input.push_back(Atom::Nil());
+			dest.syncSizes();
+			return result;
+		}
+			
+		Expression ijt(&dest, dest.input.size());
+		dest.input.push_back(Atom::Timestamp());
+		dest.input.push_back(Atom(view->injectionTime >> 32));
+		dest.input.push_back(Atom(view->injectionTime));
+		Expression res(&dest, dest.input.size());
+		int64 res64 = view->resilience.value;
+		dest.input.push_back(Atom::Timestamp());
+		dest.input.push_back(Atom(res64 >> 32));
+		dest.input.push_back(Atom(res64));
+		Expression result(&dest, dest.input.size());
+		dest.input.push_back(Atom::SSet(opcode, numAtoms));
+		dest.input.push_back(ijt.iptr());
+		dest.input.push_back(Atom::Float(view->saliency.value));
+		dest.input.push_back(res.iptr());
+		dest.input.push_back(Atom::RPointer(dest.references.size()));
 		dest.references.push_back(view->group);
 		if (view->originGroup != 0) {
-			dest.value.push_back((Atom::RPointer(dest.references.size())));
+			dest.input.push_back((Atom::RPointer(dest.references.size())));
 			dest.references.push_back(view->originGroup);
 		} else {
-			dest.value.push_back(Atom::Node(view->originNodeID));
+			dest.input.push_back(Atom::Node(view->originNodeID));
 		}
 		if (type != OBJECT)
-			dest.value.push_back(Atom::Float(view->activationOrVisibility.value));
+			dest.input.push_back(Atom::Float(view->activationOrVisibility.value));
 		if (type == GROUP)
-			dest.value.push_back(Atom::Float(view->copyOnVisibility));
+			dest.input.push_back(Atom::Float(view->copyOnVisibility));
 		dest.syncSizes();
 		return result;
 	}
@@ -609,7 +621,7 @@ namespace MemImpl {
 		markerView->injectionTime = mBrane::Time::Get();
 		markerView->saliency.value = 1;
 		markerView->resilience.value = updatePeriod * mem->baseUpdatePeriod;
-		printf("adding notification %p for object %p in group %p\n", markerView, obj, group);
+		//printf("adding notification %p for object %p in group %p\n", markerView, obj, group);
 		newView(markerView);
 	}
 	

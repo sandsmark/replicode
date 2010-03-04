@@ -29,6 +29,8 @@ void operator_add(ExecutionContext& context)
 
 bool operator == (const Expression& lhs, const Expression& rhs)
 {
+	if (lhs.getIndex() == rhs.getIndex() && lhs.getValueAddressing() == rhs.getValueAddressing())
+		return true;
 	if (lhs.head().atom != rhs.head().atom)
 		return false;
 	if (lhs.head().isStructural()) {

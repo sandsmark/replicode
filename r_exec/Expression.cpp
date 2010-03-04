@@ -64,7 +64,7 @@ Expression Expression::dereference() const
 
 Expression Expression::copy(ReductionInstance& dest) const
 {
-	printf("Expression: copying %p(%x,%d) -> %p\n", instance, index, isValue, &dest);
+	//printf("Expression: copying %p(%x,%d) -> %p\n", instance, index, isValue, &dest);
 
 	dest.syncSizes();
 	// create an empty reference that will become the result
@@ -88,7 +88,7 @@ Expression Expression::copy(ReductionInstance& dest) const
 
 	// copy any children which reside in the value array
 	if (result.head().getDescriptor() != Atom::TIMESTAMP) {
-		for (int i = 1; i <= result.head().getAtomCount(); ++i) {
+		for (int i = 0; i <= result.head().getAtomCount(); ++i) {
 			Expression rc(result.child(i, false));
 			Expression c(child(i, false));
 			switch(c.head().getDescriptor()) {
@@ -109,7 +109,7 @@ Expression Expression::copy(ReductionInstance& dest) const
 		}
 	}
 	dest.syncSizes();
-	printf("copied %p(%x)\n", &dest, result.index);
+	//printf("copied %p(%x)\n", &dest, result.index);
 	return result;
 }
 

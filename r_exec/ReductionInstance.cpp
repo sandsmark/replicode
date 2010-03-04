@@ -35,7 +35,7 @@ ReductionInstance::~ReductionInstance()
 
 ReductionInstance::ReductionInstance(const ReductionInstance& ri)
 {
-	printf("copying ri %p\n", &ri);
+	//printf("copying ri %p\n", &ri);
 	referenceCount = 0;
 	input = ri.input;
 	value = ri.value;
@@ -144,12 +144,14 @@ int maximumIndex(Expression e)
 	int numAtoms = e.head().getAtomCount();
 	int result = e.getIndex() + numAtoms;
 	switch(e.head().getDescriptor()) {
-		case Atom::I_PTR:
-		case Atom::VL_PTR:
-			result = maximumIndex(e.dereference());
+		case Atom::I_PTR: {
+			int idx = e.head().asIndex();
+			if (idx > e.getIndex())
+				result = maximumIndex(Expression(&e.getInstance(), idx, e.getValueAddressing()));
 			break;
+		}
 		case Atom::C_PTR: {
-			int n = maximumIndex(e.child(1));
+			int n = maximumIndex(e.child(1, false));
 			if (n > result)
 				result = n;
 			break;
@@ -158,7 +160,7 @@ int maximumIndex(Expression e)
 			for (int i = 1; i <= numAtoms; ++i) {
 				Expression c(e.child(i));
 				if (c.getIndex() > e.getIndex()) {
-					int n = maximumIndex(e.child(i));
+					int n = maximumIndex(e.child(i, false));
 					if (n > result)
 						result = n;
 				}
@@ -182,7 +184,7 @@ ReductionInstance* ReductionInstance::split(ExecutionContext location)
 	
 	// next, make required changes
 	for (int n = 0; n < result->input.size(); ++n) {
-		Atom& a = result->input[n];
+		Atom a = result->input[n];
 		switch(a.getDescriptor()) {
 			case Atom::I_PTR:
 			case Atom::VL_PTR: {
@@ -190,22 +192,22 @@ ReductionInstance* ReductionInstance::split(ExecutionContext location)
 				if (idx >= firstIndex) {
 					// adjust the index to point to the correct place
 					if (a.getDescriptor() == Atom::I_PTR)
-						a = Atom::IPointer(idx - firstIndex);
+						result->input[n] = Atom::IPointer(idx - firstIndex);
 					else
-						a = Atom::VLPointer(idx - firstIndex);
+						result->input[n] = Atom::VLPointer(idx - firstIndex);
 				} else {
 					// make a copy
 					if (a.getDescriptor() == Atom::I_PTR)
-						a = Expression(this, a.asIndex(), true).copy(*result).iptr();
+						result->input[n] = Expression(this, a.asIndex(), true).copy(*result).iptr();
 					else
-						a = Expression(this, a.asIndex(), true).copy(*result).vptr();
+						result->input[n] = Expression(this, a.asIndex(), true).copy(*result).vptr();
 				}
 				break;
 			}
 			case Atom::R_PTR: {
 				int old_idx = a.asIndex();
-				a = Atom::RPointer(result->references.size());
-				result->references.push_back(references[old_idx]);
+				int new_idx = result->getReferenceIndex(references[old_idx]);
+				result->input[n] = Atom::RPointer(new_idx);
 				break;
 			}
 		}
@@ -285,7 +287,7 @@ Object* ReductionInstance::extractObject(Expression expr)
 	
 	ReductionInstance copyRI(group);
 	expr.copy(copyRI);
-	printf("creating new object\n");
+	//printf("creating new object\n");
 	return Object::create(copyRI.value, copyRI.references);
 }
 
