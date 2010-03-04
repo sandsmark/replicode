@@ -39,6 +39,7 @@ Expression ExecutionContext::evaluate()
 
 			break;
 			}
+		case Atom::MARKER:
 		case Atom::OBJECT:
 			{
 			setResult(head());

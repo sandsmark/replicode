@@ -19,8 +19,13 @@ Expression Expression::dereference() const
             return r.dereference();
 		case Atom::C_PTR: {
 			Expression p(r.child(1).dereference());
-			for (int i = 2; i <= r.head().getAtomCount(); ++i) {
-				p = p.child(r.child(i).head().asIndex()).dereference();
+			for (int16 i = 2; i <= r.head().getAtomCount(); ++i) {
+				int16 idx = r.child(i, false).head().asIndex();
+				if (idx > p.head().getAtomCount()) {
+					printf("out of bounds chain pointer index %d:%d (max %d)\n", i, idx, p.head().getAtomCount());
+				} else {
+					p = p.child(idx).dereference();
+				}
 			}
 			return p;
 		}
@@ -33,17 +38,18 @@ Expression Expression::dereference() const
 						return Expression(instance, instance->copies[i].position);
 				}
 				return o->copy(*instance);
-			} // HACK: else, treat as a THIS pointer
-		}
-        case Atom::THIS: {
-			int objectIndex = 0;
-			for (int i = 0; i < instance->copies.size(); ++i) {
-				if (instance->copies[i].position > index)
-					break;
-				objectIndex = instance->copies[i].position;
+			} else {
+				int objectIndex = 0;
+				for (int i = 0; i < instance->copies.size(); ++i) {
+					if (instance->copies[i].position > index)
+						break;
+					objectIndex = instance->copies[i].position;
+				}
+				return Expression(instance, objectIndex);
 			}
-			return Expression(instance, objectIndex);
 		}
+        case Atom::THIS:
+			return Expression(instance, 0);
 		case Atom::VIEW: {
 			Object* o = instance->objectForExpression(*this);
 			Group* g = instance->getGroup();
@@ -115,7 +121,7 @@ Expression Expression::copy(ReductionInstance& dest) const
 
 int16 Expression::getReferenceIndex()
 {
-	if (isValue || head().getDescriptor() != Atom::OBJECT)
+	if (isValue || (head().getDescriptor() != Atom::OBJECT && head().getDescriptor() != Atom::MARKER))
 		return -1;
 	for (int i = 0; i < instance->copies.size(); ++i) {
 		if (instance->copies[i].position == index)

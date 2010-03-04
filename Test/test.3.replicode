@@ -155,7 +155,7 @@ P1:(pgm
    |[]; timing
    |[]; guards
 []; prods
-   (cmd _inj 0xA1000000 [(mk.last_known m |[] |[] |[] 0) [(_now) 1 400000us nil nil]]); builds L
+   (cmd _inj 0xA1000000 [(mk.last_known m |[] |[] |[] 0) [(_now) 1 400000us stdin nil]]); builds L
    (cmd _inj 0xA1000000 [(ins P1 [b pos t]) [(_now) 1 forever stdin nil]]); instantiates P1 with b, pos ..
 and t as actual template arguments
    (cmd _set 0xA1000000 [this.vw.res 0]); kills the original
