@@ -1187,7 +1187,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 				case	T_SYS_CLASS:
 						definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[class_name]=Class(atom,class_name,members);
 				case	T_CLASS:
-						definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[class_name]=Class(Atom::Object(class_opcode,members.size()),class_name,members);
+						definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[class_name]=Class(atom,class_name,members);
 					break;
 				case	T_SET:
 					definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[class_name]=Class(Atom::SSet(class_opcode,members.size()),class_name,members);
