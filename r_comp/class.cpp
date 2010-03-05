@@ -10,6 +10,7 @@ namespace	r_comp{
 
 		switch(atom.getDescriptor()){
 		case	Atom::OBJECT:
+		case	Atom::S_SET:
 		case	Atom::MARKER:	return	true;
 		default:				return	false;
 		}
