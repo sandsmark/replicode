@@ -79,8 +79,8 @@ namespace MemImpl {
 	
 	struct ObjectBase : public Object
 	{
-		ObjectBase() :propagationSaliencyThreshold(0), isNotification(false) {}
-		virtual ~ObjectBase() {}
+		ObjectBase();
+		virtual ~ObjectBase();
 		void retain();
 		void release();
 		Expression copyMarkerSet(ReductionInstance& dest) const;
@@ -90,6 +90,7 @@ namespace MemImpl {
 
 		Expression copyViewInternal(ReductionInstance& dest, const ViewImpl* view) const;
 		void prepareForCopy(ReductionInstance& dest) const;
+		virtual void debug();
 		
 		typedef UNORDERED_MAP<const Group*, ViewImpl*> ViewStore;
 		typedef UNORDERED_SET<ObjectImpl*> MarkerStore;
@@ -108,6 +109,7 @@ namespace MemImpl {
 		Expression copy(ReductionInstance& dest) const;
 		Object* getReference(int index) const;
 		const Group* asGroup() const { return 0; }
+		void debug();
 
 		std::vector<ObjectBase*> references;
 		std::vector<r_code::Atom> atoms;
@@ -155,6 +157,7 @@ namespace MemImpl {
 		void presentNewlySalientObjects();
 		void cleanup();
 
+		void debug();
 		// There are two methods of accessing the values of the group: by
 		// name and by index.  We need read-write access by index (read for
 		// implementing copy(), write for implementing mod/set), and read
@@ -259,6 +262,7 @@ namespace MemImpl {
 			Object* object, std::vector<r_code::Atom> viewData,
 			int sourceNodeId, GroupImpl* dest
 		);
+		void debug();
 		mBrane::Mutex insertionQueueMutex;
 		bool insideBatchReceive;
 		struct InsertionQueueEntry {

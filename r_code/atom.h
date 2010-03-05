@@ -21,6 +21,7 @@ namespace	r_code{
 			I_PTR=0x84,		// internal pointer
 			R_PTR=0x85,		// reference pointer
 			VL_PTR=0x86,	// value pointer
+			INDEX=0x87,		// chain pointer index
 			THIS=0x90,		// this pointer
 			VIEW=0x91,
 			MKS=0x92,

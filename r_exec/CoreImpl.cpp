@@ -174,7 +174,6 @@ namespace CoreImpl {
 	
 	void Instance::activate(Object* program)
 	{
-		printf("activate %p, %p\n", this, program);
 		onInput(InputQueueEntry(program, InputQueueEntry::ACTIVATION));
 	}
 
@@ -207,6 +206,7 @@ namespace CoreImpl {
 		Program p(group);
 		program->copy(*p.programRI);
 
+		fprintf(stderr, "activate %p, %p\n", this, program);
 		// connect template arguments
 		p.programRI->syncSizes();
 		Expression ipgm(p.programRI, 0, false);
@@ -255,6 +255,7 @@ namespace CoreImpl {
 				im = inputMatchers[inputs[i]] = new InputMatcher();
 				im->inputPattern = inputs[i];
 				uint32 a = Expression(inputs[i]).child(1).head().atom; // the first atom of skel
+				fprintf(stderr, "\tinput 0x%08x\n", a);
 				inputTable.insert(make_pair(a, im));
 			} else {
 				// This input matcher is already known to this Instance.
@@ -312,7 +313,6 @@ namespace CoreImpl {
 	
 	void Instance::salientObject(Object* object)
 	{
-		printf("salient object %p, %p\n", this, object);
 		onInput(InputQueueEntry(object, InputQueueEntry::SALIENT));
 	}
 	
@@ -321,6 +321,7 @@ namespace CoreImpl {
 		ReductionInstance ri(group);
 		object->copy(ri);
 		int n = getFirstAtom(&ri);
+		fprintf(stderr, "salient object %p, %p (0x%08x)\n", this, object, n);
 		pair<InputTable::const_iterator, InputTable::const_iterator> bounds
 		 = inputTable.equal_range(n);
 		for (InputTable::const_iterator it = bounds.first; it != bounds.second; ++it) {

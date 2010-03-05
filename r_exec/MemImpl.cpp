@@ -9,6 +9,7 @@
 namespace r_exec {
 using namespace std;
 using r_code::Atom;
+
 namespace MemImpl {
 
 
@@ -192,7 +193,18 @@ namespace MemImpl {
 		core->resume();
 	}
 
-	void ObjectBase::retain() { ++refCount; }
+	ObjectBase::ObjectBase()
+		:refCount(0), propagationSaliencyThreshold(0), isNotification(false)
+	{
+	}
+
+	ObjectBase::~ObjectBase()
+	{
+	}
+
+	void ObjectBase::retain() {
+		++refCount;
+	}
 	void ObjectBase::release() {
 		if (--refCount == 0) {
 			// refCount=0 implies that we don't have any markers or views.
@@ -200,6 +212,7 @@ namespace MemImpl {
 		}
 	}
 
+	// TODO: do something like this for injections and notifications
 	ObjectBase* Impl::insertObject(ObjectBase* object)
 	{
 		if (!object) return 0; // HACK
@@ -266,6 +279,7 @@ namespace MemImpl {
 		}
 	}
 	
+	// TODO: retain for references
 	ObjectImpl::~ObjectImpl()
 	{
 		for (vector<ObjectBase*>::iterator it = references.begin(); it != references.end(); ++it)
@@ -504,17 +518,15 @@ namespace MemImpl {
 		Expression args(command.child(3));
 		Expression objectExpr(args.child(1));
 		Expression viewExpr(args.child(2));
-		Object* object = ri->extractObject(objectExpr);
-		ViewImpl* view = new ViewImpl();
-		view->object = reinterpret_cast<ObjectBase*>(object);
 		Atom groupAtom = viewExpr.child(4, false).head();
-		if (groupAtom.getDescriptor() == Atom::R_PTR) {
-			view->group = reinterpret_cast<GroupImpl*>(ri->references[groupAtom.asIndex()]);
-		} else {
-			delete view;
-			delete object;
+		if (groupAtom.getDescriptor() != Atom::R_PTR) {
+			printf("_inj or _eje: malformed view with no group\n");
 			return;
 		}
+		ObjectBase* object = reinterpret_cast<ObjectBase*>(ri->extractObject(objectExpr));
+		ViewImpl* view = new ViewImpl();
+		view->object = object;
+		view->group = reinterpret_cast<GroupImpl*>(ri->references[groupAtom.asIndex()]);
 		view->originGroup = this;
 		view->originNodeID = 0;
 		Atom ijtAtom = viewExpr.child(1).head();
@@ -990,6 +1002,11 @@ namespace MemImpl {
 					dest.input.push_back(Atom::RPointer(n));
 					break;
 				}
+				case Atom::TIMESTAMP:
+					dest.input.push_back(*it);
+					dest.input.push_back(*++it);
+					dest.input.push_back(*++it);
+					break;
 				default:
 					dest.input.push_back(*it);
 					break;
@@ -1039,6 +1056,43 @@ namespace MemImpl {
 		requestCount = 0;
 		return value;
 	}
+
+	void ObjectBase::debug()
+	{
+		fprintf(stderr, "object %p: refCount=%d pSlnThr=%f\n", this, refCount, propagationSaliencyThreshold);
+		for (MarkerStore::iterator it = markers.begin(); it != markers.end(); ++it)
+			fprintf(stderr, "\tmarker %p\n", *it);
+		for (ViewStore::iterator it = views.begin(); it != views.end(); ++it)
+			fprintf(stderr, "\tview %p->%p\n", it->first, it->second);
+	}
+
+	void ObjectImpl::debug()
+	{
+		ObjectBase::debug();
+		for (int i = 0; i < references.size(); ++i)
+			fprintf(stderr, "\treferences[%d] = %p\n", i, references[i]);
+		for (int i = 0; i < atoms.size(); ++i)
+			fprintf(stderr, "\tatoms[%d] = %x\n", i, atoms[i].atom);
+	}
+
+	void GroupImpl::debug()
+	{
+		ObjectBase::debug();
+		for (ContentStore::iterator it = content.begin(); it != content.end(); ++it)
+			fprintf(stderr, "\tcontent %p -> %p = {%p %f %f}\n", it->first, it->second,
+				it->second->object, it->second->saliency.value, it->second->resilience.value);
+	}
+
+	void Impl::debug()
+	{
+		for (GroupStore::iterator it = groups.begin(); it != groups.end(); ++it) {
+			fprintf(stderr, "GROUP %p->%p\n", it->first, it->second);
+			it->second->debug();
+		}
+		for (ObjectStore::iterator it = objects.begin(); it != objects.end(); ++it) {
+			(*it)->debug();
+		}
+	}
 }
 
 UNORDERED_MAP<std::string, r_code::Atom> opcodeRegister;
@@ -1062,6 +1116,18 @@ Object* Object::create(std::vector<Atom> atoms, std::vector<Object*> references)
 		for (int i = 0; i < references.size(); ++i)
 			obj->references.push_back( reinterpret_cast<MemImpl::ObjectBase*>(references[i]));
 		obj->atoms = atoms;
+		
+		// HACK HACK HACK -- correct the code
+		for (int i = 0; i < atoms.size(); ++i) {
+			if (obj->atoms[i].atom == 0xc3003806)
+				obj->atoms[i].atom = 0xc4003806;
+			if (obj->atoms[i].getDescriptor() == Atom::C_PTR) {
+				obj->atoms[i+2] = Atom::IPointer(2);
+				for (int j = 2; j <= obj->atoms[i].getAtomCount(); ++j)
+					obj->atoms[i+j].atom += 0x03000000;
+			}
+		}
+
 		int opcode = atoms[0].asOpcode();
 		if (opcode == OPCODE_IPGM)
 			obj->type = MemImpl::ObjectBase::REACTIVE;
@@ -1070,4 +1136,5 @@ Object* Object::create(std::vector<Atom> atoms, std::vector<Object*> references)
 		return obj;
 	}
 }
+
 }

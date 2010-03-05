@@ -210,6 +210,9 @@ ReductionInstance* ReductionInstance::split(ExecutionContext location)
 				result->input[n] = Atom::RPointer(new_idx);
 				break;
 			}
+			case Atom::TIMESTAMP:
+				n += 2; // skip over the next two atoms
+				break;
 		}
 	}
 	CopiedObject partial;
@@ -255,6 +258,9 @@ void ReductionInstance::merge(ExecutionContext location, ReductionInstance* ri)
 				value[n] = Atom::RPointer(new_idx);
 				break;
 			}
+			case Atom::TIMESTAMP:
+				n += 2; // skip over the next two atoms
+				break;
 		}
 	}
 }
