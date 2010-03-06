@@ -39,6 +39,7 @@ namespace MemImpl {
 			}
 
 			Object* _o = Object::create(*o->code.as_std(), refs);
+			_o->retain("initialization");
 			ObjectBase* __o = reinterpret_cast<ObjectBase*>(_o);
 			insertedObjects[o] = _o;
 			for (int j = 0; j < o->view_set.size(); ++j) {
@@ -51,8 +52,9 @@ namespace MemImpl {
 					vector<r_code::Atom> translatedViewData;
 					translatedViewData.push_back(v->code[2]); // sln
 					int16 n = v->code[3].asIndex();
-					int64 t = (static_cast<int64>(v->code[n].atom) << 32) + v->code[n+1].atom;
-					translatedViewData.push_back(r_code::Atom::Float(n));
+					// TODO int64 t = (static_cast<int64>(v->code[n].atom) << 32) + v->code[n+1].atom;
+					int64 t = 1000000000;
+					translatedViewData.push_back(r_code::Atom::Float(t));
 					if (numAtoms >= 6)
 						translatedViewData.push_back(v->code[6]);
 					if (numAtoms >= 7)
@@ -60,6 +62,7 @@ namespace MemImpl {
 					receiveInternal(_o, translatedViewData, 0, grp);
 				}
 			}
+
 			if (__o->type == ObjectBase::GROUP) {
 				GroupImpl* g = reinterpret_cast<GroupImpl*>(__o);
 				groups[g] = g;
@@ -203,12 +206,15 @@ namespace MemImpl {
 
 	ObjectBase::~ObjectBase()
 	{
+		//fprintf(stderr, "destroying object %p\n", this);
 	}
 
-	void ObjectBase::retain() {
+	void ObjectBase::retain(const char* msg) {
+		//fprintf(stderr, "retain %p (%s)\n", this, msg);
 		++refCount;
 	}
-	void ObjectBase::release() {
+	void ObjectBase::release(const char* msg) {
+		//fprintf(stderr, "release %p (%s)\n", this, msg);
 		if (--refCount == 0) {
 			// refCount=0 implies that we don't have any markers or views.
 			delete this;
@@ -219,15 +225,13 @@ namespace MemImpl {
 	{
 		if (!object) return 0; // HACK
 		if (object->type == ObjectBase::GROUP) {
-			GroupImpl* group = reinterpret_cast<GroupImpl*>(object);
-			group->coreInstance = core->createInstance(group);
 			return object;
 		} else {
 			ObjectImpl* obj = reinterpret_cast<ObjectImpl*>(object);
 			pair<ObjectStore::iterator, bool> ins = objects.insert(obj);
 			if (ins.second) {
 				for (vector<ObjectBase*>::iterator it = obj->references.begin(); it != obj->references.end(); ++it) {
-					(*it)->retain();
+					(*it)->retain("object reference");
 					*it = insertObject(*it);
 				}
 				return obj;
@@ -248,10 +252,10 @@ namespace MemImpl {
 		view->isSalient = false;
 		view->isActive = false;
 		view->isVisible = false;
-		view->object->retain();
-		view->group->retain();
+		view->object->retain("view object");
+		view->group->retain("view group");
 		if (view->originGroup != 0)
-			view->originGroup->retain();
+			view->originGroup->retain("view origin group");
 		view->group->newContent.push_back(view);
 	}
 	
@@ -286,7 +290,7 @@ namespace MemImpl {
 	{
 		for (vector<ObjectBase*>::iterator it = references.begin(); it != references.end(); ++it)
 			if (*it != 0) // HACK
-				(*it)->release();
+				(*it)->release("object reference");
 	}
 	
 	Expression ObjectBase::copyMarkerSet(ReductionInstance& dest) const
@@ -821,7 +825,10 @@ namespace MemImpl {
 				} else if (view->resilience.value == 0) {
 					if (view->isActive)
 						coreInstance->deactivate(view->object);
-					view->object->release();
+					view->object->release("view object");
+					view->group->release("view group");
+					if (view->originGroup)
+						view->originGroup->release("view origin group");
 					content.erase(it++);
 					// TODO: check for a non-salient view which was shadowing a salient view
 					continue;
@@ -916,10 +923,10 @@ namespace MemImpl {
 				ViewImpl* existingView = itExisting->second;
 				if (view->saliency.value <= existingView->saliency.value)
 					continue;
-				existingView->object->release();
-				existingView->group->release();
+				existingView->object->release("view clash object");
+				existingView->group->release("view clash group");
 				if (existingView->originGroup != 0)
-					existingView->originGroup->release();
+					existingView->originGroup->release("view clash origin group");
 				view->isExisting = existingView->isExisting;
 				view->isSalient = existingView->isSalient;
 				view->isActive = existingView->isActive;

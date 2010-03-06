@@ -110,7 +110,7 @@ namespace CoreImpl {
 
 	Core::Instance* Impl::createInstance(Group* group)
 	{
-		group->asObject()->retain();
+		group->asObject()->retain("create instance");
 		return new CoreImpl::Instance(group, this);
 	}
 
@@ -122,7 +122,7 @@ namespace CoreImpl {
 
 	Instance::~Instance()
 	{
-		group->asObject()->release();
+		group->asObject()->release("destroy instance");
 		core->instances.erase(this);
 		if (isActive) {
 			deque<Instance*>::iterator it = find(core->activeInstances.begin(), core->activeInstances.end(), this);
@@ -153,7 +153,7 @@ namespace CoreImpl {
 					doSalient(e.object);
 					break;
 			}
-			e.object->release();
+			e.object->release("CoreImpl::Instance::nextJob");
 			inputQueue.pop_front();
 		}
 		Job* j = new InputJob(inputJobQueue.front());
@@ -165,7 +165,7 @@ namespace CoreImpl {
 	void Instance::onInput(const InputQueueEntry& e)
 	{
 		inputQueue.push_back(e);
-		e.object->retain();
+		e.object->retain("CoreImpl::Instance::onInput");
 		if (!isActive) {
 			isActive = true;
 			core->activeInstances.push_back(this);
@@ -203,8 +203,7 @@ namespace CoreImpl {
 
 	void Instance::doActivate(Object *program)
 	{
-		Program p(group);
-		program->copy(*p.programRI);
+		Program p(group, program);
 
 		fprintf(stderr, "activate %p, %p\n", this, program);
 		// connect template arguments
@@ -244,6 +243,7 @@ namespace CoreImpl {
 		p.timeScope = pgm.child(4).head().asFloat();
 		
 		std::vector<ReductionInstance*> inputs = getInputs(*p.programRI);
+		p.programRI->retain();
 		pair<ProgramHash::iterator, bool> ins = programs.insert(make_pair(program, p));
 
 		for (size_t i = 0; i < inputs.size(); ++i) {
@@ -282,6 +282,7 @@ namespace CoreImpl {
 		
 	void Instance::doDeactivate(Object* program)
 	{
+		fprintf(stderr, "deactivate %p, %p\n", this, program);
 		ProgramHash::iterator it = programs.find(program);
 		if (it == programs.end())
 			return;
@@ -427,7 +428,12 @@ namespace CoreImpl {
 		}
 		program->matchSets.resize(iWrite);
 	}
-	Instance::Program::Program(Group* g) :programRI(new ReductionInstance(g)) { programRI->retain(); }
+	Instance::Program::Program(Group* g, Object* o)
+		:programRI(new ReductionInstance(g))
+	{
+		o->copy(*programRI);
+	}
+
 	Instance::Program::Program(const Program& p)
 	{
 		programRI = p.programRI;

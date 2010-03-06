@@ -53,8 +53,8 @@ struct Object {
 	
 	// retain and release increase and decrease the reference count.
 	// if the reference count reaches 0, the object is destroyed.
-	virtual void retain() = 0;
-	virtual void release() = 0;
+	virtual void retain(const char* msg) = 0;
+	virtual void release(const char* msg) = 0;
 
 	// TODO: methods for accessing object content for transmission
 	// copy copies the content of the object.

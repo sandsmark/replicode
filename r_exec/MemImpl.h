@@ -81,8 +81,8 @@ namespace MemImpl {
 	{
 		ObjectBase();
 		virtual ~ObjectBase();
-		void retain();
-		void release();
+		void retain(const char* msg);
+		void release(const char* msg);
 		Expression copyMarkerSet(ReductionInstance& dest) const;
 		Expression copyViewSet(ReductionInstance& dest) const;
 		Expression copyVisibleView(ReductionInstance& dest, const Group* group) const;

@@ -10,20 +10,22 @@ using r_code::Atom;
 
 void ReductionInstance::retain()
 {
+	//fprintf(stderr, "RI retain %p\n", this);
 	if (referenceCount++ == 0) {
 		for (int i = 0; i < references.size(); ++i) {
 			if (references[i] != 0) // HACK
-				references[i]->retain();
+				references[i]->retain("RI");
 		}
 	}
 }
 
 void ReductionInstance::release()
 {
+	//fprintf(stderr, "RI release %p\n", this);
 	if (--referenceCount == 0) {
 		for (int i = 0; i < references.size(); ++i) {
 			if (references[i] != 0)
-				references[i]->release();
+				references[i]->release("RI");
 		}
 		delete this;
 	}

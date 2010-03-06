@@ -61,7 +61,7 @@ namespace CoreImpl {
 		
 		// TODO: anti-program
 		struct Program {
-			Program(Group* g);
+			Program(Group* g, Object* o);
 			Program(const Program& p);
 			~Program();
 			struct MatchedInputs {
