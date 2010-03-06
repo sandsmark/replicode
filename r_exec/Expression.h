@@ -46,7 +46,7 @@ inline r_code::Atom& Expression::head() const {
 
 inline int64 Expression::decodeTimestamp() const
 {
-	return (static_cast<int64>(child(1).head().atom) << 32) + child(2).head().atom;
+	return (static_cast<int64>(child(1, false).head().atom) << 32) + child(2, false).head().atom;
 }
 
 inline r_code::Atom Expression::iptr() const

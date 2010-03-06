@@ -26,17 +26,6 @@ private:
 	std::vector<r_code::Atom> resultSet;
 };
 inline void ExecutionContext::setResult(r_code::Atom result) { instance->value[index] = result; }
-inline ExecutionContext ExecutionContext::xchild(int offset) const
-{
-	ExecutionContext c(*this);
-	c.index = index + offset;
-	while (c.head().getDescriptor() == r_code::Atom::I_PTR) {
-		c.setResult(c.head());
-		c.index = c.head().asIndex();
-	}
-	return c;
-}
-
 }
 
 #endif // __EXECUTION_CONTEXT_H

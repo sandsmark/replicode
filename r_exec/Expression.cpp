@@ -34,7 +34,7 @@ Expression Expression::dereference() const
 			Object* o = instance->references[idx];
 			if (o) {
 				for (int i = instance->firstReusableCopiedObject; i < instance->copies.size(); ++i) {
-					if (instance->copies[i].object == o)
+					if (instance->copies[i].object == o && !instance->copies[i].isView)
 						return Expression(instance, instance->copies[i].position);
 				}
 				return o->copy(*instance);
@@ -43,7 +43,8 @@ Expression Expression::dereference() const
 				for (int i = 0; i < instance->copies.size(); ++i) {
 					if (instance->copies[i].position > index)
 						break;
-					objectIndex = instance->copies[i].position;
+					if (!instance->copies[i].isView)
+						objectIndex = instance->copies[i].position;
 				}
 				return Expression(instance, objectIndex);
 			}
@@ -78,7 +79,7 @@ Expression Expression::copy(ReductionInstance& dest) const
 
 	// First, check to see if this expression is an exact copy of an existing object
 	for (int i = 0; i < instance->copies.size(); ++i) {
-		if (instance->copies[i].position == index) {
+		if (instance->copies[i].position == index && !instance->copies[i].isView) {
 			Object *o = instance->copies[i].object;
 			int j = dest.getReferenceIndex(o);
 			dest.value.push_back(Atom::RPointer(j));
@@ -124,7 +125,7 @@ int16 Expression::getReferenceIndex()
 	if (isValue || (head().getDescriptor() != Atom::OBJECT && head().getDescriptor() != Atom::MARKER))
 		return -1;
 	for (int i = 0; i < instance->copies.size(); ++i) {
-		if (instance->copies[i].position == index)
+		if (instance->copies[i].position == index && !instance->copies[i].isView)
 			return instance->getReferenceIndex(instance->copies[i].object);
 	}
 	return -1;

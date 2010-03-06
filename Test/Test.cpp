@@ -72,6 +72,8 @@ int32	main(int	argc,char	**argv){
 #ifdef USE_MEM
 		//	Create the mem with objects defined in ram_objects
 		r_exec::Mem* mem = r_exec::Mem::create(
+			10000, // resilience update period: 10ms
+			10000, // base update period: 10ms
 			classes,
 			*ram_objects.as_std(),
 			0

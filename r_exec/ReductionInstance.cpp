@@ -277,7 +277,7 @@ Object* ReductionInstance::objectForExpression(Expression expr)
 {
 	Object* result = 0;
 	for (int i = 0; i < copies.size(); ++i) {
-		if (copies[i].position <= expr.getIndex())
+		if (copies[i].position <= expr.getIndex() && !copies[i].isView)
 			result = copies[i].object;
 	}
 	return result;
@@ -288,7 +288,7 @@ Object* ReductionInstance::extractObject(Expression expr)
 	// first, check to see if the object is known to exist
 	Object* result = 0;
 	for (int i = 0; i < copies.size(); ++i)
-		if (copies[i].position == expr.getIndex())
+		if (copies[i].position == expr.getIndex() && !copies[i].isView)
 			return copies[i].object;
 	
 	ReductionInstance copyRI(group);
@@ -316,8 +316,10 @@ void ReductionInstance::debug()
 	syncSizes();
 	int copyI = 0;
 	for (int i = 0; i < input.size(); ++i) {
-		if (copyI < copies.size() && copies[copyI].position == i)
-			printf("COPY[%d]: %p\n", copyI, copies[copyI++].object);
+		if (copyI < copies.size() && copies[copyI].position == i) {
+			printf("%s[%d]: %p\n", copies[copyI].isView ? "VIEW" : "COPY", copyI, copies[copyI].object);
+			++copyI;
+		}
 		printf("[%02x] = input = 0x%08x value = 0x%08x (%s,%s)\n", i, input[i].atom, value[i].atom,
 			atomNames[input[i].atom].c_str(), atomNames[value[i].atom].c_str());
 	}

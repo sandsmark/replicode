@@ -169,6 +169,7 @@ namespace MemImpl {
 		// WARNING! When making changes to this structure, examine:
 		//   GroupImpl::copy
 		//   GroupImpl::GroupImpl
+		//   GroupImpl::processModOrSet
 		// to see if the assumptions made about the ordering of values
 		//  are still correct.
 		union {
@@ -242,7 +243,7 @@ namespace MemImpl {
 	struct Impl : public Mem
 	{
 		// implementation of Mem interface
-		Impl(ObjectReceiver *receiver_, std::vector<r_code::Object*> objects);
+		Impl(ObjectReceiver *receiver_, int64 resilienceUpdatePeriod_, int64 baseUpdatePeriod_, std::vector<r_code::Object*> objects);
 		~Impl();
 		void receive(
 			Object *object,

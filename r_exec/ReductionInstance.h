@@ -57,6 +57,7 @@ private:
 	struct CopiedObject {
 		Object* object;
 		int position;
+		bool isView;
 	};
 	
 	int referenceCount;

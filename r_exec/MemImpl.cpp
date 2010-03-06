@@ -19,8 +19,8 @@ namespace MemImpl {
 		exit(1);
 	}
 
-	Impl::Impl(ObjectReceiver *output_, vector<r_code::Object*> objects_)
-		:output(output_)
+	Impl::Impl(ObjectReceiver *output_, int64 resilienceUpdatePeriod_, int64 baseUpdatePeriod_, vector<r_code::Object*> objects_)
+		:output(output_), resilienceUpdatePeriod(resilienceUpdatePeriod_), baseUpdatePeriod(baseUpdatePeriod_)
 	{
 		UNORDERED_MAP<r_code::Object*, Object*> insertedObjects;
 
@@ -81,6 +81,7 @@ namespace MemImpl {
 
 		core = Core::create();
 		int64 now = mBrane::Time::Get();
+
 		nextResilienceUpdate = now + resilienceUpdatePeriod;
 		nextGeneralUpdate = now + baseUpdatePeriod;
 		runThread = mBrane::Thread::New<mBrane::Thread>(Impl::run, this);
@@ -152,6 +153,10 @@ namespace MemImpl {
 		
 		processInsertions();
 		GroupStore::iterator it;
+		for (it = groups.begin(); it != groups.end(); ++it)
+			if (!it->second->mem)
+				it->second->mem = this;
+
 		for (it = groups.begin(); it != groups.end(); ++it) {
 			it->second->processCommands();
 		}
@@ -171,8 +176,6 @@ namespace MemImpl {
 		for (it = groups.begin(); it != groups.end(); ++it) {
 			if (!it->second->coreInstance)
 				it->second->coreInstance = core->createInstance(it->second);
-			if (!it->second->mem)
-				it->second->mem = this;
 			it->second->updateControlValues(updateGeneral, resilienceDecrease);
 			it->second->processNewViews();
 			it->second->processStatusChangesAndUpdateStatistics();
@@ -212,7 +215,6 @@ namespace MemImpl {
 		}
 	}
 
-	// TODO: do something like this for injections and notifications
 	ObjectBase* Impl::insertObject(ObjectBase* object)
 	{
 		if (!object) return 0; // HACK
@@ -222,14 +224,14 @@ namespace MemImpl {
 			return object;
 		} else {
 			ObjectImpl* obj = reinterpret_cast<ObjectImpl*>(object);
-			for (vector<ObjectBase*>::iterator it = obj->references.begin(); it != obj->references.end(); ++it) {
-				*it = insertObject(*it);
-			}
 			pair<ObjectStore::iterator, bool> ins = objects.insert(obj);
 			if (ins.second) {
+				for (vector<ObjectBase*>::iterator it = obj->references.begin(); it != obj->references.end(); ++it) {
+					(*it)->retain();
+					*it = insertObject(*it);
+				}
 				return obj;
 			} else {
-				// NOTE: we may want to tell the System about the collision
 				return *ins.first;
 			}
 		}
@@ -262,7 +264,6 @@ namespace MemImpl {
 		insertionQueueMutex.release();
 		for (InsertionStore::const_iterator it = objs.begin(); it != objs.end(); ++it) {
 			ObjectBase* base = reinterpret_cast<ObjectBase*>(it->object);
-			base = insertObject(base);
 			ViewImpl* view = new ViewImpl();
 			view->object = base;
 			view->group = it->destination;
@@ -275,6 +276,7 @@ namespace MemImpl {
 				view->activationOrVisibility.value = it->viewData[2].asFloat();
 			if (it->viewData.size() > 2)
 				view->copyOnVisibility = it->viewData[3].asFloat();
+			view->object = insertObject(view->object);
 			newView(view);
 		}
 	}
@@ -410,6 +412,12 @@ namespace MemImpl {
 			return result;
 		}
 			
+		ReductionInstance::CopiedObject co;
+		co.object = const_cast<ObjectBase*>(this);
+		co.position = dest.input.size();
+		co.isView = true;
+		dest.copies.push_back(co);
+
 		Expression ijt(&dest, dest.input.size());
 		dest.input.push_back(Atom::Timestamp());
 		dest.input.push_back(Atom(view->injectionTime >> 32));
@@ -449,6 +457,7 @@ namespace MemImpl {
 		ReductionInstance::CopiedObject co;
 		co.object = o;
 		co.position = dest.input.size();
+		co.isView = false;
 		dest.copies.push_back(co);
 	}
 	
@@ -565,6 +574,7 @@ namespace MemImpl {
 		}
 		
 		if (command.child(1).head() == opcodeRegister["_inj"]) {
+			view->object = mem->insertObject(view->object);
 			newView(view);
 		} else {
 			Atom a = args.child(3).head();
@@ -574,14 +584,107 @@ namespace MemImpl {
 			else if (a.isFloat())
 				node_id = a.asFloat();
 			// NOTE: need to supply proper view data when output->receive() becomes adequate
-			mem->output->receive(object, vector<r_code::Atom>(), node_id,
-				(view->group == mem->stdinGroup) ? ObjectReceiver::INPUT_GROUP : ObjectReceiver::OUTPUT_GROUP);
+			if (mem->output) {
+				mem->output->receive(object, vector<r_code::Atom>(), node_id,
+					(view->group == mem->stdinGroup) ? ObjectReceiver::INPUT_GROUP : ObjectReceiver::OUTPUT_GROUP);
+			} else {
+				fprintf(stderr, "trying to eject object with no output\n");
+				fprintf(stderr, " VIEW = {sln = %f res = %f act = %f cov=%f}\n",
+					view->saliency.value, view->resilience.value,
+					view->activationOrVisibility.value, view->copyOnVisibility);
+				ReductionInstance ri(this);
+				object->copy(ri);
+				ri.debug();
+			}
 		}
 	}
 	
 	void GroupImpl::processModOrSet(ReductionInstance* ri, Expression command)
 	{
-		// TODO: mod/set
+		bool isMod = command.child(1).head() == opcodeRegister["_mod"];
+		Expression args(command.child(3));
+		Expression variableExpr(args.child(1));
+		Expression valueExpr(args.child(2));
+		float targetValue = 0;
+		if (valueExpr.head().isFloat())
+			targetValue = valueExpr.head().asFloat();
+		else if (valueExpr.head().getDescriptor() == Atom::TIMESTAMP)
+			targetValue = valueExpr.decodeTimestamp();
+
+		int copyI = 0;
+		for (copyI = 0; copyI < ri->copies.size(); ++copyI) {
+			if (ri->copies[copyI].position > variableExpr.getIndex()) {
+				break;
+			}
+		}
+		--copyI;
+		if (ri->copies[copyI].isView) {
+			// this code depends on the actual layout of the view:
+			// [0] ijt TIMESTAMP [1] ijt (word 0) [2] ijt (word 1)
+			// [3] res TIMESTAMP [4] res (word 0) [5] res (word 1)
+			// [6] S_SET("view")
+			// [7] pointer to ijt
+			// [8] sln
+			// [9] pointer to res
+			// [10] reference to group
+			// [11] reference to origin, OR node id
+			// [12] activation or visibility (for reactive objects or groups)
+			// [13] copy on visibility (for groups)
+			int32 viewPosition = ri->copies[copyI].position;
+			Atom groupAtom = ri->input[viewPosition + 10];
+			Object* groupObj = ri->references[groupAtom.asIndex()];
+			GroupImpl* group = reinterpret_cast<GroupImpl*>(groupObj);
+			ContentStore::iterator it = group->content.find(reinterpret_cast<ObjectBase*>(ri->copies[copyI].object));
+			if (it != group->content.end()) {
+				ViewImpl* view = it->second;
+				int32 offset = variableExpr.getIndex() - viewPosition;
+				int32 mediationIndex = -1;
+				float32 priorValue = 0;
+				switch(offset) {
+					case 3:
+						mediationIndex = 1;
+						priorValue = view->resilience.value;
+						break;
+					case 8:
+						mediationIndex = 0;
+						priorValue = view->saliency.value;
+						break;
+					case 12:
+						mediationIndex = 2;
+						priorValue = view->activationOrVisibility.value;
+						break;
+					case 13:
+						if (isMod) {
+							view->copyOnVisibility += valueExpr.head().asFloat();
+						} else {
+							view->copyOnVisibility = valueExpr.head().asFloat();
+						}
+				}
+				if (mediationIndex != -1) {
+					if (isMod)
+						targetValue += priorValue;
+					++view->mediations[mediationIndex].requestCount;
+					view->mediations[mediationIndex].sumTargetValue += targetValue;
+				}
+			}
+		} else {
+			GroupImpl* group = reinterpret_cast<GroupImpl*>(ri->copies[copyI].object);
+			if (group->type == ObjectBase::GROUP) {
+				int32 offset = variableExpr.getIndex() - ri->copies[copyI].position;
+				if (offset >= 1) {
+					float32* variable = &group->values[offset-1];
+					if (isMod)
+						targetValue += *variable;
+					int32 mediationIndex = variable - &group->saliencyThreshold;
+					if (mediationIndex >= 0 && mediationIndex < 7) {
+						++group->mediations[mediationIndex].requestCount;
+						group->mediations[mediationIndex].sumTargetValue += targetValue;
+					} else {
+						*variable = targetValue;
+					}
+				}
+			}
+		}
 	}
 	
 	void GroupImpl::generateReductionNotification(ReductionInstance* ri)
@@ -634,6 +737,7 @@ namespace MemImpl {
 		markerView->saliency.value = 1;
 		markerView->resilience.value = updatePeriod * mem->baseUpdatePeriod;
 		//printf("adding notification %p for object %p in group %p\n", markerView, obj, group);
+		markerView->object = mem->insertObject(markerView->object);
 		newView(markerView);
 	}
 	
@@ -715,6 +819,9 @@ namespace MemImpl {
 				if (view->resilience.value == -1) {
 					// do nothing
 				} else if (view->resilience.value == 0) {
+					if (view->isActive)
+						coreInstance->deactivate(view->object);
+					view->object->release();
 					content.erase(it++);
 					// TODO: check for a non-salient view which was shadowing a salient view
 					continue;
@@ -1098,12 +1205,14 @@ namespace MemImpl {
 UNORDERED_MAP<std::string, r_code::Atom> opcodeRegister;
 
 Mem* Mem::create(
+	int64 resilienceUpdatePeriod,
+	int64 baseUpdatePeriod,
 	UNORDERED_MAP<std::string, r_code::Atom> classes,
 	std::vector<r_code::Object*> objects,
 	ObjectReceiver *r
 ) {
 	opcodeRegister = classes;
-	return new MemImpl::Impl(r, objects);
+	return new MemImpl::Impl(r, resilienceUpdatePeriod, baseUpdatePeriod, objects);
 }
 
 Object* Object::create(std::vector<Atom> atoms, std::vector<Object*> references)
@@ -1119,12 +1228,17 @@ Object* Object::create(std::vector<Atom> atoms, std::vector<Object*> references)
 		
 		// HACK HACK HACK -- correct the code
 		for (int i = 0; i < atoms.size(); ++i) {
-			if (obj->atoms[i].atom == 0xc3003806)
+			if (obj->atoms[i].atom == 0xc3003806) {
+				printf("converting atom %d from 0x3003806 to 0x4003806\n", i);
 				obj->atoms[i].atom = 0xc4003806;
+			}
 			if (obj->atoms[i].getDescriptor() == Atom::C_PTR) {
-				obj->atoms[i+2] = Atom::IPointer(2);
-				for (int j = 2; j <= obj->atoms[i].getAtomCount(); ++j)
-					obj->atoms[i+j].atom += 0x03000000;
+				for (int j = 2; j <= obj->atoms[i].getAtomCount(); ++j) {
+					if (obj->atoms[i+j].getDescriptor() == Atom::I_PTR) {
+						printf("converting from I_PTR to INDEX\n");
+						obj->atoms[i+j] = Atom::Index(obj->atoms[i+j].asIndex());
+					}
+				}
 			}
 		}
 

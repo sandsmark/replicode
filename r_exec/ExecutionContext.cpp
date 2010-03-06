@@ -6,6 +6,17 @@ namespace r_exec {
 
 using r_code::Atom;
 
+ExecutionContext ExecutionContext::xchild(int offset) const
+{
+	ExecutionContext c(*this);
+	c.index = index + offset;
+	while (c.head().getDescriptor() == r_code::Atom::I_PTR) {
+		c.setResult(c.head());
+		c.index = c.head().asIndex();
+	}
+	return c;
+}
+
 Expression ExecutionContext::evaluate()
 {
 	switch(head().getDescriptor()) {
@@ -22,23 +33,11 @@ Expression ExecutionContext::evaluate()
 			break;
 			}
 		case Atom::SET:
+		case Atom::S_SET:
 			setResult(head());
 			for (int i = 1; i <= head().getAtomCount(); ++i)
 				evaluateOperand(i);
 			break;
-		case Atom::C_PTR: // TODO: is this right?
-			{
-			// first, copy the c_ptr structure to the value array
-			for (int i = 0; i <= head().getAtomCount(); ++i)
-				instance->value[index + i] = instance->input[index + i];
-
-			// then, evaluate the pointer
-			ExecutionContext p(*this);
-			++p.index;
-			p.evaluate();
-
-			break;
-			}
 		case Atom::MARKER:
 		case Atom::OBJECT:
 			{
@@ -62,6 +61,10 @@ Expression ExecutionContext::evaluate()
 		case Atom::TIMESTAMP:
 			setResultTimestamp(decodeTimestamp());
 			break;
+		case Atom::C_PTR:
+			for (int i = 0; i <= head().getAtomCount(); ++i)
+				instance->value[index + i] = instance->input[index + i];
+			break;
 		case Atom::DEVICE:
 		case Atom::DEVICE_FUNCTION:
 		case Atom::NIL:
@@ -69,6 +72,7 @@ Expression ExecutionContext::evaluate()
 		case Atom::VWS:
 		case Atom::MKS:
 		case Atom::R_PTR:
+		case Atom::THIS:
 			setResult(head());
 			break;
 		default:
@@ -85,8 +89,7 @@ Expression ExecutionContext::evaluate()
 
 Expression ExecutionContext::evaluateOperand(int index_)
 {
-	ExecutionContext p(*this);
-	p.index = index + index_;
+	ExecutionContext p(xchild(index_));
 	Expression r = p.evaluate();
 	return r.dereference();
 }

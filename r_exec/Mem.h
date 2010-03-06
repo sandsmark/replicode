@@ -36,6 +36,8 @@ namespace r_exec {
 // BUGS: suspend/resume doesn't work; simplify or ask eric for assist
 struct Mem : public ObjectReceiver, public Asynchronous {	
 	static Mem* create(
+		int64 resilienceUpdatePeriod,
+		int64 baseUpdatePeriod,
 		UNORDERED_MAP<std::string, r_code::Atom> classes,
 		std::vector<r_code::Object*> objects,
 		ObjectReceiver* output
