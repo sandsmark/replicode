@@ -281,33 +281,44 @@ namespace	r_comp{
 				break;
 			case	Atom::C_PTR:{
 				uint16	opcode;
-				atom=current_object->code[index+1];	//	current_object->data[index] is the cptr; members start at 1
+				uint16	member_count=/*current_object->code[0].getAtomCount()*/atom.getAtomCount()-1;	//	-1: the leading atom is the CPtr
+				atom=current_object->code[index+1];	//	current_object->code[index] is the cptr; members start at 1
+				Class	_class;
 				switch(atom.getDescriptor()){
 				case	Atom::THIS:
 					out_stream->push("this",read_index);
 					opcode=current_object->code[0].asOpcode();
+					//	for reactive objects, this refers to the instantiated reactive object
+					_class=_image->definition_segment.classes_by_opcodes[opcode];
+					if(_class.str_opcode=="pgm")
+						opcode=_image->definition_segment.sys_classes["ipgm"].atom.asOpcode();
+					else	if(_class.str_opcode=="fmd")
+						opcode=_image->definition_segment.sys_classes["ifmd"].atom.asOpcode();
+					else	if(_class.str_opcode=="imd")
+						opcode=_image->definition_segment.sys_classes["iimd"].atom.asOpcode();
 					break;
 				case	Atom::VL_PTR:
 					while(current_object->code[atom.asIndex()].getDescriptor()==Atom::I_PTR)
 						atom=current_object->code[atom.asIndex()];
 					out_stream->push(get_variable_name(atom.asIndex(),true),read_index);
 					opcode=current_object->code[atom.asIndex()].asOpcode();
+					//_class=_image->definition_segment.classes_by_opcodes[opcode];
 					break;
 				case	Atom::R_PTR:{
 					uint32	object_index=current_object->reference_set[atom.asIndex()];
 					out_stream->push(get_object_name(object_index),read_index);
 					opcode=_image->code_segment.objects[object_index]->code[0].asOpcode();
+					//_class=_image->definition_segment.classes_by_opcodes[opcode];
 					break;
 				}default:
 					out_stream->push("unknown-cptr-lead-type",read_index);
 					break;
 				}
-				uint16	member_count=current_object->code[0].getAtomCount()-1;	//	-1: the leading atom has already been parsed
 				uint16	structure_index=0;
 				for(uint16	i=1;i<=member_count;++i){	//	get the opcode of the pointed structure and retrieve the member name from i
 
 					std::string	member_name;
-					atom=current_object->code[index+1+i];	//	atom is an internal pointer appearing after the leading atom
+					atom=current_object->code[index+1+i];	//	atom is an Index appearing after the leading atom
 					Class	embedding_class=_image->definition_segment.classes_by_opcodes[opcode];	//	class defining the member
 					member_name=embedding_class.get_member_name(atom.asIndex());
 					*out_stream<<'.'<<member_name;	

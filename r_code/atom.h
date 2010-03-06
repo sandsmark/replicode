@@ -50,6 +50,7 @@ namespace	r_code{
 		static	Atom	VPointer(uint16 index);
 		static	Atom	RPointer(uint16 index);
 		static	Atom	VLPointer(uint16 index);
+		static	Atom	Index(uint16	index);
 		static	Atom	This();
 		static	Atom	View();
 		static	Atom	Mks();
@@ -84,7 +85,7 @@ namespace	r_code{
 		// decoders
 		uint8	getDescriptor()	const;
 		bool	isPointer()		const;	// returns true for all pointer types
-										// incl. this and view
+										// incl. index, this and view
 		bool	isStructural()	const;
 		bool	isFloat()		const;
 		bool	readsAsNil()	const;	// returns true for all undefined values

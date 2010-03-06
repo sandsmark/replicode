@@ -60,6 +60,11 @@ namespace	r_code{
 		return	Atom((R_PTR<<24)+index);
 	}
 
+		Atom	Atom::Index(uint16	index){
+		
+		return	Atom((INDEX<<24)+index);
+	}
+
 		Atom	Atom::This(){
 		
 		return	Atom(THIS<<24);
@@ -199,11 +204,12 @@ namespace	r_code{
 		bool	Atom::isPointer()	const{
 
 		switch(getDescriptor()){
-		case I_PTR:
-		case VL_PTR:
-		case R_PTR:
-		case THIS:
-		case C_PTR:
+		case	I_PTR:
+		case	VL_PTR:
+		case	R_PTR:
+		case	THIS:
+		case	C_PTR:
+		case	INDEX:
 			return true;
 		default:
 			return false;

@@ -1167,7 +1167,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 				std::list<RepliStruct	*>	tpl_args;
 				getMembers(s,members,tpl_args,false);
 
-				Atom	atom;
+				Atom	atom=Atom::Object(class_opcode,members.size());
 				if(class_type==T_CLASS){	//	find out if the class is a sys class, i.e. has a view
 
 					for(uint32	i=0;i<members.size();++i)
@@ -1176,11 +1176,9 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacr
 							class_type=T_SYS_CLASS;
 							if(class_name.find("mk.")!=std::string::npos)
 								atom=Atom::Marker(class_opcode,members.size());
-							else
-								atom=Atom::Object(class_opcode,members.size());
 							break;
 						}
-				}	
+				}
 
 				definition_segment->class_names[class_opcode]=class_name;
 				switch(class_type){

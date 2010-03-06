@@ -841,7 +841,13 @@ return_false:
 		std::streampos	i=in_stream->tellg();
 		if(match_symbol("this.",false)){
 
-			Class		*p=&current_class;
+			Class		*p;	//	in general, p starts as the current_class; exception: in pgm, fmd and imd, this refers to the instantiated object
+			if(current_class.str_opcode=="pgm")
+				p=&_image->definition_segment.sys_classes["ipgm"];
+			else	if(current_class.str_opcode=="fmd")
+				p=&_image->definition_segment.sys_classes["ifmd"];
+			else	if(current_class.str_opcode=="imd")
+				p=&_image->definition_segment.sys_classes["iimd"];
 			Class		*_p;
 			std::string	m;
 			uint16		index;
@@ -2262,7 +2268,7 @@ return_false:
 				current_object->code[extent_index++]=Atom::CPointer(v.size()+1);
 				current_object->code[extent_index++]=Atom::This();
 				for(uint16	i=0;i<v.size();++i)
-					current_object->code[extent_index++]=Atom::IPointer(v[i]);
+					current_object->code[extent_index++]=Atom::Index(v[i]);
 			}
 			return	true;
 		}
@@ -2274,7 +2280,7 @@ return_false:
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::VLPointer(v[0]);
 				for(uint16	i=1;i<v.size();++i)
-					current_object->code[extent_index++]=Atom::IPointer(v[i]);
+					current_object->code[extent_index++]=Atom::Index(v[i]);
 			}
 			return	true;
 		}
@@ -2290,7 +2296,7 @@ return_false:
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::RPointer(v[0]);
 				for(uint16	i=1;i<v.size();++i)
-					current_object->code[extent_index++]=Atom::IPointer(v[i]);
+					current_object->code[extent_index++]=Atom::Index(v[i]);
 			}
 			return	true;
 		}
