@@ -156,6 +156,16 @@ namespace MemImpl {
 		
 		processInsertions();
 		GroupStore::iterator it;
+
+		for (ObjectStore::iterator itO = objects.begin(); itO != objects.end(); ) {
+			if ((*itO)->refCount == 0) {
+				delete *itO;
+				objects.erase(itO++);
+			} else {
+				++itO;
+			}
+		}
+
 		for (it = groups.begin(); it != groups.end(); ++it)
 			if (!it->second->mem)
 				it->second->mem = this;
@@ -206,7 +216,7 @@ namespace MemImpl {
 
 	ObjectBase::~ObjectBase()
 	{
-		//fprintf(stderr, "destroying object %p\n", this);
+		fprintf(stderr, "destroying object %p\n", this);
 	}
 
 	void ObjectBase::retain(const char* msg) {
@@ -215,10 +225,6 @@ namespace MemImpl {
 	}
 	void ObjectBase::release(const char* msg) {
 		//fprintf(stderr, "release %p (%s)\n", this, msg);
-		if (--refCount == 0) {
-			// refCount=0 implies that we don't have any markers or views.
-			delete this;
-		}
 	}
 
 	ObjectBase* Impl::insertObject(ObjectBase* object)
