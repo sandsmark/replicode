@@ -13,7 +13,7 @@ namespace r_exec {
 
 // forward declarations of interfaces
 struct System;
-struct Mem;
+class Mem;
 struct Core;
 
 // forward declarations of public RMem classes

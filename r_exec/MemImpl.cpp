@@ -284,9 +284,9 @@ namespace MemImpl {
 			view->injectionTime = now;
 			view->saliency.value = it->viewData[0].asFloat();
 			view->resilience.value = it->viewData[1].asFloat();
-			if (it->viewData.size() > 1)
-				view->activationOrVisibility.value = it->viewData[2].asFloat();
 			if (it->viewData.size() > 2)
+				view->activationOrVisibility.value = it->viewData[2].asFloat();
+			if (it->viewData.size() > 3)
 				view->copyOnVisibility = it->viewData[3].asFloat();
 			view->object = insertObject(view->object);
 			newView(view);

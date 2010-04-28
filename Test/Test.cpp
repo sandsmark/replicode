@@ -13,6 +13,8 @@ using	namespace	r_comp;
 
 int32	main(int	argc,char	**argv){
 
+	r_code::Time::Init(1000);
+
 	std::string		error;
 	std::ifstream	source_code(argv[1]);	//	ANSI encoding (not Unicode)
 
