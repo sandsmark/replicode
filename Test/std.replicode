@@ -88,7 +88,7 @@
 !def @ at
 
 ;mapping devices -> r-atoms
-!def exe 0xA2000000; the executive.
+!def exe 0xA1000000; the executive.
 
 ;mapping device functions -> r-atoms
 !dfn (_inj : :)
