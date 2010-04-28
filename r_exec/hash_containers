@@ -2,7 +2,8 @@
 #define __HASH_CONTAINERS_H__
 #include "../r_code/types.h"
 
-#ifndef LINUX
+
+#ifdef OSX
 using namespace __gnu_cxx;
 namespace __gnu_cxx {
 	template<class T>
@@ -25,6 +26,20 @@ namespace __gnu_cxx {
 		  { return __stl_hash_string(__s.c_str()); }
 		};
 }
+#elif	defined	WINDOWS/*
+using	namespace	stdext;
+namespace	stdext{
+	template<class T>	struct hash<const T*>{
+		size_t operator()(const T* __p) const	{ return reinterpret_cast<size_t>(__p); }
+	};
+	template<class T>	struct hash<T*>{
+		size_t operator()(T* __p) const	{ return reinterpret_cast<size_t>(__p); }
+	};
+	template<>	struct hash<std::string>{
+		size_t	operator()(const std::string __s) const	{ return __stl_hash_string(__s.c_str()); }
+	};
+}*/
 #endif
+
 
 #endif

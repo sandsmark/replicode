@@ -199,11 +199,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\mem_e.cpp"
+				RelativePath=".\MemImpl.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\MemImpl.cpp"
+				RelativePath=".\Object.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\opcodes.cpp"
 				>
 			</File>
 			<File
@@ -212,10 +216,6 @@
 			</File>
 			<File
 				RelativePath=".\Operators.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\r_exec.cpp"
 				>
 			</File>
 			<File
@@ -261,15 +261,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\hash_containers"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\match.h"
 				>
 			</File>
 			<File
 				RelativePath=".\mem.h"
-				>
-			</File>
-			<File
-				RelativePath=".\mem_e.h"
 				>
 			</File>
 			<File
@@ -305,14 +313,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\hash_containers"
-			>
-		</File>
-		<File
-			RelativePath=".\Makefile"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

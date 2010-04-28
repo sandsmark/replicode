@@ -1,9 +1,11 @@
 #include "Mem.h"
 #include "Object.h"
 #include <stdio.h>
-#include <unistd.h>
+#ifdef	LINUX
+	#include <unistd.h>
+#endif
 #include <vector>
-#include "../r_code/types.h"
+#include "../r_code/utils.h"
 #include "hash_containers"
 
 namespace r_exec {
@@ -69,7 +71,7 @@ using namespace r_exec;
 int main(int argc, char** argv)
 {
 	TestReceiver test;
-	Mem* mem = Mem::create(UNORDERED_MAP<string, r_code::Atom>(), vector<r_code::Object*>(), &test);
+	Mem* mem = Mem::create(10000,10000,UNORDERED_MAP<string, r_code::Atom>(), vector<r_code::Object*>(), &test);
 	vector<Object*> objects;
 	vector<vector<Atom> > views;
 	for (int i = 1; i < argc; ++i)
@@ -77,6 +79,6 @@ int main(int argc, char** argv)
 		read_object(argv[i], objects, views);
 		mem->receive(objects[i-1], views[i-1], 1, ObjectReceiver::INPUT_GROUP);
 	}
-	sleep(10);
+	r_code::Thread::Sleep(10);
 }
 

@@ -12,10 +12,9 @@
 #include "Core.h"
 #include "hash_containers"
 #include "../r_code/atom.h"
-#include "mbrane_imports/utils.h"
+#include "../r_code/utils.h"
 #include <deque>
 #include "ReductionInstance.h"
-#include <cstdatomic>
 
 namespace r_exec {
 
@@ -143,10 +142,11 @@ namespace CoreImpl {
 		UNORDERED_SET<CoreImpl::Instance*> instances;
 		
 		bool suspendRequested;
-		std::atomic_uint numRunningThreads;
-		mBrane::Mutex runRelease;
-		mBrane::Mutex suspended;
-		mBrane::Mutex implMutex;
+//		std::atomic_uint numRunningThreads;
+		int32	volatile	numRunningThreads;
+		r_code::Mutex runRelease;
+		r_code::Mutex suspended;
+		r_code::Mutex implMutex;
 		
 		// There are some compelling advantages in having only one thread
 		// working on a given Instance:
@@ -162,7 +162,7 @@ namespace CoreImpl {
 		// for the first implementation, but for the first implementation
 		// I'm not doing the one thread/instance idea.
 		std::deque<CoreImpl::Instance*> activeInstances;
-		std::vector<mBrane::Thread*> workerThreads;
+		std::vector<r_code::Thread*> workerThreads;
 	};
 }
 

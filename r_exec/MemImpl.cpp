@@ -1,7 +1,7 @@
 #include "../r_code/types.h"
 #include "MemImpl.h"
 #include "Expression.h"
-#include "mbrane_imports/utils.h"
+#include "../r_code/utils.h"
 #include "opcodes.h"
 #include <math.h>
 #include <stdio.h>
@@ -83,11 +83,11 @@ namespace MemImpl {
 			error("definition of standard groups and object invalid");
 
 		core = Core::create();
-		int64 now = mBrane::Time::Get();
+		int64 now = r_code::Time::Get();
 
 		nextResilienceUpdate = now + resilienceUpdatePeriod;
 		nextGeneralUpdate = now + baseUpdatePeriod;
-		runThread = mBrane::Thread::New<mBrane::Thread>(Impl::run, this);
+		runThread = r_code::Thread::New<r_code::Thread>(Impl::run, this);
 	}
 
 	Impl::~Impl()
@@ -138,6 +138,8 @@ namespace MemImpl {
 			this_->runThread->Sleep(10);
 			this_->update();
 		}
+
+		return	0;
 	}
 
 	void Impl::resume()
@@ -176,7 +178,7 @@ namespace MemImpl {
 		
 		bool updateGeneral = false;
 		int64 resilienceDecrease = 0;
-		int64 now = mBrane::Time::Get();
+		int64 now = r_code::Time::Get();
 		if (now >= nextGeneralUpdate) {
 			updateGeneral = true;
 			nextGeneralUpdate += baseUpdatePeriod;
@@ -267,7 +269,7 @@ namespace MemImpl {
 	
 	void Impl::processInsertions()
 	{
-		int64 now = mBrane::Time::Get();
+		int64 now = r_code::Time::Get();
 		InsertionStore objs;
 		insertionQueueMutex.acquire();
 			objs.swap(insertionQueue);
@@ -505,6 +507,7 @@ namespace MemImpl {
 	Expression GroupImpl::copy(ReductionInstance& dest) const
 	{
 		prepareForCopy(dest);
+		Expression result(&dest, dest.input.size());
 		
 		dest.input.push_back(opcodeRegister["grp"]);
 		for (const float* f = values; f != &lastValueSentinel; ++f) {
@@ -521,6 +524,8 @@ namespace MemImpl {
 		dest.input.push_back(Atom::Vws());
 		dest.input.push_back(Atom::Float(propagationSaliencyThreshold));
 		dest.syncSizes();
+
+		return result;
 	}
 
 	Object* GroupImpl::getReference(int index) const { return 0; }
@@ -743,7 +748,7 @@ namespace MemImpl {
 			markerView->group = group;
 		markerView->originGroup = group;
 		markerView->originNodeID = 0;
-		markerView->injectionTime = mBrane::Time::Get();
+		markerView->injectionTime = r_code::Time::Get();
 		markerView->saliency.value = 1;
 		markerView->resilience.value = updatePeriod * mem->baseUpdatePeriod;
 		//printf("adding notification %p for object %p in group %p\n", markerView, obj, group);
@@ -844,14 +849,14 @@ namespace MemImpl {
 					view->resilience.value -= resilienceDecrease;
 				}
 			}
-			if (updateGeneral) {
+			if (updateGeneral) {	//	p_sln_thr
 				if (view->saliencyPeriodsOfDecayRemaining > 0 && updateCounter % int(saliencyDecayPeriod) == 0) {
 					--view->saliencyPeriodsOfDecayRemaining;
 					view->mediations[0].requestCount;
 					view->mediations[0].sumTargetValue += view->saliency.value - view->saliencyDecayPerPeriod;
 				}
 				if (view->mediations[0].requestCount != 0) {
-					view->saliency.value = view->mediations[0].getAndReset();
+					view->saliency.value = view->mediations[0].getAndReset();	//	propag here
 				}
 				if (view->mediations[2].requestCount != 0) {
 					view->activationOrVisibility.value = view->mediations[2].getAndReset();
@@ -907,7 +912,7 @@ namespace MemImpl {
 	void GroupImpl::processNewViews()
 	{
 		// First, check to see if any of the pending views need to be inserted
-		int64 now = mBrane::Time::Get();
+		int64 now = r_code::Time::Get();
 		for (;;) {
 			PendingViewStore::iterator it = pendingViews.begin();
 			if (it == pendingViews.end() || it->second->injectionTime > now)
@@ -1061,7 +1066,7 @@ namespace MemImpl {
 			 && group->cSaliency > group->cSaliencyThreshold
 			 && group->cActivation > group->cActivationThreshold) {
 				for(vector<ViewImpl*>::iterator it = localNewlySalientContent.begin(); it != localNewlySalientContent.end(); ++it) {
-					group->combinedNewlySalientContent.insert(*it);
+					group->combinedNewlySalientContent.insert(*it);	//	cov here
 				}
 			}
 		}
@@ -1214,54 +1219,4 @@ namespace MemImpl {
 		}
 	}
 }
-
-UNORDERED_MAP<std::string, r_code::Atom> opcodeRegister;
-
-Mem* Mem::create(
-	int64 resilienceUpdatePeriod,
-	int64 baseUpdatePeriod,
-	UNORDERED_MAP<std::string, r_code::Atom> classes,
-	std::vector<r_code::Object*> objects,
-	ObjectReceiver *r
-) {
-	opcodeRegister = classes;
-	return new MemImpl::Impl(r, resilienceUpdatePeriod, baseUpdatePeriod, objects);
-}
-
-Object* Object::create(std::vector<Atom> atoms, std::vector<Object*> references)
-{
-	if (atoms[0] == opcodeRegister["grp"]) {
-		MemImpl::GroupImpl* obj = new MemImpl::GroupImpl(atoms, references);
-		return obj;
-	} else {
-		MemImpl::ObjectImpl* obj = new MemImpl::ObjectImpl();
-		for (int i = 0; i < references.size(); ++i)
-			obj->references.push_back( reinterpret_cast<MemImpl::ObjectBase*>(references[i]));
-		obj->atoms = atoms;
-		
-		// HACK HACK HACK -- correct the code
-		for (int i = 0; i < atoms.size(); ++i) {
-			if (obj->atoms[i].atom == 0xc3003806) {
-				printf("converting atom %d from 0x3003806 to 0x4003806\n", i);
-				obj->atoms[i].atom = 0xc4003806;
-			}
-			if (obj->atoms[i].getDescriptor() == Atom::C_PTR) {
-				for (int j = 2; j <= obj->atoms[i].getAtomCount(); ++j) {
-					if (obj->atoms[i+j].getDescriptor() == Atom::I_PTR) {
-						printf("converting from I_PTR to INDEX\n");
-						obj->atoms[i+j] = Atom::Index(obj->atoms[i+j].asIndex());
-					}
-				}
-			}
-		}
-
-		int opcode = atoms[0].asOpcode();
-		if (opcode == OPCODE_IPGM)
-			obj->type = MemImpl::ObjectBase::REACTIVE;
-		else
-			obj->type = MemImpl::ObjectBase::OBJECT;
-		return obj;
-	}
-}
-
 }

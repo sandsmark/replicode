@@ -31,7 +31,7 @@
 
 namespace r_exec {
 
-struct Object {
+class Object {
 	// creates a new object, with (possibly-empty) references to other objects.
 	// The objects referred to are not accessed or modified; in particular,
 	// their reference counts are not incremented.  This is necessary --
@@ -46,6 +46,9 @@ struct Object {
 	//    reference count increments (and marker set updates, and ...)
 	//    at a high frequency, before the System could possibly release
 	//    the reference.
+
+public:
+
 	static Object* create(
 		std::vector<r_code::Atom> atoms,
 		std::vector<Object*> references

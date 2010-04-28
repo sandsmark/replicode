@@ -5,7 +5,7 @@
 #include	"../r_exec/Mem.h"
 
 #include	<iostream>
-#define		PREPROCESSOR_TEST
+
 
 using	namespace	r_comp;
 
@@ -45,7 +45,7 @@ int32	main(int	argc,char	**argv){
 		return	3;
 	}else{
 
-		image->trace();
+		//image->trace();
 		source_code.close();
 #if 1
 		//	Loading code from the image into memory then into the r_exec::Mem

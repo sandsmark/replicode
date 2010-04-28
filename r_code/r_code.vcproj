@@ -211,6 +211,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\utils.tpl.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\vector.cpp"
 				>
 			</File>
@@ -222,6 +234,10 @@
 			>
 			<File
 				RelativePath=".\atom.h"
+				>
+			</File>
+			<File
+				RelativePath=".\compat.h"
 				>
 			</File>
 			<File
@@ -254,6 +270,14 @@
 			</File>
 			<File
 				RelativePath=".\types.h"
+				>
+			</File>
+			<File
+				RelativePath=".\utils.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\utils.h"
 				>
 			</File>
 			<File

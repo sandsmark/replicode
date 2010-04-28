@@ -14,7 +14,7 @@
 #include "Core.h"
 #include "Object.h"
 #include "Group.h"
-#include "mbrane_imports/utils.h"
+#include "../r_code/utils.h"
 #include <map>
 
 using namespace std;
@@ -264,7 +264,7 @@ namespace MemImpl {
 			int sourceNodeId, GroupImpl* dest
 		);
 		void debug();
-		mBrane::Mutex insertionQueueMutex;
+		r_code::Mutex insertionQueueMutex;
 		bool insideBatchReceive;
 		struct InsertionQueueEntry {
 			Object* object;
@@ -278,7 +278,7 @@ namespace MemImpl {
 		typedef UNORDERED_MAP<const Group*, GroupImpl*> GroupStore;
 		typedef UNORDERED_SET<ObjectImpl*, ObjectImpl::hash, ObjectImpl::equal_object> ObjectStore;
 		
-		mBrane::Thread *runThread;
+		r_code::Thread *runThread;
 		static thread_ret thread_function_call run(void* args);
 		ObjectReceiver *output;
 		Core* core;

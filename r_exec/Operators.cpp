@@ -1,7 +1,7 @@
 #include "ExecutionContext.h"
 #include "match.h"
 #include "hash_containers"
-#include <sys/time.h>
+#include	"../r_code/utils.h"
 
 namespace r_exec {
 
@@ -110,10 +110,11 @@ void operator_lsr(ExecutionContext& context)
 
 void operator_now(ExecutionContext& context)
 {
-	struct timeval tv;
+	/*struct timeval tv;
 	struct timezone tz;
 	gettimeofday(&tv, &tz);
-	int64 now = static_cast<int64>(tv.tv_sec) * 1000000 + tv.tv_usec;
+	int64 now = static_cast<int64>(tv.tv_sec) * 1000000 + tv.tv_usec;*/
+	int64	now=r_code::Time::Get();
 	context.setResultTimestamp( now );
 }
 

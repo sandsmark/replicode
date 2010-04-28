@@ -34,7 +34,14 @@
 	#include	<windows.h>
 	#include	<winsock2.h>
 	#include	<hash_map>
-	#define		UNORDERED_MAP	stdext::hash_map
+	#include	<sys/timeb.h>
+	#include	<time.h>
+	#include	<unordered_set>
+	#include	<unordered_map>
+	#define		UNORDERED_MAP		std::tr1::unordered_map//stdext::hash_map
+	#define		UNORDERED_SET		std::tr1::unordered_set
+	#define		UNORDERED_MULTIMAP	std::tr1::unordered_multimap
+	#define		UNORDERED_MULTISET	std::tr1::unordered_multiset
 
 	#if defined	BUILD_DLL
 		#define dll	__declspec(dllexport)
@@ -53,12 +60,14 @@
 	#include	<iostream>
 	#include	<string>
 	#include	<pthread.h>
+	#include	<sys/time.h>
 	#include	<semaphore.h>
 	#include	<signal.h>
 	#include	<limits.h>
 	#include	<stdlib.h>
 	#include	<vector>
 	#include	<list>
+	#include	<cstdatomic>
 	#if defined LINUX
 		#include	<unordered_map>
 		#include	<unordered_set>
@@ -160,12 +169,12 @@ namespace	r_code{
 	typedef	HANDLE							timer;
 	#define	signal_handler_function_call	WINAPI
 	typedef	PHANDLER_ROUTINE				signal_handler;
-#elif defined	LINUX
+#elif defined	LINUX	||	defined	OSX
 	typedef void *							shared_object;
 	typedef pthread_t						thread;
 	#define thread_ret						void *
-	#define thread_ret_val(ret)					pthread_exit((thread_ret)ret);
-	typedef thread_ret (*thread_function)(void *);
+	#define thread_ret_val(ret)				pthread_exit((thread_ret)ret);
+	typedef thread_ret						(*thread_function)(void *);
 	#define thread_function_call
 	typedef int								socket;
 	typedef struct sockaddr					SOCKADDR;
@@ -175,8 +184,6 @@ namespace	r_code{
 	typedef timer_t							timer;
 	#define signal_handler_function_call
 	typedef sighandler_t					signal_handler;
-	#define stricmp strcasecmp
-#elif defined	OSX
 	#define stricmp strcasecmp
 #endif
 }

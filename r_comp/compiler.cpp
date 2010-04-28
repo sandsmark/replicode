@@ -215,7 +215,7 @@ namespace	r_comp{
 			}
 		}
 
-		//sys_object->trace();//uint32	a;std::cin>>a;
+		sys_object->trace();//uint32	a;std::cin>>a;
 
 		_image->addObject(sys_object);
 		return	true;

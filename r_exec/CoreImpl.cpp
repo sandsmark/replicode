@@ -3,7 +3,7 @@
 #include "Expression.h"
 #include "Group.h"
 #include <algorithm>
-#include "mbrane_imports/utils.h"
+#include "../r_code/utils.h"
 #include "ExecutionContext.h"
 #include "match.h"
 
@@ -19,7 +19,7 @@ namespace CoreImpl {
 		runRelease.acquire();
 		suspended.acquire();
 		for (int i = 0; i < num_threads; ++i) {
-			workerThreads.push_back(mBrane::Thread::New<mBrane::Thread>(Impl::work, this));
+			workerThreads.push_back(r_code::Thread::New<r_code::Thread>(Impl::work, this));
 		}
 	}
 
@@ -33,7 +33,8 @@ namespace CoreImpl {
 		for (;;) {
 			runRelease.acquire();
 			runRelease.release();
-			++numRunningThreads;
+			//++numRunningThreads;
+			r_code::Atomic::Increment32(&numRunningThreads);
 			CoreImpl::Instance::Job* job = 0;
 			bool progress = true;
 			while (progress) {
@@ -56,7 +57,9 @@ namespace CoreImpl {
 				if (job)
 					job->process();
 			}
-			if (--numRunningThreads == 0)
+			//if (--numRunningThreads == 0)
+			uint32	r=r_code::Atomic::Decrement32(&numRunningThreads);
+			if (r == 0)
 				suspended.release();
 		}
 	}
@@ -65,6 +68,7 @@ namespace CoreImpl {
 	{
 		Impl* this_ = reinterpret_cast<Impl*>(args);
 		this_->doWork();
+		return	0;
 	}
 
 	Impl::~Impl()
@@ -201,7 +205,7 @@ namespace CoreImpl {
 		return Expression(ri).head().atom;
 	}
 
-	void Instance::doActivate(Object *program)
+	void Instance::doActivate(Object *program)	//	push the |pgm in the cron-like map
 	{
 		Program p(group, program);
 
@@ -280,7 +284,7 @@ namespace CoreImpl {
 	}
 
 		
-	void Instance::doDeactivate(Object* program)
+	void Instance::doDeactivate(Object* program)	//	remove |pgm from the map
 	{
 		fprintf(stderr, "deactivate %p, %p\n", this, program);
 		ProgramHash::iterator it = programs.find(program);
@@ -370,7 +374,7 @@ namespace CoreImpl {
 	
 	void Instance::onProgramInput(Program* program, int index, ReductionInstance* input)
 	{
-		int64 now = mBrane::Time::Get();
+		int64 now = r_code::Time::Get();
 		vector<Program::MatchedInputs> newMatches;
 		int iRead=0, iWrite=0;
 		while (iRead < program->matchSets.size()) {
@@ -413,7 +417,7 @@ namespace CoreImpl {
 					break;
 				}
 			}
-			if (isComplete) {
+			if (isComplete) {	//	reset "timer" for |pgm instead of new job
 				OverlayJob j;
 				j.instance = this;
 				j.programRI = program->programRI;
