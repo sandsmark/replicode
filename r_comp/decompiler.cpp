@@ -14,14 +14,14 @@ namespace	r_comp{
 
 	std::string	Decompiler::get_variable_name(uint16	index,bool	postfix){
 
-		static	uint16	last_variable_ID=0;
+		static	uint16	Last_variable_ID=0;
 		std::string	s;
 		UNORDERED_MAP<uint16,std::string>::iterator	it=variable_names.find(index);
 		if(it==variable_names.end()){
 
 			char	buffer[255];
 			s="v";
-			sprintf(buffer,"%d",last_variable_ID++);
+			sprintf(buffer,"%d",Last_variable_ID++);
 			s+=buffer;
 			variable_names[index]=s;
 			if(postfix)

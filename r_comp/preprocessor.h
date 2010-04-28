@@ -15,11 +15,10 @@ namespace	r_comp{
 	class	RepliCondition;
 	class	RepliStruct{
 	public:
-		// Global members for all instances
-		static	UNORDERED_MAP<std::string,RepliMacro	*>	repliMacros;
-		static	UNORDERED_MAP<std::string,int32>	counters;
-		static	std::list<RepliCondition	*>	conditions;
-		static	uint32	globalLine;
+		static	UNORDERED_MAP<std::string,RepliMacro	*>	RepliMacros;
+		static	UNORDERED_MAP<std::string,int32>			Counters;
+		static	std::list<RepliCondition	*>				Conditions;
+		static	uint32										GlobalLine;
 
 		enum Type {Root,Structure,Set,Atom,Directive,Condition,Development};
 		Type type;
@@ -72,7 +71,7 @@ namespace	r_comp{
 		RepliCondition(const	std::string	&name,bool	reversed);
 		~RepliCondition();
 		bool	reverse();
-		bool	isActive(UNORDERED_MAP<std::string,RepliMacro*> &repliMacros, UNORDERED_MAP<std::string,int32> &counters);
+		bool	isActive(UNORDERED_MAP<std::string,RepliMacro*> &RepliMacros, UNORDERED_MAP<std::string,int32> &Counters);
 	};
 
 	class	dll_export	Preprocessor{

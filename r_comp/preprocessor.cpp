@@ -4,14 +4,14 @@
 
 namespace	r_comp{
 
-UNORDERED_MAP<std::string,RepliMacro	*>	RepliStruct::repliMacros;
-UNORDERED_MAP<std::string,int32>			RepliStruct::counters;
-std::list<RepliCondition	*>				RepliStruct::conditions;
-uint32	RepliStruct::globalLine=1;
+UNORDERED_MAP<std::string,RepliMacro	*>	RepliStruct::RepliMacros;
+UNORDERED_MAP<std::string,int32>			RepliStruct::Counters;
+std::list<RepliCondition	*>				RepliStruct::Conditions;
+uint32										RepliStruct::GlobalLine=1;
 
 RepliStruct::RepliStruct(RepliStruct::Type type) {
 	this->type = type;
-	line = globalLine;
+	line = GlobalLine;
 	parent = NULL;
 }
 
@@ -25,7 +25,7 @@ uint32	RepliStruct::getIndent(std::istream	*stream){
 	while (!stream->eof()) {
 	switch(stream->get()) {
 		case 10:
-			globalLine++;
+			GlobalLine++;
 		case 13:
 			stream->seekg(-1, std::ios_base::cur);
 			return count/3;
@@ -60,7 +60,7 @@ int32	RepliStruct::parse(std::istream *stream,uint32	&curIndent,uint32	&prevInde
 		switch(c) {
 			case '\t':
 				if (inComment) continue; // allow tabs in comments, does not matter anyway
-				line = globalLine;
+				line = GlobalLine;
 				error += "Tabs chars are not permitted. ";
 				return -1;
 			case '!':
@@ -78,7 +78,7 @@ int32	RepliStruct::parse(std::istream *stream,uint32	&curIndent,uint32	&prevInde
 				}
 				break;
 			case 10:
-				globalLine++;
+				GlobalLine++;
 			case 13:
 				// remain inComment?
 				if (inComment) {
@@ -90,7 +90,7 @@ int32	RepliStruct::parse(std::istream *stream,uint32	&curIndent,uint32	&prevInde
 				// skip all CR and LF
 				while ((!stream->eof()) && (stream->peek() < 32))
 					if (stream->get() == 10)
-						globalLine++;
+						GlobalLine++;
 				// get indents
 				prevIndent = curIndent;
 				curIndent = getIndent(stream);
@@ -461,7 +461,7 @@ bool	RepliStruct::parseDirective(std::istream	*stream,uint32	&curIndent,uint32	&
 		// read the end of line too
 		while ( (!stream->eof()) && (stream->peek() < 32) )
 			if (stream->get() == 10)
-				globalLine++;
+				GlobalLine++;
 		return true;
 	}
 
@@ -483,15 +483,15 @@ int32	RepliStruct::process(){
 	std::string loadError;
 
 	if (args.size() == 0) {
-		// expand counters in all structures
-		if (counters.find(cmd) != counters.end()) {
+		// expand Counters in all structures
+		if (Counters.find(cmd) != Counters.end()) {
 			// expand the counter
-			cmd = string_utils::Int2String(counters[cmd]++);
+			cmd = string_utils::Int2String(Counters[cmd]++);
 			changes++;
 		}
-		if (repliMacros.find(cmd) != repliMacros.end()) {
+		if (RepliMacros.find(cmd) != RepliMacros.end()) {
 			// expand the macro
-			macro = repliMacros[cmd];
+			macro = RepliMacros[cmd];
 			newStruct = macro->expandMacro(this);
 			if (newStruct != NULL) {
 				*this = *newStruct;
@@ -514,27 +514,27 @@ int32	RepliStruct::process(){
 		if (structure->type == Condition) {
 			if (structure->cmd.compare("!ifdef") == 0) {
 				cond = new RepliCondition(structure->args.front()->cmd, false);
-				conditions.push_back(cond);
+				Conditions.push_back(cond);
 			}
 			else if (structure->cmd.compare("!ifundef") == 0) {
 				cond = new RepliCondition(structure->args.front()->cmd, true);
-				conditions.push_back(cond);
+				Conditions.push_back(cond);
 			}
 			else if (structure->cmd.compare("!else") == 0) {
 				// reverse the current condition
-				conditions.back()->reverse();
+				Conditions.back()->reverse();
 			}
 			else if (structure->cmd.compare("!endif") == 0) {
-				conditions.pop_back();
+				Conditions.pop_back();
 			}
 			return 0;
 		}
 
-		// Check conditions to see if we are active at the moment
-		for (std::list<RepliCondition*>::const_iterator iCon(conditions.begin()), iConEnd(conditions.end()); iCon != iConEnd; ++iCon) {
+		// Check Conditions to see if we are active at the moment
+		for (std::list<RepliCondition*>::const_iterator iCon(Conditions.begin()), iConEnd(Conditions.end()); iCon != iConEnd; ++iCon) {
 			// if just one active condition is not active we will ignore the current line
 			// until we get an !else or !endif
-			if (!((*iCon)->isActive(repliMacros, counters)))
+			if (!((*iCon)->isActive(RepliMacros, Counters)))
 				return 0;
 		}
 
@@ -542,9 +542,9 @@ int32	RepliStruct::process(){
 			if (structure->cmd.compare("!counter") == 0) {
 				// register the counter
 				if (structure->args.size() > 1)
-					counters[structure->args.front()->cmd] = atoi(structure->args.back()->cmd.c_str());
+					Counters[structure->args.front()->cmd] = atoi(structure->args.back()->cmd.c_str());
 				else
-					counters[structure->args.front()->cmd] = 0;
+					Counters[structure->args.front()->cmd] = 0;
 			}
 			else if (structure->cmd.compare("!def") == 0) {
 				// check second sub structure only containing macros
@@ -554,12 +554,12 @@ int32	RepliStruct::process(){
 					return -1;
 				// register the macro
 				macro = new RepliMacro(structure->args.front()->cmd, structure->args.front(), structure->args.back());
-				repliMacros[macro->name] = macro;
+				RepliMacros[macro->name] = macro;
 			}
 			else if (structure->cmd.compare("!undef") == 0) {
 				// remove the counter or macro
-				repliMacros.erase(repliMacros.find(structure->args.front()->cmd));
-				counters.erase(counters.find(structure->args.front()->cmd));
+				RepliMacros.erase(RepliMacros.find(structure->args.front()->cmd));
+				Counters.erase(Counters.find(structure->args.front()->cmd));
 			}
 			else if (structure->cmd.compare("!load") == 0) {
 				// Check for a load directive...
@@ -595,9 +595,9 @@ int32	RepliStruct::process(){
 			}
 		}
 		else { // a Structure, Set, Atom or Development
-			if (repliMacros.find(structure->cmd) != repliMacros.end()) {
+			if (RepliMacros.find(structure->cmd) != RepliMacros.end()) {
 				// expand the macro
-				macro = repliMacros[structure->cmd];
+				macro = RepliMacros[structure->cmd];
 				newStruct = macro->expandMacro(structure);
 				if (newStruct != NULL) {
 					*structure = *newStruct;
@@ -620,10 +620,10 @@ int32	RepliStruct::process(){
 			}
 		}
 
-		// expand counters in all structures
-		if (counters.find(structure->cmd) != counters.end()) {
+		// expand Counters in all structures
+		if (Counters.find(structure->cmd) != Counters.end()) {
 			// expand the counter
-			structure->cmd = string_utils::Int2String(counters[structure->cmd]++);
+			structure->cmd = string_utils::Int2String(Counters[structure->cmd]++);
 			changes++;
 		}
 	}
@@ -885,12 +885,12 @@ bool RepliCondition::reverse(){
 	return true;
 }
 
-bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&repliMacros,UNORDERED_MAP<std::string,int32>	&counters){
+bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacros,UNORDERED_MAP<std::string,int32>	&Counters){
 
-	bool foundIt = (repliMacros.find(name) != repliMacros.end());
+	bool foundIt = (RepliMacros.find(name) != RepliMacros.end());
 
 	if (!foundIt)
-		foundIt = (counters.find(name) != counters.end());
+		foundIt = (Counters.find(name) != Counters.end());
 
 	if (reversed)
 		return (!foundIt);
