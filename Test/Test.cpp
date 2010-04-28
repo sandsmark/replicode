@@ -36,7 +36,7 @@ int32	main(int	argc,char	**argv){
 	source_code.close();
 
 	std::istringstream	preprocessed_code_in(preprocessed_code_out.str());
-	std::cout<<preprocessed_code_in.str()<<std::endl;
+	//std::cout<<preprocessed_code_in.str()<<std::endl;
 	r_code::Image		*image;		//	compiler output, decompiler input, r_exec::Mem input
 	Compiler			compiler;
 	if(!compiler.compile(&preprocessed_code_in,_image,image,&error)){
@@ -62,11 +62,11 @@ int32	main(int	argc,char	**argv){
 		UNORDERED_MAP<std::string, r_comp::Class>::iterator it;
 		for (it = _image->definition_segment.classes.begin(); it != _image->definition_segment.classes.end(); ++it) {
 			classes.insert(make_pair(it->first, it->second.atom));
-			printf("CLASS %s=0x%08x\n", it->first.c_str(), it->second.atom.atom);
+			//printf("CLASS %s=0x%08x\n", it->first.c_str(), it->second.atom.atom);
 		}
 		for (it = _image->definition_segment.sys_classes.begin(); it != _image->definition_segment.sys_classes.end(); ++it) {
 			classes.insert(make_pair(it->first, it->second.atom));
-			printf("SYS %s=0x%08x\n", it->first.c_str(), it->second.atom.atom);
+			//printf("SYS %s=0x%08x\n", it->first.c_str(), it->second.atom.atom);
 		}
 
 		delete	_image;

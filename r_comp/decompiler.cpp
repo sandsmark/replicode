@@ -261,7 +261,12 @@ namespace	r_comp{
 				if(atom.readsAsNil())
 					out_stream->push("|st",read_index);
 				else{
-					//	TODO
+
+					uint16		char_count=atom.atom	&	0x0000FFFF;
+					uint8		block_offset=1;
+					std:string	s;
+					s+=(char	*)&current_object->code[index+block_offset].atom;
+					*out_stream<<'\"'<<s<<'\"';
 				}
 				break;
 			case	Atom::TIMESTAMP:

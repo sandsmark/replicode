@@ -11,6 +11,7 @@ namespace	r_code{
 		static	uint32	Members_to_go;
 		static	uint8	Timestamp_data;
 		static	uint8	String_data;
+		static	uint16	Char_count;
 		void	write_indents()	const;
 	public:
 		typedef	enum{

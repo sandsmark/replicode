@@ -1819,15 +1819,16 @@ return_false:
 				current_object->code[write_index]=Atom::IPointer(extent_index);
 				current_object->code[extent_index++]=Atom::String(l);
 				uint32	_st=0;
-				int8	shift=24;
+				int8	shift=0;
 				for(uint16	i=0;i<l;++i){
 					
 					_st|=st[i]<<shift;
-					shift-=8;
-					if(shift==-8){
+					shift+=8;
+					if(shift==32){
 
 						current_object->code[extent_index++]=_st;
-						shift=24;
+						_st=0;
+						shift=0;
 					}
 				}
 				if(l%4)

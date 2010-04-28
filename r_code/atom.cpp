@@ -8,6 +8,7 @@ namespace	r_code{
 	uint32	Atom::Members_to_go=0;
 	uint8	Atom::Timestamp_data=0;
 	uint8	Atom::String_data=0;
+	uint16	Atom::Char_count=0;
 
 		Atom	Atom::Float(float32	f){
 
@@ -300,11 +301,6 @@ namespace	r_code{
 	void	Atom::trace()	const{
 
 		write_indents();
-		if(isFloat()){
-
-			std::cout<<"nb: "<<std::scientific<<asFloat();
-			return;
-		}
 		switch(getDescriptor()){
 		case	NIL:				std::cout<<"nil";return;
 		case	BOOLEAN_:			std::cout<<"bl: "<<std::boolalpha<<asBoolean();return;
@@ -326,7 +322,7 @@ namespace	r_code{
 		case	S_SET:				std::cout<<"s_set: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
 		case	MARKER:				std::cout<<"mk: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
 		case	OPERATOR:			std::cout<<"op: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	STRING:				std::cout<<"st: "<<std::dec<<getAtomCount();Members_to_go=String_data=getAtomCount();return;
+		case	STRING:				std::cout<<"st: "<<std::dec<<getAtomCount();Members_to_go=String_data=getAtomCount();Char_count=(atom	&	0x0000FFFF);return;
 		case	TIMESTAMP:			std::cout<<"us";Members_to_go=Timestamp_data=2;return;
 		default:
 			if(Timestamp_data){
@@ -336,20 +332,20 @@ namespace	r_code{
 			}else	if(String_data){
 
 				--String_data;
-				std::cout<<(char)(atom>>24);
-				std::cout<<(char)(atom>>16	&&	0x000000FF);
-				std::cout<<(char)(atom>>8	&&	0x000000FF);
-				std::cout<<(char)(atom>>24	&&	0x000000FF);
 				std::string	s;
 				char	*content=(char	*)&atom;
 				for(uint32	i=0;i<4;++i){
 
-					if(content[i]!='\0')
+					if(Char_count-->0)
 						s+=content[i];
 					else
 						break;
 				}
 				std::cout<<s.c_str();
+			}else	if(isFloat()){
+
+				std::cout<<"nb: "<<std::scientific<<asFloat();
+				return;
 			}else
 				std::cout<<"undef";
 			return;
