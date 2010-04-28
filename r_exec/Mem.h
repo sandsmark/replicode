@@ -34,7 +34,8 @@
 namespace r_exec {
 
 // BUGS: suspend/resume doesn't work; simplify or ask eric for assist
-struct Mem : public ObjectReceiver, public Asynchronous {	
+class dll_export	Mem : public ObjectReceiver, public Asynchronous {
+public:
 	static Mem* create(
 		int64 resilienceUpdatePeriod,
 		int64 baseUpdatePeriod,

@@ -119,7 +119,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="C:\Work\mBrane.CM.2\Core"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;R_CODE_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;R_CODE_EXPORTS;BUILD_DLL"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -211,10 +211,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\utils.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\utils.tpl.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -270,10 +282,6 @@
 			</File>
 			<File
 				RelativePath=".\types.h"
-				>
-			</File>
-			<File
-				RelativePath=".\utils.cpp"
 				>
 			</File>
 			<File

@@ -4,6 +4,8 @@
 
 #include	"../r_exec/Mem.h"
 
+#include	"../r_code/utils.h"
+
 #include	<iostream>
 
 
@@ -69,6 +71,7 @@ int32	main(int	argc,char	**argv){
 		_image=new	r_comp::Image();
 		*_image<<image;				//	this stores the ram_objects in the _image
 		_image->removeObjects();	//	remove these objects, to keep only the definiton segment
+#define	USE_MEM
 #ifdef USE_MEM
 		//	Create the mem with objects defined in ram_objects
 		r_exec::Mem* mem = r_exec::Mem::create(
@@ -78,7 +81,7 @@ int32	main(int	argc,char	**argv){
 			*ram_objects.as_std(),
 			0
 		);
-		sleep(3600);
+		r_code::Thread::Sleep(3600);
 #endif
 		//	Loading code from memory to an r_comp::Image
 		*_image<<ram_objects;	//	all at once; to load one object obj, use: *_image<<obj;	//	this recursively loads all obj dependencies
