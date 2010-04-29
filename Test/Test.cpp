@@ -8,6 +8,7 @@
 
 #include	<iostream>
 
+// #define PREPROCESSOR_TEST
 
 using	namespace	r_comp;
 
@@ -36,7 +37,13 @@ int32	main(int	argc,char	**argv){
 	source_code.close();
 
 	std::istringstream	preprocessed_code_in(preprocessed_code_out.str());
-	//std::cout<<preprocessed_code_in.str()<<std::endl;
+
+	#ifdef PREPROCESSOR_TEST
+		std::cout<<preprocessed_code_in.str()<<std::endl;
+		return 0;
+	#endif
+
+
 	r_code::Image		*image;		//	compiler output, decompiler input, r_exec::Mem input
 	Compiler			compiler;
 	if(!compiler.compile(&preprocessed_code_in,_image,image,&error)){
