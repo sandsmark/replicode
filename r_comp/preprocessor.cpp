@@ -482,30 +482,31 @@ int32	RepliStruct::process(){
 	RepliCondition* cond;
 	std::string loadError;
 
-	if (args.size() == 0) {
-		// expand Counters in all structures
-		if (Counters.find(cmd) != Counters.end()) {
-			// expand the counter
-			cmd = string_utils::Int2String(Counters[cmd]++);
+	// expand Counters in all structures
+	if (Counters.find(cmd) != Counters.end()) {
+		// expand the counter
+		cmd = string_utils::Int2String(Counters[cmd]++);
+		changes++;
+	}
+	// expand Macros in all structures
+	if (RepliMacros.find(cmd) != RepliMacros.end()) {
+		// expand the macro
+		macro = RepliMacros[cmd];
+		newStruct = macro->expandMacro(this);
+		if (newStruct != NULL) {
+			*this = *newStruct;
+			delete(newStruct);
 			changes++;
 		}
-		if (RepliMacros.find(cmd) != RepliMacros.end()) {
-			// expand the macro
-			macro = RepliMacros[cmd];
-			newStruct = macro->expandMacro(this);
-			if (newStruct != NULL) {
-				*this = *newStruct;
-				delete(newStruct);
-				changes++;
-			}
-			else {
-				error = macro->error;
-				macro->error = "";
-				return -1;
-			}
+		else {
+			error = macro->error;
+			macro->error = "";
+			return -1;
 		}
-		return changes;
 	}
+
+	if (args.size() == 0)
+		return changes;
 
 	for (std::list<RepliStruct*>::iterator iter(args.begin()), iterEnd(args.end()); iter != iterEnd; ++iter) {
 		structure = (*iter);
