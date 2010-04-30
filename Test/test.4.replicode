@@ -146,8 +146,8 @@ P1:(pgm
    []; inputs
       (ptn m:(mk.position b: pos: [t: ::] ::) []
          (= b ref_b)
-         (gtr t ref_t)
-         (neq pos ref_pos)
+         (> t ref_t)
+         (<> pos ref_pos)
       )
    |[]; timing
    |[]; guards
@@ -172,7 +172,7 @@ P2:(pgm
 [(ptn ref_b: |[])]; tpl
 []; input
    []; inputs
-      (ptn m:(mk.position b: pos: [t: ::] ::) [(neq b ref_b)])
+      (ptn m:(mk.position b: pos: [t: ::] ::) [(<> b ref_b)])
    |[]; timings
    |[]; guards
 []; productions
@@ -244,7 +244,7 @@ P4:(pgm
    |[]
    |[]
 []
-   (inj [(mk.position b (vec3 (add x 1) y z) |[] |[] |[] 0) [(add T 1000000us) s r g o] 0])
+   (inj [(mk.position b (vec3 (+ x 1) y z) |[] |[] |[] 0) [(+ T 1000000us) s r g o] 0])
 100000us
 0
 0
