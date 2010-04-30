@@ -8,7 +8,8 @@
 
 #include	<iostream>
 
-#define PREPROCESSOR_TEST
+//#define PREPROCESSOR_TEST
+#define	USE_MEM
 
 using	namespace	r_comp;
 
@@ -42,7 +43,6 @@ int32	main(int	argc,char	**argv){
 		std::cout<<preprocessed_code_in.str()<<std::endl;
 		return 0;
 	#endif
-
 
 	r_code::Image		*image;		//	compiler output, decompiler input, r_exec::Mem input
 	Compiler			compiler;
@@ -80,7 +80,6 @@ int32	main(int	argc,char	**argv){
 		_image=new	r_comp::Image();
 		*_image<<image;				//	this stores the ram_objects in the _image
 		_image->removeObjects();	//	remove these objects, to keep only the definiton segment
-#define	USE_MEM
 #ifdef USE_MEM
 		//	Create the mem with objects defined in ram_objects
 		r_exec::Mem* mem = r_exec::Mem::create(
