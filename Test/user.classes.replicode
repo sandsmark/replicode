@@ -1,0 +1,3 @@
+!class (vec3 x:nb y:nb z:nb)
+!class (mk.position (_obj {object: position:vec3}))
+!class (mk.last_known (_obj event:))
