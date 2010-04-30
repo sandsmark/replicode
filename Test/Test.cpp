@@ -8,7 +8,7 @@
 
 #include	<iostream>
 
-// #define PREPROCESSOR_TEST
+#define PREPROCESSOR_TEST
 
 using	namespace	r_comp;
 
