@@ -18,7 +18,7 @@ int32	main(int	argc,char	**argv){
 	r_code::Time::Init(1000);
 
 	std::string		error;
-	std::ifstream	source_code(argv[1], ios::in | ios::binary);	//	ANSI encoding (not Unicode)
+	std::ifstream	source_code(argv[1]);	//	ANSI encoding (not Unicode)
 
 	r_comp::Image		*_image=new	r_comp::Image();	//	compiler input; definition segment filled by preprocessor
 
