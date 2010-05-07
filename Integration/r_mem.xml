@@ -1,0 +1,38 @@
+<ApplicationConfiguration user_library="integration">
+	<!--first, space definitions-->
+	<Space name="space1" activation_threshold="0.5"/><!--name is mandatory-->
+	<!--second, module instantiations-->
+	<Module class="RMem" name="r_mem" host="local"><!--name optional-->
+		<Projection space="space1" activation_level="1">
+			<Subscription message_class="SystemReady"/>
+      <Subscription message_class="ImageMessage"/>
+			<Subscription stream="0"/>
+		</Projection>
+	</Module>
+  <Module class="SampleIO" name="sample_io" host="local">
+    <Projection space="space1" activation_level="1">
+      <Subscription message_class="SystemReady"/>
+      <Subscription message_class="TestPayload"/>
+      <Subscription stream="0"/>
+    </Projection>
+  </Module>
+  <Module class="Loader" name="loader" host="local">
+    <Projection space="space1" activation_level="1">
+      <Subscription message_class="SystemReady"/>
+      <Subscription message_class="TestPayload"/>
+      <Subscription stream="0"/>
+    </Projection>
+  </Module>
+	<!--GENERAL REMARKS-->
+	<!--0	all nodes have the exact same application config file-->
+	<!--1	no circular references (in projections)-->
+	<!--2	inclusion of external definitions via path to the xml node;-->
+	<!--	ex: <Module import="fileName.xml::mainNode.subNode.node"/>-->
+	<!--3	host: node name or "local"-->
+	<!--4	subscriptions are optional-->
+	<!--5	names are specified only here and can be retrieved at runtime; dynamically generated instances have no names-->
+	<!--6   FUTURE DEVELOPMENT: define a simple scripting language to parametrize space/module instantiation-->
+	<!--    ex: names, class, subscriptions, projections, thresholds, activation levels-->
+	<!--    idea: space/module instantiation templates-->
+	<!--7	if no projection is specified, projection on default space with activation level of 1 is assumed-->
+</ApplicationConfiguration>
