@@ -1,10 +1,12 @@
-#include	"../r_comp/decompiler.h"
-#include	"../r_comp/compiler.h"
-#include	"../r_comp/preprocessor.h"
+#include	"decompiler.h"
+#include	"compiler.h"
+#include	"preprocessor.h"
 
-#include	"../r_exec/Mem.h"
+#include	"Mem.h"
 
-#include	"../r_code/utils.h"
+#include	"utils.h"
+
+#include	"image_impl.h"
 
 #include	<iostream>
 
@@ -15,7 +17,7 @@ using	namespace	r_comp;
 
 int32	main(int	argc,char	**argv){
 
-	r_code::Time::Init(1000);
+	Time::Init(1000);
 
 	std::string		error;
 	std::ifstream	source_code(argv[1]);	//	ANSI encoding (not Unicode)
@@ -44,18 +46,18 @@ int32	main(int	argc,char	**argv){
 		return 0;
 	#endif
 
-	r_code::Image		*image;		//	compiler output, decompiler input, r_exec::Mem input
-	Compiler			compiler;
-	if(!compiler.compile(&preprocessed_code_in,_image,image,&error)){
+	r_code::Image<ImageImpl>	*image;	//	compiler output, decompiler input, r_exec::Mem input
+	Compiler					compiler;
+	if(!compiler.compile(&preprocessed_code_in,_image,&error,true)){
 
 		std::streampos	i=preprocessed_code_in.tellg();
 		std::cout.write(preprocessed_code_in.str().c_str(),i);
 		std::cout<<" <- "<<error<<std::endl;
-		delete	image;
 		delete	_image;
 		return	3;
 	}else{
 
+		image=_image->serialize<r_code::Image<ImageImpl> >();	
 		//image->trace();
 		source_code.close();
 #if 1
@@ -78,8 +80,8 @@ int32	main(int	argc,char	**argv){
 
 		delete	_image;
 		_image=new	r_comp::Image();
-		*_image<<image;				//	this stores the ram_objects in the _image
-		_image->removeObjects();	//	remove these objects, to keep only the definiton segment
+		_image->load<r_code::Image<ImageImpl> >(image);		//	this stores the ram_objects in the _image
+		_image->removeObjects();							//	remove these objects, to keep only the definiton segment
 #ifdef USE_MEM
 		//	Create the mem with objects defined in ram_objects
 		r_exec::Mem* mem = r_exec::Mem::create(
@@ -89,7 +91,7 @@ int32	main(int	argc,char	**argv){
 			*ram_objects.as_std(),
 			0
 		);
-		r_code::Thread::Sleep(3600);
+		Thread::Sleep(3600);
 #endif
 		//	Loading code from memory to an r_comp::Image
 		*_image<<ram_objects;	//	all at once; to load one object obj, use: *_image<<obj;	//	this recursively loads all obj dependencies

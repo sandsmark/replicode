@@ -1,6 +1,6 @@
 #ifndef __HASH_CONTAINERS_H__
 #define __HASH_CONTAINERS_H__
-#include "../r_code/types.h"
+#include "types.h"
 
 
 #ifdef OSX

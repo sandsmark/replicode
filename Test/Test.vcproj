@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(CORE_LIBRARY_DIR)\CoreLibrary&quot;;&quot;$(REPLICODE_DIR)\r_code&quot;;&quot;$(REPLICODE_DIR)\r_exec&quot;;&quot;$(REPLICODE_DIR)\r_comp&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -62,9 +63,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="r_comp.lib r_code.lib r_exec.lib"
+				AdditionalDependencies="r_comp.lib r_code.lib r_exec.lib CoreLibrary.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(OutDir)"
+				AdditionalLibraryDirectories="&quot;$(CORE_LIBRARY_DIR)\Debug&quot;;$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -118,6 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="&quot;$(REPLICODE_DIR)\r_code&quot;;&quot;$(CORE_LIBRARY_DIR)\CoreLibrary&quot;;&quot;$(REPLICODE_DIR)\r_exec&quot;;&quot;$(REPLICODE_DIR)\r_comp&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
@@ -138,9 +140,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="r_comp.lib r_code.lib r_exec.lib"
+				AdditionalDependencies="r_comp.lib r_code.lib r_exec.lib CoreLibrary.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(OutDir)"
+				AdditionalLibraryDirectories="&quot;$(CORE_LIBRARY_DIR)\Release&quot;;$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -178,6 +180,10 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\image_impl.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\Test.cpp"
 				>
@@ -325,6 +331,14 @@
 						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="Header Files"
+			>
+			<File
+				RelativePath=".\image_impl.h"
+				>
 			</File>
 		</Filter>
 	</Files>

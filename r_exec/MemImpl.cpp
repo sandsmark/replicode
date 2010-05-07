@@ -1,7 +1,7 @@
-#include "../r_code/types.h"
+#include "types.h"
 #include "MemImpl.h"
 #include "Expression.h"
-#include "../r_code/utils.h"
+#include "utils.h"
 #include "opcodes.h"
 #include <math.h>
 #include <stdio.h>
@@ -83,11 +83,11 @@ namespace MemImpl {
 			error("definition of standard groups and object invalid");
 
 		core = Core::create();
-		int64 now = r_code::Time::Get();
+		int64 now = Time::Get();
 
 		nextResilienceUpdate = now + resilienceUpdatePeriod;
 		nextGeneralUpdate = now + baseUpdatePeriod;
-		runThread = r_code::Thread::New<r_code::Thread>(Impl::run, this);
+		runThread = Thread::New<Thread>(Impl::run, this);
 	}
 
 	Impl::~Impl()
@@ -178,7 +178,7 @@ namespace MemImpl {
 		
 		bool updateGeneral = false;
 		int64 resilienceDecrease = 0;
-		int64 now = r_code::Time::Get();
+		int64 now = Time::Get();
 		if (now >= nextGeneralUpdate) {
 			updateGeneral = true;
 			nextGeneralUpdate += baseUpdatePeriod;
@@ -269,7 +269,7 @@ namespace MemImpl {
 	
 	void Impl::processInsertions()
 	{
-		int64 now = r_code::Time::Get();
+		int64 now = Time::Get();
 		InsertionStore objs;
 		insertionQueueMutex.acquire();
 			objs.swap(insertionQueue);
@@ -748,7 +748,7 @@ namespace MemImpl {
 			markerView->group = group;
 		markerView->originGroup = group;
 		markerView->originNodeID = 0;
-		markerView->injectionTime = r_code::Time::Get();
+		markerView->injectionTime = Time::Get();
 		markerView->saliency.value = 1;
 		markerView->resilience.value = updatePeriod * mem->baseUpdatePeriod;
 		//printf("adding notification %p for object %p in group %p\n", markerView, obj, group);
@@ -912,7 +912,7 @@ namespace MemImpl {
 	void GroupImpl::processNewViews()
 	{
 		// First, check to see if any of the pending views need to be inserted
-		int64 now = r_code::Time::Get();
+		int64 now = Time::Get();
 		for (;;) {
 			PendingViewStore::iterator it = pendingViews.begin();
 			if (it == pendingViews.end() || it->second->injectionTime > now)

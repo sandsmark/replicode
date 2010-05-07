@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\Work\mBrane.CM.2\Core"
+				AdditionalIncludeDirectories="&quot;$(CORE_LIBRARY_DIR)\CoreLibrary&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;R_CODE_EXPORTS;BUILD_DLL"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -63,8 +63,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="CoreLibrary.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="&quot;$(CORE_LIBRARY_DIR)\Debug&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -118,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="C:\Work\mBrane.CM.2\Core"
+				AdditionalIncludeDirectories="&quot;$(CORE_LIBRARY_DIR)\CoreLibrary&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;R_CODE_EXPORTS;BUILD_DLL"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
@@ -139,8 +140,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="CoreLibrary.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="&quot;$(CORE_LIBRARY_DIR)\Release&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -195,27 +197,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\object.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\operator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\r_code.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\reduction_instance.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\utils.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\utils.tpl.cpp"
+				RelativePath=".\image.tpl.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -235,6 +217,22 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\object.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\operator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\r_code.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\reduction_instance.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\vector.cpp"
 				>
 			</File>
@@ -246,10 +244,6 @@
 			>
 			<File
 				RelativePath=".\atom.h"
-				>
-			</File>
-			<File
-				RelativePath=".\compat.h"
 				>
 			</File>
 			<File
@@ -278,14 +272,6 @@
 			</File>
 			<File
 				RelativePath=".\reduction_instance.h"
-				>
-			</File>
-			<File
-				RelativePath=".\types.h"
-				>
-			</File>
-			<File
-				RelativePath=".\utils.h"
 				>
 			</File>
 			<File

@@ -1,3 +1,33 @@
+//	segments.cpp
+//
+//	Author: Eric Nivel
+//
+//	BSD license:
+//	Copyright (c) 2008, Eric Nivel
+//	All rights reserved.
+//	Redistribution and use in source and binary forms, with or without
+//	modification, are permitted provided that the following conditions are met:
+//
+//   - Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//   - Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+//   - Neither the name of Eric Nivel nor the
+//     names of their contributors may be used to endorse or promote products
+//     derived from this software without specific prior written permission.
+//
+//	THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+//	EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+//	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+//	DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+//	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+//	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+//	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+//	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 #include	"segments.h"
 
 #include	<iostream>
@@ -44,8 +74,8 @@ namespace	r_comp{
 		UNORDERED_MAP<std::string,Class>::iterator	it=classes.begin();
 		for(;it!=classes.end();++it){
 
-			r_code::Image::Write(data+offset,it->first);
-			offset+=r_code::Image::GetSize(it->first);
+			r_code::Write(data+offset,it->first);
+			offset+=r_code::GetSize(it->first);
 			data[offset]=it->second.atom.asOpcode();
 			offset++;
 		}
@@ -54,8 +84,8 @@ namespace	r_comp{
 		it=sys_classes.begin();
 		for(;it!=sys_classes.end();++it){
 
-			r_code::Image::Write(data+offset,it->first);
-			offset+=r_code::Image::GetSize(it->first);
+			r_code::Write(data+offset,it->first);
+			offset+=r_code::GetSize(it->first);
 			data[offset]=it->second.atom.asOpcode();
 			offset++;
 		}
@@ -63,22 +93,22 @@ namespace	r_comp{
 		data[offset++]=class_names.size();
 		for(i=0;i<class_names.size();++i){
 
-			r_code::Image::Write(data+offset,class_names[i]);
-			offset+=r_code::Image::GetSize(class_names[i]);
+			r_code::Write(data+offset,class_names[i]);
+			offset+=r_code::GetSize(class_names[i]);
 		}
 
 		data[offset++]=operator_names.size();
 		for(i=0;i<operator_names.size();++i){
 
-			r_code::Image::Write(data+offset,operator_names[i]);
-			offset+=r_code::Image::GetSize(operator_names[i]);
+			r_code::Write(data+offset,operator_names[i]);
+			offset+=r_code::GetSize(operator_names[i]);
 		}
 
 		data[offset++]=function_names.size();
 		for(i=0;i<function_names.size();++i){
 
-			r_code::Image::Write(data+offset,function_names[i]);
-			offset+=r_code::Image::GetSize(function_names[i]);
+			r_code::Write(data+offset,function_names[i]);
+			offset+=r_code::GetSize(function_names[i]);
 		}
 	}
 		
@@ -99,8 +129,8 @@ namespace	r_comp{
 		for(i=0;i<classes_count;++i){
 
 			std::string	s;
-			r_code::Image::Read(data+offset,s);
-			offset+=r_code::Image::GetSize(s);
+			r_code::Read(data+offset,s);
+			offset+=r_code::GetSize(s);
 			classes[s]=classes_by_opcodes[data[offset++]];
 		}
 
@@ -108,8 +138,8 @@ namespace	r_comp{
 		for(i=0;i<sys_classes_count;++i){
 
 			std::string	s;
-			r_code::Image::Read(data+offset,s);
-			offset+=r_code::Image::GetSize(s);
+			r_code::Read(data+offset,s);
+			offset+=r_code::GetSize(s);
 			sys_classes[s]=classes_by_opcodes[data[offset++]];
 		}
 
@@ -117,27 +147,27 @@ namespace	r_comp{
 		for(i=0;i<class_names_count;++i){
 
 			std::string	s;
-			r_code::Image::Read(data+offset,s);
+			r_code::Read(data+offset,s);
 			class_names.push_back(s);
-			offset+=r_code::Image::GetSize(s);
+			offset+=r_code::GetSize(s);
 		}
 
 		uint32	operator_names_count=data[offset++];
 		for(i=0;i<operator_names_count;++i){
 
 			std::string	s;
-			r_code::Image::Read(data+offset,s);
+			r_code::Read(data+offset,s);
 			operator_names.push_back(s);
-			offset+=r_code::Image::GetSize(s);
+			offset+=r_code::GetSize(s);
 		}
 
 		uint32	function_names_count=data[offset++];
 		for(i=0;i<function_names_count;++i){
 
 			std::string	s;
-			r_code::Image::Read(data+offset,s);
+			r_code::Read(data+offset,s);
 			function_names.push_back(s);
-			offset+=r_code::Image::GetSize(s);
+			offset+=r_code::GetSize(s);
 		}
 	}
 
@@ -203,7 +233,7 @@ namespace	r_comp{
 		uint32	size=1;	//	size of the hash table
 		UNORDERED_MAP<std::string,Class>::iterator	it=classes.begin();
 		for(;it!=classes.end();++it)
-			size+=r_code::Image::GetSize(it->first)+1;	//	+1: index to the class in the class array
+			size+=r_code::GetSize(it->first)+1;	//	+1: index to the class in the class array
 		return	size;
 	}
 
@@ -212,7 +242,7 @@ namespace	r_comp{
 		uint32	size=1;	//	size of the hash table
 		UNORDERED_MAP<std::string,Class>::iterator	it=sys_classes.begin();
 		for(;it!=sys_classes.end();++it)
-			size+=r_code::Image::GetSize(it->first)+1;	//	+1: index to the class in the class array
+			size+=r_code::GetSize(it->first)+1;	//	+1: index to the class in the class array
 		return	size;
 	}
 
@@ -220,7 +250,7 @@ namespace	r_comp{
 
 		uint32	size=1;	//	size of the vector
 		for(uint32	i=0;i<class_names.size();++i)
-			size+=r_code::Image::GetSize(class_names[i]);
+			size+=r_code::GetSize(class_names[i]);
 		return	size;
 	}
 
@@ -228,7 +258,7 @@ namespace	r_comp{
 
 		uint32	size=1;	//	size of the vector
 		for(uint32	i=0;i<operator_names.size();++i)
-			size+=r_code::Image::GetSize(operator_names[i]);
+			size+=r_code::GetSize(operator_names[i]);
 		return	size;
 	}
 
@@ -236,7 +266,7 @@ namespace	r_comp{
 
 		uint32	size=1;	//	size of the vector
 		for(uint32	i=0;i<function_names.size();++i)
-			size+=r_code::Image::GetSize(function_names[i]);
+			size+=r_code::GetSize(function_names[i]);
 		return	size;
 	}
 
@@ -386,35 +416,6 @@ namespace	r_comp{
 	}
 
 	Image::~Image(){
-	}
-
-	Image	&Image::operator	>>(r_code::Image *image){
-
-		image->def_size=definition_segment.getSize();
-		image->map_size=object_map.getSize();
-		image->code_size=code_segment.getSize();
-		image->reloc_size=relocation_segment.getSize();
-
-		image->data=new	word32[image->def_size+image->map_size+image->code_size+image->reloc_size];
-
-		object_map.shift(image->def_size+image->map_size);
-
-		definition_segment.write(image->data);
-		object_map.write(image->data+image->def_size);
-		code_segment.write(image->data+image->def_size+image->map_size);
-		relocation_segment.write(image->data+image->def_size+image->map_size+image->code_size);
-
-		return	*this;
-	}
-
-	Image	&Image::operator	<<(r_code::Image *image){
-
-		definition_segment.read(image->data,image->def_size);
-		object_map.read(image->data+image->def_size,image->map_size);
-		code_segment.read(image->data+image->def_size+image->map_size,image->map_size);
-		relocation_segment.read(image->data+image->def_size+image->map_size+image->code_size);
-
-		return	*this;
 	}
 
 	void	Image::addObject(SysObject	*object){

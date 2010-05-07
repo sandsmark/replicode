@@ -10,7 +10,7 @@
 #define __OBJECT_RECEIVER_H
 #include <vector>
 #include "fwd.h"
-#include "../r_code/atom.h"
+#include "atom.h"
 
 namespace r_exec {
 

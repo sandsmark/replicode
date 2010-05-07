@@ -1,7 +1,37 @@
+//	segments.h
+//
+//	Author: Eric Nivel
+//
+//	BSD license:
+//	Copyright (c) 2008, Eric Nivel
+//	All rights reserved.
+//	Redistribution and use in source and binary forms, with or without
+//	modification, are permitted provided that the following conditions are met:
+//
+//   - Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//   - Redistributions in binary form must reproduce the above copyright
+//     notice, this list of conditions and the following disclaimer in the
+//     documentation and/or other materials provided with the distribution.
+//   - Neither the name of Eric Nivel nor the
+//     names of their contributors may be used to endorse or promote products
+//     derived from this software without specific prior written permission.
+//
+//	THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+//	EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+//	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+//	DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+//	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+//	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+//	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+//	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 #ifndef	segments_h
 #define	segments_h
 
-#include	"../r_code/object.h"
+#include	"object.h"
 #include	"class.h"
 
 
@@ -109,8 +139,8 @@ namespace	r_comp{
 	class	dll_export	Image{
 	private:
 		uint32	map_offset;
-		UNORDERED_MAP<Object	*,uint32>	ptrs_to_indices;	//	used for >> in memory
-		void	buildReferences(SysObject	*sys_object,Object	*object,uint32	object_index);
+		UNORDERED_MAP<r_code::Object	*,uint32>	ptrs_to_indices;	//	used for >> in memory
+		void	buildReferences(SysObject	*sys_object,r_code::Object	*object,uint32	object_index);
 	public:
 		DefinitionSegment	definition_segment;
 		ObjectMap			object_map;
@@ -122,13 +152,32 @@ namespace	r_comp{
 
 		void	addObject(SysObject	*object);
 		
-		Image	&operator	>>	(r_code::Image	*image);
-		Image	&operator	<<	(r_code::Image	*image);
+		template<class	I>	I	*serialize(){
 
-		Image	&operator	>>	(r_code::vector<Object	*>	&ram_objects);
-		Image	&operator	<<	(r_code::vector<Object	*>	&ram_objects);
+			I	*image=(I	*)I::Build(definition_segment.getSize(),object_map.getSize(),code_segment.getSize(),relocation_segment.getSize());
+			
+			object_map.shift(image->def_size()+image->map_size());
 
-		Image	&operator	<<	(Object	*object);
+			definition_segment.write(image->data());
+			object_map.write(image->data()+image->def_size());
+			code_segment.write(image->data()+image->def_size()+image->map_size());
+			relocation_segment.write(image->data()+image->def_size()+image->map_size()+image->code_size());
+
+			return	image;
+		}
+
+		template<class	I>	void	load(I	*image){
+
+			definition_segment.read(image->data(),image->def_size());
+			object_map.read(image->data()+image->def_size(),image->map_size());
+			code_segment.read(image->data()+image->def_size()+image->map_size(),image->map_size());
+			relocation_segment.read(image->data()+image->def_size()+image->map_size()+image->code_size());
+		}
+
+		Image	&operator	>>	(r_code::vector<r_code::Object	*>	&ram_objects);
+		Image	&operator	<<	(r_code::vector<r_code::Object	*>	&ram_objects);
+
+		Image	&operator	<<	(r_code::Object	*object);
 
 		void	removeObjects();
 	};

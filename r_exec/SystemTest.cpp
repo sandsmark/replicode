@@ -5,7 +5,7 @@
 	#include <unistd.h>
 #endif
 #include <vector>
-#include "../r_code/utils.h"
+#include "utils.h"
 #include "hash_containers"
 
 namespace r_exec {
@@ -79,6 +79,6 @@ int main(int argc, char** argv)
 		read_object(argv[i], objects, views);
 		mem->receive(objects[i-1], views[i-1], 1, ObjectReceiver::INPUT_GROUP);
 	}
-	r_code::Thread::Sleep(10);
+	Thread::Sleep(10);
 }
 

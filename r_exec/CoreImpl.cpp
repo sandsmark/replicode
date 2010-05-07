@@ -3,7 +3,7 @@
 #include "Expression.h"
 #include "Group.h"
 #include <algorithm>
-#include "../r_code/utils.h"
+#include "utils.h"
 #include "ExecutionContext.h"
 #include "match.h"
 
@@ -19,7 +19,7 @@ namespace CoreImpl {
 		runRelease.acquire();
 		suspended.acquire();
 		for (int i = 0; i < num_threads; ++i) {
-			workerThreads.push_back(r_code::Thread::New<r_code::Thread>(Impl::work, this));
+			workerThreads.push_back(Thread::New<Thread>(Impl::work, this));
 		}
 	}
 
@@ -34,7 +34,7 @@ namespace CoreImpl {
 			runRelease.acquire();
 			runRelease.release();
 			//++numRunningThreads;
-			r_code::Atomic::Increment32(&numRunningThreads);
+			Atomic::Increment32(&numRunningThreads);
 			CoreImpl::Instance::Job* job = 0;
 			bool progress = true;
 			while (progress) {
@@ -58,7 +58,7 @@ namespace CoreImpl {
 					job->process();
 			}
 			//if (--numRunningThreads == 0)
-			uint32	r=r_code::Atomic::Decrement32(&numRunningThreads);
+			uint32	r=Atomic::Decrement32(&numRunningThreads);
 			if (r == 0)
 				suspended.release();
 		}
@@ -374,7 +374,7 @@ namespace CoreImpl {
 	
 	void Instance::onProgramInput(Program* program, int index, ReductionInstance* input)
 	{
-		int64 now = r_code::Time::Get();
+		int64 now = Time::Get();
 		vector<Program::MatchedInputs> newMatches;
 		int iRead=0, iWrite=0;
 		while (iRead < program->matchSets.size()) {

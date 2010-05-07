@@ -11,8 +11,8 @@
 #define __CORE_IMPL_H
 #include "Core.h"
 #include "hash_containers"
-#include "../r_code/atom.h"
-#include "../r_code/utils.h"
+#include "atom.h"
+#include "utils.h"
 #include <deque>
 #include "ReductionInstance.h"
 
@@ -144,9 +144,9 @@ namespace CoreImpl {
 		bool suspendRequested;
 //		std::atomic_uint numRunningThreads;
 		int32	volatile	numRunningThreads;
-		r_code::Mutex runRelease;
-		r_code::Mutex suspended;
-		r_code::Mutex implMutex;
+		Mutex runRelease;
+		Mutex suspended;
+		Mutex implMutex;
 		
 		// There are some compelling advantages in having only one thread
 		// working on a given Instance:
@@ -162,7 +162,7 @@ namespace CoreImpl {
 		// for the first implementation, but for the first implementation
 		// I'm not doing the one thread/instance idea.
 		std::deque<CoreImpl::Instance*> activeInstances;
-		std::vector<r_code::Thread*> workerThreads;
+		std::vector<Thread*> workerThreads;
 	};
 }
 

@@ -1,6 +1,6 @@
 #include "hash_containers"
 #include <string>
-#include "../r_code/atom.h"
+#include "atom.h"
 
 namespace r_exec {
 

@@ -1,7 +1,7 @@
 #ifndef __REDUCTION_INSTANCE_H
 #define __REDUCTION_INSTANCE_H
 #include <vector>
-#include "../r_code/atom.h"
+#include "atom.h"
 #include "fwd.h"
 
 namespace r_exec {

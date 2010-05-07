@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(CORE_LIBRARY_DIR)\CoreLibrary&quot;;&quot;$(REPLICODE_DIR)\r_comp&quot;;&quot;$(REPLICODE_DIR)\r_code&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;R_EXEC_EXPORTS"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -62,9 +63,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="r_code.lib"
+				AdditionalDependencies="r_code.lib CoreLibrary.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(OutDir)"
+				AdditionalLibraryDirectories="&quot;$(CORE_LIBRARY_DIR)\Debug&quot;;$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -118,6 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="&quot;$(CORE_LIBRARY_DIR)\CoreLibrary&quot;;&quot;$(REPLICODE_DIR)\r_comp&quot;;&quot;$(REPLICODE_DIR)\r_code&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;R_EXEC_EXPORTS"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
@@ -138,9 +140,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="r_code.lib"
+				AdditionalDependencies="r_code.lib CoreLibrary.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(OutDir)"
+				AdditionalLibraryDirectories="&quot;$(CORE_LIBRARY_DIR)\Release&quot;;$(OutDir)"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -265,6 +267,14 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool

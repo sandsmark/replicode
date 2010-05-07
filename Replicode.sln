@@ -16,6 +16,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "r_comp", "r_comp\r_comp.vcp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "r_exec", "r_exec\r_exec.vcproj", "{B0178025-3156-4066-9F8A-994851D49C27}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Integration", "Integration\Integration.vcproj", "{EB0AE095-4655-48BD-8C08-183E99F92B9C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -38,6 +40,10 @@ Global
 		{B0178025-3156-4066-9F8A-994851D49C27}.Debug|Win32.Build.0 = Debug|Win32
 		{B0178025-3156-4066-9F8A-994851D49C27}.Release|Win32.ActiveCfg = Release|Win32
 		{B0178025-3156-4066-9F8A-994851D49C27}.Release|Win32.Build.0 = Release|Win32
+		{EB0AE095-4655-48BD-8C08-183E99F92B9C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EB0AE095-4655-48BD-8C08-183E99F92B9C}.Debug|Win32.Build.0 = Debug|Win32
+		{EB0AE095-4655-48BD-8C08-183E99F92B9C}.Release|Win32.ActiveCfg = Release|Win32
+		{EB0AE095-4655-48BD-8C08-183E99F92B9C}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

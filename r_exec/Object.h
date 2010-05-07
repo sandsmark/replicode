@@ -26,7 +26,7 @@
 #ifndef __ROBJECT_H
 #define __ROBJECT_H
 #include "fwd.h"
-#include "../r_code/atom.h"
+#include "atom.h"
 #include <vector>
 
 namespace r_exec {
