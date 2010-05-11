@@ -64,6 +64,8 @@ namespace	r_code{
 		Object();
 		Object(SysObject	*source);
 		~Object();
+
+		uint32	opcode();
 	};
 
 	class	dll_export	Group:

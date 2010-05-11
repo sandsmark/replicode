@@ -6,20 +6,20 @@
 		<Projection space="space1" activation_level="1">
 			<Subscription message_class="SystemReady"/>
       <Subscription message_class="ImageMessage"/>
+      <Subscription message_class="InputCode"/>
 			<Subscription stream="0"/>
 		</Projection>
 	</Module>
   <Module class="SampleIO" name="sample_io" host="local">
     <Projection space="space1" activation_level="1">
       <Subscription message_class="SystemReady"/>
-      <Subscription message_class="TestPayload"/>
+      <Subscription message_class="OutputCode"/>
       <Subscription stream="0"/>
     </Projection>
   </Module>
   <Module class="Loader" name="loader" host="local">
     <Projection space="space1" activation_level="1">
       <Subscription message_class="SystemReady"/>
-      <Subscription message_class="TestPayload"/>
       <Subscription stream="0"/>
     </Projection>
   </Module>
