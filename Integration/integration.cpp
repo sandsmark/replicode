@@ -36,5 +36,5 @@ using	namespace	r_code;
 
 void	Init(){
 
-	std::cout << "rMem loaded"<<std::endl;
+	std::cout << "integration loaded"<<std::endl;
 }

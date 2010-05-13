@@ -12,18 +12,104 @@ void operator_add(ExecutionContext& context)
 {
 	Expression lhs(context.evaluateOperand(1));
 	Expression rhs(context.evaluateOperand(2));
+
+	if(lhs.head().readsAsNil()	||	rhs.head().readsAsNil())
+		context.setResult(Atom::UndefinedFloat());
+
 	if (lhs.head().isFloat()) {
 		if (rhs.head().isFloat()) {
 			context.setResult(Atom::Float( rhs.head().asFloat() + lhs.head().asFloat()));
 		} else if (rhs.head().getDescriptor() == Atom::TIMESTAMP) {
-			context.setResultTimestamp( int(lhs.head().asFloat() * 1e6) + rhs.decodeTimestamp() );
+			if(rhs.head()!=Atom::Forever())
+				context.setResultTimestamp( int(lhs.head().asFloat()) + rhs.decodeTimestamp() );
+			else
+				context.setResultTimestamp(-1);	//	forever
 		}
 	} else if (lhs.head().getDescriptor() == Atom::TIMESTAMP) {
 		if (rhs.head().isFloat()) {
-			context.setResultTimestamp( lhs.decodeTimestamp() + int(rhs.head().asFloat() * 1e6));
+			if(lhs.head()!=Atom::Forever())
+				context.setResultTimestamp( lhs.decodeTimestamp() + int(rhs.head().asFloat()));
+			else
+				context.setResultTimestamp(-1);	//	forever
 		} else if (rhs.head().getDescriptor() == Atom::TIMESTAMP) {
-			context.setResultTimestamp( lhs.decodeTimestamp() + rhs.decodeTimestamp() );
+			if(lhs.head()!=Atom::Forever()	&&	rhs.head()!=Atom::Forever())
+				context.setResultTimestamp( lhs.decodeTimestamp() + rhs.decodeTimestamp() );
+			else
+				context.setResultTimestamp(-1);	//	forever
 		}
+	}
+}
+
+void operator_sub(ExecutionContext& context)
+{
+	Expression lhs(context.evaluateOperand(1));
+	Expression rhs(context.evaluateOperand(2));
+
+	if(lhs.head().readsAsNil()	||	rhs.head().readsAsNil())
+		context.setResult(Atom::UndefinedFloat());
+
+	if (lhs.head().isFloat() && rhs.head().isFloat()) {
+		context.setResult( Atom::Float( lhs.head().asFloat() - rhs.head().asFloat() ));
+	} else if (lhs.head().getDescriptor() == Atom::TIMESTAMP && rhs.head().getDescriptor() == Atom::TIMESTAMP) {
+		if(lhs.head()==Atom::Forever())
+			context.setResultTimestamp(-1);	//	forever; NB: forever-forever=forever
+		else	if(rhs.head()==Atom::Forever())
+			context.setResultTimestamp(0);	//	NB: n-forever=0
+		else{
+			double diff = static_cast<float>( lhs.decodeTimestamp() ) - static_cast<float>( rhs.decodeTimestamp() );
+			context.setResultTimestamp( diff );
+		}
+	}
+}
+void operator_mul(ExecutionContext& context)
+{
+	Expression lhs(context.evaluateOperand(1));
+	Expression rhs(context.evaluateOperand(2));
+
+	if(lhs.head().readsAsNil()	||	rhs.head().readsAsNil())
+		context.setResult(Atom::UndefinedFloat());
+
+	if (lhs.head().isFloat() && rhs.head().isFloat()) {
+		context.setResult( Atom::Float( lhs.head().asFloat() * rhs.head().asFloat() ));
+	} else if (lhs.head().getDescriptor() == Atom::TIMESTAMP) {
+		if(rhs.head().getDescriptor() == Atom::TIMESTAMP)
+			context.setResultTimestamp(-2);	//	undefined value
+		else	if(lhs.head()==Atom::Forever())
+			context.setResultTimestamp(-1);	//	forever; NB: forever*n=forever	
+		else
+			context.setResultTimestamp(lhs.decodeTimestamp()*rhs.head().asFloat());
+	} else if (rhs.head().getDescriptor() == Atom::TIMESTAMP) {
+		if(rhs.head()==Atom::Forever())
+			context.setResultTimestamp(-1);	//	forever; NB: forever*n=forever
+		else
+			context.setResultTimestamp(rhs.decodeTimestamp()*lhs.head().asFloat());
+	}
+}
+
+void operator_div(ExecutionContext& context)
+{
+	Expression lhs(context.evaluateOperand(1));
+	Expression rhs(context.evaluateOperand(2));
+
+	if(lhs.head().readsAsNil()	||	rhs.head().readsAsNil())
+		context.setResult(Atom::UndefinedFloat());
+
+	if (lhs.head().isFloat() && rhs.head().isFloat()) {
+		if(rhs.head().asFloat()==0)
+			context.setResult(Atom::UndefinedFloat());
+		else
+			context.setResult( Atom::Float( lhs.head().asFloat() / rhs.head().asFloat() ));
+	} else if (lhs.head().getDescriptor() == Atom::TIMESTAMP) {
+		if(rhs.head().getDescriptor() == Atom::TIMESTAMP)
+			context.setResultTimestamp(-2);	//	undefined value
+		else	if(lhs.head()==Atom::Forever())
+			context.setResultTimestamp(-1);	//	forever; NB: forever/n=forever	
+		else	if(rhs.head().asFloat()==0)
+			context.setResult(Atom::UndefinedFloat());
+		else
+			context.setResultTimestamp(lhs.decodeTimestamp()/rhs.head().asFloat());
+	} else if (rhs.head().getDescriptor() == Atom::TIMESTAMP) {
+		context.setResult(Atom::UndefinedFloat());
 	}
 }
 
@@ -67,8 +153,12 @@ void operator_gte(ExecutionContext& context)
 	if (lhs.head().isFloat() && rhs.head().isFloat()) {
 		context.setResult(Atom::Boolean(lhs.head().asFloat() >= rhs.head().asFloat()));
 	} else if (lhs.head().getDescriptor() == Atom::TIMESTAMP && rhs.head().getDescriptor() == Atom::TIMESTAMP) {
-		context.setResult(Atom::Boolean(
-			lhs.decodeTimestamp() >= rhs.decodeTimestamp()));
+		if(lhs.head()==Atom::Forever())
+			context.setResult(Atom::Boolean(true));
+		else	if(rhs.head()==Atom::Forever())
+			context.setResult(Atom::Boolean(false));
+		else
+			context.setResult(Atom::Boolean(lhs.decodeTimestamp() >= rhs.decodeTimestamp()));
 	}
 }
 
@@ -79,8 +169,15 @@ void operator_gtr(ExecutionContext& context)
 	if (lhs.head().isFloat() && rhs.head().isFloat()) {
 		context.setResult(Atom::Boolean(lhs.head().asFloat() > rhs.head().asFloat()));
 	} else if (lhs.head().getDescriptor() == Atom::TIMESTAMP && rhs.head().getDescriptor() == Atom::TIMESTAMP) {
-		context.setResult(Atom::Boolean(
-			lhs.decodeTimestamp() > rhs.decodeTimestamp()));
+		if(lhs.head()==Atom::Forever()){
+			if(rhs.head()==Atom::Forever())
+				context.setResult(Atom::Boolean(false));
+			else
+				context.setResult(Atom::Boolean(true));
+		}else	if(rhs.head()==Atom::Forever())
+			context.setResult(Atom::Boolean(false));
+		else
+			context.setResult(Atom::Boolean(lhs.decodeTimestamp() > rhs.decodeTimestamp()));
 	}
 }
 
@@ -91,8 +188,12 @@ void operator_lse(ExecutionContext& context)
 	if (lhs.head().isFloat() && rhs.head().isFloat()) {
 		context.setResult(Atom::Boolean(lhs.head().asFloat() <= rhs.head().asFloat()));
 	} else if (lhs.head().getDescriptor() == Atom::TIMESTAMP && rhs.head().getDescriptor() == Atom::TIMESTAMP) {
-		context.setResult(Atom::Boolean(
-			lhs.decodeTimestamp() <= rhs.decodeTimestamp()));
+		if(lhs.head()==Atom::Forever())
+			context.setResult(Atom::Boolean(false));
+		else	if(rhs.head()==Atom::Forever())
+			context.setResult(Atom::Boolean(true));
+		else
+			context.setResult(Atom::Boolean(lhs.decodeTimestamp() <= rhs.decodeTimestamp()));
 	}
 }
 
@@ -103,17 +204,20 @@ void operator_lsr(ExecutionContext& context)
 	if (lhs.head().isFloat() && rhs.head().isFloat()) {
 		context.setResult(Atom::Boolean(lhs.head().asFloat() < rhs.head().asFloat()));
 	} else if (lhs.head().getDescriptor() == Atom::TIMESTAMP && rhs.head().getDescriptor() == Atom::TIMESTAMP) {
-		context.setResult(Atom::Boolean(
-			lhs.decodeTimestamp() < rhs.decodeTimestamp()));
+		if(lhs.head()==Atom::Forever()){
+			if(rhs.head()==Atom::Forever())
+				context.setResult(Atom::Boolean(false));
+			else
+				context.setResult(Atom::Boolean(false));
+		}else	if(rhs.head()==Atom::Forever())
+			context.setResult(Atom::Boolean(true));
+		else
+			context.setResult(Atom::Boolean(lhs.decodeTimestamp() < rhs.decodeTimestamp()));
 	}
 }
 
 void operator_now(ExecutionContext& context)
 {
-	/*struct timeval tv;
-	struct timezone tz;
-	gettimeofday(&tv, &tz);
-	int64 now = static_cast<int64>(tv.tv_sec) * 1000000 + tv.tv_usec;*/
 	int64	now=Time::Get();
 	context.setResultTimestamp( now );
 }
@@ -201,19 +305,6 @@ void operator_red(ExecutionContext& context)
 	}
 
 	context.endResultSet();
-}
-
-void operator_sub(ExecutionContext& context)
-{
-	Expression lhs(context.evaluateOperand(1));
-	Expression rhs(context.evaluateOperand(2));
-
-	if (lhs.head().isFloat() && rhs.head().isFloat()) {
-		context.setResult( Atom::Float( lhs.head().asFloat() - rhs.head().asFloat() ));
-	} else if (lhs.head().getDescriptor() == Atom::TIMESTAMP && rhs.head().getDescriptor() == Atom::TIMESTAMP) {
-		double diff = static_cast<float>( lhs.decodeTimestamp() ) - static_cast<float>( rhs.decodeTimestamp() );
-		context.setResult( Atom::Float(diff * 1e-6) );
-	}
 }
 
 void operator_ins(ExecutionContext& context)

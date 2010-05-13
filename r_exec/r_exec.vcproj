@@ -315,14 +315,14 @@
 				>
 			</File>
 			<File
-				RelativePath=".\r_exec.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ReductionInstance.h"
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\ClassDiagram1.cd"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

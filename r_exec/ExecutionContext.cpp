@@ -96,13 +96,20 @@ Expression ExecutionContext::evaluateOperand(int index_)
 
 void ExecutionContext::setResultTimestamp(int64 timestamp)
 {
+	Atom	descriptor;
+	switch(timestamp){
+	case	-1:	descriptor=Atom::Forever();	break;
+	case	-2:	descriptor=Atom::UndefinedTimestamp();	break;
+	default:descriptor=Atom::Timestamp();	break;
+	}
+
 	if (head().getAtomCount() >= 2) {
-		instance->value[index] = Atom::Timestamp();
+		instance->value[index] = descriptor;
 		instance->value[index+1] = Atom(timestamp >> 32);
 		instance->value[index+2] = Atom(timestamp);
 	} else {
 		instance->value[index] = Atom::IPointer(instance->value.size());
-		instance->value.push_back(Atom::Timestamp());
+		instance->value.push_back(descriptor);
 		instance->value.push_back(Atom(timestamp >> 32));
 		instance->value.push_back(Atom(timestamp));
 	}

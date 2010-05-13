@@ -11,7 +11,6 @@
 #include	<iostream>
 
 //#define PREPROCESSOR_TEST
-#define	USE_MEM
 
 using	namespace	r_comp;
 
@@ -60,7 +59,7 @@ int32	main(int	argc,char	**argv){
 		image=_image->serialize<r_code::Image<ImageImpl> >();	
 		//image->trace();
 		source_code.close();
-#if 1
+
 		//	Loading code from the image into memory then into the r_exec::Mem
 		//	Instantiate objects and views
 		r_code::vector<r_code::Object	*>	ram_objects;
@@ -82,7 +81,7 @@ int32	main(int	argc,char	**argv){
 		_image=new	r_comp::Image();
 		_image->load<r_code::Image<ImageImpl> >(image);		//	this stores the ram_objects in the _image
 		_image->removeObjects();							//	remove these objects, to keep only the definiton segment
-#ifdef USE_MEM
+
 		//	Create the mem with objects defined in ram_objects
 		r_exec::Mem* mem = r_exec::Mem::create(
 			10000, // resilience update period: 10ms
@@ -92,7 +91,7 @@ int32	main(int	argc,char	**argv){
 			0
 		);
 		Thread::Sleep(3600);
-#endif
+
 		//	Loading code from memory to an r_comp::Image
 		*_image<<ram_objects;	//	all at once; to load one object obj, use: *_image<<obj;	//	this recursively loads all obj dependencies
 
@@ -100,7 +99,7 @@ int32	main(int	argc,char	**argv){
 		std::ostringstream	decompiled_code;
 		decompiler.decompile(_image,&decompiled_code);
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
-#endif
+
 		delete	image;
 		delete	_image;
 	}

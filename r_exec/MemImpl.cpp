@@ -52,9 +52,8 @@ namespace MemImpl {
 					vector<r_code::Atom> translatedViewData;
 					translatedViewData.push_back(v->code[2]); // sln
 					int16 n = v->code[3].asIndex();
-					// TODO int64 t = (static_cast<int64>(v->code[n].atom) << 32) + v->code[n+1].atom;
-					int64 t = 1000000000;
-					translatedViewData.push_back(r_code::Atom::Float(t));
+					int64 res = (static_cast<int64>(v->code[n+1].atom) << 32) + v->code[n+2].atom;	//	forever=0xFFFFFFFFFFFFFFFF
+					translatedViewData.push_back(r_code::Atom::Float(res));	//	res
 					if (numAtoms >= 6)
 						translatedViewData.push_back(v->code[6]);
 					if (numAtoms >= 7)
@@ -679,7 +678,7 @@ namespace MemImpl {
 					if (isMod)
 						targetValue += priorValue;
 					++view->mediations[mediationIndex].requestCount;
-					view->mediations[mediationIndex].sumTargetValue += targetValue;
+					view->mediations[mediationIndex].sumTargetValue += targetValue;	//	TODO: special case: forever for resilience
 				}
 			}
 		} else {
@@ -693,7 +692,7 @@ namespace MemImpl {
 					int32 mediationIndex = variable - &group->saliencyThreshold;
 					if (mediationIndex >= 0 && mediationIndex < 7) {
 						++group->mediations[mediationIndex].requestCount;
-						group->mediations[mediationIndex].sumTargetValue += targetValue;
+						group->mediations[mediationIndex].sumTargetValue += targetValue;	//	TODO: special case: forever for resilience
 					} else {
 						*variable = targetValue;
 					}
@@ -831,7 +830,7 @@ namespace MemImpl {
 				if (view->mediations[1].requestCount != 0) {
 					view->resilience.value = view->mediations[1].getAndReset();
 				}
-				if (view->resilience.value == -1) {
+				if (view->resilience.value == -1) {	//	forever
 					// do nothing
 				} else if (view->resilience.value == 0) {
 					if (view->isActive)
