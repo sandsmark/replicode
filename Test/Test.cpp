@@ -45,7 +45,6 @@ int32	main(int	argc,char	**argv){
 		return 0;
 	#endif
 
-	r_code::Image<ImageImpl>	*image;	//	compiler output, decompiler input, r_exec::Mem input
 	Compiler					compiler;
 	if(!compiler.compile(&preprocessed_code_in,_image,&error,true)){
 
@@ -56,6 +55,7 @@ int32	main(int	argc,char	**argv){
 		return	3;
 	}else{
 
+		r_code::Image<ImageImpl>	*image;	//	compiler output, decompiler input, r_exec::Mem input
 		image=_image->serialize<r_code::Image<ImageImpl> >();	
 		//image->trace();
 		source_code.close();

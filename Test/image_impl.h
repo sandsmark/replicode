@@ -21,6 +21,7 @@ protected:
 	word32	*data();
 public:
 	void	*operator	new(size_t,uint32	data_size);
+	void	operator delete(void	*o);
 	ImageImpl(uint32	def_size,uint32	map_size,uint32	code_size,uint32	reloc_size);
 	~ImageImpl();
 };

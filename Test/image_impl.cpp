@@ -1,9 +1,14 @@
 #include	"image_impl.h"
 
 
-void	*ImageImpl::operator	new(size_t,uint32	data_size){
+void	*ImageImpl::operator	new(size_t	s,uint32	data_size){
 
-	return	::new(size_t);
+	return	::operator	new(s);
+}
+
+void	ImageImpl::operator delete(void	*o){
+
+	::operator	delete(o);
 }
 
 ImageImpl::ImageImpl(uint32	def_size,uint32	map_size,uint32	code_size,uint32	reloc_size):_def_size(def_size),_map_size(map_size),_code_size(code_size),_reloc_size(reloc_size){
