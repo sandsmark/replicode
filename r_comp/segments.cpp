@@ -428,8 +428,14 @@ namespace	r_comp{
 	Image	&Image::operator	>>(r_code::vector<Object	*>	&ram_objects){
 
 		uint32	i;
-		for(i=0;i<code_segment.objects.size();++i)
-			ram_objects[i]=new	r_code::Object(code_segment.objects[i]);
+		for(i=0;i<code_segment.objects.size();++i){
+
+			uint16	opcode=code_segment.objects[i]->code[0].asOpcode();
+			if(opcode==definition_segment.classes.find("grp")->second.atom.asOpcode())
+				ram_objects[i]=new	r_code::Group(code_segment.objects[i]);
+			else
+				ram_objects[i]=new	r_code::Object(code_segment.objects[i]);
+		}
 		//	Translate indices into pointers
 		for(i=0;i<relocation_segment.entries.size();++i){	//	for each allocated object, write its address in the reference set of the objects or views that reference it
 
@@ -439,13 +445,18 @@ namespace	r_comp{
 
 				RelocationSegment::PointerIndex	p=e.pointer_indexes[j];
 				r_code::Object	*referencing_object=ram_objects[p.object_index];
-				if(p.view_index==-1)
+				switch(p.view_index){
+				case	-1:
 					referencing_object->reference_set[p.pointer_index]=referenced_object;
-				else
+					break;
+				case	-2:
+					referencing_object->marker_set[p.pointer_index]=referenced_object;
+					break;
+				default:
 					referencing_object->view_set[p.view_index]->reference_set[p.pointer_index]=referenced_object;
+					break;
+				}
 			}
-			//	TBD: put marker addresses in each object's marker set (marker sets are subsets of reference sets)
-			//	TBD: no need to do the same for members in groups: the Mem shall do it itself
 		}
 		return	*this;
 	}
@@ -463,7 +474,7 @@ namespace	r_comp{
 		static	uint32	Last_index=0;
 
 		UNORDERED_MAP<Object	*,uint32>::iterator	it=ptrs_to_indices.find(object);
-		if(it!=ptrs_to_indices.end())
+		if(it!=ptrs_to_indices.end())	//	object already there
 			return	*this;
 
 		uint32	object_index;
@@ -471,8 +482,11 @@ namespace	r_comp{
 		SysObject	*sys_object=new	SysObject(object);
 		addObject(sys_object);
 
-		for(uint32	i=0;i<object->reference_set.size();++i)	//	follow reference pointers and recurse
+		uint32	i;
+		for(i=0;i<object->reference_set.size();++i)	//	follow reference pointers and recurse
 			*this<<object->reference_set[i];
+		for(i=0;i<object->marker_set.size();++i)	//	follow marker pointers and recurse
+			*this<<object->marker_set[i];
 
 		buildReferences(sys_object,object,object_index);
 		return	*this;
@@ -480,7 +494,7 @@ namespace	r_comp{
 
 	void	Image::buildReferences(SysObject	*sys_object,Object	*object,uint32	object_index){
 
-		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references
+		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references and markers
 		uint32	i;
 		uint32	referenced_object_index;
 		for(i=0;i<object->reference_set.size();++i){
@@ -496,8 +510,12 @@ namespace	r_comp{
 				sys_object->view_set[i]->reference_set.push_back(referenced_object_index);
 				relocation_segment.addViewReference(referenced_object_index,object_index,i,j);
 			}
-		//	for(i=0;j<object->marker_set.size();++i)
-		//		relocation_segment.addMarkerReference(ptrs_to_indices.find(object->marker_set[i])->second,object_index,i);
+		for(i=0;i<object->marker_set.size();++i){
+
+			referenced_object_index=ptrs_to_indices.find(object->marker_set[i])->second;
+			sys_object->marker_set.push_back(referenced_object_index);
+			relocation_segment.addMarkerReference(referenced_object_index,object_index,i);
+		}
 	}
 
 	void	Image::removeObjects(){

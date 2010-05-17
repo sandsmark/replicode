@@ -1,4 +1,5 @@
 #include	"object.h"
+#include	"replicode_defs.h"
 
 #include	<iostream>
 
@@ -178,21 +179,23 @@ namespace	r_code{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Object::Object(){
+	Object::Object():mem(NULL){
 	}
 
-	Object::Object(SysObject	*source){
+	Object::Object(SysObject	*source):mem(NULL){
 
 		uint32	i;
 		for(i=0;i<source->code.size();++i)
 			code[i]=source->code[i];
 
 		for(i=0;i<source->view_set.size();++i)
-			view_set[i]=new	View(source->view_set[i]);
+			view_set[i]=new	View(source->view_set[i],this);
 	}
 
 	Object::~Object(){
 
+		if(mem)
+			mem->deleteObject(this);
 		for(uint32	i=0;i<view_set.size();++i)
 			delete	view_set[i];
 	}
@@ -202,25 +205,138 @@ namespace	r_code{
 		return	code[0].asOpcode();
 	}
 
+	bool	Object::isGroup()	const{
+
+		return	false;
+	}
+
+	uint32	Object::getOID()	const{
+
+		return	OID;
+	}
+
+	void	Object::init(uint32	OID,Mem	*mem){
+
+		this->OID=OID;
+		this->mem=mem;
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	Group::Group(){
 	}
 
+	Group::Group(SysObject	*source):Object(source){
+	}
+
 	Group::~Group(){
+	}
+
+	bool	Group::isGroup()	const{
+
+		return	true;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	View::View(){
+
+		reset_ctrl_values();
 	}
 
-	View::View(SysView	*source){
+	View::View(SysView	*source,Object	*object){
 
 		for(uint32	i=0;i<source->code.size();++i)
 			code[i]=source->code[i];
+		this->object=object;
+
+		reset_ctrl_values();
 	}
 
 	View::~View(){
+	}
+
+	Group	*View::getHost(){
+
+		uint32	host_reference=code[VIEW_HOST].asIndex();
+		return	(Group	*)reference_set[host_reference];
+	}
+
+	void	View::mod_res(int64	value){
+
+		acc_res+=value;
+		++res_changes;
+	}
+
+	void	View::set_res(int64	value){
+
+		acc_res+=value-code[VIEW_RES].asFloat();
+		++res_changes;
+	}
+
+	void	View::mod_sln(float32	value){
+
+		acc_sln+=value;
+		++sln_changes;
+	}
+
+	void	View::set_sln(float32	value){
+
+		acc_res+=value-code[VIEW_SLN].asFloat();
+		++sln_changes;
+	}
+
+	void	View::mod_act_vis(float32	value){
+
+		acc_act_vis+=value;
+		++act_vis_changes;
+	}
+
+	void	View::set_act_vis(float32	value){
+
+		acc_act_vis+=value-code[VIEW_ACT_VIS].asFloat();
+		++act_vis_changes;
+	}
+
+	void	View::reset_ctrl_values(){
+
+		sln_changes=0;
+		acc_sln=0;
+		act_vis_changes=0;
+		acc_act_vis=0;
+		res_changes=0;
+		acc_res=0;
+	}
+
+	float32	View::update_res(){
+
+		if(res_changes)
+			code[VIEW_RES]=Atom::Float(acc_res/res_changes);
+		acc_res=0;
+		res_changes=0;
+		return	code[VIEW_RES].asFloat();
+	}
+
+	float32	View::update_sln(float32	&change){
+
+		if(sln_changes){
+
+			change=code[VIEW_SLN].asFloat();
+			code[VIEW_SLN]=Atom::Float(acc_sln/sln_changes);
+			change-=code[VIEW_SLN].asFloat();
+		}else
+			change=0;
+		acc_sln=0;
+		sln_changes=0;
+		return	code[VIEW_SLN].asFloat();
+	}
+
+	float32	View::update_act_vis(){
+
+		if(act_vis_changes)
+			code[VIEW_ACT_VIS]=Atom::Float(acc_act_vis/act_vis_changes);
+		acc_act_vis=0;
+		act_vis_changes=0;
+		return	code[VIEW_ACT_VIS].asFloat();
 	}
 }

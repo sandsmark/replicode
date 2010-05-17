@@ -48,16 +48,6 @@ root; ntf_grp
 []
    [now 1 forever nil nil 0 0]
 
-self:(ent
-|[]; view
-|[]; mks
-|[]; vws
-0; psln_thr
-)
-
-[]
-   [now 1 forever root nil]
-
 stdin:(grp
 1; upr
 1; spr
@@ -104,7 +94,7 @@ stdout:(grp
 1; upr
 1; spr
 0; sln_thr
-0; act-thr
+0; act_thr
 0; vis_thr
 1; c_sln
 0; c_sln_thr
@@ -141,3 +131,13 @@ stdout; ntf_grp
 
 []
    [now 1 forever root nil 0 0]
+
+self:(ent
+|[]; view
+|[]; mks
+|[]; vws
+0; psln_thr
+)
+
+[]
+   [now 1 forever root nil]
