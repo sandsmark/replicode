@@ -5,9 +5,6 @@
 
 
 namespace	r_code{
-
-	class	dll_export	Expression{	//	TODO: declare
-	};
 }
 
 

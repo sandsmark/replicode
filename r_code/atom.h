@@ -28,8 +28,8 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	atom_h
-#define	atom_h
+#ifndef	r_code_atom_h
+#define	r_code_atom_h
 
 #include	"types.h"
 

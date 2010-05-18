@@ -138,6 +138,7 @@ namespace	r_comp{
 
 	class	dll_export	Image{
 	private:
+		Mem	*mem;
 		uint32	map_offset;
 		UNORDERED_MAP<r_code::Object	*,uint32>	ptrs_to_indices;	//	used for >> in memory
 		void	buildReferences(SysObject	*sys_object,r_code::Object	*object,uint32	object_index);
@@ -149,6 +150,8 @@ namespace	r_comp{
 
 		Image();
 		~Image();
+
+		void	bind(Mem	*m);	//	use if there is a local Mem (as opoosed to a standalone compilation application);
 
 		void	addObject(SysObject	*object);
 		

@@ -412,10 +412,28 @@ namespace	r_comp{
 
 	////////////////////////////////////////////////////////////////
 
-	Image::Image():map_offset(0){
+	class	NoMem:
+	public	Mem{
+	public:
+		Object	*buildObject(SysObject	*source){
+			return	new	Object(source);
+		}
+		Object	*buildGroup(SysObject	*source){
+			return	new	Object(source);
+		}
+	};
+
+	////////////////////////////////////////////////////////////////
+
+	Image::Image():map_offset(0),mem(NULL){
 	}
 
 	Image::~Image(){
+	}
+
+	void	Image::bind(Mem	*m){
+
+		mem=m;
 	}
 
 	void	Image::addObject(SysObject	*object){
@@ -427,14 +445,21 @@ namespace	r_comp{
 
 	Image	&Image::operator	>>(r_code::vector<Object	*>	&ram_objects){
 
+		bool	noMem=false;
+		if(!mem){
+
+			noMem=true;
+			mem=new	NoMem();
+		}
+
 		uint32	i;
 		for(i=0;i<code_segment.objects.size();++i){
 
 			uint16	opcode=code_segment.objects[i]->code[0].asOpcode();
 			if(opcode==definition_segment.classes.find("grp")->second.atom.asOpcode())
-				ram_objects[i]=new	r_code::Group(code_segment.objects[i]);
+				ram_objects[i]=mem->buildGroup(code_segment.objects[i]);
 			else
-				ram_objects[i]=new	r_code::Object(code_segment.objects[i]);
+				ram_objects[i]=mem->buildObject(code_segment.objects[i]);
 		}
 		//	Translate indices into pointers
 		for(i=0;i<relocation_segment.entries.size();++i){	//	for each allocated object, write its address in the reference set of the objects or views that reference it
@@ -458,6 +483,8 @@ namespace	r_comp{
 				}
 			}
 		}
+		if(noMem)
+			delete	mem;
 		return	*this;
 	}
 

@@ -28,8 +28,8 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	vector_h
-#define	vector_h
+#ifndef	r_code_vector_h
+#define	r_code_vector_h
 
 #include	"types.h"
 
@@ -50,7 +50,7 @@ namespace	r_code{
 			return	std::vector<T>::operator [](i);
 		}
 		void	push_back(T	t){	std::vector<T>::push_back(t);	}
-		std::vector<T>	*as_std(){	return	this;	}
+		std::vector<T>	*as_std()	const{	return	(std::vector<T>	*)this;	}
 	};
 }
 

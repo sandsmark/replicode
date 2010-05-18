@@ -274,6 +274,7 @@ namespace MemImpl {
 			objs.swap(insertionQueue);
 		insertionQueueMutex.release();
 		for (InsertionStore::const_iterator it = objs.begin(); it != objs.end(); ++it) {
+			
 			ObjectBase* base = reinterpret_cast<ObjectBase*>(it->object);
 			ViewImpl* view = new ViewImpl();
 			view->object = base;

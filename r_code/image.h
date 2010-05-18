@@ -28,8 +28,8 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef image_h
-#define	image_h
+#ifndef r_code_image_h
+#define	r_code_image_h
 
 #include	"types.h"
 
