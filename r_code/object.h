@@ -67,6 +67,8 @@ namespace	r_code{
 		Object();
 		Object(SysObject	*source);
 		virtual	~Object();
+
+		uint16	opcode();
 	};
 
 	class	dll_export	View:

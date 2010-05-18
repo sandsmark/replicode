@@ -209,14 +209,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\execution_context.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\expression.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\image.cpp"
 				>
 			</File>
@@ -245,15 +237,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\operator.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\r_code.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\reduction_instance.cpp"
 				>
 			</File>
 			<File
@@ -279,14 +263,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\execution_context.h"
-				>
-			</File>
-			<File
-				RelativePath=".\expression.h"
-				>
-			</File>
-			<File
 				RelativePath=".\image.h"
 				>
 			</File>
@@ -295,15 +271,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\operator.h"
-				>
-			</File>
-			<File
 				RelativePath=".\r_code.h"
-				>
-			</File>
-			<File
-				RelativePath=".\reduction_instance.h"
 				>
 			</File>
 			<File

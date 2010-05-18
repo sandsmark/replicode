@@ -42,7 +42,7 @@
 
 MODULE_CLASS_BEGIN(Loader,Module<Loader>)
 private:
-	P<ImageMessage>	image;
+	mBrane::sdk::P<ImageMessage>	image;
 	void	initialize();
 	void	finalize();
 	void	compile(std::string		&filename);
