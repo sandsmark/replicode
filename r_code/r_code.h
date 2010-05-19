@@ -32,7 +32,6 @@
 #define	r_code_h
 
 #include	"image.h"
-#include	"operator.h"
 
 
 extern	"C"{
