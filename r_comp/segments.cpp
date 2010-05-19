@@ -421,6 +421,9 @@ namespace	r_comp{
 		Object	*buildGroup(SysObject	*source){
 			return	new	Object(source);
 		}
+		Object	*buildInstantiatedProgram(SysObject	*source){
+			return	new	Object(source);
+		}
 	};
 
 	////////////////////////////////////////////////////////////////
@@ -458,6 +461,8 @@ namespace	r_comp{
 			uint16	opcode=code_segment.objects[i]->code[0].asOpcode();
 			if(opcode==definition_segment.classes.find("grp")->second.atom.asOpcode())
 				ram_objects[i]=mem->buildGroup(code_segment.objects[i]);
+			else	if(opcode==definition_segment.classes.find("ipgm")->second.atom.asOpcode())
+				ram_objects[i]=mem->buildInstantiatedProgram(code_segment.objects[i]);
 			else
 				ram_objects[i]=mem->buildObject(code_segment.objects[i]);
 		}
