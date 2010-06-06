@@ -988,7 +988,6 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 
 		for(std::list<RepliStruct	*>::iterator	j(s->args.begin());j!=s->args.end();++j){
 
-			size_t	p;
 			std::string	name;
 			std::string	type;
 			switch((*j)->type){

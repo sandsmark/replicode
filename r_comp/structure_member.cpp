@@ -110,6 +110,8 @@ namespace	r_comp{
 			storage[0]=R_MKS;
 		else	if(_read==&Compiler::read_vws)
 			storage[0]=R_VWS;
+		/*else	if(_read==&Compiler::read_class)
+			storage[0]=R_CLASS;*/	//	future development
 		uint32	offset=1;
 		storage[offset++]=type;
 		r_code::Write(storage+offset,_class);
@@ -121,19 +123,20 @@ namespace	r_comp{
 	void	StructureMember::read(word32	*storage){
 		
 		switch(storage[0]){
-		case	R_ANY:			_read=&Compiler::read_any;	break;
-		case	R_NUMBER:		_read=&Compiler::read_number;	break;
+		case	R_ANY:			_read=&Compiler::read_any;			break;
+		case	R_NUMBER:		_read=&Compiler::read_number;		break;
 		case	R_TIMESTAMP:	_read=&Compiler::read_timestamp;	break;
-		case	R_BOOLEAN:		_read=&Compiler::read_boolean;	break;
-		case	R_STRING:		_read=&Compiler::read_string;	break;
-		case	R_NODE:			_read=&Compiler::read_node;	break;
-		case	R_DEVICE:		_read=&Compiler::read_device;	break;
-		case	R_FUNCTION:		_read=&Compiler::read_function;	break;
+		case	R_BOOLEAN:		_read=&Compiler::read_boolean;		break;
+		case	R_STRING:		_read=&Compiler::read_string;		break;
+		case	R_NODE:			_read=&Compiler::read_node;			break;
+		case	R_DEVICE:		_read=&Compiler::read_device;		break;
+		case	R_FUNCTION:		_read=&Compiler::read_function;		break;
 		case	R_EXPRESSION:	_read=&Compiler::read_expression;	break;
-		case	R_SET:			_read=&Compiler::read_set;	break;
-		case	R_VIEW:			_read=&Compiler::read_view;	break;
-		case	R_MKS:			_read=&Compiler::read_mks;	break;
-		case	R_VWS:			_read=&Compiler::read_vws;	break;
+		case	R_SET:			_read=&Compiler::read_set;			break;
+		case	R_VIEW:			_read=&Compiler::read_view;			break;
+		case	R_MKS:			_read=&Compiler::read_mks;			break;
+		case	R_VWS:			_read=&Compiler::read_vws;			break;
+		/*case	R_CLASS:		_read=&Compiler::read_class;		break;*/	//	future development
 		}
 		uint32	offset=1;
 		type=(ReturnType)storage[offset++];

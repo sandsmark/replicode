@@ -119,6 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="..\CoreLibrary;..\r_code"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;R_COMP_EXPORTS;BUILD_DLL"
 				ExceptionHandling="0"
@@ -185,6 +186,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\class_register.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\compiler.cpp"
 				>
 			</File>
@@ -216,6 +221,10 @@
 			>
 			<File
 				RelativePath=".\class.h"
+				>
+			</File>
+			<File
+				RelativePath=".\class_register.h"
 				>
 			</File>
 			<File

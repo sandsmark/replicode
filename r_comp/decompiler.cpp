@@ -294,7 +294,7 @@ namespace	r_comp{
 
 					uint16		char_count=atom.atom	&	0x0000FFFF;
 					uint8		block_offset=1;
-					std:string	s;
+					std::string	s;
 					s+=(char	*)&current_object->code[index+block_offset].atom;
 					*out_stream<<'\"'<<s<<'\"';
 				}
@@ -303,15 +303,9 @@ namespace	r_comp{
 				if(atom.readsAsNil())
 					out_stream->push("|us",read_index);
 				else{
-
-					if(atom==Atom::Forever())
-						out_stream->push("forever",read_index);
-					else{
-
-						uint64	ts=((uint64)(current_object->code[index+1].atom))<<32	|	((uint64)(current_object->code[index+2].atom));
-						out_stream->push(ts,read_index);
-						*out_stream<<"us";
-					}
+					uint64	ts=((uint64)(current_object->code[index+1].atom))<<32	|	((uint64)(current_object->code[index+2].atom));
+					out_stream->push(ts,read_index);
+					*out_stream<<"us";
 				}
 				break;
 			case	Atom::C_PTR:{

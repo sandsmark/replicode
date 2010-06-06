@@ -424,6 +424,9 @@ namespace	r_comp{
 		Object	*buildInstantiatedProgram(SysObject	*source){
 			return	new	Object(source);
 		}
+		Object	*buildMarker(SysObject	*source){
+			return	new	Object(source);
+		}
 	};
 
 	////////////////////////////////////////////////////////////////
@@ -463,6 +466,8 @@ namespace	r_comp{
 				ram_objects[i]=mem->buildGroup(code_segment.objects[i]);
 			else	if(opcode==definition_segment.classes.find("ipgm")->second.atom.asOpcode())
 				ram_objects[i]=mem->buildInstantiatedProgram(code_segment.objects[i]);
+			else	if(code_segment.objects[i]->code[0].getDescriptor()	&	Atom::MARKER)
+				ram_objects[i]=mem->buildMarker(code_segment.objects[i]);
 			else
 				ram_objects[i]=mem->buildObject(code_segment.objects[i]);
 		}
@@ -536,11 +541,14 @@ namespace	r_comp{
 			relocation_segment.addObjectReference(referenced_object_index,object_index,i);
 		}
 		for(i=0;i<object->view_set.size();++i)
-			for(uint32	j=0;j<object->view_set[i]->reference_set.size();++j){
+			for(uint32	j=0;j<2;++j){	//	2 refs maximum; may be NULL.
 
-				referenced_object_index=ptrs_to_indices.find(object->view_set[i]->reference_set[j])->second;
-				sys_object->view_set[i]->reference_set.push_back(referenced_object_index);
-				relocation_segment.addViewReference(referenced_object_index,object_index,i,j);
+				if(object->view_set[i]->reference_set[j]){
+
+					referenced_object_index=ptrs_to_indices.find(object->view_set[i]->reference_set[j])->second;
+					sys_object->view_set[i]->reference_set.push_back(referenced_object_index);
+					relocation_segment.addViewReference(referenced_object_index,object_index,i,j);
+				}
 			}
 		for(i=0;i<object->marker_set.size();++i){
 

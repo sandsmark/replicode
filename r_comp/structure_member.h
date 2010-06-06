@@ -80,7 +80,8 @@ namespace	r_comp{
 			R_SET=9,
 			R_VIEW=10,
 			R_MKS=11,
-			R_VWS=12
+			R_VWS=12,
+			R_CLASS=13
 		}ReadID;	//	used for serialization
 		_Read		_read;
 		ReturnType	type;

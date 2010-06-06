@@ -245,7 +245,7 @@ namespace	r_comp{
 		}
 
 		if(trace)
-			sys_object->trace();//uint32	a;std::cin>>a;
+			sys_object->trace();
 
 		_image->addObject(sys_object);
 		return	true;
@@ -1728,6 +1728,8 @@ return_false:
 
 		if(read_nil_nb(write_index,extent_index,write))
 			return	true;
+		if(read_forever_nb(write_index,extent_index,write))
+			return	true;
 		if(read_variable(write_index,extent_index,write,NUMBER))
 			return	true;
 		if(read_reference(write_index,extent_index,write,NUMBER))
@@ -1791,8 +1793,6 @@ return_false:
 	bool	Compiler::read_timestamp(bool	&indented,bool	enforce,const	Class	*p,uint16	write_index,uint16	&extent_index,bool	write){	//	p always NULL
 
 		if(read_nil_us(write_index,extent_index,write))
-			return	true;
-		if(read_forever_us(write_index,extent_index,write))
 			return	true;
 		if(read_variable(write_index,extent_index,write,TIMESTAMP))
 			return	true;
@@ -2172,16 +2172,13 @@ return_false:
 		return	false;
 	}
 
-	bool	Compiler::read_forever_us(uint16	write_index,uint16	&extent_index,bool	write){
+	bool	Compiler::read_forever_nb(uint16	write_index,uint16	&extent_index,bool	write){
 
 		if(forever()){
 
 			if(write){
 
-				current_object->code[write_index]=Atom::IPointer(extent_index);
-				current_object->code[extent_index++]=Atom::Forever();
-				current_object->code[extent_index++]=0xFFFFFFFF;
-				current_object->code[extent_index++]=0xFFFFFFFF;
+				current_object->code[write_index]=Atom::Float(-1);
 			}
 			return	true;
 		}

@@ -94,7 +94,7 @@ namespace	r_comp{
 		bool	read_nil_set(uint16	write_index,uint16	&extent_index,bool	write);
 		bool	read_nil_nb(uint16	write_index,uint16	&extent_index,bool	write);
 		bool	read_nil_us(uint16	write_index,uint16	&extent_index,bool	write);
-		bool	read_forever_us(uint16	write_index,uint16	&extent_index,bool	write);
+		bool	read_forever_nb(uint16	write_index,uint16	&extent_index,bool	write);
 		bool	read_nil_nid(uint16	write_index,uint16	&extent_index,bool	write);
 		bool	read_nil_did(uint16	write_index,uint16	&extent_index,bool	write);
 		bool	read_nil_fid(uint16	write_index,uint16	&extent_index,bool	write);
