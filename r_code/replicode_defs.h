@@ -31,29 +31,67 @@
 #ifndef	replicode_defs_h
 #define	replicode_defs_h
 
+#define	VIEW_CODE_MAX_SIZE	11	//	size of the code of the largest view (grp view).
 
-#define	VIEW_IJT	1
-#define	VIEW_SLN	2
-#define	VIEW_RES	3
-#define	VIEW_HOST	4
-#define	VIEW_ORG	5
+#define	VIEW_IJT		1
+#define	VIEW_SLN		2
+#define	VIEW_RES		3
+#define	VIEW_HOST		4
+#define	VIEW_ORG		5
 #define	VIEW_ACT_VIS	6
 #define	IPGM_VIEW_ACT	6
 #define	GRP_VIEW_VIS	6
 #define	GRP_VIEW_COV	7
 
-#define	GRP_UPR			1
-#define	GRP_SPR			2
-#define	GRP_SLN_THR		3
-#define	GRP_ACT_THR		4
-#define	GRP_VIS_THR		5
-
 #define	OBJECT_CLASS	0
 
-//#define	IPGM_PGM
-//#define	IPGM_INPUTS
+#define	GRP_UPR				1
+#define	GRP_SPR				2
+#define	GRP_SLN_THR			3
+#define	GRP_ACT_THR			4
+#define	GRP_VIS_THR			5
+#define	GRP_C_SLN			6
+#define	GRP_C_SLN_THR		7
+#define	GRP_C_ACT			8
+#define	GRP_C_ACT_THR		9
+#define	GRP_DCY_PER			10
+#define	GRP_DCY_TGT			11
+#define	GRP_DCY_PRD			12
+#define	GRP_SLN_CHG_THR		13
+#define	GRP_SLN_CHG_PRD		14
+#define	GRP_ACT_CHG_THR		15
+#define	GRP_ACT_CHG_PRD		16
+#define	GRP_AVG_SLN			17
+#define	GRP_HIGH_SLN		18
+#define	GRP_LOW_SLN			19
+#define	GRP_AVG_ACT			20
+#define	GRP_HIGH_ACT		21
+#define	GRP_LOW_ACT			22
+#define	GRP_HIGH_SLN_THR	23
+#define	GRP_LOW_SLN_THR		24
+#define	GRP_SLN_NTF_PRD		25
+#define	GRP_HIGH_ACT_THR	26
+#define	GRP_LOW_ACT_THR		27
+#define	GRP_ACT_NTF_PRD		28
+#define	GRP_NTF_NEW			29
+#define	GRP_LOW_RES_THR		30
+#define	GRP_RES_NTF_PRD		31
+#define	GRP_NTF_GRP			32
 
-//#define	PGM_TSC
+#define	IPGM_PGM	1
+#define	IPGM_ARGS	2
 
+#define	PGM_TPL_ARGS	1
+#define	PGM_INPUTS		2
+#define	PGM_PRODS		3
+#define	PGM_TSC			4
+#define	PGM_NFR			5
+
+#define	IPGM_IGOL_ARITY	6
+#define	MK_RDX_ARITY	7
+
+#define	EXECUTIVE_DEVICE	0xA1000000
+
+#define	CMD_DEVICE		1
 
 #endif

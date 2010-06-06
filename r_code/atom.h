@@ -55,6 +55,10 @@ namespace	r_code{
 			R_PTR=0x85,		// reference pointer
 			VL_PTR=0x86,	// value pointer
 			INDEX=0x87,		// chain pointer index
+			IPGM_PTR=0x88,	// r_exec internal: index of data held by an ipgm
+			INPUT_PTR=0x89,	// r_exec internal: index of data held by an input
+			VALUE_PTR=0x8A,	// r_exec internal: index of data held by the overlay's value array
+			PROD_PTR=0x8B,	// r_exec internal: index of data held by the overlay's production array
 			THIS=0x90,		// this pointer
 			VIEW=0x91,
 			MKS=0x92,
@@ -72,7 +76,9 @@ namespace	r_code{
 			TIMESTAMP=0xC7
 		}Type;
 		// encoders
-		static	Atom	Float(float32 f);
+		static	Atom	Float(float32 f);	//	IEEE 754 encoding >> 1
+		static	Atom	PlusInfinity();
+		static	Atom	MinusInfinity();
 		static	Atom	UndefinedFloat();
 		static	Atom	Nil();
 		static	Atom	Boolean(bool value);
@@ -84,6 +90,10 @@ namespace	r_code{
 		static	Atom	RPointer(uint16 index);
 		static	Atom	VLPointer(uint16 index);
 		static	Atom	Index(uint16	index);
+		static	Atom	IPGMPointer(uint16 index);
+		static	Atom	InputPointer(uint8	inputIndex,uint16 index);
+		static	Atom	ValuePointer(uint16 index);
+		static	Atom	ProductionPointer(uint16 index);
 		static	Atom	This();
 		static	Atom	View();
 		static	Atom	Mks();
@@ -104,7 +114,7 @@ namespace	r_code{
 		static	Atom	UndefinedString();
 		static	Atom	Timestamp();
 		static	Atom	UndefinedTimestamp();
-		static	Atom	Forever();
+		static	Atom	Forever();	//	deprecated.
 
 		Atom(uint32	a=0xFFFFFFFF);
 		~Atom();
@@ -133,6 +143,7 @@ namespace	r_code{
 									// number of blocks of characters in
 									// strings.
 		uint16	getOpcode()		const;
+		uint8	getInputIndex()	const;	//	applicable to input ptrs.
 		uint8	getNodeID()		const;	// applicable to nodes and devices.
 		uint8	getClassID()	const;	// applicable to devices.
 		uint8	getDeviceID()	const;	// applicable to devices.
@@ -140,6 +151,9 @@ namespace	r_code{
 		void	trace()	const;
 	};
 }
+
+
+#include	"atom.inline.cpp"
 
 
 #endif

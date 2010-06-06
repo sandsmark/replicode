@@ -36,7 +36,8 @@ namespace	r_code{
 	uint64	Timestamp::Get(Atom	*iptr){
 
 		uint32	i=iptr->asIndex();
-		return	iptr[i+1].atom<<32	|	iptr[i+2].atom;
+		uint64	high=iptr[i+1].atom;
+		return	high<<32	|	iptr[i+2].atom;
 	}
 
 	void	Timestamp::Set(Atom	*iptr,uint64	t){

@@ -34,6 +34,7 @@
 #include	"atom.h"
 #include	"vector.h"
 #include	"base.h"
+#include	"replicode_defs.h"
 
 
 namespace	r_code{
@@ -92,21 +93,21 @@ namespace	r_code{
 		r_code::vector<Atom>		code;
 		r_code::vector<P<Object> >	marker_set;
 		r_code::vector<P<Object> >	reference_set;
-		r_code::vector<View	*>		view_set;
+		r_code::vector<View	*>		view_set;	//	used only for initialization from an image.
 
 		Object();
 		Object(SysObject	*source);
 		virtual	~Object();
 
-		uint16	opcode();
+		uint16	opcode()	const;
 	};
 
 	class	dll_export	View:
 	public	_Object{
 	public:
-		P<Object>					object;
-		r_code::vector<Atom>		code;
-		r_code::vector<Object	*>	reference_set;
+		P<Object>	object;						//	viewed object.
+		Atom		code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
+		Object		*reference_set[2];			//	does not include the viewed object.
 
 		View();
 		View(SysView	*source,Object	*object);
@@ -118,6 +119,7 @@ namespace	r_code{
 		virtual	Object	*buildObject(SysObject	*source)=0;
 		virtual	Object	*buildGroup(SysObject	*source)=0;
 		virtual	Object	*buildInstantiatedProgram(SysObject	*source)=0;
+		virtual	Object	*buildMarker(SysObject	*source)=0;
 	};
 }
 

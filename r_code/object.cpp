@@ -29,6 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"object.h"
+#include	"replicode_defs.h"
 
 #include	<iostream>
 
@@ -40,7 +41,7 @@ namespace	r_code{
 
 	SysView::SysView(View	*source){
 
-		for(uint32	i=0;i<source->code.size();++i)
+		for(uint32	i=0;i<VIEW_CODE_MAX_SIZE;++i)
 			code[i]=source->code[i];
 	}
 
@@ -227,20 +228,23 @@ namespace	r_code{
 			delete	view_set[i];
 	}
 
-	uint16	Object::opcode(){
+	uint16	Object::opcode()	const{
 
-		return	code[0].asOpcode();
+		return	(*code.as_std())[OBJECT_CLASS].asOpcode();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	View::View():object(NULL){
+
+		reference_set[0]=reference_set[1]=NULL;
 	}
 
 	View::View(SysView	*source,Object	*object):object(object){
 
 		for(uint32	i=0;i<source->code.size();++i)
 			code[i]=source->code[i];
+		reference_set[0]=reference_set[1]=NULL;
 	}
 
 	View::~View(){

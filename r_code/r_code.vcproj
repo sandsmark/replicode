@@ -119,6 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="..\CoreLibrary"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;R_CODE_EXPORTS;BUILD_DLL"
 				ExceptionHandling="0"
@@ -183,6 +184,26 @@
 			<File
 				RelativePath=".\atom.cpp"
 				>
+			</File>
+			<File
+				RelativePath=".\atom.inline.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\base.cpp"
