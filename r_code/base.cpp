@@ -45,7 +45,7 @@ namespace	r_code{
 		Atomic::Increment32(&refCount);
 	}
 
-	inline	void	_Object::decRef(){
+	void	_Object::decRef(){
 
 		if(Atomic::Decrement32(&refCount)==0)
 			delete	this;

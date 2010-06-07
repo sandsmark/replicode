@@ -38,7 +38,7 @@ namespace	r_code{
 
 	class	dll_export	Timestamp{
 	public:
-		static	uint64	Get(Atom	*iptr);
+		static	uint64	Get(const	Atom	*iptr);
 		static	void	Set(Atom	*iptr,uint64	t);
 	};
 }

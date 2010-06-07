@@ -40,6 +40,8 @@ using	namespace	std;
 using	namespace	core;
 
 namespace	r_comp{
+	class	ClassImage;
+	class	CodeImage;
 	class	Image;
 }
 
@@ -114,6 +116,8 @@ namespace	r_code{
 
 	template<class	I>	class	Image:
 	public	I{
+	friend	class r_comp::CodeImage;
+	friend	class r_comp::ClassImage;
 	friend	class r_comp::Image;
 	private:
 		word32	*getDefSegment();

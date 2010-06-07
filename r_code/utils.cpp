@@ -33,7 +33,7 @@
 
 namespace	r_code{
 
-	uint64	Timestamp::Get(Atom	*iptr){
+	uint64	Timestamp::Get(const	Atom	*iptr){
 
 		uint32	i=iptr->asIndex();
 		uint64	high=iptr[i+1].atom;
