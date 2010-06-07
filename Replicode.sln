@@ -24,6 +24,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "..\mBrane\Core\Core
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "r_exec", "r_exec\r_exec.vcproj", "{C36B96EC-EF72-4B21-87BE-2130E997BDA0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usr_operators", "usr_operators\usr_operators.vcproj", "{3DE12B3F-D45E-46E1-B501-E294009AD4B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -62,6 +64,10 @@ Global
 		{C36B96EC-EF72-4B21-87BE-2130E997BDA0}.Debug|Win32.Build.0 = Debug|Win32
 		{C36B96EC-EF72-4B21-87BE-2130E997BDA0}.Release|Win32.ActiveCfg = Release|Win32
 		{C36B96EC-EF72-4B21-87BE-2130E997BDA0}.Release|Win32.Build.0 = Release|Win32
+		{3DE12B3F-D45E-46E1-B501-E294009AD4B9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3DE12B3F-D45E-46E1-B501-E294009AD4B9}.Debug|Win32.Build.0 = Debug|Win32
+		{3DE12B3F-D45E-46E1-B501-E294009AD4B9}.Release|Win32.ActiveCfg = Release|Win32
+		{3DE12B3F-D45E-46E1-B501-E294009AD4B9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

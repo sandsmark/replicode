@@ -174,6 +174,8 @@ namespace	r_exec{
 
 		Group	*getHost();
 
+		uint64	get_ijt()	const;
+
 		float32	get_res();
 		float32	get_sln();
 		float32	get_act_vis();

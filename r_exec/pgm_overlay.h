@@ -16,7 +16,7 @@ namespace	r_exec{
 	class	IPGMController;
 	class	Context;
 
-	class	Overlay:
+	class	dll_export	Overlay:
 	public	_Object{
 	friend	class	IPGMController;
 	friend	class	Context;

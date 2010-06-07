@@ -9,11 +9,24 @@ namespace	r_exec{
 
 	SharedLibrary	Mem::UserLibrary;
 
-	uint64	(*Mem::_Now)();
+	uint64	(*Mem::_Now)()=NULL;
 
-	void	Mem::Init(UNORDERED_MAP<std::string,uint16>	&opcodes,uint64	(*time_base)(),const	char	*user_operator_library_path){
+	void	Mem::Init(r_comp::ClassImage	*class_image,uint64	(*time_base)(),const	char	*user_operator_library_path){
 
 		_Now=time_base;
+
+		UNORDERED_MAP<std::string,uint16>	opcodes;
+		UNORDERED_MAP<std::string,r_comp::Class>::iterator it;
+		for(it=class_image->classes.begin();it!=class_image->classes.end();++it){
+
+			opcodes[it->first]=it->second.atom.asOpcode();
+			std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
+		}
+		for(it=class_image->sys_classes.begin();it!=class_image->sys_classes.end();++it){
+
+			opcodes[it->first]=it->second.atom.asOpcode();
+			std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
+		}
 
 		//	load class opcodes.
 		View::ViewOpcode=opcodes.find("view")->second;
@@ -91,7 +104,7 @@ namespace	r_exec{
 		if(!(UserLibrary.load(user_operator_library_path)))
 			exit(-1);
 
-		typedef	void	(*UserInit)();
+		typedef	void	(*UserInit)(UNORDERED_MAP<std::string,uint16>	&);
 		UserInit	Init=UserLibrary.getFunction<UserInit>("Init");
 		if(!Init)
 			exit(-1);
@@ -109,7 +122,7 @@ namespace	r_exec{
 
 		std::cout<<"> User-defined operator library "<<user_operator_library_path<<" loaded"<<std::endl;
 
-		Init();
+		Init(opcodes);
 		uint16	operatorCount=GetOperatorCount();
 		for(uint16	i=0;i<operatorCount;++i){
 
@@ -185,18 +198,18 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	void	Mem::init(std::vector<Object	*>	*objects){	//	NB: no cov at init time.
+	void	Mem::init(std::vector<r_code::Object	*>	*objects){	//	NB: no cov at init time.
 
 		//	load root
 		root=(Group	*)(*objects)[0];
 		//	load conveniences
 		_stdin=(Group	*)(*objects)[1];
 		_stdout=(Group	*)(*objects)[2];
-		_self=(*objects)[3];
+		_self=(Object	*)(*objects)[3];
 
 		for(uint32	i=1;i<objects->size();++i){
 
-			Object	*object=(*objects)[i];
+			Object	*object=(Object	*)(*objects)[i];
 
 			for(uint32	j=0;j<object->view_set.size();++j){
 
@@ -378,6 +391,15 @@ namespace	r_exec{
 		}
 		object_io_map_sem->release();
 		return	it->second;
+	}
+
+	r_comp::CodeImage	*Mem::getCodeImage(){
+
+		r_comp::CodeImage	*code_image=new	r_comp::CodeImage();
+		UNORDERED_SET<Object	*,Object::Hash,Object::Equal>::iterator	i;
+		for(i=object_register.begin();i!=object_register.end();++i)
+			code_image->operator	<<(*i);
+		return	code_image;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -652,7 +674,8 @@ namespace	r_exec{
 
 			//	update resilience.
 			(*v)->mod_res(-1);
-			if(group->update_res(*v,this)>0){
+			float32	res=group->update_res(*v,this);
+			if(res<=0	&&	now-(*v)->get_ijt()>=group->get_upr()){	//	if now-ijt<upr, let the view live for one upr.
 
 				//	update saliency (apply decay).
 				bool	wiew_was_salient=(*v)->get_sln()>group->get_sln_thr();

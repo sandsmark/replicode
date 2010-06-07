@@ -4,6 +4,8 @@
 #include	"reduction_core.h"
 #include	"time_core.h"
 
+#include	"../r_comp/segments.h"
+
 #include	"pipe.h"
 
 
@@ -27,9 +29,9 @@ namespace	r_exec{
 	public	r_code::Mem{
 	private:
 		static	SharedLibrary	UserLibrary;	//	user-defined operators.
+		static	uint64	(*_Now)();				//	time base.
 
 		uint32	base_period;
-		static	uint64	(*_Now)();
 
 		PipeNN<ReductionJob,1024>	reduction_job_queue;
 		PipeNN<TimeJob,1024>		time_job_queue;
@@ -69,7 +71,7 @@ namespace	r_exec{
 		FastSemaphore	*object_register_sem;
 		FastSemaphore	*object_io_map_sem;
 	public:
-		static	void	Init(UNORDERED_MAP<std::string,uint16>	&opcodes,uint64	(*time_base)(),const	char	*user_operator_library_path);	//	load opcodes and std operators.
+		static	void	Init(r_comp::ClassImage	*class_image,uint64	(*time_base)(),const	char	*user_operator_library_path);	//	load opcodes and std operators.
 		static	uint64	Now(){	return	_Now();	}
 
 		Mem(uint32	base_period,	//	in us; same for upr, spr and res.
@@ -86,9 +88,9 @@ namespace	r_exec{
 		r_code::Object	*buildInstantiatedProgram(r_code::SysObject	*source);
 		r_code::Object	*buildMarker(r_code::SysObject	*source);
 
-		void	init(std::vector<Object	*>	*objects);	//	call before start
-														//	0: root, 1.stdin, 2:stdout, 3:self: these objects must be defined in the source code in that order.
-														//	no mod/set/eje will be executed (only inj). ijt will be set at now=Time::Get() whatever the source code.
+		void	init(std::vector<r_code::Object	*>	*objects);	//	call before start
+																//	0: root, 1.stdin, 2:stdout, 3:self: these objects must be defined in the source code in that order.
+																//	no mod/set/eje will be executed (only inj). ijt will be set at now=Time::Get() whatever the source code.
 		void	start();
 		void	stop();
 		void	suspend();
@@ -103,6 +105,7 @@ namespace	r_exec{
 
 		//	External device I/O	////////////////////////////////////////////////////////////////
 		Object	*retrieve(uint32	OID);
+		r_comp::CodeImage	*getCodeImage();	//	create an image; fill with all objects; call only when suspended/stopped.
 
 		//	Executive device functions	////////////////////////////////////////////////////////
 		

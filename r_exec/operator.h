@@ -22,9 +22,11 @@ namespace	r_exec{
 		void	setOverload(bool	(*o)(const	Context	&)){	_overload=o;	}
 
 		bool	operator	()(const	Context	&context)	const{
-			if(!_operator(context)	&&	_overload)
+			if(_operator(context))
+				return	true;
+			if(_overload)
 				return	_overload(context);
-			return	true;
+			return	false;
 		}
 	};
 
@@ -66,7 +68,7 @@ namespace	r_exec{
 
 	bool	ptc(const	Context	&context);	//	TODO.
 
-	bool	fvw(const	Context	&context);	//	TODO.
+	bool	fvw(const	Context	&context);
 }
 
 

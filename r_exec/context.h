@@ -11,7 +11,7 @@ namespace	r_exec{
 	class	Overlay;
 
 	//	Evaluation context.
-	class	Context{
+	class	dll_export	Context{
 	private:
 		Object	*object;			//	the object the code belongs to; unchanged when dereferencing to the overlay's value array.
 		View	*view;				//	the object's view, can be NULL when dereferenced to a reference_set or a marker_set.
