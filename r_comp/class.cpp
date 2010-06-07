@@ -35,6 +35,7 @@
 namespace	r_comp{
 
 	const	char	*Class::Expression="xpr";
+	const	char	*Class::Type="type";
 
 	bool	Class::has_offset()	const{
 
@@ -59,12 +60,12 @@ namespace	r_comp{
 												use_as(StructureMember::I_CLASS){
 	}
 	
-	bool	Class::is_pattern(DefinitionSegment	*segment)	const{
+	bool	Class::is_pattern(ClassImage	*class_image)	const{
 		
-		return	segment->classes.find("ptn")->second.atom==atom;
+		return	class_image->classes.find("ptn")->second.atom==atom;
 	}
 		
-	bool	Class::get_member_index(DefinitionSegment	*segment,std::string	&name,uint16	&index,Class	*&p)	const{
+	bool	Class::get_member_index(ClassImage	*class_image,std::string	&name,uint16	&index,Class	*&p)	const{
 			
 		for(uint16	i=0;i<things_to_read.size();++i)
 			if(things_to_read[i].name==name){
@@ -73,7 +74,7 @@ namespace	r_comp{
 				if(things_to_read[i].used_as_expression())	//	the class is: [::a-class]
 					p=NULL;
 				else
-					p=things_to_read[i].get_class(segment);
+					p=things_to_read[i].get_class(class_image);
 				return	true;
 			}
 		return	false;
@@ -89,11 +90,11 @@ namespace	r_comp{
 		return	things_to_read[has_offset()?index-1:index].get_return_type();
 	}
 
-	Class	*Class::get_member_class(DefinitionSegment	*segment,const	std::string	&name){
+	Class	*Class::get_member_class(ClassImage	*class_image,const	std::string	&name){
 
 		for(uint16	i=0;i<things_to_read.size();++i)
 			if(things_to_read[i].name==name)
-				return	things_to_read[i].get_class(segment);
+				return	things_to_read[i].get_class(class_image);
 		return	NULL;
 	}
 

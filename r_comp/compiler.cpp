@@ -150,7 +150,7 @@ namespace	r_comp{
 
 			current_object=new	SysObject();
 			if(lbl)
-				global_references[l]=Reference(_image->code_segment.objects.size(),current_class);
+				global_references[l]=Reference(_image->code_image.code_segment.objects.size(),current_class);
 		}
 
 		current_object->code[0]=current_class.atom;
@@ -169,7 +169,7 @@ namespace	r_comp{
 				return	false;
 		}
 
-		SysObject	*sys_object=(SysObject	*)current_object;	//	current_object will point to views, if any
+		SysObject	*sys_object=(SysObject	*)current_object;	//	current_object will point to views, if any.
 		
 		//	compile view set
 		//	input format:
@@ -193,7 +193,7 @@ namespace	r_comp{
 
 			indent(false);
 
-			current_class=*current_class.get_member_class(&_image->definition_segment,"vw");
+			current_class=*current_class.get_member_class(&_image->class_image,"vw");
 			current_class.use_as=StructureMember::I_CLASS;
 
 			uint16	count=0;
@@ -247,13 +247,13 @@ namespace	r_comp{
 		if(trace)
 			sys_object->trace();
 
-		_image->addObject(sys_object);
+		_image->code_image.addObject(sys_object);
 		return	true;
 	}
 
 	bool	Compiler::read(const	StructureMember	&m,bool	&indented,bool	enforce,uint16	write_index,uint16	&extent_index,bool	write){
 
-		if(Class	*p=m.get_class(&_image->definition_segment)){
+		if(Class	*p=m.get_class(&_image->class_image)){
 
 			p->use_as=m.getIteration();
 			return	(this->*m.read())(indented,enforce,p,write_index,extent_index,write);
@@ -873,18 +873,18 @@ return_false:
 
 			Class		*p;	//	in general, p starts as the current_class; exception: in pgm, fmd and imd, this refers to the instantiated object
 			if(current_class.str_opcode=="pgm")
-				p=&_image->definition_segment.sys_classes["ipgm"];
+				p=&_image->class_image.sys_classes["ipgm"];
 			else	if(current_class.str_opcode=="fmd")
-				p=&_image->definition_segment.sys_classes["ifmd"];
+				p=&_image->class_image.sys_classes["ifmd"];
 			else	if(current_class.str_opcode=="imd")
-				p=&_image->definition_segment.sys_classes["iimd"];
+				p=&_image->class_image.sys_classes["iimd"];
 			Class		*_p;
 			std::string	m;
 			uint16		index;
 			ReturnType	type;
 			while(member(m)){
 
-				if(!p->get_member_index(&_image->definition_segment,m,index,_p)){
+				if(!p->get_member_index(&_image->class_image,m,index,_p)){
 
 					set_error(" error: "+m+" is not a member of "+p->str_opcode);
 					break;
@@ -935,7 +935,7 @@ return_false:
 				Class	*_p;
 				while(member(m)){
 
-					if(!p->get_member_index(&_image->definition_segment,m,index,_p)){
+					if(!p->get_member_index(&_image->class_image,m,index,_p)){
 
 						set_error(" error: "+m+" is not a member of "+p->str_opcode);
 						break;
@@ -986,7 +986,7 @@ return_false:
 				bool	first_member=true;
 				while(member(m)){
 
-					if(!p->get_member_index(&_image->definition_segment,m,index,_p)){
+					if(!p->get_member_index(&_image->class_image,m,index,_p)){
 
 						set_error(" error: "+m+" is not a member of "+p->str_opcode);
 						break;
@@ -1176,10 +1176,15 @@ return_false:
 		if(!symbol_expr(s)){
 
 			in_stream->seekg(i);
-			return	false;
+			s="";
+			if(!symbol_expr_set(s)){
+
+				in_stream->seekg(i);
+				return	false;
+			}
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment.classes.find(s);
-		if(it==_image->definition_segment.classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->class_image.classes.find(s);
+		if(it==_image->class_image.classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1208,10 +1213,15 @@ return_false:
 		if(!symbol_expr(s)){
 
 			in_stream->seekg(i);
-			return	false;
+			s="";
+			if(!symbol_expr_set(s)){
+
+				in_stream->seekg(i);
+				return	false;
+			}
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment.sys_classes.find(s);
-		if(it==_image->definition_segment.sys_classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->class_image.sys_classes.find(s);
+		if(it==_image->class_image.sys_classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1239,14 +1249,20 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
+		std::streampos	j=in_stream->tellg();
 		std::string	s;
 		if(!symbol_expr(s)){
 
-			in_stream->seekg(i);
-			return	false;
+			in_stream->seekg(j);
+			s="";
+			if(!symbol_expr_set(s)){
+
+				in_stream->seekg(i);
+				return	false;
+			}
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment.sys_classes.find("mk."+s);
-		if(it==_image->definition_segment.sys_classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->class_image.sys_classes.find("mk."+s);
+		if(it==_image->class_image.sys_classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1264,8 +1280,8 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment.classes.find(s);
-		if(it==_image->definition_segment.classes.end()	|| (t!=ANY	&&	it->second.type!=ANY	&&	it->second.type!=t)){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->class_image.classes.find(s);
+		if(it==_image->class_image.classes.end()	|| (t!=ANY	&&	it->second.type!=ANY	&&	it->second.type!=t)){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1294,8 +1310,8 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->definition_segment.classes.find(s);
-		if(it==_image->definition_segment.classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->class_image.classes.find(s);
+		if(it==_image->class_image.classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1349,12 +1365,12 @@ return_false:
 		return	true;
 	}
 
-	bool	Compiler::expression_tail(bool	indented,const	Class	&p,uint16	write_index,uint16	&extent_index,bool	write){	//	arity>0
+	bool	Compiler::expression_tail(bool	indented,const	Class	&p,uint16	write_index,uint16	&extent_index,bool	write){	//	arity>0.
 
 		uint16	count=0;
 		bool	_indented=false;
-		bool	entered_pattern=p.is_pattern(&_image->definition_segment);
-		if(write	&&	state.pattern_lvl)	//	fill up with wildcards that will be overwritten up to ::
+		bool	entered_pattern=p.is_pattern(&_image->class_image);
+		if(write	&&	state.pattern_lvl)	//	fill up with wildcards that will be overwritten up to ::.
 			for(uint16	j=write_index;j<write_index+p.atom.getAtomCount();++j)
 				current_object->code[j]=Atom::Wildcard();
 		std::streampos	i=in_stream->tellg();
@@ -1392,14 +1408,14 @@ return_false:
 				}else
 					_indented=false;
 			}
-			if(entered_pattern	&&	count==0)	//	pattern skeleton begin
+			if(entered_pattern	&&	count==0)	//	pattern skeleton begin.
 				++state.pattern_lvl;
 			if(!read(p.things_to_read[count],_indented,true,write_index+count,extent_index,write)){
 
 				set_error(" error: parsing element in expression");
 				return	false;
 			}
-			if(entered_pattern	&&	count==0)	//	pattern skeleton end
+			if(entered_pattern	&&	count==0)	//	pattern skeleton end.
 				--state.pattern_lvl;
 			++count;
 		}
@@ -1475,7 +1491,7 @@ return_false:
 		return	true;
 	}
 
-	bool	Compiler::set(bool	&indented,uint16	write_index,uint16	&extent_index,bool	write){	//	[ ] illegal; use |[] instead, or [nil]
+	bool	Compiler::set(bool	&indented,uint16	write_index,uint16	&extent_index,bool	write){	//	[ ] is illegal; use |[] instead, or [nil].
 
 		std::streampos	i=in_stream->tellg();
 		bool	lbl=false;
@@ -1540,7 +1556,7 @@ return_false:
 		return	false;
 	}
 
-	bool	Compiler::set(bool	&indented,const	Class	&p,uint16	write_index,uint16	&extent_index,bool	write){	//	for class defs like member-name:[member-list] or !class (name[] member-list)
+	bool	Compiler::set(bool	&indented,const	Class	&p,uint16	write_index,uint16	&extent_index,bool	write){	//	for class defs like member-name:[member-list] or !class (name[] member-list).
 		
 		std::streampos	i=in_stream->tellg();
 		bool	lbl=false;
@@ -1576,10 +1592,10 @@ return_false:
 		uint16	count=0;
 		bool	_indented=false;
 		uint16	arity=0xFFFF;
-		if(p.use_as==StructureMember::I_CLASS){	//	undefined arity for unstructured sets
+		if(p.use_as==StructureMember::I_CLASS){	//	undefined arity for unstructured sets.
 		
 			arity=p.atom.getAtomCount();
-			if(write)	//	fill up with wildcards that will be overwritten up to ::
+			if(write)	//	fill up with wildcards that will be overwritten up to ::.
 				for(uint16	j=content_write_index;j<content_write_index+arity;++j)
 					current_object->code[j]=Atom::Wildcard();
 		}
@@ -1637,6 +1653,9 @@ return_false:
 			case	StructureMember::I_CLASS:
 				r=read(p.things_to_read[count],_indented,true,content_write_index+count,extent_index,write);
 				break;
+			case	StructureMember::I_DCLASS:
+				r=read_class(_indented,true,NULL,content_write_index+count,extent_index,write);
+				break;
 			}
 			if(!r){
 						
@@ -1686,7 +1705,7 @@ return_false:
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
-	bool	Compiler::read_any(bool	&indented,bool	enforce,const	Class	*p,uint16	write_index,uint16	&extent_index,bool	write){	//	enforce always false, p always NULL
+	bool	Compiler::read_any(bool	&indented,bool	enforce,const	Class	*p,uint16	write_index,uint16	&extent_index,bool	write){	//	enforce always false, p always NULL.
 
 		indented=false;
 		if(read_number(indented,false,NULL,write_index,extent_index,write))
@@ -1710,6 +1729,8 @@ return_false:
 		if(err)
 			return	false;
 		if(read_device(indented,false,NULL,write_index,extent_index,write))
+			return	true;
+		if(read_class(indented,false,NULL,write_index,extent_index,write))
 			return	true;
 		if(err)
 			return	false;
@@ -1912,7 +1933,7 @@ return_false:
 		return	false;
 	}
 
-	bool	Compiler::read_device(bool	&indented,bool	enforce,const	Class	*p,uint16	write_index,uint16	&extent_index,bool	write){	//	p always NULL
+	bool	Compiler::read_device(bool	&indented,bool	enforce,const	Class	*p,uint16	write_index,uint16	&extent_index,bool	write){	//	p always NULL.
 
 		if(read_nil_did(write_index,extent_index,write))
 			return	true;
@@ -2116,6 +2137,26 @@ return_false:
 		return	false;
 	}
 
+	bool	Compiler::read_class(bool	&indented,bool	enforce,const	Class	*p,uint16	write_index,uint16	&extent_index,bool	write){	//	p always NULL.
+		
+		std::streampos	i=in_stream->tellg();
+		std::string	l;
+		if(label(l)){
+
+			Class	_p;
+			if(!object(_p))
+				if(!marker(_p))
+					return	false;
+			local_references[l]=Reference(write_index,_p);
+			if(write)
+				current_object->code[write_index]=_p.atom;
+			return	true;
+		}
+		in_stream->clear();
+		in_stream->seekg(i);
+		return	false;
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	bool	Compiler::read_nil(uint16	write_index,uint16	&extent_index,bool	write){
@@ -2280,9 +2321,9 @@ return_false:
 			if(write){
 
 				if(current_view_index==-1)
-					_image->relocation_segment.addObjectReference(current_object->reference_set[index],current_object_index,index);
+					_image->code_image.relocation_segment.addObjectReference(current_object->reference_set[index],current_object_index,index);
 				else
-					_image->relocation_segment.addViewReference(current_object->reference_set[index],current_object_index,current_view_index,index);
+					_image->code_image.relocation_segment.addViewReference(current_object->reference_set[index],current_object_index,current_view_index,index);
 				current_object->code[write_index]=Atom::RPointer(index);
 			}
 			return	true;
@@ -2317,9 +2358,9 @@ return_false:
 			if(write){
 
 				if(current_view_index==-1)
-					_image->relocation_segment.addObjectReference(current_object->reference_set[v[0]],current_object_index,v[0]);
+					_image->code_image.relocation_segment.addObjectReference(current_object->reference_set[v[0]],current_object_index,v[0]);
 				else
-					_image->relocation_segment.addViewReference(current_object->reference_set[v[0]],current_object_index,current_view_index,v[0]);
+					_image->code_image.relocation_segment.addViewReference(current_object->reference_set[v[0]],current_object_index,current_view_index,v[0]);
 				current_object->code[write_index]=Atom::IPointer(extent_index);
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::RPointer(v[0]);

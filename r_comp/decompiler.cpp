@@ -33,7 +33,7 @@
 
 namespace	r_comp{
 
-	Decompiler::Decompiler():out_stream(NULL),current_object(NULL),_image(NULL){
+	Decompiler::Decompiler():out_stream(NULL),current_object(NULL),class_image(NULL),code_image(NULL){
 	}
 
 	Decompiler::~Decompiler(){
@@ -76,10 +76,15 @@ namespace	r_comp{
 		return	it->second;
 	}
 
-	void	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream){
+	void	Decompiler::init(r_comp::ClassImage	*class_image){
+
+		this->class_image=class_image;
+	}
+
+	void	Decompiler::decompile(r_comp::CodeImage		*code_image,std::ostringstream	*stream){
 
 		out_stream=new	OutStream(stream);
-		_image=image;
+		this->code_image=code_image;
 
 		uint32		last_object_ID=0;
 		char		buffer[255];
@@ -87,9 +92,9 @@ namespace	r_comp{
 
 		closing_set=false;
 
-		for(uint32	i=0;i<_image->code_segment.objects.size();++i){
+		for(uint32	i=0;i<code_image->code_segment.objects.size();++i){
 
-			current_object=_image->code_segment.objects[i];
+			current_object=code_image->code_segment.objects[i];
 			SysObject	*sys_object=(SysObject	*)current_object;
 			uint16	read_index=0;
 			bool	after_tail_wildcard=false;
@@ -102,7 +107,7 @@ namespace	r_comp{
 			case	3:	s="stdout";break;
 			default:
 				sprintf(buffer,"%d",last_object_ID++);
-				s=_image->definition_segment.getClass(current_object->code[0].asOpcode())->str_opcode;
+				s=class_image->getClass(current_object->code[0].asOpcode())->str_opcode;
 				s+=buffer;
 				break;
 			}
@@ -158,11 +163,11 @@ namespace	r_comp{
 
 		switch(current_object->code[read_index].getDescriptor()){
 		case	Atom::OPERATOR:
-			*out_stream<<_image->definition_segment.operator_names[current_object->code[read_index].asOpcode()];
+			*out_stream<<class_image->operator_names[current_object->code[read_index].asOpcode()];
 			break;
 		case	Atom::OBJECT:
 		case	Atom::MARKER:
-			*out_stream<<_image->definition_segment.class_names[current_object->code[read_index].asOpcode()];
+			*out_stream<<class_image->class_names[current_object->code[read_index].asOpcode()];
 			break;
 		default:
 			*out_stream<<"undefined-class";
@@ -318,26 +323,26 @@ namespace	r_comp{
 					out_stream->push("this",read_index);
 					opcode=current_object->code[0].asOpcode();
 					//	for reactive objects, this refers to the instantiated reactive object
-					_class=_image->definition_segment.classes_by_opcodes[opcode];
+					_class=class_image->classes_by_opcodes[opcode];
 					if(_class.str_opcode=="pgm")
-						opcode=_image->definition_segment.sys_classes["ipgm"].atom.asOpcode();
+						opcode=class_image->sys_classes["ipgm"].atom.asOpcode();
 					else	if(_class.str_opcode=="fmd")
-						opcode=_image->definition_segment.sys_classes["ifmd"].atom.asOpcode();
+						opcode=class_image->sys_classes["ifmd"].atom.asOpcode();
 					else	if(_class.str_opcode=="imd")
-						opcode=_image->definition_segment.sys_classes["iimd"].atom.asOpcode();
+						opcode=class_image->sys_classes["iimd"].atom.asOpcode();
 					break;
 				case	Atom::VL_PTR:
 					while(current_object->code[atom.asIndex()].getDescriptor()==Atom::I_PTR)
 						atom=current_object->code[atom.asIndex()];
 					out_stream->push(get_variable_name(atom.asIndex(),true),read_index);
 					opcode=current_object->code[atom.asIndex()].asOpcode();
-					//_class=_image->definition_segment.classes_by_opcodes[opcode];
+					//_class=_image->class_image.classes_by_opcodes[opcode];
 					break;
 				case	Atom::R_PTR:{
 					uint32	object_index=current_object->reference_set[atom.asIndex()];
 					out_stream->push(get_object_name(object_index),read_index);
-					opcode=_image->code_segment.objects[object_index]->code[0].asOpcode();
-					//_class=_image->definition_segment.classes_by_opcodes[opcode];
+					opcode=code_image->code_segment.objects[object_index]->code[0].asOpcode();
+					//_class=_image->class_image.classes_by_opcodes[opcode];
 					break;
 				}default:
 					out_stream->push("unknown-cptr-lead-type",read_index);
@@ -348,7 +353,7 @@ namespace	r_comp{
 
 					std::string	member_name;
 					atom=current_object->code[index+1+i];	//	atom is an Index appearing after the leading atom
-					Class	embedding_class=_image->definition_segment.classes_by_opcodes[opcode];	//	class defining the member
+					Class	embedding_class=class_image->classes_by_opcodes[opcode];	//	class defining the member
 					member_name=embedding_class.get_member_name(atom.asIndex());
 					*out_stream<<'.'<<member_name;	
 					if(i<member_count){	//	not the last member, point to next structure
@@ -356,7 +361,7 @@ namespace	r_comp{
 						if(member_name=="vw"){	//	special case: no view structure in the code, vw is just a place holder; vw is the second to last member: write the last member and exit
 
 							atom=current_object->code[index+i+2];	//	atom is the last internal pointer
-							member_name=embedding_class.get_member_class(&_image->definition_segment,"vw")->get_member_name(atom.asIndex());
+							member_name=embedding_class.get_member_class(class_image,"vw")->get_member_name(atom.asIndex());
 							*out_stream<<'.'<<member_name;
 							break;
 						}else{	//	regular case: the member points to a structure embedded in the code
@@ -430,7 +435,7 @@ namespace	r_comp{
 			if(a.readsAsNil())
 				out_stream->push("|fid",read_index);
 			else
-				out_stream->push(_image->definition_segment.function_names[a.asOpcode()],read_index);
+				out_stream->push(class_image->function_names[a.asOpcode()],read_index);
 			break;
 		case	Atom::VIEW:
 			out_stream->push("vw",read_index);	//	to be consistent with hand-crafted source code, shall be written |[]

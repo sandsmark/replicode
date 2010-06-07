@@ -941,7 +941,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 			delete	root;
 	}
 
-	bool	Preprocessor::process(DefinitionSegment		*definition_segment,
+	bool	Preprocessor::process(ClassImage			*class_image,
 								  std::istream			*stream,
 								  std::ostringstream	*outstream,
 								  std::string			*error){
@@ -977,7 +977,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 
 		*outstream<<root;
 
-		this->definition_segment=definition_segment;
+		this->class_image=class_image;
 		initialize();
 
 		*error=root->printError();
@@ -995,9 +995,9 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				if((*j)->cmd==":~")
 					return	true;
 				break;
-			case	RepliStruct::Structure:		//	template instantiation; args are the actual parameters
-			case	RepliStruct::Development:	//	actual template arg as a list of args
-			case	RepliStruct::Set:			//	sets can contain tpl args
+			case	RepliStruct::Structure:		//	template instantiation; args are the actual parameters.
+			case	RepliStruct::Development:	//	actual template arg as a list of args.
+			case	RepliStruct::Set:			//	sets can contain tpl args.
 				if(isTemplateClass(*j))
 					return	true;
 				break;
@@ -1015,7 +1015,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 			if((*i)->type!=RepliStruct::Directive	||	(*i)->cmd!="!class")
 				continue;
 			RepliStruct	*s=*(*i)->args.begin();
-			if(s->cmd==class_name)	//	set classes are written class_name[]
+			if(s->cmd==class_name)	//	set classes are written class_name[].
 				return	false;
 			if(s->cmd==class_name+"[]")
 				return	true;
@@ -1026,12 +1026,12 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 	void	Preprocessor::instantiateClass(RepliStruct	*tpl_class,std::list<RepliStruct	*>	&tpl_args,std::string	&instantiated_class_name){
 
 		static	uint32	LastClassID=0;
-		//	remove the trailing []
+		//	remove the trailing [].
 		std::string	sset="[]";
 		instantiated_class_name=tpl_class->cmd;
 		size_t	p=instantiated_class_name.find(sset);
 		instantiated_class_name=instantiated_class_name.substr(0,instantiated_class_name.length()-sset.length());
-		//	append an ID to the tpl class name
+		//	append an ID to the tpl class name.
 		char	buffer[255];
 		sprintf(buffer,"%d",LastClassID++);
 		instantiated_class_name+=buffer;
@@ -1042,8 +1042,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 			_tpl_args.push_back(*i);
 		getMembers(tpl_class,members,_tpl_args,true);
 
-		definition_segment->class_names[class_opcode]=instantiated_class_name;
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[instantiated_class_name]=Class(Atom::SSet(class_opcode,members.size()),instantiated_class_name,members);
+		class_image->class_names[class_opcode]=instantiated_class_name;
+		class_image->classes_by_opcodes[class_opcode]=class_image->classes[instantiated_class_name]=Class(Atom::SSet(class_opcode,members.size()),instantiated_class_name,members);
 		++class_opcode;
 	}
 
@@ -1055,17 +1055,19 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		switch(m->type){
 		case	RepliStruct::Set:
 			name=m->label.substr(0,m->label.length()-1);
-			if(name=="mks")			//	special case
+			if(name=="mks")			//	special case.
 				members.push_back(StructureMember(&Compiler::read_mks,name));
-			else	if(name=="vws")	//	special case
+			else	if(name=="vws")	//	special case.
 				members.push_back(StructureMember(&Compiler::read_vws,name));
-			else	if(m->args.size()==0)	//	anonymous set of anything
+			else	if(m->args.size()==0)	//	anonymous set of anything.
 				members.push_back(StructureMember(&Compiler::read_set,name));
-			else{							//	structured set, arg[0].cmd is ::type
+			else{							//	structured set, arg[0].cmd is ::type.
 
 				type=(*m->args.begin())->cmd.substr(2,m->cmd.length()-1);
 				if(isSet(type))
 					members.push_back(StructureMember(&Compiler::read_set,name,type,StructureMember::I_SET));
+				else	if(type==Class::Type)
+					members.push_back(StructureMember(&Compiler::read_set,name,type,StructureMember::I_DCLASS));
 				else
 					members.push_back(StructureMember(&Compiler::read_set,name,type,StructureMember::I_EXPRESSION));
 			}
@@ -1076,7 +1078,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 			p=m->cmd.find(':');
 			name=m->cmd.substr(0,p);
 			type=m->cmd.substr(p+1,m->cmd.length());
-			if(name=="vw")	//	special case
+			if(name=="vw")	//	special case.
 				members.push_back(StructureMember(&Compiler::read_view,name,type));
 			else	if(type=="")
 				members.push_back(StructureMember(&Compiler::read_any,name));
@@ -1101,7 +1103,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				RepliStruct	*_m=tpl_args.back();
 				tpl_args.pop_back();
 				switch(_m->type){
-				case	RepliStruct::Structure:{	//	the tpl arg is an instantiated tpl set class
+				case	RepliStruct::Structure:{	//	the tpl arg is an instantiated tpl set class.
 					std::string	instantiated_class_name;
 					instantiateClass(template_classes.find(_m->cmd)->second,_m->args,instantiated_class_name);
 					members.push_back(StructureMember(&Compiler::read_set,_m->label.substr(0,_m->label.length()-1),instantiated_class_name,StructureMember::I_CLASS));
@@ -1110,10 +1112,12 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 					getMember(members,_m,tpl_args,true);
 					break;
 				}
-			}else	//	type is a class name
+			}else	if(type==Class::Type)
+				members.push_back(StructureMember(&Compiler::read_class,name));
+			else	//	type is a class name.
 				members.push_back(StructureMember(&Compiler::read_expression,name,type));
 			break;
-		case	RepliStruct::Structure:{	//	template instantiation; (*m)->cmd is the template class, (*m)->args are the actual parameters
+		case	RepliStruct::Structure:{	//	template instantiation; (*m)->cmd is the template class, (*m)->args are the actual parameters.
 			RepliStruct	*template_class=template_classes.find(m->cmd)->second;
 			if(instantiate){
 
@@ -1122,7 +1126,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				members.push_back(StructureMember(&Compiler::read_set,m->label.substr(0,m->label.length()-1),instantiated_class_name,StructureMember::I_CLASS));
 			}else{
 
-				for(std::list<RepliStruct	*>::reverse_iterator	i=m->args.rbegin();i!=m->args.rend();++i)	//	append the passed args to the ones held by m
+				for(std::list<RepliStruct	*>::reverse_iterator	i=m->args.rbegin();i!=m->args.rend();++i)	//	append the passed args to the ones held by m.
 					tpl_args.push_back(*i);
 				getMembers(template_class,members,tpl_args,false);
 			}
@@ -1170,7 +1174,10 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		uint16	operator_opcode=0;
 
 		std::vector<StructureMember>	r_xpr;
-		definition_segment->classes[std::string(Class::Expression)]=Class(Atom::Object(class_opcode,0),Class::Expression,r_xpr);	//	to read unspecified expressions in classes and sets
+		class_image->classes[std::string(Class::Expression)]=Class(Atom::Object(class_opcode,0),Class::Expression,r_xpr);	//	to read unspecified expressions in classes and sets.
+		++class_opcode;
+		std::vector<StructureMember>	r_type;
+		class_image->classes[std::string(Class::Type)]=Class(Atom::Object(class_opcode,0),Class::Type,r_type);	//	to read object types in expressions and sets.
 		++class_opcode;
 
 		for(std::list<RepliStruct	*>::iterator	i(root->args.begin());i!=root->args.end();++i){
@@ -1186,7 +1193,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				std::string	class_name=s->cmd;
 				size_t		p=class_name.find(sset);
 				ClassType	class_type=(p==std::string::npos?T_CLASS:T_SET);
-				if(class_type==T_SET)	//	remove the trailing [] since the RepliStructs for instantiated classes do so
+				if(class_type==T_SET)	//	remove the trailing [] since the RepliStructs for instantiated classes do so.
 					class_name=class_name.substr(0,class_name.length()-sset.length());
 
 				if(isTemplateClass(s)){
@@ -1211,15 +1218,15 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 						}
 				}
 
-				definition_segment->class_names[class_opcode]=class_name;
+				class_image->class_names[class_opcode]=class_name;
 				switch(class_type){
 				case	T_SYS_CLASS:
-						definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[class_name]=Class(atom,class_name,members);
+						class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[class_name]=Class(atom,class_name,members);
 				case	T_CLASS:
-						definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[class_name]=Class(atom,class_name,members);
+						class_image->classes_by_opcodes[class_opcode]=class_image->classes[class_name]=Class(atom,class_name,members);
 					break;
 				case	T_SET:
-					definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[class_name]=Class(Atom::SSet(class_opcode,members.size()),class_name,members);
+					class_image->classes_by_opcodes[class_opcode]=class_image->classes[class_name]=Class(Atom::SSet(class_opcode,members.size()),class_name,members);
 					break;
 				default:
 					break;
@@ -1232,17 +1239,17 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				ReturnType	return_type=getReturnType(s);
 
 				std::string	operator_name=s->cmd;
-				definition_segment->operator_names.push_back(operator_name);
-				definition_segment->classes[operator_name]=Class(Atom::Operator(operator_opcode,s->args.size()),operator_name,members,return_type);
+				class_image->operator_names.push_back(operator_name);
+				class_image->classes[operator_name]=Class(Atom::Operator(operator_opcode,s->args.size()),operator_name,members,return_type);
 				++operator_opcode;
-			}else	if((*i)->cmd=="!dfn"){	//	don't bother to read the members, it's always a set
+			}else	if((*i)->cmd=="!dfn"){	//	don't bother to read the members, it's always a set.
 
 				std::vector<StructureMember>	r_set;
 				r_set.push_back(StructureMember(&Compiler::read_set,""));
 
 				std::string	function_name=s->cmd;
-				definition_segment->function_names.push_back(function_name);
-				definition_segment->classes[function_name]=Class(Atom::DeviceFunction(function_opcode),function_name,r_set);
+				class_image->function_names.push_back(function_name);
+				class_image->classes[function_name]=Class(Atom::DeviceFunction(function_opcode),function_name,r_set);
 				++function_opcode;
 			}
 		}
@@ -1256,24 +1263,24 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 	HardCodedPreprocessor::~HardCodedPreprocessor(){
 	}
 
-	bool	HardCodedPreprocessor::process(DefinitionSegment	*definition_segment,
+	bool	HardCodedPreprocessor::process(ClassImage			*class_image,
 											std::istream		*stream,
 											std::ostringstream	*outstream,
 											std::string			*error){
 
-		initialize(definition_segment);
+		initialize(class_image);
 		*outstream<<stream->rdbuf();
 		return	true;
 	}
 
-	void	HardCodedPreprocessor::initialize(DefinitionSegment	*definition_segment){
+	void	HardCodedPreprocessor::initialize(ClassImage	*class_image){
 
 		uint16	class_opcode=0;	//	shared with sys_classes
 		uint16	function_opcode=0;
 		uint16	operator_opcode=0;
 
 		std::vector<StructureMember>	r_xpr;
-		definition_segment->classes[std::string(Class::Expression)]=Class(Atom::Object(class_opcode,0),Class::Expression,r_xpr);	//	to read expression in sets, special case: see read_expression()
+		class_image->classes[std::string(Class::Expression)]=Class(Atom::Object(class_opcode,0),Class::Expression,r_xpr);	//	to read expression in sets, special case: see read_expression()
 		++class_opcode;
 
 		//	everything below shall be filled by the preprocessor
@@ -1334,8 +1341,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_view.push_back(StructureMember(&Compiler::read_expression,"grp"));
 		r_view.push_back(StructureMember(&Compiler::read_any,"org"));
 
-		definition_segment->class_names[class_opcode]="view";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("view")]=Class(Atom::SSet(class_opcode,5),"view",r_view);
+		class_image->class_names[class_opcode]="view";
+		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("view")]=Class(Atom::SSet(class_opcode,5),"view",r_view);
 		++class_opcode;
 
 		//	react_view
@@ -1347,8 +1354,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_react_view.push_back(StructureMember(&Compiler::read_any,"org"));
 		r_react_view.push_back(StructureMember(&Compiler::read_number,"act"));
 
-		definition_segment->class_names[class_opcode]="react_view";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("react_view")]=Class(Atom::SSet(class_opcode,6),"react_view",r_react_view);
+		class_image->class_names[class_opcode]="react_view";
+		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("react_view")]=Class(Atom::SSet(class_opcode,6),"react_view",r_react_view);
 		++class_opcode;
 		
 		//	ptn
@@ -1356,8 +1363,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_ptn.push_back(StructureMember(&Compiler::read_expression,"skel"));
 		r_ptn.push_back(StructureMember(&Compiler::read_set,"guards",Class::Expression,StructureMember::I_EXPRESSION));	//	reads a set of expressions
 
-		definition_segment->class_names[class_opcode]="ptn";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("ptn")]=Class(Atom::Object(class_opcode,2),"ptn",r_ptn);
+		class_image->class_names[class_opcode]="ptn";
+		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("ptn")]=Class(Atom::Object(class_opcode,2),"ptn",r_ptn);
 		++class_opcode;
 
 		//	_in_sec
@@ -1366,8 +1373,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"timings",Class::Expression,StructureMember::I_EXPRESSION));	//	reads a set of expressions
 		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"guards",Class::Expression,StructureMember::I_EXPRESSION));	//	reads a set of expressions
 
-		definition_segment->class_names[class_opcode]="_in_sec";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("_in_sec")]=Class(Atom::SSet(class_opcode,3),"_in_sec",r__ins_sec);
+		class_image->class_names[class_opcode]="_in_sec";
+		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("_in_sec")]=Class(Atom::SSet(class_opcode,3),"_in_sec",r__ins_sec);
 		++class_opcode;
 
 		//	cmd
@@ -1376,8 +1383,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_cmd.push_back(StructureMember(&Compiler::read_device,"device"));
 		r_cmd.push_back(StructureMember(&Compiler::read_set,"args"));
 
-		definition_segment->class_names[class_opcode]="cmd";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("cmd")]=Class(Atom::Object(class_opcode,3),"cmd",r_cmd);
+		class_image->class_names[class_opcode]="cmd";
+		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("cmd")]=Class(Atom::Object(class_opcode,3),"cmd",r_cmd);
 		++class_opcode;
 
 		//	val_pair
@@ -1385,8 +1392,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_val_pair.push_back(StructureMember(&Compiler::read_any,"value"));
 		r_val_pair.push_back(StructureMember(&Compiler::read_number,"index"));
 
-		definition_segment->class_names[class_opcode]="val_pair";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("val_pair")]=Class(Atom::SSet(class_opcode,2),"val_pair",r_val_pair);
+		class_image->class_names[class_opcode]="val_pair";
+		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("val_pair")]=Class(Atom::SSet(class_opcode,2),"val_pair",r_val_pair);
 		++class_opcode;
 
 		//	vec3: non-standard (i.e. does not belong to std.replicode), only for testing
@@ -1395,8 +1402,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_vec3.push_back(StructureMember(&Compiler::read_number,"y"));
 		r_vec3.push_back(StructureMember(&Compiler::read_number,"z"));
 
-		definition_segment->class_names[class_opcode]="vec3";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->classes[std::string("vec3")]=Class(Atom::Object(class_opcode,3),"vec3",r_vec3);
+		class_image->class_names[class_opcode]="vec3";
+		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("vec3")]=Class(Atom::Object(class_opcode,3),"vec3",r_vec3);
 		++class_opcode;
 		
 		//	sys-classes /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1414,13 +1421,13 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_pgm.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_pgm.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		definition_segment->class_names[class_opcode]="pgm";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("pgm")]=Class(Atom::Object(class_opcode,11),"pgm",r_pgm);
+		class_image->class_names[class_opcode]="pgm";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("pgm")]=Class(Atom::Object(class_opcode,11),"pgm",r_pgm);
 		++class_opcode;
 
 		//	|pgm
-		definition_segment->class_names[class_opcode]="|pgm";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("|pgm")]=Class(Atom::Object(class_opcode,11),"|pgm",r_pgm);
+		class_image->class_names[class_opcode]="|pgm";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("|pgm")]=Class(Atom::Object(class_opcode,11),"|pgm",r_pgm);
 		++class_opcode;
 
 		//	ipgm
@@ -1432,8 +1439,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_ipgm.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_ipgm.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		definition_segment->class_names[class_opcode]="ipgm";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("ipgm")]=Class(Atom::Object(class_opcode,6),"ipgm",r_ipgm);
+		class_image->class_names[class_opcode]="ipgm";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("ipgm")]=Class(Atom::Object(class_opcode,6),"ipgm",r_ipgm);
 		++class_opcode;
 
 		//	ent
@@ -1443,8 +1450,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_ent.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_ent.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		definition_segment->class_names[class_opcode]="ent";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("ent")]=Class(Atom::Object(class_opcode,4),"ent",r_ent);
+		class_image->class_names[class_opcode]="ent";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("ent")]=Class(Atom::Object(class_opcode,4),"ent",r_ent);
 		++class_opcode;
 
 		//	grp
@@ -1486,8 +1493,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_grp.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_grp.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		definition_segment->class_names[class_opcode]="grp";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("grp")]=Class(Atom::Object(class_opcode,36),"grp",r_grp);
+		class_image->class_names[class_opcode]="grp";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("grp")]=Class(Atom::Object(class_opcode,36),"grp",r_grp);
 		++class_opcode;
 
 		//	mk.rdx
@@ -1500,8 +1507,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_rdx.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_rdx.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		definition_segment->class_names[class_opcode]="mk.rdx";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.rdx")]=Class(Atom::Object(class_opcode,7),"mk.rdx",r_rdx);
+		class_image->class_names[class_opcode]="mk.rdx";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.rdx")]=Class(Atom::Object(class_opcode,7),"mk.rdx",r_rdx);
 		++class_opcode;
 
 		//	mk.|rdx
@@ -1513,8 +1520,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_ardx.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_ardx.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		definition_segment->class_names[class_opcode]="mk.|rdx";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.|rdx")]=Class(Atom::Object(class_opcode,6),"mk.|rdx",r_ardx);
+		class_image->class_names[class_opcode]="mk.|rdx";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.|rdx")]=Class(Atom::Object(class_opcode,6),"mk.|rdx",r_ardx);
 		++class_opcode;
 
 		//	utilities for notification markers
@@ -1536,48 +1543,48 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_ntf_chg.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
 		//	mk.low_sln
-		definition_segment->class_names[class_opcode]="mk.low_sln";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.low_sln")]=Class(Atom::Object(class_opcode,6),"mk.low_sln",r_ntf);
+		class_image->class_names[class_opcode]="mk.low_sln";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.low_sln")]=Class(Atom::Object(class_opcode,6),"mk.low_sln",r_ntf);
 		++class_opcode;
 
 		//	mk.high_sln
-		definition_segment->class_names[class_opcode]="mk.high_sln";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.high_sln")]=Class(Atom::Object(class_opcode,6),"mk.high_sln",r_ntf);
+		class_image->class_names[class_opcode]="mk.high_sln";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.high_sln")]=Class(Atom::Object(class_opcode,6),"mk.high_sln",r_ntf);
 		++class_opcode;
 
 		//	mk.low_act
-		definition_segment->class_names[class_opcode]="mk.low_act";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.low_act")]=Class(Atom::Object(class_opcode,6),"mk.low_act",r_ntf);
+		class_image->class_names[class_opcode]="mk.low_act";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.low_act")]=Class(Atom::Object(class_opcode,6),"mk.low_act",r_ntf);
 		++class_opcode;
 
 		//	mk.high_act
-		definition_segment->class_names[class_opcode]="mk.high_act";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf);
+		class_image->class_names[class_opcode]="mk.high_act";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf);
 		++class_opcode;
 
 		//	mk.low_res
-		definition_segment->class_names[class_opcode]="mk.low_res";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.low_res")]=Class(Atom::Object(class_opcode,6),"mk.low_res",r_ntf);
+		class_image->class_names[class_opcode]="mk.low_res";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.low_res")]=Class(Atom::Object(class_opcode,6),"mk.low_res",r_ntf);
 		++class_opcode;
 
 		//	mk.high_res
-		definition_segment->class_names[class_opcode]="mk.high_res";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.high_res")]=Class(Atom::Object(class_opcode,6),"mk.high_res",r_ntf);
+		class_image->class_names[class_opcode]="mk.high_res";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.high_res")]=Class(Atom::Object(class_opcode,6),"mk.high_res",r_ntf);
 		++class_opcode;
 
 		//	mk.sln_chg
-		definition_segment->class_names[class_opcode]="mk.high_act";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf_chg);
+		class_image->class_names[class_opcode]="mk.high_act";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf_chg);
 		++class_opcode;
 
 		//	mk.act_chg
-		definition_segment->class_names[class_opcode]="mk.high_act";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf_chg);
+		class_image->class_names[class_opcode]="mk.high_act";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf_chg);
 		++class_opcode;
 
 		//	mk.new
-		definition_segment->class_names[class_opcode]="mk.new";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.new")]=Class(Atom::Object(class_opcode,6),"mk.new",r_ntf);
+		class_image->class_names[class_opcode]="mk.new";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.new")]=Class(Atom::Object(class_opcode,6),"mk.new",r_ntf);
 		++class_opcode;
 
 		//	mk.position: non-standard
@@ -1589,8 +1596,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_mk_position.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_mk_position.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		definition_segment->class_names[class_opcode]="mk.position";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.position")]=Class(Atom::Object(class_opcode,6),"mk.position",r_mk_position);
+		class_image->class_names[class_opcode]="mk.position";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.position")]=Class(Atom::Object(class_opcode,6),"mk.position",r_mk_position);
 		++class_opcode;
 
 		//	mk.last_known: non-standard
@@ -1601,8 +1608,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_mk_last_known.push_back(StructureMember(&Compiler::read_vws,"vws"));
 		r_mk_last_known.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
 
-		definition_segment->class_names[class_opcode]="mk.last_known";
-		definition_segment->classes_by_opcodes[class_opcode]=definition_segment->sys_classes[std::string("mk.last_known")]=Class(Atom::Object(class_opcode,5),"mk.last_known",r_mk_last_known);
+		class_image->class_names[class_opcode]="mk.last_known";
+		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.last_known")]=Class(Atom::Object(class_opcode,5),"mk.last_known",r_mk_last_known);
 		++class_opcode;
 
 		//	utilities /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1640,47 +1647,47 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		r_ms_ms.push_back(StructureMember(&Compiler::read_timestamp,""));
 
 		//	operators /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		definition_segment->classes[std::string("_now")]=Class(Atom::Operator(operator_opcode++,0),"_now",r_null,TIMESTAMP);
-		definition_segment->operator_names.push_back("_now");
-		definition_segment->classes[std::string("add")]=Class(Atom::Operator(operator_opcode++,2),"add",r_any_any,ANY);
-		definition_segment->operator_names.push_back("add");
-		definition_segment->classes[std::string("sub")]=Class(Atom::Operator(operator_opcode++,2),"sub",r_any_any,ANY);
-		definition_segment->operator_names.push_back("sub");
-		definition_segment->classes[std::string("mul")]=Class(Atom::Operator(operator_opcode++,2),"mul",r_nb_nb,NUMBER);
-		definition_segment->operator_names.push_back("mul");
-		definition_segment->classes[std::string("div")]=Class(Atom::Operator(operator_opcode++,2),"div",r_nb_nb,NUMBER);
-		definition_segment->operator_names.push_back("div");
-		definition_segment->classes[std::string("gtr")]=Class(Atom::Operator(operator_opcode++,2),"gtr",r_any_any,BOOLEAN);
-		definition_segment->operator_names.push_back("gtr");
-		definition_segment->classes[std::string("lse")]=Class(Atom::Operator(operator_opcode++,2),"lse",r_any_any,BOOLEAN);
-		definition_segment->operator_names.push_back("lse");
-		definition_segment->classes[std::string("lsr")]=Class(Atom::Operator(operator_opcode++,2),"lsr",r_any_any,BOOLEAN);
-		definition_segment->operator_names.push_back("lsr");
-		definition_segment->classes[std::string("gte")]=Class(Atom::Operator(operator_opcode++,2),"gte",r_any_any,BOOLEAN);
-		definition_segment->operator_names.push_back("gte");
-		definition_segment->classes[std::string("equ")]=Class(Atom::Operator(operator_opcode++,2),"equ",r_any_any,BOOLEAN);
-		definition_segment->operator_names.push_back("equ");
-		definition_segment->classes[std::string("neq")]=Class(Atom::Operator(operator_opcode++,2),"neq",r_any_any,BOOLEAN);
-		definition_segment->operator_names.push_back("neq");
-		definition_segment->classes[std::string("syn")]=Class(Atom::Operator(operator_opcode++,1),"syn",r_any,ANY);
-		definition_segment->operator_names.push_back("syn");
-		definition_segment->classes[std::string("red")]=Class(Atom::Operator(operator_opcode++,3),"red",r_set_set_set,SET);
-		definition_segment->operator_names.push_back("red");
-		definition_segment->classes[std::string("ins")]=Class(Atom::Operator(operator_opcode++,2),"ins",r_any_set,ANY);
-		definition_segment->operator_names.push_back("ins");
-		definition_segment->classes[std::string("at")]=Class(Atom::Operator(operator_opcode++,2),"at",r_set_nb,ANY);
-		definition_segment->operator_names.push_back("at");
+		class_image->classes[std::string("_now")]=Class(Atom::Operator(operator_opcode++,0),"_now",r_null,TIMESTAMP);
+		class_image->operator_names.push_back("_now");
+		class_image->classes[std::string("add")]=Class(Atom::Operator(operator_opcode++,2),"add",r_any_any,ANY);
+		class_image->operator_names.push_back("add");
+		class_image->classes[std::string("sub")]=Class(Atom::Operator(operator_opcode++,2),"sub",r_any_any,ANY);
+		class_image->operator_names.push_back("sub");
+		class_image->classes[std::string("mul")]=Class(Atom::Operator(operator_opcode++,2),"mul",r_nb_nb,NUMBER);
+		class_image->operator_names.push_back("mul");
+		class_image->classes[std::string("div")]=Class(Atom::Operator(operator_opcode++,2),"div",r_nb_nb,NUMBER);
+		class_image->operator_names.push_back("div");
+		class_image->classes[std::string("gtr")]=Class(Atom::Operator(operator_opcode++,2),"gtr",r_any_any,BOOLEAN);
+		class_image->operator_names.push_back("gtr");
+		class_image->classes[std::string("lse")]=Class(Atom::Operator(operator_opcode++,2),"lse",r_any_any,BOOLEAN);
+		class_image->operator_names.push_back("lse");
+		class_image->classes[std::string("lsr")]=Class(Atom::Operator(operator_opcode++,2),"lsr",r_any_any,BOOLEAN);
+		class_image->operator_names.push_back("lsr");
+		class_image->classes[std::string("gte")]=Class(Atom::Operator(operator_opcode++,2),"gte",r_any_any,BOOLEAN);
+		class_image->operator_names.push_back("gte");
+		class_image->classes[std::string("equ")]=Class(Atom::Operator(operator_opcode++,2),"equ",r_any_any,BOOLEAN);
+		class_image->operator_names.push_back("equ");
+		class_image->classes[std::string("neq")]=Class(Atom::Operator(operator_opcode++,2),"neq",r_any_any,BOOLEAN);
+		class_image->operator_names.push_back("neq");
+		class_image->classes[std::string("syn")]=Class(Atom::Operator(operator_opcode++,1),"syn",r_any,ANY);
+		class_image->operator_names.push_back("syn");
+		class_image->classes[std::string("red")]=Class(Atom::Operator(operator_opcode++,3),"red",r_set_set_set,SET);
+		class_image->operator_names.push_back("red");
+		class_image->classes[std::string("ins")]=Class(Atom::Operator(operator_opcode++,2),"ins",r_any_set,ANY);
+		class_image->operator_names.push_back("ins");
+		class_image->classes[std::string("at")]=Class(Atom::Operator(operator_opcode++,2),"at",r_set_nb,ANY);
+		class_image->operator_names.push_back("at");
 
 		//	functions /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		definition_segment->classes[std::string("_inj")]=Class(Atom::DeviceFunction(function_opcode++),"_inj",r_set);
-		definition_segment->function_names.push_back("_inj");
-		definition_segment->classes[std::string("_eje")]=Class(Atom::DeviceFunction(function_opcode++),"_eje",r_set);
-		definition_segment->function_names.push_back("_eje");
-		definition_segment->classes[std::string("_mod")]=Class(Atom::DeviceFunction(function_opcode++),"_mod",r_set);
-		definition_segment->function_names.push_back("_mod");
-		definition_segment->classes[std::string("_set")]=Class(Atom::DeviceFunction(function_opcode++),"_set",r_set);
-		definition_segment->function_names.push_back("_set");
-		definition_segment->classes[std::string("_start")]=Class(Atom::DeviceFunction(function_opcode++),"_start",r_set);
-		definition_segment->function_names.push_back("_start");
+		class_image->classes[std::string("_inj")]=Class(Atom::DeviceFunction(function_opcode++),"_inj",r_set);
+		class_image->function_names.push_back("_inj");
+		class_image->classes[std::string("_eje")]=Class(Atom::DeviceFunction(function_opcode++),"_eje",r_set);
+		class_image->function_names.push_back("_eje");
+		class_image->classes[std::string("_mod")]=Class(Atom::DeviceFunction(function_opcode++),"_mod",r_set);
+		class_image->function_names.push_back("_mod");
+		class_image->classes[std::string("_set")]=Class(Atom::DeviceFunction(function_opcode++),"_set",r_set);
+		class_image->function_names.push_back("_set");
+		class_image->classes[std::string("_start")]=Class(Atom::DeviceFunction(function_opcode++),"_start",r_set);
+		class_image->function_names.push_back("_start");
 	}
 }

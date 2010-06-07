@@ -55,11 +55,12 @@ namespace	r_comp{
 		else	if(_read==&Compiler::read_function)		type=FUNCTION_ID;
 		else	if(_read==&Compiler::read_expression)	type=ANY;
 		else	if(_read==&Compiler::read_set)			type=ReturnType::SET;
+		else	if(_read==&Compiler::read_class)		type=ReturnType::CLASS;
 	}
 		
-	Class	*StructureMember::get_class(DefinitionSegment	*segment)	const{
+	Class	*StructureMember::get_class(ClassImage	*class_image)	const{
 		
-		return	_class==""?NULL:&segment->classes.find(_class)->second;
+		return	_class==""?NULL:&class_image->classes.find(_class)->second;
 	}
 	
 	ReturnType	StructureMember::get_return_type()	const{
@@ -110,8 +111,8 @@ namespace	r_comp{
 			storage[0]=R_MKS;
 		else	if(_read==&Compiler::read_vws)
 			storage[0]=R_VWS;
-		/*else	if(_read==&Compiler::read_class)
-			storage[0]=R_CLASS;*/	//	future development
+		else	if(_read==&Compiler::read_class)
+			storage[0]=R_CLASS;
 		uint32	offset=1;
 		storage[offset++]=type;
 		r_code::Write(storage+offset,_class);
@@ -136,7 +137,7 @@ namespace	r_comp{
 		case	R_VIEW:			_read=&Compiler::read_view;			break;
 		case	R_MKS:			_read=&Compiler::read_mks;			break;
 		case	R_VWS:			_read=&Compiler::read_vws;			break;
-		/*case	R_CLASS:		_read=&Compiler::read_class;		break;*/	//	future development
+		case	R_CLASS:		_read=&Compiler::read_class;		break;
 		}
 		uint32	offset=1;
 		type=(ReturnType)storage[offset++];

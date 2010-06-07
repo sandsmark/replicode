@@ -51,7 +51,7 @@ namespace	r_comp{
 	//	Both images are equivalent, the latter being easier to work with (uses vectors instead of a contiguous structure, that is r_code::Image::data).
 	//	All read(word32*,uint32)/write(word32*) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
 
-	class	dll_export	DefinitionSegment{
+	class	dll_export	ClassImage{
 	private:
 		uint32	getClassArraySize();
 		uint32	getClassesSize();
@@ -60,7 +60,7 @@ namespace	r_comp{
 		uint32	getOperatorNamesSize();
 		uint32	getFunctionNamesSize();
 	public:
-		DefinitionSegment();
+		ClassImage();
 
 		UNORDERED_MAP<std::string,Class>	classes;	//	non-sys classes, operators and device functions
 		UNORDERED_MAP<std::string,Class>	sys_classes;
@@ -136,53 +136,67 @@ namespace	r_comp{
 		uint32	getSize();
 	};
 
-	class	dll_export	Image{
+	class	dll_export	CodeImage{
 	private:
 		Mem	*mem;
 		uint32	map_offset;
 		UNORDERED_MAP<r_code::Object	*,uint32>	ptrs_to_indices;	//	used for >> in memory
 		void	buildReferences(SysObject	*sys_object,r_code::Object	*object,uint32	object_index);
 	public:
-		DefinitionSegment	definition_segment;
 		ObjectMap			object_map;
 		CodeSegment			code_segment;
 		RelocationSegment	relocation_segment;
 
-		Image();
-		~Image();
+		CodeImage();
+		~CodeImage();
 
-		void	bind(Mem	*m);	//	use if there is a local Mem (as opoosed to a standalone compilation application);
+		void	bind(Mem	*m);	//	use if there is a local r_exec::Mem (as opposed to a standalone compilation application);
 
 		void	addObject(SysObject	*object);
-		
-		template<class	I>	I	*serialize(){
 
-			I	*image=(I	*)I::Build(definition_segment.getSize(),object_map.getSize(),code_segment.getSize(),relocation_segment.getSize());
-			
+		void	getObjects(ClassImage	*class_image,r_code::vector<r_code::Object	*>	&ram_objects);
+
+		CodeImage	&operator	<<	(r_code::vector<r_code::Object	*>	&ram_objects);
+		CodeImage	&operator	<<	(r_code::Object	*object);
+
+		template<class	I>	void	serialize(I	*image){
+
 			object_map.shift(image->def_size()+image->map_size());
-
-			definition_segment.write(image->data());
 			object_map.write(image->data()+image->def_size());
 			code_segment.write(image->data()+image->def_size()+image->map_size());
 			relocation_segment.write(image->data()+image->def_size()+image->map_size()+image->code_size());
+		}
 
+		template<class	I>	void	load(I	*image){
+
+			object_map.read(image->data()+image->def_size(),image->map_size());
+			code_segment.read(image->data()+image->def_size()+image->map_size(),image->map_size());
+			relocation_segment.read(image->data()+image->def_size()+image->map_size()+image->code_size());
+		}
+	};
+
+	class	dll_export	Image{
+	public:
+		ClassImage	class_image;
+		CodeImage	code_image;
+
+		Image();
+		~Image();
+		
+		template<class	I>	I	*serialize(){
+
+			I	*image=(I	*)I::Build(class_image.getSize(),code_image.object_map.getSize(),code_image.code_segment.getSize(),code_image.relocation_segment.getSize());
+			
+			class_image.write(image->data());
+			code_image.serialize(image);
 			return	image;
 		}
 
 		template<class	I>	void	load(I	*image){
 
-			definition_segment.read(image->data(),image->def_size());
-			object_map.read(image->data()+image->def_size(),image->map_size());
-			code_segment.read(image->data()+image->def_size()+image->map_size(),image->map_size());
-			relocation_segment.read(image->data()+image->def_size()+image->map_size()+image->code_size());
+			class_image.read(image->data(),image->def_size());
+			code_image.load(image);
 		}
-
-		Image	&operator	>>	(r_code::vector<r_code::Object	*>	&ram_objects);
-		Image	&operator	<<	(r_code::vector<r_code::Object	*>	&ram_objects);
-
-		Image	&operator	<<	(r_code::Object	*object);
-
-		void	removeObjects();
 	};
 }
 

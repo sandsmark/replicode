@@ -110,7 +110,7 @@ namespace	r_comp{
 			T_SYS_CLASS=1,
 			T_SET=2
 		}ClassType;
-		DefinitionSegment							*definition_segment;
+		ClassImage									*class_image;
 		uint16										class_opcode;	//	shared with sys_classes
 		UNORDERED_MAP<std::string,RepliStruct	*>	template_classes;
 		void		instantiateClass(RepliStruct	*tpl_class,std::list<RepliStruct	*>	&tpl_args,std::string	&instantiated_class_name);
@@ -125,24 +125,24 @@ namespace	r_comp{
 
 		Preprocessor();
 		~Preprocessor();
-		bool	process(DefinitionSegment	*definition_segment,	//	process will fill definition_segment
-						std::istream		*stream,	//	if an ifstream, stream must be open
-						std::ostringstream	*outstream,	//	output stream=input stream where macros are expanded
-						std::string			*error);	//	set when function fails, e.g. returns false
+		bool	process(ClassImage			*class_image,	//	process will fill class_image.
+						std::istream		*stream,	//	if an ifstream, stream must be open.
+						std::ostringstream	*outstream,	//	output stream=input stream where macros are expanded.
+						std::string			*error);	//	set when function fails, e.g. returns false.
 	};
 
 	//	For development only: hard codes the basic classes, does not expands any macros.
 	//	The output stream is the same as the input stream.
 	class	dll_export	HardCodedPreprocessor{
 	private:
-		void	initialize(DefinitionSegment	*definition_segment);
+		void	initialize(ClassImage	*class_image);
 	public:
 		HardCodedPreprocessor();
 		~HardCodedPreprocessor();
-		bool	process(DefinitionSegment	*definition_segment,	//	process will fill definition_segment
-						std::istream		*stream,	//	if an ifstream, stream must be open
-						std::ostringstream	*outstream,	//	output stream=input stream where macros are expanded
-						std::string			*error);	//	set when function fails, e.g. returns false
+		bool	process(ClassImage			*class_image,	//	process will fill class_image.
+						std::istream		*stream,	//	if an ifstream, stream must be open.
+						std::ostringstream	*outstream,	//	output stream=input stream where macros are expanded.
+						std::string			*error);	//	set when function fails, e.g. returns false.
 	};
 }
 

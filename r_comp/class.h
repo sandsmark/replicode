@@ -43,16 +43,18 @@ namespace	r_comp{
 		bool	has_offset()	const;
 	public:
 		static	const	char	*Expression;
+		static	const	char	*Type;
+
 		Class(ReturnType	t=ANY);
 		Class(Atom							atom,
 			std::string						str_opcode,
 			std::vector<StructureMember>	r,
 			ReturnType						t=ANY);
-		bool	is_pattern(DefinitionSegment	*segment)	const;
-		bool	get_member_index(DefinitionSegment	*segment,std::string	&name,uint16	&index,Class	*&p)	const;
+		bool	is_pattern(ClassImage	*class_image)	const;
+		bool	get_member_index(ClassImage	*class_image,std::string	&name,uint16	&index,Class	*&p)	const;
 		std::string	get_member_name(uint32	index);	//	for decompilation
 		ReturnType	get_member_type(const	uint16	index);
-		Class		*get_member_class(DefinitionSegment	*segment,const	std::string	&name);
+		Class		*get_member_class(ClassImage	*class_image,const	std::string	&name);
 		Atom							atom;
 		std::string						str_opcode;			//	unused for anything but objects, markers and operators
 		std::vector<StructureMember>	things_to_read;
