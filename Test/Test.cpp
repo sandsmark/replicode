@@ -4,36 +4,94 @@
 
 #include	"Mem.h"
 
-#include	"utils.h"
+#include	"../CoreLibrary/utils.h"
 
 #include	"image_impl.h"
 
 #include	<iostream>
 
 //#define PREPROCESSOR_TEST
+//#define	R_MEM_TEST
+
+uint64	(*r_exec::Mem::_Now)()=Time::Get;
 
 using	namespace	r_comp;
-
+/*
+class	Y{
+public:
+	Y():ref(0){};
+	int32	ref;
+	void	dec(){
+		if(--ref==0)
+			delete	this;
+	}
+	void	inc(){
+		++ref;
+	}
+};
+class	X{
+public:
+	Y	*data;
+	X():data(NULL){}
+	X(Y	*y):data(y){
+		if(data)
+			data->inc();
+	}
+	~X(){
+		if(data)
+			data->dec();
+	}
+	X(const	X	&x){
+		data=x.data;
+		if(data)
+			data->inc();
+	}
+	X&	operator	=(const	X	&x){
+		if(data)
+			data->dec();
+		data=x.data;
+		if(data)
+			data->inc();
+		return	*this;
+	}
+	X&	operator	=(Y	*y){
+		if(data)
+			data->dec();
+		data=y;
+		if(data)
+			data->inc();
+		return	*this;
+	}
+};
+*/
 int32	main(int	argc,char	**argv){
+/*
+	Y	*y=new	Y();
+	std::vector<X>	*v=new	std::vector<X>();
+	v->resize(2);
+	(*v)[0]=y;
+	(*v)[1]=y;
+	delete	v;
+*/
 
-	Time::Init(1000);
+	core::Time::Init(1000);
 
 	std::string		error;
-	std::ifstream	source_code(argv[1]);	//	ANSI encoding (not Unicode)
+	std::ifstream	source_code(argv[1]);	//	WARNING: ANSI encoding (not Unicode).
 
-	r_comp::Image		*_image=new	r_comp::Image();	//	compiler input; definition segment filled by preprocessor
+	r_comp::Image	*_image=new	r_comp::Image();	//	compiler input; class_image filled by preprocessor.
 
 	if(!source_code.good()){
 
-		std::cout<<"error: unable to load file "<<argv[1]<<std::endl;
+		std::cerr<<"error: unable to load file "<<argv[1]<<std::endl;
 		return	1;
 	}
 
 	std::ostringstream		preprocessed_code_out;
 	Preprocessor			preprocessor;
-	if(!preprocessor.process(&_image->definition_segment,&source_code,&preprocessed_code_out,&error)){
+	if(!preprocessor.process(&_image->class_image,&source_code,&preprocessed_code_out,&error)){
 
-		std::cout<<error;
+		std::cerr<<error;
 		return	2;
 	}
 	source_code.close();
@@ -45,59 +103,46 @@ int32	main(int	argc,char	**argv){
 		return 0;
 	#endif
 
-	Compiler					compiler;
+	Compiler	compiler;
 	if(!compiler.compile(&preprocessed_code_in,_image,&error,true)){
 
 		std::streampos	i=preprocessed_code_in.tellg();
-		std::cout.write(preprocessed_code_in.str().c_str(),i);
-		std::cout<<" <- "<<error<<std::endl;
+		std::cerr.write(preprocessed_code_in.str().c_str(),i);
+		std::cerr<<" <- "<<error<<std::endl;
 		delete	_image;
 		return	3;
 	}else{
 
-		r_code::Image<ImageImpl>	*image;	//	compiler output, decompiler input, r_exec::Mem input
-		image=_image->serialize<r_code::Image<ImageImpl> >();	
-		//image->trace();
 		source_code.close();
 
-		//	Loading code from the image into memory then into the r_exec::Mem
-		//	Instantiate objects and views
+		r_code::Image<ImageImpl>	*image;
+		image=_image->serialize<r_code::Image<ImageImpl> >();	//	flat structure that contains only objects; that's the mem input. We retain _image->class_image for the class definitions.
+		//image->trace();
+
+		r_comp::CodeImage	*_code_image=new	r_comp::CodeImage();
+		_code_image->load<r_code::Image<ImageImpl> >(image);
+
 		r_code::vector<r_code::Object	*>	ram_objects;
-		*_image>>ram_objects;
-		
-		// Translate the compiler's class table to give just an Atom for use by the Mem
-		UNORDERED_MAP<std::string, r_code::Atom> classes;
-		UNORDERED_MAP<std::string, r_comp::Class>::iterator it;
-		for (it = _image->definition_segment.classes.begin(); it != _image->definition_segment.classes.end(); ++it) {
-			classes.insert(make_pair(it->first, it->second.atom));
-			//printf("CLASS %s=0x%08x\n", it->first.c_str(), it->second.atom.atom);
-		}
-		for (it = _image->definition_segment.sys_classes.begin(); it != _image->definition_segment.sys_classes.end(); ++it) {
-			classes.insert(make_pair(it->first, it->second.atom));
-			//printf("SYS %s=0x%08x\n", it->first.c_str(), it->second.atom.atom);
-		}
+		_code_image->getObjects(&_image->class_image,ram_objects);
 
-		delete	_image;
-		_image=new	r_comp::Image();
-		_image->load<r_code::Image<ImageImpl> >(image);		//	this stores the ram_objects in the _image
-		_image->removeObjects();							//	remove these objects, to keep only the definiton segment
+#ifdef	R_MEM_TEST
+		r_exec::Mem::Init(&_image->class_image,Time::Get,"C:/Work/Replicode/Debug/usr_operators.dll");
+		r_exec::Mem	*mem=new	r_exec::Mem(100000,8,8,NULL);
+		mem->init(ram_objects.as_std());
+		mem->start();
+		mem->stop();
 
-		//	Create the mem with objects defined in ram_objects
-		r_exec::Mem* mem = r_exec::Mem::create(
-			10000, // resilience update period: 10ms
-			10000, // base update period: 10ms
-			classes,
-			*ram_objects.as_std(),
-			0
-		);
-		Thread::Sleep(3600);
+		delete	_code_image;
+		_code_image=mem->getCodeImage();
+		ram_objects.as_std()->clear();
+		_code_image->getObjects(&_image->class_image,ram_objects);
 
-		//	Loading code from memory to an r_comp::Image
-		*_image<<ram_objects;	//	all at once; to load one object obj, use: *_image<<obj;	//	this recursively loads all obj dependencies
-
+		delete	mem;
+#endif
 		Decompiler			decompiler;
 		std::ostringstream	decompiled_code;
-		decompiler.decompile(_image,&decompiled_code);
+		decompiler.init(&_image->class_image);
+		decompiler.decompile(_code_image,&decompiled_code);
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 
 		delete	image;

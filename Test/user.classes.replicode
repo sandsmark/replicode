@@ -1,9 +1,7 @@
 !load C:/Work/Replicode/test/std.replicode
 
 !class (vec3 x:nb y:nb z:nb)
-!class (mk.position (_obj {object: position:vec3}))
 !class (mk.last_known (_obj event:))
-
 !class (mk.val (_obj {object: attribute: value:}))
 
 root:(grp
@@ -42,7 +40,7 @@ root; ntf_grp
 |[]; view
 |[]; mks
 |[]; vws
-0; psln_thr
+1; psln_thr
 )
 
 []
@@ -84,7 +82,7 @@ stdin; ntf_grp
 |[]; view
 |[]; mks
 |[]; vws
-0; psln_thr
+1; psln_thr
 )
 
 []
@@ -126,7 +124,7 @@ stdout; ntf_grp
 |[]; view
 |[]; mks
 |[]; vws
-0; psln_thr
+1; psln_thr
 )
 
 []
@@ -136,7 +134,17 @@ self:(ent
 |[]; view
 |[]; mks
 |[]; vws
-0; psln_thr
+1; psln_thr
+)
+
+[]
+   [now 1 forever root nil]
+
+position:(ent
+|[]; view
+|[]; mks
+|[]; vws
+1; psln_thr
 )
 
 []

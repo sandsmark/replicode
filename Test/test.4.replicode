@@ -2,63 +2,58 @@
 
 P1:(pgm
 []; tpl
-   (ptn (mk.position ref_b: ref_pos: [ref_t: ::] ::) |[])
+   (ptn ref_val:(mk.val : position ::) |[])
 []; input
    []; inputs
-      (ptn m:(mk.position b: pos: [t: ::] ::) []
-         (= b ref_b)
-         (> t ref_t)
-         (<> pos ref_pos)
+      (ptn m:(mk.val ref_val.object position ::) []
+         (> m.vw.ijt ref_val.vw.ijt)
+         (<> m.value ref_val.value)
       )
    |[]; timing
    |[]; guards
 []; prods
    (inj [(mk.last_known m |[] |[] |[] 0) [now 1 400000us nil nil]]); builds L
-   (inj [(ins P1 [b pos t]) [now 1 forever stdin nil]]); instantiates P1 with b, pos ..
-and t as actual template arguments
-   (set [this.vw.res 0]); kills the original
+   (inj [(ins P1 [m]) [now 1 forever stdin nil]]); instantiates P1 with m as actual template arguments
+   (set [this.vw.res 0]); kills the original ipgm
 1000000us; tsc
-0; csm
-0; sig
 0; nfr
 |[]; view
 |[]; mks
 |[]; vws
-0; psln_thr
+1; psln_thr
 )
 
 |[]
 
 P2:(pgm
-[(ptn ref_b: |[])]; tpl
+[]; tpl
+   (ptn ref_b:(ent ::) |[])
 []; input
    []; inputs
-      (ptn m:(mk.position b: pos: [t: ::] ::) [(<> b ref_b)])
+      (ptn m:(mk.val o: position ::) []
+         (<> o ref_b)]
    |[]; timings
    |[]; guards
 []; productions
    (inj [(ins P1 [m]) [now 1 100000us stdin nil]])
-   (inj [(ins P2 [b]) [now 1 200000us stdin nil]])
+   (inj [(ins P2 [m.object]) [now 1 200000us stdin nil]])
 1000000us; tsc
-0; csm
-0; sig
 0; nfr
 |[]; view
 |[]; mks
 |[]; vws
-0; psln_thr
+1; psln_thr
 )
 
 |[]
 
 iP2:(ipgm
 P2; code
-[]; args
-   [nil 1]
+[nil]; args
 |[]; view
 |[]; mks
 |[]; vws
-0; psln_thr
+1; psln_thr
 )
 
 []
@@ -75,12 +70,10 @@ P3:(pgm
    (eje [l l.vw 0])
 100000us
 0
-0
-0
 |[]
 |[]
 |[]
-0
+1
 )
 
 |[]
@@ -91,7 +84,7 @@ P3
 |[]
 |[]
 |[]
-0
+1
 )
 
 []
@@ -101,19 +94,17 @@ P4:(pgm
 |[]
 []
    []
-      (ptn m:(mk.position b: (vec3 x: y: z:) [T: s: r: g: o:] ::) |[])
+      (ptn m:(mk.val : position v:(vec3 ::) ::) |[])
    |[]
    |[]
 []
-   (inj [(mk.position b (vec3 (+ x 1) y z) |[] |[] |[] 0) [(+ T 1000000us) s r g o] 0])
+   (inj [(mk.val m.object position (vec3 (+ v.x 1) v.y v.z) |[] |[] |[] 0) [(+ m.vw.ijt 1000000us) m.vw.sln m.vw.res m.vw.grp m.vw.org] 0])
 100000us
 0
-0
-0
 |[]
 |[]
 |[]
-0
+1
 )
 
 |[]
@@ -124,19 +115,20 @@ P4
 |[]
 |[]
 |[]
-0
+1
 )
 
 []
    [now 1 forever stdin nil 1]
 
-O1:(mk.position
+O1:(mk.val
 self
+position
 (vec3 3 3 3)
 |[9
 |[]
 |[]
-0
+1
 )
 
 []
