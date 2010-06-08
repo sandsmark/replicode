@@ -34,7 +34,6 @@ namespace	r_exec{
 
 		switch(code[0].getDescriptor()){
 		case	Atom::I_PTR:
-		case	Atom::INDEX:
 			return	Context(object,view,code,code[index].asIndex(),overlay).dereference();
 		case	Atom::VL_PTR:{	//	evaluate the code if necessary.
 			

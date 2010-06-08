@@ -5,9 +5,9 @@ P1:(pgm
    (ptn ref_val:(mk.val : position ::) |[])
 []; input
    []; inputs
-      (ptn m:(mk.val ref_val.object position ::) []
-         (> m.vw.ijt ref_val.vw.ijt)
-         (<> m.value ref_val.value)
+      (ptn m:(mk.val ref_val.object position value: [ijt: ::] ::) []
+         (> ijt ref_val.vw.ijt)
+         (<> value ref_val.value)
       )
    |[]; timing
    |[]; guards

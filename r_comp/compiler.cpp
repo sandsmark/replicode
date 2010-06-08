@@ -2343,7 +2343,7 @@ return_false:
 				current_object->code[extent_index++]=Atom::CPointer(v.size()+1);
 				current_object->code[extent_index++]=Atom::This();
 				for(uint16	i=0;i<v.size();++i)
-					current_object->code[extent_index++]=Atom::Index(v[i]);
+					current_object->code[extent_index++]=Atom::IPointer(v[i]);
 			}
 			return	true;
 		}
@@ -2355,7 +2355,7 @@ return_false:
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::VLPointer(v[0]);
 				for(uint16	i=1;i<v.size();++i)
-					current_object->code[extent_index++]=Atom::Index(v[i]);
+					current_object->code[extent_index++]=Atom::IPointer(v[i]);
 			}
 			return	true;
 		}
@@ -2371,7 +2371,7 @@ return_false:
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::RPointer(v[0]);
 				for(uint16	i=1;i<v.size();++i)
-					current_object->code[extent_index++]=Atom::Index(v[i]);
+					current_object->code[extent_index++]=Atom::IPointer(v[i]);
 			}
 			return	true;
 		}

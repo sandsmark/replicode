@@ -54,11 +54,10 @@ namespace	r_code{
 			I_PTR=0x84,		// internal pointer
 			R_PTR=0x85,		// reference pointer
 			VL_PTR=0x86,	// value pointer
-			INDEX=0x87,		// chain pointer index
-			IPGM_PTR=0x88,	// r_exec internal: index of data held by an ipgm
-			INPUT_PTR=0x89,	// r_exec internal: index of data held by an input
-			VALUE_PTR=0x8A,	// r_exec internal: index of data held by the overlay's value array
-			PROD_PTR=0x8B,	// r_exec internal: index of data held by the overlay's production array
+			IPGM_PTR=0x87,	// r_exec internal: index of data held by an ipgm
+			INPUT_PTR=0x88,	// r_exec internal: index of data held by an input
+			VALUE_PTR=0x89,	// r_exec internal: index of data held by the overlay's value array
+			PROD_PTR=0x8A,	// r_exec internal: index of data held by the overlay's production array
 			THIS=0x90,		// this pointer
 			VIEW=0x91,
 			MKS=0x92,
@@ -89,7 +88,6 @@ namespace	r_code{
 		static	Atom	VPointer(uint16 index);
 		static	Atom	RPointer(uint16 index);
 		static	Atom	VLPointer(uint16 index);
-		static	Atom	Index(uint16	index);
 		static	Atom	IPGMPointer(uint16 index);
 		static	Atom	InputPointer(uint8	inputIndex,uint16 index);
 		static	Atom	ValuePointer(uint16 index);
