@@ -112,7 +112,7 @@ namespace	r_exec{
 		std::list<P<Overlay> >	overlays;
 		bool					successful_match;
 	public:
-		IPGMController(r_code::View	*ipgm_view):_Object(),ipgm_view(NULL),alive(true),successful_match(false){}
+		IPGMController(r_code::View	*ipgm_view):_Object(),ipgm_view(ipgm_view),alive(true),successful_match(false){}
 		~IPGMController(){}
 
 		InstantiatedProgram	*getIPGM()		const;

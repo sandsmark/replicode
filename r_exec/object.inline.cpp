@@ -646,37 +646,36 @@ namespace	r_exec{
 
 	inline	void	Group::_set_0_positive(uint16	member_index,float32	value){
 
-		float32	v=code[member_index].asFloat();
-		if(v<0)
-			v=0;
-		code[member_index]=Atom::Float(v);
+		if(value<0)
+			code[member_index]=Atom::Float(0);
+		else
+			code[member_index]=Atom::Float(value);
 	}
 
 	inline	void	Group::_set_0_plus1(uint16	member_index,float32	value){
 
-		float32	v=code[member_index].asFloat();
-		if(v<0)
-			v=0;
-		else	if(v>1)
-			v=1;
-		code[member_index]=Atom::Float(v);
+		if(value<0)
+			code[member_index]=Atom::Float(0);
+		else	if(value>1)
+			code[member_index]=Atom::Float(1);
+		else
+			code[member_index]=Atom::Float(value);
 	}
 
 	inline	void	Group::_set_minus1_plus1(uint16	member_index,float32	value){
 
-		float32	v=code[member_index].asFloat();
-		if(v<-1)
-			v=-1;
-		else	if(v>1)
-			v=1;
-		code[member_index]=Atom::Float(v);
+		if(value<-1)
+			code[member_index]=Atom::Float(-1);
+		else	if(value>1)
+			code[member_index]=Atom::Float(1);
+		else
+			code[member_index]=Atom::Float(value);
 	}
 
 	inline	void	Group::_set_0_1(uint16	member_index,float32	value){
 
-		float32	v=code[member_index].asFloat();
-		if(v==0	||	v==1)
-			code[member_index]=Atom::Float(v);
+		if(value==0	||	value==1)
+			code[member_index]=Atom::Float(value);
 	}
 
 	inline	bool	Group::mod(uint16	member_index,float32	value){
