@@ -125,7 +125,7 @@ O1:(mk.val
 self
 position
 (vec3 3 3 3)
-|[9
+|[]
 |[]
 |[]
 1
@@ -133,3 +133,17 @@ position
 
 []
    [now 1 5 stdin nil]
+
+Tag:(mk.tag
+self
+"a test string"
+|[]
+|[]
+|[]
+1
+)
+
+[]
+   [now 1 5 stdin nil]
+
+

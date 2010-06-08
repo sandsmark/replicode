@@ -294,7 +294,7 @@ namespace	r_comp{
 			case	Atom::STRING:
 				if(atom.readsAsNil())
 					out_stream->push("|st",read_index);
-				else{	//	TODO: check case of multiple blocks.
+				else{
 
 					uint16		char_count=atom.atom	&	0x0000FFFF;
 					uint8		block_offset=1;
