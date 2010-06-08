@@ -145,8 +145,8 @@ int32	main(int	argc,char	**argv){
 		decompiler.decompile(_code_image,&decompiled_code);
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 
-		delete	image;
 		delete	_image;
+		delete	image;
 	}
 
 	return	0;
