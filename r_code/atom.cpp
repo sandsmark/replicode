@@ -49,6 +49,7 @@ namespace	r_code{
 		case	WILDCARD:			std::cout<<":";return;
 		case	T_WILDCARD:			std::cout<<"::";return;
 		case	I_PTR:				std::cout<<"iptr: "<<std::dec<<asIndex();return;
+		case	INDEX:				std::cout<<"index: "<<std::dec<<asIndex();return;
 		case	VL_PTR:				std::cout<<"vlptr: "<<std::dec<<asIndex();return;
 		case	R_PTR:				std::cout<<"rptr: "<<std::dec<<asIndex();return;
 		case	IPGM_PTR:			std::cout<<"ipgm_ptr: "<<std::dec<<asIndex();return;
