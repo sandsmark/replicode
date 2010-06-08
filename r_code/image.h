@@ -128,6 +128,9 @@ namespace	r_code{
 		static	Image<I>	*Read(ifstream &stream);
 		static	void		Write(Image<I>	*image,ofstream &stream);
 
+		Image();
+		~Image();
+
 		uint32	getSize()	const;				//	size of data in word32
 		uint32	getObjectCount()	const;
 		word32	*getObject(uint32	i);			//	points to the code size of the object; the first atom is at getObject()+2

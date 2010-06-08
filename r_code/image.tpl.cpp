@@ -66,6 +66,12 @@ namespace	r_code{
 			stream<<image->data()[i];
 	}
 
+	template<class	I>	Image<I>::Image():I(){
+	}
+
+	template<class	I>	Image<I>::~Image(){
+	}
+
 	template<class	I>	word32	*Image<I>::getDefSegment(){
 
 		return	data();
