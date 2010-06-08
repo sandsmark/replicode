@@ -1101,10 +1101,16 @@ return_false:
 	bool	Compiler::boolean(bool	&b){
 
 		std::streampos	i=in_stream->tellg();
-		if(match_symbol_separator("true",false))
+		if(match_symbol_separator("true",false)){
+
+			b=true;
 			return	true;
-		if(match_symbol_separator("false",false))
+		}
+		if(match_symbol_separator("false",false)){
+
+			b=false;
 			return	true;
+		}
 		in_stream->clear();
 		in_stream->seekg(i);
 		return	false;

@@ -1029,7 +1029,6 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		//	remove the trailing [].
 		std::string	sset="[]";
 		instantiated_class_name=tpl_class->cmd;
-		size_t	p=instantiated_class_name.find(sset);
 		instantiated_class_name=instantiated_class_name.substr(0,instantiated_class_name.length()-sset.length());
 		//	append an ID to the tpl class name.
 		char	buffer[255];

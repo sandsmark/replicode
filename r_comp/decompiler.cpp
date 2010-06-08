@@ -179,7 +179,6 @@ namespace	r_comp{
 
 		uint16	arity=current_object->code[read_index].getAtomCount();
 		bool	after_tail_wildcard=false;
-		bool	follow_indents=true;
 		for(uint16	i=0;i<arity;++i){
 
 			if(after_tail_wildcard)
@@ -295,7 +294,7 @@ namespace	r_comp{
 			case	Atom::STRING:
 				if(atom.readsAsNil())
 					out_stream->push("|st",read_index);
-				else{
+				else{	//	TODO: check case of multiple blocks.
 
 					uint16		char_count=atom.atom	&	0x0000FFFF;
 					uint8		block_offset=1;

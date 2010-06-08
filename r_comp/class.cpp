@@ -47,7 +47,7 @@ namespace	r_comp{
 		}
 	}
 
-	Class::Class(ReturnType	t):type(t){
+	Class::Class(ReturnType	t):type(t),str_opcode("undefined"){
 	}
 		
 	Class::Class(Atom							atom,
