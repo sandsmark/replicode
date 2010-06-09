@@ -51,23 +51,24 @@ namespace	r_code{
 			BOOLEAN_=0x81,
 			WILDCARD=0x82,
 			T_WILDCARD=0x83,
-			I_PTR=0x84,		// internal pointer
-			R_PTR=0x85,		// reference pointer
-			VL_PTR=0x86,	// value pointer
-			IPGM_PTR=0x87,	// r_exec internal: index of data held by an ipgm
-			INPUT_PTR=0x88,	// r_exec internal: index of data held by an input
-			VALUE_PTR=0x89,	// r_exec internal: index of data held by the overlay's value array
-			PROD_PTR=0x8A,	// r_exec internal: index of data held by the overlay's production array
-			THIS=0x90,		// this pointer
+			I_PTR=0x84,			// internal pointer.
+			R_PTR=0x85,			// reference pointer.
+			VL_PTR=0x86,		// value pointer.
+			IPGM_PTR=0x87,		// r_exec internal: index of data of a tpl arg held by an ipgm.
+			IN_OBJ_PTR=0x88,	// r_exec internal: index of data held by the object held by an input view.
+			IN_VW_PTR=0x89,		// r_exec internal: index of data held by an input view.
+			VALUE_PTR=0x8A,		// r_exec internal: index of data held by the overlay's value array.
+			PROD_PTR=0x8B,		// r_exec internal: index of data held by the overlay's production array.
+			THIS=0x90,			// this pointer.
 			VIEW=0x91,
 			MKS=0x92,
 			VWS=0x93,
 			NODE =0xA0,
 			DEVICE=0xA1,
 			DEVICE_FUNCTION=0xA2,
-			C_PTR =0xC0, // chain pointer
+			C_PTR =0xC0,		// chain pointer.
 			SET=0xC1,
-			S_SET=0xC2, // structured set
+			S_SET=0xC2,			// structured set.
 			OBJECT=0xC3,
 			MARKER=0xC4,
 			OPERATOR=0xC5,
@@ -75,7 +76,7 @@ namespace	r_code{
 			TIMESTAMP=0xC7
 		}Type;
 		// encoders
-		static	Atom	Float(float32 f);	//	IEEE 754 encoding >> 1
+		static	Atom	Float(float32 f);	//	IEEE 754 32 bits encoding >> 1.
 		static	Atom	PlusInfinity();
 		static	Atom	MinusInfinity();
 		static	Atom	UndefinedFloat();
@@ -89,7 +90,8 @@ namespace	r_code{
 		static	Atom	RPointer(uint16 index);
 		static	Atom	VLPointer(uint16 index);
 		static	Atom	IPGMPointer(uint16 index);
-		static	Atom	InputPointer(uint8	inputIndex,uint16 index);
+		static	Atom	InObjPointer(uint8	inputIndex,uint16 index);
+		static	Atom	InVwPointer(uint8	inputIndex,uint16 index);
 		static	Atom	ValuePointer(uint16 index);
 		static	Atom	ProductionPointer(uint16 index);
 		static	Atom	This();
@@ -125,15 +127,16 @@ namespace	r_code{
 
 		// decoders
 		uint8	getDescriptor()	const;
-		bool	isPointer()		const;	// returns true for all pointer types
-										// incl. index, this and view
+		bool	isPointer()		const;	// returns true for all pointer types.
+										// incl. index, this and view.
 		bool	isStructural()	const;
 		bool	isFloat()		const;
-		bool	readsAsNil()	const;	// returns true for all undefined values
+		bool	readsAsNil()	const;	// returns true for all undefined values.
 		float32	asFloat()		const;
 		bool	asBoolean()		const;
 		uint16	asIndex()		const;	// applicable to internal, view, reference,
 										// and value pointers.
+		uint8	asViewIndex()	const;	// applicable to IN_OBJ_PTR and IN_VW_PTR.
 		uint16	asOpcode()		const;
 		uint16	getAtomCount()	const;	// arity of operators and
 									// objects/markers/structured sets,
@@ -141,7 +144,6 @@ namespace	r_code{
 									// number of blocks of characters in
 									// strings.
 		uint16	getOpcode()		const;
-		uint8	getInputIndex()	const;	//	applicable to input ptrs.
 		uint8	getNodeID()		const;	// applicable to nodes and devices.
 		uint8	getClassID()	const;	// applicable to devices.
 		uint8	getDeviceID()	const;	// applicable to devices.
