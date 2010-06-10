@@ -86,9 +86,8 @@ namespace	r_code{
 		static	Atom	Wildcard();
 		static	Atom	TailWildcard();
 		static	Atom	IPointer(uint16 index);
-		static	Atom	VPointer(uint16 index);
 		static	Atom	RPointer(uint16 index);
-		static	Atom	VLPointer(uint16 index);
+		static	Atom	VLPointer(uint16 index,uint8	cast_opcode=0xFF);
 		static	Atom	IPGMPointer(uint16 index);
 		static	Atom	InObjPointer(uint8	inputIndex,uint16 index);
 		static	Atom	InVwPointer(uint8	inputIndex,uint16 index);
@@ -105,7 +104,7 @@ namespace	r_code{
 		static	Atom	DeviceFunction(uint16 opcode);
 		static	Atom	UndefinedDeviceFunction();
 		static	Atom	CPointer(uint8 elementCount);
-		static	Atom	SSet(uint16 opcode,uint16 elementCount);
+		static	Atom	SSet(uint16 opcode,uint8 elementCount);
 		static	Atom	Set(uint16 elementCount);
 		static	Atom	Object(uint16 opcode,uint8 arity);
 		static	Atom	Marker(uint16 opcode,uint8 arity);
@@ -138,11 +137,12 @@ namespace	r_code{
 										// and value pointers.
 		uint8	asViewIndex()	const;	// applicable to IN_OBJ_PTR and IN_VW_PTR.
 		uint16	asOpcode()		const;
+		uint8	asCastOpcode()	const;	// applicable to VL_PTR.
 		uint16	getAtomCount()	const;	// arity of operators and
-									// objects/markers/structured sets,
-									// number of atoms in pointers chains,
-									// number of blocks of characters in
-									// strings.
+										// objects/markers/structured sets,
+										// number of atoms in pointers chains,
+										// number of blocks of characters in
+										// strings.
 		uint16	getOpcode()		const;
 		uint8	getNodeID()		const;	// applicable to nodes and devices.
 		uint8	getClassID()	const;	// applicable to devices.

@@ -122,13 +122,49 @@ namespace	r_exec{
 		delete[]	pgm_code;
 	}
 
-	inline	void	Overlay::patch_tpl_args(){	//	patch the pgm code with ptrs to the tpl args actual location in the ipgm code (Atom::IPGM_PTR).
-												//	no rollback on that part of the code.
-		uint16	tpl_arg_set_index=pgm_code[PGM_TPL_ARGS].asIndex();
+	void	Overlay::patch_tpl_args(){	//	no rollback on that part of the code.
+
+		uint16	tpl_arg_set_index=pgm_code[PGM_TPL_ARGS].asIndex();			//	index to the set of all tpl patterns.
 		uint16	arg_count=pgm_code[tpl_arg_set_index].getAtomCount();
-		uint16	ipgm_arg_set_index=getIPGM()->code[IPGM_ARGS].asIndex();
-		for(uint16	i=1;i<=arg_count;++i)
+		uint16	ipgm_arg_set_index=getIPGM()->code[IPGM_ARGS].asIndex();	//	index to the set of all ipgm tpl args.
+		for(uint16	i=1;i<=arg_count;++i){	//	pgm_code[tpl_arg_set_index+i] is a pattern's opcode.
+
+			uint16	skel_index=pgm_code[tpl_arg_set_index+i+1].asIndex();
+			uint16	skel_atom_count=pgm_code[skel_index].getAtomCount();
+			uint16	ipgm_arg_index=getIPGM()->code[ipgm_arg_set_index+i].asIndex();
+
+			patch_tpl_code(skel_index,ipgm_arg_index);
+
+			//	patch the pgm code with ptrs to the tpl args' actual location in the ipgm code.
 			pgm_code[tpl_arg_set_index+i]=Atom::IPGMPointer(ipgm_arg_set_index+i);
+		}
+	}
+
+	void	Overlay::patch_tpl_code(uint16	pgm_code_index,uint16	ipgm_code_index){	//	patch recursively : in pgm_code[index] with IPGM_PTRs until ::.
+
+		uint16	atom_count=pgm_code[pgm_code_index].getAtomCount();
+		for(uint16	j=1;j<atom_count;++j){
+
+			switch(pgm_code[pgm_code_index+j].getDescriptor()){
+			case	Atom::WILDCARD:
+				pgm_code[pgm_code_index+j]=Atom::IPGMPointer(ipgm_code_index+j);
+				break;
+			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
+				return;
+			case	Atom::I_PTR:
+				patch_tpl_code(pgm_code[pgm_code_index+j].asIndex(),getIPGM()->code[ipgm_code_index+j].asIndex());
+				break;
+			default:	//	leave as is.
+				break;
+			}
+		}
+	}
+
+	void	Overlay::patch_input_code(uint16	pgm_code_index,uint16	input_code_index){
+		/*TO REDO
+		pgm_code[pgm_code_index]=value;
+		patch_indices.push_back(pgm_code_index);
+		*/
 	}
 
 	bool	Overlay::is_alive()	const{
@@ -216,6 +252,44 @@ namespace	r_exec{
 		return	failed?FAILURE:IMPOSSIBLE;
 	}
 
+	inline	Overlay::MatchResult	Overlay::_match(r_exec::View	*input,uint16	pattern_index){
+
+		if(pgm_code[pattern_index].asOpcode()==Object::AntiPTNOpcode){
+
+			MatchResult	r=_match_pattern(input,pattern_index);
+			switch(r){
+			case	IMPOSSIBLE:
+			case	FAILURE:
+				return	SUCCESS;
+			case	SUCCESS:
+				return	FAILURE;
+			}
+		}else
+			return	_match_pattern(input,pattern_index);
+	}
+
+	inline	Overlay::MatchResult	Overlay::_match_pattern(r_exec::View	*input,uint16	pattern_index){
+
+		if(!_match_skeleton(input, pattern_index))
+			return	IMPOSSIBLE;
+		
+		//	patch the pattern with a ptr to the input, i.e. pgm_code at var index = input ptr.
+		patch_input_code(pattern_index,input_views.size()-1);	//	the input has just been pushed on input_views (see match).
+
+		//	match: evaluate the set of guards.
+		uint16	guard_set_index=pgm_code[pattern_index+2].asIndex();
+		if(!evaluate(guard_set_index))
+			return	FAILURE;
+		return	SUCCESS;
+	}
+
+	inline	bool	Overlay::_match_skeleton(r_exec::View	*input,uint16	pattern_index){	//	check for equality on (a) input->object vs ptn.skel.obj and, (b) input vs ptn.skel.vw.
+
+		Context	input_object(view->object,view,&view->object->code[0],0);
+		Context	pattern_skeleton(getIPGM()->getPGM(),getIPGMView(),&pgm_code[pgm_code[pattern_index+1].asIndex()],pgm_code[pattern_index+1].asIndex());	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
+		return	input_object==pattern_skeleton;
+	}
+
 	bool	Overlay::check_timings(){
 
 		for(uint16	i=first_timing_constraint_index;i<=last_timing_constraint_index;++i)
@@ -230,6 +304,12 @@ namespace	r_exec{
 			if(!evaluate(i))
 				return	false;
 		return	true;
+	}
+
+	inline	bool	Overlay::evaluate(uint16	index){
+
+		Context	c(getIPGM()->getPGM(),getIPGMView(),pgm_code,index,this);
+		return	c.evaluate();
 	}
 
 	bool	Overlay::inject_productions(Mem	*mem){
@@ -428,46 +508,6 @@ namespace	r_exec{
 
 		explicit_instantiations.clear();
 		return	true;
-	}
-
-	inline	Overlay::MatchResult	Overlay::_match(r_exec::View	*input,uint16	pattern_index){
-
-		uint16	object_class=pgm_code[pgm_code[pattern_index+1].asIndex()].asOpcode();	//	pgm_code[pattern_index+1] is an iptr to the skeleton.
-
-		if(pgm_code[pattern_index].asOpcode()==Object::AntiPTNOpcode){
-
-			MatchResult	r=_match_pattern(input,pattern_index);
-			switch(r){
-			case	IMPOSSIBLE:
-			case	FAILURE:
-				return	SUCCESS;
-			case	SUCCESS:
-				return	FAILURE;
-			}
-		}else
-			return	_match_pattern(input,pattern_index);
-	}
-
-	inline	Overlay::MatchResult	Overlay::_match_pattern(r_exec::View	*input,uint16	pattern_index){
-
-		if(pgm_code[pgm_code[pattern_index+1].asIndex()].asOpcode()!=input->object->code[0].asOpcode())	//	pgm_code[pattern_index+1] is an iptr to the skeleton.
-			return	IMPOSSIBLE;
-		
-		//	patterns are of the form (ptn var:(class ::) [guards]);
-		//	patch the pattern with a ptr to the input, i.e. pgm_code at var index = input ptr.
-		patch_code(pattern_index,Atom::InputPointer(input_views.size()-1,0));	//	the input has just been pushed on input_views (see match).
-
-		//	match: evaluate the set of guards.
-		uint16	guard_set_index=pgm_code[pattern_index+2].asIndex();
-		if(!evaluate(guard_set_index))
-			return	FAILURE;
-		return	SUCCESS;
-	}
-
-	inline	bool	Overlay::evaluate(uint16	index){
-
-		Context	c(getIPGM()->getPGM(),NULL,pgm_code,index,this);
-		return	c.evaluate();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

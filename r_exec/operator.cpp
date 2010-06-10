@@ -396,8 +396,28 @@ namespace	r_exec{
 		Context	args=context.getChild(2);
 
 		Object	*_object=object.getObject();
-		if(_object	&&	args.getCode()->getDescriptor()==Atom::SET){	//	create an ipgm or an igol in the production array.
+		if(_object	&&	args.getCode()->getDescriptor()==Atom::SET){
 
+			uint16	pattern_set_index=_object->code[_object->code[PGM_INPUTS].asIndex()+1].asIndex();
+			uint16	arg_count=args.getCode()->getAtomCount();
+			if(_object->code[pattern_set_index].getAtomCount()!=arg_count){
+
+				context.setAtomicResult(Atom::Nil());
+				return	false;
+			}
+			
+			//	match args with the tpl patterns in _object.
+			for(uint16	i=1;i<arg_count;++i){
+
+				Context	arg=args.getChild(i);
+				if(!match(arg,&_object->code[pattern_set_index+i])){
+
+					context.setAtomicResult(Atom::Nil());
+					return	false;
+				}
+			}
+
+			//	create an ipgm or an igol in the explicit_instantiations array.
 			if(_object->code[0].asOpcode()==Object::PGMOpcode	||	_object->code[0].asOpcode()==Object::AntiPGMOpcode){
 
 				Object	*ipgm=new	Object();
@@ -454,12 +474,12 @@ namespace	r_exec{
 
 	bool	_match(const	Context	&input,const	Context	&pattern){
 
+		//	TODO: equal instead.
 		if(input.getCode()->asOpcode()!=pattern.getChild(1).getCode()->asOpcode())	//	pattern.getChild(1) is an iptr to the skeleton (dereferenced).
 			return	false;
 
-		//	patterns are of the form (ptn var:(class ::) [guards]);
 		//	patch the pattern with an iptr to the input, i.e. with input.index.
-		pattern.patch_code(pattern.getIndex(),Atom::IPointer(input.getIndex()));
+		pattern.patch_input_code(pattern.getIndex(),input.getIndex());
 
 		//	match: evaluate the set of guards.
 		Context	guard_set=pattern.getChild(2);

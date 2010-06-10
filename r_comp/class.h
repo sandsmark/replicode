@@ -56,9 +56,9 @@ namespace	r_comp{
 		ReturnType	get_member_type(const	uint16	index);
 		Class		*get_member_class(ClassImage	*class_image,const	std::string	&name);
 		Atom							atom;
-		std::string						str_opcode;			//	unused for anything but objects, markers and operators
+		std::string						str_opcode;			//	unused for anything but objects, markers and operators.
 		std::vector<StructureMember>	things_to_read;
-		ReturnType						type;				//	ANY for non-operators
+		ReturnType						type;				//	ANY for non-operators.
 		StructureMember::Iteration		use_as;
 
 		void	write(word32	*storage);

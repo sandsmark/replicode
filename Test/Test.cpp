@@ -2,7 +2,7 @@
 #include	"compiler.h"
 #include	"preprocessor.h"
 
-#include	"Mem.h"
+//#include	"Mem.h"
 
 #include	"../CoreLibrary/utils.h"
 
@@ -13,7 +13,7 @@
 //#define PREPROCESSOR_TEST
 //#define	R_MEM_TEST
 
-uint64	(*r_exec::Mem::_Now)()=Time::Get;
+//uint64	(*r_exec::Mem::_Now)()=Time::Get;
 
 using	namespace	r_comp;
 /*

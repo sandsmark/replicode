@@ -2,19 +2,22 @@
 
 P1:(pgm
 []; tpl
-   (ptn ref_val:(mk.val : position ::) |[])
+   (ptn ref_val:(mk.val : position ::) |[]); no views can be passed with an object as a tpl arg.
+   (ptn ref_t: |[]); put view data here, one by one (not in a set, as ptn 1st member must be anything but a set).
 []; input
    []; inputs
       (ptn m:(mk.val ref_val.object position value: [ijt: ::] ::) []
-         (> ijt ref_val.vw.ijt)
+         (> ijt ref_t)
          (<> value ref_val.value)
+         v:(fvw m stdin)
       )
    |[]; timing
    |[]; guards
 []; prods
-   (inj [(mk.last_known m |[] |[] |[] 0) [now 1 400000us nil nil]]); builds L
-   (inj [(ins P1 [m]) [now 1 forever stdin nil]]); instantiates P1 with m as actual template arguments
-   (set [this.vw.res 0]); kills the original ipgm
+   (inj [(mk.last_known m |[] |[] |[] 0) [now 1 400000us nil nil]]); builds L.
+   (inj [(ins P1 [m ijt]) [now 1 forever stdin nil]]); instantiates P1 with m as actual template arguments.
+   (set [this.vw.res 0]); kills the original ipgm.
+   (mod [v#view.sln -0.5])
 1000000us; tsc
 0; nfr
 |[]; view
@@ -30,12 +33,12 @@ P2:(pgm
    (ptn ref_b:(ent ::) |[])
 []; input
    []; inputs
-      (ptn m:(mk.val o: position ::) []
+      (ptn m:(mk.val o: position : [ijt: ::] ::) []
          (<> o ref_b)]
    |[]; timings
    |[]; guards
 []; productions
-   (inj [(ins P1 [m]) [now 1 100000us stdin nil]])
+   (inj [(ins P1 [m ijt]) [now 1 100000us stdin nil]])
    (inj [(ins P2 [m.object]) [now 1 200000us stdin nil]])
 1000000us; tsc
 0; nfr

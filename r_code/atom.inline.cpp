@@ -53,9 +53,12 @@ namespace	r_code{
 		return	Atom((I_PTR<<24)+index);
 	}
 
-	inline	Atom	Atom::VLPointer(uint16	index){
+	inline	Atom	Atom::VLPointer(uint16	index,uint8	cast_opcode){
 		
-		return	Atom((VL_PTR<<24)+index);
+		uint32	a=(VL_PTR<<24);
+		a+=cast_opcode<<16;
+		a+=index;
+		return	Atom((VL_PTR<<24)+(cast_opcode<<16)+index);
 	}
 
 	inline	Atom	Atom::RPointer(uint16	index){
@@ -108,7 +111,7 @@ namespace	r_code{
 		return	Atom(VWS<<24);
 	}
 
-	inline	Atom	Atom::SSet(uint16 opcode,uint16	elementCount){
+	inline	Atom	Atom::SSet(uint16 opcode,uint8	elementCount){
 		
 		return	Atom((S_SET<<24)+(opcode<<8)+elementCount);
 	}
@@ -269,6 +272,11 @@ namespace	r_code{
 	inline	uint16	Atom::asOpcode()	const{
 
 		return	(atom>>8)	&	0x0000FFFF;
+	}
+
+	inline	uint8	Atom::asCastOpcode()	const{
+
+		return	(atom	&	0x00FF0000)>>16;
 	}
 
 	inline	uint8	Atom::getNodeID()	const{

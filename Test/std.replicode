@@ -65,6 +65,7 @@
 !op (spl :[] :[]):[]
 !op (mrg :[] :[]):[]
 !op (ptc : :[] :[]):
+!op (fvw : :):
 
 ;operator aliases
 !def now (_now)

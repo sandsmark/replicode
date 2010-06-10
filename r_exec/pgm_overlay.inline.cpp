@@ -13,7 +13,7 @@ namespace	r_exec{
 		return	controller->getIPGMView();
 	}
 	
-	inline	r_exec::Object	*Overlay::getInput(uint16	i)	const{	
+	inline	r_exec::Object	*Overlay::getInputObject(uint16	i)	const{	
 		
 		return	input_views[i]->object;
 	}

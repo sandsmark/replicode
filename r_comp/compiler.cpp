@@ -871,7 +871,7 @@ return_false:
 		std::streampos	i=in_stream->tellg();
 		if(match_symbol("this.",false)){
 
-			Class		*p;	//	in general, p starts as the current_class; exception: in pgm, fmd and imd, this refers to the instantiated object
+			Class	*p;	//	in general, p starts as the current_class; exception: in pgm, fmd and imd, this refers to the instantiated object.
 			if(current_class.str_opcode=="pgm")
 				p=&_image->class_image.sys_classes["ipgm"];
 			else	if(current_class.str_opcode=="fmd")
@@ -916,7 +916,7 @@ return_false:
 		return	false;
 	}
 
-	bool	Compiler::local_indirection(std::vector<uint16>	&v,const	ReturnType	t){
+	bool	Compiler::local_indirection(std::vector<uint16>	&v,const	ReturnType	t,uint16	&cast_opcode){
 
 		std::streampos	i=in_stream->tellg();
 		std::string	m;
@@ -926,12 +926,40 @@ return_false:
 
 			uint16		index;
 			ReturnType	type;
+
+			//	cast.
+			Class	*cast_class=NULL;
+			size_t	pos=m.find('#');
+			std::string	class_name;
+			if(pos!=string::npos){
+
+				class_name=m.substr(pos+1);
+				m=m.substr(0,pos);
+
+				UNORDERED_MAP<std::string,Class>::iterator	it=_image->class_image.classes.find(class_name);
+				if(it!=_image->class_image.classes.end()){
+
+					cast_class=&it->second;
+					cast_opcode=cast_class->atom.asOpcode();
+				}else{
+
+					set_error(" error: cast to "+class_name+": unknown class");
+					in_stream->clear();
+					in_stream->seekg(i);
+					return	false;
+				}
+			}else
+				cast_opcode=0xFF;
+
 			UNORDERED_MAP<std::string,Reference>::iterator	it=local_references.find(m);
 			if(it!=local_references.end()){
 
 				index=it->second.index;
 				v.push_back(index);
-				p=&it->second._class;
+				if(cast_class)
+					p=cast_class;
+				else
+					p=&it->second._class;
 				Class	*_p;
 				while(member(m)){
 
@@ -2347,13 +2375,14 @@ return_false:
 			}
 			return	true;
 		}
-		if(local_indirection(v,t)){
+		uint16	cast_opcode;
+		if(local_indirection(v,t,cast_opcode)){
 
 			if(write){
 
 				current_object->code[write_index]=Atom::IPointer(extent_index);
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
-				current_object->code[extent_index++]=Atom::VLPointer(v[0]);
+				current_object->code[extent_index++]=Atom::VLPointer(v[0],cast_opcode);
 				for(uint16	i=1;i<v.size();++i)
 					current_object->code[extent_index++]=Atom::IPointer(v[i]);
 			}

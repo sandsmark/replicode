@@ -65,7 +65,9 @@ namespace	r_exec{
 		void		commit();	//	empty the patch_indices and set value_commit_index to values.size().
 		void		reset();	//	reset to original state (pristine copy of the pgm code and empty value set).
 
-		void		patch_tpl_args();
+		void		patch_tpl_args();	//	no views in tpl args; patches the ptn skeleton's first atom with IPGM_PTR with an index in the ipgm arg set; patches wildcards with similar IPGM_PTRs.
+		void		patch_tpl_code(uint16	pgm_code_index,uint16	ipgm_code_index);	//	to recurse.
+		void		patch_input_code(uint16	pgm_code_index,uint16	input_code_index);
 		void		patch_code(uint16	index,Atom	value);
 
 		IPGMController	*controller;
@@ -83,7 +85,7 @@ namespace	r_exec{
 		InstantiatedProgram	*getIPGM()		const;
 		r_exec::View		*getIPGMView()	const;
 
-		r_exec::Object		*getInput(uint16	i)		const;
+		r_exec::Object		*getInputObject(uint16	i)	const;
 		r_exec::View		*getInputView(uint16	i)	const;
 	};
 

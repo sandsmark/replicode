@@ -1145,10 +1145,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 	}
 
 	ReturnType	Preprocessor::getReturnType(RepliStruct	*s){
-
-		if(s->tail==":")
-			return	ANY;
-		else	if(s->tail==":nb")
+			
+		if(s->tail==":nb")
 			return	NUMBER;
 		else	if(s->tail==":us")
 			return	TIMESTAMP;
@@ -1164,6 +1162,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 			return	FUNCTION_ID;
 		else	if(s->tail==":[]")
 			return	SET;
+		return	ANY;
 	}
 
 	void	Preprocessor::initialize(){

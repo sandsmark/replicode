@@ -175,7 +175,7 @@ namespace	r_comp{
 		}
 	}
 
-	void	Decompiler::write_expression_tail(uint16	read_index,bool	vertical){	//	read_index points initially to the head
+	void	Decompiler::write_expression_tail(uint16	read_index,bool	vertical){	//	read_index points initially to the head.
 
 		uint16	arity=current_object->code[read_index].getAtomCount();
 		bool	after_tail_wildcard=false;
@@ -216,7 +216,7 @@ namespace	r_comp{
 		*out_stream<<')';
 	}
 
-	void	Decompiler::write_set(uint16	read_index){	//	read_index points initially to set atom
+	void	Decompiler::write_set(uint16	read_index){	//	read_index points initially to set atom.
 
 		uint16	arity=current_object->code[read_index].getAtomCount();
 		bool	after_tail_wildcard=false;
@@ -225,7 +225,7 @@ namespace	r_comp{
 			out_stream->push('[',read_index);
 			write_any(++read_index,after_tail_wildcard);
 			*out_stream<<']';
-		}else{		//	write []+indented elements
+		}else{		//	write []+indented elements.
 
 			out_stream->push("[]",read_index);
 			indents+=3;
@@ -240,11 +240,11 @@ namespace	r_comp{
 				}
 			}
 			closing_set=true;
-			indents-=3;	//	don't call write_indents() here as the last set member can be a set
+			indents-=3;	//	don't call write_indents() here as the last set member can be a set.
 		}
 	}
 
-	void	Decompiler::write_any(uint16	read_index,bool	&after_tail_wildcard){	//	after_tail_wildcard meant to avoid printing ':' after "::"
+	void	Decompiler::write_any(uint16	read_index,bool	&after_tail_wildcard){	//	after_tail_wildcard meant to avoid printing ':' after "::".
 
 		Atom	a=current_object->code[read_index];
 
@@ -272,13 +272,13 @@ namespace	r_comp{
 				index=atom.asIndex();
 				atom=current_object->code[index];
 			}
-			if(index<read_index){	//	reference to a label or variable
+			if(index<read_index){	//	reference to a label or variable.
 
-				std::string	s=get_variable_name(index,atom.getDescriptor()!=Atom::WILDCARD); // post-fix labels with ':' (no need for variables since they are inserted just before wildcards)
+				std::string	s=get_variable_name(index,atom.getDescriptor()!=Atom::WILDCARD); // post-fix labels with ':' (no need for variables since they are inserted just before wildcards).
 				out_stream->push(s,read_index);
 				break;
 			}
-			switch(atom.getDescriptor()){	//	structures
+			switch(atom.getDescriptor()){	//	structures.
 			case	Atom::OBJECT:
 			case	Atom::MARKER:
 			case	Atom::OPERATOR:
@@ -314,14 +314,14 @@ namespace	r_comp{
 				break;
 			case	Atom::C_PTR:{
 				uint16	opcode;
-				uint16	member_count=/*current_object->code[0].getAtomCount()*/atom.getAtomCount()-1;	//	-1: the leading atom is the CPtr
-				atom=current_object->code[index+1];	//	current_object->code[index] is the cptr; members start at 1
+				uint16	member_count=/*current_object->code[0].getAtomCount()*/atom.getAtomCount()-1;	//	-1: the leading atom is the CPtr.
+				atom=current_object->code[index+1];	//	current_object->code[index] is the cptr; members start at 1.
 				Class	_class;
 				switch(atom.getDescriptor()){
 				case	Atom::THIS:
 					out_stream->push("this",read_index);
 					opcode=current_object->code[0].asOpcode();
-					//	for reactive objects, this refers to the instantiated reactive object
+					//	for reactive objects, this refers to the instantiated reactive object.
 					_class=class_image->classes_by_opcodes[opcode];
 					if(_class.str_opcode=="pgm")
 						opcode=class_image->sys_classes["ipgm"].atom.asOpcode();
@@ -330,40 +330,43 @@ namespace	r_comp{
 					else	if(_class.str_opcode=="imd")
 						opcode=class_image->sys_classes["iimd"].atom.asOpcode();
 					break;
-				case	Atom::VL_PTR:
-					while(current_object->code[atom.asIndex()].getDescriptor()==Atom::I_PTR)
+				case	Atom::VL_PTR:{
+
+					uint8	cast_opcode=atom.asCastOpcode();
+					while(current_object->code[atom.asIndex()].getDescriptor()==Atom::I_PTR)	// position to a structure or an atomic value.	
 						atom=current_object->code[atom.asIndex()];
 					out_stream->push(get_variable_name(atom.asIndex(),true),read_index);
-					opcode=current_object->code[atom.asIndex()].asOpcode();
-					//_class=_image->class_image.classes_by_opcodes[opcode];
+					if(cast_opcode==0xFF)
+						opcode=current_object->code[atom.asIndex()].asOpcode();
+					else
+						opcode=cast_opcode;
 					break;
-				case	Atom::R_PTR:{
+				}case	Atom::R_PTR:{
 					uint32	object_index=current_object->reference_set[atom.asIndex()];
 					out_stream->push(get_object_name(object_index),read_index);
 					opcode=code_image->code_segment.objects[object_index]->code[0].asOpcode();
-					//_class=_image->class_image.classes_by_opcodes[opcode];
 					break;
 				}default:
 					out_stream->push("unknown-cptr-lead-type",read_index);
 					break;
 				}
 				uint16	structure_index=0;
-				for(uint16	i=1;i<=member_count;++i){	//	get the opcode of the pointed structure and retrieve the member name from i
+				for(uint16	i=1;i<=member_count;++i){	//	get the opcode of the pointed structure and retrieve the member name from i.
 
 					std::string	member_name;
-					atom=current_object->code[index+1+i];	//	atom is an Index appearing after the leading atom
-					Class	embedding_class=class_image->classes_by_opcodes[opcode];	//	class defining the member
+					atom=current_object->code[index+1+i];	//	atom is an I_PTR appearing after the leading atom.
+					Class	embedding_class=class_image->classes_by_opcodes[opcode];	//	class defining the member.
 					member_name=embedding_class.get_member_name(atom.asIndex());
 					*out_stream<<'.'<<member_name;	
 					if(i<member_count){	//	not the last member, point to next structure
 					
-						if(member_name=="vw"){	//	special case: no view structure in the code, vw is just a place holder; vw is the second to last member: write the last member and exit
+						if(member_name=="vw"){	//	special case: no view structure in the code, vw is just a place holder; vw is the second to last member: write the last member and exit.
 
-							atom=current_object->code[index+i+2];	//	atom is the last internal pointer
+							atom=current_object->code[index+i+2];	//	atom is the last internal pointer.
 							member_name=embedding_class.get_member_class(class_image,"vw")->get_member_name(atom.asIndex());
 							*out_stream<<'.'<<member_name;
 							break;
-						}else{	//	regular case: the member points to a structure embedded in the code
+						}else{	//	regular case: the member points to a structure embedded in the code.
 
 							uint16	_target_index=structure_index+atom.asIndex();
 							while(current_object->code[_target_index].getDescriptor()==Atom::I_PTR){
@@ -437,7 +440,7 @@ namespace	r_comp{
 				out_stream->push(class_image->function_names[a.asOpcode()],read_index);
 			break;
 		case	Atom::VIEW:
-			out_stream->push("vw",read_index);	//	to be consistent with hand-crafted source code, shall be written |[]
+			out_stream->push("vw",read_index);	//	to be consistent with hand-crafted source code, shall be written |[].
 			break;
 		case	Atom::MKS:
 			out_stream->push("mks",read_index);
@@ -446,7 +449,7 @@ namespace	r_comp{
 			out_stream->push("vws",read_index);
 			break;
 		default:
-			//out_stream->push("undefined-atom",read_index);
+			//	out_stream->push("undefined-atom",read_index).
 			out_stream->push("0x",read_index);
 			*out_stream<<std::hex;
 			*out_stream<<a.atom;

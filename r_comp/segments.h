@@ -62,13 +62,13 @@ namespace	r_comp{
 	public:
 		ClassImage();
 
-		UNORDERED_MAP<std::string,Class>	classes;	//	non-sys classes, operators and device functions
+		UNORDERED_MAP<std::string,Class>	classes;	//	non-sys classes, operators and device functions.
 		UNORDERED_MAP<std::string,Class>	sys_classes;
 
-		r_code::vector<std::string>	class_names;		//	classes and sys-classes; does not include set classes
+		r_code::vector<std::string>	class_names;		//	classes and sys-classes; does not include set classes.
 		r_code::vector<std::string>	operator_names;
 		r_code::vector<std::string>	function_names;
-		r_code::vector<Class>		classes_by_opcodes;	//	classes indexed by opcodes; used to retrieve member names; registers all classes (incl. set classes)
+		r_code::vector<Class>		classes_by_opcodes;	//	classes indexed by opcodes; used to retrieve member names; registers all classes (incl. set classes).
 
 		Class	*getClass(std::string	&class_name);
 		Class	*getClass(uint16	opcode);
@@ -104,15 +104,15 @@ namespace	r_comp{
 	public:
 		class	dll_export	PointerIndex{
 		public:
-			uint32	object_index;	//	index of a referencing object in CodeSegment::objects
-			int32	view_index;		//	index of a view in the object's view set
-			uint32	pointer_index;	//	index of a pointer in CodeSegment::objects[object_index]
+			uint32	object_index;	//	index of a referencing object in CodeSegment::objects.
+			int32	view_index;		//	index of a view in the object's view set.
+			uint32	pointer_index;	//	index of a pointer in CodeSegment::objects[object_index].
 			PointerIndex();
 			PointerIndex(uint32	object_index,int32	view_index,uint32	pointer_index);
 		};
 		class	dll_export	Entry{
 		public:
-			r_code::vector<PointerIndex>	pointer_indexes;	//	indexes of the pointers referencing the object
+			r_code::vector<PointerIndex>	pointer_indexes;	//	indexes of the pointers referencing the object.
 			void	write(word32	*data);
 			void	read(word32		*data);
 			uint32	getSize()	const;
@@ -140,7 +140,7 @@ namespace	r_comp{
 	private:
 		Mem	*mem;
 		uint32	map_offset;
-		UNORDERED_MAP<r_code::Object	*,uint32>	ptrs_to_indices;	//	used for >> in memory
+		UNORDERED_MAP<r_code::Object	*,uint32>	ptrs_to_indices;	//	used for >> in memory.
 		void	buildReferences(SysObject	*sys_object,r_code::Object	*object,uint32	object_index);
 	public:
 		ObjectMap			object_map;
@@ -150,7 +150,7 @@ namespace	r_comp{
 		CodeImage();
 		~CodeImage();
 
-		void	bind(Mem	*m);	//	use if there is a local r_exec::Mem (as opposed to a standalone compilation application);
+		void	bind(Mem	*m);	//	use if there is a local r_exec::Mem (as opposed to a standalone compilation application).
 
 		void	addObject(SysObject	*object);
 

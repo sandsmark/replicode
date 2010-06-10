@@ -107,7 +107,7 @@ namespace	r_code{
 	public:
 		P<Object>	object;						//	viewed object.
 		Atom		code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
-		Object		*reference_set[2];			//	does not include the viewed object.
+		Object		*reference_set[2];			//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group).
 
 		View();
 		View(SysView	*source,Object	*object);
