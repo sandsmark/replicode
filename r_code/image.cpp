@@ -52,7 +52,6 @@ namespace	r_code{
 
 	void	Read(word32	*data,std::string	&s){
 
-		uint32	word_count=data[0];
 		char	*content=(char	*)(data+1);
 		for(uint32	i=0;;++i){
 

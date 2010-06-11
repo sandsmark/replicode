@@ -50,45 +50,45 @@ namespace	r_code{
 
 	inline	Atom	Atom::IPointer(uint16	index){
 		
-		return	Atom((I_PTR<<24)+index);
+		return	Atom((I_PTR<<24)+(index	&	0x0FFF));
 	}
 
-	inline	Atom	Atom::VLPointer(uint16	index,uint8	cast_opcode){
+	inline	Atom	Atom::VLPointer(uint16	index,uint16	cast_opcode){
 		
 		uint32	a=(VL_PTR<<24);
 		a+=cast_opcode<<16;
 		a+=index;
-		return	Atom((VL_PTR<<24)+(cast_opcode<<16)+index);
+		return	Atom((VL_PTR<<24)+((cast_opcode	&	0x0FFF)<<12)+(index	&	0x0FFF));
 	}
 
 	inline	Atom	Atom::RPointer(uint16	index){
 		
-		return	Atom((R_PTR<<24)+index);
+		return	Atom((R_PTR<<24)+(index	&	0x0FFF));
 	}
 
 	inline	Atom	Atom::IPGMPointer(uint16	index){
 		
-		return	Atom((IPGM_PTR<<24)+index);
+		return	Atom((IPGM_PTR<<24)+(index	&	0x0FFF));
 	}
 
 	inline	Atom	Atom::InObjPointer(uint8	inputIndex,uint16	index){
 		
-		return	Atom((IN_OBJ_PTR<<24)+(inputIndex<<16)+index);
+		return	Atom((IN_OBJ_PTR<<24)+(inputIndex<<12)+(index	&	0x0FFF));
 	}
 
 	inline	Atom	Atom::InVwPointer(uint8	inputIndex,uint16	index){
 		
-		return	Atom((IN_VW_PTR<<24)+(inputIndex<<16)+index);
+		return	Atom((IN_VW_PTR<<24)+(inputIndex<<12)+(index	&	0x0FFF));
 	}
 
 	inline	Atom	Atom::ValuePointer(uint16	index){
 		
-		return	Atom((VALUE_PTR<<24)+index);
+		return	Atom((VALUE_PTR<<24)+(index	&	0x0FFF));
 	}
 
 	inline	Atom	Atom::ProductionPointer(uint16	index){
 		
-		return	Atom((PROD_PTR<<24)+index);
+		return	Atom((PROD_PTR<<24)+(index	&	0x0FFF));
 	}
 
 	inline	Atom	Atom::This(){
@@ -113,10 +113,10 @@ namespace	r_code{
 
 	inline	Atom	Atom::SSet(uint16 opcode,uint8	elementCount){
 		
-		return	Atom((S_SET<<24)+(opcode<<8)+elementCount);
+		return	Atom((S_SET<<24)+((opcode	&	0x0FFF)<<8)+elementCount);
 	}
 
-	inline	Atom	Atom::Set(uint16	elementCount){
+	inline	Atom	Atom::Set(uint8	elementCount){
 		
 		return	Atom((SET<<24)+elementCount);
 	}
@@ -128,17 +128,17 @@ namespace	r_code{
 
 	inline	Atom	Atom::Object(uint16	opcode,uint8	arity){
 		
-		return	Atom((OBJECT<<24)+(opcode<<8)+arity);
+		return	Atom((OBJECT<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
 	inline	Atom	Atom::Marker(uint16	opcode,uint8	arity){
 		
-		return	Atom((MARKER<<24)+(opcode<<8)+arity);
+		return	Atom((MARKER<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
 	inline	Atom	Atom::Operator(uint16	opcode,uint8	arity){
 		
-		return	Atom((OPERATOR<<24)+(opcode<<8)+arity);
+		return	Atom((OPERATOR<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
 	inline	Atom	Atom::Node(uint8	nodeID){
@@ -171,12 +171,12 @@ namespace	r_code{
 		return	Atom(0xA2FFFFFF);
 	}
 
-	inline	Atom	Atom::String(uint16	characterCount){
+	inline	Atom	Atom::String(uint8	characterCount){
 		
 		uint8	blocks=characterCount/4;
 		if(characterCount%4)
 			++blocks;
-		return	Atom((STRING<<24)+(blocks<<16)+characterCount);
+		return	Atom((STRING<<24)+(blocks<<8)+characterCount);
 	}
 
 	inline	Atom	Atom::UndefinedString(){
@@ -192,11 +192,6 @@ namespace	r_code{
 	inline	Atom	Atom::UndefinedTimestamp(){
 		
 		return	Atom(0xC7FFFFFF);
-	}
-
-	inline	Atom	Atom::Forever(){
-
-		return	Atom(0xC7FFFFF0);
 	}
 
 	inline	Atom::Atom(uint32	a):atom(a){
@@ -244,8 +239,7 @@ namespace	r_code{
 				atom==0xA0FFFFFF	||
 				atom==0xA1FFFFFF	||
 				atom==0xA2FFFFFF	||
-				atom==0xC6FFFFFF	||
-				atom==0xC7FFFFFF;
+				atom==0xC6FFFFFF;
 	}
 
 	inline	float32	Atom::asFloat()	const{
@@ -261,27 +255,27 @@ namespace	r_code{
 
 	inline	uint16	Atom::asIndex()	const{
 
-		return	atom	&	0x0000FFFF;
+		return	atom	&	0x00000FFF;
 	}
 
 	inline	uint8	Atom::asViewIndex()	const{
 
-		return	(atom	&	0x00FF0000)>>16;
+		return	(uint8)((atom	&	0x000FF000)>>12);
 	}
 
 	inline	uint16	Atom::asOpcode()	const{
 
-		return	(atom>>8)	&	0x0000FFFF;
+		return	(atom>>8)	&	0x00000FFF;
 	}
 
 	inline	uint8	Atom::asCastOpcode()	const{
 
-		return	(atom	&	0x00FF0000)>>16;
+		return	(uint8)((atom	&	0x00FFF000)>>12);
 	}
 
 	inline	uint8	Atom::getNodeID()	const{
 
-		return	(atom	&	0x00FF0000)>>16;
+		return	(uint8)((atom	&	0x00FF0000)>>16);
 	}
 
 	inline	uint8	Atom::getClassID()	const{
@@ -313,26 +307,19 @@ namespace	r_code{
 		}
 	}
 
-	inline	uint16	Atom::getAtomCount()	const{
+	inline	uint8	Atom::getAtomCount()	const{
 		
-		if (atom == 0xFFFFFFFF) {
-			printf("attempt to get atom count for undefined atom\n");
-			return 0;
-		}
-
-		if(isStructural()){
-		
-			switch(getDescriptor()){
-			case	SET:	return	atom	&	0x0000FFFF;
-			case	OBJECT:
-			case	MARKER:
-			case	C_PTR:
-			case	OPERATOR:
-			case	S_SET:	return	atom	&	0x000000FF;
-			case	STRING:	return	(atom	&	0x00FF0000)>>16;
-			case	TIMESTAMP: return 2;
-			}
-		}else
+		switch(getDescriptor()){
+		case	SET:
+		case	OBJECT:
+		case	MARKER:
+		case	C_PTR:
+		case	OPERATOR:
+		case	S_SET:	return	atom	&	0x000000FF;
+		case	STRING:	return	(atom	&	0x0000FF00)>>8;
+		case	TIMESTAMP: return 2;
+		default:
 			return	0;
+		}
 	}
 }

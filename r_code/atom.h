@@ -38,12 +38,16 @@ using	namespace	core;
 
 namespace	r_code{
 
+	//	Opcodes on 12 bits.
+	//	Indices on 12 bits.
+	//	Element count on 8 bits.
+	//	To define bigger constructs (e.g. large matrices), define hooks to RAM (and derive classes from Object).
 	class	dll_export	Atom{
-	private:	//	trace utilities
-		static	uint32	Members_to_go;
+	private:	//	trace utilities.
+		static	uint8	Members_to_go;
 		static	uint8	Timestamp_data;
 		static	uint8	String_data;
-		static	uint16	Char_count;
+		static	uint8	Char_count;
 		void	write_indents()	const;
 	public:
 		typedef	enum{
@@ -87,7 +91,7 @@ namespace	r_code{
 		static	Atom	TailWildcard();
 		static	Atom	IPointer(uint16 index);
 		static	Atom	RPointer(uint16 index);
-		static	Atom	VLPointer(uint16 index,uint8	cast_opcode=0xFF);
+		static	Atom	VLPointer(uint16 index,uint16	cast_opcode=0x0FFF);
 		static	Atom	IPGMPointer(uint16 index);
 		static	Atom	InObjPointer(uint8	inputIndex,uint16 index);
 		static	Atom	InVwPointer(uint8	inputIndex,uint16 index);
@@ -105,15 +109,14 @@ namespace	r_code{
 		static	Atom	UndefinedDeviceFunction();
 		static	Atom	CPointer(uint8 elementCount);
 		static	Atom	SSet(uint16 opcode,uint8 elementCount);
-		static	Atom	Set(uint16 elementCount);
+		static	Atom	Set(uint8 elementCount);
 		static	Atom	Object(uint16 opcode,uint8 arity);
 		static	Atom	Marker(uint16 opcode,uint8 arity);
 		static	Atom	Operator(uint16 opcode,uint8 arity);
-		static	Atom	String(uint16 characterCount);
+		static	Atom	String(uint8 characterCount);
 		static	Atom	UndefinedString();
 		static	Atom	Timestamp();
 		static	Atom	UndefinedTimestamp();
-		static	Atom	Forever();	//	deprecated.
 
 		Atom(uint32	a=0xFFFFFFFF);
 		~Atom();
@@ -138,12 +141,11 @@ namespace	r_code{
 		uint8	asViewIndex()	const;	// applicable to IN_OBJ_PTR and IN_VW_PTR.
 		uint16	asOpcode()		const;
 		uint8	asCastOpcode()	const;	// applicable to VL_PTR.
-		uint16	getAtomCount()	const;	// arity of operators and
+		uint8	getAtomCount()	const;	// arity of operators and
 										// objects/markers/structured sets,
 										// number of atoms in pointers chains,
 										// number of blocks of characters in
 										// strings.
-		uint16	getOpcode()		const;
 		uint8	getNodeID()		const;	// applicable to nodes and devices.
 		uint8	getClassID()	const;	// applicable to devices.
 		uint8	getDeviceID()	const;	// applicable to devices.
