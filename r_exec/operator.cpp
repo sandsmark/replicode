@@ -53,19 +53,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs.getCode()->isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.getCode()->isFloat()){
+			if(rhs[0].isFloat()){
 
-				bool	r=lhs.getCode()->asFloat()>rhs.getCode()->asFloat();
+				bool	r=lhs[0].asFloat()>rhs[0].asFloat();
 				context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(lhs.getCode())>Timestamp::Get(rhs.getCode());
+				bool	r=Timestamp::Get(&lhs[0])>Timestamp::Get(&rhs[0]);
 				context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -82,19 +82,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs.getCode()->isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.getCode()->isFloat()){
+			if(rhs[0].isFloat()){
 
-				bool	r=lhs.getCode()->asFloat()<rhs.getCode()->asFloat();
+				bool	r=lhs[0].asFloat()<rhs[0].asFloat();
 				context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(lhs.getCode())<Timestamp::Get(rhs.getCode());
+				bool	r=Timestamp::Get(&lhs[0])<Timestamp::Get(&rhs[0]);
 				context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -111,19 +111,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs.getCode()->isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.getCode()->isFloat()){
+			if(rhs[0].isFloat()){
 
-				bool	r=lhs.getCode()->asFloat()>=rhs.getCode()->asFloat();
+				bool	r=lhs[0].asFloat()>=rhs[0].asFloat();
 				context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(lhs.getCode())>=Timestamp::Get(rhs.getCode());
+				bool	r=Timestamp::Get(&lhs[0])>=Timestamp::Get(&rhs[0]);
 				context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -140,19 +140,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs.getCode()->isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.getCode()->isFloat()){
+			if(rhs[0].isFloat()){
 
-				bool	r=lhs.getCode()->asFloat()<=rhs.getCode()->asFloat();
+				bool	r=lhs[0].asFloat()<=rhs[0].asFloat();
 				context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(lhs.getCode())<=Timestamp::Get(rhs.getCode());
+				bool	r=Timestamp::Get(&lhs[0])<=Timestamp::Get(&rhs[0]);
 				context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -169,18 +169,18 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs.getCode()->isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.getCode()->isFloat()){
+			if(rhs[0].isFloat()){
 
-				context.setAtomicResult(Atom::Float(lhs.getCode()->asFloat()+rhs.getCode()->asFloat()));
+				context.setAtomicResult(Atom::Float(lhs[0].asFloat()+rhs[0].asFloat()));
 				return	true;
 			}
-		}else	if(lhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				context.setTimestampResult(Timestamp::Get(lhs.getCode())+Timestamp::Get(rhs.getCode()));
+				context.setTimestampResult(Timestamp::Get(&lhs[0])+Timestamp::Get(&rhs[0]));
 				return	true;
 			}
 		}
@@ -196,19 +196,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs.getCode()->isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.getCode()->isFloat()){
+			if(rhs[0].isFloat()){
 
-				context.setAtomicResult(Atom::Float(lhs.getCode()->asFloat()-rhs.getCode()->asFloat()));
+				context.setAtomicResult(Atom::Float(lhs[0].asFloat()-rhs[0].asFloat()));
 				return	true;
 			}
-		}else	if(lhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				uint64	lhs_t=Timestamp::Get(lhs.getCode());
-				uint64	rhs_t=Timestamp::Get(rhs.getCode());
+				uint64	lhs_t=Timestamp::Get(&lhs[0]);
+				uint64	rhs_t=Timestamp::Get(&rhs[0]);
 				if(lhs_t>=rhs_t){
 
 					context.setTimestampResult(lhs_t-rhs_t);
@@ -228,25 +228,25 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs.getCode()->isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.getCode()->isFloat()){
+			if(rhs[0].isFloat()){
 
-				context.setAtomicResult(Atom::Float(lhs.getCode()->asFloat()*rhs.getCode()->asFloat()));
+				context.setAtomicResult(Atom::Float(lhs[0].asFloat()*rhs[0].asFloat()));
 				return	true;
-			}else	if(rhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				if(lhs.getCode()->asFloat()>=0){
+				if(lhs[0].asFloat()>=0){
 
-					context.setAtomicResult(Atom::Float(Timestamp::Get(rhs.getCode())*lhs.getCode()->asFloat()));
+					context.setAtomicResult(Atom::Float(Timestamp::Get(&rhs[0])*lhs[0].asFloat()));
 					return	true;
 				}
 			}
-		}else	if(lhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.getCode()->isFloat()	&&	rhs.getCode()->asFloat()>=0){
+			if(rhs[0].isFloat()	&&	rhs[0].asFloat()>=0){
 
-				context.setTimestampResult(Timestamp::Get(lhs.getCode())*rhs.getCode()->asFloat());
+				context.setTimestampResult(Timestamp::Get(&lhs[0])*rhs[0].asFloat());
 				return	true;
 			}
 		}
@@ -262,18 +262,18 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs.getCode()->isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.getCode()->isFloat()	&&	rhs.getCode()->asFloat()>0){
+			if(rhs[0].isFloat()	&&	rhs[0].asFloat()>0){
 
-				context.setAtomicResult(Atom::Float(lhs.getCode()->asFloat()/rhs.getCode()->asFloat()));
+				context.setAtomicResult(Atom::Float(lhs[0].asFloat()/rhs[0].asFloat()));
 				return	true;
 			}
-		}else	if(lhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.getCode()->isFloat()	&&	rhs.getCode()->asFloat()>0){
+			if(rhs[0].isFloat()	&&	rhs[0].asFloat()>0){
 
-				context.setTimestampResult(Timestamp::Get(lhs.getCode())/rhs.getCode()->asFloat());
+				context.setTimestampResult(Timestamp::Get(&lhs[0])/rhs[0].asFloat());
 				return	true;
 			}
 		}
@@ -289,19 +289,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs.getCode()->isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.getCode()->isFloat()){
+			if(rhs[0].isFloat()){
 
-				context.setAtomicResult(Atom::Float(abs(lhs.getCode()->asFloat()-rhs.getCode()->asFloat())));
+				context.setAtomicResult(Atom::Float(abs(lhs[0].asFloat()-rhs[0].asFloat())));
 				return	true;
 			}
-		}else	if(lhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.getCode()->getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				uint64	lhs_t=Timestamp::Get(lhs.getCode());
-				uint64	rhs_t=Timestamp::Get(rhs.getCode());
+				uint64	lhs_t=Timestamp::Get(&lhs[0]);
+				uint64	rhs_t=Timestamp::Get(&rhs[0]);
 				context.setTimestampResult(abs((float64)(lhs_t-rhs_t)));
 				return	true;
 			}
@@ -317,11 +317,11 @@ namespace	r_exec{
 
 		Context	arg=context.getChild(1);
 		
-		if(arg.getCode()->isFloat()){
+		if(arg[0].isFloat()){
 
-			if(arg.getCode()!=0){
+			if(arg[0].asFloat()!=0){
 				
-				context.setAtomicResult(Atom::Float(::log(arg.getCode()->asFloat())));
+				context.setAtomicResult(Atom::Float(::log(arg[0].asFloat())));
 				return	true;
 			}
 		}
@@ -336,9 +336,9 @@ namespace	r_exec{
 
 		Context	arg=context.getChild(1);
 		
-		if(arg.getCode()->isFloat()){
+		if(arg[0].isFloat()){
 
-			context.setAtomicResult(Atom::Float(::exp(arg.getCode()->asFloat())));
+			context.setAtomicResult(Atom::Float(::exp(arg[0].asFloat())));
 			return	true;
 		}
 
@@ -352,11 +352,11 @@ namespace	r_exec{
 
 		Context	arg=context.getChild(1);
 		
-		if(arg.getCode()->isFloat()){
+		if(arg[0].isFloat()){
 
-			if(arg.getCode()!=0){
+			if(arg[0].asFloat()!=0){
 				
-				context.setAtomicResult(Atom::Float(log10(arg.getCode()->asFloat())));
+				context.setAtomicResult(Atom::Float(log10(arg[0].asFloat())));
 				return	true;
 			}
 		}
@@ -371,9 +371,9 @@ namespace	r_exec{
 
 		Context	arg=context.getChild(1);
 		
-		if(arg.getCode()->isFloat()){
+		if(arg[0].isFloat()){
 
-			context.setAtomicResult(Atom::Float(pow(10,arg.getCode()->asFloat())));
+			context.setAtomicResult(Atom::Float(pow(10,arg[0].asFloat())));
 			return	true;
 		}
 
@@ -396,10 +396,10 @@ namespace	r_exec{
 		Context	args=context.getChild(2);
 
 		Object	*_object=object.getObject();
-		if(_object	&&	args.getCode()->getDescriptor()==Atom::SET){
+		if(_object	&&	args[0].getDescriptor()==Atom::SET){
 
 			uint16	pattern_set_index=_object->code[_object->code[PGM_INPUTS].asIndex()+1].asIndex();
-			uint16	arg_count=args.getCode()->getAtomCount();
+			uint16	arg_count=args[0].getAtomCount();
 			if(_object->code[pattern_set_index].getAtomCount()!=arg_count){
 
 				context.setAtomicResult(Atom::Nil());
@@ -434,7 +434,7 @@ namespace	r_exec{
 				args.copy(_object,write_index);	//	writes after psln_thr.
 
 				ipgm->reference_set[0]=_object;
-				context.setAtomicResult(Atom::ProductionPointer(context.addExplicitInstantiation(ipgm)));
+				context.setAtomicResult(Atom::ProductionPointer(context.addProduction(ipgm)));
 				return	true;
 			}
 
@@ -454,7 +454,7 @@ namespace	r_exec{
 				args.copy(_object,write_index);	//	writes after psln_thr.
 
 				igol->reference_set[0]=_object;
-				context.setAtomicResult(Atom::ProductionPointer(context.addExplicitInstantiation(igol)));
+				context.setAtomicResult(Atom::ProductionPointer(context.addProduction(igol)));
 				return	true;
 			}
 		}
@@ -475,7 +475,7 @@ namespace	r_exec{
 	bool	_match(const	Context	&input,const	Context	&pattern){
 
 		//	TODO: equal instead.
-		if(input.getCode()->asOpcode()!=pattern.getChild(1).getCode()->asOpcode())	//	pattern.getChild(1) is an iptr to the skeleton (dereferenced).
+		if(input[0].asOpcode()!=pattern.getChild(1)[0].asOpcode())	//	pattern.getChild(1) is an iptr to the skeleton (dereferenced).
 			return	false;
 
 		//	patch the pattern with an iptr to the input, i.e. with input.index.
@@ -491,14 +491,16 @@ namespace	r_exec{
 				pattern.rollback();
 				return	false;
 			}
-		}
+		} 
+
+		//	TODO: productions, add them to the context passed to red.
 
 		return	true;
 	}
 
 	inline	bool	match(const	Context	&input,const	Context	&pattern){
 		
-		if(pattern.getCode()->asOpcode()==Object::AntiPTNOpcode)
+		if(pattern[0].asOpcode()==Object::AntiPTNOpcode)
 			return	!_match(input,pattern);
 		else
 			return	_match(input,pattern);
@@ -545,9 +547,10 @@ namespace	r_exec{
 
 		std::vector<uint16>	input_indices;	//	todo list of matching jobs intially filled with all input indices.
 
-		if(input_set.getCode()->getDescriptor()!=Atom::SET	||
-			positive_section.getCode()->getDescriptor()!=Atom::SET	||
-			negative_section.getCode()->getDescriptor()!=Atom::SET)
+		if(input_set[0].getDescriptor()!=Atom::SET	||
+			input_set[0].getDescriptor()!=Atom::S_SET	||
+			positive_section[0].getDescriptor()!=Atom::SET	||
+			negative_section[0].getDescriptor()!=Atom::SET)
 			goto	failure;
 
 		uint16	input_count=input_set.getChildrenCount();

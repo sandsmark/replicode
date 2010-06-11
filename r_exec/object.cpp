@@ -64,6 +64,18 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	FastSemaphore	OID_sem(1,1);
+
+	uint32	View::LastOID=0;
+
+	uint32	View::GetOID(){
+
+		OID_sem.acquire();
+		uint32	oid=LastOID++;
+		OID_sem.release();
+		return	oid;
+	}
+
 	uint16	View::ViewOpcode;
 
 	float32	View::MorphValue(float32	value,float32	source_thr,float32	destination_thr){
@@ -82,7 +94,9 @@ namespace	r_exec{
 		return	destination_thr+change;
 	}
 
-	View::View(View	*view,Group	*group):r_code::View(),FastSemaphore(1,1){
+	View::View(View	*view,Group	*group):r_code::View(){
+
+		OID=GetOID();
 
 		Group	*source=view->getHost();
 		object=view->object;

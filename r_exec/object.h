@@ -98,10 +98,9 @@ namespace	r_exec{
 		void	acq_marker_set()	const{	marker_set_sem->acquire();	}
 		void	rel_marker_set()	const{	marker_set_sem->release();	}
 
-		//	Return false when the member is not found.
 		//	Target psln_thr only.
-		virtual	bool	set(uint16	member_index,float32	value);
-		virtual	bool	mod(uint16	member_index,float32	value);
+		virtual	void	set(uint16	member_index,float32	value);
+		virtual	void	mod(uint16	member_index,float32	value);
 
 		class	Hash{
 		public:
@@ -132,11 +131,14 @@ namespace	r_exec{
 	};
 
 	//	Shared resources:
-	//		all control values and supporting values: accessed by Mem::update and reduction cores (via overlays mod/set); low contention.
+	//		none: all mod/set operations are pushed on the group and executed at update time.
 	class	View:
-	public	r_code::View,
-	public	FastSemaphore{
+	public	r_code::View{
 	private:
+		static	uint32	LastOID;
+		static	uint32	GetOID();
+		uint32	OID;
+
 		//	Ctrl values.
 		uint32	sln_changes;
 		float32	acc_sln;
@@ -170,6 +172,8 @@ namespace	r_exec{
 		View(View	*view);	//	simple copy.
 		~View();
 
+		uint32	getOID()	const;
+
 		virtual	bool	isNotification()	const;
 
 		Group	*getHost();
@@ -196,10 +200,9 @@ namespace	r_exec{
 		float32	update_sln_delta();
 		float32	update_act_delta();
 
-		//	Return false when the member is not found.
 		//	Target res, sln, act, vis.
-		bool	mod(uint16	member_index,float32	value);
-		bool	set(uint16	member_index,float32	value);
+		void	mod(uint16	member_index,float32	value);
+		void	set(uint16	member_index,float32	value);
 
 		class	Hash{
 		public:
@@ -286,11 +289,28 @@ namespace	r_exec{
 		//	Viewing groups are c-active and c-salient. the bool is the cov.
 		UNORDERED_MAP<Group	*,bool>								viewing_groups;
 
-		//	Populated within update; cleared afterward.
+		//	Populated within update; cleared at the beginning of update.
 		std::vector<View	*>									newly_salient_views;
 
 		//	Populated upon ipgm injection; used at update time; cleared afterward.
 		std::vector<IPGMController	*>							new_controllers;
+
+		typedef	enum{
+			MOD=0,
+			SET=1
+		}OpType;
+
+		class	PendingOperation{
+		public:
+			PendingOperation(uint32	oid,uint16	member_index,OpType	operation,float32	value):oid(oid),member_index(member_index),operation(operation),value(value){}
+			uint32	oid;		//	of the view.
+			uint16	member_index;
+			OpType	operation;
+			float32	value;
+		};
+
+		//	Pending mod/set operations on the group's view, exploited and cleared at update time.
+		std::vector<PendingOperation>							pending_operations;
 
 		Group();
 		Group(r_code::SysObject	*source);
@@ -315,6 +335,8 @@ namespace	r_exec{
 		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	non_ntf_views_begin()	const;
 		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	non_ntf_views_end()		const;
 		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	next_non_ntf_view(UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	&it)	const;
+
+		View	*getView(uint32	OID);
 
 		ObjectType	getType()	const;
 
@@ -384,12 +406,11 @@ namespace	r_exec{
 		float32	update_sln(View	*v,float32	&change,Mem	*mem);	//	applies decay if any.
 		float32	update_act(View	*v,Mem	*mem);
 
-		//	Return false when the member is not found.
 		//	Target upr, spr, c_sln, c_act, sln_thr, act_thr, vis_thr, c_sln_thr, c-act_thr, sln_chg_thr,
 		//	sln_chg_prd, act_chg_thr, act_chg_prd, high_sln_thr, low_sln_thr, sln_ntf_prd, high_act_thr, low_act_thr, act_ntf_prd, low_res_thr, res_ntf_prd, ntf_new,
 		//	dcy_per, dcy-tgt, dcy_prd.
-		bool	mod(uint16	member_index,float32	value);
-		bool	set(uint16	member_index,float32	value);
+		void	mod(uint16	member_index,float32	value);
+		void	set(uint16	member_index,float32	value);
 
 		void	reset_stats();				//	called at the begining of an update.
 		void	update_stats(Mem	*m);	//	at the end of an update; may produce notifcations.

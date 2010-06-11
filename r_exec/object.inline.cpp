@@ -48,10 +48,10 @@ namespace	r_exec{
 		return	r;
 	}
 
-	inline	bool	Object::mod(uint16	member_index,float32	value){
+	inline	void	Object::mod(uint16	member_index,float32	value){
 
 		if(member_index!=code.size()-1)
-			return	false;
+			return;
 		float32	v=code[member_index].asFloat()+value;
 		if(v<0)
 			v=0;
@@ -63,10 +63,10 @@ namespace	r_exec{
 		psln_thr_sem->release();
 	}
 
-	inline	bool	Object::set(uint16	member_index,float32	value){
+	inline	void	Object::set(uint16	member_index,float32	value){
 
 		if(member_index!=code.size()-1)
-			return	false;
+			return;
 
 		psln_thr_sem->acquire();
 		code[member_index]=Atom::Float(value);
@@ -75,18 +75,24 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	inline	View::View():r_code::View(),FastSemaphore(1,1){
+	inline	View::View():r_code::View(){
+
+		OID=GetOID();
 
 		reset_ctrl_values();
 	}
 
-	inline	View::View(r_code::SysView	*source,r_code::Object	*object):r_code::View(source,object),FastSemaphore(1,1){
+	inline	View::View(r_code::SysView	*source,r_code::Object	*object):r_code::View(source,object){
+
+		OID=GetOID();
 
 		reset_ctrl_values();
 		reset_init_values();
 	}
 
-	inline	View::View(View	*view):r_code::View(),FastSemaphore(1,1){
+	inline	View::View(View	*view):r_code::View(){
+
+		OID=view->OID;
 
 		object=view->object;
 		memcpy(code,view->code,VIEW_CODE_MAX_SIZE*sizeof(Atom)+2*sizeof(Object	*));	//	reference_set is contiguous to code; memcpy in one go.
@@ -184,37 +190,33 @@ namespace	r_exec{
 		return	delta;
 	}
 
-	inline	bool	View::mod(uint16	member_index,float32	value){
+	inline	void	View::mod(uint16	member_index,float32	value){
 
 		switch(member_index){
 		case	VIEW_SLN:
 			mod_sln(value);
-			return	true;
+			break;
 		case	VIEW_RES:
 			mod_res(value);
-			return	true;
+			break;
 		case	VIEW_ACT_VIS:
 			mod_act_vis(value);
-			return	true;
-		default:
-			return	false;
+			break;
 		}
 	}
 
-	inline	bool	View::set(uint16	member_index,float32	value){
+	inline	void	View::set(uint16	member_index,float32	value){
 
 		switch(member_index){
 		case	VIEW_SLN:
 			set_sln(value);
-			return	true;
+			break;
 		case	VIEW_RES:
 			set_res(value);
-			return	true;
+			break;
 		case	VIEW_ACT_VIS:
 			set_act_vis(value);
-			return	true;
-		default:
-			return	false;
+			break;
 		}
 	}
 
@@ -678,7 +680,7 @@ namespace	r_exec{
 			code[member_index]=Atom::Float(value);
 	}
 
-	inline	bool	Group::mod(uint16	member_index,float32	value){
+	inline	void	Group::mod(uint16	member_index,float32	value){
 
 		switch(member_index){
 		case	GRP_UPR:
@@ -690,31 +692,31 @@ namespace	r_exec{
 		case	GRP_ACT_NTF_PRD:
 		case	GRP_RES_NTF_PRD:
 			_mod_0_positive(member_index,value);
-			return	true;
+			return	;
 		case	GRP_SLN_THR:
 			mod_sln_thr(value);
-			return	true;
+			return;
 		case	GRP_ACT_THR:
 			mod_act_thr(value);
-			return	true;
+			return;
 		case	GRP_VIS_THR:
 			mod_vis_thr(value);
-			return	true;
+			return;
 		case	GRP_C_SLN:
 			mod_c_sln(value);
-			return	true;
+			return;
 		case	GRP_C_SLN_THR:
 			mod_c_sln_thr(value);
-			return	true;
+			return;
 		case	GRP_C_ACT:
 			mod_c_act(value);
-			return	true;
+			return;
 		case	GRP_C_ACT_THR:
 			mod_c_act_thr(value);
-			return	true;
+			return;
 		case	GRP_DCY_PER:
 			_mod_minus1_plus1(member_index,value);
-			return	true;
+			return;
 		case	GRP_SLN_CHG_THR:
 		case	GRP_ACT_CHG_THR:
 		case	GRP_HIGH_SLN_THR:
@@ -723,13 +725,11 @@ namespace	r_exec{
 		case	GRP_LOW_ACT_THR:
 		case	GRP_LOW_RES_THR:
 			_mod_0_plus1(member_index,value);
-			return	true;
-		default:
-			return	false;
+			return;
 		}
 	}
 
-	inline	bool	Group::set(uint16	member_index,float32	value){
+	inline	void	Group::set(uint16	member_index,float32	value){
 		
 		switch(member_index){
 		case	GRP_UPR:
@@ -741,31 +741,31 @@ namespace	r_exec{
 		case	GRP_ACT_NTF_PRD:
 		case	GRP_RES_NTF_PRD:
 			_set_0_positive(member_index,value);
-			return	true;
+			return;
 		case	GRP_SLN_THR:
 			set_sln_thr(value);
-			return	true;
+			return;
 		case	GRP_ACT_THR:
 			set_act_thr(value);
-			return	true;
+			return;
 		case	GRP_VIS_THR:
 			set_vis_thr(value);
-			return	true;
+			return;
 		case	GRP_C_SLN:
 			set_c_sln(value);
-			return	true;
+			return;
 		case	GRP_C_SLN_THR:
 			set_c_sln_thr(value);
-			return	true;
+			return;
 		case	GRP_C_ACT:
 			set_c_act(value);
-			return	true;
+			return;
 		case	GRP_C_ACT_THR:
 			set_c_act_thr(value);
-			return	true;
+			return;
 		case	GRP_DCY_PER:
 			_set_minus1_plus1(member_index,value);
-			return	true;
+			return;
 		case	GRP_SLN_CHG_THR:
 		case	GRP_ACT_CHG_THR:
 		case	GRP_HIGH_SLN_THR:
@@ -774,13 +774,11 @@ namespace	r_exec{
 		case	GRP_LOW_ACT_THR:
 		case	GRP_LOW_RES_THR:
 			_set_0_plus1(member_index,value);
-			return	true;
+			return;
 		case	GRP_NTF_NEW:
 		case	GRP_DCY_TGT:
 			_set_0_1(member_index,value);
-			return	true;
-		default:
-			return	false;
+			return;
 		}
 	}
 

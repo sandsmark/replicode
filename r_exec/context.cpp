@@ -17,18 +17,49 @@ namespace	r_exec{
 			return	lhs.object==rhs.object;
 
 		//	both contexts point to an atom which is not a pointer.
-		if(lhs.code[lhs.index]!=rhs.code[rhs.index])
+		if(lhs[0]!=rhs[0])
 			return	false;
 
-		if(lhs.code[lhs.index].isStructural()){	//	both are structural.
+		if(lhs[0].isStructural()){	//	both are structural.
 
-			uint16	atom_count=lhs.code[lhs.index].getAtomCount();
-			for(uint16	i=1;i<atom_count;++i)
+			uint16	atom_count=lhs[0].getAtomCount();
+			for(uint16	i=1;i<=atom_count;++i)
 				if(lhs.getChild(i)!=rhs.getChild(i))
 					return	false;
 			return	true;
 		}
 		return	true;
+	}
+
+	bool	Context::match(const	Context	&input)	const{
+
+		if(data==REFERENCE	&&	index==0	&&
+			input.data==REFERENCE	&&	input.index==0)	//	both point to an object's head, not one of its members.
+			return	object==input.object;
+
+		if(code[index].isStructural()){
+
+			uint16	atom_count=code[index].getAtomCount();
+			if(input.getChildrenCount()!=atom_count)
+				return	false;
+
+			for(uint16	i=1;i<=atom_count;++i){
+
+				Context	pc=getChild(i);
+				Context	ic=input.getChild(i);
+				if(!pc.match(ic))
+					return	false;
+			}
+			return	true;
+		}
+
+		switch(code[index].getDescriptor()){
+		case	Atom::WILDCARD:
+		case	Atom::T_WILDCARD:
+			return	true;
+		default:
+			return	(*this)[0].atom==input[0].atom;
+		}
 	}
 
 	inline	bool	Context::operator	!=(const	Context	&c)	const{
@@ -66,7 +97,7 @@ namespace	r_exec{
 
 			Context	c=getChild(1).dereference();
 			for(uint16	i=2;i<=code->getAtomCount();++i)
-				c=c.getChild(code[i].asIndex()).dereference();
+				c=c.getChild(code[index+i].asIndex()).dereference();
 			return	c;
 		}
 		case	Atom::THIS:	//	refers to the ipgm; the pgm view is not available.
@@ -78,15 +109,15 @@ namespace	r_exec{
 		case	Atom::VWS:
 			return	Context(object,VWS);
 		case	Atom::VALUE_PTR:
-			return	Context(object,view,&overlay->values[0],code[index].asIndex(),overlay,data).dereference();
+			return	Context(object,view,&overlay->values[0],(*this)[0].asIndex(),overlay,data).dereference();
 		case	Atom::IPGM_PTR:
-			return	Context(overlay->getIPGM(),code[index].asIndex()).dereference();
+			return	Context(overlay->getIPGM(),(*this)[0].asIndex()).dereference();
 		case	Atom::IN_OBJ_PTR:
-			return	Context(overlay->getInputObject(code[index].asViewIndex()),code[index].asIndex()).dereference();
+			return	Context(overlay->getInputObject((*this)[0].asViewIndex()),(*this)[0].asIndex()).dereference();
 		case	Atom::IN_VW_PTR:
-			return	Context(overlay->getInputObject(code[index].asViewIndex()),code[index].asIndex()).dereference();
+			return	Context(overlay->getInputObject((*this)[0].asViewIndex()),(*this)[0].asIndex()).dereference();
 		case	Atom::PROD_PTR:
-			return	Context(overlay->explicit_instantiations[code->asIndex()],0).dereference();
+			return	Context(overlay->productions[(*this)[0].asIndex()],0).dereference();
 		default:
 			return	*this;
 		}
@@ -99,21 +130,21 @@ namespace	r_exec{
 		switch(code[index].getDescriptor()){
 		case	Atom::OPERATOR:{
 
-			uint16	atom_count=code[index].getAtomCount();
+			uint16	atom_count=(*this)[0].getAtomCount();
 			for(uint16	i=1;i<=atom_count;++i){
 
 				if(!getChild(i).evaluate())
 					return	false;
 			}
-			return	Operator::Get(code[index].asOpcode())(*this);
+			return	Operator::Get((*this)[0].asOpcode())(*this);
 		}case	Atom::OBJECT:	//	incl. cmd.
-			if(code[index].asOpcode()==Object::PTNOpcode	||	code[index].asOpcode()==Object::AntiPTNOpcode)	//	skip for patterns.
+			if((*this)[0].asOpcode()==Object::PTNOpcode	||	(*this)[0].asOpcode()==Object::AntiPTNOpcode)	//	skip patterns.
 				return	true;
 		case	Atom::MARKER:
 		case	Atom::SET:
 		case	Atom::S_SET:{
 
-			uint16	atom_count=code[index].getAtomCount();
+			uint16	atom_count=(*this)[0].getAtomCount();
 			for(uint16	i=1;i<=atom_count;++i){
 
 				if(!getChild(i).evaluate())
@@ -135,7 +166,7 @@ namespace	r_exec{
 
 	void	Context::getChildAsMember(uint16	index,void	*&object,ObjectType	object_type,uint16	member_index)	const{
 
-		if(code[index].getDescriptor()!=Atom::C_PTR){	//	ill-formed mod/set expression
+		if((*this)[0].getDescriptor()!=Atom::C_PTR){	//	ill-formed mod/set expression.
 
 			object=NULL;
 			object_type=TYPE_UNDEFINED;
@@ -143,26 +174,30 @@ namespace	r_exec{
 			return;
 		}
 
+		//	cptr is of one the following forms:
+		//		cptr, this, iptr, ...
+		//		cptr, vl_ptr, iptr, ...
+		//		cptr, rptr, iptr, ...
 		Context	c=getChild(1).dereference();
-		uint16	atom_count=code[index].getAtomCount();
+		uint16	atom_count=(*this)[0].getAtomCount();
 		for(uint16	i=2;i<atom_count;++i)	//	stop before the last iptr.
-			c=c.getChild(code[i].asIndex()).dereference();
+			c=c.getChild((*this)[i].asIndex()).dereference();
 		
-		// at this point c is the object; the next iptr gives the member index.
-		switch(c.code->getDescriptor()){
+		// at this point, c is an iptr dereferenced to an object or a view; the next iptr holds the member index.
+		switch(c[0].getDescriptor()){
 		case	Atom::OBJECT:
-			if(c.code->asOpcode()==Object::GroupOpcode){	//	must be a reference.
+			if(c[0].asOpcode()==Object::GroupOpcode){	//	must be a reference.
 
 				object=c.getObject();
 				object_type=TYPE_GROUP;
 			}else{
 
 				object=new	Object();
-				c.copy((Object	*)object,0);
+				c.copy((Object	*)object,0);	//	PB: not sure.
 				object_type=TYPE_OBJECT;
 			}
 			break;
-		case	Atom::VIEW:
+		case	Atom::VIEW:	//	PB: 
 			object=new	View();
 			c.copy((View	*)object,0);
 			object_type=TYPE_VIEW;
@@ -174,7 +209,7 @@ namespace	r_exec{
 		}
 
 		//	get the index held by the last iptr.
-		c=c.getChild(code[atom_count].getAtomCount()).dereference();
-		member_index=c.code[c.index].asIndex();
+		c=c.getChild((*this)[atom_count].getAtomCount());
+		member_index=c[0].asIndex();
 	}
 }

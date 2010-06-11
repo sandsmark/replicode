@@ -26,8 +26,8 @@ namespace	r_exec{
 		//		the evaluation result if it fits in a single atom,
 		//		a ptr to the value array if the result is larger than a single atom,
 		//		a ptr to an input if the result is a pattern input.
-		Atom				*pgm_code;
-		uint16				pgm_code_size;
+		Atom	*pgm_code;
+		uint16	pgm_code_size;
 
 		//	Convenience.
 		uint16	first_timing_constraint_index;
@@ -44,7 +44,7 @@ namespace	r_exec{
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
 
-		std::vector<P<Object> >			explicit_instantiations;	//	so far in the spec, receives the results of ins.
+		std::vector<P<Object> >			productions;	//	receives the results of ins, inj and eje; views are retrieved (fvw) or built (reduction) in the value array.
 
 		typedef	enum{
 			SUCCESS=0,
@@ -59,6 +59,7 @@ namespace	r_exec{
 
 		MatchResult	_match(r_exec::View	*input,uint16	pattern_index);	//	delegates to -match_pattern
 		MatchResult	_match_pattern(r_exec::View	*input,uint16	pattern_index);	//	return SUCCESS upon a successful match, IMPOSSIBLE if the input is not of the right class, FAILURE otherwise.
+		bool		_match_skeleton(r_exec::View	*input,uint16	pattern_index);
 		bool		evaluate(uint16	index);	//	evaluates the pgm_code at the specified index.
 
 		void		rollback();	//	reset the overlay to the last commited state: unpatch code and values.
@@ -67,7 +68,7 @@ namespace	r_exec{
 
 		void		patch_tpl_args();	//	no views in tpl args; patches the ptn skeleton's first atom with IPGM_PTR with an index in the ipgm arg set; patches wildcards with similar IPGM_PTRs.
 		void		patch_tpl_code(uint16	pgm_code_index,uint16	ipgm_code_index);	//	to recurse.
-		void		patch_input_code(uint16	pgm_code_index,uint16	input_code_index);
+		void		patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index);
 		void		patch_code(uint16	index,Atom	value);
 
 		IPGMController	*controller;

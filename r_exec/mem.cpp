@@ -31,7 +31,7 @@ namespace	r_exec{
 		//	load class opcodes.
 		View::ViewOpcode=opcodes.find("view")->second;
 
-		Object::GroupOpcode==opcodes.find("grp")->second;
+		Object::GroupOpcode=opcodes.find("grp")->second;
 
 		Object::PTNOpcode=opcodes.find("ptn")->second;
 		Object::AntiPTNOpcode=opcodes.find("|ptn")->second;
@@ -592,12 +592,10 @@ namespace	r_exec{
 
 			object->rel_view_map();
 
-			it->second->acquire();
-			it->second->set_res(view->get_res());
-			it->second->set_sln(view->get_sln());
+			host->pending_operations.push_back(Group::PendingOperation(it->second->getOID(),VIEW_RES,Group::SET,view->get_res()));
+			host->pending_operations.push_back(Group::PendingOperation(it->second->getOID(),VIEW_SLN,Group::SET,view->get_sln()));
 			if(object->isIPGM())
-				it->second->set_act_vis(view->get_act_vis());
-			it->second->release();
+				host->pending_operations.push_back(Group::PendingOperation(it->second->getOID(),IPGM_VIEW_ACT,Group::SET,view->get_act_vis()));
 		}
 	}
 
@@ -655,6 +653,24 @@ namespace	r_exec{
 
 		group->acquire();
 
+		group->newly_salient_views.clear();
+
+		//	execute pending operations.
+		for(uint32	i=0;i<group->pending_operations.size();++i){
+
+			View	*v=group->getView(group->pending_operations[i].oid);
+			if(v)
+				switch(group->pending_operations[i].operation){
+				case	Group::MOD:
+					v->mod(group->pending_operations[i].member_index,group->pending_operations[i].value);
+					break;
+				case	Group::SET:
+					v->set(group->pending_operations[i].member_index,group->pending_operations[i].value);
+					break;
+				}
+		}
+		group->pending_operations.clear();
+
 		//	update group's ctrl values.
 		group->update_sln_thr();	//	applies decay on sln thr. 
 		group->update_act_thr();
@@ -669,8 +685,6 @@ namespace	r_exec{
 
 		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	v;
 		for(v=group->views_begin();v!=group->views_end();v=group->next_view(v)){
-
-			(*v)->acquire();
 
 			//	update resilience.
 			(*v)->mod_res(-1);
@@ -747,8 +761,6 @@ namespace	r_exec{
 							group->new_controllers.push_back((*v)->controller);
 					}
 				}
-
-				(*v)->release();
 			}else{	//	view has no resilience; sem left unreleased.
 
 				if(((Object	*)(*v)->object)->isIPGM())	//	if ipgm view, kill the overlay.
@@ -798,7 +810,6 @@ namespace	r_exec{
 
 			for(uint32	i=0;i<group->newly_salient_views.size();++i)
 				_inject_reduction_jobs(group->newly_salient_views[i],group);
-			group->newly_salient_views.clear();
 		}
 
 		if(group_is_c_active	&&	group_is_c_salient){	//	build signaling jobs for new ipgms.
@@ -838,9 +849,7 @@ namespace	r_exec{
 		for(it=object->view_map.begin();it!=object->view_map.end();++it){
 
 			float32	morphed_sln_change=View::MorphChange(change,source_sln_thr,it->first->get_sln_thr());
-			it->second->acquire();
-			it->second->mod_sln(morphed_sln_change);
-			it->second->release();
+			it->first->pending_operations.push_back(Group::PendingOperation(it->second->getOID(),VIEW_RES,Group::MOD,morphed_sln_change));
 		}
 		object->rel_view_map();
 	}

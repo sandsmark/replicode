@@ -44,11 +44,13 @@ namespace	r_exec{
 			destination->reference_set[r_ptr_index]=object->reference_set[code[index].asIndex()];
 			destination->code[write_index++]=Atom::RPointer(r_ptr_index);
 		}
-	public:
-		Context():object(NULL),view(NULL),code(NULL),index(0),overlay(NULL),data(UNDEFINED){}	//	undefined context (happens when accessing the view of an object when it has not been provided).
-		Context(Object	*object,View	*view,Atom	*code,uint16	index,Overlay	*const	overlay,Data	data):object(object),view(view),code(code),index(index),overlay(overlay),data(data){}
 		Context(Object	*object,uint16	index):object(object),view(NULL),code(&object->code[0]),index(index),overlay(NULL),data(REFERENCE){}
 		Context(Object	*object,Data	data):object(object),view(NULL),code(NULL),index(0),overlay(NULL),data(data){}
+	public:
+		static	Context	GetContextFromInput(View	*input,Overlay	*overlay){	return	Context((r_exec::Object	*)input->object,input,&input->object->code[0],0,overlay,REFERENCE);	}
+
+		Context():object(NULL),view(NULL),code(NULL),index(0),overlay(NULL),data(UNDEFINED){}	//	undefined context (happens when accessing the view of an object when it has not been provided).
+		Context(Object	*object,View	*view,Atom	*code,uint16	index,Overlay	*const	overlay,Data	data=ORIGINAL_PGM):object(object),view(view),code(code),index(index),overlay(overlay),data(data){}
 
 		bool	evaluate()	const;
 		bool	evaluate_no_dereference()	const;
@@ -86,9 +88,9 @@ namespace	r_exec{
 		bool	operator	==(const	Context	&c)	const;
 		bool	operator	!=(const	Context	&c)	const;
 
-		Atom	*getCode()		const{	return	code;	}
-		Object	*getObject()	const{	return	object;	}
-		uint16	getIndex()		const{	return	index;	}
+		Atom	&operator	[](uint16	i)	const{	return	code[index+1];	}
+		Object	*getObject()				const{	return	object;	}
+		uint16	getIndex()					const{	return	index;	}
 
 		Context	dereference()	const;
 
@@ -123,9 +125,9 @@ namespace	r_exec{
 				overlay->values.push_back(a);
 		}
 
-		uint16	addExplicitInstantiation(Object	*object)	const{
-			overlay->explicit_instantiations.push_back(object);
-			return	overlay->explicit_instantiations.size()-1;
+		uint16	addProduction(Object	*object)	const{
+			overlay->productions.push_back(object);
+			return	overlay->productions.size()-1;
 		}
 
 		template<class	C>	void	copy(C	*destination,uint16	write_index)	const{	//	assumes the context is a structure; C: Object or View.
@@ -197,6 +199,9 @@ namespace	r_exec{
 
 		//	To retrieve objects, groups and views in mod/set expressions; views are copied.
 		void	getChildAsMember(uint16	index,void	*&object,ObjectType	object_type,uint16	member_index)	const;
+
+		//	this is a context on a pattern skeleton.
+		bool	match(const	Context	&input)	const;
 	};
 }
 

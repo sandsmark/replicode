@@ -143,7 +143,7 @@ namespace	r_exec{
 	void	Overlay::patch_tpl_code(uint16	pgm_code_index,uint16	ipgm_code_index){	//	patch recursively : in pgm_code[index] with IPGM_PTRs until ::.
 
 		uint16	atom_count=pgm_code[pgm_code_index].getAtomCount();
-		for(uint16	j=1;j<atom_count;++j){
+		for(uint16	j=1;j<=atom_count;++j){
 
 			switch(pgm_code[pgm_code_index+j].getDescriptor()){
 			case	Atom::WILDCARD:
@@ -160,11 +160,30 @@ namespace	r_exec{
 		}
 	}
 
-	void	Overlay::patch_input_code(uint16	pgm_code_index,uint16	input_code_index){
-		/*TO REDO
-		pgm_code[pgm_code_index]=value;
-		patch_indices.push_back(pgm_code_index);
-		*/
+	void	Overlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){	//	patch recursively : in pgm_code[index] with IN_OBJ_PTRs and IN_VW_PTRs until ::.
+
+		uint16	skel_index=pgm_code[pgm_code_index+1].asIndex();
+		uint16	atom_count=pgm_code[skel_index].getAtomCount();
+		for(uint16	j=1;j<=atom_count;++j){
+
+			switch(pgm_code[skel_index+j].getDescriptor()){
+			case	Atom::WILDCARD:
+				if(j==atom_count-4)	//	view
+					pgm_code[skel_index+j]=Atom::InVwPointer(input_index,input_code_index+j);
+				else
+					pgm_code[pgm_code_index+j]=Atom::InObjPointer(input_index,input_code_index+j);
+				patch_indices.push_back(skel_index+j);
+				break;
+			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
+				return;
+			case	Atom::I_PTR:
+				patch_input_code(pgm_code[skel_index+j].asIndex(),input_index,getInputObject(input_index)->code[skel_index+j].asIndex());
+				patch_indices.push_back(skel_index+j);
+				break;
+			default:	//	leave as is.
+				break;
+			}
+		}
 	}
 
 	bool	Overlay::is_alive()	const{
@@ -201,7 +220,7 @@ namespace	r_exec{
 		input_pattern_indices.clear();
 		value_commit_index=0;
 		values.clear();
-		explicit_instantiations.clear();
+		productions.clear();
 	}
 
 	void	Overlay::reduce(r_exec::View	*input,Mem	*mem){
@@ -273,8 +292,7 @@ namespace	r_exec{
 		if(!_match_skeleton(input, pattern_index))
 			return	IMPOSSIBLE;
 		
-		//	patch the pattern with a ptr to the input, i.e. pgm_code at var index = input ptr.
-		patch_input_code(pattern_index,input_views.size()-1);	//	the input has just been pushed on input_views (see match).
+		patch_input_code(pattern_index,input_views.size()-1,0);	//	the input has just been pushed on input_views (see match).
 
 		//	match: evaluate the set of guards.
 		uint16	guard_set_index=pgm_code[pattern_index+2].asIndex();
@@ -285,9 +303,9 @@ namespace	r_exec{
 
 	inline	bool	Overlay::_match_skeleton(r_exec::View	*input,uint16	pattern_index){	//	check for equality on (a) input->object vs ptn.skel.obj and, (b) input vs ptn.skel.vw.
 
-		Context	input_object(view->object,view,&view->object->code[0],0);
-		Context	pattern_skeleton(getIPGM()->getPGM(),getIPGMView(),&pgm_code[pgm_code[pattern_index+1].asIndex()],pgm_code[pattern_index+1].asIndex());	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
-		return	input_object==pattern_skeleton;
+		Context	input_object=Context::GetContextFromInput(input,this);
+		Context	pattern_skeleton(getIPGM()->getPGM(),getIPGMView(),pgm_code,pgm_code[pattern_index+1].asIndex(),this);	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
+		return	pattern_skeleton.match(input_object);
 	}
 
 	bool	Overlay::check_timings(){
@@ -318,49 +336,9 @@ namespace	r_exec{
 
 			if(!evaluate(i)){
 
-				explicit_instantiations.clear();
+				productions.clear();
 				return	false;
 			}
-		}
-
-		uint16	write_index=0;
-		uint16	extent_index=MK_RDX_ARITY+1;
-		uint32	production_index;
-		Object	*mk_rdx;
-
-		bool	notify_rdx=getIPGM()->getPGM()->code[PGM_NFR]==1;
-		if(notify_rdx){	//	the productions are command objects (cmd); all productions are notified.
-
-			mk_rdx=new	Object();
-			if(getIPGM()->code[0].asOpcode()==Object::PGMOpcode){
-
-				mk_rdx->code[write_index++]=Atom::Object(Object::PGMOpcode,MK_RDX_ARITY);
-				mk_rdx->code[write_index++]=Atom::RPointer(0);				//	code
-				mk_rdx->reference_set.push_back(getIPGM());
-				mk_rdx->code[write_index++]=Atom::IPointer(extent_index);	//	inputs
-				mk_rdx->code[extent_index++]=Atom::Set(input_views.size());
-				for(uint16	i=0;i<input_views.size();++i){
-
-					mk_rdx->code[extent_index++]=Atom::RPointer(i+1);
-					mk_rdx->reference_set.push_back(input_views[i]->object);
-				}
-			}else	if(getIPGM()->code[0].asOpcode()==Object::AntiPGMOpcode){
-
-				mk_rdx->code[write_index++]=Atom::Object(Object::AntiPGMOpcode,MK_RDX_ARITY);
-				mk_rdx->code[write_index++]=Atom::RPointer(0);				//	code
-				mk_rdx->reference_set.push_back(getIPGM());
-			}
-			
-			mk_rdx->code[write_index++]=Atom::IPointer(extent_index);		//	productions
-			mk_rdx->code[write_index++]=Atom::View();
-			mk_rdx->code[write_index++]=Atom::Vws();
-			mk_rdx->code[write_index++]=Atom::Mks();
-			mk_rdx->code[write_index++]=Atom::Float(1);						//	psln_thr.
-			production_index=extent_index;
-			mk_rdx->code[extent_index++]=Atom::Set(last_production_index-first_production_index+1);	//	number of productions.
-		}
-		
-		for(uint16	i=first_production_index;i<=last_production_index;++i){	//	all productions have evaluated correctly; we can now execute the commands.
 
 			Context	cmd(getIPGM()->getPGM(),NULL,pgm_code,i,this);
 			cmd.dereference();
@@ -376,28 +354,95 @@ namespace	r_exec{
 			//	4	>set
 			//	5	>first arg
 
+			//	identify production of new objects.
+			Context	args=cmd.getChild(4);
+			if(device[0].asOpcode()==EXECUTIVE_DEVICE){
+
+				if(function[0].asOpcode()==Object::InjectOpcode	||
+					function[0].asOpcode()==Object::EjectOpcode){	//	args:[object view]; create an object if not a reference.
+
+					Object	*object;
+					switch(args[1].getDescriptor()){
+					case	Atom::PROD_PTR:
+						object=productions[args[1].asIndex()];
+						break;
+					case	Atom::R_PTR:
+						object=args.getChild(1).getObject();
+						break;
+					default:{
+
+						Context	_object=args.getChild(1);
+						object=new	Object();
+						_object.copy(object,0);
+
+						productions.push_back(object);
+						patch_code(args.getIndex()+1,Atom::ProductionPointer(args[1].asIndex()));	//	so that this new object can be referenced in subsequent productions without needing another copy.
+					}
+					}
+				}
+			}
+		}
+
+		uint16	write_index=0;
+		uint16	extent_index=MK_RDX_ARITY+1;
+		Object	*mk_rdx;
+		bool	notify_rdx=getIPGM()->getPGM()->code[PGM_NFR]==1;
+		if(notify_rdx){	//	the productions are command objects (cmd); all productions are notified.
+
+			mk_rdx=new	Object();
+			if(getIPGM()->code[0].asOpcode()==Object::PGMOpcode){
+
+				mk_rdx->code[write_index++]=Atom::Object(Object::PGMOpcode,MK_RDX_ARITY);
+				mk_rdx->code[write_index++]=Atom::RPointer(0);				//	code.
+				mk_rdx->reference_set.push_back(getIPGM());
+				mk_rdx->code[write_index++]=Atom::IPointer(extent_index);	//	inputs.
+				mk_rdx->code[extent_index++]=Atom::Set(input_views.size());
+				for(uint16	i=0;i<input_views.size();++i){
+
+					mk_rdx->code[extent_index++]=Atom::RPointer(i+1);
+					mk_rdx->reference_set.push_back(input_views[i]->object);
+				}
+			}else	if(getIPGM()->code[0].asOpcode()==Object::AntiPGMOpcode){
+
+				mk_rdx->code[write_index++]=Atom::Object(Object::AntiPGMOpcode,MK_RDX_ARITY);
+				mk_rdx->code[write_index++]=Atom::RPointer(0);				//	code.
+				mk_rdx->reference_set.push_back(getIPGM());
+			}
+			
+			mk_rdx->code[write_index++]=Atom::IPointer(extent_index);		//	productions.
+			mk_rdx->code[write_index++]=Atom::View();
+			mk_rdx->code[write_index++]=Atom::Vws();
+			mk_rdx->code[write_index++]=Atom::Mks();
+			mk_rdx->code[write_index++]=Atom::Float(1);						//	psln_thr.
+			mk_rdx->code[extent_index++]=Atom::Set(last_production_index-first_production_index+1);	//	number of productions.
+		}
+		
+		for(uint16	i=first_production_index;i<=last_production_index;++i){	//	all productions have evaluated correctly; now we can execute the commands.
+
+			Context	cmd(getIPGM()->getPGM(),NULL,pgm_code,i,this);
+			cmd.dereference();
+
+			Context	function=cmd.getChild(1);
+			Context	device=cmd.getChild(2);
+
 			//	call device functions.
 			Context	args=cmd.getChild(4);
-			if(device.getCode()->asOpcode()==EXECUTIVE_DEVICE){
+			if(device[0].asOpcode()==EXECUTIVE_DEVICE){
 
-				if(function.getCode()->asOpcode()==Object::InjectOpcode){	//	args:[object view]; create a view and an object.
+				if(function[0].asOpcode()==Object::InjectOpcode){	//	args:[object view]; retrieve the object and create a view.
 
-					Context	_object=args.getChild(1);
-					Object	*object=new	Object();
-					_object.copy(object,0);
-
+					Object	*object=args.getChild(1).getObject();
+					
 					Context	_view=args.getChild(2);
 					View	*view=new	View();
 					_view.copy(view,0);
 					view->object=object;
 
 					mem->inject(view);
-				}else	if(function.getCode()->asOpcode()==Object::EjectOpcode){	//	args:[object view destination_node]; view.grp=destination grp (stdin ot stdout); create a view and an object; update mk_rdx.
+				}else	if(function[0].asOpcode()==Object::EjectOpcode){	//	args:[object view destination_node]; view.grp=destination grp (stdin ot stdout); retrieve the object and create a view.
 
-					Context	_object=args.getChild(1);
-					Object	*object=new	Object();
-					_object.copy(object,0);
-
+					Object	*object=args.getChild(1).getObject();
+					
 					Context	_view=args.getChild(2);
 					View	*view=new	View();
 					_view.copy(view,0);
@@ -405,8 +450,8 @@ namespace	r_exec{
 
 					Context	node=args.getChild(3);
 
-					mem->eject(view,node.getCode()->getNodeID());
-				}else	if(function.getCode()->asOpcode()==Object::ModOpcode){	//	args:[cptr value]
+					mem->eject(view,node[0].getNodeID());
+				}else	if(function[0].asOpcode()==Object::ModOpcode){	//	args:[cptr value].
 
 					void	*object;
 					Context::ObjectType	object_type;
@@ -416,25 +461,28 @@ namespace	r_exec{
 					if(object){
 						
 						Context	_value=args.getChild(2);
-						float32	value=_value.getCode()->asFloat();
-						bool	r;
+						float32	value=_value[0].asFloat();
 						switch(object_type){
-						case	Context::TYPE_VIEW:
-							((View	*)object)->acquire();
-							r=((View	*)object)->mod(member_index,value);
-							((View	*)object)->release();
-							return	r;
-						case	Context::TYPE_OBJECT:
-							return	((Object	*)object)->mod(member_index,value);	//	protected internally.
+						case	Context::TYPE_VIEW:{	//	add the target and value to the group's pending operations.
+
+							Group	*g=(Group	*)object;
+							g->acquire();
+							g->pending_operations.push_back(Group::PendingOperation(((View	*)object)->getOID(),member_index,Group::MOD,value));
+							g->release();
+							break;
+						}case	Context::TYPE_OBJECT:
+							((Object	*)object)->mod(member_index,value);	//	protected internally.
+							break;
 						case	Context::TYPE_GROUP:
 							((Group	*)object)->acquire();
-							r=((Group	*)object)->mod(member_index,value);
+							((Group	*)object)->mod(member_index,value);
 							((Group	*)object)->release();
+							break;
 						default:
 							return	false;
 						}
 					}
-				}else	if(function.getCode()->asOpcode()==Object::SetOpcode){	//	args:[cptr value]
+				}else	if(function[0].asOpcode()==Object::SetOpcode){	//	args:[cptr value].
 
 					void	*object;
 					Context::ObjectType	object_type;
@@ -444,48 +492,49 @@ namespace	r_exec{
 					if(object){
 						
 						Context	_value=args.getChild(2);
-						float32	value=_value.getCode()->asFloat();
-						bool	r;
+						float32	value=_value[0].asFloat();
 						switch(object_type){
-						case	Context::TYPE_VIEW:
-							((View	*)object)->acquire();
-							r=((View	*)object)->mod(member_index,value);
-							((View	*)object)->release();
-							return	r;
-						case	Context::TYPE_OBJECT:
-							return	((Object	*)object)->set(member_index,value);	//	protected internally.
+						case	Context::TYPE_VIEW:{	//	add the target and value to the group's pending operations.
+
+							Group	*g=((View	*)object)->getHost();
+							g->acquire();
+							g->pending_operations.push_back(Group::PendingOperation(((View	*)object)->getOID(),member_index,Group::SET,value));
+							g->release();
+							break;
+						}case	Context::TYPE_OBJECT:
+							((Object	*)object)->set(member_index,value);	//	protected internally.
+							break;
 						case	Context::TYPE_GROUP:
 							((Group	*)object)->acquire();
-							r=((Group	*)object)->set(member_index,value);
+							((Group	*)object)->set(member_index,value);
 							((Group	*)object)->release();
-						default:
-							return	false;
+							break;
 						}
 					}
-				}else	if(function.getCode()->asOpcode()==Object::NewClassOpcode){
+				}else	if(function[0].asOpcode()==Object::NewClassOpcode){
 
-				}else	if(function.getCode()->asOpcode()==Object::DelClassOpcode){
+				}else	if(function[0].asOpcode()==Object::DelClassOpcode){
 
-				}else	if(function.getCode()->asOpcode()==Object::LDCOpcode){
+				}else	if(function[0].asOpcode()==Object::LDCOpcode){
 
-				}else	if(function.getCode()->asOpcode()==Object::SwapOpcode){
+				}else	if(function[0].asOpcode()==Object::SwapOpcode){
 
-				}else	if(function.getCode()->asOpcode()==Object::NewDevOpcode){
+				}else	if(function[0].asOpcode()==Object::NewDevOpcode){
 
-				}else	if(function.getCode()->asOpcode()==Object::DelDevOpcode){
+				}else	if(function[0].asOpcode()==Object::DelDevOpcode){
 
-				}else	if(function.getCode()->asOpcode()==Object::SuspendOpcode){	//	no args.
+				}else	if(function[0].asOpcode()==Object::SuspendOpcode){	//	no args.
 
 					mem->suspend();
-				}else	if(function.getCode()->asOpcode()==Object::ResumeOpcode){	//	no args.
+				}else	if(function[0].asOpcode()==Object::ResumeOpcode){	//	no args.
 
 					mem->resume();
-				}else	if(function.getCode()->asOpcode()==Object::StopOpcode){		//	no args.
+				}else	if(function[0].asOpcode()==Object::StopOpcode){		//	no args.
 
 					mem->stop();
 				}else{	//	unknown function.
 
-					explicit_instantiations.clear();
+					productions.clear();
 					return	false;
 				}
 			}else{	//	in case of an external device, create a cmd object and send it.
@@ -506,7 +555,7 @@ namespace	r_exec{
 			mem->inject(v);
 		}
 
-		explicit_instantiations.clear();
+		productions.clear();
 		return	true;
 	}
 
