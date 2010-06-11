@@ -38,7 +38,7 @@ namespace	r_comp{
 	Reference::Reference(){
 	}
 
-	Reference::Reference(const	uint16	i,const	Class	&c):index(i),_class(c){
+	Reference::Reference(const	uint16	i,const	Class	&c,const	Class	&cc):index(i),_class(c),cast_class(cc){
 	}
 
 	////////////////////////////////////////////////////////////////

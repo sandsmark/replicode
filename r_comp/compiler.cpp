@@ -150,7 +150,7 @@ namespace	r_comp{
 
 			current_object=new	SysObject();
 			if(lbl)
-				global_references[l]=Reference(_image->code_image.code_segment.objects.size(),current_class);
+				global_references[l]=Reference(_image->code_image.code_segment.objects.size(),current_class,Class());
 		}
 
 		current_object->code[0]=current_class.atom;
@@ -279,6 +279,25 @@ namespace	r_comp{
 		}
 		return	false;
 	}
+
+	void	Compiler::addReference(const	std::string	reference_name,const	uint16	index,const	Class	&p){
+
+		//	cast detection.
+		size_t	pos=reference_name.find('#');
+		if(pos!=string::npos){
+
+			std::string	class_name=reference_name.substr(pos+1);
+			std::string	ref_name=reference_name.substr(0,pos);
+
+			UNORDERED_MAP<std::string,Class>::iterator	it=_image->class_image.classes.find(class_name);
+			if(it!=_image->class_image.classes.end())
+				local_references[ref_name]=Reference(index,p,it->second);
+			else
+				set_error(" error: cast to "+class_name+": unknown class");
+		}else
+			local_references[reference_name]=Reference(index,p,Class());
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	bool	Compiler::comment(){
@@ -926,40 +945,20 @@ return_false:
 
 			uint16		index;
 			ReturnType	type;
-
-			//	cast.
-			Class	*cast_class=NULL;
-			size_t	pos=m.find('#');
-			std::string	class_name;
-			if(pos!=string::npos){
-
-				class_name=m.substr(pos+1);
-				m=m.substr(0,pos);
-
-				UNORDERED_MAP<std::string,Class>::iterator	it=_image->class_image.classes.find(class_name);
-				if(it!=_image->class_image.classes.end()){
-
-					cast_class=&it->second;
-					cast_opcode=cast_class->atom.asOpcode();
-				}else{
-
-					set_error(" error: cast to "+class_name+": unknown class");
-					in_stream->clear();
-					in_stream->seekg(i);
-					return	false;
-				}
-			}else
-				cast_opcode=0xFF;
-
 			UNORDERED_MAP<std::string,Reference>::iterator	it=local_references.find(m);
 			if(it!=local_references.end()){
 
 				index=it->second.index;
 				v.push_back(index);
-				if(cast_class)
-					p=cast_class;
-				else
+				if(it->second.cast_class.str_opcode=="undefined"){	//	find out if there was a cast for this reference.
+
 					p=&it->second._class;
+					cast_opcode=0x0FFF;
+				}else{
+
+					p=&it->second.cast_class;
+					cast_opcode=p->atom.asOpcode();
+				}
 				Class	*_p;
 				while(member(m)){
 
@@ -1478,7 +1477,7 @@ return_false:
 			return	false;
 		}
 		if(lbl)
-			local_references[l]=Reference(write_index,p);
+			addReference(l,write_index,p);
 		uint16	tail_write_index=0;
 		if(write){
 
@@ -1511,7 +1510,7 @@ return_false:
 			return	false;
 		}
 		if(lbl)
-			local_references[l]=Reference(write_index,p);
+			addReference(l,write_index,p);
 		uint16	tail_write_index=0;
 		if(write){
 
@@ -1539,7 +1538,7 @@ return_false:
 			return	false;
 		}
 		if(lbl)
-			local_references[l]=Reference(write_index,Class(SET));
+			addReference(l,write_index,Class(SET));
 		indent(false);
 		uint16	content_write_index=0;
 		if(write){
@@ -1604,7 +1603,7 @@ return_false:
 			return	false;
 		}
 		if(lbl)
-			local_references[l]=Reference(write_index,p);
+			addReference(l,write_index,p);
 		indent(false);
 		uint16	content_write_index=0;
 		if(write){
@@ -2181,7 +2180,7 @@ return_false:
 			if(!object(_p))
 				if(!marker(_p))
 					return	false;
-			local_references[l]=Reference(write_index,_p);
+			local_references[l]=Reference(write_index,_p,Class());
 			if(write)
 				current_object->code[write_index]=_p.atom;
 			return	true;
@@ -2322,7 +2321,7 @@ return_false:
 
 			if(state.pattern_lvl){
 			
-				local_references[v]=Reference(write_index,p);
+				addReference(v,write_index,p);
 				if(write)
 					current_object->code[write_index]=Atom::Wildcard();	//	useless in skeleton expressions (already filled up in expression_head); usefull when the skeleton itself is a variable
 				return	true;

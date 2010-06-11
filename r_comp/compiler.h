@@ -87,6 +87,7 @@ namespace	r_comp{
 
 		UNORDERED_MAP<std::string,Reference>	local_references;	//	labels and variables declared inside objects (cleared before parsing each sys-object): translate to value pointers.
 		UNORDERED_MAP<std::string,Reference>	global_references;	//	labels declared outside sys-objects. translate to reference pointers.
+		void	addReference(const	std::string	reference_name,const	uint16	index,const	Class	&p);											//	detect cast.
 		bool	getReferenceIndex(const	std::string	reference_name,const	ReturnType	t,ImageObject	*object,uint16	&index,Class	*&_class);	//	index points to the reference set.
 																																					//	return false when not found.
 		//	Utility.

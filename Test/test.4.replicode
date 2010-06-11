@@ -9,7 +9,7 @@ P1:(pgm
       (ptn m:(mk.val ref_val.object position value: [ijt: ::] ::) []
          (> ijt ref_t)
          (<> value ref_val.value)
-         v:(fvw m stdin)
+         v#view:(fvw m stdin)
       )
    |[]; timing
    |[]; guards
@@ -17,7 +17,7 @@ P1:(pgm
    (inj [(mk.last_known m |[] |[] |[] 0) [now 1 400000us nil nil]]); builds L.
    (inj [(ins P1 [m ijt]) [now 1 forever stdin nil]]); instantiates P1 with m as actual template arguments.
    (set [this.vw.res 0]); kills the original ipgm.
-   (mod [v#view.sln -0.5])
+   (mod [v.sln -0.5]); just for quick testing; shall not be there!
 1000000us; tsc
 0; nfr
 |[]; view

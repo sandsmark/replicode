@@ -42,9 +42,10 @@ namespace	r_comp{
 	class	Reference{
 	public:
 		Reference();
-		Reference(const	uint16	i,const	Class	&c);
+		Reference(const	uint16	i,const	Class	&c,const	Class	&cc);
 		uint16	index;
 		Class	_class;
+		Class	cast_class;
 	};
 
 	//	All classes below map components of r_code::Image into r_comp::Image.
