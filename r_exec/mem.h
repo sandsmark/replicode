@@ -41,10 +41,10 @@ namespace	r_exec{
 		uint32			time_core_count;
 		TimeCore		**time_cores;
 
-		r_code::P<Group>	root;		//	holds everything.
-		Group				*_stdin;	//	convenience.
-		Group				*_stdout;	//	convenience.
-		Object				*_self;		//	convenience.
+		P<Group>	root;		//	holds everything.
+		Group		*_stdin;	//	convenience.
+		Group		*_stdout;	//	convenience.
+		Object		*_self;		//	convenience.
 
 		UNORDERED_MAP<uint32,Object	*>							object_io_map;		//	[OID|object	*]: used for retrieving objects by ID; does not include groups; used only if comm!=NULL.
 		UNORDERED_SET<Object	*,Object::Hash,Object::Equal>	object_register;	//	to eliminate duplicates (content-wise); does not include groups.

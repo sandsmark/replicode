@@ -37,6 +37,8 @@
 #include	"replicode_defs.h"
 
 
+using	namespace	core;
+
 namespace	r_code{
 
 	//	I/O from/to r_code::Image ////////////////////////////////////////////////////////////////////////

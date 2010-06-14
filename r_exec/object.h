@@ -262,24 +262,24 @@ namespace	r_exec{
 	public:
 		//	xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
 		//	Active overlays are to be found in xxx_ipgm_views.
-		UNORDERED_MAP<uint32,r_code::P<View> >	ipgm_views;
-		UNORDERED_MAP<uint32,r_code::P<View> >	anti_ipgm_views;
-		UNORDERED_MAP<uint32,r_code::P<View> >	input_less_ipgm_views;
-		UNORDERED_MAP<uint32,r_code::P<View> >	notification_views;
-		UNORDERED_MAP<uint32,r_code::P<View> >	group_views;
-		UNORDERED_MAP<uint32,r_code::P<View> >	other_views;
+		UNORDERED_MAP<uint32,P<View> >	ipgm_views;
+		UNORDERED_MAP<uint32,P<View> >	anti_ipgm_views;
+		UNORDERED_MAP<uint32,P<View> >	input_less_ipgm_views;
+		UNORDERED_MAP<uint32,P<View> >	notification_views;
+		UNORDERED_MAP<uint32,P<View> >	group_views;
+		UNORDERED_MAP<uint32,P<View> >	other_views;
 
 		//	Defined to create reduction jobs in the viewing groups from the viewed group.
 		//	Empty when the viewed group is invisible (this means that visible groups can be non c-active or non c-salient).
 		//	Maintained by the viewing groups (at update time).
 		//	Viewing groups are c-active and c-salient. the bool is the cov.
-		UNORDERED_MAP<Group	*,bool>								viewing_groups;
+		UNORDERED_MAP<Group	*,bool>		viewing_groups;
 
 		//	Populated within update; cleared at the beginning of update.
-		std::vector<View	*>									newly_salient_views;
+		std::vector<View	*>			newly_salient_views;
 
 		//	Populated upon ipgm injection; used at update time; cleared afterward.
-		std::vector<IPGMController	*>							new_controllers;
+		std::vector<IPGMController	*>	new_controllers;
 
 		typedef	enum{
 			MOD=0,
@@ -302,25 +302,25 @@ namespace	r_exec{
 		Group(r_code::SysObject	*source);
 		~Group();
 
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	views_begin()	const;
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	views_end()		const;
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	next_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	views_begin()	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	views_end()		const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
 
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	input_less_ipgm_views_begin()	const;
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	input_less_ipgm_views_end()		const;
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	next_input_less_ipgm_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	input_less_ipgm_views_begin()	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	input_less_ipgm_views_end()		const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_input_less_ipgm_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
 
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	anti_ipgm_views_begin()	const;
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	anti_ipgm_views_end()	const;
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	next_anti_pgm_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	anti_ipgm_views_begin()	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	anti_ipgm_views_end()	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_anti_pgm_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
 
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	ipgm_views_with_inputs_begin()	const;
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	ipgm_views_with_inputs_end()	const;
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	next_ipgm_view_with_inputs(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	ipgm_views_with_inputs_begin()	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	ipgm_views_with_inputs_end()	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_ipgm_view_with_inputs(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
 
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	non_ntf_views_begin()	const;
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	non_ntf_views_end()		const;
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	next_non_ntf_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	non_ntf_views_begin()	const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	non_ntf_views_end()		const;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_non_ntf_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
 
 		View	*getView(uint32	OID);
 

@@ -242,17 +242,17 @@ namespace	r_exec{
 	inline	Group::~Group(){
 	}
 
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::views_begin()	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::views_begin()	const{
 
 		return	ipgm_views.begin();
 	}
 
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::views_end()	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::views_end()	const{
 
 		return	other_views.end();
 	}
 
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::next_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::next_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const{
 
 		if(it==ipgm_views.end())
 			return	anti_ipgm_views.begin();
@@ -267,64 +267,64 @@ namespace	r_exec{
 		return	++it;
 	}
 
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::input_less_ipgm_views_begin()	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::input_less_ipgm_views_begin()	const{
 
 		return	input_less_ipgm_views.begin();
 	}
 	
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::input_less_ipgm_views_end()		const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::input_less_ipgm_views_end()		const{
 
 		return	input_less_ipgm_views.end();
 	}
 	
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::next_input_less_ipgm_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::next_input_less_ipgm_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const{
 
 		return	++it;
 	}
 
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::anti_ipgm_views_begin()	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::anti_ipgm_views_begin()	const{
 
 		return	anti_ipgm_views.begin();
 	}
 	
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::anti_ipgm_views_end()	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::anti_ipgm_views_end()	const{
 
 		return	anti_ipgm_views.end();
 	}
 	
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::next_anti_pgm_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::next_anti_pgm_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const{
 
 		return	++it;
 	}
 
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::ipgm_views_with_inputs_begin()	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::ipgm_views_with_inputs_begin()	const{
 
 		return	ipgm_views.begin();
 	}
 	
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::ipgm_views_with_inputs_end()	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::ipgm_views_with_inputs_end()	const{
 
 		return	anti_ipgm_views.end();
 	}
 	
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::next_ipgm_view_with_inputs(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::next_ipgm_view_with_inputs(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const{
 
 		if(it==ipgm_views.end())
 			return	anti_ipgm_views.begin();
 		return	++it;
 	}
 
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::non_ntf_views_begin()	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::non_ntf_views_begin()	const{
 
 		return	ipgm_views.begin();
 	}
 	
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::non_ntf_views_end()		const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::non_ntf_views_end()		const{
 
 		return	input_less_ipgm_views.end();
 	}
 	
-	inline	UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	Group::next_non_ntf_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const{
+	inline	UNORDERED_MAP<uint32,P<View> >::const_iterator	Group::next_non_ntf_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const{
 
 		if(it==ipgm_views.end())
 			return	anti_ipgm_views.begin();

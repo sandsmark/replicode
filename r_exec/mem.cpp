@@ -279,7 +279,7 @@ namespace	r_exec{
 
 			if(c_active){
 
-				UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
+				UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 
 				//	build signaling jobs for active input-less overlays.
 				for(v=g->input_less_ipgm_views_begin();v!=g->input_less_ipgm_views_end();v=g->next_input_less_ipgm_view(v)){
@@ -298,7 +298,7 @@ namespace	r_exec{
 				if(c_salient){
 
 					//	build reduction jobs for each salient view and each active overlay.
-					UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
+					UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 					for(v=g->views_begin();v!=g->views_end();v=g->next_view(v)){
 						
 						r_code::Timestamp::Set(&v->second->code[VIEW_IJT],now);	//	init injection time for the view.
@@ -701,7 +701,7 @@ namespace	r_exec{
 
 		group->reset_stats();
 
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 		for(v=group->views_begin();v!=group->views_end();v=group->next_view(v)){
 
 			//	update resilience.
@@ -879,7 +879,7 @@ namespace	r_exec{
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
 
 			//	build reduction jobs from host's own inputs and own overlays.
-			UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
+			UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 			for(v=host->ipgm_views_with_inputs_begin();v!=host->ipgm_views_with_inputs_end();v=host->next_ipgm_view_with_inputs(v)){
 
 				if(v->second->get_act_vis()>host->get_sln_thr())	//	active ipgm view.
@@ -896,7 +896,7 @@ namespace	r_exec{
 			if(vg->second	||	view->isNotification())	//	cov==true or notification.
 				continue;
 
-			UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
+			UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 			for(v=vg->first->ipgm_views_with_inputs_begin();v!=vg->first->ipgm_views_with_inputs_end();v=vg->first->next_ipgm_view_with_inputs(v)){
 
 				if(v->second->get_act_vis()>vg->first->get_sln_thr())	//	active ipgm view.

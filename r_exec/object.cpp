@@ -227,7 +227,7 @@ namespace	r_exec{
 
 	View	*Group::getView(uint32	OID){
 
-		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	it=other_views.find(OID);
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	it=other_views.find(OID);
 		if(it!=other_views.end())
 			return	it->second;
 		it=group_views.find(OID);
@@ -304,7 +304,7 @@ namespace	r_exec{
 
 		if(sln_change_monitoring_periods_to_go==0){
 
-			UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
+			UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 			for(v=non_ntf_views_begin();v!=non_ntf_views_end();v=next_non_ntf_view(v)){
 
 				float32	change=v->second->update_sln_delta();
@@ -315,7 +315,7 @@ namespace	r_exec{
 
 		if(act_change_monitoring_periods_to_go==0){
 
-			UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
+			UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 			for(v=non_ntf_views_begin();v!=non_ntf_views_end();v=next_non_ntf_view(v)){
 
 				float32	change=v->second->update_act_delta();
