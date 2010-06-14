@@ -511,7 +511,7 @@ namespace	r_exec{
 					host->ipgm_views[view->getOID()]=view;
 					IPGMController	*o=new	IPGMController(view);
 					view->controller=o;
-					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
+					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()){	//	active ipgm in a c-salient group.
 
 						for(uint32	i=0;i<host->newly_salient_views.size();++i)
 							_inject_reduction_jobs(host->newly_salient_views[i],host);
@@ -521,20 +521,23 @@ namespace	r_exec{
 					host->anti_ipgm_views[view->getOID()]=view;
 					IPGMController	*o=new	IPGMController(view);
 					view->controller=o;
-					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
+					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()){	//	active ipgm in a c-salient group.
 
 						for(uint32	i=0;i<host->newly_salient_views.size();++i)
 							_inject_reduction_jobs(host->newly_salient_views[i],host);
 
-						TimeJob	j(new	AntiPGMSignalingJob(o),now+o->getIPGM()->get_tsc());
-						time_job_queue.push(j);
+						if(host->get_c_act()>host->get_c_act_thr()){	//	c-active group.
+
+							TimeJob	j(new	AntiPGMSignalingJob(o),now+o->getIPGM()->get_tsc());
+							time_job_queue.push(j);
+						}
 					}
 					break;
 				}case	INPUT_LESS_IPGM:{
 					host->input_less_ipgm_views[view->getOID()]=view;
 					IPGMController	*o=new	IPGMController(view);
 					view->controller=o;
-					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
+					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
 						TimeJob	j(new	InputLessPGMSignalingJob(o),now+host->get_spr()*base_period);
 						time_job_queue.push(j);
