@@ -283,8 +283,9 @@ namespace	r_exec{
 			case	SUCCESS:
 				return	FAILURE;
 			}
-		}else
+		}else	if(pgm_code[pattern_index].asOpcode()==Object::PTNOpcode)
 			return	_match_pattern(input,pattern_index);
+		return	IMPOSSIBLE;
 	}
 
 	inline	Overlay::MatchResult	Overlay::_match_pattern(r_exec::View	*input,uint16	pattern_index){

@@ -150,7 +150,7 @@ namespace	r_exec{
 			float32	new_res=(float32)acc_res/(float32)res_changes;
 			if(new_res<0)
 				new_res=0;
-			r_code::Timestamp::Set(&code[VIEW_RES],new_res);
+			code[VIEW_RES]=new_res;
 		}
 		acc_res=0;
 		res_changes=0;

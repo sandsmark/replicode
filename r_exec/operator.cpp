@@ -273,7 +273,7 @@ namespace	r_exec{
 
 			if(rhs[0].isFloat()	&&	rhs[0].asFloat()>0){
 
-				index=context.setTimestampResult(Timestamp::Get(&lhs[0])/rhs[0].asFloat());
+				index=context.setTimestampResult(((float64)Timestamp::Get(&lhs[0]))/rhs[0].asFloat());
 				return	true;
 			}
 		}
@@ -495,14 +495,7 @@ namespace	r_exec{
 					return	false;
 			}
 
-			//	compute all productions for this input.
-			uint16	production_count=productions.getChildrenCount();
-			uint16	production_index;
-			for(uint16	i=1;i<production_count;++i){
-
-				productions.getChild(i).evaluate(production_index);
-				production_indices.push_back(production_index);
-			}
+			goto	build_productions;
 			return	true;
 		}
 
@@ -521,18 +514,23 @@ namespace	r_exec{
 					return	false;
 			}
 
-			//	compute all productions for this input.
-			uint16	production_count=productions.getChildrenCount();
-			uint16	production_index;
-			for(uint16	i=1;i<production_count;++i){
-
-				productions.getChild(i).evaluate(production_index);
-				production_indices.push_back(production_index);
-			}
+			goto	build_productions;
 			return	true;
 		}
 
 		return	false;
+
+build_productions:
+		//	compute all productions for this input.
+		uint16	production_count=productions.getChildrenCount();
+		uint16	production_index;
+		for(uint16	i=1;i<production_count;++i){
+
+			productions.getChild(i).evaluate(production_index);
+			production_indices.push_back(production_index);
+		}
+
+		return	true;
 	}
 
 	void	reduce(const	Context	&context,const	Context	&input_set,const	Context	&section,std::vector<uint16>	&input_indices,std::vector<uint16>	&production_indices){
