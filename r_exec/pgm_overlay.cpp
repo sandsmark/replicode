@@ -301,7 +301,7 @@ namespace	r_exec{
 		return	SUCCESS;
 	}
 
-	inline	bool	Overlay::_match_skeleton(r_exec::View	*input,uint16	pattern_index){	//	check for equality on (a) input->object vs ptn.skel.obj and, (b) input vs ptn.skel.vw.
+	inline	bool	Overlay::_match_skeleton(r_exec::View	*input,uint16	pattern_index){
 
 		Context	input_object=Context::GetContextFromInput(input,this);
 		Context	pattern_skeleton(getIPGM()->getPGM(),getIPGMView(),pgm_code,pgm_code[pattern_index+1].asIndex(),this);	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
@@ -327,7 +327,7 @@ namespace	r_exec{
 	inline	bool	Overlay::evaluate(uint16	index){
 
 		Context	c(getIPGM()->getPGM(),getIPGMView(),pgm_code,index,this);
-		return	c.evaluate();
+		return	c.evaluate(index);
 	}
 
 	bool	Overlay::inject_productions(Mem	*mem){
@@ -456,7 +456,8 @@ namespace	r_exec{
 					void	*object;
 					Context::ObjectType	object_type;
 					uint16	member_index;
-					args.getChildAsMember(1,object,object_type,member_index);
+					uint32	view_oid;
+					args.getChildAsMember(1,object,view_oid,object_type,member_index);
 
 					if(object){
 						
@@ -467,7 +468,7 @@ namespace	r_exec{
 
 							Group	*g=(Group	*)object;
 							g->acquire();
-							g->pending_operations.push_back(Group::PendingOperation(((View	*)object)->getOID(),member_index,Group::MOD,value));
+							g->pending_operations.push_back(Group::PendingOperation(view_oid,member_index,Group::MOD,value));
 							g->release();
 							break;
 						}case	Context::TYPE_OBJECT:
@@ -487,7 +488,8 @@ namespace	r_exec{
 					void	*object;
 					Context::ObjectType	object_type;
 					uint16	member_index;
-					args.getChildAsMember(1,object,object_type,member_index);
+					uint32	view_oid;
+					args.getChildAsMember(1,object,view_oid,object_type,member_index);
 
 					if(object){
 						
@@ -496,9 +498,9 @@ namespace	r_exec{
 						switch(object_type){
 						case	Context::TYPE_VIEW:{	//	add the target and value to the group's pending operations.
 
-							Group	*g=((View	*)object)->getHost();
+							Group	*g=(Group	*)object;
 							g->acquire();
-							g->pending_operations.push_back(Group::PendingOperation(((View	*)object)->getOID(),member_index,Group::SET,value));
+							g->pending_operations.push_back(Group::PendingOperation(view_oid,member_index,Group::SET,value));
 							g->release();
 							break;
 						}case	Context::TYPE_OBJECT:

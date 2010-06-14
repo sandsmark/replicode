@@ -130,15 +130,12 @@ namespace	r_exec{
 		};
 	};
 
+	//	OID is the 2nd atom in code.
 	//	Shared resources:
 	//		none: all mod/set operations are pushed on the group and executed at update time.
 	class	View:
 	public	r_code::View{
 	private:
-		static	uint32	LastOID;
-		static	uint32	GetOID();
-		uint32	OID;
-
 		//	Ctrl values.
 		uint32	sln_changes;
 		float32	acc_sln;
@@ -152,6 +149,9 @@ namespace	r_exec{
 		float32	initial_sln;
 		float32	initial_act;
 	protected:
+		static	uint32	LastOID;
+		static	uint32	GetOID();
+
 		void	reset_init_values();
 	public:
 		static	uint16	ViewOpcode;
@@ -203,20 +203,6 @@ namespace	r_exec{
 		//	Target res, sln, act, vis.
 		void	mod(uint16	member_index,float32	value);
 		void	set(uint16	member_index,float32	value);
-
-		class	Hash{
-		public:
-			size_t	operator	()(View	*v)	const{
-				return	(size_t)(Object	*)v->object;
-			}
-		};
-
-		class	Equal{
-		public:
-			bool	operator	()(const	View	*lhs,const	View	*rhs)	const{
-				return	lhs->object==rhs->object;
-			}
-		};
 	};
 
 	//	Shared resources:
@@ -276,12 +262,12 @@ namespace	r_exec{
 	public:
 		//	xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
 		//	Active overlays are to be found in xxx_ipgm_views.
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>	ipgm_views;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>	anti_ipgm_views;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>	input_less_ipgm_views;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>	notification_views;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>	group_views;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>	other_views;
+		UNORDERED_MAP<uint32,r_code::P<View> >	ipgm_views;
+		UNORDERED_MAP<uint32,r_code::P<View> >	anti_ipgm_views;
+		UNORDERED_MAP<uint32,r_code::P<View> >	input_less_ipgm_views;
+		UNORDERED_MAP<uint32,r_code::P<View> >	notification_views;
+		UNORDERED_MAP<uint32,r_code::P<View> >	group_views;
+		UNORDERED_MAP<uint32,r_code::P<View> >	other_views;
 
 		//	Defined to create reduction jobs in the viewing groups from the viewed group.
 		//	Empty when the viewed group is invisible (this means that visible groups can be non c-active or non c-salient).
@@ -316,25 +302,25 @@ namespace	r_exec{
 		Group(r_code::SysObject	*source);
 		~Group();
 
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	views_begin()	const;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	views_end()		const;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	next_view(UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	&it)	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	views_begin()	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	views_end()		const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	next_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const;
 
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	input_less_ipgm_views_begin()	const;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	input_less_ipgm_views_end()		const;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	next_input_less_ipgm_view(UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	&it)	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	input_less_ipgm_views_begin()	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	input_less_ipgm_views_end()		const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	next_input_less_ipgm_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const;
 
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	anti_ipgm_views_begin()	const;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	anti_ipgm_views_end()	const;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	next_anti_pgm_view(UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	&it)	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	anti_ipgm_views_begin()	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	anti_ipgm_views_end()	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	next_anti_pgm_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const;
 
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	ipgm_views_with_inputs_begin()	const;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	ipgm_views_with_inputs_end()	const;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	next_ipgm_view_with_inputs(UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	&it)	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	ipgm_views_with_inputs_begin()	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	ipgm_views_with_inputs_end()	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	next_ipgm_view_with_inputs(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const;
 
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	non_ntf_views_begin()	const;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	non_ntf_views_end()		const;
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	next_non_ntf_view(UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	&it)	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	non_ntf_views_begin()	const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	non_ntf_views_end()		const;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	next_non_ntf_view(UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	&it)	const;
 
 		View	*getView(uint32	OID);
 

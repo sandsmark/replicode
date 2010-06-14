@@ -109,7 +109,7 @@ namespace	r_exec{
 		if(!Init)
 			exit(-1);
 
-		typedef	bool	(*UserOperator)(const	Context	&);
+		typedef	bool	(*UserOperator)(const	Context	&,uint16	&);
 		typedef	uint16	(*UserGetOperatorCount)();
 		UserGetOperatorCount	GetOperatorCount=UserLibrary.getFunction<UserGetOperatorCount>("GetOperatorCount");
 		if(!GetOperatorCount)
@@ -220,7 +220,7 @@ namespace	r_exec{
 
 				if(object->getType()==GROUP){
 					
-					host->group_views.insert(view);
+					host->group_views[view->getOID()]=view;
 
 					//	init viewing_group.
 					bool	viewing_c_active=host->get_c_act()>host->get_c_act_thr();
@@ -232,13 +232,13 @@ namespace	r_exec{
 
 					switch(object->getType()){
 					case	INPUT_LESS_IPGM:
-						host->input_less_ipgm_views.insert(view);
+						host->input_less_ipgm_views[view->getOID()]=view;
 						break;
 					case	ANTI_IPGM:
-						host->anti_ipgm_views.insert(view);
+						host->anti_ipgm_views[view->getOID()]=view;
 						break;
 					default:
-						host->ipgm_views.insert(view);
+						host->ipgm_views[view->getOID()]=view;
 						break;
 					}
 					
@@ -248,7 +248,7 @@ namespace	r_exec{
 						view->controller=o;	//	init the view's overlay.
 					}
 				}else
-					host->other_views.insert(view);
+					host->other_views[view->getOID()]=view;
 			}
 
 			if(!object->getType()==GROUP){
@@ -279,31 +279,31 @@ namespace	r_exec{
 
 			if(c_active){
 
-				UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	v;
+				UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
 
 				//	build signaling jobs for active input-less overlays.
 				for(v=g->input_less_ipgm_views_begin();v!=g->input_less_ipgm_views_end();v=g->next_input_less_ipgm_view(v)){
 
-					TimeJob	j(new	InputLessPGMSignalingJob((*v)->controller),now+g->get_spr()*base_period);
+					TimeJob	j(new	InputLessPGMSignalingJob(v->second->controller),now+g->get_spr()*base_period);
 					time_job_queue.push(j);
 				}
 
 				//	build signaling jobs for active anti-pgm overlays.
 				for(v=g->anti_ipgm_views_begin();v!=g->anti_ipgm_views_end();v=g->next_anti_pgm_view(v)){
 
-					TimeJob	j(new	AntiPGMSignalingJob((*v)->controller),now+(*v)->controller->getIPGM()->get_tsc());
+					TimeJob	j(new	AntiPGMSignalingJob(v->second->controller),now+v->second->controller->getIPGM()->get_tsc());
 					time_job_queue.push(j);
 				}
 
 				if(c_salient){
 
 					//	build reduction jobs for each salient view and each active overlay.
-					UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	v;
+					UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
 					for(v=g->views_begin();v!=g->views_end();v=g->next_view(v)){
 						
-						r_code::Timestamp::Set(&(*v)->code[VIEW_IJT],now);	//	init injection time for the view.
-						if((*v)->get_sln()>g->get_sln_thr())	//	salient view.
-							_inject_reduction_jobs(*v,g);
+						r_code::Timestamp::Set(&v->second->code[VIEW_IJT],now);	//	init injection time for the view.
+						if(v->second->get_sln()>g->get_sln_thr())	//	salient view.
+							_inject_reduction_jobs(v->second,g);
 					}
 				}
 			}
@@ -492,17 +492,17 @@ namespace	r_exec{
 				r_code::Timestamp::Set(&view->code[VIEW_IJT],_Now());
 				switch(object->getType()){
 				case	IPGM:
-					host->ipgm_views.insert(view);
+					host->ipgm_views[view->getOID()]=view;
 					break;
 				case	ANTI_IPGM:
-					host->anti_ipgm_views.insert(view);
+					host->anti_ipgm_views[view->getOID()]=view;
 					break;
 				case	INPUT_LESS_IPGM:
-					host->input_less_ipgm_views.insert(view);
+					host->input_less_ipgm_views[view->getOID()]=view;
 					break;
 				case	OTHER:
 				case	MARKER:
-					host->other_views.insert(view);
+					host->other_views[view->getOID()]=view;
 					break;
 				}
 				object->view_map[host]=view;
@@ -571,17 +571,17 @@ namespace	r_exec{
 			host->acquire();
 			switch(object->getType()){
 			case	IPGM:
-				host->ipgm_views.insert(view);
+				host->ipgm_views[view->getOID()]=view;
 				break;
 			case	ANTI_IPGM:
-				host->anti_ipgm_views.insert(view);
+				host->anti_ipgm_views[view->getOID()]=view;
 				break;
 			case	INPUT_LESS_IPGM:
-				host->input_less_ipgm_views.insert(view);
+				host->input_less_ipgm_views[view->getOID()]=view;
 				break;
 			case	OTHER:
 			case	MARKER:
-				host->other_views.insert(view);
+				host->other_views[view->getOID()]=view;
 				break;
 			}
 			host->release();
@@ -603,7 +603,7 @@ namespace	r_exec{
 
 		host->acquire();
 
-		host->group_views.insert(view);
+		host->group_views[view->getOID()]=view;
 
 		uint64	now=_Now();
 		r_code::Timestamp::Set(&view->code[VIEW_IJT],now);
@@ -635,7 +635,7 @@ namespace	r_exec{
 		host->acquire();
 
 		r_code::Timestamp::Set(&view->code[VIEW_IJT],_Now());
-		host->notification_views.insert(view);
+		host->notification_views[view->getOID()]=view;
 
 		object->acq_view_map();
 		object->view_map[host]=view;
@@ -683,112 +683,112 @@ namespace	r_exec{
 
 		group->reset_stats();
 
-		UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	v;
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
 		for(v=group->views_begin();v!=group->views_end();v=group->next_view(v)){
 
 			//	update resilience.
-			(*v)->mod_res(-1);
-			float32	res=group->update_res(*v,this);
-			if(res<=0	&&	now-(*v)->get_ijt()>=group->get_upr()){	//	if now-ijt<upr, let the view live for one upr.
+			v->second->mod_res(-1);
+			float32	res=group->update_res(v->second,this);
+			if(res<=0	&&	now-v->second->get_ijt()>=group->get_upr()){	//	if now-ijt<upr, let the view live for one upr.
 
 				//	update saliency (apply decay).
-				bool	wiew_was_salient=(*v)->get_sln()>group->get_sln_thr();
+				bool	wiew_was_salient=v->second->get_sln()>group->get_sln_thr();
 				float32	sln_change;
-				bool	wiew_is_salient=group->update_sln(*v,sln_change,this)>group->get_sln_thr();
+				bool	wiew_is_salient=group->update_sln(v->second,sln_change,this)>group->get_sln_thr();
 
 				if(group_is_c_salient	&&	!wiew_was_salient	&&	wiew_is_salient)	//	record as a newly salient view.
-					group->newly_salient_views.push_back(*v);
+					group->newly_salient_views.push_back(v->second);
 
-				_initiate_sln_propagation((Object	*)(*v)->object,sln_change,group->get_sln_thr());	//	inject sln propagation jobs.
+				_initiate_sln_propagation((Object	*)v->second->object,sln_change,group->get_sln_thr());	//	inject sln propagation jobs.
 
-				if(((Object	*)(*v)->object)->getType()==GROUP){
+				if(((Object	*)v->second->object)->getType()==GROUP){
 
 					//	update visibility.
-					bool	view_was_visible=(*v)->get_act_vis()>group->get_vis_thr();
-					bool	view_is_visible=(*v)->update_vis()>group->get_vis_thr();
-					bool	cov=(*v)->get_cov()==0?false:true;
+					bool	view_was_visible=v->second->get_act_vis()>group->get_vis_thr();
+					bool	view_is_visible=v->second->update_vis()>group->get_vis_thr();
+					bool	cov=v->second->get_cov()==0?false:true;
 
 					//	update viewing groups.
 					if(group_was_c_active	&&	group_was_c_salient){
 
 						if(!group_is_c_active	||	!group_is_c_salient)	//	group is not c-active and c-salient anymore: unregister as a viewing group.
-							((Group	*)(*v)->object)->viewing_groups.erase(group);
+							((Group	*)v->second->object)->viewing_groups.erase(group);
 						else{	//	group remains c-active and c-salient.
 
 							if(!view_was_visible){
 								
 								if(view_is_visible)		//	newly visible view.
-									((Group	*)(*v)->object)->viewing_groups[group]=cov;
+									((Group	*)v->second->object)->viewing_groups[group]=cov;
 							}else{
 								
 								if(!view_is_visible)	//	the view is no longer visible.
-									((Group	*)(*v)->object)->viewing_groups.erase(group);
+									((Group	*)v->second->object)->viewing_groups.erase(group);
 								else					//	the view is still visible, cov might have changed.
-									((Group	*)(*v)->object)->viewing_groups[group]=cov;
+									((Group	*)v->second->object)->viewing_groups[group]=cov;
 							}
 						}
 					}else	if(group_is_c_active	&&	group_is_c_salient){	//	group becomes c-active and c-salient.
 
 						if(view_is_visible)		//	update viewing groups for any visible group.
-							((Group	*)(*v)->object)->viewing_groups[group]=cov;
+							((Group	*)v->second->object)->viewing_groups[group]=cov;
 					}	
-				}else	if(((Object	*)(*v)->object)->isIPGM()){
+				}else	if(((Object	*)v->second->object)->isIPGM()){
 
 					//	update activation
-					bool	view_was_active=(*v)->get_act_vis()>group->get_act_thr();
-					bool	view_is_active=group->update_act(*v,this)>group->get_act_thr();
+					bool	view_was_active=v->second->get_act_vis()>group->get_act_thr();
+					bool	view_is_active=group->update_act(v->second,this)>group->get_act_thr();
 
 					//	kill newly inactive controllers, register newly active ones.
 					if(group_was_c_active	&&	group_was_c_salient){
 
 						if(!group_is_c_active	||	!group_is_c_salient)	//	group is not c-active and c-salient anymore: kill the view's controller.
-							(*v)->controller->kill();
+							v->second->controller->kill();
 						else{	//	group remains c-active and c-salient.
 
 							if(!view_was_active){
 						
 								if(view_is_active)	//	register the overlay for the newly active ipgm view.
-									group->new_controllers.push_back((*v)->controller);
+									group->new_controllers.push_back(v->second->controller);
 							}else{
 								
 								if(!view_is_active)	//	kill the newly inactive ipgm view's overlays.
-									(*v)->controller->kill();
+									v->second->controller->kill();
 							}
 						}
 					}else	if(group_is_c_active	&&	group_is_c_salient){	//	group becomes c-active and c-salient.
 
 						if(view_is_active)	//	register the overlay for any active ipgm view.
-							group->new_controllers.push_back((*v)->controller);
+							group->new_controllers.push_back(v->second->controller);
 					}
 				}
 			}else{	//	view has no resilience; sem left unreleased.
 
-				if(((Object	*)(*v)->object)->isIPGM())	//	if ipgm view, kill the overlay.
-					(*v)->controller->kill();
+				if(((Object	*)v->second->object)->isIPGM())	//	if ipgm view, kill the overlay.
+					v->second->controller->kill();
 
-				((Object	*)(*v)->object)->acq_view_map();
-				((Object	*)(*v)->object)->view_map.erase(group);	//	delete view from object's view_map.
-				((Object	*)(*v)->object)->rel_view_map();
+				((Object	*)v->second->object)->acq_view_map();
+				((Object	*)v->second->object)->view_map.erase(group);	//	delete view from object's view_map.
+				((Object	*)v->second->object)->rel_view_map();
 
 				//	delete the view.
-				if((*v)->isNotification())
-					group->notification_views.erase(*v);
-				else	switch(((Object	*)(*v)->object)->getType()){
+				if(v->second->isNotification())
+					group->notification_views.erase(v->first);
+				else	switch(((Object	*)v->second->object)->getType()){
 				case	IPGM:
-					group->ipgm_views.erase(*v);
+					group->ipgm_views.erase(v->first);
 					break;
 				case	ANTI_IPGM:
-					group->anti_ipgm_views.erase(*v);
+					group->anti_ipgm_views.erase(v->first);
 					break;
 				case	INPUT_LESS_IPGM:
-					group->input_less_ipgm_views.erase(*v);
+					group->input_less_ipgm_views.erase(v->first);
 					break;
 				case	OTHER:
 				case	MARKER:
-					group->other_views.erase(*v);
+					group->other_views.erase(v->first);
 					break;
 				case	GROUP:
-					group->group_views.erase(*v);
+					group->group_views.erase(v->first);
 					break;
 				}
 			}
@@ -862,11 +862,11 @@ namespace	r_exec{
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
 
 			//	build reduction jobs from host's own inputs and own overlays.
-			UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	v;
+			UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
 			for(v=host->ipgm_views_with_inputs_begin();v!=host->ipgm_views_with_inputs_end();v=host->next_ipgm_view_with_inputs(v)){
 
-				if((*v)->get_act_vis()>host->get_sln_thr())	//	active ipgm view.
-					(*v)->controller->take_input(*v,this);	//	view will be copied.
+				if(v->second->get_act_vis()>host->get_sln_thr())	//	active ipgm view.
+					v->second->controller->take_input(v->second,this);	//	view will be copied.
 			}
 		}
 
@@ -879,11 +879,11 @@ namespace	r_exec{
 			if(vg->second	||	view->isNotification())	//	cov==true or notification.
 				continue;
 
-			UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	v;
+			UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
 			for(v=vg->first->ipgm_views_with_inputs_begin();v!=vg->first->ipgm_views_with_inputs_end();v=vg->first->next_ipgm_view_with_inputs(v)){
 
-				if((*v)->get_act_vis()>vg->first->get_sln_thr())	//	active ipgm view.
-					(*v)->controller->take_input(*v,this);			//	view will be copied.
+				if(v->second->get_act_vis()>vg->first->get_sln_thr())	//	active ipgm view.
+					v->second->controller->take_input(v->second,this);			//	view will be copied.
 			}
 		}
 	}

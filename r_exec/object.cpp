@@ -96,11 +96,10 @@ namespace	r_exec{
 
 	View::View(View	*view,Group	*group):r_code::View(){
 
-		OID=GetOID();
-
 		Group	*source=view->getHost();
 		object=view->object;
 		memcpy(code,view->code,VIEW_CODE_MAX_SIZE*sizeof(Atom));
+		code[VIEW_OID]=GetOID();
 		reference_set[0]=group;		//	host.
 		reference_set[1]=source;	//	origin.
 
@@ -226,6 +225,29 @@ namespace	r_exec{
 		return	GROUP;
 	}
 
+	View	*Group::getView(uint32	OID){
+
+		UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	it=other_views.find(OID);
+		if(it!=other_views.end())
+			return	it->second;
+		it=group_views.find(OID);
+		if(it!=group_views.end())
+			return	it->second;
+		it=ipgm_views.find(OID);
+		if(it!=ipgm_views.end())
+			return	it->second;
+		it=anti_ipgm_views.find(OID);
+		if(it!=anti_ipgm_views.end())
+			return	it->second;
+		it=input_less_ipgm_views.find(OID);
+		if(it!=input_less_ipgm_views.end())
+			return	it->second;
+		it=notification_views.find(OID);
+		if(it!=notification_views.end())
+			return	it->second;
+		return	NULL;
+	}
+
 	void	Group::reset_ctrl_values(){
 
 		sln_thr_changes=0;
@@ -282,23 +304,23 @@ namespace	r_exec{
 
 		if(sln_change_monitoring_periods_to_go==0){
 
-			UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	v;
+			UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
 			for(v=non_ntf_views_begin();v!=non_ntf_views_end();v=next_non_ntf_view(v)){
 
-				float32	change=(*v)->update_sln_delta();
+				float32	change=v->second->update_sln_delta();
 				if(fabs(change)>get_sln_chg_thr())
-					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	MkSlnChg((*v)->object,change)));
+					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	MkSlnChg(v->second->object,change)));
 			}
 		}
 
 		if(act_change_monitoring_periods_to_go==0){
 
-			UNORDERED_SET<r_code::P<View>,View::Hash,View::Equal>::const_iterator	v;
+			UNORDERED_MAP<uint32,r_code::P<View> >::const_iterator	v;
 			for(v=non_ntf_views_begin();v!=non_ntf_views_end();v=next_non_ntf_view(v)){
 
-				float32	change=(*v)->update_act_delta();
+				float32	change=v->second->update_act_delta();
 				if(fabs(change)>get_act_chg_thr())
-					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	MkActChg((*v)->object,change)));
+					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	MkActChg(v->second->object,change)));
 			}
 		}
 	}
@@ -484,13 +506,14 @@ namespace	r_exec{
 	NotificationView::NotificationView(Group	*origin,Group	*destination,Object	*marker):View(){
 
 		uint32	write_index=0;
-		code[write_index++]=r_code::Atom::SSet(ViewOpcode,5);	//	Structured Set.
-		code[write_index++]=r_code::Atom::IPointer(6);			//	iptr to ijt.
+		code[write_index++]=r_code::Atom::SSet(ViewOpcode,6);	//	Structured Set.
+		code[write_index++]=GetOID();							//	oid
+		code[write_index++]=r_code::Atom::IPointer(7);			//	iptr to ijt.
 		code[write_index++]=r_code::Atom::Float(1);				//	res.
 		code[write_index++]=r_code::Atom::Float(1);				//	sln.
 		code[write_index++]=r_code::Atom::RPointer(0);			//	destination.
 		code[write_index++]=r_code::Atom::RPointer(1);			//	origin.
-		code[6]=r_code::Atom::Timestamp();						//	ijt will be set at injection time.
+		code[7]=r_code::Atom::Timestamp();						//	ijt will be set at injection time.
 		reference_set[0]=destination;
 		reference_set[1]=origin;
 		reset_init_values();

@@ -45,7 +45,7 @@ root; ntf_grp
 )
 
 []
-   [now 1 forever nil nil 0 0]
+   [|nb now 1 forever nil nil 0 0]
 
 stdin:(grp
 1; upr
@@ -87,7 +87,7 @@ stdin; ntf_grp
 )
 
 []
-   [now 1 forever root nil 0 0]
+   [|nb now 1 forever root nil 0 0]
 
 stdout:(grp
 1; upr
@@ -129,7 +129,7 @@ stdout; ntf_grp
 )
 
 []
-   [now 1 forever root nil 0 0]
+   [|nb now 1 forever root nil 0 0]
 
 self:(ent
 |[]; view
@@ -139,7 +139,7 @@ self:(ent
 )
 
 []
-   [now 1 forever root nil]
+   [|nb now 1 forever root nil]
 
 position:(ent
 |[]; view
@@ -149,4 +149,4 @@ position:(ent
 )
 
 []
-   [now 1 forever root nil]
+   [|nb now 1 forever root nil]

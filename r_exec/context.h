@@ -18,15 +18,15 @@ namespace	r_exec{
 		Atom	*code;				//	the object's code, or the code in value array, or the view's code when the context is dereferenced from Atom::VIEW.
 		uint16	index;				//	in the code;
 		Overlay	*const	overlay;	//	the overlay where the evaluation is performed; NULL when the context is dereferenced outside the original pgm or outside the value array.
-		typedef	enum{
-			ORIGINAL_PGM=0,
-			REFERENCE=1,
-			VIEW=2,
-			MKS=3,
-			VWS=4,
+		typedef	enum{				//	indicates whether the context refers to:
+			ORIGINAL_PGM=0,			//		- the pgm being reducing inputs;
+			REFERENCE=1,			//		- a reference to another object;
+			VIEW=2,					//		- a view;
+			MKS=3,					//		- the mks or an object;
+			VWS=4,					//		- the vws of an object;
 			UNDEFINED=5
 		}Data;
-		Data	data;				//	indicates whether the context refers to the pgm being reducing inputs, a reference to another object, a view, the mks or vws of an object, or is undefined.
+		Data	data;
 
 		void	addReference(Object	*destination,uint16	&write_index)	const{
 
@@ -44,16 +44,15 @@ namespace	r_exec{
 			destination->reference_set[r_ptr_index]=object->reference_set[code[index].asIndex()];
 			destination->code[write_index++]=Atom::RPointer(r_ptr_index);
 		}
-		Context(Object	*object,uint16	index):object(object),view(NULL),code(&object->code[0]),index(index),overlay(NULL),data(REFERENCE){}
-		Context(Object	*object,Data	data):object(object),view(NULL),code(NULL),index(0),overlay(NULL),data(data){}
 	public:
 		static	Context	GetContextFromInput(View	*input,Overlay	*overlay){	return	Context((r_exec::Object	*)input->object,input,&input->object->code[0],0,overlay,REFERENCE);	}
 
 		Context():object(NULL),view(NULL),code(NULL),index(0),overlay(NULL),data(UNDEFINED){}	//	undefined context (happens when accessing the view of an object when it has not been provided).
 		Context(Object	*object,View	*view,Atom	*code,uint16	index,Overlay	*const	overlay,Data	data=ORIGINAL_PGM):object(object),view(view),code(code),index(index),overlay(overlay),data(data){}
+		Context(Object	*object,uint16	index):object(object),view(NULL),code(&object->code[0]),index(index),overlay(NULL),data(REFERENCE){}
 
-		bool	evaluate()	const;
-		bool	evaluate_no_dereference()	const;
+		bool	evaluate(uint16	&index)					const;	//	index is set to the index of the result, undefined in case of failure.
+		bool	evaluate_no_dereference(uint16	&index)	const;
 
 		Context	getChild(uint16	index)	const{
 			switch(data){
@@ -94,35 +93,35 @@ namespace	r_exec{
 
 		Context	dereference()	const;
 
-		void	patch_code(uint16	location,Atom	value)	const{	overlay->patch_code(location,value);	}
-		void	patch_input_code(uint16	pgm_code_index,uint16	input_code_index)	const;
+		void	patch_code(uint16	location,Atom	value)						const{	overlay->patch_code(location,value);	}
+		void	patch_input_code(uint16	pgm_code_index,uint16	input_index)	const{	overlay->patch_input_code(pgm_code_index,input_index,0);	}
 
 		void	commit()	const{	overlay->commit();		}
 		void	rollback()	const{	overlay->rollback();	}
 
-		void	setAtomicResult(Atom	a)		const{	//	patch code with 32 bits data.
-			if(code)
-				overlay->patch_code(index,a);
+		uint16	setAtomicResult(Atom	a)		const{	//	patch code with 32 bits data.
+			overlay->patch_code(index,a);
+			return	index;
 		}
 
-		void	setTimestampResult(uint64	t)	const{	//	patch code with a VALUE_PTR
-			if(!code)
-				return;
+		uint16	setTimestampResult(uint64	t)	const{	//	patch code with a VALUE_PTR
 			overlay->patch_code(index,Atom::ValuePointer(overlay->values.size()));
 			overlay->values.resize(overlay->values.size()+3);
-			Timestamp::Set(&overlay->values[overlay->values.size()-3],t);
+			uint16	index=overlay->values.size()-3;
+			Timestamp::Set(&overlay->values[index],t);
+			return	index;
 		}
 
-		void	setCompoundResultHead(Atom	a)	const{	//	patch code with a VALUE_PTR.
-			if(!code)
-				return;
-			overlay->patch_code(index,Atom::ValuePointer(overlay->values.size()));
+		uint16	setCompoundResultHead(Atom	a)	const{	//	patch code with a VALUE_PTR.
+			uint16	index=overlay->values.size();
+			overlay->patch_code(index,Atom::ValuePointer(index));
 			addCompoundResultPart(a);
+			return	index;
 		}
 
-		void	addCompoundResultPart(Atom	a)	const{	//	store result in the value array.
-			if(code)
-				overlay->values.push_back(a);
+		uint16	addCompoundResultPart(Atom	a)	const{	//	store result in the value array.
+			overlay->values.push_back(a);
+			return	overlay->values.size()-1;
 		}
 
 		uint16	addProduction(Object	*object)	const{
@@ -198,9 +197,9 @@ namespace	r_exec{
 		}ObjectType;
 
 		//	To retrieve objects, groups and views in mod/set expressions; views are copied.
-		void	getChildAsMember(uint16	index,void	*&object,ObjectType	object_type,uint16	member_index)	const;
+		void	getChildAsMember(uint16	index,void	*&object,uint32	&view_oid,ObjectType	object_type,uint16	member_index)	const;
 
-		//	this is a context on a pattern skeleton.
+		//	'this' is a context on a pattern skeleton.
 		bool	match(const	Context	&input)	const;
 	};
 }

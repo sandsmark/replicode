@@ -34,7 +34,7 @@
 #include	"context.h"
 
 
-typedef	bool	(*Operator)(const	r_exec::Context	&);
+typedef	bool	(*Operator)(const	r_exec::Context	&,uint16	&);
 
 
 //	User-defined operators for vec3: add, sub, mul, dis.
