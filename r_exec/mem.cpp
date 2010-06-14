@@ -514,7 +514,7 @@ namespace	r_exec{
 					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
 						for(uint32	i=0;i<host->newly_salient_views.size();++i)
-							_inject_reduction_jobs(host->newly_salient_views[i],host);
+							o->take_input(host->newly_salient_views[i],this);	//	view will be copied.
 					}
 					break;
 				}case	ANTI_IPGM:{
@@ -524,7 +524,7 @@ namespace	r_exec{
 					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
 						for(uint32	i=0;i<host->newly_salient_views.size();++i)
-							_inject_reduction_jobs(host->newly_salient_views[i],host);
+							o->take_input(host->newly_salient_views[i],this);	//	view will be copied.
 
 						TimeJob	j(new	AntiPGMSignalingJob(o),now+o->getIPGM()->get_tsc());
 						time_job_queue.push(j);
@@ -876,7 +876,6 @@ namespace	r_exec{
 
 	inline	void	Mem::_inject_reduction_jobs(View	*view,Group	*host){	//	host is assumed to be c-salient; host already protected.
 
-		uint64	now=_Now();
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
 
 			//	build reduction jobs from host's own inputs and own overlays.
