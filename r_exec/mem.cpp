@@ -302,8 +302,11 @@ namespace	r_exec{
 					for(v=g->views_begin();v!=g->views_end();v=g->next_view(v)){
 						
 						r_code::Timestamp::Set(&v->second->code[VIEW_IJT],now);	//	init injection time for the view.
-						if(v->second->get_sln()>g->get_sln_thr())	//	salient view.
+						if(v->second->get_sln()>g->get_sln_thr()){	//	salient view.
+
+							g->newly_salient_views.push_back(v->second);
 							_inject_reduction_jobs(v->second,g);
+						}
 					}
 				}
 			}
@@ -489,23 +492,9 @@ namespace	r_exec{
 
 				host->acquire();
 
-				r_code::Timestamp::Set(&view->code[VIEW_IJT],_Now());
-				switch(object->getType()){
-				case	IPGM:
-					host->ipgm_views[view->getOID()]=view;
-					break;
-				case	ANTI_IPGM:
-					host->anti_ipgm_views[view->getOID()]=view;
-					break;
-				case	INPUT_LESS_IPGM:
-					host->input_less_ipgm_views[view->getOID()]=view;
-					break;
-				case	OTHER:
-				case	MARKER:
-					host->other_views[view->getOID()]=view;
-					break;
-				}
 				object->view_map[host]=view;
+				uint64	now=Now();
+				r_code::Timestamp::Set(&view->code[VIEW_IJT],now);
 
 				object_register.insert(object);
 				object_register_sem->release();
@@ -516,24 +505,50 @@ namespace	r_exec{
 					object_io_map_sem->release();
 				}
 
-				if(object->getType()==MARKER){	//	the marker does not exist yet: add it to the mks of its references.
-					
+				switch(object->getType()){
+				case	IPGM:{
+
+					host->ipgm_views[view->getOID()]=view;
+					IPGMController	*o=new	IPGMController(view);
+					view->controller=o;
+					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
+
+						for(uint32	i=0;i<host->newly_salient_views.size();++i)
+							_inject_reduction_jobs(host->newly_salient_views[i],host);
+					}
+					break;
+				}case	ANTI_IPGM:{
+					host->anti_ipgm_views[view->getOID()]=view;
+					IPGMController	*o=new	IPGMController(view);
+					view->controller=o;
+					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
+
+						for(uint32	i=0;i<host->newly_salient_views.size();++i)
+							_inject_reduction_jobs(host->newly_salient_views[i],host);
+
+						TimeJob	j(new	AntiPGMSignalingJob(o),now+o->getIPGM()->get_tsc());
+						time_job_queue.push(j);
+					}
+					break;
+				}case	INPUT_LESS_IPGM:{
+					host->input_less_ipgm_views[view->getOID()]=view;
+					IPGMController	*o=new	IPGMController(view);
+					view->controller=o;
+					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
+
+						TimeJob	j(new	InputLessPGMSignalingJob(o),now+host->get_spr()*base_period);
+						time_job_queue.push(j);
+					}
+					break;
+				}case	MARKER:	//	the marker does not exist yet: add it to the mks of its references.
 					for(uint32	i=0;i<object->reference_set.size();++i){
 
 						((Object	*)object->reference_set[i])->acq_marker_set();
 						object->reference_set[i]->marker_set.push_back(object);
 						((Object	*)object->reference_set[i])->rel_marker_set();
 					}
-				}
-				
-				if(object->isIPGM()){	//	reduction/signaling jobs will be created at next update.
-
-					IPGMController	*o=new	IPGMController(view);
-					view->controller=o;
-					if(view->get_act_vis()>host->get_act_thr())	//	active ipgm.
-						host->new_controllers.push_back(o);
-				}else{	//	no cov for pgm, groups and notifications (the latter are injected using injectNotificationNow).
-
+				case	OTHER:{
+					host->other_views[view->getOID()]=view;
 					//	cov, i.e. injecting now newly salient views in the viewing groups for which group is visible and has cov.
 					UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
 					for(vg=host->viewing_groups.begin();vg!=host->viewing_groups.end();++vg){
@@ -541,6 +556,8 @@ namespace	r_exec{
 						if(vg->second)	//	cov==true, vieiwing group c-salient and c-active (otherwise it wouldn't be a viewing group).
 							injectCopyNow(view,vg->first);
 					}
+					break;
+				}
 				}
 
 				if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.
@@ -856,7 +873,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	inline	void	Mem::_inject_reduction_jobs(View	*view,Group	*host){	//	host assumed to be c-salient; host already protected.
+	inline	void	Mem::_inject_reduction_jobs(View	*view,Group	*host){	//	host is assumed to be c-salient; host already protected.
 
 		uint64	now=_Now();
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
@@ -872,7 +889,7 @@ namespace	r_exec{
 
 		//	build reduction jobs from host's own inputs and overlays from viewing groups, if no cov and view is not a notification.
 		//	NB: visibility is not transitive;
-		//	no shadowing: if a view alresady exist in the viewing group, ther will be twice the reductions.
+		//	no shadowing: if a view alresady exists in the viewing group, there will be twice the reductions: all of the identicals will be trimmed down at injection time.
 		UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
 		for(vg=host->viewing_groups.begin();vg!=host->viewing_groups.end();++vg){
 
