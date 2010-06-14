@@ -779,7 +779,7 @@ namespace	r_exec{
 							group->new_controllers.push_back(v->second->controller);
 					}
 				}
-			}else{	//	view has no resilience; sem left unreleased.
+			}else{	//	view has no resilience.
 
 				if(((Object	*)v->second->object)->isIPGM())	//	if ipgm view, kill the overlay.
 					v->second->controller->kill();
