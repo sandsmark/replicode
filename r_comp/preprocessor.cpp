@@ -932,30 +932,30 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Preprocessor::Preprocessor():root(NULL){
+	Preprocessor::Preprocessor(){
+
+		root=new RepliStruct(RepliStruct::Root);
 	}
 
 	Preprocessor::~Preprocessor(){
 		
-		if(root)
-			delete	root;
+		delete	root;
 	}
 
-	bool	Preprocessor::process(ClassImage			*class_image,
-								  std::istream			*stream,
+	bool	Preprocessor::process(std::istream			*stream,
 								  std::ostringstream	*outstream,
-								  std::string			*error){
+								  std::string			&error,
+								  Metadata				*metadata){
 
-		root=new RepliStruct(RepliStruct::Root);
 		uint32	a=0, b=0;
 		if(root->parse(stream,a,b)<0){
 
-			*error=root->printError();
+			error=root->printError();
 			return	false;
 		}
 		if(!stream->eof()){
 
-			*error="Code structure error: Unmatched ) or ].\n";
+			error="Code structure error: Unmatched ) or ].\n";
 			return	false;
 		}
 
@@ -970,18 +970,18 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		}
 		if(count<0){
 
-			*error=root->printError();
+			error=root->printError();
 			return	false;
 		}
 		//	printf("Replicode:\n\n%s\n",root->print().c_str());
 
 		*outstream<<root;
 
-		this->class_image=class_image;
-		initialize();
+		if(metadata)
+			initialize(metadata);
 
-		*error=root->printError();
-		return (error->size()==0);
+		error=root->printError();
+		return (error.size()==0);
 	}
 
 	bool	Preprocessor::isTemplateClass(RepliStruct	*s){
@@ -1041,8 +1041,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 			_tpl_args.push_back(*i);
 		getMembers(tpl_class,members,_tpl_args,true);
 
-		class_image->class_names[class_opcode]=instantiated_class_name;
-		class_image->classes_by_opcodes[class_opcode]=class_image->classes[instantiated_class_name]=Class(Atom::SSet(class_opcode,members.size()),instantiated_class_name,members);
+		metadata->class_names[class_opcode]=instantiated_class_name;
+		metadata->classes_by_opcodes[class_opcode]=metadata->classes[instantiated_class_name]=Class(Atom::SSet(class_opcode,members.size()),instantiated_class_name,members);
 		++class_opcode;
 	}
 
@@ -1165,17 +1165,19 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		return	ANY;
 	}
 
-	void	Preprocessor::initialize(){
+	void	Preprocessor::initialize(Metadata	*metadata){
+
+		this->metadata=metadata;
 
 		class_opcode=0;
 		uint16	function_opcode=0;
 		uint16	operator_opcode=0;
 
 		std::vector<StructureMember>	r_xpr;
-		class_image->classes[std::string(Class::Expression)]=Class(Atom::Object(class_opcode,0),Class::Expression,r_xpr);	//	to read unspecified expressions in classes and sets.
+		metadata->classes[std::string(Class::Expression)]=Class(Atom::Object(class_opcode,0),Class::Expression,r_xpr);	//	to read unspecified expressions in classes and sets.
 		++class_opcode;
 		std::vector<StructureMember>	r_type;
-		class_image->classes[std::string(Class::Type)]=Class(Atom::Object(class_opcode,0),Class::Type,r_type);	//	to read object types in expressions and sets.
+		metadata->classes[std::string(Class::Type)]=Class(Atom::Object(class_opcode,0),Class::Type,r_type);	//	to read object types in expressions and sets.
 		++class_opcode;
 
 		for(std::list<RepliStruct	*>::iterator	i(root->args.begin());i!=root->args.end();++i){
@@ -1216,15 +1218,15 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 						}
 				}
 
-				class_image->class_names[class_opcode]=class_name;
+				metadata->class_names[class_opcode]=class_name;
 				switch(class_type){
 				case	T_SYS_CLASS:
-						class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[class_name]=Class(atom,class_name,members);
+						metadata->classes_by_opcodes[class_opcode]=metadata->sys_classes[class_name]=Class(atom,class_name,members);
 				case	T_CLASS:
-						class_image->classes_by_opcodes[class_opcode]=class_image->classes[class_name]=Class(atom,class_name,members);
+						metadata->classes_by_opcodes[class_opcode]=metadata->classes[class_name]=Class(atom,class_name,members);
 					break;
 				case	T_SET:
-					class_image->classes_by_opcodes[class_opcode]=class_image->classes[class_name]=Class(Atom::SSet(class_opcode,members.size()),class_name,members);
+					metadata->classes_by_opcodes[class_opcode]=metadata->classes[class_name]=Class(Atom::SSet(class_opcode,members.size()),class_name,members);
 					break;
 				default:
 					break;
@@ -1237,8 +1239,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				ReturnType	return_type=getReturnType(s);
 
 				std::string	operator_name=s->cmd;
-				class_image->operator_names.push_back(operator_name);
-				class_image->classes[operator_name]=Class(Atom::Operator(operator_opcode,s->args.size()),operator_name,members,return_type);
+				metadata->operator_names.push_back(operator_name);
+				metadata->classes[operator_name]=Class(Atom::Operator(operator_opcode,s->args.size()),operator_name,members,return_type);
 				++operator_opcode;
 			}else	if((*i)->cmd=="!dfn"){	//	don't bother to read the members, it's always a set.
 
@@ -1246,446 +1248,10 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				r_set.push_back(StructureMember(&Compiler::read_set,""));
 
 				std::string	function_name=s->cmd;
-				class_image->function_names.push_back(function_name);
-				class_image->classes[function_name]=Class(Atom::DeviceFunction(function_opcode),function_name,r_set);
+				metadata->function_names.push_back(function_name);
+				metadata->classes[function_name]=Class(Atom::DeviceFunction(function_opcode),function_name,r_set);
 				++function_opcode;
 			}
 		}
-	}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	HardCodedPreprocessor::HardCodedPreprocessor(){
-	}
-
-	HardCodedPreprocessor::~HardCodedPreprocessor(){
-	}
-
-	bool	HardCodedPreprocessor::process(ClassImage			*class_image,
-											std::istream		*stream,
-											std::ostringstream	*outstream,
-											std::string			*error){
-
-		initialize(class_image);
-		*outstream<<stream->rdbuf();
-		return	true;
-	}
-
-	void	HardCodedPreprocessor::initialize(ClassImage	*class_image){
-
-		uint16	class_opcode=0;	//	shared with sys_classes
-		uint16	function_opcode=0;
-		uint16	operator_opcode=0;
-
-		std::vector<StructureMember>	r_xpr;
-		class_image->classes[std::string(Class::Expression)]=Class(Atom::Object(class_opcode,0),Class::Expression,r_xpr);	//	to read expression in sets, special case: see read_expression()
-		++class_opcode;
-
-		//	everything below shall be filled by the preprocessor
-		//	implemented classes:
-		//		view
-		//		react_view
-		//		ptn
-		//		pgm
-		//		|pgm
-		//		ipgm
-		//		cmd
-		//		val_pair
-		//		vec3: for testing only
-		//		ent
-		//		grp
-		//		mk.rdx
-		//		mk.|rdx
-		//		mk.low_sln
-		//		mk.high_sln
-		//		mk.low_act
-		//		mk.high_act
-		//		mk.low_res
-		//		mk.high_res
-		//		mk.sln_chg
-		//		mk.act_chg
-		//		mk.new
-		//		mk.position: for testing only
-		//		mk.last_known: for testing only
-		//	implemented operators:
-		//		_now
-		//		add
-		//		sub
-		//		mul
-		//		div
-		//		gtr
-		//		lse
-		//		lsr
-		//		gte
-		//		equ
-		//		neq
-		//		syn
-		//		red
-		//		ins
-		//		at
-		//	implemented functions:
-		//		_inj
-		//		_eje
-		//		_mod
-		//		_set
-		//		_start
-		
-		//	non-sys classes /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//	view
-		std::vector<StructureMember>	r_view;
-		r_view.push_back(StructureMember(&Compiler::read_timestamp,"ijt"));
-		r_view.push_back(StructureMember(&Compiler::read_number,"sln"));
-		r_view.push_back(StructureMember(&Compiler::read_timestamp,"res"));
-		r_view.push_back(StructureMember(&Compiler::read_expression,"grp"));
-		r_view.push_back(StructureMember(&Compiler::read_any,"org"));
-
-		class_image->class_names[class_opcode]="view";
-		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("view")]=Class(Atom::SSet(class_opcode,5),"view",r_view);
-		++class_opcode;
-
-		//	react_view
-		std::vector<StructureMember>	r_react_view;
-		r_react_view.push_back(StructureMember(&Compiler::read_timestamp,"ijt"));
-		r_react_view.push_back(StructureMember(&Compiler::read_number,"sln"));
-		r_react_view.push_back(StructureMember(&Compiler::read_timestamp,"res"));
-		r_react_view.push_back(StructureMember(&Compiler::read_expression,"grp"));
-		r_react_view.push_back(StructureMember(&Compiler::read_any,"org"));
-		r_react_view.push_back(StructureMember(&Compiler::read_number,"act"));
-
-		class_image->class_names[class_opcode]="react_view";
-		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("react_view")]=Class(Atom::SSet(class_opcode,6),"react_view",r_react_view);
-		++class_opcode;
-		
-		//	ptn
-		std::vector<StructureMember>	r_ptn;
-		r_ptn.push_back(StructureMember(&Compiler::read_expression,"skel"));
-		r_ptn.push_back(StructureMember(&Compiler::read_set,"guards",Class::Expression,StructureMember::I_EXPRESSION));	//	reads a set of expressions
-
-		class_image->class_names[class_opcode]="ptn";
-		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("ptn")]=Class(Atom::Object(class_opcode,2),"ptn",r_ptn);
-		++class_opcode;
-
-		//	_in_sec
-		std::vector<StructureMember>	r__ins_sec;
-		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"inputs","ptn",StructureMember::I_EXPRESSION));	//	reads a set of patterns
-		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"timings",Class::Expression,StructureMember::I_EXPRESSION));	//	reads a set of expressions
-		r__ins_sec.push_back(StructureMember(&Compiler::read_set,"guards",Class::Expression,StructureMember::I_EXPRESSION));	//	reads a set of expressions
-
-		class_image->class_names[class_opcode]="_in_sec";
-		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("_in_sec")]=Class(Atom::SSet(class_opcode,3),"_in_sec",r__ins_sec);
-		++class_opcode;
-
-		//	cmd
-		std::vector<StructureMember>	r_cmd;
-		r_cmd.push_back(StructureMember(&Compiler::read_function,"function"));
-		r_cmd.push_back(StructureMember(&Compiler::read_device,"device"));
-		r_cmd.push_back(StructureMember(&Compiler::read_set,"args"));
-
-		class_image->class_names[class_opcode]="cmd";
-		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("cmd")]=Class(Atom::Object(class_opcode,3),"cmd",r_cmd);
-		++class_opcode;
-
-		//	val_pair
-		std::vector<StructureMember>	r_val_pair;
-		r_val_pair.push_back(StructureMember(&Compiler::read_any,"value"));
-		r_val_pair.push_back(StructureMember(&Compiler::read_number,"index"));
-
-		class_image->class_names[class_opcode]="val_pair";
-		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("val_pair")]=Class(Atom::SSet(class_opcode,2),"val_pair",r_val_pair);
-		++class_opcode;
-
-		//	vec3: non-standard (i.e. does not belong to std.replicode), only for testing
-		std::vector<StructureMember>	r_vec3;
-		r_vec3.push_back(StructureMember(&Compiler::read_number,"x"));
-		r_vec3.push_back(StructureMember(&Compiler::read_number,"y"));
-		r_vec3.push_back(StructureMember(&Compiler::read_number,"z"));
-
-		class_image->class_names[class_opcode]="vec3";
-		class_image->classes_by_opcodes[class_opcode]=class_image->classes[std::string("vec3")]=Class(Atom::Object(class_opcode,3),"vec3",r_vec3);
-		++class_opcode;
-		
-		//	sys-classes /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//	pgm
-		std::vector<StructureMember>	r_pgm;
-		r_pgm.push_back(StructureMember(&Compiler::read_set,"tpl","ptn",StructureMember::I_EXPRESSION));	//	reads a set of patterns
-		r_pgm.push_back(StructureMember(&Compiler::read_set,"input","_in_sec",StructureMember::I_CLASS));	//	reads a structured set of class _in_sec 
-		r_pgm.push_back(StructureMember(&Compiler::read_set,"prods","cmd",StructureMember::I_EXPRESSION));	//	reads a set of commands
-		r_pgm.push_back(StructureMember(&Compiler::read_timestamp,"tsc"));
-		r_pgm.push_back(StructureMember(&Compiler::read_number,"csm"));
-		r_pgm.push_back(StructureMember(&Compiler::read_number,"sig"));
-		r_pgm.push_back(StructureMember(&Compiler::read_number,"nfr"));
-		r_pgm.push_back(StructureMember(&Compiler::read_view,"vw","view"));
-		r_pgm.push_back(StructureMember(&Compiler::read_mks,"mks"));
-		r_pgm.push_back(StructureMember(&Compiler::read_vws,"vws"));
-		r_pgm.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
-
-		class_image->class_names[class_opcode]="pgm";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("pgm")]=Class(Atom::Object(class_opcode,11),"pgm",r_pgm);
-		++class_opcode;
-
-		//	|pgm
-		class_image->class_names[class_opcode]="|pgm";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("|pgm")]=Class(Atom::Object(class_opcode,11),"|pgm",r_pgm);
-		++class_opcode;
-
-		//	ipgm
-		std::vector<StructureMember>	r_ipgm;
-		r_ipgm.push_back(StructureMember(&Compiler::read_any,"code"));
-		r_ipgm.push_back(StructureMember(&Compiler::read_set,"args","val_pair",StructureMember::I_SET));	//	reads a set of value pairs
-		r_ipgm.push_back(StructureMember(&Compiler::read_view,"vw","react_view"));
-		r_ipgm.push_back(StructureMember(&Compiler::read_mks,"mks"));
-		r_ipgm.push_back(StructureMember(&Compiler::read_vws,"vws"));
-		r_ipgm.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
-
-		class_image->class_names[class_opcode]="ipgm";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("ipgm")]=Class(Atom::Object(class_opcode,6),"ipgm",r_ipgm);
-		++class_opcode;
-
-		//	ent
-		std::vector<StructureMember>	r_ent;
-		r_ent.push_back(StructureMember(&Compiler::read_view,"vw","view"));
-		r_ent.push_back(StructureMember(&Compiler::read_mks,"mks"));
-		r_ent.push_back(StructureMember(&Compiler::read_vws,"vws"));
-		r_ent.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
-
-		class_image->class_names[class_opcode]="ent";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("ent")]=Class(Atom::Object(class_opcode,4),"ent",r_ent);
-		++class_opcode;
-
-		//	grp
-		std::vector<StructureMember>	r_grp;
-		r_grp.push_back(StructureMember(&Compiler::read_number,"upr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"spr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"sln_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"act_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"vis_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"c_sln"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"c_sln_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"c_act"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"c_act_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"dcy_per"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"dcy_tgt"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"dcy_prd"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"sln_chg_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"sln_chg_prd"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"act_chg_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"act_chg_prd"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"avg_sln"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"high_sln"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"low_sln"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"avg_act"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"high_act"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"low_act"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"high_sln_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"low_sln_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"sln_ntf_prd"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"high_act_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"low_act_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"act_ntf_prd"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"high_res_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"low_res_thr"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"res_ntf_prd"));
-		r_grp.push_back(StructureMember(&Compiler::read_expression,"ntf_grp"));
-		r_grp.push_back(StructureMember(&Compiler::read_view,"vw","view"));
-		r_grp.push_back(StructureMember(&Compiler::read_mks,"mks"));
-		r_grp.push_back(StructureMember(&Compiler::read_vws,"vws"));
-		r_grp.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
-
-		class_image->class_names[class_opcode]="grp";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("grp")]=Class(Atom::Object(class_opcode,36),"grp",r_grp);
-		++class_opcode;
-
-		//	mk.rdx
-		std::vector<StructureMember>	r_rdx;
-		r_rdx.push_back(StructureMember(&Compiler::read_any,"code"));
-		r_rdx.push_back(StructureMember(&Compiler::read_any,"inputs"));
-		r_rdx.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::I_SET));	//	reads a set of value pairs
-		r_rdx.push_back(StructureMember(&Compiler::read_view,"vw","view"));
-		r_rdx.push_back(StructureMember(&Compiler::read_mks,"mks"));
-		r_rdx.push_back(StructureMember(&Compiler::read_vws,"vws"));
-		r_rdx.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
-
-		class_image->class_names[class_opcode]="mk.rdx";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.rdx")]=Class(Atom::Object(class_opcode,7),"mk.rdx",r_rdx);
-		++class_opcode;
-
-		//	mk.|rdx
-		std::vector<StructureMember>	r_ardx;
-		r_ardx.push_back(StructureMember(&Compiler::read_any,"code"));
-		r_ardx.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::I_SET));	//	reads a set of value pairs
-		r_ardx.push_back(StructureMember(&Compiler::read_view,"vw","view"));
-		r_ardx.push_back(StructureMember(&Compiler::read_mks,"mks"));
-		r_ardx.push_back(StructureMember(&Compiler::read_vws,"vws"));
-		r_ardx.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
-
-		class_image->class_names[class_opcode]="mk.|rdx";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.|rdx")]=Class(Atom::Object(class_opcode,6),"mk.|rdx",r_ardx);
-		++class_opcode;
-
-		//	utilities for notification markers
-		std::vector<StructureMember>	r_ntf;
-		r_ntf.push_back(StructureMember(&Compiler::read_any,"obj"));
-		r_ntf.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::I_SET));	//	reads a set of value pairs
-		r_ntf.push_back(StructureMember(&Compiler::read_view,"vw","view"));
-		r_ntf.push_back(StructureMember(&Compiler::read_mks,"mks"));
-		r_ntf.push_back(StructureMember(&Compiler::read_vws,"vws"));
-		r_ntf.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
-
-		std::vector<StructureMember>	r_ntf_chg;
-		r_ntf_chg.push_back(StructureMember(&Compiler::read_any,"obj"));
-		r_ntf_chg.push_back(StructureMember(&Compiler::read_number,"chg"));
-		r_ntf_chg.push_back(StructureMember(&Compiler::read_set,"prods","val_pair",StructureMember::I_SET));	//	reads a set of value pairs
-		r_ntf_chg.push_back(StructureMember(&Compiler::read_view,"vw","view"));
-		r_ntf_chg.push_back(StructureMember(&Compiler::read_mks,"mks"));
-		r_ntf_chg.push_back(StructureMember(&Compiler::read_vws,"vws"));
-		r_ntf_chg.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
-
-		//	mk.low_sln
-		class_image->class_names[class_opcode]="mk.low_sln";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.low_sln")]=Class(Atom::Object(class_opcode,6),"mk.low_sln",r_ntf);
-		++class_opcode;
-
-		//	mk.high_sln
-		class_image->class_names[class_opcode]="mk.high_sln";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.high_sln")]=Class(Atom::Object(class_opcode,6),"mk.high_sln",r_ntf);
-		++class_opcode;
-
-		//	mk.low_act
-		class_image->class_names[class_opcode]="mk.low_act";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.low_act")]=Class(Atom::Object(class_opcode,6),"mk.low_act",r_ntf);
-		++class_opcode;
-
-		//	mk.high_act
-		class_image->class_names[class_opcode]="mk.high_act";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf);
-		++class_opcode;
-
-		//	mk.low_res
-		class_image->class_names[class_opcode]="mk.low_res";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.low_res")]=Class(Atom::Object(class_opcode,6),"mk.low_res",r_ntf);
-		++class_opcode;
-
-		//	mk.high_res
-		class_image->class_names[class_opcode]="mk.high_res";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.high_res")]=Class(Atom::Object(class_opcode,6),"mk.high_res",r_ntf);
-		++class_opcode;
-
-		//	mk.sln_chg
-		class_image->class_names[class_opcode]="mk.high_act";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf_chg);
-		++class_opcode;
-
-		//	mk.act_chg
-		class_image->class_names[class_opcode]="mk.high_act";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.high_act")]=Class(Atom::Object(class_opcode,6),"mk.high_act",r_ntf_chg);
-		++class_opcode;
-
-		//	mk.new
-		class_image->class_names[class_opcode]="mk.new";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.new")]=Class(Atom::Object(class_opcode,6),"mk.new",r_ntf);
-		++class_opcode;
-
-		//	mk.position: non-standard
-		std::vector<StructureMember>	r_mk_position;
-		r_mk_position.push_back(StructureMember(&Compiler::read_any,"object"));
-		r_mk_position.push_back(StructureMember(&Compiler::read_expression,"position","vec3"));
-		r_mk_position.push_back(StructureMember(&Compiler::read_view,"vw","view"));
-		r_mk_position.push_back(StructureMember(&Compiler::read_mks,"mks"));
-		r_mk_position.push_back(StructureMember(&Compiler::read_vws,"vws"));
-		r_mk_position.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
-
-		class_image->class_names[class_opcode]="mk.position";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.position")]=Class(Atom::Object(class_opcode,6),"mk.position",r_mk_position);
-		++class_opcode;
-
-		//	mk.last_known: non-standard
-		std::vector<StructureMember>	r_mk_last_known;
-		r_mk_last_known.push_back(StructureMember(&Compiler::read_any,"event"));
-		r_mk_last_known.push_back(StructureMember(&Compiler::read_view,"vw","view"));
-		r_mk_last_known.push_back(StructureMember(&Compiler::read_mks,"mks"));
-		r_mk_last_known.push_back(StructureMember(&Compiler::read_vws,"vws"));
-		r_mk_last_known.push_back(StructureMember(&Compiler::read_number,"psln_thr"));
-
-		class_image->class_names[class_opcode]="mk.last_known";
-		class_image->classes_by_opcodes[class_opcode]=class_image->sys_classes[std::string("mk.last_known")]=Class(Atom::Object(class_opcode,5),"mk.last_known",r_mk_last_known);
-		++class_opcode;
-
-		//	utilities /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		std::vector<StructureMember>	r_null;
-		
-		std::vector<StructureMember>	r_any;
-		r_any.push_back(StructureMember(&Compiler::read_any,""));
-
-		std::vector<StructureMember>	r_set;
-		r_set.push_back(StructureMember(&Compiler::read_set,""));
-
-		std::vector<StructureMember>	r_any_any;
-		r_any_any.push_back(StructureMember(&Compiler::read_any,""));
-		r_any_any.push_back(StructureMember(&Compiler::read_any,""));
-
-		std::vector<StructureMember>	r_any_set;
-		r_any_set.push_back(StructureMember(&Compiler::read_any,""));
-		r_any_set.push_back(StructureMember(&Compiler::read_set,""));
-
-		std::vector<StructureMember>	r_nb_nb;
-		r_nb_nb.push_back(StructureMember(&Compiler::read_number,""));
-		r_nb_nb.push_back(StructureMember(&Compiler::read_number,""));
-
-		std::vector<StructureMember>	r_set_set_set;
-		r_set_set_set.push_back(StructureMember(&Compiler::read_set,""));
-		r_set_set_set.push_back(StructureMember(&Compiler::read_set,""));
-		r_set_set_set.push_back(StructureMember(&Compiler::read_set,""));
-
-		std::vector<StructureMember>	r_set_nb;
-		r_set_nb.push_back(StructureMember(&Compiler::read_set,""));
-		r_set_nb.push_back(StructureMember(&Compiler::read_number,""));
-
-		std::vector<StructureMember>	r_ms_ms;
-		r_ms_ms.push_back(StructureMember(&Compiler::read_timestamp,""));
-		r_ms_ms.push_back(StructureMember(&Compiler::read_timestamp,""));
-
-		//	operators /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		class_image->classes[std::string("_now")]=Class(Atom::Operator(operator_opcode++,0),"_now",r_null,TIMESTAMP);
-		class_image->operator_names.push_back("_now");
-		class_image->classes[std::string("add")]=Class(Atom::Operator(operator_opcode++,2),"add",r_any_any,ANY);
-		class_image->operator_names.push_back("add");
-		class_image->classes[std::string("sub")]=Class(Atom::Operator(operator_opcode++,2),"sub",r_any_any,ANY);
-		class_image->operator_names.push_back("sub");
-		class_image->classes[std::string("mul")]=Class(Atom::Operator(operator_opcode++,2),"mul",r_nb_nb,NUMBER);
-		class_image->operator_names.push_back("mul");
-		class_image->classes[std::string("div")]=Class(Atom::Operator(operator_opcode++,2),"div",r_nb_nb,NUMBER);
-		class_image->operator_names.push_back("div");
-		class_image->classes[std::string("gtr")]=Class(Atom::Operator(operator_opcode++,2),"gtr",r_any_any,BOOLEAN);
-		class_image->operator_names.push_back("gtr");
-		class_image->classes[std::string("lse")]=Class(Atom::Operator(operator_opcode++,2),"lse",r_any_any,BOOLEAN);
-		class_image->operator_names.push_back("lse");
-		class_image->classes[std::string("lsr")]=Class(Atom::Operator(operator_opcode++,2),"lsr",r_any_any,BOOLEAN);
-		class_image->operator_names.push_back("lsr");
-		class_image->classes[std::string("gte")]=Class(Atom::Operator(operator_opcode++,2),"gte",r_any_any,BOOLEAN);
-		class_image->operator_names.push_back("gte");
-		class_image->classes[std::string("equ")]=Class(Atom::Operator(operator_opcode++,2),"equ",r_any_any,BOOLEAN);
-		class_image->operator_names.push_back("equ");
-		class_image->classes[std::string("neq")]=Class(Atom::Operator(operator_opcode++,2),"neq",r_any_any,BOOLEAN);
-		class_image->operator_names.push_back("neq");
-		class_image->classes[std::string("syn")]=Class(Atom::Operator(operator_opcode++,1),"syn",r_any,ANY);
-		class_image->operator_names.push_back("syn");
-		class_image->classes[std::string("red")]=Class(Atom::Operator(operator_opcode++,3),"red",r_set_set_set,SET);
-		class_image->operator_names.push_back("red");
-		class_image->classes[std::string("ins")]=Class(Atom::Operator(operator_opcode++,2),"ins",r_any_set,ANY);
-		class_image->operator_names.push_back("ins");
-		class_image->classes[std::string("at")]=Class(Atom::Operator(operator_opcode++,2),"at",r_set_nb,ANY);
-		class_image->operator_names.push_back("at");
-
-		//	functions /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		class_image->classes[std::string("_inj")]=Class(Atom::DeviceFunction(function_opcode++),"_inj",r_set);
-		class_image->function_names.push_back("_inj");
-		class_image->classes[std::string("_eje")]=Class(Atom::DeviceFunction(function_opcode++),"_eje",r_set);
-		class_image->function_names.push_back("_eje");
-		class_image->classes[std::string("_mod")]=Class(Atom::DeviceFunction(function_opcode++),"_mod",r_set);
-		class_image->function_names.push_back("_mod");
-		class_image->classes[std::string("_set")]=Class(Atom::DeviceFunction(function_opcode++),"_set",r_set);
-		class_image->function_names.push_back("_set");
-		class_image->classes[std::string("_start")]=Class(Atom::DeviceFunction(function_opcode++),"_start",r_set);
-		class_image->function_names.push_back("_start");
 	}
 }

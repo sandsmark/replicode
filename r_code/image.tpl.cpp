@@ -34,9 +34,9 @@
 
 namespace	r_code{
 
-	template<class	I>	Image<I>	*Image<I>::Build(uint32	def_size,uint32	map_size,uint32	code_size,uint32	reloc_size){
+	template<class	I>	Image<I>	*Image<I>::Build(uint32	map_size,uint32	code_size,uint32	reloc_size){
 
-		I	*image=new(def_size+map_size+code_size+reloc_size)	I(def_size,map_size,code_size,reloc_size);
+		I	*image=new(map_size+code_size+reloc_size)	I(map_size,code_size,reloc_size);
 		return	(Image<I>	*)image;
 	}
 
@@ -72,19 +72,9 @@ namespace	r_code{
 	template<class	I>	Image<I>::~Image(){
 	}
 
-	template<class	I>	word32	*Image<I>::getDefSegment(){
-
-		return	data();
-	}
-
-	template<class	I>	uint32	Image<I>::getDefSegmentSize()	const{
-
-		return	def_size();
-	}
-
 	template<class	I>	uint32	Image<I>::getSize()	const{
 
-		return	def_size()+map_size()+code_size()+reloc_size();
+		return	map_size()+code_size()+reloc_size();
 	}
 
 	template<class	I>	uint32	Image<I>::getObjectCount()	const{
@@ -94,12 +84,12 @@ namespace	r_code{
 
 	template<class	I>	word32	*Image<I>::getObject(uint32	i){
 
-		return	data()+data()[def_size()+i];
+		return	data()+data()[i];
 	}
 
 	template<class	I>	word32	*Image<I>::getCodeSegment(){
 	
-		return	data()+def_size()+map_size();
+		return	data()+map_size();
 	}
 
 	template<class	I>	uint32	Image<I>::getCodeSegmentSize()	const{
@@ -109,7 +99,7 @@ namespace	r_code{
 
 	template<class	I>	word32	*Image<I>::getRelocSegment(){
 
-		return	data()+def_size()+map_size()+code_size();
+		return	data()+map_size()+code_size();
 	}
 
 	template<class	I>	uint32	Image<I>::getRelocSegmentSize()	const{
@@ -134,25 +124,20 @@ namespace	r_code{
 
 		std::cout<<"---Image---\n";
 		std::cout<<"Size: "<<getSize()<<std::endl;
-		std::cout<<"Definition Segment Size: "<<def_size()<<std::endl;
 		std::cout<<"Object Map Size: "<<map_size()<<std::endl;
 		std::cout<<"Code Segment Size: "<<code_size()<<std::endl;
 		std::cout<<"Relocation Segment Size: "<<reloc_size()<<std::endl;
 
 		uint32	i=0;
 
-		std::cout<<"===Definition Segment==="<<std::endl;
-		for(;i<def_size();++i)
-			std::cout<<i<<" "<<data()[i]<<std::endl;
-
 		std::cout<<"===Object Map==="<<std::endl;
-		for(;i<def_size()+map_size();++i)
+		for(;i<map_size();++i)
 			std::cout<<i<<" "<<data()[i]<<std::endl;
 
 		//	at this point, i is at the first word32 of the first object in the code segment
 		std::cout<<"===Code Segment==="<<std::endl;
-		uint32	code_start=def_size()+map_size();
-		for(uint32	j=def_size();j<code_start;++j){	//	read object map: data[data[j]] is the first word32 of an object, data[data[j]+4] is the first atom
+		uint32	code_start=map_size();
+		for(uint32	j=0;j<code_start;++j){	//	read object map: data[data[j]] is the first word32 of an object, data[data[j]+4] is the first atom
 
 			uint32	object_code_size=data()[data()[j]];
 			uint32	object_reference_set_size=data()[data()[j]+1];

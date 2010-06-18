@@ -46,7 +46,7 @@ namespace	r_comp{
 	private:
 		
 		std::istream	*in_stream;
-		std::string		*error;
+		std::string		&error;
 
 		bool	trace;
 
@@ -55,7 +55,8 @@ namespace	r_comp{
 		uint32		current_object_index;	//	ordinal of the current sys-object in the code segment.
 		int32		current_view_index;		//	ordinal of a view in the sys-object's view set.
 
-		r_comp::Image	*_image;
+		r_comp::Image		*_image;
+		r_comp::Metadata	*_metadata;
 
 		class	State{
 		public:
@@ -82,14 +83,14 @@ namespace	r_comp{
 		State	save_state();			//	called before trying to read an expression.
 		void	restore_state(State	s);	//	called after failing to read an expression.
 
-		void	set_error(std::string	s);
+		void	set_error(const	std::string	&s);
 		void	set_arity_error(uint16	expected,uint16	got);
 
 		UNORDERED_MAP<std::string,Reference>	local_references;	//	labels and variables declared inside objects (cleared before parsing each sys-object): translate to value pointers.
 		UNORDERED_MAP<std::string,Reference>	global_references;	//	labels declared outside sys-objects. translate to reference pointers.
-		void	addReference(const	std::string	reference_name,const	uint16	index,const	Class	&p);											//	detect cast.
-		bool	getReferenceIndex(const	std::string	reference_name,const	ReturnType	t,ImageObject	*object,uint16	&index,Class	*&_class);	//	index points to the reference set.
-																																					//	return false when not found.
+		void	addLocalReference(const	std::string	reference_name,const	uint16	index,const	Class	&p);												//	detect cast.
+		bool	getGlobalReferenceIndex(const	std::string	reference_name,const	ReturnType	t,ImageObject	*object,uint16	&index,Class	*&_class);	//	index points to the reference set.
+																																							//	return false when not found.
 		//	Utility.
 		bool	read_nil(uint16	write_index,uint16	&extent_index,bool	write);
 		bool	read_nil_set(uint16	write_index,uint16	&extent_index,bool	write);
@@ -182,10 +183,11 @@ namespace	r_comp{
 		Compiler();
 		~Compiler();
 
-		bool	compile(std::istream	*stream,	//	stream must be open.
-						r_comp::Image	*_image,
-						std::string		*error,
-						bool			trace);	//	set when compile() fails, e.g. returns false.
+		bool	compile(std::istream		*stream,	//	stream must be open.
+						r_comp::Image		*_image,
+						r_comp::Metadata	*_metadata,
+						std::string			&error,
+						bool				trace);	//	set when compile() fails, e.g. returns false.
 
 		//	Read functions for defining structure members.
 		//	Always try to read nil (typed), a variable, a wildcrad or a tail wildcard first; then try to read the lexical unit; then try to read an expression returning the appropriate type.

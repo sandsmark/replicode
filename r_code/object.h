@@ -89,31 +89,57 @@ namespace	r_code{
 
 	class	View;
 
-	class	dll_export	Object:
+	class	dll_export	Code:
 	public	_Object{
 	public:
-		r_code::vector<Atom>		code;
-		r_code::vector<P<Object> >	marker_set;
-		r_code::vector<P<Object> >	reference_set;
+		virtual	Atom	&code(uint16	i)=0;
+		virtual	Atom	&code(uint16	i)	const=0;
+		virtual	uint16	code_size()	const=0;
+		virtual	P<Code>	&references(uint16	i)=0;
+		virtual	P<Code>	&references(uint16	i)	const=0;
+		virtual	uint16	references_size()	const=0;
+
+		r_code::vector<P<Code> >	marker_set;
 		r_code::vector<View	*>		view_set;	//	used only for initialization from an image.
 
+		Code();
+		virtual	~Code();
+	};
+
+	class	dll_export	Object:
+	public	Code{
+	private:
+		r_code::vector<Atom>		_code;
+		r_code::vector<P<Code> >	_references;
+	public:
 		Object();
 		Object(SysObject	*source);
 		virtual	~Object();
 
-		uint16	opcode()	const;
+		Atom	&code(uint16	i){	return	_code[i];	}
+		Atom	&code(uint16	i)	const{	return	(*_code.as_std())[i];	}
+		uint16	code_size()	const{	return	_code.size();	}
+		P<Code>	&references(uint16	i){	return	_references[i];	}
+		P<Code>	&references(uint16	i)	const{	return	(*_references.as_std())[i];	}
+		uint16	references_size()	const{	return	_references.size();	}
+
+		void	add_reference(Code	*object)	const{	_references.as_std()->push_back(object);	}
 	};
 
 	class	dll_export	View:
 	public	_Object{
+	protected:
+		Atom	_code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, oid, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
 	public:
-		P<Object>	object;						//	viewed object.
-		Atom		code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, oid, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
-		Object		*reference_set[2];			//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group).
+		P<Code>	object;						//	viewed object.
+		Code	*references[2];				//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group).
 
 		View();
 		View(SysView	*source,Object	*object);
 		virtual	~View();
+
+		Atom	&code(uint16	i){	return	_code[i];	}
+		Atom	code(uint16	i)	const{	return	_code[i];	}
 	};
 
 	class	Mem{

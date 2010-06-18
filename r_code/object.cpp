@@ -42,7 +42,7 @@ namespace	r_code{
 	SysView::SysView(View	*source){
 
 		for(uint32	i=0;i<VIEW_CODE_MAX_SIZE;++i)
-			code[i]=source->code[i];
+			code[i]=source->code(i);
 	}
 
 	void	SysView::write(word32	*data){
@@ -96,8 +96,8 @@ namespace	r_code{
 	SysObject::SysObject(Object	*source){
 
 		uint32	i;
-		for(i=0;i<source->code.size();++i)
-			code[i]=source->code[i];
+		for(i=0;i<source->code_size();++i)
+			code[i]=source->code(i);
 
 		for(i=0;i<source->view_set.size();++i)
 			view_set[i]=new	SysView(source->view_set[i]);
@@ -209,42 +209,45 @@ namespace	r_code{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Object::Object(){
+	Code::Code(){
+	}
+
+	Code::~Code(){
+
+		for(uint32	i=0;i<view_set.size();++i)
+			delete	view_set[i];
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Object::Object():Code(){
 	}
 
 	Object::Object(SysObject	*source){
 
 		uint32	i;
 		for(i=0;i<source->code.size();++i)
-			code[i]=source->code[i];
+			code(i)=source->code[i];
 
 		for(i=0;i<source->view_set.size();++i)
 			view_set[i]=new	View(source->view_set[i],this);
 	}
 
 	Object::~Object(){
-
-		for(uint32	i=0;i<view_set.size();++i)
-			delete	view_set[i];
-	}
-
-	uint16	Object::opcode()	const{
-
-		return	(*code.as_std())[OBJECT_CLASS].asOpcode();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	View::View():object(NULL){
 
-		reference_set[0]=reference_set[1]=NULL;
+		references[0]=references[1]=NULL;
 	}
 
 	View::View(SysView	*source,Object	*object):object(object){
 
 		for(uint32	i=0;i<source->code.size();++i)
-			code[i]=source->code[i];
-		reference_set[0]=reference_set[1]=NULL;
+			_code[i]=source->code[i];
+		references[0]=references[1]=NULL;
 	}
 
 	View::~View(){

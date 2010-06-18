@@ -1,5 +1,8 @@
 #include	"pgm_overlay.h"
 #include	"mem.h"
+#include	"group.h"
+#include	"init.h"
+#include	"opcodes.h"
 #include	"context.h"
 
 
@@ -58,9 +61,9 @@ namespace	r_exec{
 	Overlay::Overlay(IPGMController	*c):_Object(),controller(c){
 
 		//	copy the original pgm code.
-		pgm_code_size=getIPGM()->getPGM()->code.size();
+		pgm_code_size=getIPGM()->getPGM()->code_size();
 		pgm_code=new	r_code::Atom[pgm_code_size];
-		memcpy(pgm_code,&getIPGM()->getPGM()->code[0],pgm_code_size*sizeof(r_code::Atom));
+		memcpy(pgm_code,&getIPGM()->getPGM()->code(0),pgm_code_size*sizeof(r_code::Atom));
 		
 		value_commit_index=0;
 
@@ -101,7 +104,7 @@ namespace	r_exec{
 		pgm_code=new	r_code::Atom[pgm_code_size];
 		memcpy(pgm_code,original->pgm_code,pgm_code_size*sizeof(r_code::Atom));	//	copy patched code.
 
-		Atom	*original_code=&getIPGM()->getPGM()->code[0];
+		Atom	*original_code=&getIPGM()->getPGM()->code(0);
 		for(uint16	i=0;i<original->patch_indices.size();++i)	//	unpatch code.
 			pgm_code[i]=original_code[patch_indices[i]];
 
@@ -126,12 +129,12 @@ namespace	r_exec{
 
 		uint16	tpl_arg_set_index=pgm_code[PGM_TPL_ARGS].asIndex();			//	index to the set of all tpl patterns.
 		uint16	arg_count=pgm_code[tpl_arg_set_index].getAtomCount();
-		uint16	ipgm_arg_set_index=getIPGM()->code[IPGM_ARGS].asIndex();	//	index to the set of all ipgm tpl args.
+		uint16	ipgm_arg_set_index=getIPGM()->code(IPGM_ARGS).asIndex();	//	index to the set of all ipgm tpl args.
 		for(uint16	i=1;i<=arg_count;++i){	//	pgm_code[tpl_arg_set_index+i] is a pattern's opcode.
 
 			uint16	skel_index=pgm_code[tpl_arg_set_index+i+1].asIndex();
 			uint16	skel_atom_count=pgm_code[skel_index].getAtomCount();
-			uint16	ipgm_arg_index=getIPGM()->code[ipgm_arg_set_index+i].asIndex();
+			uint16	ipgm_arg_index=getIPGM()->code(ipgm_arg_set_index+i).asIndex();
 
 			patch_tpl_code(skel_index,ipgm_arg_index);
 
@@ -152,7 +155,7 @@ namespace	r_exec{
 			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
 				return;
 			case	Atom::I_PTR:
-				patch_tpl_code(pgm_code[pgm_code_index+j].asIndex(),getIPGM()->code[ipgm_code_index+j].asIndex());
+				patch_tpl_code(pgm_code[pgm_code_index+j].asIndex(),getIPGM()->code(ipgm_code_index+j).asIndex());
 				break;
 			default:	//	leave as is.
 				break;
@@ -177,7 +180,7 @@ namespace	r_exec{
 			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
 				return;
 			case	Atom::I_PTR:
-				patch_input_code(pgm_code[skel_index+j].asIndex(),input_index,getInputObject(input_index)->code[skel_index+j].asIndex());
+				patch_input_code(pgm_code[skel_index+j].asIndex(),input_index,getInputObject(input_index)->code(skel_index+j).asIndex());
 				patch_indices.push_back(skel_index+j);
 				break;
 			default:	//	leave as is.
@@ -193,7 +196,7 @@ namespace	r_exec{
 
 	inline	void	Overlay::rollback(){
 
-		Atom	*original_code=&getIPGM()->getPGM()->code[0];
+		Atom	*original_code=&getIPGM()->getPGM()->code(0);
 		for(uint16	i=0;i<patch_indices.size();++i)	//	upatch code.
 			pgm_code[i]=original_code[patch_indices[i]];
 
@@ -212,7 +215,7 @@ namespace	r_exec{
 
 	inline	void	Overlay::reset(){
 
-		memcpy(pgm_code,&getIPGM()->getPGM()->code[0],pgm_code_size*sizeof(r_code::Atom));	//	restore code to prisitne copy.
+		memcpy(pgm_code,&getIPGM()->getPGM()->code(0),pgm_code_size*sizeof(r_code::Atom));	//	restore code to prisitne copy.
 		patch_tpl_args();
 
 		patch_indices.clear();
@@ -273,7 +276,7 @@ namespace	r_exec{
 
 	inline	Overlay::MatchResult	Overlay::_match(r_exec::View	*input,uint16	pattern_index){
 
-		if(pgm_code[pattern_index].asOpcode()==Object::AntiPTNOpcode){
+		if(pgm_code[pattern_index].asOpcode()==Opcodes::AntiPTN){
 
 			MatchResult	r=_match_pattern(input,pattern_index);
 			switch(r){
@@ -283,7 +286,7 @@ namespace	r_exec{
 			case	SUCCESS:
 				return	FAILURE;
 			}
-		}else	if(pgm_code[pattern_index].asOpcode()==Object::PTNOpcode)
+		}else	if(pgm_code[pattern_index].asOpcode()==Opcodes::PTN)
 			return	_match_pattern(input,pattern_index);
 		return	IMPOSSIBLE;
 	}
@@ -359,8 +362,8 @@ namespace	r_exec{
 			Context	args=cmd.getChild(4);
 			if(device[0].asOpcode()==EXECUTIVE_DEVICE){
 
-				if(function[0].asOpcode()==Object::InjectOpcode	||
-					function[0].asOpcode()==Object::EjectOpcode){	//	args:[object view]; create an object if not a reference.
+				if(function[0].asOpcode()==Opcodes::Inject	||
+					function[0].asOpcode()==Opcodes::Eject){	//	args:[object view]; create an object if not a reference.
 
 					Object	*object;
 					switch(args[1].getDescriptor()){
@@ -386,36 +389,36 @@ namespace	r_exec{
 
 		uint16	write_index=0;
 		uint16	extent_index=MK_RDX_ARITY+1;
-		Object	*mk_rdx;
-		bool	notify_rdx=getIPGM()->getPGM()->code[PGM_NFR]==1;
+		MkRdx	*mk_rdx;
+		bool	notify_rdx=getIPGM()->getPGM()->code(PGM_NFR)==1;
 		if(notify_rdx){	//	the productions are command objects (cmd); all productions are notified.
 
-			mk_rdx=new	Object();
-			if(getIPGM()->code[0].asOpcode()==Object::PGMOpcode){
+			mk_rdx=new	MkRdx();
+			if(getIPGM()->code(0).asOpcode()==Opcodes::PGM){
 
-				mk_rdx->code[write_index++]=Atom::Object(Object::PGMOpcode,MK_RDX_ARITY);
-				mk_rdx->code[write_index++]=Atom::RPointer(0);				//	code.
-				mk_rdx->reference_set.push_back(getIPGM());
-				mk_rdx->code[write_index++]=Atom::IPointer(extent_index);	//	inputs.
-				mk_rdx->code[extent_index++]=Atom::Set(input_views.size());
+				mk_rdx->code(write_index++)=Atom::Object(Opcodes::PGM,MK_RDX_ARITY);
+				mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
+				mk_rdx->add_reference(getIPGM());
+				mk_rdx->code(write_index++)=Atom::IPointer(extent_index);	//	inputs.
+				mk_rdx->code(extent_index++)=Atom::Set(input_views.size());
 				for(uint16	i=0;i<input_views.size();++i){
 
-					mk_rdx->code[extent_index++]=Atom::RPointer(i+1);
-					mk_rdx->reference_set.push_back(input_views[i]->object);
+					mk_rdx->code(extent_index++)=Atom::RPointer(i+1);
+					mk_rdx->add_reference(input_views[i]->object);
 				}
-			}else	if(getIPGM()->code[0].asOpcode()==Object::AntiPGMOpcode){
+			}else	if(getIPGM()->code(0).asOpcode()==Opcodes::AntiPGM){
 
-				mk_rdx->code[write_index++]=Atom::Object(Object::AntiPGMOpcode,MK_RDX_ARITY);
-				mk_rdx->code[write_index++]=Atom::RPointer(0);				//	code.
-				mk_rdx->reference_set.push_back(getIPGM());
+				mk_rdx->code(write_index++)=Atom::Object(Opcodes::AntiPGM,MK_RDX_ARITY);
+				mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
+				mk_rdx->add_reference(getIPGM());
 			}
 			
-			mk_rdx->code[write_index++]=Atom::IPointer(extent_index);		//	productions.
-			mk_rdx->code[write_index++]=Atom::View();
-			mk_rdx->code[write_index++]=Atom::Vws();
-			mk_rdx->code[write_index++]=Atom::Mks();
-			mk_rdx->code[write_index++]=Atom::Float(1);						//	psln_thr.
-			mk_rdx->code[extent_index++]=Atom::Set(last_production_index-first_production_index+1);	//	number of productions.
+			mk_rdx->code(write_index++)=Atom::IPointer(extent_index);		//	productions.
+			mk_rdx->code(write_index++)=Atom::View();
+			mk_rdx->code(write_index++)=Atom::Vws();
+			mk_rdx->code(write_index++)=Atom::Mks();
+			mk_rdx->code(write_index++)=Atom::Float(1);						//	psln_thr.
+			mk_rdx->code(extent_index++)=Atom::Set(last_production_index-first_production_index+1);	//	number of productions.
 		}
 		
 		for(uint16	i=first_production_index;i<=last_production_index;++i){	//	all productions have evaluated correctly; now we can execute the commands.
@@ -430,7 +433,7 @@ namespace	r_exec{
 			Context	args=cmd.getChild(4);
 			if(device[0].asOpcode()==EXECUTIVE_DEVICE){
 
-				if(function[0].asOpcode()==Object::InjectOpcode){	//	args:[object view]; retrieve the object and create a view.
+				if(function[0].asOpcode()==Opcodes::Inject){	//	args:[object view]; retrieve the object and create a view.
 
 					Object	*object=args.getChild(1).getObject();
 					
@@ -440,7 +443,7 @@ namespace	r_exec{
 					view->object=object;
 
 					mem->inject(view);
-				}else	if(function[0].asOpcode()==Object::EjectOpcode){	//	args:[object view destination_node]; view.grp=destination grp (stdin ot stdout); retrieve the object and create a view.
+				}else	if(function[0].asOpcode()==Opcodes::Eject){	//	args:[object view destination_node]; view.grp=destination grp (stdin ot stdout); retrieve the object and create a view.
 
 					Object	*object=args.getChild(1).getObject();
 					
@@ -452,7 +455,7 @@ namespace	r_exec{
 					Context	node=args.getChild(3);
 
 					mem->eject(view,node[0].getNodeID());
-				}else	if(function[0].asOpcode()==Object::ModOpcode){	//	args:[cptr value].
+				}else	if(function[0].asOpcode()==Opcodes::Mod){	//	args:[cptr value].
 
 					void	*object;
 					Context::ObjectType	object_type;
@@ -484,7 +487,7 @@ namespace	r_exec{
 							return	false;
 						}
 					}
-				}else	if(function[0].asOpcode()==Object::SetOpcode){	//	args:[cptr value].
+				}else	if(function[0].asOpcode()==Opcodes::Set){	//	args:[cptr value].
 
 					void	*object;
 					Context::ObjectType	object_type;
@@ -514,25 +517,25 @@ namespace	r_exec{
 							break;
 						}
 					}
-				}else	if(function[0].asOpcode()==Object::NewClassOpcode){
+				}else	if(function[0].asOpcode()==Opcodes::NewClass){
 
-				}else	if(function[0].asOpcode()==Object::DelClassOpcode){
+				}else	if(function[0].asOpcode()==Opcodes::DelClass){
 
-				}else	if(function[0].asOpcode()==Object::LDCOpcode){
+				}else	if(function[0].asOpcode()==Opcodes::LDC){
 
-				}else	if(function[0].asOpcode()==Object::SwapOpcode){
+				}else	if(function[0].asOpcode()==Opcodes::Swap){
 
-				}else	if(function[0].asOpcode()==Object::NewDevOpcode){
+				}else	if(function[0].asOpcode()==Opcodes::NewDev){
 
-				}else	if(function[0].asOpcode()==Object::DelDevOpcode){
+				}else	if(function[0].asOpcode()==Opcodes::DelDev){
 
-				}else	if(function[0].asOpcode()==Object::SuspendOpcode){	//	no args.
+				}else	if(function[0].asOpcode()==Opcodes::Suspend){	//	no args.
 
 					mem->suspend();
-				}else	if(function[0].asOpcode()==Object::ResumeOpcode){	//	no args.
+				}else	if(function[0].asOpcode()==Opcodes::Resume){	//	no args.
 
 					mem->resume();
-				}else	if(function[0].asOpcode()==Object::StopOpcode){		//	no args.
+				}else	if(function[0].asOpcode()==Opcodes::Stop){		//	no args.
 
 					mem->stop();
 				}else{	//	unknown function.
@@ -545,7 +548,7 @@ namespace	r_exec{
 				Object	*command=new	Object();
 				cmd.copy(command,0);
 
-				mem->eject(command,command->code[CMD_DEVICE].getNodeID());
+				mem->eject(command,command->code(CMD_DEVICE).getNodeID());
 			}
 
 			if(notify_rdx)
@@ -614,7 +617,7 @@ namespace	r_exec{
 		if(overlays.size()==0)
 			overlays.push_back(getIPGM()->getType()==ANTI_IPGM?new	AntiOverlay(this):new	Overlay(this));
 
-		uint64	now=Mem::Now();
+		uint64	now=Now();
 
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
@@ -656,7 +659,7 @@ namespace	r_exec{
 			host->get_c_act()>host->get_c_act_thr()			&&	//	c-active group.
 			host->get_c_sln()>host->get_c_sln_thr()){			//	c-salient group.
 
-			TimeJob	next_job(new	InputLessPGMSignalingJob(this),Mem::Now()+host->get_spr()*mem->get_base_period());
+			TimeJob	next_job(new	InputLessPGMSignalingJob(this),Now()+host->get_spr()*mem->get_base_period());
 			mem->pushTimeJob(next_job);
 		}
 	}
@@ -683,7 +686,7 @@ namespace	r_exec{
 			host->get_c_act()>host->get_c_act_thr()	&&		//	c-active group.
 			host->get_c_sln()>host->get_c_sln_thr()){		//	c-salient group.
 
-			TimeJob	next_job(new	AntiPGMSignalingJob(this),Mem::Now()+getIPGM()->get_tsc());
+			TimeJob	next_job(new	AntiPGMSignalingJob(this),Now()+getIPGM()->get_tsc());
 			mem->pushTimeJob(next_job);
 		}
 

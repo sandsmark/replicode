@@ -36,7 +36,7 @@ namespace	r_comp{
 
 	static	bool	Output=true;
 
-	Compiler::Compiler():out_stream(NULL),current_object(NULL){
+	Compiler::Compiler():out_stream(NULL),current_object(NULL),error(std::string("")){
 	}
 
 	Compiler::~Compiler(){
@@ -57,12 +57,12 @@ namespace	r_comp{
 		state=s;
 	}
 
-	void	Compiler::set_error(std::string	s){
+	void	Compiler::set_error(const	std::string	&s){
 
 		if(!err	&&	Output){
 
 			err=true;
-			*error=s;
+			error=s;
 		}
 	}
 
@@ -80,7 +80,7 @@ namespace	r_comp{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
-	bool	Compiler::compile(std::istream	*stream,r_comp::Image	*_image,std::string	*error,bool	trace){
+	bool	Compiler::compile(std::istream	*stream,r_comp::Image	*_image,r_comp::Metadata	*_metadata,std::string	&error,bool	trace){
 
 		this->in_stream=stream;
 		this->error=error;
@@ -88,7 +88,8 @@ namespace	r_comp{
 		this->trace=trace;
 
 		this->_image=_image;
-		current_object_index=0;
+		this->_metadata=_metadata;
+		current_object_index=_image->object_map.objects.size();
 		while(!in_stream->eof()){
 
 			switch(in_stream->peek()){
@@ -150,7 +151,7 @@ namespace	r_comp{
 
 			current_object=new	SysObject();
 			if(lbl)
-				global_references[l]=Reference(_image->code_image.code_segment.objects.size(),current_class,Class());
+				global_references[l]=Reference(_image->code_segment.objects.size(),current_class,Class());
 		}
 
 		current_object->code[0]=current_class.atom;
@@ -193,7 +194,7 @@ namespace	r_comp{
 
 			indent(false);
 
-			current_class=*current_class.get_member_class(&_image->class_image,"vw");
+			current_class=*current_class.get_member_class(_metadata,"vw");
 			current_class.use_as=StructureMember::I_CLASS;
 
 			uint16	count=0;
@@ -247,13 +248,13 @@ namespace	r_comp{
 		if(trace)
 			sys_object->trace();
 
-		_image->code_image.addObject(sys_object);
+		_image->addObject(sys_object);
 		return	true;
 	}
 
 	bool	Compiler::read(const	StructureMember	&m,bool	&indented,bool	enforce,uint16	write_index,uint16	&extent_index,bool	write){
 
-		if(Class	*p=m.get_class(&_image->class_image)){
+		if(Class	*p=m.get_class(_metadata)){
 
 			p->use_as=m.getIteration();
 			return	(this->*m.read())(indented,enforce,p,write_index,extent_index,write);
@@ -261,26 +262,26 @@ namespace	r_comp{
 		return	(this->*m.read())(indented,enforce,NULL,write_index,extent_index,write);
 	}
 
-	bool	Compiler::getReferenceIndex(const	std::string	reference_name,const	ReturnType	t,ImageObject	*object,uint16	&index,Class	*&_class){
+	bool	Compiler::getGlobalReferenceIndex(const	std::string	reference_name,const	ReturnType	t,ImageObject	*object,uint16	&index,Class	*&_class){
 
 		UNORDERED_MAP<std::string,Reference>::iterator	it=global_references.find(reference_name);
 		if(it!=global_references.end()	&&	(t==ANY	||	(t!=ANY	&&	it->second._class.type==t))){
 
 			_class=&it->second._class;
 			for(uint16	j=0;j<object->reference_set.size();++j)
-				if(object->reference_set[j]==it->second.index){	//	the object has already been referenced
+				if(object->reference_set[j]==it->second.index){	//	the object has already been referenced.
 
-					index=j;	//	rptr points to object->reference_set[j], which in turn points to it->second.index
+					index=j;	//	rptr points to object->reference_set[j], which in turn points to it->second.index.
 					return	true;
 				}
-			object->reference_set.push_back(it->second.index);	//	add new reference to the object
-			index=object->reference_set.size()-1;	//	//	rptr points to the last element of object->reference_set, which in turn points to it->second.index
+			object->reference_set.push_back(it->second.index);	//	add new reference to the object.
+			index=object->reference_set.size()-1;				//	rptr points to the last element of object->reference_set, which in turn points to it->second.index.
 			return	true;
 		}
 		return	false;
 	}
 
-	void	Compiler::addReference(const	std::string	reference_name,const	uint16	index,const	Class	&p){
+	void	Compiler::addLocalReference(const	std::string	reference_name,const	uint16	index,const	Class	&p){
 
 		//	cast detection.
 		size_t	pos=reference_name.find('#');
@@ -289,8 +290,8 @@ namespace	r_comp{
 			std::string	class_name=reference_name.substr(pos+1);
 			std::string	ref_name=reference_name.substr(0,pos);
 
-			UNORDERED_MAP<std::string,Class>::iterator	it=_image->class_image.classes.find(class_name);
-			if(it!=_image->class_image.classes.end())
+			UNORDERED_MAP<std::string,Class>::iterator	it=_metadata->classes.find(class_name);
+			if(it!=_metadata->classes.end())
 				local_references[ref_name]=Reference(index,p,it->second);
 			else
 				set_error(" error: cast to "+class_name+": unknown class");
@@ -877,7 +878,7 @@ return_false:
 		if(symbol_expr_set(r)){
 
 			Class	*unused;
-			if(getReferenceIndex(r,t,current_object,index,unused))
+			if(getGlobalReferenceIndex(r,t,current_object,index,unused))
 				return	true;
 		}
 		in_stream->clear();
@@ -892,18 +893,18 @@ return_false:
 
 			Class	*p;	//	in general, p starts as the current_class; exception: in pgm, fmd and imd, this refers to the instantiated object.
 			if(current_class.str_opcode=="pgm")
-				p=&_image->class_image.sys_classes["ipgm"];
+				p=&_metadata->sys_classes["ipgm"];
 			else	if(current_class.str_opcode=="fmd")
-				p=&_image->class_image.sys_classes["ifmd"];
+				p=&_metadata->sys_classes["ifmd"];
 			else	if(current_class.str_opcode=="imd")
-				p=&_image->class_image.sys_classes["iimd"];
+				p=&_metadata->sys_classes["iimd"];
 			Class		*_p;
 			std::string	m;
 			uint16		index;
 			ReturnType	type;
 			while(member(m)){
 
-				if(!p->get_member_index(&_image->class_image,m,index,_p)){
+				if(!p->get_member_index(_metadata,m,index,_p)){
 
 					set_error(" error: "+m+" is not a member of "+p->str_opcode);
 					break;
@@ -962,7 +963,7 @@ return_false:
 				Class	*_p;
 				while(member(m)){
 
-					if(!p->get_member_index(&_image->class_image,m,index,_p)){
+					if(!p->get_member_index(_metadata,m,index,_p)){
 
 						set_error(" error: "+m+" is not a member of "+p->str_opcode);
 						break;
@@ -1006,14 +1007,14 @@ return_false:
 
 			uint16		index;
 			ReturnType	type;
-			if(getReferenceIndex(m,ANY,current_object,index,p)){
+			if(getGlobalReferenceIndex(m,ANY,current_object,index,p)){
 
 				v.push_back(index);
 				Class	*_p;
 				bool	first_member=true;
 				while(member(m)){
 
-					if(!p->get_member_index(&_image->class_image,m,index,_p)){
+					if(!p->get_member_index(_metadata,m,index,_p)){
 
 						set_error(" error: "+m+" is not a member of "+p->str_opcode);
 						break;
@@ -1216,8 +1217,8 @@ return_false:
 				return	false;
 			}
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->class_image.classes.find(s);
-		if(it==_image->class_image.classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_metadata->classes.find(s);
+		if(it==_metadata->classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1253,8 +1254,8 @@ return_false:
 				return	false;
 			}
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->class_image.sys_classes.find(s);
-		if(it==_image->class_image.sys_classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_metadata->sys_classes.find(s);
+		if(it==_metadata->sys_classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1294,8 +1295,8 @@ return_false:
 				return	false;
 			}
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->class_image.sys_classes.find("mk."+s);
-		if(it==_image->class_image.sys_classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_metadata->sys_classes.find("mk."+s);
+		if(it==_metadata->sys_classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1313,8 +1314,8 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->class_image.classes.find(s);
-		if(it==_image->class_image.classes.end()	|| (t!=ANY	&&	it->second.type!=ANY	&&	it->second.type!=t)){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_metadata->classes.find(s);
+		if(it==_metadata->classes.end()	|| (t!=ANY	&&	it->second.type!=ANY	&&	it->second.type!=t)){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1343,8 +1344,8 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
-		UNORDERED_MAP<std::string,Class>::const_iterator	it=_image->class_image.classes.find(s);
-		if(it==_image->class_image.classes.end()){
+		UNORDERED_MAP<std::string,Class>::const_iterator	it=_metadata->classes.find(s);
+		if(it==_metadata->classes.end()){
 
 			in_stream->seekg(i);
 			return	false;
@@ -1402,7 +1403,7 @@ return_false:
 
 		uint16	count=0;
 		bool	_indented=false;
-		bool	entered_pattern=p.is_pattern(&_image->class_image);
+		bool	entered_pattern=p.is_pattern(_metadata);
 		if(write	&&	state.pattern_lvl)	//	fill up with wildcards that will be overwritten up to ::.
 			for(uint16	j=write_index;j<write_index+p.atom.getAtomCount();++j)
 				current_object->code[j]=Atom::Wildcard();
@@ -1477,7 +1478,7 @@ return_false:
 			return	false;
 		}
 		if(lbl)
-			addReference(l,write_index,p);
+			addLocalReference(l,write_index,p);
 		uint16	tail_write_index=0;
 		if(write){
 
@@ -1510,7 +1511,7 @@ return_false:
 			return	false;
 		}
 		if(lbl)
-			addReference(l,write_index,p);
+			addLocalReference(l,write_index,p);
 		uint16	tail_write_index=0;
 		if(write){
 
@@ -1538,7 +1539,7 @@ return_false:
 			return	false;
 		}
 		if(lbl)
-			addReference(l,write_index,Class(SET));
+			addLocalReference(l,write_index,Class(SET));
 		indent(false);
 		uint16	content_write_index=0;
 		if(write){
@@ -1603,7 +1604,7 @@ return_false:
 			return	false;
 		}
 		if(lbl)
-			addReference(l,write_index,p);
+			addLocalReference(l,write_index,p);
 		indent(false);
 		uint16	content_write_index=0;
 		if(write){
@@ -2321,7 +2322,7 @@ return_false:
 
 			if(state.pattern_lvl){
 			
-				addReference(v,write_index,p);
+				addLocalReference(v,write_index,p);
 				if(write)
 					current_object->code[write_index]=Atom::Wildcard();	//	useless in skeleton expressions (already filled up in expression_head); usefull when the skeleton itself is a variable
 				return	true;
@@ -2354,9 +2355,9 @@ return_false:
 			if(write){
 
 				if(current_view_index==-1)
-					_image->code_image.relocation_segment.addObjectReference(current_object->reference_set[index],current_object_index,index);
+					_image->relocation_segment.addObjectReference(current_object->reference_set[index],current_object_index,index);
 				else
-					_image->code_image.relocation_segment.addViewReference(current_object->reference_set[index],current_object_index,current_view_index,index);
+					_image->relocation_segment.addViewReference(current_object->reference_set[index],current_object_index,current_view_index,index);
 				current_object->code[write_index]=Atom::RPointer(index);
 			}
 			return	true;
@@ -2392,9 +2393,9 @@ return_false:
 			if(write){
 
 				if(current_view_index==-1)
-					_image->code_image.relocation_segment.addObjectReference(current_object->reference_set[v[0]],current_object_index,v[0]);
+					_image->relocation_segment.addObjectReference(current_object->reference_set[v[0]],current_object_index,v[0]);
 				else
-					_image->code_image.relocation_segment.addViewReference(current_object->reference_set[v[0]],current_object_index,current_view_index,v[0]);
+					_image->relocation_segment.addViewReference(current_object->reference_set[v[0]],current_object_index,current_view_index,v[0]);
 				current_object->code[write_index]=Atom::IPointer(extent_index);
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::RPointer(v[0]);

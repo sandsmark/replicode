@@ -110,7 +110,7 @@ namespace	r_comp{
 			T_SYS_CLASS=1,
 			T_SET=2
 		}ClassType;
-		ClassImage									*class_image;
+		Metadata									*metadata;
 		uint16										class_opcode;	//	shared with sys_classes
 		UNORDERED_MAP<std::string,RepliStruct	*>	template_classes;
 		void		instantiateClass(RepliStruct	*tpl_class,std::list<RepliStruct	*>	&tpl_args,std::string	&instantiated_class_name);
@@ -119,30 +119,16 @@ namespace	r_comp{
 		void		getMember(std::vector<StructureMember>	&members,RepliStruct	*m,std::list<RepliStruct	*>	&tpl_args,bool	instantiate);
 		void		getMembers(RepliStruct	*s,std::vector<StructureMember>	&members,std::list<RepliStruct	*>	&tpl_args,bool	instantiate);
 		ReturnType	getReturnType(RepliStruct	*s);
-		void		initialize();	//	init definition_segment
+		void		initialize(Metadata	*metadata);	//	init definition_segment
 	public:
 		RepliStruct	*root;
 
 		Preprocessor();
 		~Preprocessor();
-		bool	process(ClassImage			*class_image,	//	process will fill class_image.
-						std::istream		*stream,	//	if an ifstream, stream must be open.
-						std::ostringstream	*outstream,	//	output stream=input stream where macros are expanded.
-						std::string			*error);	//	set when function fails, e.g. returns false.
-	};
-
-	//	For development only: hard codes the basic classes, does not expands any macros.
-	//	The output stream is the same as the input stream.
-	class	dll_export	HardCodedPreprocessor{
-	private:
-		void	initialize(ClassImage	*class_image);
-	public:
-		HardCodedPreprocessor();
-		~HardCodedPreprocessor();
-		bool	process(ClassImage			*class_image,	//	process will fill class_image.
-						std::istream		*stream,	//	if an ifstream, stream must be open.
-						std::ostringstream	*outstream,	//	output stream=input stream where macros are expanded.
-						std::string			*error);	//	set when function fails, e.g. returns false.
+		bool	process(std::istream		*stream,			//	if an ifstream, stream must be open.
+						std::ostringstream	*outstream,			//	output stream=input stream where macros are expanded.
+						std::string			&error,				//	set when function fails, e.g. returns false.
+						Metadata			*metadata=NULL);	//	process will fill class_image, or use the exiting one if NULL.
 	};
 }
 

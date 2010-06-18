@@ -43,10 +43,10 @@ namespace	r_comp{
 
 	////////////////////////////////////////////////////////////////
 
-	ClassImage::ClassImage(){
+	Metadata::Metadata(){
 	}
 
-	Class	*ClassImage::getClass(std::string	&class_name){
+	Class	*Metadata::getClass(std::string	&class_name){
 
 		UNORDERED_MAP<std::string,Class>::iterator	it=classes.find(class_name);
 		if(it!=classes.end())
@@ -54,12 +54,12 @@ namespace	r_comp{
 		return	NULL;
 	}
 
-	Class	*ClassImage::getClass(uint16	opcode){
+	Class	*Metadata::getClass(uint16	opcode){
 
 		return	&classes_by_opcodes[opcode];
 	}
 	
-	void	ClassImage::write(word32	*data){
+	void	Metadata::write(word32	*data){
 		
 		data[0]=classes_by_opcodes.size();
 		uint32	i;
@@ -112,7 +112,7 @@ namespace	r_comp{
 		}
 	}
 		
-	void	ClassImage::read(word32	*data,uint32	size){
+	void	Metadata::read(word32	*data,uint32	size){
 		
 		uint32	class_count=data[0];
 		uint32	i;
@@ -171,7 +171,7 @@ namespace	r_comp{
 		}
 	}
 
-	uint32	ClassImage::getSize(){
+	uint32	Metadata::getSize(){
 
 		return	getClassArraySize()+
 				getClassesSize()+
@@ -220,7 +220,7 @@ namespace	r_comp{
 	//		- size in word32
 	//		- list of words: contain the charaacters; the last one is \0; some of the least significant bytes of the last word my be empty
 
-	uint32	ClassImage::getClassArraySize(){
+	uint32	Metadata::getClassArraySize(){
 
 		uint32	size=1;	//	size of the array
 		for(uint32	i=0;i<classes_by_opcodes.size();++i)
@@ -228,7 +228,7 @@ namespace	r_comp{
 		return	size;
 	}
 
-	uint32	ClassImage::getClassesSize(){
+	uint32	Metadata::getClassesSize(){
 
 		uint32	size=1;	//	size of the hash table
 		UNORDERED_MAP<std::string,Class>::iterator	it=classes.begin();
@@ -237,7 +237,7 @@ namespace	r_comp{
 		return	size;
 	}
 
-	uint32	ClassImage::getSysClassesSize(){
+	uint32	Metadata::getSysClassesSize(){
 
 		uint32	size=1;	//	size of the hash table
 		UNORDERED_MAP<std::string,Class>::iterator	it=sys_classes.begin();
@@ -246,7 +246,7 @@ namespace	r_comp{
 		return	size;
 	}
 
-	uint32	ClassImage::getClassNamesSize(){
+	uint32	Metadata::getClassNamesSize(){
 
 		uint32	size=1;	//	size of the vector
 		for(uint32	i=0;i<class_names.size();++i)
@@ -254,7 +254,7 @@ namespace	r_comp{
 		return	size;
 	}
 
-	uint32	ClassImage::getOperatorNamesSize(){
+	uint32	Metadata::getOperatorNamesSize(){
 
 		uint32	size=1;	//	size of the vector
 		for(uint32	i=0;i<operator_names.size();++i)
@@ -262,7 +262,7 @@ namespace	r_comp{
 		return	size;
 	}
 
-	uint32	ClassImage::getFunctionNamesSize(){
+	uint32	Metadata::getFunctionNamesSize(){
 
 		uint32	size=1;	//	size of the vector
 		for(uint32	i=0;i<function_names.size();++i)
@@ -431,25 +431,20 @@ namespace	r_comp{
 
 	////////////////////////////////////////////////////////////////
 
-	CodeImage::CodeImage():map_offset(0),mem(NULL){
+	Image::Image():map_offset(0){
 	}
 
-	CodeImage::~CodeImage(){
+	Image::~Image(){
 	}
 
-	void	CodeImage::bind(Mem	*m){
-
-		mem=m;
-	}
-
-	void	CodeImage::addObject(SysObject	*object){
+	void	Image::addObject(SysObject	*object){
 
 		code_segment.objects.push_back(object);
 		object_map.objects.push_back(map_offset);
 		map_offset+=object->getSize();
 	}
 
-	CodeImage	&CodeImage::operator	<<(r_code::vector<Object	*>	&ram_objects){
+	Image	&Image::operator	<<(r_code::vector<Object	*>	&ram_objects){
 
 		uint32	i;
 		for(i=0;i<ram_objects.size();++i)
@@ -457,11 +452,11 @@ namespace	r_comp{
 		return	*this;
 	}
 
-	CodeImage	&CodeImage::operator	<<(Object	*object){
+	Image	&Image::operator	<<(Object	*object){
 
 		static	uint32	Last_index=0;
 
-		UNORDERED_MAP<Object	*,uint32>::iterator	it=ptrs_to_indices.find(object);
+		UNORDERED_MAP<Code	*,uint32>::iterator	it=ptrs_to_indices.find(object);
 		if(it!=ptrs_to_indices.end())	//	object already there
 			return	*this;
 
@@ -471,8 +466,8 @@ namespace	r_comp{
 		addObject(sys_object);
 
 		uint32	i;
-		for(i=0;i<object->reference_set.size();++i)	//	follow reference pointers and recurse
-			*this<<object->reference_set[i];
+		for(i=0;i<object->references_size();++i)	//	follow reference pointers and recurse
+			*this<<object->references(i);
 		for(i=0;i<object->marker_set.size();++i)	//	follow marker pointers and recurse
 			*this<<object->marker_set[i];
 
@@ -480,23 +475,23 @@ namespace	r_comp{
 		return	*this;
 	}
 
-	void	CodeImage::buildReferences(SysObject	*sys_object,Object	*object,uint32	object_index){
+	void	Image::buildReferences(SysObject	*sys_object,Object	*object,uint32	object_index){
 
 		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references and markers
 		uint32	i;
 		uint32	referenced_object_index;
-		for(i=0;i<object->reference_set.size();++i){
+		for(i=0;i<object->references_size();++i){
 
-			referenced_object_index=ptrs_to_indices.find(object->reference_set[i])->second;
+			referenced_object_index=ptrs_to_indices.find(object->references(i))->second;
 			sys_object->reference_set.push_back(referenced_object_index);
 			relocation_segment.addObjectReference(referenced_object_index,object_index,i);
 		}
 		for(i=0;i<object->view_set.size();++i)
 			for(uint32	j=0;j<2;++j){	//	2 refs maximum; may be NULL.
 
-				if(object->view_set[i]->reference_set[j]){
+				if(object->view_set[i]->references[j]){
 
-					referenced_object_index=ptrs_to_indices.find(object->view_set[i]->reference_set[j])->second;
+					referenced_object_index=ptrs_to_indices.find(object->view_set[i]->references[j])->second;
 					sys_object->view_set[i]->reference_set.push_back(referenced_object_index);
 					relocation_segment.addViewReference(referenced_object_index,object_index,i,j);
 				}
@@ -509,7 +504,7 @@ namespace	r_comp{
 		}
 	}
 
-	void	CodeImage::getObjects(ClassImage	*class_image,r_code::vector<Object	*>	&ram_objects){
+	void	Image::getObjects(Metadata	*class_image,Mem	*mem,r_code::vector<Object	*>	&ram_objects){
 
 		bool	noMem=false;
 		if(!mem){
@@ -542,26 +537,18 @@ namespace	r_comp{
 				r_code::Object	*referencing_object=ram_objects[p.object_index];
 				switch(p.view_index){
 				case	-1:
-					referencing_object->reference_set[p.pointer_index]=referenced_object;
+					referencing_object->references(p.pointer_index)=referenced_object;
 					break;
 				case	-2:
 					referencing_object->marker_set[p.pointer_index]=referenced_object;
 					break;
 				default:
-					referencing_object->view_set[p.view_index]->reference_set[p.pointer_index]=referenced_object;
+					referencing_object->view_set[p.view_index]->references[p.pointer_index]=referenced_object;
 					break;
 				}
 			}
 		}
 		if(noMem)
 			delete	mem;
-	}
-
-	////////////////////////////////////////////////////////////////
-
-	Image::Image(){
-	}
-
-	Image::~Image(){
 	}
 }

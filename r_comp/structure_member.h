@@ -59,7 +59,7 @@ namespace	r_comp{
 
 	typedef	bool	(Compiler::*_Read)(bool	&,bool,const	Class	*,uint16,uint16	&,bool);	//	reads from the stream and writes in an object.
 
-	class	ClassImage;
+	class	Metadata;
 	class	StructureMember{
 	public:
 		typedef	enum{
@@ -96,7 +96,7 @@ namespace	r_comp{
 						std::string	m,			//	member's name.
 						std::string	p="",		//	class name of return type if r==Compiler::read_expression or name of the structure to enumerate elements if r==Compiler::read_set.
 						Iteration	i=I_CLASS);	//	specified only if r==Compiler::read_set.
-		Class		*get_class(ClassImage	*class_image)	const;
+		Class		*get_class(Metadata	*metadata)	const;
 		ReturnType	get_return_type()	const;
 		bool		used_as_expression()	const;
 		Iteration	getIteration()	const;

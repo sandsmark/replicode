@@ -11,26 +11,11 @@
 
 namespace	r_exec{
 
-	//	To be implemented by a communication device.
-	class	dll_export	Comm{
-	public:
-		typedef	enum{
-			STDIN=0,
-			STDOUT=1
-		}STDGroupID;
-		virtual	void	eject(Object	*object,uint16	nodeID,STDGroupID	destination)=0;	//	rMem to rMem.
-		virtual	void	eject(Object	*object,uint16	nodeID)=0;							//	rMem to I/O device.
-	};
-
 	//	Shared resources:
-	//		Mem::object_io_map: accessed by Mem::retrieve (called by I/O threads), Mem::injectNow (i.e. reduction cores via overlays) and Mem::deleteObject (dctor of Object).
 	//		Mem::object_register: accessed by Mem::update, Mem::injectNow and Mem::deleteObject (see above).
 	class	dll_export	Mem:
 	public	r_code::Mem{
 	private:
-		static	SharedLibrary	UserLibrary;	//	user-defined operators.
-		static	uint64	(*_Now)();				//	time base.
-
 		uint32	base_period;
 
 		PipeNN<ReductionJob,1024>	reduction_job_queue;
@@ -42,14 +27,9 @@ namespace	r_exec{
 		TimeCore		**time_cores;
 
 		P<Group>	root;		//	holds everything.
-		Group		*_stdin;	//	convenience.
-		Group		*_stdout;	//	convenience.
-		Object		*_self;		//	convenience.
 
-		UNORDERED_MAP<uint32,Object	*>							object_io_map;		//	[OID|object	*]: used for retrieving objects by ID; does not include groups; used only if comm!=NULL.
+
 		UNORDERED_SET<Object	*,Object::Hash,Object::Equal>	object_register;	//	to eliminate duplicates (content-wise); does not include groups.
-
-		Comm	*comm;	//	performs actual ejections.
 
 		//	Functions called by internal processing of jobs (see internal processing section below).
 		void	injectNow(View	*view);														//	also called by inject() (see below).
@@ -69,30 +49,37 @@ namespace	r_exec{
 		std::vector<Group	*>	initial_groups;	//	convenience; cleared after start();
 
 		FastSemaphore	*object_register_sem;
-		FastSemaphore	*object_io_map_sem;
-	public:
-		static	void	Init(r_comp::ClassImage	*class_image,uint64	(*time_base)(),const	char	*user_operator_library_path);	//	load opcodes and std operators.
-		static	uint64	Now(){	return	_Now();	}
 
-		Mem(uint32	base_period,	//	in us; same for upr, spr and res.
-			uint32	reduction_core_count,
-			uint32	time_core_count,
-			Comm	*comm);
-		~Mem();
+		void	reset();	//	clear the content of the mem.
+	protected:
+		typedef	enum{
+			STDIN=0,
+			STDOUT=1
+		}STDGroupID;
+
+		Group	*_stdin;	//	convenience.
+		Group	*_stdout;	//	convenience.
+		Object	*_self;		//	convenience.
+	public:
+		Mem();
+		virtual	~Mem();
 
 		uint64	get_base_period()	const{	return	base_period;	}
 
 		//	r_code interface implementation.
-		r_code::Object	*buildObject(r_code::SysObject	*source);
-		r_code::Object	*buildGroup(r_code::SysObject	*source);
-		r_code::Object	*buildInstantiatedProgram(r_code::SysObject	*source);
-		r_code::Object	*buildMarker(r_code::SysObject	*source);
+		//	To be redefined by object caching aware subcalsses.
+		virtual	r_code::Object	*buildObject(r_code::SysObject	*source);
+		virtual	r_code::Object	*buildGroup(r_code::SysObject	*source);
+		virtual	r_code::Object	*buildInstantiatedProgram(r_code::SysObject	*source);
+		virtual	r_code::Object	*buildMarker(r_code::SysObject	*source);
 
-		void	init(std::vector<r_code::Object	*>	*objects);	//	call before start
-																//	0: root, 1.stdin, 2:stdout, 3:self: these objects must be defined in the source code in that order.
-																//	no mod/set/eje will be executed (only inj). ijt will be set at now=Time::Get() whatever the source code.
+		void	init(uint32	base_period,	//	in us; same for upr, spr and res.
+					uint32	reduction_core_count,
+					uint32	time_core_count);
+
+		void	load(std::vector<r_code::Object	*>	*objects);	//	call before start; 0: root, 1.stdin, 2:stdout, 3:self: these objects must be defined in the source code in that order; no mod/set/eje will be executed (only inj); ijt will be set at now=Time::Get() whatever the source code.
 		void	start();
-		void	stop();
+		void	stop();	//	after stop() the content is cleared and one has to call init() and load() again.
 		void	suspend();
 		void	resume();
 
@@ -101,11 +88,10 @@ namespace	r_exec{
 		TimeJob			popTimeJob();
 		void			pushTimeJob(TimeJob	j);
 
-		void	deleteObject(Object	*object);
+		void	removeObject(Object	*object);
 
 		//	External device I/O	////////////////////////////////////////////////////////////////
-		Object	*retrieve(uint32	OID);
-		r_comp::CodeImage	*getCodeImage();	//	create an image; fill with all objects; call only when suspended/stopped.
+		r_comp::Image	*getImage();	//	create an image; fill with all objects; call only when suspended/stopped.
 
 		//	Executive device functions	////////////////////////////////////////////////////////
 		
@@ -119,13 +105,15 @@ namespace	r_exec{
 		void	injectNotificationNow(View	*view);	//	variant of injectNow optimized for notifications.
 
 		//	Called by the reduction core.
-		//	Delegated to the communiction device (I/O).
+		//	rMem to rMem.
 		//	The view must contain the destintion group (either stdin or stdout) as its grp member.
-		void	eject(View	*view,uint16	nodeID);
+		//	To be redefined by object transport aware subcalsses.
+		virtual	void	eject(View	*view,uint16	nodeID);
 
 		//	Called by the reduction core.
-		//	Delegated to the communiction device (I/O).
-		void	eject(Object	*command,uint16	nodeID);
+		//	rMem to I/O device.
+		//	To be redefined by object transport aware subcalsses.
+		virtual	void	eject(Object	*command,uint16	nodeID);
 
 		//	Internal processing	////////////////////////////////////////////////////////////////
 

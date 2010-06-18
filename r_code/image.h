@@ -40,8 +40,6 @@ using	namespace	std;
 using	namespace	core;
 
 namespace	r_comp{
-	class	ClassImage;
-	class	CodeImage;
 	class	Image;
 }
 
@@ -49,7 +47,6 @@ namespace	r_code{
 
 	//	An image contains the following:
 	//		- sizes of what follows
-	//		- def segment: list of class, operators and function definitions, and object names
 	//		- object map: list of indexes (4 bytes) of objects in the code segment
 	//		- code segment: list of objects
 	//			- object:
@@ -85,45 +82,34 @@ namespace	r_code{
 	//
 	//	RAM layout of Image::data [sizes in word32]:
 	//
-	//		data[0]:										first word32 of def segment [1]
-	//		...												...
-	//		data[def_size-1]:								last word32 of def segment [1]
-	//		data[def_size]:									index of first object in data (i.e. def_size+map_size) [1]
-	//		...												...
-	//		data[def_size+map_size-1]:						index of last object in data [1]
-	//		data[def_size+map_size]:						first word32 of code segment [1]
-	//		...												...
-	//		data[def_size+map_size+code_size-1]:			last word32 of code segment [1]
-	//		data[def_size+map_size+code_size]:				first word32 of	reloc segment [1]
-	//		...												...
-	//		data[def_size+map_size+code_size+reloc_size-1]:	last word32 of reloc segment [1]
-	//
-	//	Def segment is private to the compiler: the only requirement is to keep def segment aligned on 4 bytes.
+	//		data[0]:								index of first object in data (i.e. def_size+map_size) [1]
+	//		...										...
+	//		data[map_size-1]:						index of last object in data [1]
+	//		data[map_size]:							first word32 of code segment [1]
+	//		...										...
+	//		data[map_size+code_size-1]:				last word32 of code segment [1]
+	//		data[map_size+code_size]:				first word32 of	reloc segment [1]
+	//		...										...
+	//		data[map_size+code_size+reloc_size-1]:	last word32 of reloc segment [1]
 	//
 	//	I is the implementation class; prototype:
 	//	class	ImageImpl{
 	//	protected:
-	//		uint32	def_size()		const;
 	//		uint32	map_size()		const;
 	//		uint32	code_size()		const;
 	//		uint32	reloc_size()	const;
-	//		word32	*data();	//	[def segment|object map|code segment|reloc segment]
+	//		word32	*data();	//	[object map|code segment|reloc segment]
 	//	public:
 	//		void	*operator	new(size_t,uint32	data_size);
-	//		ImageImpl(uint32	def_size,uint32	map_size,uint32	code_size,uint32	reloc_size);
+	//		ImageImpl(uint32	map_size,uint32	code_size,uint32	reloc_size);
 	//		~ImageImpl();
 	//	};
 
 	template<class	I>	class	Image:
 	public	I{
-	friend	class r_comp::CodeImage;
-	friend	class r_comp::ClassImage;
 	friend	class r_comp::Image;
-	private:
-		word32	*getDefSegment();
-		uint32	getDefSegmentSize()	const;
 	public:
-		static	Image<I>	*Build(uint32	def_size,uint32	map_size,uint32	code_size,uint32	reloc_size);
+		static	Image<I>	*Build(uint32	map_size,uint32	code_size,uint32	reloc_size);
 		//	file IO
 		static	Image<I>	*Read(ifstream &stream);
 		static	void		Write(Image<I>	*image,ofstream &stream);

@@ -58,9 +58,9 @@ namespace	r_comp{
 		else	if(_read==&Compiler::read_class)		type=ReturnType::CLASS;
 	}
 		
-	Class	*StructureMember::get_class(ClassImage	*class_image)	const{
+	Class	*StructureMember::get_class(Metadata	*metadata)	const{
 		
-		return	_class==""?NULL:&class_image->classes.find(_class)->second;
+		return	_class==""?NULL:&metadata->classes.find(_class)->second;
 	}
 	
 	ReturnType	StructureMember::get_return_type()	const{

@@ -30,26 +30,26 @@ namespace	r_exec{
 
 		void	addReference(Object	*destination,uint16	&write_index)	const{
 
-			destination->reference_set.push_back(object->reference_set[code[index].asIndex()]);
-			destination->code[write_index++]=Atom::RPointer(destination->reference_set.size()-1);
+			destination->add_reference(object->references(code[index].asIndex()));
+			destination->code(write_index++)=Atom::RPointer(destination->references_size()-1);
 		}
 
 		void	addReference(View	*destination,uint16	&write_index)	const{	//	view references are set in order (indices 0 then 1).
 
 			uint16	r_ptr_index;
-			if(destination->reference_set[0])	//	first ref already in place
+			if(destination->references[0])	//	first ref already in place
 				r_ptr_index=1;
 			else
 				r_ptr_index=0;
-			destination->reference_set[r_ptr_index]=object->reference_set[code[index].asIndex()];
-			destination->code[write_index++]=Atom::RPointer(r_ptr_index);
+			destination->references[r_ptr_index]=object->references(code[index].asIndex());
+			destination->code(write_index++)=Atom::RPointer(r_ptr_index);
 		}
 	public:
-		static	Context	GetContextFromInput(View	*input,Overlay	*overlay){	return	Context((r_exec::Object	*)input->object,input,&input->object->code[0],0,overlay,REFERENCE);	}
+		static	Context	GetContextFromInput(View	*input,Overlay	*overlay){	return	Context((r_exec::Object	*)input->object,input,&input->object->code(0),0,overlay,REFERENCE);	}
 
 		Context():object(NULL),view(NULL),code(NULL),index(0),overlay(NULL),data(UNDEFINED){}	//	undefined context (happens when accessing the view of an object when it has not been provided).
 		Context(Object	*object,View	*view,Atom	*code,uint16	index,Overlay	*const	overlay,Data	data=ORIGINAL_PGM):object(object),view(view),code(code),index(index),overlay(overlay),data(data){}
-		Context(Object	*object,uint16	index):object(object),view(NULL),code(&object->code[0]),index(index),overlay(NULL),data(REFERENCE){}
+		Context(Object	*object,uint16	index):object(object),view(NULL),code(&object->code(0)),index(index),overlay(NULL),data(REFERENCE){}
 
 		bool	evaluate(uint16	&index)					const;	//	index is set to the index of the result, undefined in case of failure.
 		bool	evaluate_no_dereference(uint16	&index)	const;
@@ -171,8 +171,8 @@ namespace	r_exec{
 				uint16	atom_count=code[index].getAtomCount();
 				extent_index=write_index+atom_count+1;
 
-				destination->code[write_index++]=Atom::IPointer(extent_index);
-				destination->code[extent_index++]=code[index];
+				destination->code(write_index++)=Atom::IPointer(extent_index);
+				destination->code(extent_index++)=code[index];
 
 				uint16	new_extent_index;
 				for(uint16	i=1;i<=atom_count;++i){
@@ -184,7 +184,7 @@ namespace	r_exec{
 				break;
 			}
 			default:
-				destination->code[write_index]=code[index];
+				destination->code(write_index)=code[index];
 				break;
 			}
 		}

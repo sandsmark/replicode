@@ -49,6 +49,10 @@ namespace	r_code{
 				std::vector<T>::resize(i+1);
 			return	std::vector<T>::operator [](i);
 		}
+		T	&operator	[](uint32	i)	const{
+
+			return	std::vector<T>::operator [](i);
+		}
 		void	push_back(T	t){	std::vector<T>::push_back(t);	}
 		std::vector<T>	*as_std()	const{	return	(std::vector<T>	*)this;	}
 	};

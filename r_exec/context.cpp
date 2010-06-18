@@ -1,6 +1,7 @@
 #include	"context.h"
 #include	"pgm_overlay.h"
 #include	"operator.h"
+#include	"opcodes.h"
 
 
 using	namespace	r_code;
@@ -89,8 +90,8 @@ namespace	r_exec{
 			return	Context(object,view,code,code[index].asIndex(),overlay,data).dereference();
 		case	Atom::R_PTR:{
 
-			Object	*o=object->reference_set[code[index].asIndex()];
-			return	Context(o,NULL,&o->code[0],0,NULL,REFERENCE);
+			Object	*o=object->references(code[index].asIndex());
+			return	Context(o,NULL,&o->code(0),0,NULL,REFERENCE);
 		}case	Atom::C_PTR:{
 
 			Context	c=getChild(1).dereference();
@@ -99,9 +100,9 @@ namespace	r_exec{
 			return	c;
 		}
 		case	Atom::THIS:	//	refers to the ipgm; the pgm view is not available.
-			return	Context(overlay->getIPGM(),overlay->getIPGMView(),&overlay->getIPGM()->code[0],0,NULL,REFERENCE);
+			return	Context(overlay->getIPGM(),overlay->getIPGMView(),&overlay->getIPGM()->code(0),0,NULL,REFERENCE);
 		case	Atom::VIEW:	//	never a reference, always in a cptr.
-			return	Context(object,view,&view->code[0],0,NULL,VIEW);
+			return	Context(object,view,&view->code(0),0,NULL,VIEW);
 		case	Atom::MKS:
 			return	Context(object,MKS);
 		case	Atom::VWS:
@@ -138,7 +139,7 @@ namespace	r_exec{
 			return	Operator::Get((*this)[0].asOpcode())(*this,index);
 		}case	Atom::MARKER:
 		case	Atom::OBJECT:	//	incl. cmd.
-			if((*this)[0].asOpcode()==Object::PTNOpcode	||	(*this)[0].asOpcode()==Object::AntiPTNOpcode){	//	skip patterns.
+			if((*this)[0].asOpcode()==Opcodes::PTN	||	(*this)[0].asOpcode()==Opcodes::AntiPTN){	//	skip patterns.
 
 				index=this->index;
 				return	true;
@@ -191,7 +192,7 @@ namespace	r_exec{
 		switch(c[0].getDescriptor()){
 		case	Atom::OBJECT:
 			object=c.getObject();
-			if(c[0].asOpcode()==Object::GroupOpcode)
+			if(c[0].asOpcode()==Opcodes::Group)
 				object_type=TYPE_GROUP;
 			else
 				object_type=TYPE_OBJECT;

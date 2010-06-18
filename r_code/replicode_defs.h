@@ -94,5 +94,7 @@
 #define	EXECUTIVE_DEVICE	0xA1000000
 
 #define	CMD_DEVICE		1
+#define	CMD_FUNCTION	2
+#define	CMD_ARGS		3
 
 #endif

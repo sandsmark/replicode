@@ -48,8 +48,8 @@ namespace	r_comp{
 		
 		ImageObject	*current_object;
 
-		r_comp::ClassImage	*class_image;
-		r_comp::CodeImage	*code_image;
+		r_comp::Metadata	*metadata;
+		r_comp::Image		*image;
 
 		UNORDERED_MAP<uint16,std::string>	variable_names;				//	in the form vxxx where xxx is an integer representing the order of referencing of the variable/label in the code
 		std::string	get_variable_name(uint16	index,bool	postfix);	//	associates iptr/vptr indexes to names; inserts them in out_stream if necessary; when postfix==true, a trailing ':' is added
@@ -67,8 +67,8 @@ namespace	r_comp{
 		Decompiler();
 		~Decompiler();
 
-		void	init(r_comp::ClassImage	*class_image);
-		void	decompile(r_comp::CodeImage		*image,std::ostringstream	*stream);
+		void	init(r_comp::Metadata	*metadata);
+		void	decompile(r_comp::Image		*image,std::ostringstream	*stream);
 	};
 }
 

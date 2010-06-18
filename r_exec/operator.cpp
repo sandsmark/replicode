@@ -1,5 +1,8 @@
 #include	"operator.h"
 #include	"mem.h"
+#include	"init.h"
+#include	"opcodes.h"
+#include	"group.h"
 #include	"../CoreLibrary/utils.h"
 #include	"../r_code/utils.h"
 #include	<math.h>
@@ -24,7 +27,7 @@ namespace	r_exec{
 
 	bool	now(const	Context	&context,uint16	&index){
 
-		index=context.setTimestampResult(Mem::Now());
+		index=context.setTimestampResult(Now());
 		return	true;
 	}
 
@@ -207,13 +210,8 @@ namespace	r_exec{
 
 			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				uint64	lhs_t=Timestamp::Get(&lhs[0]);
-				uint64	rhs_t=Timestamp::Get(&rhs[0]);
-				if(lhs_t>=rhs_t){
-
-					index=context.setTimestampResult(lhs_t-rhs_t);
-					return	true;
-				}
+				index=context.setTimestampResult(Timestamp::Get(&lhs[0])-Timestamp::Get(&rhs[0]));
+				return	true;
 			}
 		}
 
@@ -236,17 +234,18 @@ namespace	r_exec{
 				return	true;
 			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				if(lhs[0].asFloat()>=0){
-
-					index=context.setAtomicResult(Atom::Float(Timestamp::Get(&rhs[0])*lhs[0].asFloat()));
-					return	true;
-				}
+				index=context.setAtomicResult(Atom::Float(Timestamp::Get(&rhs[0])*lhs[0].asFloat()));
+				return	true;
 			}
 		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].isFloat()	&&	rhs[0].asFloat()>=0){
+			if(rhs[0].isFloat()){
 
 				index=context.setTimestampResult(Timestamp::Get(&lhs[0])*rhs[0].asFloat());
+				return	true;
+			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+
+				index=context.setAtomicResult(Atom::Float(Timestamp::Get(&lhs[0])*Timestamp::Get(&lhs[0])));
 				return	true;
 			}
 		}
@@ -264,17 +263,41 @@ namespace	r_exec{
 
 		if(lhs[0].isFloat()){
 
-			if(rhs[0].isFloat()	&&	rhs[0].asFloat()>0){
+			if(rhs[0].isFloat()){
+				
+				if(rhs[0].asFloat()!=0){
 
-				index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()/rhs[0].asFloat()));
-				return	true;
+					index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()/rhs[0].asFloat()));
+					return	true;
+				}
+			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+
+				float64	rhs_t=(float64)Timestamp::Get(&rhs[0]);
+				if(rhs_t!=0){
+
+					index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()/rhs_t));
+					return	true;
+				}
 			}
 		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].isFloat()	&&	rhs[0].asFloat()>0){
+			if(rhs[0].isFloat()){
+				
+				if(rhs[0].asFloat()!=0){
 
-				index=context.setTimestampResult(((float64)Timestamp::Get(&lhs[0]))/rhs[0].asFloat());
-				return	true;
+					float64	lhs_t=(float64)Timestamp::Get(&lhs[0]);
+					index=context.setTimestampResult(lhs_t/rhs[0].asFloat());
+					return	true;
+				}
+			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+
+				float64	rhs_t=(float64)Timestamp::Get(&rhs[0]);
+				if(rhs_t!=0){
+
+					float64	lhs_t=(float64)Timestamp::Get(&lhs[0]);
+					index=context.setAtomicResult(Atom::Float(lhs_t/rhs_t));
+					return	true;
+				}
 			}
 		}
 
@@ -398,9 +421,9 @@ namespace	r_exec{
 		Object	*_object=object.getObject();
 		if(_object	&&	args[0].getDescriptor()==Atom::SET){
 
-			uint16	pattern_set_index=_object->code[_object->code[PGM_INPUTS].asIndex()+1].asIndex();
+			uint16	pattern_set_index=_object->code(_object->code(PGM_INPUTS).asIndex()+1).asIndex();
 			uint16	arg_count=args[0].getAtomCount();
-			if(_object->code[pattern_set_index].getAtomCount()!=arg_count){
+			if(_object->code(pattern_set_index).getAtomCount()!=arg_count){
 
 				context.setAtomicResult(Atom::Nil());
 				return	false;
@@ -419,42 +442,42 @@ namespace	r_exec{
 			}
 
 			//	create an ipgm or an igol in the production array.
-			if(_object->code[0].asOpcode()==Object::PGMOpcode	||	_object->code[0].asOpcode()==Object::AntiPGMOpcode){
+			if(_object->code(0).asOpcode()==Opcodes::PGM	||	_object->code(0).asOpcode()==Opcodes::AntiPGM){
 
 				Object	*ipgm=new	Object();
 
 				uint16	write_index=0;
-				ipgm->code[write_index++]=Atom::Object(Object::IPGMOpcode,IPGM_IGOL_ARITY);
-				ipgm->code[write_index++]=Atom::RPointer(0);	//	points to the pgm object.
-				ipgm->code[write_index++]=Atom::IPointer(IPGM_IGOL_ARITY+1);
-				ipgm->code[write_index++]=Atom::View();
-				ipgm->code[write_index++]=Atom::Vws();
-				ipgm->code[write_index++]=Atom::Mks();
-				ipgm->code[write_index++]=Atom::Float(1);	//	psln_thr.
+				ipgm->code(write_index++)=Atom::Object(Opcodes::IPGM,IPGM_IGOL_ARITY);
+				ipgm->code(write_index++)=Atom::RPointer(0);	//	points to the pgm object.
+				ipgm->code(write_index++)=Atom::IPointer(IPGM_IGOL_ARITY+1);
+				ipgm->code(write_index++)=Atom::View();
+				ipgm->code(write_index++)=Atom::Vws();
+				ipgm->code(write_index++)=Atom::Mks();
+				ipgm->code(write_index++)=Atom::Float(1);	//	psln_thr.
 
 				args.copy(_object,write_index);	//	writes after psln_thr.
 
-				ipgm->reference_set[0]=_object;
+				ipgm->references(0)=_object;
 				context.setAtomicResult(Atom::ProductionPointer(context.addProduction(ipgm)));
 				return	true;
 			}
 
-			if(_object->code[0].asOpcode()==Object::GoalOpcode	||	_object->code[0].asOpcode()==Object::AntiGoalOpcode){
+			if(_object->code(0).asOpcode()==Opcodes::Goal	||	_object->code(0).asOpcode()==Opcodes::AntiGoal){
 
 				Object	*igol=new	Object();
 
 				uint16	write_index=0;
-				igol->code[write_index++]=Atom::Object(Object::IGoalOpcode,IPGM_IGOL_ARITY);
-				igol->code[write_index++]=Atom::RPointer(0);	//	points to the goal object.
-				igol->code[write_index++]=Atom::IPointer(IPGM_IGOL_ARITY+1);
-				igol->code[write_index++]=Atom::View();
-				igol->code[write_index++]=Atom::Vws();
-				igol->code[write_index++]=Atom::Mks();
-				igol->code[write_index++]=Atom::Float(1);	//	psln_thr.
+				igol->code(write_index++)=Atom::Object(Opcodes::IGoal,IPGM_IGOL_ARITY);
+				igol->code(write_index++)=Atom::RPointer(0);	//	points to the pgm object.
+				igol->code(write_index++)=Atom::IPointer(IPGM_IGOL_ARITY+1);
+				igol->code(write_index++)=Atom::View();
+				igol->code(write_index++)=Atom::Vws();
+				igol->code(write_index++)=Atom::Mks();
+				igol->code(write_index++)=Atom::Float(1);	//	psln_thr.
 
 				args.copy(_object,write_index);	//	writes after psln_thr.
 
-				igol->reference_set[0]=_object;
+				igol->references(0)=_object;
 				context.setAtomicResult(Atom::ProductionPointer(context.addProduction(igol)));
 				return	true;
 			}
@@ -477,7 +500,7 @@ namespace	r_exec{
 
 		Context	pattern_skeleton=pattern.getChild(1);
 
-		if(pattern[0].asOpcode()==Object::PTNOpcode){
+		if(pattern[0].asOpcode()==Opcodes::PTN){
 			
 			if(!pattern_skeleton.match(input))
 				return	false;
@@ -499,7 +522,7 @@ namespace	r_exec{
 			return	true;
 		}
 
-		if(pattern[0].asOpcode()==Object::AntiPTNOpcode){
+		if(pattern[0].asOpcode()==Opcodes::AntiPTN){
 			
 			if(pattern_skeleton.match(input))
 				return	false;
@@ -655,20 +678,19 @@ failure:
 			return	false;
 		}
 
-		_object->acq_view_map();
-		UNORDERED_MAP<Group	*,View	*>::iterator	it=_object->view_map.find(_group);
-		if(it!=_object->view_map.end()){	//	copy the view in the value array.
+		_object->acq_views();
+		View	*v=_group->findView(_object);
+		if(v){	//	copy the view in the value array.
 
-			View	*v=it->second;
-			uint16	atom_count=v->code[0].getAtomCount();
-			index=context.setCompoundResultHead(v->code[0]);
+			uint16	atom_count=v->code(0).getAtomCount();
+			index=context.setCompoundResultHead(v->code(0));
 			for(uint16	i=1;i<=atom_count;++i)
-				context.addCompoundResultPart(v->code[i]);
-			_object->rel_view_map();
+				context.addCompoundResultPart(v->code(i));
+			_object->rel_views();
 			return	true;
 		}
 
-		_object->rel_view_map();
+		_object->rel_views();
 		index=context.setAtomicResult(Atom::Nil());
 		return	false;
 	}

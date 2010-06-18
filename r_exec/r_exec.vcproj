@@ -186,6 +186,34 @@
 				>
 			</File>
 			<File
+				RelativePath=".\group.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\group.inline.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\init.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\mem.cpp"
 				>
 			</File>
@@ -212,6 +240,10 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\opcodes.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\operator.cpp"
@@ -257,6 +289,30 @@
 				RelativePath=".\time_job.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\view.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\view.inline.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -268,11 +324,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\group.h"
+				>
+			</File>
+			<File
+				RelativePath=".\init.h"
+				>
+			</File>
+			<File
 				RelativePath=".\mem.h"
 				>
 			</File>
 			<File
 				RelativePath=".\object.h"
+				>
+			</File>
+			<File
+				RelativePath=".\opcodes.h"
 				>
 			</File>
 			<File
@@ -297,6 +365,10 @@
 			</File>
 			<File
 				RelativePath=".\time_job.h"
+				>
+			</File>
+			<File
+				RelativePath=".\view.h"
 				>
 			</File>
 		</Filter>

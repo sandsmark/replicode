@@ -186,10 +186,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\class_register.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\compiler.cpp"
 				>
 			</File>
@@ -221,10 +217,6 @@
 			>
 			<File
 				RelativePath=".\class.h"
-				>
-			</File>
-			<File
-				RelativePath=".\class_register.h"
 				>
 			</File>
 			<File

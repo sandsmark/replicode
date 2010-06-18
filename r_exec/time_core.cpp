@@ -1,5 +1,6 @@
 #include	"time_core.h"
 #include	"mem.h"
+#include	"init.h"
 
 
 namespace	r_exec{
@@ -18,7 +19,7 @@ namespace	r_exec{
 			if(target==0)	//	0 means ASAP.
 				goto	process;
 
-			uint64	now=Mem::Now();
+			uint64	now=Now();
 			uint64	deadline=target-now;
 			if(deadline>=0){	//	on time: spawn a delegate and wait for the due time
 

@@ -1,166 +1,26 @@
 #include	"mem.h"
+#include	"init.h"
 #include	"replicode_defs.h"
 #include	"operator.h"
+#include	"group.h"
 #include	"../r_code/utils.h"
 #include	<math.h>
 
 
 namespace	r_exec{
 
-	SharedLibrary	Mem::UserLibrary;
-
-	uint64	(*Mem::_Now)()=NULL;
-
-	void	Mem::Init(r_comp::ClassImage	*class_image,uint64	(*time_base)(),const	char	*user_operator_library_path){
-
-		_Now=time_base;
-
-		UNORDERED_MAP<std::string,uint16>	opcodes;
-		UNORDERED_MAP<std::string,r_comp::Class>::iterator it;
-		for(it=class_image->classes.begin();it!=class_image->classes.end();++it){
-
-			opcodes[it->first]=it->second.atom.asOpcode();
-			std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
-		}
-		for(it=class_image->sys_classes.begin();it!=class_image->sys_classes.end();++it){
-
-			opcodes[it->first]=it->second.atom.asOpcode();
-			std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
-		}
-
-		//	load class opcodes.
-		View::ViewOpcode=opcodes.find("view")->second;
-
-		Object::GroupOpcode=opcodes.find("grp")->second;
-
-		Object::PTNOpcode=opcodes.find("ptn")->second;
-		Object::AntiPTNOpcode=opcodes.find("|ptn")->second;
-
-		Object::IPGMOpcode=opcodes.find("ipgm")->second;
-		Object::PGMOpcode=opcodes.find("pgm")->second;
-		Object::AntiPGMOpcode=opcodes.find("|pgm")->second;
-
-		Object::IGoalOpcode=opcodes.find("igol")->second;
-		Object::GoalOpcode=opcodes.find("gol")->second;
-		Object::AntiGoalOpcode=opcodes.find("|gol")->second;
-
-		Object::MkRdx=opcodes.find("mk.rdx")->second;
-		Object::MkAntiRdx=opcodes.find("mk.|rdx")->second;
-
-		Object::MkNewOpcode=opcodes.find("mk.new")->second;
-
-		Object::MkLowResOpcode=opcodes.find("mk.low_res")->second;
-		Object::MkLowSlnOpcode=opcodes.find("mk.low_sln")->second;
-		Object::MkHighSlnOpcode=opcodes.find("mk.high_sln")->second;
-		Object::MkLowActOpcode=opcodes.find("mk.low_act")->second;
-		Object::MkHighActOpcode=opcodes.find("mk.high_act")->second;
-		Object::MkSlnChgOpcode=opcodes.find("mk.sln_chg")->second;
-		Object::MkActChgOpcode=opcodes.find("mk.act_chg")->second;
-
-		//	load executive function opcodes.
-		Object::InjectOpcode=opcodes.find("_inj")->second;
-		Object::EjectOpcode=opcodes.find("_eje")->second;
-		Object::ModOpcode=opcodes.find("_eje")->second;
-		Object::SetOpcode=opcodes.find("_eje")->second;
-		Object::NewClassOpcode=opcodes.find("_new_class")->second;
-		Object::DelClassOpcode=opcodes.find("_del_class")->second;
-		Object::LDCOpcode=opcodes.find("_ldc")->second;
-		Object::SwapOpcode=opcodes.find("_swp")->second;
-		Object::NewDevOpcode=opcodes.find("_new_dev")->second;
-		Object::DelDevOpcode=opcodes.find("_del_dev")->second;
-		Object::SuspendOpcode=opcodes.find("_suspend")->second;
-		Object::ResumeOpcode=opcodes.find("_resume")->second;
-		Object::StopOpcode=opcodes.find("_stop")->second;
-
-		//	load std operators.
-		uint16	operator_opcode=0;
-		Operator::Register(operator_opcode++,now);
-		Operator::Register(operator_opcode++,equ);
-		Operator::Register(operator_opcode++,neq);
-		Operator::Register(operator_opcode++,gtr);
-		Operator::Register(operator_opcode++,lsr);
-		Operator::Register(operator_opcode++,gte);
-		Operator::Register(operator_opcode++,lse);
-		Operator::Register(operator_opcode++,add);
-		Operator::Register(operator_opcode++,sub);
-		Operator::Register(operator_opcode++,mul);
-		Operator::Register(operator_opcode++,div);
-		Operator::Register(operator_opcode++,dis);
-		Operator::Register(operator_opcode++,ln);
-		Operator::Register(operator_opcode++,exp);
-		Operator::Register(operator_opcode++,log);
-		Operator::Register(operator_opcode++,e10);
-		Operator::Register(operator_opcode++,syn);
-		Operator::Register(operator_opcode++,ins);
-		Operator::Register(operator_opcode++,at);
-		Operator::Register(operator_opcode++,red);
-		Operator::Register(operator_opcode++,com);
-		Operator::Register(operator_opcode++,spl);
-		Operator::Register(operator_opcode++,mrg);
-		Operator::Register(operator_opcode++,ptc);
-		Operator::Register(operator_opcode++,fvw);
-
-		//	load usr operators.
-		if(!(UserLibrary.load(user_operator_library_path)))
-			exit(-1);
-
-		typedef	void	(*UserInit)(UNORDERED_MAP<std::string,uint16>	&);
-		UserInit	Init=UserLibrary.getFunction<UserInit>("Init");
-		if(!Init)
-			exit(-1);
-
-		typedef	bool	(*UserOperator)(const	Context	&,uint16	&);
-		typedef	uint16	(*UserGetOperatorCount)();
-		UserGetOperatorCount	GetOperatorCount=UserLibrary.getFunction<UserGetOperatorCount>("GetOperatorCount");
-		if(!GetOperatorCount)
-			exit(-1);
-
-		typedef	void	(*UserGetOperator)(UserOperator	&,std::string	&);
-		UserGetOperator	GetOperator=UserLibrary.getFunction<UserGetOperator>("GetOperator");
-		if(!GetOperator)
-			exit(-1);
-
-		std::cout<<"> User-defined operator library "<<user_operator_library_path<<" loaded"<<std::endl;
-
-		Init(opcodes);
-		uint16	operatorCount=GetOperatorCount();
-		for(uint16	i=0;i<operatorCount;++i){
-
-			UserOperator	op;
-			std::string		op_name;
-			GetOperator(op,op_name);
-
-			UNORDERED_MAP<std::string,uint16>::iterator	it=opcodes.find(op_name);
-			if(it==opcodes.end()){
-
-				std::cerr<<"Operator "<<op_name<<" is undefined"<<std::endl;
-				exit(-1);
-			}
-			Operator::Register(it->second,op);
-		}
-	}
-
-	Mem::Mem(uint32	base_period,
-			uint32	reduction_core_count,
-			uint32	time_core_count,
-			Comm	*comm):base_period(base_period),
-							reduction_core_count(reduction_core_count),
-							time_core_count(time_core_count),
-							comm(comm){
-
-		uint32	i;
-		reduction_cores=new	ReductionCore	*[reduction_core_count];
-		for(i=0;i<reduction_core_count;++i)
-			reduction_cores[i]=new	ReductionCore(this);
-		time_cores=new	TimeCore	*[time_core_count];
-		for(i=0;i<time_core_count;++i)
-			time_cores[i]=new	TimeCore(this);
+	Mem::Mem(){
 
 		object_register_sem=new	FastSemaphore(1,1);
-		object_io_map_sem=new	FastSemaphore(1,1);
 	}
 
 	Mem::~Mem(){
+
+		reset();
+		delete	object_register_sem;
+	}
+
+	void	Mem::reset(){
 
 		uint32	i;
 		for(i=0;i<reduction_core_count;++i)
@@ -170,15 +30,23 @@ namespace	r_exec{
 			delete	time_cores[i];
 		delete[]	time_cores;
 
-		delete	object_register_sem;
-		delete	object_io_map_sem;
+		root=NULL;
+	}
+
+	void	Mem::init(uint32	base_period,	//	in us; same for upr, spr and res.
+						uint32	reduction_core_count,
+						uint32	time_core_count){
+
+		this->base_period=base_period;
+		this->reduction_core_count=reduction_core_count;
+		this->time_core_count=time_core_count;
 	}
 
 	////////////////////////////////////////////////////////////////
 
 	r_code::Object	*Mem::buildObject(r_code::SysObject	*source){
 
-		return	new	Object(source,this);	//	TODO: set OID
+		return	new	Object(source,this);
 	}
 
 	r_code::Object	*Mem::buildGroup(r_code::SysObject	*source){
@@ -198,7 +66,25 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	void	Mem::init(std::vector<r_code::Object	*>	*objects){	//	NB: no cov at init time.
+	inline	void	Mem::removeObject(Object	*object){
+
+		//	erase from object_register.
+		object_register_sem->acquire();
+		object_register.erase(object);
+		object_register_sem->release();
+	}
+
+	////////////////////////////////////////////////////////////////
+
+	void	Mem::load(std::vector<r_code::Object	*>	*objects){	//	NB: no cov at init time.
+
+		uint32	i;
+		reduction_cores=new	ReductionCore	*[reduction_core_count];
+		for(i=0;i<reduction_core_count;++i)
+			reduction_cores[i]=new	ReductionCore(this);
+		time_cores=new	TimeCore	*[time_core_count];
+		for(i=0;i<time_core_count;++i)
+			time_cores[i]=new	TimeCore(this);
 
 		//	load root
 		root=(Group	*)(*objects)[0];
@@ -216,7 +102,7 @@ namespace	r_exec{
 				//	init hosts' member_set and object's view_map.
 				View	*view=(View	*)object->view_set[j];
 				Group	*host=view->getHost();
-				object->view_map[host]=view;
+				object->views.insert(view);
 
 				if(object->getType()==GROUP){
 					
@@ -251,13 +137,11 @@ namespace	r_exec{
 					host->other_views[view->getOID()]=view;
 			}
 
-			if(!object->getType()==GROUP){
+			object->view_set.as_std()->clear();
 
-				//	load non-group object in regsister and io map.
+			if(!object->getType()==GROUP)	//	load non-group object in regsister and io map.
 				object_register.insert(object);
-				if(comm)
-					object_io_map[object->getOID()]=object;
-			}else
+			else
 				initial_groups.push_back((Group	*)object);	//	convenience to create initial update jobs - see start().
 		}
 	}
@@ -270,7 +154,7 @@ namespace	r_exec{
 		for(i=0;i<time_core_count;++i)
 			time_cores[i]->start(TimeCore::Run);
 
-		uint64	now=_Now();
+		uint64	now=Now();
 		for(i=0;i<initial_groups.size();++i){
 
 			Group	*g=initial_groups[i];
@@ -301,7 +185,7 @@ namespace	r_exec{
 					UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 					for(v=g->views_begin();v!=g->views_end();v=g->next_view(v)){
 						
-						r_code::Timestamp::Set(&v->second->code[VIEW_IJT],now);	//	init injection time for the view.
+						r_code::Timestamp::Set(&v->second->code(VIEW_IJT),now);	//	init injection time for the view.
 						if(v->second->get_sln()>g->get_sln_thr()){	//	salient view.
 
 							g->newly_salient_views.push_back(v->second);
@@ -326,6 +210,8 @@ namespace	r_exec{
 			Thread::TerminateAndWait(reduction_cores[i]);
 		for(i=0;i<time_core_count;++i)
 			Thread::TerminateAndWait(time_cores[i]);
+
+		reset();
 	}
 	
 	void	Mem::suspend(){
@@ -366,43 +252,15 @@ namespace	r_exec{
 		time_job_queue.push(j);
 	}
 
-	inline	void	Mem::deleteObject(Object	*object){
-
-		//	erase from object_register and object_io_map.
-		object_register_sem->acquire();
-		object_register.erase(object);
-		object_register_sem->release();
-
-		if(object->getType()!=GROUP	&&	comm){
-
-			object_io_map_sem->acquire();
-			object_io_map.erase(object->getOID());
-			object_io_map_sem->release();
-		}
-	}
-
 	////////////////////////////////////////////////////////////////
 
-	Object	*Mem::retrieve(uint32	OID){
+	r_comp::Image	*Mem::getImage(){
 
-		object_io_map_sem->acquire();
-		UNORDERED_MAP<uint32,Object	*>::iterator	it=object_io_map.find(OID);
-		if(it==object_io_map.end()){
-
-			object_io_map_sem->release();
-			return	NULL;
-		}
-		object_io_map_sem->release();
-		return	it->second;
-	}
-
-	r_comp::CodeImage	*Mem::getCodeImage(){
-
-		r_comp::CodeImage	*code_image=new	r_comp::CodeImage();
+		r_comp::Image	*image=new	r_comp::Image();
 		UNORDERED_SET<Object	*,Object::Hash,Object::Equal>::iterator	i;
 		for(i=object_register.begin();i!=object_register.end();++i)
-			code_image->operator	<<(*i);
-		return	code_image;
+			image->operator	<<(*i);
+		return	image;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -415,8 +273,8 @@ namespace	r_exec{
 
 	inline	void	Mem::inject(View	*view){
 
-		uint64	now=_Now();
-		uint64	ijt=r_code::Timestamp::Get(&view->code[VIEW_IJT]);
+		uint64	now=Now();
+		uint64	ijt=r_code::Timestamp::Get(&view->code(VIEW_IJT));
 		if(ijt<=now)
 			injectNow(view);
 		else{
@@ -426,23 +284,10 @@ namespace	r_exec{
 		}
 	}
 
-	inline	void	Mem::eject(View	*view,uint16	nodeID){
-
-		if(comm){
-
-			Comm::STDGroupID	destination;
-			if(view->getHost()==_stdin)
-				destination=Comm::STDIN;
-			else
-				destination=Comm::STDOUT;
-			comm->eject(view->object,nodeID,destination);
-		}
+	void	Mem::eject(View	*view,uint16	nodeID){
 	}
 
-	inline	void	Mem::eject(Object	*command,uint16	nodeID){
-
-		if(comm)
-			comm->eject(command,nodeID);
+	void	Mem::eject(Object	*object,uint16	nodeID){
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -492,18 +337,12 @@ namespace	r_exec{
 
 				host->acquire();
 
-				object->view_map[host]=view;
+				object->views.insert(view);
 				uint64	now=Now();
-				r_code::Timestamp::Set(&view->code[VIEW_IJT],now);
+				r_code::Timestamp::Set(&view->code(VIEW_IJT),now);
 
 				object_register.insert(object);
 				object_register_sem->release();
-				if(comm){
-
-					object_io_map_sem->acquire();
-					object_io_map[object->getOID()]=object;
-					object_io_map_sem->release();
-				}
 
 				switch(object->getType()){
 				case	IPGM:{
@@ -542,11 +381,11 @@ namespace	r_exec{
 					}
 					break;
 				}case	MARKER:	//	the marker does not exist yet: add it to the mks of its references.
-					for(uint32	i=0;i<object->reference_set.size();++i){
+					for(uint32	i=0;i<object->references_size();++i){
 
-						((Object	*)object->reference_set[i])->acq_marker_set();
-						object->reference_set[i]->marker_set.push_back(object);
-						((Object	*)object->reference_set[i])->rel_marker_set();
+						((Object	*)object->references(i))->acq_marker_set();
+						object->references(i)->marker_set.push_back(object);
+						((Object	*)object->references(i))->rel_marker_set();
 					}
 				case	OTHER:{
 					host->other_views[view->getOID()]=view;
@@ -582,9 +421,9 @@ namespace	r_exec{
 
 		view->object=object;	//	the object already exists (content-wise): have the view point to the existing one.
 
-		object->acq_view_map();
-		UNORDERED_MAP<Group	*,View	*>::const_iterator	it=object->view_map.find(host);
-		if(it==object->view_map.end()){	//	no existing view: add the view to the group and to the object's view_map.
+		object->acq_views();
+		View	*existing_view=host->findView(object);
+		if(!existing_view){	//	no existing view: add the view to the group and to the object's view_map.
 
 			host->acquire();
 			switch(object->getType()){
@@ -604,16 +443,16 @@ namespace	r_exec{
 			}
 			host->release();
 
-			object->view_map[host]=view;
-			object->rel_view_map();
+			object->views.insert(view);
+			object->rel_views();
 		}else{	//	call set on the ctrl values of the existing view with the new view's ctrl values. NB: org left unchanged.
 
-			object->rel_view_map();
+			object->rel_views();
 
-			host->pending_operations.push_back(Group::PendingOperation(it->second->getOID(),VIEW_RES,Group::SET,view->get_res()));
-			host->pending_operations.push_back(Group::PendingOperation(it->second->getOID(),VIEW_SLN,Group::SET,view->get_sln()));
+			host->pending_operations.push_back(Group::PendingOperation(existing_view->getOID(),VIEW_RES,Group::SET,view->get_res()));
+			host->pending_operations.push_back(Group::PendingOperation(existing_view->getOID(),VIEW_SLN,Group::SET,view->get_sln()));
 			if(object->isIPGM())
-				host->pending_operations.push_back(Group::PendingOperation(it->second->getOID(),IPGM_VIEW_ACT,Group::SET,view->get_act_vis()));
+				host->pending_operations.push_back(Group::PendingOperation(existing_view->getOID(),IPGM_VIEW_ACT,Group::SET,view->get_act_vis()));
 		}
 	}
 
@@ -623,9 +462,9 @@ namespace	r_exec{
 
 		host->group_views[view->getOID()]=view;
 
-		uint64	now=_Now();
-		r_code::Timestamp::Set(&view->code[VIEW_IJT],now);
-		object->view_map[host]=view;
+		uint64	now=Now();
+		r_code::Timestamp::Set(&view->code(VIEW_IJT),now);
+		object->views.insert(view);
 
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr()){	//	host is c-salient and view is salient.
 
@@ -652,12 +491,12 @@ namespace	r_exec{
 		
 		host->acquire();
 
-		r_code::Timestamp::Set(&view->code[VIEW_IJT],_Now());
+		r_code::Timestamp::Set(&view->code(VIEW_IJT),Now());
 		host->notification_views[view->getOID()]=view;
 
-		object->acq_view_map();
-		object->view_map[host]=view;
-		object->rel_view_map();
+		object->acq_views();
+		object->views.insert(view);
+		object->rel_views();
 
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.
 			_inject_reduction_jobs(view,host);
@@ -667,7 +506,7 @@ namespace	r_exec{
 
 	inline	void	Mem::update(Group	*group){
 
-		uint64	now=_Now();
+		uint64	now=Now();
 
 		group->acquire();
 
@@ -784,9 +623,9 @@ namespace	r_exec{
 				if(((Object	*)v->second->object)->isIPGM())	//	if ipgm view, kill the overlay.
 					v->second->controller->kill();
 
-				((Object	*)v->second->object)->acq_view_map();
-				((Object	*)v->second->object)->view_map.erase(group);	//	delete view from object's view_map.
-				((Object	*)v->second->object)->rel_view_map();
+				((Object	*)v->second->object)->acq_views();
+				((Object	*)v->second->object)->views.erase(v->second);	//	delete view from object's views.
+				((Object	*)v->second->object)->rel_views();
 
 				//	delete the view.
 				if(v->second->isNotification())
@@ -862,14 +701,14 @@ namespace	r_exec{
 		//	apply morphed change to views.
 		//	feedback can happen, i.e. m:(mk o1 o2); o1.vw.g propag -> o1 propag ->m propag -> o2 propag o2.vw.g, next upr in g, o2 propag -> m propag -> o1 propag -> o1,vw.g: loop!
 		//	to avoid this, have the psln_thr set to 1 in o2: this is applicaton-dependent.
-		object->acq_view_map();
-		UNORDERED_MAP<Group	*,View	*>::const_iterator	it;
-		for(it=object->view_map.begin();it!=object->view_map.end();++it){
+		object->acq_views();
+		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	it;
+		for(it=object->views.begin();it!=object->views.end();++it){
 
-			float32	morphed_sln_change=View::MorphChange(change,source_sln_thr,it->first->get_sln_thr());
-			it->first->pending_operations.push_back(Group::PendingOperation(it->second->getOID(),VIEW_RES,Group::MOD,morphed_sln_change));
+			float32	morphed_sln_change=View::MorphChange(change,source_sln_thr,(*it)->getHost()->get_sln_thr());
+			(*it)->getHost()->pending_operations.push_back(Group::PendingOperation((*it)->getOID(),VIEW_RES,Group::MOD,morphed_sln_change));
 		}
-		object->rel_view_map();
+		object->rel_views();
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -914,8 +753,8 @@ namespace	r_exec{
 
 			if(object->getType()==MARKER){	//	if marker, propagate to references.
 
-				for(uint32	i=0;object->reference_set.size();++i)
-					_propagate_sln((Object	*)object->reference_set[i],change,source_sln_thr,path);
+				for(uint32	i=0;object->references_size();++i)
+					_propagate_sln((Object	*)object->references(i),change,source_sln_thr,path);
 			}
 
 			//	propagate to markers
@@ -938,8 +777,8 @@ namespace	r_exec{
 			path.push_back(object);
 
 			if(object->getType()==MARKER)	//	if marker, propagate to references.
-				for(uint32	i=0;object->reference_set.size();++i)
-					_propagate_sln((Object	*)object->reference_set[i],change,source_sln_thr,path);
+				for(uint32	i=0;object->references_size();++i)
+					_propagate_sln((Object	*)object->references(i),change,source_sln_thr,path);
 
 			//	propagate to markers
 			object->acq_marker_set();
