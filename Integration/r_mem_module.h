@@ -36,7 +36,6 @@
 #include	"mem.h"
 #include	"segments.h"
 
-#include	"io_register.h"
 #include	"replicode_classes.h"
 
 #define	N		module::Node

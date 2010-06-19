@@ -14,7 +14,7 @@
 //#ifdef	R_MEM_TEST
 #include	"mem.h"
 #include	"init.h"
-#endif
+//#endif
 
 #define	TEST_IMAGE
 

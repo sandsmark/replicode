@@ -36,8 +36,6 @@
 #include	"object.h"
 #include	"mem.h"
 
-#include	"io_register.h"
-
 
 using	namespace	mBrane::sdk;
 using	namespace	mBrane::sdk::payloads;
@@ -94,6 +92,13 @@ public:
 		this->code_size=code_size;
 		this->destination=destination;
 		memset(_data,0,_capacity);
+	}
+
+	~CodePayload(){
+
+		uint16	ref_count=_capacity-code_size;
+		for(uint16	i=0;i<ref_count;++i)
+			*((P<Code>	*)&data(code_size+i))=NULL;
 	}
 
 	void	load(r_exec::LObject	*object){
@@ -167,17 +172,24 @@ public	StreamData<U,Memory>{
 public:
 	CommandHeader():StreamData<U,Memory>(){}
 
-	uint32	command_size;	//	in the CStorage below.
+	uint32	code_size;	//	in the CStorage below.
 };
 
 //	Stores the code and the references in one array.
 class	Command:
 public	CStorage<CommandHeader<Command>,Atom>{
 public:
-	Command(uint16	command_size):CStorage<CommandHeader<Command>,Atom>(){
+	Command(uint16	code_size):CStorage<CommandHeader<Command>,Atom>(){
 	
-		this->command_size=command_size;
+		this->code_size=code_size;
 		memset(_data,0,_capacity);
+	}
+
+	~Command(){
+
+		uint16	ref_count=_capacity-code_size;
+		for(uint16	i=0;i<ref_count;++i)
+			*((P<Code>	*)&data(code_size+i))=NULL;
 	}
 
 	void	load(r_exec::LObject	*object){
@@ -185,7 +197,7 @@ public:
 		for(uint16	i=0;i<object->code_size();++i)
 			data(i)=object->code(i);
 		for(uint16	i=0;i<object->references_size();++i)
-			*((P<Code>	*)&data(command_size+i))=object->references(i);
+			*((P<Code>	*)&data(code_size+i))=object->references(i);
 	}
 };
 
