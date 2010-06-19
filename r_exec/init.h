@@ -7,12 +7,8 @@
 #include	"../r_comp/compiler.h"
 #include	"../r_comp/preprocessor.h"
 
+#include	"dll.h"
 
-#if defined	EXECUTIVE_EXPORTS
-	#define r_exec_dll	__declspec(dllexport)
-#else
-	#define r_exec_dll	__declspec(dllimport)
-#endif
 
 namespace	r_exec{
 
@@ -43,7 +39,7 @@ namespace	r_exec{
 							const	r_comp::Metadata	&metadata,
 							const	r_comp::Image		&seed);
 
-	uint16	r_exec_dll	GetOpcode(const	char	*class_name);
+	uint16	r_exec_dll	GetOpcode(const	char	*name);	//	classes, operators and functions.
 }
 
 

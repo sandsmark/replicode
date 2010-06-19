@@ -124,14 +124,14 @@ namespace	r_comp{
 			write_indent(0);
 			write_indent(0);
 
-			uint32	view_count=sys_object->view_set.size();
+			uint32	view_count=sys_object->views.size();
 			if(view_count){	//	write the set of views
 
 				*out_stream<<"[]; view set";
 				for(uint32	i=0;i<view_count;++i){
 
 					write_indent(3);
-					current_object=sys_object->view_set[i];
+					current_object=sys_object->views[i];
 					read_index=0;
 					after_tail_wildcard=false;
 					*out_stream<<"[";
@@ -342,7 +342,7 @@ namespace	r_comp{
 						opcode=cast_opcode;
 					break;
 				}case	Atom::R_PTR:{
-					uint32	object_index=current_object->reference_set[atom.asIndex()];
+					uint32	object_index=current_object->references[atom.asIndex()];
 					out_stream->push(get_object_name(object_index),read_index);
 					opcode=image->code_segment.objects[object_index]->code[0].asOpcode();
 					break;
@@ -386,7 +386,7 @@ namespace	r_comp{
 			}
 			break;
 		case	Atom::R_PTR:
-			out_stream->push(get_object_name(current_object->reference_set[a.asIndex()]),read_index);
+			out_stream->push(get_object_name(current_object->references[a.asIndex()]),read_index);
 			break;
 		case	Atom::THIS:
 			out_stream->push("this",read_index);

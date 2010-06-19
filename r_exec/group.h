@@ -8,14 +8,14 @@
 
 namespace	r_exec{
 
-	class	Mem;
+	class	_Mem;
 
 	//	Shared resources:
 	//		all parameters: accessed by Mem::update and reduction cores (via overlay mod/set).
 	//		all views: accessed by Mem::update and reduction cores.
 	//		viewing_groups: accessed by Mem::injectNow and Mem::update.
-	class	Group:
-	public	Object,
+	class	r_exec_dll	Group:
+	public	LObject,
 	public	FastSemaphore{
 	private:
 		//	Ctrl values.
@@ -127,10 +127,7 @@ namespace	r_exec{
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	non_ntf_views_end()		const;
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_non_ntf_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
 
-		View	*getView(uint32	OID);
-		View	*findView(Object	*object);
-
-		ObjectType	getType()	const;
+		View	*get_view(uint32	OID);
 
 		uint32	get_upr();
 		uint32	get_spr();
@@ -194,9 +191,9 @@ namespace	r_exec{
 		Group	*get_ntf_grp();
 
 		//	Delegate to views; update stats and notifies.
-		float32	update_res(View	*v,Mem	*mem);
-		float32	update_sln(View	*v,float32	&change,Mem	*mem);	//	applies decay if any.
-		float32	update_act(View	*v,Mem	*mem);
+		float32	update_res(View	*v,_Mem	*mem);
+		float32	update_sln(View	*v,float32	&change,_Mem	*mem);	//	applies decay if any.
+		float32	update_act(View	*v,_Mem	*mem);
 
 		//	Target upr, spr, c_sln, c_act, sln_thr, act_thr, vis_thr, c_sln_thr, c-act_thr, sln_chg_thr,
 		//	sln_chg_prd, act_chg_thr, act_chg_prd, high_sln_thr, low_sln_thr, sln_ntf_prd, high_act_thr, low_act_thr, act_ntf_prd, low_res_thr, res_ntf_prd, ntf_new,
@@ -205,7 +202,7 @@ namespace	r_exec{
 		void	set(uint16	member_index,float32	value);
 
 		void	reset_stats();				//	called at the begining of an update.
-		void	update_stats(Mem	*m);	//	at the end of an update; may produce notifcations.
+		void	update_stats(_Mem	*m);	//	at the end of an update; may produce notifcations.
 
 		class	Hash{
 		public:

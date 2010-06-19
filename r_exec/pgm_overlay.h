@@ -3,20 +3,20 @@
 
 #include	"base.h"
 #include	"../r_code/object.h"
+#include	"dll.h"
 
 using	namespace	r_code;
 
 namespace	r_exec{
 
-	class	Mem;
+	class	_Mem;
 	class	View;
 
-	class	Object;
 	class	InstantiatedProgram;
 	class	IPGMController;
 	class	Context;
 
-	class	dll_export	Overlay:
+	class	r_exec_dll	Overlay:
 	public	_Object{
 	friend	class	IPGMController;
 	friend	class	Context;
@@ -44,7 +44,7 @@ namespace	r_exec{
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
 
-		std::vector<P<Object> >			productions;	//	receives the results of ins, inj and eje; views are retrieved (fvw) or built (reduction) in the value array.
+		std::vector<P<Code> >			productions;	//	receives the results of ins, inj and eje; views are retrieved (fvw) or built (reduction) in the value array.
 
 		typedef	enum{
 			SUCCESS=0,
@@ -55,7 +55,7 @@ namespace	r_exec{
 		MatchResult	match(r_exec::View	*input,uint16	&input_index);	//	delegates to _match; input_index is set to the index of the pattern that matched the input.
 		bool		check_timings();									//	return true upon successful evaluation.
 		bool		check_guards();										//	return true upon successful evaluation.
-		bool		inject_productions(Mem	*mem);						//	return true upon successful evaluation.
+		bool		inject_productions(_Mem	*mem);						//	return true upon successful evaluation.
 
 		MatchResult	_match(r_exec::View	*input,uint16	pattern_index);	//	delegates to -match_pattern
 		MatchResult	_match_pattern(r_exec::View	*input,uint16	pattern_index);	//	return SUCCESS upon a successful match, IMPOSSIBLE if the input is not of the right class, FAILURE otherwise.
@@ -81,16 +81,16 @@ namespace	r_exec{
 		virtual	void	kill();
 		virtual	bool	is_alive()	const;
 
-		virtual	void	reduce(r_exec::View	*input,Mem	*mem);	//	called upon the processing of a reduction job.
+		virtual	void	reduce(r_exec::View	*input,_Mem	*mem);	//	called upon the processing of a reduction job.
 
-		InstantiatedProgram	*getIPGM()		const;
-		r_exec::View		*getIPGMView()	const;
+		r_code::Code	*getIPGM()		const;
+		r_exec::View	*getIPGMView()	const;
 
-		r_exec::Object		*getInputObject(uint16	i)	const;
-		r_exec::View		*getInputView(uint16	i)	const;
+		r_code::Code	*getInputObject(uint16	i)	const;
+		r_exec::View	*getInputView(uint16	i)	const;
 	};
 
-	class	AntiOverlay:
+	class	r_exec_dll	AntiOverlay:
 	public	Overlay{
 	friend	class	IPGMController;
 	private:
@@ -104,10 +104,10 @@ namespace	r_exec{
 		void	kill();
 		bool	is_alive()	const;
 
-		void	reduce(r_exec::View	*input,Mem	*mem);	//	called upon the processing of a reduction job.
+		void	reduce(r_exec::View	*input,_Mem	*mem);	//	called upon the processing of a reduction job.
 	};
 
-	class	IPGMController:
+	class	r_exec_dll	IPGMController:
 	public	_Object{
 	private:
 		r_code::View			*ipgm_view;
@@ -118,19 +118,19 @@ namespace	r_exec{
 		IPGMController(r_code::View	*ipgm_view):_Object(),ipgm_view(ipgm_view),alive(true),successful_match(false){}
 		~IPGMController(){}
 
-		InstantiatedProgram	*getIPGM()		const;
-		r_exec::View		*getIPGMView()	const;
+		r_code::Code	*getIPGM()		const;
+		r_exec::View	*getIPGMView()	const;
 
 		void	kill();
 		bool	is_alive()	const;
 
-		void	take_input(r_exec::View	*input,Mem	*mem);	//	push one job for each overlay; called by the rMem at update time and at injection time.
-		void	signal_anti_pgm(Mem	*mem);
-		void	signal_input_less_pgm(Mem	*mem);
+		void	take_input(r_exec::View	*input,_Mem	*mem);	//	push one job for each overlay; called by the rMem at update time and at injection time.
+		void	signal_anti_pgm(_Mem	*mem);
+		void	signal_input_less_pgm(_Mem	*mem);
 
 		void	remove(Overlay	*overlay);
 		void	add(Overlay	*overlay);
-		void	restart(AntiOverlay	*overlay,Mem	*mem,bool	match);
+		void	restart(AntiOverlay	*overlay,_Mem	*mem,bool	match);
 
 		class	Hash{
 		public:

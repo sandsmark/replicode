@@ -3,7 +3,7 @@ namespace	r_exec{
 	inline	void	Overlay::kill(){
 	}
 
-	inline	InstantiatedProgram	*Overlay::getIPGM()	const{	
+	inline	r_code::Code	*Overlay::getIPGM()	const{	
 		
 		return	controller->getIPGM();
 	}
@@ -13,7 +13,7 @@ namespace	r_exec{
 		return	controller->getIPGMView();
 	}
 	
-	inline	r_exec::Object	*Overlay::getInputObject(uint16	i)	const{	
+	inline	r_code::Code	*Overlay::getInputObject(uint16	i)	const{	
 		
 		return	input_views[i]->object;
 	}
@@ -53,8 +53,8 @@ namespace	r_exec{
 		return	(r_exec::View	*)ipgm_view;
 	}
 	
-	inline	InstantiatedProgram	*IPGMController::getIPGM()	const{
+	inline	r_code::Code	*IPGMController::getIPGM()	const{
 		
-		return	(InstantiatedProgram	*)ipgm_view->object;
+		return	ipgm_view->object;
 	}
 }

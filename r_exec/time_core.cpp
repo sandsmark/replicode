@@ -45,7 +45,7 @@ process:
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	TimeCore::TimeCore(Mem	*i):Thread(),mem(i),delegated(false){
+	TimeCore::TimeCore(_Mem	*m):Thread(),mem(m),delegated(false){
 	}
 
 	TimeCore::~TimeCore(){

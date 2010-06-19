@@ -3,16 +3,18 @@
 
 #include	"../r_code/object.h"
 #include	"pgm_overlay.h"
+#include	"dll.h"
 
 
 namespace	r_exec{
 
 	class	Group;
+	class	LObject;
 
 	//	OID is the 2nd atom in code.
 	//	Shared resources:
 	//		none: all mod/set operations are pushed on the group and executed at update time.
-	class	View:
+	class	r_exec_dll	View:
 	public	r_code::View{
 	private:
 		//	Ctrl values.
@@ -46,7 +48,7 @@ namespace	r_exec{
 		uint32	periods_at_high_act;
 
 		View();
-		View(r_code::SysView	*source,r_code::Object	*object);
+		View(r_code::SysView	*source,r_code::Code	*object);
 		View(View	*view,Group	*group);	//	copy the view and assigns it to the group (used for cov); morph ctrl values.
 		View(View	*view);	//	simple copy.
 		~View();
@@ -55,7 +57,7 @@ namespace	r_exec{
 
 		virtual	bool	isNotification()	const;
 
-		Group	*getHost();
+		Group	*get_host();
 
 		uint64	get_ijt()	const;
 
@@ -86,7 +88,7 @@ namespace	r_exec{
 		class	Hash{
 		public:
 			size_t	operator	()(View	*v)	const{
-				return	(size_t)(Object	*)v->object;
+				return	(size_t)(Code	*)v->object;
 			}
 		};
 
@@ -98,10 +100,10 @@ namespace	r_exec{
 		};
 	};
 
-	class	NotificationView:
+	class	r_exec_dll	NotificationView:
 	public	View{
 	public:
-		NotificationView(Group	*origin,Group	*destination,Object	*marker);	//	res=1, sln=1.
+		NotificationView(Group	*origin,Group	*destination,LObject	*marker);	//	res=1, sln=1.
 
 		bool	isNotification()	const;
 	};

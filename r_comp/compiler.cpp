@@ -241,7 +241,7 @@ namespace	r_comp{
 					return	false;
 				}
 				count++;
-				sys_object->view_set.push_back((SysView	*)current_object);
+				sys_object->views.push_back((SysView	*)current_object);
 			}
 		}
 
@@ -268,14 +268,14 @@ namespace	r_comp{
 		if(it!=global_references.end()	&&	(t==ANY	||	(t!=ANY	&&	it->second._class.type==t))){
 
 			_class=&it->second._class;
-			for(uint16	j=0;j<object->reference_set.size();++j)
-				if(object->reference_set[j]==it->second.index){	//	the object has already been referenced.
+			for(uint16	j=0;j<object->references.size();++j)
+				if(object->references[j]==it->second.index){	//	the object has already been referenced.
 
 					index=j;	//	rptr points to object->reference_set[j], which in turn points to it->second.index.
 					return	true;
 				}
-			object->reference_set.push_back(it->second.index);	//	add new reference to the object.
-			index=object->reference_set.size()-1;				//	rptr points to the last element of object->reference_set, which in turn points to it->second.index.
+			object->references.push_back(it->second.index);	//	add new reference to the object.
+			index=object->references.size()-1;				//	rptr points to the last element of object->reference_set, which in turn points to it->second.index.
 			return	true;
 		}
 		return	false;
@@ -2355,9 +2355,9 @@ return_false:
 			if(write){
 
 				if(current_view_index==-1)
-					_image->relocation_segment.addObjectReference(current_object->reference_set[index],current_object_index,index);
+					_image->relocation_segment.addObjectReference(current_object->references[index],current_object_index,index);
 				else
-					_image->relocation_segment.addViewReference(current_object->reference_set[index],current_object_index,current_view_index,index);
+					_image->relocation_segment.addViewReference(current_object->references[index],current_object_index,current_view_index,index);
 				current_object->code[write_index]=Atom::RPointer(index);
 			}
 			return	true;
@@ -2393,9 +2393,9 @@ return_false:
 			if(write){
 
 				if(current_view_index==-1)
-					_image->relocation_segment.addObjectReference(current_object->reference_set[v[0]],current_object_index,v[0]);
+					_image->relocation_segment.addObjectReference(current_object->references[v[0]],current_object_index,v[0]);
 				else
-					_image->relocation_segment.addViewReference(current_object->reference_set[v[0]],current_object_index,current_view_index,v[0]);
+					_image->relocation_segment.addViewReference(current_object->references[v[0]],current_object_index,current_view_index,v[0]);
 				current_object->code[write_index]=Atom::IPointer(extent_index);
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::RPointer(v[0]);

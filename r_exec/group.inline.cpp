@@ -1,13 +1,13 @@
 namespace	r_exec{
 
-	inline	Group::Group():Object(),FastSemaphore(1,1){
+	inline	Group::Group():LObject(),FastSemaphore(1,1){
 
 		reset_ctrl_values();
 		reset_stats();
 		reset_decay_values();
 	}
 
-	inline	Group::Group(r_code::SysObject	*source):Object(source,NULL),FastSemaphore(1,1){
+	inline	Group::Group(r_code::SysObject	*source):LObject(source,NULL),FastSemaphore(1,1){
 
 		reset_ctrl_values();
 		reset_stats();

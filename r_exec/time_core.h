@@ -9,18 +9,17 @@ using	namespace	core;
 
 namespace	r_exec{
 
-	class	Mem;
+	class	_Mem;
 
-	
-	class	TimeCore:
+	class	r_exec_dll	TimeCore:
 	public	Thread{
 	private:
-		Mem	*mem;
+		_Mem	*mem;
 		Timer	timer;
 		bool	delegated;
 	public:
 		static	thread_ret thread_function_call	Run(void	*args);
-		TimeCore(Mem	*i);
+		TimeCore(_Mem	*m);
 		~TimeCore();
 	};
 }

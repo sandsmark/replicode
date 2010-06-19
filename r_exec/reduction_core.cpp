@@ -25,7 +25,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	ReductionCore::ReductionCore(Mem	*i):Thread(),mem(i){
+	ReductionCore::ReductionCore(_Mem	*m):Thread(),mem(m){
 	}
 
 	ReductionCore::~ReductionCore(){

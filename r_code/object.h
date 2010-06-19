@@ -46,7 +46,7 @@ namespace	r_code{
 	class	dll_export	ImageObject{
 	public:
 		r_code::vector<Atom>	code;
-		r_code::vector<uint32>	reference_set;	//	for views: 0, 1 or 2 elements; these are indexes in the relocation segment for grp (exception: not for root) and possibly org
+		r_code::vector<uint32>	references;	//	for views: 0, 1 or 2 elements; these are indexes in the relocation segment for grp (exception: not for root) and possibly org
 												//	for sys-objects: any number
 		virtual	void	write(word32	*data)=0;
 		virtual	void	read(word32		*data)=0;
@@ -67,16 +67,16 @@ namespace	r_code{
 		void	trace();
 	};
 
-	class	Object;
+	class	Code;
 
 	class	dll_export	SysObject:
 	public	ImageObject{
 	public:
-		r_code::vector<uint32>		marker_set;		//	indexes in the relocation segment
-		r_code::vector<SysView	*>	view_set;
+		r_code::vector<uint32>		markers;		//	indexes in the relocation segment
+		r_code::vector<SysView	*>	views;
 
 		SysObject();
-		SysObject(Object	*source);
+		SysObject(Code	*source);
 		~SysObject();
 
 		void	write(word32	*data);
@@ -87,10 +87,33 @@ namespace	r_code{
 
 	// Interfaces for r_exec classes ////////////////////////////////////////////////////////////////////////
 
-	class	View;
+	class	Object;
+
+	class	dll_export	View:
+	public	_Object{
+	protected:
+		Atom	_code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, oid, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
+	public:
+		P<Code>	object;						//	viewed object.
+		Code	*references[2];				//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group).
+
+		View();
+		View(SysView	*source,Code	*object);
+		virtual	~View();
+
+		Atom	&code(uint16	i){	return	_code[i];	}
+		Atom	code(uint16	i)	const{	return	_code[i];	}
+	};
 
 	class	dll_export	Code:
 	public	_Object{
+	protected:
+		void	load(SysObject	*source);
+		template<class	V>	void	build_views(SysObject	*source){
+
+			for(uint16	i=0;i<source->views.size();++i)
+				initial_views[i]=new	V(source->views[i],this);
+		}
 	public:
 		virtual	Atom	&code(uint16	i)=0;
 		virtual	Atom	&code(uint16	i)	const=0;
@@ -99,11 +122,18 @@ namespace	r_code{
 		virtual	P<Code>	&references(uint16	i)	const=0;
 		virtual	uint16	references_size()	const=0;
 
-		r_code::vector<P<Code> >	marker_set;
-		r_code::vector<View	*>		view_set;	//	used only for initialization from an image.
+		r_code::vector<P<Code> >	markers;
+
+		r_code::vector<P<View> >	initial_views;
 
 		Code();
 		virtual	~Code();
+
+		virtual	void	mod(uint16	member_index,float32	value){};
+		virtual	void	set(uint16	member_index,float32	value){};
+		virtual	View	*find_view(Code	*group){	return	NULL;	}
+		virtual	bool	is_compact()	const{	return	false;	}
+		virtual	void	add_reference(Code	*object)	const{}
 	};
 
 	class	dll_export	Object:
@@ -126,28 +156,12 @@ namespace	r_code{
 		void	add_reference(Code	*object)	const{	_references.as_std()->push_back(object);	}
 	};
 
-	class	dll_export	View:
-	public	_Object{
-	protected:
-		Atom	_code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, oid, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
-	public:
-		P<Code>	object;						//	viewed object.
-		Code	*references[2];				//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group).
-
-		View();
-		View(SysView	*source,Object	*object);
-		virtual	~View();
-
-		Atom	&code(uint16	i){	return	_code[i];	}
-		Atom	code(uint16	i)	const{	return	_code[i];	}
-	};
-
 	class	Mem{
 	public:
-		virtual	Object	*buildObject(SysObject	*source)=0;
-		virtual	Object	*buildGroup(SysObject	*source)=0;
-		virtual	Object	*buildInstantiatedProgram(SysObject	*source)=0;
-		virtual	Object	*buildMarker(SysObject	*source)=0;
+		virtual	Code	*buildObject(SysObject	*source)=0;
+		virtual	Code	*buildGroup(SysObject	*source)=0;
+		virtual	void	deleteObject(Code	*object)=0;
+		virtual	View	*find_view(Code	*object,Code	*group)=0;
 	};
 }
 

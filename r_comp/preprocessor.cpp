@@ -1205,7 +1205,14 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				std::list<RepliStruct	*>	tpl_args;
 				getMembers(s,members,tpl_args,false);
 
-				Atom	atom=Atom::Object(class_opcode,members.size());
+				Atom	atom;
+				if(class_name=="grp")
+					atom=Atom::Group(class_opcode,members.size());
+				else	if(class_name=="ipgm")
+					atom=Atom::InstantiatedProgram(class_opcode,members.size());
+				else
+					atom=Atom::Object(class_opcode,members.size());
+
 				if(class_type==T_CLASS){	//	find out if the class is a sys class, i.e. has a view
 
 					for(uint32	i=0;i<members.size();++i)

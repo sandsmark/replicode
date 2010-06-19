@@ -219,9 +219,9 @@ namespace	r_exec{
 		return	Init(user_operator_library_path,time_base);
 	}
 
-	uint16	GetOpcode(const	char	*class_name){
+	uint16	GetOpcode(const	char	*name){
 
-		UNORDERED_MAP<std::string,uint16>::iterator it=Opcodes.find(class_name);
+		UNORDERED_MAP<std::string,uint16>::iterator it=Opcodes.find(name);
 		if(it==Opcodes.end())
 			return	0xFFFF;
 		return	it->second;

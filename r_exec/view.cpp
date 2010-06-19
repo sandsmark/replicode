@@ -37,7 +37,7 @@ namespace	r_exec{
 
 	View::View(View	*view,Group	*group):r_code::View(){
 
-		Group	*source=view->getHost();
+		Group	*source=view->get_host();
 		object=view->object;
 		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom));
 		code(VIEW_OID)=GetOID();
@@ -46,13 +46,10 @@ namespace	r_exec{
 
 		//	morph ctrl values; NB: res is not morphed as it is expressed as a multiple of the upr.
 		code(VIEW_SLN)=MorphValue(view->code(VIEW_SLN).asFloat(),source->get_sln_thr(),group->get_sln_thr());
-		ObjectType	t=((Object	*)object)->getType();
-		switch(t){
-		case	GROUP:
+		switch(object->code(0).getDescriptor()){
+		case	Atom::GROUP:
 			code(VIEW_ACT_VIS)=MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_vis_thr(),group->get_vis_thr());
-		case	IPGM:
-		case	ANTI_IPGM:
-		case	INPUT_LESS_IPGM:
+		case	Atom::INSTANTIATED_PROGRAM:
 			code(VIEW_ACT_VIS)=MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_act_thr(),group->get_act_thr());
 		}
 
@@ -78,7 +75,7 @@ namespace	r_exec{
 	void	View::reset_init_values(){
 
 		initial_sln=get_sln();
-		if(((Object	*)object)->isIPGM())
+		if(object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM)
 			initial_act=get_act_vis();
 		else
 			initial_act=0;
@@ -161,7 +158,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	NotificationView::NotificationView(Group	*origin,Group	*destination,Object	*marker):View(){
+	NotificationView::NotificationView(Group	*origin,Group	*destination,LObject	*marker):View(){
 
 		uint32	write_index=0;
 		code(write_index++)=r_code::Atom::SSet(ViewOpcode,6);	//	Structured Set.

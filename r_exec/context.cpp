@@ -90,7 +90,7 @@ namespace	r_exec{
 			return	Context(object,view,code,code[index].asIndex(),overlay,data).dereference();
 		case	Atom::R_PTR:{
 
-			Object	*o=object->references(code[index].asIndex());
+			Code	*o=object->references(code[index].asIndex());
 			return	Context(o,NULL,&o->code(0),0,NULL,REFERENCE);
 		}case	Atom::C_PTR:{
 

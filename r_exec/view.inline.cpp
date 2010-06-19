@@ -10,7 +10,7 @@ namespace	r_exec{
 		reset_ctrl_values();
 	}
 
-	inline	View::View(r_code::SysView	*source,r_code::Object	*object):r_code::View(source,object){
+	inline	View::View(r_code::SysView	*source,r_code::Code	*object):r_code::View(source,object){
 
 		code(VIEW_OID)=GetOID();
 
@@ -40,7 +40,7 @@ namespace	r_exec{
 		return	false;
 	}
 
-	inline	Group	*View::getHost(){
+	inline	Group	*View::get_host(){
 
 		uint32	host_reference=code(VIEW_HOST).asIndex();
 		return	(Group	*)references[host_reference];

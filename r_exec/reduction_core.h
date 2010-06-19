@@ -9,7 +9,8 @@ using	namespace	core;
 
 namespace	r_exec{
 
-	class	Mem;
+	class	_Mem;
+
 	//	Pop a job and reduce - may create overlays from exisitng ones.
 	//	Injects new productions in the mem - may create 1st level overlays.
 	//	For each job:
@@ -18,13 +19,13 @@ namespace	r_exec{
 	//		- inject new rdx jobs if salient prods.
 	//		- inject new update jobs if prod=grp.
 	//		- inject new signaling jobs if prod=|pgm or prod=pgm with no inputs.
-	class	ReductionCore:
+	class	r_exec_dll	ReductionCore:
 	public	Thread{
 	private:
-		Mem	*mem;
+		_Mem	*mem;
 	public:
 		static	thread_ret thread_function_call	Run(void	*args);
-		ReductionCore(Mem	*i);
+		ReductionCore(_Mem	*i);
 		~ReductionCore();
 	};
 }

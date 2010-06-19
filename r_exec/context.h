@@ -13,7 +13,7 @@ namespace	r_exec{
 	//	Evaluation context.
 	class	dll_export	Context{
 	private:
-		Object	*object;			//	the object the code belongs to; unchanged when the context is dereferenced to the overlay's value array.
+		Code	*object;			//	the object the code belongs to; unchanged when the context is dereferenced to the overlay's value array.
 		View	*view;				//	the object's view, can be NULL when the context is dereferenced to a reference_set or a marker_set.
 		Atom	*code;				//	the object's code, or the code in value array, or the view's code when the context is dereferenced from Atom::VIEW.
 		uint16	index;				//	in the code;
@@ -28,7 +28,7 @@ namespace	r_exec{
 		}Data;
 		Data	data;
 
-		void	addReference(Object	*destination,uint16	&write_index)	const{
+		void	addReference(Code	*destination,uint16	&write_index)	const{
 
 			destination->add_reference(object->references(code[index].asIndex()));
 			destination->code(write_index++)=Atom::RPointer(destination->references_size()-1);
@@ -45,11 +45,11 @@ namespace	r_exec{
 			destination->code(write_index++)=Atom::RPointer(r_ptr_index);
 		}
 	public:
-		static	Context	GetContextFromInput(View	*input,Overlay	*overlay){	return	Context((r_exec::Object	*)input->object,input,&input->object->code(0),0,overlay,REFERENCE);	}
+		static	Context	GetContextFromInput(View	*input,Overlay	*overlay){	return	Context(input->object,input,&input->object->code(0),0,overlay,REFERENCE);	}
 
 		Context():object(NULL),view(NULL),code(NULL),index(0),overlay(NULL),data(UNDEFINED){}	//	undefined context (happens when accessing the view of an object when it has not been provided).
-		Context(Object	*object,View	*view,Atom	*code,uint16	index,Overlay	*const	overlay,Data	data=ORIGINAL_PGM):object(object),view(view),code(code),index(index),overlay(overlay),data(data){}
-		Context(Object	*object,uint16	index):object(object),view(NULL),code(&object->code(0)),index(index),overlay(NULL),data(REFERENCE){}
+		Context(Code	*object,View	*view,Atom	*code,uint16	index,Overlay	*const	overlay,Data	data=ORIGINAL_PGM):object(object),view(view),code(code),index(index),overlay(overlay),data(data){}
+		Context(Code	*object,uint16	index):object(object),view(NULL),code(&object->code(0)),index(index),overlay(NULL),data(REFERENCE){}
 
 		bool	evaluate(uint16	&index)					const;	//	index is set to the index of the result, undefined in case of failure.
 		bool	evaluate_no_dereference(uint16	&index)	const;
@@ -63,7 +63,7 @@ namespace	r_exec{
 			case	VIEW:
 				return	Context(object,view,code,index,NULL,VIEW).dereference();
 			case	MKS:
-				return	Context(object->marker_set[index-1],0);
+				return	Context(object->markers[index-1],0);
 			case	VWS:
 				return	Context();	//	never used for iterating views (unexposed).
 			default:	//	undefined context.
@@ -88,7 +88,7 @@ namespace	r_exec{
 		bool	operator	!=(const	Context	&c)	const;
 
 		Atom	&operator	[](uint16	i)	const{	return	code[index+1];	}
-		Object	*getObject()				const{	return	object;	}
+		Code	*getObject()				const{	return	object;	}
 		uint16	getIndex()					const{	return	index;	}
 
 		Context	dereference()	const;
@@ -124,7 +124,7 @@ namespace	r_exec{
 			return	overlay->values.size()-1;
 		}
 
-		uint16	addProduction(Object	*object)	const{
+		uint16	addProduction(LObject	*object)	const{
 			overlay->productions.push_back(object);
 			return	overlay->productions.size()-1;
 		}

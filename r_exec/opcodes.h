@@ -2,6 +2,7 @@
 #define	opcodes_h
 
 #include	"types.h"
+#include	"dll.h"
 
 
 using	namespace	core;
@@ -9,7 +10,7 @@ using	namespace	core;
 namespace	r_exec{
 
 	//	Opcodes are initialized by Init().
-	class	Opcodes{
+	class	r_exec_dll	Opcodes{
 	public:
 		static	uint16	Group;
 

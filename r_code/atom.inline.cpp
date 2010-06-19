@@ -194,6 +194,16 @@ namespace	r_code{
 		return	Atom(0xC7FFFFFF);
 	}
 
+	inline	Atom	Atom::InstantiatedProgram(uint16 opcode,uint8 arity){
+
+		return	Atom((INSTANTIATED_PROGRAM<<24)+((opcode	&	0x0FFF)<<8)+arity);
+	}
+
+	inline	Atom	Atom::Group(uint16 opcode,uint8 arity){
+
+		return	Atom((GROUP<<24)+((opcode	&	0x0FFF)<<8)+arity);
+	}
+
 	inline	Atom::Atom(uint32	a):atom(a){
 	}
 
@@ -315,6 +325,8 @@ namespace	r_code{
 		case	MARKER:
 		case	C_PTR:
 		case	OPERATOR:
+		case	INSTANTIATED_PROGRAM:
+		case	GROUP:
 		case	S_SET:	return	atom	&	0x000000FF;
 		case	STRING:	return	(atom	&	0x0000FF00)>>8;
 		case	TIMESTAMP: return 2;

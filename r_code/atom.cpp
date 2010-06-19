@@ -44,33 +44,35 @@ namespace	r_code{
 
 		write_indents();
 		switch(getDescriptor()){
-		case	NIL:				std::cout<<"nil";return;
-		case	BOOLEAN_:			std::cout<<"bl: "<<std::boolalpha<<asBoolean();return;
-		case	WILDCARD:			std::cout<<":";return;
-		case	T_WILDCARD:			std::cout<<"::";return;
-		case	I_PTR:				std::cout<<"iptr: "<<std::dec<<asIndex();return;
-		case	VL_PTR:				std::cout<<"vlptr: "<<std::dec<<asIndex();return;
-		case	R_PTR:				std::cout<<"rptr: "<<std::dec<<asIndex();return;
-		case	IPGM_PTR:			std::cout<<"ipgm_ptr: "<<std::dec<<asIndex();return;
-		case	IN_OBJ_PTR:			std::cout<<"in_obj_ptr: "<<std::dec<<asViewIndex()<<" "<<asIndex();return;
-		case	IN_VW_PTR:			std::cout<<"in_vw_ptr: "<<std::dec<<asViewIndex()<<" "<<asIndex();return;
-		case	VALUE_PTR:			std::cout<<"value_ptr: "<<std::dec<<asIndex();return;
-		case	PROD_PTR:			std::cout<<"prod_ptr: "<<std::dec<<asIndex();return;
-		case	THIS:				std::cout<<"this";return;
-		case	VIEW:				std::cout<<"view";return;
-		case	MKS:				std::cout<<"mks";return;
-		case	VWS:				std::cout<<"vws";return;
-		case	NODE:				std::cout<<"nid: "<<std::dec<<(uint32)getNodeID();return;
-		case	DEVICE:				std::cout<<"did: "<<std::dec<<(uint32)getNodeID()<<" "<<(uint32)getClassID()<<" "<<(uint32)getDeviceID();return;
-		case	DEVICE_FUNCTION:	std::cout<<"fid: "<<std::dec<<asOpcode();return;
-		case	C_PTR:				std::cout<<"cptr: "<<std::dec<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	SET:				std::cout<<"set: "<<std::dec<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	OBJECT:				std::cout<<"obj: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	S_SET:				std::cout<<"s_set: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	MARKER:				std::cout<<"mk: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	OPERATOR:			std::cout<<"op: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	STRING:				std::cout<<"st: "<<std::dec<<getAtomCount();Members_to_go=String_data=getAtomCount();Char_count=(atom	&	0x000000FF);return;
-		case	TIMESTAMP:			std::cout<<"us";Members_to_go=Timestamp_data=2;return;
+		case	NIL:					std::cout<<"nil";return;
+		case	BOOLEAN_:				std::cout<<"bl: "<<std::boolalpha<<asBoolean();return;
+		case	WILDCARD:				std::cout<<":";return;
+		case	T_WILDCARD:				std::cout<<"::";return;
+		case	I_PTR:					std::cout<<"iptr: "<<std::dec<<asIndex();return;
+		case	VL_PTR:					std::cout<<"vlptr: "<<std::dec<<asIndex();return;
+		case	R_PTR:					std::cout<<"rptr: "<<std::dec<<asIndex();return;
+		case	IPGM_PTR:				std::cout<<"ipgm_ptr: "<<std::dec<<asIndex();return;
+		case	IN_OBJ_PTR:				std::cout<<"in_obj_ptr: "<<std::dec<<asViewIndex()<<" "<<asIndex();return;
+		case	IN_VW_PTR:				std::cout<<"in_vw_ptr: "<<std::dec<<asViewIndex()<<" "<<asIndex();return;
+		case	VALUE_PTR:				std::cout<<"value_ptr: "<<std::dec<<asIndex();return;
+		case	PROD_PTR:				std::cout<<"prod_ptr: "<<std::dec<<asIndex();return;
+		case	THIS:					std::cout<<"this";return;
+		case	VIEW:					std::cout<<"view";return;
+		case	MKS:					std::cout<<"mks";return;
+		case	VWS:					std::cout<<"vws";return;
+		case	NODE:					std::cout<<"nid: "<<std::dec<<(uint32)getNodeID();return;
+		case	DEVICE:					std::cout<<"did: "<<std::dec<<(uint32)getNodeID()<<" "<<(uint32)getClassID()<<" "<<(uint32)getDeviceID();return;
+		case	DEVICE_FUNCTION:		std::cout<<"fid: "<<std::dec<<asOpcode();return;
+		case	C_PTR:					std::cout<<"cptr: "<<std::dec<<getAtomCount();Members_to_go=getAtomCount();return;
+		case	SET:					std::cout<<"set: "<<std::dec<<getAtomCount();Members_to_go=getAtomCount();return;
+		case	OBJECT:					std::cout<<"obj: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
+		case	S_SET:					std::cout<<"s_set: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
+		case	MARKER:					std::cout<<"mk: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
+		case	OPERATOR:				std::cout<<"op: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
+		case	STRING:					std::cout<<"st: "<<std::dec<<getAtomCount();Members_to_go=String_data=getAtomCount();Char_count=(atom	&	0x000000FF);return;
+		case	TIMESTAMP:				std::cout<<"us";Members_to_go=Timestamp_data=2;return;
+		case	INSTANTIATED_PROGRAM:	std::cout<<"ipgm: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
+		case	GROUP:					std::cout<<"grp: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
 		default:
 			if(Timestamp_data){
 				

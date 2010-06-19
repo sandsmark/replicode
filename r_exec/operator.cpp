@@ -418,7 +418,7 @@ namespace	r_exec{
 		Context	object=context.getChild(1);
 		Context	args=context.getChild(2);
 
-		Object	*_object=object.getObject();
+		Code	*_object=object.getObject();
 		if(_object	&&	args[0].getDescriptor()==Atom::SET){
 
 			uint16	pattern_set_index=_object->code(_object->code(PGM_INPUTS).asIndex()+1).asIndex();
@@ -444,10 +444,10 @@ namespace	r_exec{
 			//	create an ipgm or an igol in the production array.
 			if(_object->code(0).asOpcode()==Opcodes::PGM	||	_object->code(0).asOpcode()==Opcodes::AntiPGM){
 
-				Object	*ipgm=new	Object();
+				LObject	*ipgm=new	LObject();
 
 				uint16	write_index=0;
-				ipgm->code(write_index++)=Atom::Object(Opcodes::IPGM,IPGM_IGOL_ARITY);
+				ipgm->code(write_index++)=Atom::InstantiatedProgram(Opcodes::IPGM,IPGM_IGOL_ARITY);
 				ipgm->code(write_index++)=Atom::RPointer(0);	//	points to the pgm object.
 				ipgm->code(write_index++)=Atom::IPointer(IPGM_IGOL_ARITY+1);
 				ipgm->code(write_index++)=Atom::View();
@@ -464,7 +464,7 @@ namespace	r_exec{
 
 			if(_object->code(0).asOpcode()==Opcodes::Goal	||	_object->code(0).asOpcode()==Opcodes::AntiGoal){
 
-				Object	*igol=new	Object();
+				LObject	*igol=new	LObject();
 
 				uint16	write_index=0;
 				igol->code(write_index++)=Atom::Object(Opcodes::IGoal,IPGM_IGOL_ARITY);
@@ -670,7 +670,7 @@ failure:
 		Context	object=context.getChild(1);
 		Context	group=context.getChild(2);
 
-		Object	*_object=object.getObject();
+		Code	*_object=object.getObject();
 		Group	*_group=(Group	*)group.getObject();
 		if(!_object	||	!_group){
 
@@ -678,19 +678,17 @@ failure:
 			return	false;
 		}
 
-		_object->acq_views();
-		View	*v=_group->findView(_object);
+		View	*v=(View	*)_object->find_view(_group);	//	returns a copy of the view, if any.
 		if(v){	//	copy the view in the value array.
 
 			uint16	atom_count=v->code(0).getAtomCount();
 			index=context.setCompoundResultHead(v->code(0));
 			for(uint16	i=1;i<=atom_count;++i)
 				context.addCompoundResultPart(v->code(i));
-			_object->rel_views();
+			delete	v;
 			return	true;
 		}
 
-		_object->rel_views();
 		index=context.setAtomicResult(Atom::Nil());
 		return	false;
 	}

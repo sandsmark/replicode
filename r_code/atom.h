@@ -77,7 +77,9 @@ namespace	r_code{
 			MARKER=0xC4,
 			OPERATOR=0xC5,
 			STRING=0xC6,
-			TIMESTAMP=0xC7
+			TIMESTAMP=0xC7,
+			INSTANTIATED_PROGRAM=0xC8,
+			GROUP=0xC9
 		}Type;
 		// encoders
 		static	Atom	Float(float32 f);	//	IEEE 754 32 bits encoding >> 1.
@@ -117,6 +119,8 @@ namespace	r_code{
 		static	Atom	UndefinedString();
 		static	Atom	Timestamp();
 		static	Atom	UndefinedTimestamp();
+		static	Atom	InstantiatedProgram(uint16 opcode,uint8 arity);
+		static	Atom	Group(uint16 opcode,uint8 arity);
 
 		Atom(uint32	a=0xFFFFFFFF);
 		~Atom();

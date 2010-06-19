@@ -4,51 +4,48 @@
 #include	"../CoreLibrary/utils.h"
 #include	"../r_code/object.h"
 #include	"view.h"
+#include	"opcodes.h"
 
 
 namespace	r_exec{
 
-	class	Mem;
-
 	typedef	enum{
-		GROUP=0,
-		MARKER=1,
-		IPGM=2,
-		ANTI_IPGM=3,
-		INPUT_LESS_IPGM=4,
-		OTHER=5
+		IPGM=0,
+		INPUT_LESS_IPGM=1,
+		ANTI_IPGM=2,
+		OBJECT=4,
+		MARKER=5,
+		GROUP=6
 	}ObjectType;
 
+	r_exec_dll	bool	IsNotification(Code	*object);
+	r_exec_dll	ObjectType	GetType(Code	*object);
+
 	//	Shared resources:
-	//		view_map: accessed by Mem::injectNow (via various sub calls) and Mem::update.
+	//		views: accessed by Mem::injectNow (via various sub calls) and Mem::update.
 	//		psln_thr: accessed by reduction cores (via overlay mod/set).
 	//		marker_set: accessed by Mem::injectNow ans Mem::_initiate_sln_propagation.
-	class	Object:
-	public	r_code::Object{
+	template<class	C>	class	Object:
+	public	C{
 	private:
-		uint32	OID;
 		size_t	hash_value;
+
 		FastSemaphore	*psln_thr_sem;
 		FastSemaphore	*views_sem;
 		FastSemaphore	*marker_set_sem;
 	protected:
-		Mem		*mem;
+		r_code::Mem	*mem;
+
+		Object();
+		Object(r_code::Mem	*mem);
 	public:
 		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;
-	
-		Object();
-		Object(uint32	OID,Mem	*m);
-		Object(r_code::SysObject	*source,Mem	*m);
-		virtual	~Object();	//	un-registers from the rMem's object-map and object_io_map.
 
-		void	computeHashValue();
+		virtual	~Object();	//	un-registers from the rMem's object_register.
 
-		virtual	ObjectType	getType()	const;
-		virtual	bool		isIPGM()	const;
+		void	compute_hash_value();
 
 		float32	get_psln_thr();
-
-		uint32	getOID()	const;
 
 		void	acq_views()			const{	views_sem->acquire();	}
 		void	rel_views()			const{	views_sem->release();	}
@@ -59,11 +56,13 @@ namespace	r_exec{
 		virtual	void	set(uint16	member_index,float32	value);
 		virtual	void	mod(uint16	member_index,float32	value);
 
+		View	*find_view(Code	*group);
+
 		class	Hash{
 		public:
 			size_t	operator	()(Object	*o)	const{
 				if(o->hash_value==0)
-					o->computeHashValue();
+					o->compute_hash_value();
 				return	o->hash_value;
 			}
 		};
@@ -87,104 +86,28 @@ namespace	r_exec{
 		};
 	};
 
-	class	InstantiatedProgram:
-	public	Object{
+	//	Local object.
+	//	Used for r-code that does not travel across networks.
+	//	Used for construction.
+	//	If the mem is network-aware, instances will be packed into a suitable form.
+	class	r_exec_dll	LObject:
+	public	Object<r_code::Object>{
 	public:
-		InstantiatedProgram();
-		InstantiatedProgram(r_code::SysObject	*source,Mem	*m);
-		~InstantiatedProgram();
+		static	bool	RequiresPacking(){	return	false;	}
+		static	LObject	*Pack(Code	*object){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
 
-		ObjectType	getType()	const;
-		bool		isIPGM()	const;
-
-		Object	*getPGM()	const;
-		uint64	get_tsc()	const;
-	};
-
-	class	Marker:
-	public	Object{
-	protected:
-		Marker();
-	public:
-		Marker(r_code::SysObject	*source,Mem	*m);
-		~Marker();
-
-		ObjectType	getType()	const;
-		virtual	bool	isNotification()	const;
-	};
-
-	class	MkNew:
-	public	Marker{
-	public:
-		MkNew(Object	*object);
-
-		bool	isNotification()	const;
-	};
-
-	class	MkLowRes:
-	public	Marker{
-	public:
-		MkLowRes(Object	*object);
-
-		bool	isNotification()	const;
-	};
-
-	class	MkLowSln:
-	public	Marker{
-	public:
-		MkLowSln(Object	*object);
-
-		bool	isNotification()	const;
-	};
-
-	class	MkHighSln:
-	public	Marker{
-	public:
-		MkHighSln(Object	*object);
-
-		bool	isNotification()	const;
-	};
-
-	class	MkLowAct:
-	public	Marker{
-	public:
-		MkLowAct(Object	*object);
-
-		bool	isNotification()	const;
-	};
-
-	class	MkHighAct:
-	public	Marker{
-	public:
-		MkHighAct(Object	*object);
-
-		bool	isNotification()	const;
-	};
-
-	class	MkSlnChg:
-	public	Marker{
-	public:
-		MkSlnChg(Object	*object,float32	value);
-
-		bool	isNotification()	const;
-	};
-
-	class	MkActChg:
-	public	Marker{
-	public:
-		MkActChg(Object	*object,float32	value);
-
-		bool	isNotification()	const;
-	};
-
-	class	MkRdx:
-	public	Marker{
-	public:
-		MkRdx();
-
-		bool	isNotification()	const;
+		LObject():Object<r_code::Object>(){}
+		LObject(r_code::SysObject	*source,r_code::Mem	*m):Object<r_code::Object>(mem){
+		
+			load(source);
+			build_views<r_exec::View>(source);
+		}
+		~LObject(){}
 	};
 }
+
+
+#include	"object.tpl.cpp"
 
 
 #endif
