@@ -28,42 +28,28 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace	io{
+template<class	V>	const	char	*MkVal<V>::ClassName="mk.val";
+template<class	V>	uint16			MkVal<V>::Opcode;
+
+template<class	V>	CodePayload	*MkVal<V>::New(CodePayload	*entity,CodePayload	*attribute,V	value){
+
+	CodePayload	*r=new(14+2)	CodePayload(14);
+
+	uint16	i=0;
+	r->data(++i)=Atom::RPointer(0);				//	1	ptr to object.
+	r->data(++i)=Atom::RPointer(1);				//	2	ptr to attribute.
+	r->data(++i)=Atom::IPointer(8);				//	3	iptr to vec3.
+	r->data(++i)=Atom::View();					//	4	vw.
+	r->data(++i)=Atom::IPointer(0);				//	5	iptr to vws.
+	r->data(++i)=Atom::IPointer(0);				//	6	iptr to mks.
+	r->data(++i)=Atom::Float(1);				//	7	psln_thr.
+	++i;
+	value.write(r->data(),i);					//	writes 4 atoms: 8 -> 11
+	r->data(++i)=Atom::Set(0);					//	12	vws.
+	r->data(++i)=Atom::Set(0);					//	13	mks.
+
+	r->data(++i).atom=(uint32)entity;
+	r->data(++i).atom=(uint32)attribute;
 	
-	template<class	V>	const	char	*MkVal<V>::ClassName="mk.val";
-
-	template<class	V>	r_code::Object	*MkVal<V>::GetObject(InputCode	*input){
-
-		MkVal<V>		*m=input->as<MkVal<V> >();
-		r_code::Object	*object=new	r_code::Object();
-
-		const	uint32	arity=7;	//	reminder: opcode not included in the arity
-		uint32	write_index=0;
-		uint32	extent_index=arity;
-
-		object->code[write_index++]=r_code::Atom::Marker(m->opcode,arity);
-
-		object->code[write_index++]=r_code::Atom::RPointer(0);	//	entity is the first ref
-		//object->reference_set[0]=RetrieveObject(m->entityID);
-
-		object->code[write_index++]=r_code::Atom::RPointer(1);	//	attribute is the second ref
-		//object->reference_set[1]=RetrieveObject(m->attributeID);
-
-		object->code[write_index++]=r_code::Atom::IPointer(extent_index);	//	vec3
-		m->value.write(object->code,extent_index);
-
-		object->code[write_index++]=r_code::Atom::View();	//	nil view
-		
-		object->code[write_index++]=r_code::Atom::IPointer(extent_index);	//	vws
-		object->code[extent_index++]=r_code::Atom::Set(0);					//	empty set
-
-		object->code[write_index++]=r_code::Atom::IPointer(extent_index);	//	mks
-		object->code[extent_index++]=r_code::Atom::Set(0);					//	empty set
-
-		object->code[write_index++]=r_code::Atom::Float(1.0);	//	psln_thr
-
-		object->view_set[0]=View::GetView(input);
-
-		return	object;
-	}
+	return	r;
 }

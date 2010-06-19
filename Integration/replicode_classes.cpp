@@ -29,67 +29,45 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"replicode_classes.h"
+#include	"../r_code/utils.h"
 
 
-namespace	io{
+const	char	*Entity::ClassName="ent";
+uint16	Entity::Opcode;
 
-	uint32	View::Opcode;
+CodePayload	*Entity::New(){
 
-	const	char	*View::ClassName="view";
+	CodePayload	*r=new(7)	CodePayload(7);
 
-	r_code::View	*View::GetView(InputCode *input){
+	r->data(1)=Atom::View();		//	vw.
+	r->data(2)=Atom::IPointer(5);	//	iptr to vws.
+	r->data(3)=Atom::IPointer(6);	//	iptr to mks.
+	r->data(4)=Atom::Float(1);		//	psln_thr.
+	r->data(5)=Atom::Set(0);		//	vws.
+	r->data(6)=Atom::Set(0);		//	mks.
 
-		r_code::View	*view=new	r_code::View();
+	return	r;
+}
 
-		const	uint32	arity=5;	//	reminder: opcode not included in the arity
-		uint32	write_index=0;
-		uint32	extent_index=arity;
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		view->code[write_index++]=r_code::Atom::Object(Opcode,arity);
+uint16	Vec3::Opcode;
 
-		view->code[write_index++]=r_code::Atom::IPointer(extent_index);	//	ijt
-		Timestamp	t1(Time::Get());
-		t1.write(view->code,extent_index);
+const	char	*Vec3::ClassName="vec3";
+const	uint16	Vec3::CodeSize=4;
 
-		view->code[write_index++]=r_code::Atom::Float(1.0);	//	sln
+Vec3::Vec3(float32	x,float32	y,float32	z){
 
-		view->code[write_index++]=r_code::Atom::IPointer(extent_index);	//	res
-		Timestamp	t2(10000);
-		t2.write(view->code,extent_index);
+	data[0]=x;
+	data[1]=y;
+	data[2]=z;
+}
 
-		view->code[write_index++]=r_code::Atom::RPointer(0);	//	stdin is the only reference
-		//view->reference_set[0]=RetrieveStdin();
+void	Vec3::write(Atom	*code,uint16	&index)	const{
 
-		view->code[write_index++]=r_code::Atom::Node(input->senderNodeID());	//	org
-
-		return	view;
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	Timestamp::Timestamp(uint64	t):t(t){
-	}
-
-	void	Timestamp::write(r_code::vector<r_code::Atom>	&code,uint32	&index)	const{
-
-		code[index++]=Atom::Timestamp();
-		code[index++]=t>>32;
-		code[index++]=(t	&	0x00000000FFFFFFFF);
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	uint32	Vec3::Opcode;
-
-	const	char	*Vec3::ClassName="vec3";
-
-	void	Vec3::write(r_code::vector<r_code::Atom>	&code,uint32	&index)	const{
-
-		const	uint32	arity=3;
-
-		code[index++]=r_code::Atom::Object(Opcode,arity);
-		code[index++]=data[0];
-		code[index++]=data[1];
-		code[index++]=data[2];
-	}
+	const	uint16	arity=3;
+	code[index]=Atom::Object(Opcode,arity);
+	code[++index]=data[0];
+	code[++index]=data[1];
+	code[++index]=data[2];
 }

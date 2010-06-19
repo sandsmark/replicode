@@ -34,10 +34,51 @@
 #include	"preprocessor.h"
 
 
+#define	ENTITY_COUNT	3
+
 LOAD_MODULE(SampleIO)
 
+thread_ret thread_function_call	SampleIO::Sample(void	*args){
+
+	SampleIO	*_this=(SampleIO	*)args;
+
+	Timer	timer;
+	timer.start(_this->sampling_rate,_this->sampling_rate);
+
+	CodePayload	*entities[ENTITY_COUNT];
+	for(uint8	i=0;i<ENTITY_COUNT;++i)
+		entities[i]=Entity::New();
+
+	float32	delta=0.1;
+
+	while(1){
+
+		timer.wait();
+
+		//	send 3 entities and an update of their positions.
+		for(uint8	i=0;i<ENTITY_COUNT;++i){
+
+			NODE->send(_this,entities[i],NODE->id(),N::PRIMARY);
+
+			CodePayload	*m=MkVal<Vec3>::New(entities[i],/*Get("position")*/NULL,Vec3(0.1+delta,0.2+delta,0.3+delta));
+			NODE->send(_this,m,NODE->id(),N::PRIMARY);
+		}
+
+		delta+=0.1;
+	}
+
+	for(uint8	i=0;i<ENTITY_COUNT;++i)
+		delete	entities[i];
+
+	thread_ret_val(0);
+}
+
 void	SampleIO::initialize(){
+
+	Thread::start(Sample);
 }
 
 void	SampleIO::finalize(){
+
+	Thread::TerminateAndWait(this);
 }

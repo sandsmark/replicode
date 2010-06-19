@@ -44,20 +44,30 @@
 #define	OUTPUT	NODE->trace(N::APPLICATION)
 
 
-using	namespace	io;
+template<class	U>	class	NetworkMem:
+public	Module<U>,
+public	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>{
+protected:
+	NetworkMem();
+	~NetworkMem();
+public:
+	void	eject(r_exec::View	*view,uint16	nodeID);		//	RMem to RMem.
+	void	eject(r_exec::LObject	*command,uint16	nodeID);	//	RMem to I/O device.
+};
 
-MODULE_CLASS_BEGIN(RMem,Module<RMem>)
+#include	"r_mem_module.tpl.cpp"
+
+MODULE_CLASS_BEGIN(RMem,NetworkMem<RMem>)
 private:
-	r_exec::Mem	*mem;
 	void	initialize();
 	void	finalize();
+	void	load(r_comp::Image	*image);
 	void	decompile(r_comp::Image*image);
-	void	inject(r_comp::Image	*image);
-	void	inject(r_code::Object	*object,uint16	nodeID);
+	void	inject(RObject	*object,uint16	nodeID,STDGroupID	destination);
 public:
 	void	start(){
 		initialize();
-		OUTPUT<<"RMem "<<"started"<<std::endl;
+		OUTPUT<<"RMem "<<"got started"<<std::endl;
 	}
 	void	stop(){
 		finalize();
@@ -72,18 +82,16 @@ public:
 	void	react(SystemReady	*p){
 		OUTPUT<<"RMem "<<"got SysReady"<<std::endl;
 	}
-	void	react(InputCode	*p){
-		OUTPUT<<"RMem "<<"got input code"<<std::endl;
-		MkVal<Vec3>	*m=p->as<MkVal<Vec3> >();
-		inject(IORegister::GetObject(p),p->senderNodeID());	//	load input in the rMem
-	}
 	void	react(ImageMessage	*p){
 		OUTPUT<<"RMem "<<"got an image"<<std::endl;
 		r_comp::Image	*image=new	r_comp::Image();
 		image->load<ImageMessage>(p);
-		decompile(image);	//	for debugging
-		inject(image);		//	load objects in the rMem
+		load(image);	//	stop the mem, reload and restart.
 		delete	image;
+	}
+	void	react(CodePayload	*p){
+		OUTPUT<<"RMem "<<"got input code"<<std::endl;
+		inject(new	RObject(p),p->senderNodeID(),p->destination);	//	load input in the rMem.
 	}
 MODULE_CLASS_END(RMem)
 

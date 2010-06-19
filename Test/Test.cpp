@@ -11,7 +11,7 @@
 //#define PREPROCESSOR_TEST
 #define	R_MEM_TEST
 
-#ifdef	R_MEM_TEST
+//#ifdef	R_MEM_TEST
 #include	"mem.h"
 #include	"init.h"
 #endif
@@ -132,9 +132,9 @@ int32	main(int	argc,char	**argv){
 #ifdef	R_MEM_TEST
 		r_exec::Init("C:/Work/Replicode/Debug/usr_operators.dll",Time::Get,_metadata,*_image);
 
-		r_exec::Mem	*mem=new	r_exec::Mem();
+		r_exec::Mem<r_exec::LObject,r_exec::LObject::Hash,r_exec::LObject::Equal>	*mem=new	r_exec::Mem<r_exec::LObject,r_exec::LObject::Hash,r_exec::LObject::Equal>();
 
-		r_code::vector<r_code::Object	*>	ram_objects;
+		r_code::vector<r_code::Code	*>	ram_objects;
 		_image->getObjects(&_metadata,mem,ram_objects);
 
 		mem->init(100000,8,8);

@@ -29,12 +29,18 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"integration.h"
-#include	"Mem.h"
+#include	"init.h"
+#include	"replicode_classes.h"
 
 
 using	namespace	r_code;
 
+inline	uint64	_Now(){	return	module::Node::Get()->time();	}
+
 void	Init(){
 
+	r_exec::Init("C:/Work/Replicode/Debug/usr_operators.dll",_Now,"C:/Work/Replicode/Test/user.classes.replicode");
+	#define	REPLICODE_CLASS(C)	C::Opcode=r_exec::GetOpcode(C::ClassName);
+	#include	"replicode_class_def.h"
 	std::cout << "integration loaded"<<std::endl;
 }

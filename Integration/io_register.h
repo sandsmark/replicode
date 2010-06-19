@@ -31,35 +31,18 @@
 #ifndef	io_register_h
 #define	io_register_h
 
-#include	"object.h"
+#include	"../r_exec/object.h"
+#include	"../r_exec/init.h"
 
 
-class	InputCode;
-class	OutputCode;
+using	namespace	r_code;
+
+class	RCode;
 
 class	IORegister{
-private:
-	typedef	r_code::Object	*(*ObjectBuilder)(InputCode	*);
-	typedef	OutputCode		*(*CommandBuilder)(r_code::Object	*);
-
-	static	UNORDERED_MAP<uint32,IORegister>	Register;	//	indexed by opcodes
-
-	static	uint32	LoadClasses();
-	static	uint32	ClassLoader;
-	template<class	C>	static	uint32	LoadInputClass();
-	template<class	C>	static	uint32	LoadOutputClass();
-
-	ObjectBuilder	objectBuilder;	//	executed on the rMem nodes
-	CommandBuilder	commandBuilder;	//	executed on the rMem nodes
 public:
-	static	r_code::Object	*GetObject(InputCode	*input);	//	invoked upon reception by the rMem
-	static	OutputCode	*GetCommand(r_code::Object	*object);	//	invoked upon ejection by the rMem of a command to a device
-	static	uint32	GetOpcode(const	char	*class_name);
-	static	UNORDERED_MAP<std::string,r_code::Atom>	Classes;	//	opcodes retrieved by name
+	static	uint16	LoadClasses();
 };
-
-
-#include	"io_register.tpl.cpp"
 
 
 #endif

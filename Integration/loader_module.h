@@ -33,19 +33,20 @@
 
 #include	"integration.h"
 #include	"module_node.h"
-#include	"mem.h"
 
 #define	N		module::Node
 #define	NODE	module::Node::Get()
 #define	OUTPUT	NODE->trace(N::APPLICATION)
 
 
+//	Module that compiles code and broadcast the resulting image.
+//	Will be replaced by the Visualization System.
 MODULE_CLASS_BEGIN(Loader,Module<Loader>)
 private:
-	mBrane::sdk::P<ImageMessage>	image;
+	P<ImageMessage>	image;
 	void	initialize();
 	void	finalize();
-	void	compile(std::string		&filename);
+	void	compile(const	std::string	&filename);
 public:
 	void	start(){
 		initialize();
@@ -62,9 +63,7 @@ public:
 	}
 	void	react(SystemReady	*p){
 		OUTPUT<<"Loader "<<"got SysReady"<<std::endl;
-		std::string		filename("c:/work/replicode/test/test.4.replicode");
-		/*std::cout<<" file to compile: ";
-		std::cin>>filename;*/
+		std::string		filename("c:/work/replicode/test/test.4.replicode");	//	WARNING: remove !load user.classes.replicode: global refs are maintained between compilations.
 		compile(filename);
 		OUTPUT<<"Loader "<<"started"<<std::endl;
 		if(image!=NULL)

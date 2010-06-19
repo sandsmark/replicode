@@ -34,25 +34,38 @@
 #include	"integration.h"
 #include	"module_node.h"
 #include	"replicode_classes.h"
+#include	"opcodes.h"
 
 #define	N		module::Node
 #define	NODE	module::Node::Get()
 #define	OUTPUT	NODE->trace(N::APPLICATION)
 
 
-using	namespace	io;
+template<class	U>	class	ThreadedModule:
+public	Module<U>,
+public	Thread{
+};
 
-MODULE_CLASS_BEGIN(SampleIO,Module<SampleIO>)
+//	Demonstrates how to interface an I/O module to rMems.
+//	As an example, the module samples its environment: it identifies entities in the environment and periodically updates their positions (markers).
+//	This is performed in an internal thread controlled by a timer.
+//	Notice that entities have a resilience: if the module does not send them repeatedly, they will expire in the rMems,
+//	meaning that they will be considered not exisitng anymore.
+//	As a general rule, objects are sent to the rMems flat, i.e. they reference objects by their OIDs, instead of using pointers.
+//	Thus, such objects (e.g. entities) have to be sent first, and markers next.
+MODULE_CLASS_BEGIN(SampleIO,ThreadedModule<SampleIO>)
 private:
-	void	initialize();
-	void	finalize();
+	static	thread_ret thread_function_call	Sample(void	*args);
+
+	uint32	sampling_rate;	//	in us (49 days max).
+
+	void	initialize();	//	starts the thread.
+	void	finalize();		//	kills the thread.
 public:
 	void	start(){
-		initialize();
 		OUTPUT<<"SampleIO "<<"started"<<std::endl;
 	}
 	void	stop(){
-		finalize();
 		OUTPUT<<"SampleIO "<<"stopped"<<std::endl;
 	}
 	template<class	T>	Decision	decide(T	*p){
@@ -63,17 +76,24 @@ public:
 	}
 	void	react(SystemReady	*p){
 		OUTPUT<<"SampleIO "<<"got SysReady"<<std::endl;
-		InputCode	*_m=InputCode::Build<MkVal<Vec3> >();
-		MkVal<Vec3>	*m=_m->as<MkVal<Vec3> >();
-		m->entityID=1;
-		m->attributeID=2;
-		m->value.data[0]=0.1;
-		m->value.data[1]=0.2;
-		m->value.data[2]=0.3;
-		NODE->send(this,_m,N::PRIMARY);
 	}
-	void	react(OutputCode	*p){
+	//	Command layout:
+	//		cmd opcode
+	//		device id
+	//		function id
+	//		iptr to arg set
+	//		set
+	//		arg 1
+	//		...
+	//		arg n
+	void	react(uint16	deviceID,Command	*p){
 		OUTPUT<<"SampleIO "<<"got command"<<std::endl;
+		if(p->data(CMD_FUNCTION).asOpcode()==r_exec::GetOpcode("sample_io_start")){	//	function names as defined in usr.classes.replicode.
+		
+			sampling_rate=p->data(p->data(CMD_ARGS).asIndex()+1).asFloat();
+			initialize();
+		}else	if(p->data(CMD_FUNCTION).asOpcode()==r_exec::GetOpcode("sample_io_stop"))
+			finalize();
 	}
 MODULE_CLASS_END(SampleIO)
 

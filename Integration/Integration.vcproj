@@ -186,11 +186,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\io_register.cpp"
+				RelativePath=".\loader_module.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\io_register.tpl.cpp"
+				RelativePath=".\r_mem_module.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\r_mem_module.tpl.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -208,14 +212,6 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\loader_module.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\r_mem_module.cpp"
-				>
 			</File>
 			<File
 				RelativePath=".\replicode_classes.cpp"
@@ -253,10 +249,6 @@
 			>
 			<File
 				RelativePath=".\integration.h"
-				>
-			</File>
-			<File
-				RelativePath=".\io_register.h"
 				>
 			</File>
 			<File

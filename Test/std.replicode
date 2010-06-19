@@ -95,7 +95,6 @@
 !dfn (_swp :nb)
 !dfn (_new_dev :st :nb)
 !dfn (_del_dev :did)
-!dfn (_start :us :us)
 !dfn (_suspend)
 !dfn (_resume)
 !dfn (_stop)

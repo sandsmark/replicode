@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="r_comp.lib r_code.lib CoreLibrary.lib"
+				AdditionalDependencies="r_comp.lib r_code.lib CoreLibrary.lib r_exec.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(OutDir)"
 				GenerateDebugInformation="true"

@@ -28,20 +28,10 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-template<class	C>	static	uint32	IORegister::LoadInputClass(){
+template<class	C>	static	void	IORegister::LoadClass(){
 
 	IORegister	r;
 	r.objectBuilder=C::GetObject;
-	uint32	opcode=GetOpcode(C::ClassName);
-	Register[opcode]=r;
-	return	0;
-}
-
-template<class	C>	static	uint32	IORegister::LoadOutputClass(){
-
-	IORegister	r;
-	r.commandBuilder=C::GetCommand;
-	uint32	opcode=GetOpcode(C::ClassName);
-	Register[opcode]=r;
-	return	0;
+	
+	Register[C::Opcode]=r;
 }

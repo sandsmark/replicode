@@ -34,57 +34,49 @@
 #include	"r_mem_class.h"
 
 
-namespace	io{
+class	RMem;
 
-	//	Utility classes.
+//	Standard classes.
 
-	//	Default view for inputs:
-	//	ijt=now
-	//	sln=1
-	//	res=100000us
-	//	grp=stdin
-	//	org=sending node
-	class	View{
-	public:
-		static	const	char	*ClassName;
-		static	uint32	Opcode;
-		static	r_code::View	*GetView(InputCode	*input);	//	executed on the rMem nodes
-	};
+class	Entity{
+public:
+	static	const	char		*ClassName;
+	static			uint16		Opcode;
+	static			CodePayload	*New();
+};
 
-	class	Timestamp{
-	public:
-		uint64	t;
-		Timestamp(uint64	t);
-		void	write(r_code::vector<r_code::Atom>	&code,uint32	&index)	const;
-	};
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
+class	Vec3{
+public:
+	static	const	char	*ClassName;
+	static			uint16	Opcode;
+	static	const	uint16	CodeSize;
 
-	class	Vec3{
-	public:
-		static	const	char	*ClassName;
-		static	uint32	Opcode;
-		float32	data[3];	//	[x|y|z]
-		void	write(r_code::vector<r_code::Atom>	&code,uint32	&index)	const;	//	writes the data at the specified index in the given arry of atoms; updates the index.
-	};
+	float32	data[3];	//	[x|y|z].
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	Vec3(float32	x,float32	y,float32	z);
 
-	//	User-defined sys classes.
-	//	Classes defined for casting purpose.
-	//	Constructors/destructors will not be called.
-	//	Do not define virtual functions.
+	void	write(Atom	*code,uint16	&index)	const;	//	writes the data at the specified index in the given array of atoms; updates the index to the last writing location.
+};
 
-	template<class	V>	class	MkVal{
-	public:
-		static	const	char	*ClassName;
-		static	r_code::Object	*GetObject(InputCode	*input);	//	executed on the rMem nodes
-		uint32	opcode;
-		uint32	entityID;
-		uint32	attributeID;
-		V		value;
-	};
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//	User-defined sys classes.
+//	Prototype:
+//	class	X{
+//	public:
+//		static	const	char	*ClassName;	//	initilaize with the name as define in user.classes.replicode.
+//		static	uint16			Opcode;		//	will be initialized by the IORegister.
+//		static					CodePayload	*New(... args ...);	//	executed by IO modules for sending.
+//	};
+
+template<class	V>	class	MkVal{
+public:
+	static	const	char		*ClassName;
+	static			uint16		Opcode;
+	static			CodePayload	*New(CodePayload	*entity,CodePayload	*attribute,V	value);
+};
 
 
 #include	"replicode_classes.tpl.cpp"

@@ -5,6 +5,9 @@
 !class (mk.val (_obj {object: attribute: value:}))
 !class (mk.tag (_obj {object: tag:st}))
 
+!dfn (sample_io_start :nb)
+!dfn (sample_io_stop)
+
 root:(grp
 1; upr
 1; spr

@@ -38,45 +38,61 @@ LOAD_MODULE(RMem)
 
 void	RMem::initialize(){
 
-	std::vector<r_code::Object	*>	initial_objects;	//	empty
+	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::init(100000,8,8);
 
-	//	build the rMem
-	mem=r_exec::Mem::create(
-		10000, // resilience update period: 10ms
-		10000, // base update period: 10ms
-		IORegister::Classes,
-		initial_objects,
-		NULL
-	);
+	r_code::vector<r_code::Code	*>	objects;
+	r_exec::Seed.getObjects(&r_exec::Metadata,this,objects);
+	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::load(objects.as_std());
 }
 
 void	RMem::finalize(){
 
-	delete	mem;
+	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::stop();
 }
 
 void	RMem::decompile(r_comp::Image	*image){
 
 	r_comp::Decompiler	decompiler;
 	std::ostringstream	decompiled_code;
+	decompiler.init(&r_exec::Metadata);
 	decompiler.decompile(image,&decompiled_code);
 	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 }
 
-void	RMem::inject(r_comp::Image	*image){
+void	RMem::load(r_comp::Image	*image){
 
-	r_code::vector<r_code::Object	*>	objects;
-	*image>>objects;
-	for(uint32	i=0;i<objects.size();++i){
+	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::stop();
 
-		r_code::Object	*object=objects[i];
-		inject(object,NODE->id());
-	}
+	decompile(image);	//	for debugging.
+
+	r_code::vector<r_code::Code	*>	objects;
+	image->getObjects(&r_exec::Metadata,this,objects);
+
+	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::load(objects.as_std());
+
+	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::start();
 }
 
-void	RMem::inject(r_code::Object	*object,uint16	nodeID){
+void	RMem::inject(RObject	*object,uint16	nodeID,STDGroupID	destination){
 
-	//	an object may have several views: inject the object once per view
-	//for(uint32	i=0;i<object->view_set.size();++i)
-	//	mem->receive(object,object->view_set[i],nodeID,r_exec::ObjectReceiver::INPUT_GROUP);
+	r_exec::View	*view=new	r_exec::View();
+
+	const	uint32	arity=6;	//	reminder: opcode not included in the arity
+	uint16	write_index=0;
+	uint16	extent_index=arity;
+
+	view->code(write_index++)=Atom::SSet(r_exec::View::ViewOpcode,arity);
+	view->code(write_index++)=Atom::UndefinedFloat();			//	oid; will be set by the rMem.
+	view->code(write_index++)=Atom::IPointer(extent_index);		//	ijt; will be set by the rMem.
+	Timestamp::Set(&view->code(write_index-1),r_exec::Now());
+	view->code(write_index++)=Atom::Float(1.0);					//	sln.
+	view->code(write_index++)=Atom::Float(1.0);					//	res is set to 1 upr of the destination group.
+	view->code(write_index++)=Atom::RPointer(0);				//	stdin is the only reference.
+	view->code(write_index++)=Atom::Node(nodeID);				//	org.
+	if(destination==r_exec::_Mem::STDIN)
+		view->references[0]=r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::get_stdin();
+	else
+		view->references[0]=r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::get_stdin();
+
+	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::inject(object,view);
 }
