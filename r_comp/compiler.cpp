@@ -83,7 +83,6 @@ namespace	r_comp{
 	bool	Compiler::compile(std::istream	*stream,r_comp::Image	*_image,r_comp::Metadata	*_metadata,std::string	&error,bool	trace){
 
 		this->in_stream=stream;
-		this->error=error;
 		this->err=false;
 		this->trace=trace;
 
@@ -95,6 +94,7 @@ namespace	r_comp{
 			switch(in_stream->peek()){
 			case	'!':
 				set_error("error: found preprocessor directive");
+				error=this->error;
 				delete	_image;
 				return	false;
 			default:
@@ -102,6 +102,7 @@ namespace	r_comp{
 					return	true;
 				if(!read_sys_object()){
 
+					error=this->error;
 					delete	_image;
 					return	false;
 				}

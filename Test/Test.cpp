@@ -9,7 +9,7 @@
 #include	<iostream>
 
 //#define PREPROCESSOR_TEST
-#define	R_MEM_TEST
+//#define	R_MEM_TEST
 
 //#ifdef	R_MEM_TEST
 #include	"mem.h"

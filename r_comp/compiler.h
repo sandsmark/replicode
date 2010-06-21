@@ -46,7 +46,7 @@ namespace	r_comp{
 	private:
 		
 		std::istream	*in_stream;
-		std::string		&error;
+		std::string		error;
 
 		bool	trace;
 
