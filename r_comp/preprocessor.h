@@ -62,6 +62,8 @@ namespace	r_comp{
 		RepliStruct(RepliStruct::Type type);
 		~RepliStruct();
 
+		void	reset();	//	remove rags that are objects.
+
 		uint32	getIndent(std::istream *stream);
 		int32	parse(std::istream	*stream,uint32	&curIndent,uint32	&prevIndent,int32	paramExpect=0);
 		bool	parseDirective(std::istream *stream,uint32	&curIndent, uint32	&prevIndent);

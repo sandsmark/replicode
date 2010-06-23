@@ -50,6 +50,24 @@ RepliStruct::~RepliStruct() {
 	parent = NULL;
 }
 
+void	RepliStruct::reset(){
+
+	std::list<RepliStruct*>::const_iterator	arg;
+	for(arg=args.begin();arg!=args.end();){
+
+		switch((*arg)->type){
+		case	RepliStruct::Atom:
+		case	RepliStruct::Structure:
+		case	RepliStruct::Development:
+		case	RepliStruct::Set:
+			arg=args.erase(arg);
+			break;
+		default:
+			++arg;
+		}
+	}
+}
+
 uint32	RepliStruct::getIndent(std::istream	*stream){
 
 	uint32	count=0;
@@ -946,6 +964,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 								  std::ostringstream	*outstream,
 								  std::string			&error,
 								  Metadata				*metadata){
+
+		root->reset();	//	trims root from previously preprocessed objects.
 
 		uint32	a=0, b=0;
 		if(root->parse(stream,a,b)<0){
