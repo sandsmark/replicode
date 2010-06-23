@@ -36,13 +36,14 @@
 
 typedef	bool	(*Operator)(const	r_exec::Context	&,uint16	&);
 
+typedef	uint16	(*OpcodeRetriever)(const	char	*);
 
 //	User-defined operators for vec3: add, sub, mul, dis.
 
 extern	"C"{
-void	dll_export	Init(UNORDERED_MAP<std::string,uint16>	&opcodes);
+void	dll_export	Init(OpcodeRetriever	r);
 uint16	dll_export	GetOperatorCount();
-void	dll_export	GetOperator(Operator	&op,std::string	&op_name);
+void	dll_export	GetOperator(Operator	&op,char	*op_name);
 }
 
 

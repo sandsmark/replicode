@@ -131,9 +131,11 @@ bool	dis(const	r_exec::Context	&context,uint16	&index){
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void	Init(UNORDERED_MAP<std::string,uint16>	&opcodes){
+void	Init(OpcodeRetriever	r){
 
-	Vec3Opcode=opcodes.find("vec3")->second;
+	const	char	*vec3="vec3";
+
+	Vec3Opcode=r(vec3);
 
 	std::cout<<"usr operators initialized"<<std::endl;
 }
@@ -143,14 +145,15 @@ uint16	GetOperatorCount(){
 	return	4;
 }
 
-void	GetOperator(Operator	&op,std::string	&op_name){
+void	GetOperator(Operator	&op,char	*op_name){
 
 	static	uint16	op_index=0;
 
 	if(op_index==0){
 
 		op=add;
-		op_name=std::string("add");
+		std::string	s="add";
+		memcpy(op_name,s.c_str(),s.length());
 		++op_index;
 		return;
 	}
@@ -158,7 +161,8 @@ void	GetOperator(Operator	&op,std::string	&op_name){
 	if(op_index==1){
 
 		op=sub;
-		op_name=std::string("sub");
+		std::string	s="sub";
+		memcpy(op_name,s.c_str(),s.length());
 		++op_index;
 		return;
 	}
@@ -166,7 +170,8 @@ void	GetOperator(Operator	&op,std::string	&op_name){
 	if(op_index==2){
 
 		op=mul;
-		op_name=std::string("mul");
+		std::string	s="mul";
+		memcpy(op_name,s.c_str(),s.length());
 		++op_index;
 		return;
 	}
@@ -174,7 +179,8 @@ void	GetOperator(Operator	&op,std::string	&op_name){
 	if(op_index==3){
 
 		op=dis;
-		op_name=std::string("dis");
+		std::string	s="dis";
+		memcpy(op_name,s.c_str(),s.length());
 		++op_index;
 		return;
 	}
