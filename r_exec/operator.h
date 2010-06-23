@@ -8,7 +8,7 @@ namespace	r_exec{
 
 	class	Operator{
 	private:
-		static	std::vector<Operator>	Operators;	//	indexed by opcodes.
+		static	r_code::vector<Operator>	Operators;	//	indexed by opcodes.
 
 		bool	(*_operator)(const	Context	&,uint16	&);
 		bool	(*_overload)(const	Context	&,uint16	&);

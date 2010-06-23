@@ -96,6 +96,7 @@ namespace	r_exec{
 
 				//	init hosts' member_set and object's view_map.
 				View	*view=(View	*)object->initial_views[i];
+				view->object=object;
 				Group	*host=view->get_host();
 				object->views.insert(view);
 

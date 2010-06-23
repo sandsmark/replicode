@@ -75,7 +75,7 @@ namespace	r_exec{
 	void	View::reset_init_values(){
 
 		initial_sln=get_sln();
-		if(object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM)
+		if(object!=NULL	&&	object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM)
 			initial_act=get_act_vis();
 		else
 			initial_act=0;

@@ -40,6 +40,8 @@ namespace	r_exec{
 							const	r_comp::Image		&seed);
 
 	uint16	r_exec_dll	GetOpcode(const	char	*name);	//	classes, operators and functions.
+
+	std::string	r_exec_dll	GetAxiomName(const	uint16	index);	//	for constant objects (ex: self, position, and other axioms).
 }
 
 

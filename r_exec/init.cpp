@@ -69,12 +69,12 @@ namespace	r_exec{
 		for(it=Metadata.classes.begin();it!=Metadata.classes.end();++it){
 
 			Opcodes[it->first]=it->second.atom.asOpcode();
-			std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
+			//std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
 		}
 		for(it=Metadata.sys_classes.begin();it!=Metadata.sys_classes.end();++it){
 
 			Opcodes[it->first]=it->second.atom.asOpcode();
-			std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
+			//std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
 		}
 
 		//	load class Opcodes.
@@ -225,5 +225,10 @@ namespace	r_exec{
 		if(it==Opcodes.end())
 			return	0xFFFF;
 		return	it->second;
+	}
+
+	std::string	GetAxiomName(const	uint16	index){
+
+		return	Compiler.getObjectName(index);
 	}
 }

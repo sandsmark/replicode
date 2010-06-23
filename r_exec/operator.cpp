@@ -10,13 +10,10 @@
 
 namespace	r_exec{
 
-	std::vector<Operator>	Operator::Operators;
+	r_code::vector<Operator>	Operator::Operators;
 
 	void	Operator::Register(uint16	opcode,bool	(*o)(const	Context	&,uint16	&index)){
 
-		if(opcode>=Operators.size())
-			Operators.reserve(opcode+1);
-			
 		if(Operators[opcode]._operator)
 			Operators[opcode].setOverload(o);
 		else
