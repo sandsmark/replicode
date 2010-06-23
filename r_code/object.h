@@ -112,7 +112,7 @@ namespace	r_code{
 		template<class	V>	void	build_views(SysObject	*source){
 
 			for(uint16	i=0;i<source->views.size();++i)
-				initial_views[i]=new	V(source->views[i],this);
+				initial_views[i]=new	V(source->views[i],NULL);	//	no ref to the object: avoids circular deletion when not used in rMem.
 		}
 	public:
 		virtual	Atom	&code(uint16	i)=0;
