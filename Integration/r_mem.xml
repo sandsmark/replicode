@@ -1,22 +1,35 @@
 <ApplicationConfiguration user_library="integration">
-	<!--first, space definitions-->
+
+  <Parameters>
+    <Parameter value="C:/Work/Replicode/Debug/usr_operators.dll" type="string"/>
+    <Parameter value="C:/Work/Replicode/Test/user.classes.replicode" type="string"/>
+  </Parameters>
+  
 	<Space name="space1" activation_threshold="0.5"/><!--name is mandatory-->
 	<!--second, module instantiations-->
 	<Module class="RMem" name="r_mem" host="local"><!--name optional-->
 		<Projection space="space1" activation_level="1">
 			<Subscription message_class="SystemReady"/>
       <Subscription message_class="ImageMessage"/>
-      <Subscription message_class="InputCode"/>
+      <Subscription message_class="CodePayload"/>
 		</Projection>
 	</Module>
   <Module class="SampleIO" name="sample_io" host="local">
     <Projection space="space1" activation_level="1">
       <Subscription message_class="SystemReady"/>
-      <Subscription message_class="OutputCode"/>
+      <Subscription message_class="Command"/>
       <Subscription stream="0"/>
     </Projection>
   </Module>
   <Module class="Loader" name="loader" host="local">
+    <Parameters>
+      <Parameter value="c:/work/replicode/test/test.integration.replicode" type="string"/>
+    </Parameters>
+    <Projection space="space1" activation_level="1">
+      <Subscription message_class="SystemReady"/>
+    </Projection>
+  </Module>
+  <Module class="Visualizer" name="visualizer" host="local">
     <Projection space="space1" activation_level="1">
       <Subscription message_class="SystemReady"/>
     </Projection>

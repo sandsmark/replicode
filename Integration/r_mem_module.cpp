@@ -37,17 +37,17 @@
 LOAD_MODULE(RMem)
 
 void	RMem::initialize(){
-
+/*
 	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::init(100000,8,8);
 
 	r_code::vector<r_code::Code	*>	objects;
 	r_exec::Seed.getObjects(&r_exec::Metadata,this,objects);
 	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::load(objects.as_std());
-}
+*/}
 
 void	RMem::finalize(){
 
-	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::stop();
+	//r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::stop();
 }
 
 void	RMem::decompile(r_comp::Image	*image){
@@ -61,20 +61,20 @@ void	RMem::decompile(r_comp::Image	*image){
 
 void	RMem::load(r_comp::Image	*image){
 
-	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::stop();
+	//r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::stop();
 
 	decompile(image);	//	for debugging.
 
 	r_code::vector<r_code::Code	*>	objects;
 	image->getObjects(&r_exec::Metadata,this,objects);
 
-	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::load(objects.as_std());
+	//r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::load(objects.as_std());
 
-	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::start();
+	//r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::start();
 }
 
 void	RMem::inject(RObject	*object,uint16	nodeID,STDGroupID	destination){
-
+/*
 	r_exec::View	*view=new	r_exec::View();
 
 	const	uint32	arity=6;	//	reminder: opcode not included in the arity
@@ -95,4 +95,4 @@ void	RMem::inject(RObject	*object,uint16	nodeID,STDGroupID	destination){
 		view->references[0]=r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::get_stdin();
 
 	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::inject(object,view);
-}
+*/}

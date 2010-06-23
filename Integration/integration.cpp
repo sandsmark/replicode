@@ -35,12 +35,25 @@
 
 using	namespace	r_code;
 
-inline	uint64	_Now(){	return	module::Node::Get()->time();	}
+inline	uint64	_Now(){	return	module::Node::Get()->time();	}	//	have the rMem synchronized with all modules in the system.
 
-void	Init(){
+void	Init(const	std::vector<word32>	&numbers,const	std::vector<std::string>	&strings){
 
-	r_exec::Init("C:/Work/Replicode/Debug/usr_operators.dll",_Now,"C:/Work/Replicode/Test/user.classes.replicode");
+	r_exec::Init(strings[0].c_str(),_Now,strings[1].c_str());
 	#define	REPLICODE_CLASS(C)	C::Opcode=r_exec::GetOpcode(C::ClassName);
 	#include	"replicode_class_def.h"
-	std::cout << "integration loaded"<<std::endl;
+
+	//	add constant objects: all objects found except groups.
+	r_code::vector<r_code::Code	*>	objects;
+	r_exec::Seed.getObjects<RObject>(objects);
+	for(uint16	i=0;i<objects.size();++i){
+
+		if(objects[i]->code(0).asOpcode()!=r_exec::Opcodes::Group){
+
+			module::Node::Get()->addConstantObject(((RObject	*)objects[i])->get_payload(),r_exec::GetAxiomName(i));
+			delete	objects[i];	//	the stems are discarded; we olny keep the constant payloads.
+		}
+	}
+
+	std::cout<<"integration library loaded"<<std::endl;
 }

@@ -1,5 +1,3 @@
-!load C:/Work/Replicode/test/user.classes.replicode
-
 P1:(pgm
 []; tpl
    (ptn ref_val:(mk.val : position ::) |[]); no views can be passed with an object as a tpl arg.

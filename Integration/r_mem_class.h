@@ -74,6 +74,8 @@ public:
 
 ////	RCode	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+class	RObject;
+
 template<class	U>	class	CodeHeader:
 public	Message<U,Memory>{
 public:
@@ -81,9 +83,12 @@ public:
 
 	r_exec::_Mem::STDGroupID	destination;	//	unused except when received by RMems.
 	uint32						code_size;		//	in the CStorage below.
+	RObject						*stem;			//	used by rMems to retrieve the RObject associated with a constant or cached shared object.
 };
 
 //	Stores the code and the references in one array.
+//	That's the code that travels: from rMem to rMem or IO device to rMem.
+//	When received by a rMem, a new RObject is created to hold the payload, except when the payload is a constant object (follow stem instead).
 class	CodePayload:
 public	CStorage<CodeHeader<CodePayload>,Atom>{
 public:
@@ -108,31 +113,44 @@ public:
 		for(uint16	i=0;i<object->references_size();++i)
 			*((P<Code>	*)&data(code_size+i))=object->references(i);
 	}
+
+	uint16		ptrCount()	const{	return	_capacity-code_size;	}
+	__Payload	*getPtr(uint16	i)	const;	//	returns the payloads held by the RObjects.
 };
 
-//	Instantiated on the RMem side (not the device side).
+//	Instantiated on the RMem side (not on the device side).
+//	This code does not travel.
 class	RCode:
 public	r_code::Code{
 protected:
 	P<CodePayload>	payload;
+	Atom			*_code;		//	taken from the payload to avoid frequent indirections
+	uint16			_code_size;	//	idem.
 public:
-	Atom	&code(uint16	i){	return	payload->data(i);	}
-	Atom	&code(uint16	i)	const{	return	payload->data(i);	}
-	uint16	code_size()	const{	return	payload->code_size;	}
-	P<Code>	&references(uint16	i){	return	*((P<Code>	*)&payload->data(payload->code_size+i));	}
-	P<Code>	&references(uint16	i)	const{	return	*((P<Code>	*)&payload->data(payload->code_size+i));	}
-	uint16	references_size()	const{	return	payload->getCapacity()-payload->code_size;	}
+	Atom	&code(uint16	i){	return	_code[i];	}
+	Atom	&code(uint16	i)	const{	return	_code[i];	}
+	uint16	code_size()	const{	return	_code_size;	}
+	P<Code>	&references(uint16	i){	return	*((P<Code>	*)&_code[_code_size+i]);	}
+	P<Code>	&references(uint16	i)	const{	return	*((P<Code>	*)&_code[_code_size+i]);	}
+	uint16	references_size()	const{	return	payload->getCapacity()-_code_size;	}
 
 	RCode():payload(NULL){}
 	~RCode(){}
 
 	bool	is_compact()	const{	return	true;	}
 
+	void	set_payload(CodePayload	*p,RObject	*s){
+		payload=p;
+		_code=payload->data();
+		payload->stem=s;
+		_code_size=payload->code_size;
+	}
 	CodePayload	*get_payload()	const{	return	payload;	}
 };
 
 //	RemoteObject.
 //	Same level of abstraction as r_exec::LObject.
+//	This code does not travel: it acts like a stem holding the payload and lives inside the rMems; ejections actually eject the payload.
 class	RObject:
 public	r_exec::Object<RCode>{
 public:
@@ -143,7 +161,7 @@ public:
 			return	(RObject	*)object;
 
 		RObject	*r=new	RObject();
-		r->payload=new(object->code_size()+object->references_size())	CodePayload(object->code_size());
+		r->set_payload(new(object->code_size()+object->references_size())	CodePayload(object->code_size()),r);
 		for(uint16	i=0;i<object->code_size();++i)
 			r->code(i)=object->code(i);
 		for(uint16	i=0;i<object->references_size();++i)
@@ -152,15 +170,15 @@ public:
 	}
 
 	RObject():r_exec::Object<RCode>(){}
-	RObject(r_code::SysObject	*source,r_code::Mem	*m):r_exec::Object<RCode>(mem){
+	RObject(r_code::SysObject	*source,r_code::Mem	*m):r_exec::Object<RCode>(m){
 		
+		set_payload(new(source->code.size()+source->references.size())	CodePayload(source->code.size()),this);
 		load(source);
 		build_views<r_exec::View>(source);
-		payload=new(source->code.size()+source->references.size())	CodePayload(source->code.size());
 	}
 	RObject(CodePayload	*p):r_exec::Object<RCode>(){
 
-		payload=p;
+		set_payload(p,this);
 	}
 	~RObject(){}
 };
@@ -176,6 +194,7 @@ public:
 };
 
 //	Stores the code and the references in one array.
+//	This code travels from rMems to IO devices.
 class	Command:
 public	CStorage<CommandHeader<Command>,Atom>{
 public:

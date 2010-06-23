@@ -190,6 +190,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\r_mem_class.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\r_mem_module.cpp"
 				>
 			</File>
@@ -241,6 +245,10 @@
 				RelativePath=".\sample_io_module.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\visualization_module.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -277,6 +285,10 @@
 			</File>
 			<File
 				RelativePath=".\sample_io_module.h"
+				>
+			</File>
+			<File
+				RelativePath=".\visualization_module.h"
 				>
 			</File>
 		</Filter>

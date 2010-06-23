@@ -60,7 +60,7 @@ thread_ret thread_function_call	SampleIO::Sample(void	*args){
 
 			NODE->send(_this,entities[i],NODE->id(),N::PRIMARY);
 
-			CodePayload	*m=MkVal<Vec3>::New(entities[i],/*Get("position")*/NULL,Vec3(0.1+delta,0.2+delta,0.3+delta));
+			CodePayload	*m=MkVal<Vec3>::New(entities[i],(CodePayload	*)NODE->getConstantObject("position"),Vec3(0.1+delta,0.2+delta,0.3+delta));
 			NODE->send(_this,m,NODE->id(),N::PRIMARY);
 		}
 

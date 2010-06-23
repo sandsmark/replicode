@@ -43,11 +43,15 @@
 //	Will be replaced by the Visualization System.
 MODULE_CLASS_BEGIN(Loader,Module<Loader>)
 private:
+	std::string	source_code_path;
 	P<ImageMessage>	image;
 	void	initialize();
 	void	finalize();
 	void	compile(const	std::string	&filename);
 public:
+	void	loadParameters(const	std::vector<word32>	&numbers,const	std::vector<std::string>	&strings){
+		source_code_path=strings[0];
+	}
 	void	start(){
 		initialize();
 	}
@@ -63,8 +67,8 @@ public:
 	}
 	void	react(SystemReady	*p){
 		OUTPUT<<"Loader "<<"got SysReady"<<std::endl;
-		std::string		filename("c:/work/replicode/test/test.4.replicode");	//	WARNING: remove !load user.classes.replicode: global refs are maintained between compilations.
-		compile(filename);
+		//	WARNING: remove !load user.classes.replicode: global refs are maintained between compilations.
+		compile(source_code_path);
 		OUTPUT<<"Loader "<<"started"<<std::endl;
 		if(image!=NULL)
 			NODE->send(this,image,N::PRIMARY);

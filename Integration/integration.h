@@ -38,7 +38,7 @@
 
 
 extern	"C"{
-void	dll_export	Init();
+void	dll_export	Init(const	std::vector<word32>	&numbers,const	std::vector<std::string>	&strings);
 }
 
 
