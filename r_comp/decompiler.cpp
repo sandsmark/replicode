@@ -169,6 +169,12 @@ namespace	r_comp{
 		case	Atom::MARKER:
 			*out_stream<<metadata->class_names[current_object->code[read_index].asOpcode()];
 			break;
+		case	Atom::INSTANTIATED_PROGRAM:
+			*out_stream<<"ipgm";
+			break;
+		case	Atom::GROUP:
+			*out_stream<<"grp";
+			break;
 		default:
 			*out_stream<<"undefined-class";
 			break;

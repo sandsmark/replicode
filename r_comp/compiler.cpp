@@ -2444,4 +2444,15 @@ return_false:
 		return	false;
 	}
 
+	std::string	Compiler::getObjectName(const	uint16	index)	const{
+
+		UNORDERED_MAP<std::string,Reference>::const_iterator	r;
+		for(r=global_references.begin();r!=global_references.end();++r){
+
+			if(r->second.index==index)
+				return	r->first;
+		}
+		std::string	s;
+		return	s;
+	}
 }

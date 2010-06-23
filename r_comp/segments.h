@@ -142,6 +142,7 @@ namespace	r_comp{
 		uint32	map_offset;
 		UNORDERED_MAP<r_code::Code	*,uint32>	ptrs_to_indices;	//	used for >> in memory.
 		void	buildReferences(SysObject	*sys_object,r_code::Code	*object,uint32	object_index);
+		void	unpackObjects(r_code::vector<Code	*>	&ram_objects);
 	public:
 		ObjectMap			object_map;
 		CodeSegment			code_segment;
@@ -153,6 +154,15 @@ namespace	r_comp{
 		void	addObject(SysObject	*object);
 
 		void	getObjects(Metadata	*metadata,Mem	*mem,r_code::vector<r_code::Code	*>	&ram_objects);
+		template<class	O>	void	getObjects(r_code::vector<Code	*>	&ram_objects){
+
+			for(uint32	i=0;i<code_segment.objects.size();++i){
+
+				uint16	opcode=code_segment.objects[i]->code[0].asOpcode();
+				ram_objects[i]=new	O(code_segment.objects[i],NULL);
+			}
+			unpackObjects(ram_objects);
+		}
 
 		Image	&operator	<<	(r_code::vector<r_code::Code	*>	&ram_objects);
 		Image	&operator	<<	(r_code::Code	*object);
