@@ -675,7 +675,7 @@ failure:
 			return	false;
 		}
 
-		View	*v=(View	*)_object->find_view(_group);	//	returns a copy of the view, if any.
+		View	*v=(View	*)_object->find_view(_group,true);	//	returns a copy of the view, if any.
 		if(v){	//	copy the view in the value array.
 
 			uint16	atom_count=v->code(0).getAtomCount();

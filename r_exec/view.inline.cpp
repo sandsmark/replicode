@@ -157,6 +157,6 @@ namespace	r_exec{
 
 	inline	bool	NotificationView::isNotification()	const{
 
-		return	false;
+		return	true;
 	}
 }

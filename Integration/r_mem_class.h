@@ -152,7 +152,7 @@ public:
 //	Same level of abstraction as r_exec::LObject.
 //	This code does not travel: it acts like a stem holding the payload and lives inside the rMems; ejections actually eject the payload.
 class	RObject:
-public	r_exec::Object<RCode>{
+public	r_exec::Object<RCode,RObject>{
 public:
 	static	bool	RequiresPacking(){	return	true;	}
 	static	RObject	*Pack(Code	*object){	//	no need to copy any views or markers, there are none (the object is freshly built).
@@ -169,14 +169,14 @@ public:
 		return	r;
 	}
 
-	RObject():r_exec::Object<RCode>(){}
-	RObject(r_code::SysObject	*source,r_code::Mem	*m):r_exec::Object<RCode>(m){
+	RObject():r_exec::Object<RCode,RObject>(){}
+	RObject(r_code::SysObject	*source,r_code::Mem	*m):r_exec::Object<RCode,RObject>(m){
 		
 		set_payload(new(source->code.size()+source->references.size())	CodePayload(source->code.size()),this);
 		load(source);
 		build_views<r_exec::View>(source);
 	}
-	RObject(CodePayload	*p):r_exec::Object<RCode>(){
+	RObject(CodePayload	*p):r_exec::Object<RCode,RObject>(){
 
 		set_payload(p,this);
 	}

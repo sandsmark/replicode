@@ -178,7 +178,6 @@ grp1:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-1; res_ntf_prd
 root; ntf_grp
 |[]; view
 |[]; mks
@@ -220,7 +219,6 @@ grp2:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-1; res_ntf_prd
 root; ntf_grp
 |[]; view
 |[]; mks
@@ -262,7 +260,6 @@ grp3:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-1; res_ntf_prd
 root; ntf_grp
 |[]; view
 |[]; mks

@@ -144,7 +144,7 @@ namespace	r_code{
 
 		virtual	void	mod(uint16	member_index,float32	value){};
 		virtual	void	set(uint16	member_index,float32	value){};
-		virtual	View	*find_view(Code	*group){	return	NULL;	}
+		virtual	View	*find_view(Code	*group,bool	lock){	return	NULL;	}
 		virtual	bool	is_compact()	const{	return	false;	}
 		virtual	void	add_reference(Code	*object)	const{}
 	};
@@ -174,7 +174,6 @@ namespace	r_code{
 		virtual	Code	*buildObject(SysObject	*source)=0;
 		virtual	Code	*buildGroup(SysObject	*source)=0;
 		virtual	void	deleteObject(Code	*object)=0;
-		virtual	View	*find_view(Code	*object,Code	*group)=0;
 	};
 }
 

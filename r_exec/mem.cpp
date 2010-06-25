@@ -9,12 +9,12 @@
 
 namespace	r_exec{
 
-	_Mem::_Mem():need_reset(false){
+	_Mem::_Mem():state(NOT_STARTED){
 	}
 
 	_Mem::~_Mem(){
 
-		if(need_reset)
+		if(state==STARTED)
 			reset();
 		root=NULL;
 	}
@@ -37,11 +37,27 @@ namespace	r_exec{
 		for(i=0;i<time_core_count;++i)
 			delete	time_cores[i];
 		delete[]	time_cores;
+
+		delete	object_register_sem;
+		delete	objects_sem;
+	}
+
+	_Mem::State	_Mem::get_state(){
+
+		stateCS.enter();
+		State	s=state;
+		stateCS.leave();
+
+		return	s;
 	}
 
 	////////////////////////////////////////////////////////////////
 
 	void	_Mem::stop(){
+
+		stateCS.enter();
+		state=STOPPED;
+		stateCS.leave();
 
 		uint32	i;
 		for(i=0;i<reduction_core_count;++i)
@@ -50,28 +66,11 @@ namespace	r_exec{
 			Thread::TerminateAndWait(time_cores[i]);
 
 		reset();
-		need_reset=false;
+
+		Thread::Sleep(1000);	//	wait for the delegate cores to finish; assumes 1s is the max upr.
 
 		reduction_job_queue.clear();
 		time_job_queue.clear();
-	}
-	
-	void	_Mem::suspend(){
-
-		uint32	i;
-		for(i=0;i<reduction_core_count;++i)
-			reduction_cores[i]->suspend();
-		for(i=0;i<time_core_count;++i)
-			time_cores[i]->suspend();
-	}
-	
-	void	_Mem::resume(){
-
-		uint32	i;
-		for(i=0;i<reduction_core_count;++i)
-			reduction_cores[i]->resume();
-		for(i=0;i<time_core_count;++i)
-			time_cores[i]->resume();
 	}
 
 	////////////////////////////////////////////////////////////////

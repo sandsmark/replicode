@@ -28,7 +28,7 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-template<class	U>	NetworkMem<U>::NetworkMem():r_exec::Mem<RObject,RObject::Hash,RObject::Equal>(){
+template<class	U>	NetworkMem<U>::NetworkMem():r_exec::Mem<RObject>(){
 }
 
 template<class	U>	NetworkMem<U>::~NetworkMem(){

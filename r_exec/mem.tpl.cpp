@@ -9,77 +9,51 @@
 
 namespace	r_exec{
 
-	template<class	O,class	H,class	E>	Mem<O,H,E>::Mem(){
-
-		object_register_sem=new	FastSemaphore(1,1);
-		objects_sem=new	FastSemaphore(1,1);
+	template<class	O>	Mem<O>::Mem(){
 	}
 
-	template<class	O,class	H,class	E>	Mem<O,H,E>::~Mem(){
-
-		delete	object_register_sem;
-		delete	objects_sem;
+	template<class	O>	Mem<O>::~Mem(){
 	}
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O,class	H,class	E>	r_code::Code	*Mem<O,H,E>::buildObject(r_code::SysObject	*source){
+	template<class	O>	r_code::Code	*Mem<O>::buildObject(r_code::SysObject	*source){
 
 		return	new	O(source,this);
 	}
 
-	template<class	O,class	H,class	E>	r_code::Code	*Mem<O,H,E>::buildGroup(r_code::SysObject	*source){
+	template<class	O>	r_code::Code	*Mem<O>::buildGroup(r_code::SysObject	*source){
 
 		return	new	Group(source);
 	}
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::deleteObject(Code	*object){
+	template<class	O>	void	Mem<O>::deleteObject(Code	*object){
 
 		//	erase from object_register.
 		object_register_sem->acquire();
-		object_register.erase((O	*)object);
+		object_register.erase(((O	*)object)->position_in_object_register);
 		object_register_sem->release();
 
 		objects_sem->acquire();
-		objects.remove(object);
+		objects.erase(((O	*)object)->position_in_objects);
 		objects_sem->release();
 	}
 
-	template<class	O,class	H,class	E>	View	*Mem<O,H,E>::find_view(Code	*object,Code	*group){
-
-		((O	*)object)->acq_views();
-
-		r_code::View	probe;
-		probe.references[0]=group;
-
-		UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v=object->views.find(&probe);
-		if(v!=object->views.end()){
-
-			((O	*)object)->rel_views();
-			return	new	View((r_exec::View	*)*v);
-		}
-
-		((O	*)object)->rel_views();
-		return	NULL;
-	}
-
-	template<class	O,class	H,class	E>	Group	*Mem<O,H,E>::get_stdin()	const{
+	template<class	O>	Group	*Mem<O>::get_stdin()	const{
 
 		return	_stdin;
 	}
 	
-	template<class	O,class	H,class	E>	Group	*Mem<O,H,E>::get_stdout()	const{
+	template<class	O>	Group	*Mem<O>::get_stdout()	const{
 
 		return	_stdout;
 	}
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::load(std::vector<r_code::Code	*>	*objects){	//	NB: no cov at init time.
-
-		need_reset=true;
+	template<class	O>	void	Mem<O>::load(std::vector<r_code::Code	*>	*objects){	//	NB: no cov at init time.
 
 		uint32	i;
 		reduction_cores=new	ReductionCore	*[reduction_core_count];
@@ -154,16 +128,16 @@ namespace	r_exec{
 				}
 			}
 			
-			this->objects.push_back(object);
+			object->position_in_objects=this->objects.insert(this->objects.end(),object);
 
 			if(GetType(object)!=ObjectType::GROUP)	//	load non-group object in regsister and io map.
-				object_register.insert(object);
+				object->position_in_object_register=object_register.insert(object).first;
 			else
 				initial_groups.push_back((Group	*)object);	//	convenience to create initial update jobs - see start().
 		}
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::start(){
+	template<class	O>	void	Mem<O>::start(){
 
 		uint32	i;
 		uint64	now=Now();
@@ -216,15 +190,20 @@ namespace	r_exec{
 
 		initial_groups.clear();
 
+		object_register_sem=new	FastSemaphore(1,1);
+		objects_sem=new	FastSemaphore(1,1);
+
 		for(i=0;i<reduction_core_count;++i)
 			reduction_cores[i]->start(ReductionCore::Run);
 		for(i=0;i<time_core_count;++i)
 			time_cores[i]->start(TimeCore::Run);
+
+		state=STARTED;
 	}
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O,class	H,class	E>	r_comp::Image	*Mem<O,H,E>::getImage(){
+	template<class	O>	r_comp::Image	*Mem<O>::getImage(){
 
 		r_comp::Image	*image=new	r_comp::Image();
 		std::list<Code	*>::const_iterator	i;
@@ -235,13 +214,13 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::inject(O	*object,View	*view){
+	template<class	O>	void	Mem<O>::inject(O	*object,View	*view){
 
 		view->set_object(object);
 		injectNow(view);
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::inject(View	*view){
+	template<class	O>	void	Mem<O>::inject(View	*view){
 
 		uint64	now=Now();
 		uint64	ijt=view->get_ijt();
@@ -256,7 +235,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::injectNow(View	*view){
+	template<class	O>	void	Mem<O>::injectNow(View	*view){
 
 		Group	*host=view->get_host();
 		if(view->object->code(0).getDescriptor()==Atom::GROUP)
@@ -269,7 +248,7 @@ namespace	r_exec{
 			object=(O	*)view->object;
 
 			object_register_sem->acquire();
-			UNORDERED_SET<O	*,H,E>::const_iterator	it=object_register.find(object);
+			UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>::const_iterator	it=object_register.find(object);
 			if(it!=object_register.end()){
 
 				object_register_sem->release();
@@ -282,11 +261,11 @@ namespace	r_exec{
 				uint64	now=Now();
 				r_code::Timestamp::Set<View>(view,VIEW_IJT,now);
 
-				object_register.insert(object);
+				object->position_in_object_register=object_register.insert(object).first;
 				object_register_sem->release();
 
 				objects_sem->acquire();
-				objects.push_back(object);
+				object->position_in_objects=objects.insert(objects.end(),object);
 				objects_sem->release();
 
 				switch(GetType(object)){
@@ -356,18 +335,18 @@ namespace	r_exec{
 		}
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::injectCopyNow(View	*view,Group	*destination){
+	template<class	O>	void	Mem<O>::injectCopyNow(View	*view,Group	*destination){
 
 		View	*copied_view=new	View(view,destination);	//	ctrl values are morphed.
 		_inject_existing_object_now(copied_view,view->object,destination);
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::_inject_existing_object_now(View	*view,O	*object,Group	*host){
+	template<class	O>	void	Mem<O>::_inject_existing_object_now(View	*view,O	*object,Group	*host){
 
 		view->set_object(object);	//	the object already exists (content-wise): have the view point to the existing one.
 
 		object->acq_views();
-		View	*existing_view=find_view(object,host);
+		View	*existing_view=object->find_view(host,false);
 		if(!existing_view){	//	no existing view: add the view to the group and to the object's view_map.
 
 			host->acquire();
@@ -406,10 +385,10 @@ namespace	r_exec{
 		}
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::_inject_group_now(View	*view,Group	*object,Group	*host){	//	groups are always new; no cov for groups; no need to protect object.
+	template<class	O>	void	Mem<O>::_inject_group_now(View	*view,Group	*object,Group	*host){	//	groups are always new; no cov for groups; no need to protect object.
 
 		objects_sem->acquire();
-		objects.push_back(object);
+		object->position_in_objects=objects.insert(objects.end(),object);
 		objects_sem->release();
 
 		host->acquire();
@@ -438,13 +417,13 @@ namespace	r_exec{
 		host->release();
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::injectNotificationNow(View	*view,bool	lock){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
-													//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
+	template<class	O>	void	Mem<O>::injectNotificationNow(View	*view,bool	lock){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
+																						//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
 		Group	*host=view->get_host();
 		LObject	*object=(LObject	*)view->object;
 
 		objects_sem->acquire();
-		objects.push_back(object);
+		object->position_in_objects=objects.insert(objects.end(),object);
 		objects_sem->release();
 		
 		if(lock)
@@ -462,7 +441,7 @@ namespace	r_exec{
 			host->release();
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::update(Group	*group){
+	template<class	O>	void	Mem<O>::update(Group	*group){
 
 		uint64	now=Now();
 
@@ -658,12 +637,12 @@ namespace	r_exec{
 		group->release();
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::update(SaliencyPropagationJob	*j){
+	template<class	O>	void	Mem<O>::update(SaliencyPropagationJob	*j){
 		
 		propagate_sln((O	*)j->object,j->sln_change,j->source_sln_thr);
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::propagate_sln(O	*object,float32	change,float32	source_sln_thr){
+	template<class	O>	void	Mem<O>::propagate_sln(O	*object,float32	change,float32	source_sln_thr){
 
 		//	apply morphed change to views.
 		//	feedback can happen, i.e. m:(mk o1 o2); o1.vw.g propag -> o1 propag ->m propag -> o2 propag o2.vw.g, next upr in g, o2 propag -> m propag -> o1 propag -> o1,vw.g: loop!
@@ -680,7 +659,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::_inject_reduction_jobs(View	*view,Group	*host){	//	host is assumed to be c-salient; host already protected.
+	template<class	O>	void	Mem<O>::_inject_reduction_jobs(View	*view,Group	*host){	//	host is assumed to be c-salient; host already protected.
 
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
 
@@ -711,7 +690,7 @@ namespace	r_exec{
 		}
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr){
+	template<class	O>	void	Mem<O>::_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr){
 		
 		if(fabs(change)>object->get_psln_thr()){
 
@@ -732,7 +711,7 @@ namespace	r_exec{
 		}
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path){
+	template<class	O>	void	Mem<O>::_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path){
 		
 		//	prevent loops.
 		for(uint32	i=0;i<path.size();++i)
@@ -755,7 +734,7 @@ namespace	r_exec{
 		}
 	}
 
-	template<class	O,class	H,class	E>	void	Mem<O,H,E>::_propagate_sln(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path){
+	template<class	O>	void	Mem<O>::_propagate_sln(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path){
 
 		//	prevent loops.
 		for(uint32	i=0;i<path.size();++i)

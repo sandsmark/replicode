@@ -41,7 +41,6 @@ root:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-1; res_ntf_prd
 root; ntf_grp
 |[]; view
 |[]; mks
@@ -82,8 +81,7 @@ stdin:(grp
 0; low_act_thr
 1; act_ntf_prd
 0; ntf_new
-0; low_res_thr
-1; res_ntf_prd
+1; low_res_thr
 stdin; ntf_grp
 |[]; view
 |[]; mks
@@ -125,7 +123,6 @@ stdout:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-1; res_ntf_prd
 stdout; ntf_grp
 |[]; view
 |[]; mks

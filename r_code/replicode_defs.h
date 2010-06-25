@@ -76,8 +76,7 @@
 #define	GRP_ACT_NTF_PRD		28
 #define	GRP_NTF_NEW			29
 #define	GRP_LOW_RES_THR		30
-#define	GRP_RES_NTF_PRD		31
-#define	GRP_NTF_GRP			32
+#define	GRP_NTF_GRP			31
 
 #define	IPGM_PGM	1
 #define	IPGM_ARGS	2

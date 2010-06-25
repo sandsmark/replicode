@@ -45,7 +45,7 @@
 
 template<class	U>	class	NetworkMem:
 public	Module<U>,
-public	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>{
+public	r_exec::Mem<RObject>{
 protected:
 	NetworkMem();
 	~NetworkMem();
@@ -83,6 +83,8 @@ public:
 	}
 	void	react(ImageMessage	*p){
 		OUTPUT<<"RMem "<<"got an image"<<std::endl;
+		if(get_state()==STOPPED)
+			return;
 		r_comp::Image	*image=new	r_comp::Image();
 		image->load<ImageMessage>(p);
 		load(image);	//	stop the mem, reload and restart.

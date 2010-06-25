@@ -16,6 +16,12 @@ namespace	r_exec{
 
 	class	r_exec_dll	_Mem:
 	public	r_code::Mem{
+	public:
+		typedef	enum{
+			NOT_STARTED=0,
+			STARTED=1,
+			STOPPED=2
+		}State;
 	protected:
 		uint32	base_period;
 
@@ -27,7 +33,8 @@ namespace	r_exec{
 		uint32			time_core_count;
 		TimeCore		**time_cores;
 
-		bool	need_reset;
+		State			state;
+		CriticalSection	stateCS;
 
 		P<Group>	root;	//	holds everything.
 
@@ -36,6 +43,9 @@ namespace	r_exec{
 		virtual	void	injectNow(View	*view)=0;
 		virtual	void	injectCopyNow(View	*view,Group	*destination)=0;
 		virtual	void	update(Group	*group)=0;
+
+		FastSemaphore	*object_register_sem;
+		FastSemaphore	*objects_sem;
 
 		_Mem();
 	public:
@@ -52,9 +62,9 @@ namespace	r_exec{
 
 		uint64	get_base_period()	const{	return	base_period;	}
 
-		void	stop();	//	after stop() the content is cleared and one has to call init() and load() again.
-		void	suspend();
-		void	resume();
+		void	stop();	//	after stop() the content is cleared and one has to call load() and start() again.
+
+		State	get_state();
 
 		//	Called by groups at update time.
 		virtual	void	injectNotificationNow(View	*view,bool	lock)=0;
@@ -105,11 +115,11 @@ namespace	r_exec{
 	//	O is the class of the objects held by the Mem.
 	//	Shared resources:
 	//		Mem::object_register: accessed by Mem::update, Mem::injectNow and Mem::deleteObject (see above).
-	template<class	O,class	H,class	E>	class	Mem:
+	template<class	O>	class	Mem:
 	public	_Mem{
 	private:
-		std::list<Code	*>		objects;			//	to insert in an image (getImage()); in order of injection.
-		UNORDERED_SET<O	*,H,E>	object_register;	//	to eliminate duplicates (content-wise); does not include groups.
+		std::list<Code	*>											objects;			//	to insert in an image (getImage()); in order of injection.
+		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>	object_register;	//	to eliminate duplicates (content-wise); does not include groups.
 
 		//	Functions called by internal processing of jobs (see internal processing section below).
 		void	injectNow(View	*view);													//	also called by inject() (see below).
@@ -127,9 +137,6 @@ namespace	r_exec{
 		void	_propagate_sln(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path);
 
 		std::vector<Group	*>	initial_groups;	//	convenience; cleared after start();
-
-		FastSemaphore	*object_register_sem;
-		FastSemaphore	*objects_sem;
 	protected:
 		Group	*_stdin;	//	convenience.
 		Group	*_stdout;	//	convenience.
@@ -145,8 +152,6 @@ namespace	r_exec{
 		void	start();
 
 		void	deleteObject(Code	*object);
-
-		View	*find_view(Code	*object,Code	*group);
 
 		Group	*get_stdin()	const;
 		Group	*get_stdout()	const;

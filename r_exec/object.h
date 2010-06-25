@@ -6,6 +6,8 @@
 #include	"view.h"
 #include	"opcodes.h"
 
+#include	<list>
+
 
 namespace	r_exec{
 
@@ -18,14 +20,14 @@ namespace	r_exec{
 		GROUP=6
 	}ObjectType;
 
-	r_exec_dll	bool	IsNotification(Code	*object);
+	r_exec_dll	bool		IsNotification(Code	*object);
 	r_exec_dll	ObjectType	GetType(Code	*object);
 
 	//	Shared resources:
 	//		views: accessed by Mem::injectNow (via various sub calls) and Mem::update.
 	//		psln_thr: accessed by reduction cores (via overlay mod/set).
 	//		marker_set: accessed by Mem::injectNow ans Mem::_initiate_sln_propagation.
-	template<class	C>	class	Object:
+	template<class	C,class	U>	class	Object:
 	public	C{
 	private:
 		size_t	hash_value;
@@ -36,8 +38,7 @@ namespace	r_exec{
 	protected:
 		r_code::Mem	*mem;
 
-		Object();
-		Object(r_code::Mem	*mem);
+		Object(r_code::Mem	*mem=NULL);
 	public:
 		virtual	~Object();	//	un-registers from the rMem's object_register.
 
@@ -54,11 +55,11 @@ namespace	r_exec{
 		virtual	void	set(uint16	member_index,float32	value);
 		virtual	void	mod(uint16	member_index,float32	value);
 
-		View	*find_view(Code	*group);
+		View	*find_view(Code	*group,bool	lock);
 
 		class	Hash{
 		public:
-			size_t	operator	()(Object	*o)	const{
+			size_t	operator	()(U	*o)	const{
 				if(o->hash_value==0)
 					o->compute_hash_value();
 				return	o->hash_value;
@@ -67,7 +68,7 @@ namespace	r_exec{
 
 		class	Equal{
 		public:
-			bool	operator	()(const	Object	*lhs,const	Object	*rhs)	const{
+			bool	operator	()(const	U	*lhs,const	U	*rhs)	const{
 				if(lhs->references_size()!=rhs->references_size())
 					return	false;
 				if(lhs->code_size()!=rhs->code_size())
@@ -82,6 +83,10 @@ namespace	r_exec{
 				return	true;
 			}
 		};
+
+		//	for un-registering in the rMem upon deletion.
+		std::list<Code	*>::const_iterator																position_in_objects;
+		typename	UNORDERED_SET<U	*,typename	Object::Hash,typename	Object::Equal>::const_iterator	position_in_object_register;
 	};
 
 	//	Local object.
@@ -89,13 +94,13 @@ namespace	r_exec{
 	//	Used for construction.
 	//	If the mem is network-aware, instances will be packed into a suitable form.
 	class	r_exec_dll	LObject:
-	public	Object<r_code::Object>{
+	public	Object<r_code::Object,LObject>{
 	public:
 		static	bool	RequiresPacking(){	return	false;	}
 		static	LObject	*Pack(Code	*object){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
 
-		LObject():Object<r_code::Object>(){}
-		LObject(r_code::SysObject	*source,r_code::Mem	*m):Object<r_code::Object>(m){
+		LObject():Object<r_code::Object,LObject>(){}
+		LObject(r_code::SysObject	*source,r_code::Mem	*m):Object<r_code::Object,LObject>(m){
 		
 			load(source);
 			build_views<r_exec::View>(source);

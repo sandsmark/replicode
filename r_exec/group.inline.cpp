@@ -231,11 +231,6 @@ namespace	r_exec{
 		return	code(GRP_LOW_RES_THR).asFloat();
 	}
 
-	inline	float32	Group::get_res_ntf_prd(){
-
-		return	code(GRP_RES_NTF_PRD).asFloat();
-	}
-
 	inline	float32	Group::get_ntf_new(){
 
 		return	code(GRP_NTF_NEW).asFloat();
@@ -322,7 +317,6 @@ namespace	r_exec{
 		case	GRP_ACT_CHG_PRD:
 		case	GRP_SLN_NTF_PRD:
 		case	GRP_ACT_NTF_PRD:
-		case	GRP_RES_NTF_PRD:
 			_mod_0_positive(member_index,value);
 			return	;
 		case	GRP_SLN_THR:
@@ -371,7 +365,6 @@ namespace	r_exec{
 		case	GRP_ACT_CHG_PRD:
 		case	GRP_SLN_NTF_PRD:
 		case	GRP_ACT_NTF_PRD:
-		case	GRP_RES_NTF_PRD:
 			_set_0_positive(member_index,value);
 			return;
 		case	GRP_SLN_THR:

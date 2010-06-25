@@ -269,7 +269,6 @@ namespace	r_exec{
 		float32	get_low_act_thr();
 		float32	get_act_ntf_prd();
 		float32	get_low_res_thr();
-		float32	get_res_ntf_prd();
 
 		float32	get_ntf_new();
 

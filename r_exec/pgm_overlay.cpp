@@ -529,12 +529,6 @@ namespace	r_exec{
 
 				}else	if(function[0].asOpcode()==Opcodes::DelDev){
 
-				}else	if(function[0].asOpcode()==Opcodes::Suspend){	//	no args.
-
-					mem->suspend();
-				}else	if(function[0].asOpcode()==Opcodes::Resume){	//	no args.
-
-					mem->resume();
 				}else	if(function[0].asOpcode()==Opcodes::Stop){		//	no args.
 
 					mem->stop();

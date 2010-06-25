@@ -260,7 +260,7 @@ namespace	r_exec{
 	float32	Group::update_res(View	*v,_Mem	*mem){
 
 		float	res=v->update_res();
-		if(!v->isNotification()	&&	res<get_low_res_thr())
+		if(!v->isNotification()	&&	res>0	&&	res<get_low_res_thr())
 			mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkLowRes(v->object)),false);
 		return	res;
 	}
