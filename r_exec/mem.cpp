@@ -38,26 +38,45 @@ namespace	r_exec{
 			delete	time_cores[i];
 		delete[]	time_cores;
 
+		for(uint32	i=0;i<delegates.size();++i){
+
+			Thread::TerminateAndWait(delegates[i]);
+			delete	delegates[i];
+		}
+		delegates.clear();
+
 		delete	object_register_sem;
 		delete	objects_sem;
+		delete	state_sem;
+
+		delete	reduction_job_queue;
+		delete	time_job_queue;
 	}
 
 	_Mem::State	_Mem::get_state(){
 
-		stateCS.enter();
+		state_sem->acquire();
 		State	s=state;
-		stateCS.leave();
+		state_sem->release();
 
 		return	s;
 	}
 
 	////////////////////////////////////////////////////////////////
 
+	void	_Mem::add_delegate(uint64	dealine,_TimeJob	*j){
+
+		state_sem->acquire();
+		if(state==STARTED)
+			delegates.push_back(new	DelegatedCore(this,dealine,j));
+		state_sem->release();
+	}
+
 	void	_Mem::stop(){
 
-		stateCS.enter();
+		state_sem->acquire();
 		state=STOPPED;
-		stateCS.leave();
+		state_sem->release();
 
 		uint32	i;
 		for(i=0;i<reduction_core_count;++i)
@@ -66,33 +85,28 @@ namespace	r_exec{
 			Thread::TerminateAndWait(time_cores[i]);
 
 		reset();
-
-		Thread::Sleep(1000);	//	wait for the delegate cores to finish; assumes 1s is the max upr.
-
-		reduction_job_queue.clear();
-		time_job_queue.clear();
 	}
 
 	////////////////////////////////////////////////////////////////
 
 	ReductionJob	_Mem::popReductionJob(){
 
-		return	reduction_job_queue.pop();
+		return	reduction_job_queue->pop();
 	}
 
 	void	_Mem::pushReductionJob(ReductionJob	j){
 
-		reduction_job_queue.push(j);
+		reduction_job_queue->push(j);
 	}
 
 	TimeJob	_Mem::popTimeJob(){
 
-		return	time_job_queue.pop();
+		return	time_job_queue->pop();
 	}
 
 	void	_Mem::pushTimeJob(TimeJob	j){
 
-		time_job_queue.push(j);
+		time_job_queue->push(j);
 	}
 
 	////////////////////////////////////////////////////////////////

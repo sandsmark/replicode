@@ -7,7 +7,7 @@
 
 namespace	r_exec{
 
-	class	ReductionJob{
+	class	r_exec_dll	ReductionJob{
 	public:
 		P<View>		input;
 		P<Overlay>	overlay;

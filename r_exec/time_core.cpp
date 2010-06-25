@@ -23,8 +23,7 @@ namespace	r_exec{
 			int64	deadline=target-now;
 			if(deadline>=0){	//	on time: spawn a delegate to wait for the due time; delegate will die when done.
 
-				DelegatedCore	*delegate_core=new	DelegatedCore(_this->mem,deadline,j.job);
-				delegate_core->start(DelegatedCore::Wait);
+				_this->mem->add_delegate(deadline,j.job);
 				continue;
 			}else{	//	we are late: report.
 
@@ -56,13 +55,15 @@ process:
 		
 		_this->job->update(_this->mem);
 
-		delete	_this;
+		//delete	_this;	//	remove from mem::delegates.
 		thread_ret_val(0);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	DelegatedCore::DelegatedCore(_Mem	*m,uint64	deadline,_TimeJob	*j):Thread(),mem(m),deadline(deadline),job(j){
+
+		start(DelegatedCore::Wait);
 	}
 
 	DelegatedCore::~DelegatedCore(){

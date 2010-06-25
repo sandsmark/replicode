@@ -139,6 +139,13 @@ namespace	r_exec{
 
 	template<class	O>	void	Mem<O>::start(){
 
+		object_register_sem=new	FastSemaphore(1,1);
+		objects_sem=new	FastSemaphore(1,1);
+		state_sem=new	FastSemaphore(1,1);
+
+		time_job_queue=new	PipeNN<TimeJob,1024>();
+		reduction_job_queue=new	PipeNN<ReductionJob,1024>();
+
 		uint32	i;
 		uint64	now=Now();
 		for(i=0;i<initial_groups.size();++i){
@@ -159,14 +166,14 @@ namespace	r_exec{
 				for(v=g->input_less_ipgm_views.begin();v!=g->input_less_ipgm_views.end();++v){
 
 					TimeJob	j(new	InputLessPGMSignalingJob(v->second->controller),now+g->get_spr()*base_period);
-					time_job_queue.push(j);
+					time_job_queue->push(j);
 				}
 
 				//	build signaling jobs for active anti-pgm overlays.
 				for(v=g->anti_ipgm_views.begin();v!=g->anti_ipgm_views.end();++v){
 
 					TimeJob	j(new	AntiPGMSignalingJob(v->second->controller),now+Timestamp::Get<O>(v->second->controller->getIPGM()->references(0),PGM_TSC));
-					time_job_queue.push(j);
+					time_job_queue->push(j);
 				}
 
 				if(c_salient){
@@ -185,13 +192,10 @@ namespace	r_exec{
 
 			//	inject the next update job for the group.
 			TimeJob	j(new	UpdateJob(g),now+g->get_upr()*base_period);
-			time_job_queue.push(j);
+			time_job_queue->push(j);
 		}
 
 		initial_groups.clear();
-
-		object_register_sem=new	FastSemaphore(1,1);
-		objects_sem=new	FastSemaphore(1,1);
 
 		for(i=0;i<reduction_core_count;++i)
 			reduction_cores[i]->start(ReductionCore::Run);
@@ -229,7 +233,7 @@ namespace	r_exec{
 		else{
 
 			TimeJob	j(new	InjectionJob(view),ijt);
-			time_job_queue.push(j);
+			time_job_queue->push(j);
 		}
 	}
 
@@ -290,7 +294,7 @@ namespace	r_exec{
 							o->take_input(host->newly_salient_views[i],this);	//	view will be copied.
 
 						TimeJob	j(new	AntiPGMSignalingJob(o),now+Timestamp::Get<O>(o->getIPGM()->references(0),PGM_TSC));
-						time_job_queue.push(j);
+						time_job_queue->push(j);
 		
 					}
 					break;
@@ -301,7 +305,7 @@ namespace	r_exec{
 					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
 						TimeJob	j(new	InputLessPGMSignalingJob(o),now+host->get_spr()*base_period);
-						time_job_queue.push(j);
+						time_job_queue->push(j);
 					}
 					break;
 				}case	ObjectType::MARKER:	//	the marker does not exist yet: add it to the mks of its references.
@@ -409,7 +413,7 @@ namespace	r_exec{
 
 		//	inject the next update job for the group.
 		TimeJob	j(new	UpdateJob((Group	*)object),now+((Group	*)object)->get_upr()*base_period);
-		time_job_queue.push(j);
+		time_job_queue->push(j);
 
 		if(host->get_ntf_new()==1)
 			injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(object)),false);	//	the group appears for the first time in the group: notify.
@@ -614,12 +618,12 @@ namespace	r_exec{
 				case	ObjectType::ANTI_IPGM:{	//	inject signaling jobs for |ipgm (tsc).
 
 					TimeJob	j(new	AntiPGMSignalingJob(group->new_controllers[i]),now+Timestamp::Get<O>(group->new_controllers[i]->getIPGM()->references(0),PGM_TSC));
-					time_job_queue.push(j);
+					time_job_queue->push(j);
 					break;
 				}case	ObjectType::INPUT_LESS_IPGM:{	//	inject a signaling job for an input-less pgm (sfr).
 
 					TimeJob	j(new	InputLessPGMSignalingJob(group->new_controllers[i]),now+group->get_spr()*base_period);
-					time_job_queue.push(j);
+					time_job_queue->push(j);
 					break;
 				}
 				}
@@ -632,7 +636,7 @@ namespace	r_exec{
 
 		//	inject the next update job for the group.
 		TimeJob	j(new	UpdateJob(group),now+group->get_upr()*base_period);
-		time_job_queue.push(j);
+		time_job_queue->push(j);
 
 		group->release();
 	}
@@ -743,7 +747,7 @@ namespace	r_exec{
 		path.push_back(object);
 
 		TimeJob	j(new	SaliencyPropagationJob(object,change,source_sln_thr),0);
-		time_job_queue.push(j);
+		time_job_queue->push(j);
 		
 		_initiate_sln_propagation(object,change,source_sln_thr,path);
 	}

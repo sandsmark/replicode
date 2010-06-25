@@ -25,16 +25,18 @@ namespace	r_exec{
 	protected:
 		uint32	base_period;
 
-		PipeNN<ReductionJob,1024>	reduction_job_queue;
-		PipeNN<TimeJob,1024>		time_job_queue;
+		PipeNN<ReductionJob,1024>	*reduction_job_queue;
+		PipeNN<TimeJob,1024>		*time_job_queue;
 		
 		uint32			reduction_core_count;
 		ReductionCore	**reduction_cores;
 		uint32			time_core_count;
 		TimeCore		**time_cores;
 
+		std::vector<DelegatedCore	*>	delegates;
+
 		State			state;
-		CriticalSection	stateCS;
+		FastSemaphore	*state_sem;
 
 		P<Group>	root;	//	holds everything.
 
@@ -62,6 +64,7 @@ namespace	r_exec{
 
 		uint64	get_base_period()	const{	return	base_period;	}
 
+		void	add_delegate(uint64	dealine,_TimeJob	*j);
 		void	stop();	//	after stop() the content is cleared and one has to call load() and start() again.
 
 		State	get_state();

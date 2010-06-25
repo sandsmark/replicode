@@ -37,7 +37,7 @@ int32	main(int	argc,char	**argv){
 		mem->start();
 		uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
 		mem->stop();
-		
+
 		delete	mem;
 
 		Decompiler			decompiler;
