@@ -9,12 +9,14 @@
 
 namespace	r_exec{
 
-	_Mem::_Mem(){
+	_Mem::_Mem():need_reset(false){
 	}
 
 	_Mem::~_Mem(){
 
-		reset();
+		if(need_reset)
+			reset();
+		root=NULL;
 	}
 
 	void	_Mem::init(uint32	base_period,	//	in us; same for upr, spr and res.
@@ -35,8 +37,6 @@ namespace	r_exec{
 		for(i=0;i<time_core_count;++i)
 			delete	time_cores[i];
 		delete[]	time_cores;
-
-		root=NULL;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -50,6 +50,10 @@ namespace	r_exec{
 			Thread::TerminateAndWait(time_cores[i]);
 
 		reset();
+		need_reset=false;
+
+		reduction_job_queue.clear();
+		time_job_queue.clear();
 	}
 	
 	void	_Mem::suspend(){

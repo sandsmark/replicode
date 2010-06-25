@@ -5,6 +5,8 @@
 #include	"time_core.h"
 #include	"dll.h"
 
+#include	<list>
+
 #include	"../r_comp/segments.h"
 
 #include	"pipe.h"
@@ -24,6 +26,8 @@ namespace	r_exec{
 		ReductionCore	**reduction_cores;
 		uint32			time_core_count;
 		TimeCore		**time_cores;
+
+		bool	need_reset;
 
 		P<Group>	root;	//	holds everything.
 
@@ -104,6 +108,7 @@ namespace	r_exec{
 	template<class	O,class	H,class	E>	class	Mem:
 	public	_Mem{
 	private:
+		std::list<Code	*>		objects;			//	to insert in an image (getImage()); in order of injection.
 		UNORDERED_SET<O	*,H,E>	object_register;	//	to eliminate duplicates (content-wise); does not include groups.
 
 		//	Functions called by internal processing of jobs (see internal processing section below).
@@ -124,6 +129,7 @@ namespace	r_exec{
 		std::vector<Group	*>	initial_groups;	//	convenience; cleared after start();
 
 		FastSemaphore	*object_register_sem;
+		FastSemaphore	*objects_sem;
 	protected:
 		Group	*_stdin;	//	convenience.
 		Group	*_stdout;	//	convenience.

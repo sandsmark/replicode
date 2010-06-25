@@ -35,15 +35,14 @@ namespace	r_code{
 
 	uint64	Timestamp::Get(const	Atom	*iptr){
 
-		uint32	i=iptr->asIndex();
-		uint64	high=iptr[i+1].atom;
-		return	high<<32	|	iptr[i+2].atom;
+		uint64	high=iptr[1].atom;
+		return	high<<32	|	iptr[2].atom;
 	}
 
 	void	Timestamp::Set(Atom	*iptr,uint64	t){
 
-		uint32	i=iptr->asIndex();
-		iptr[i+1].atom=t>>32;
-		iptr[i+2].atom=t	&	0x00000000FFFFFFFF;
+		iptr[0]=Atom::Timestamp();
+		iptr[1].atom=t>>32;
+		iptr[2].atom=t	&	0x00000000FFFFFFFF;
 	}
 }

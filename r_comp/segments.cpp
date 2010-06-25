@@ -467,12 +467,13 @@ namespace	r_comp{
 			sys_object->references.push_back(referenced_object_index);
 			relocation_segment.addObjectReference(referenced_object_index,object_index,i);
 		}
-		for(i=0;i<object->initial_views.size();++i)
+		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
+		for(i=0,v=object->views.begin();v!=object->views.end();++i,++v)
 			for(uint32	j=0;j<2;++j){	//	2 refs maximum; may be NULL.
 
-				if(object->initial_views[i]->references[j]){
+				if((*v)->references[j]){
 
-					referenced_object_index=ptrs_to_indices.find(object->initial_views[i]->references[j])->second;
+					referenced_object_index=ptrs_to_indices.find((*v)->references[j])->second;
 					sys_object->views[i]->references.push_back(referenced_object_index);
 					relocation_segment.addViewReference(referenced_object_index,object_index,i,j);
 				}
@@ -503,7 +504,7 @@ namespace	r_comp{
 		//	Translate indices into pointers
 		for(uint32	i=0;i<relocation_segment.entries.size();++i){	//	for each allocated object, write its address in the reference set of the objects or views that reference it
 
-			r_code::Code	*referenced_object=ram_objects[i];
+			r_code::Code				*referenced_object=ram_objects[i];
 			RelocationSegment::Entry	e=relocation_segment.entries[i];
 			for(uint32	j=0;j<e.pointer_indexes.size();++j){
 
@@ -516,9 +517,12 @@ namespace	r_comp{
 				case	-2:
 					referencing_object->markers[p.pointer_index]=referenced_object;
 					break;
-				default:
-					referencing_object->initial_views[p.view_index]->references[p.pointer_index]=referenced_object;
+				default:{
+					UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v=referencing_object->views.begin();
+					for(uint32	j=0;j<p.view_index;++j,++v);
+					(*v)->references[p.pointer_index]=referenced_object;
 					break;
+				}
 				}
 			}
 		}

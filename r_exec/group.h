@@ -107,25 +107,110 @@ namespace	r_exec{
 		Group(r_code::SysObject	*source);
 		~Group();
 
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	views_begin()	const;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	views_end()		const;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
+		bool	all_views_cond(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
+			static	uint8	selector=0;
+			while(it==end){
+				switch(selector++){
+				case	0:
+					it=anti_ipgm_views.begin();
+					end=anti_ipgm_views.end();
+					break;
+				case	1:
+					it=input_less_ipgm_views.begin();
+					end=input_less_ipgm_views.end();
+					break;
+				case	2:
+					it=notification_views.begin();
+					end=notification_views.end();
+					break;
+				case	3:
+					it=group_views.begin();
+					end=group_views.end();
+					break;
+				case	4:
+					it=other_views.begin();
+					end=other_views.end();
+					break;
+				case	5:
+					selector=0;
+					return	false;
+				}
+			}
+			return	true;
+		}
 
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	input_less_ipgm_views_begin()	const;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	input_less_ipgm_views_end()		const;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_input_less_ipgm_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
+#define	FOR_ALL_VIEWS_BEGIN(g,it)	{	\
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	it=g->ipgm_views.begin();	\
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	end=g->ipgm_views.end();	\
+		for(;g->all_views_cond(it,end);++it){
 
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	anti_ipgm_views_begin()	const;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	anti_ipgm_views_end()	const;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_anti_pgm_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
+#define	FOR_ALL_VIEWS_BEGIN_NO_INC(g,it)	{	\
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	it=g->ipgm_views.begin();	\
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	end=g->ipgm_views.end();	\
+		for(;g->all_views_cond(it,end);){
+			
+#define	FOR_ALL_VIEWS_END	}	\
+		}
 
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	ipgm_views_with_inputs_begin()	const;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	ipgm_views_with_inputs_end()	const;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_ipgm_view_with_inputs(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
+		bool	ipgm_views_with_inputs_cond(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
+			static	uint8	selector=0;
+			while(it==end){
+				switch(selector++){
+				case	0:
+					it=anti_ipgm_views.begin();
+					end=anti_ipgm_views.end();
+					break;
+				case	1:
+					selector=0;
+					return	false;
+				}
+			}
+			return	true;
+		}
 
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	non_ntf_views_begin()	const;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	non_ntf_views_end()		const;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	next_non_ntf_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it)	const;
+#define	FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(g,it)	{	\
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	it=g->ipgm_views.begin();	\
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	end=g->ipgm_views.end();	\
+		for(;g->ipgm_views_with_inputs_cond(it,end);++it){
+
+#define	FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END	}	\
+		}	
+
+		bool	non_ntf_views_cond(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
+			static	uint8	selector=0;
+			while(it==end){
+				switch(selector++){
+				case	0:
+					it=anti_ipgm_views.begin();
+					end=anti_ipgm_views.end();
+					break;
+				case	1:
+					it=input_less_ipgm_views.begin();
+					end=input_less_ipgm_views.end();
+					break;
+				case	2:
+					it=group_views.begin();
+					end=group_views.end();
+					break;
+				case	3:
+					it=other_views.begin();
+					end=other_views.end();
+					break;
+				case	4:
+					selector=0;
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+#define	FOR_ALL_NON_NTF_VIEWS_BEGIN(g,it)	{	\
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	it=g->ipgm_views.begin();	\
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	end=g->ipgm_views.end();	\
+		for(;g->non_ntf_views_cond(it,end);++it){
+			
+#define	FOR_ALL_NON_NTF_VIEWS_END	}	\
+		}
 
 		View	*get_view(uint32	OID);
 

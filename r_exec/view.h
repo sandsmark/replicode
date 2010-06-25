@@ -31,9 +31,10 @@ namespace	r_exec{
 		float32	initial_act;
 	protected:
 		static	uint32	LastOID;
-		static	uint32	GetOID();
+		static	Atom	GetOID();
 
-		void	reset_init_values();
+		void	reset_init_sln();
+		void	reset_init_act();
 	public:
 		static	uint16	ViewOpcode;
 
@@ -50,8 +51,10 @@ namespace	r_exec{
 		View();
 		View(r_code::SysView	*source,r_code::Code	*object);
 		View(View	*view,Group	*group);	//	copy the view and assigns it to the group (used for cov); morph ctrl values.
-		View(View	*view);	//	simple copy.
+		View(const	View	*view);			//	simple copy.
 		~View();
+
+		void	set_object(r_code::Code	*object);
 
 		uint32	getOID()	const;
 
@@ -84,20 +87,6 @@ namespace	r_exec{
 		//	Target res, sln, act, vis.
 		void	mod(uint16	member_index,float32	value);
 		void	set(uint16	member_index,float32	value);
-
-		class	Hash{
-		public:
-			size_t	operator	()(View	*v)	const{
-				return	(size_t)(Code	*)v->object;
-			}
-		};
-
-		class	Equal{
-		public:
-			bool	operator	()(const	View	*lhs,const	View	*rhs)	const{
-				return	lhs->object==rhs->object;
-			}
-		};
 	};
 
 	class	r_exec_dll	NotificationView:

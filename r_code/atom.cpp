@@ -63,16 +63,16 @@ namespace	r_code{
 		case	NODE:					std::cout<<"nid: "<<std::dec<<(uint32)getNodeID();return;
 		case	DEVICE:					std::cout<<"did: "<<std::dec<<(uint32)getNodeID()<<" "<<(uint32)getClassID()<<" "<<(uint32)getDeviceID();return;
 		case	DEVICE_FUNCTION:		std::cout<<"fid: "<<std::dec<<asOpcode();return;
-		case	C_PTR:					std::cout<<"cptr: "<<std::dec<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	SET:					std::cout<<"set: "<<std::dec<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	OBJECT:					std::cout<<"obj: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	S_SET:					std::cout<<"s_set: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	MARKER:					std::cout<<"mk: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	OPERATOR:				std::cout<<"op: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	STRING:					std::cout<<"st: "<<std::dec<<getAtomCount();Members_to_go=String_data=getAtomCount();Char_count=(atom	&	0x000000FF);return;
+		case	C_PTR:					std::cout<<"cptr: "<<std::dec<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	SET:					std::cout<<"set: "<<std::dec<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	OBJECT:					std::cout<<"obj: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	S_SET:					std::cout<<"s_set: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	MARKER:					std::cout<<"mk: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	OPERATOR:				std::cout<<"op: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	STRING:					std::cout<<"st: "<<std::dec<<(uint16)getAtomCount();Members_to_go=String_data=getAtomCount();Char_count=(atom	&	0x000000FF);return;
 		case	TIMESTAMP:				std::cout<<"us";Members_to_go=Timestamp_data=2;return;
-		case	INSTANTIATED_PROGRAM:	std::cout<<"ipgm: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
-		case	GROUP:					std::cout<<"grp: "<<std::dec<<asOpcode()<<" "<<getAtomCount();Members_to_go=getAtomCount();return;
+		case	INSTANTIATED_PROGRAM:	std::cout<<"ipgm: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	GROUP:					std::cout<<"grp: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		default:
 			if(Timestamp_data){
 				

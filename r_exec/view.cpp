@@ -9,12 +9,12 @@ namespace	r_exec{
 
 	uint32	View::LastOID=0;
 
-	uint32	View::GetOID(){
+	Atom	View::GetOID(){
 
 		OID_sem.acquire();
 		uint32	oid=LastOID++;
 		OID_sem.release();
-		return	oid;
+		return	Atom::Float(oid);
 	}
 
 	uint16	View::ViewOpcode;
@@ -54,7 +54,14 @@ namespace	r_exec{
 		}
 
 		reset_ctrl_values();
-		reset_init_values();
+		reset_init_sln();
+		reset_init_act();
+	}
+
+	void	View::set_object(r_code::Code	*object){
+
+		this->object=object;
+		reset_init_act();
 	}
 
 	void	View::reset_ctrl_values(){
@@ -72,9 +79,13 @@ namespace	r_exec{
 		periods_at_high_act=0;
 	}
 
-	void	View::reset_init_values(){
+	void	View::reset_init_sln(){
 
 		initial_sln=get_sln();
+	}
+
+	void	View::reset_init_act(){
+
 		if(object!=NULL	&&	object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM)
 			initial_act=get_act_vis();
 		else
@@ -85,10 +96,10 @@ namespace	r_exec{
 
 		if(res_changes){
 
-			float32	new_res=(float32)acc_res/(float32)res_changes;
+			float32	new_res=get_res()+(float32)acc_res/(float32)res_changes;
 			if(new_res<0)
 				new_res=0;
-			code(VIEW_RES)=new_res;
+			code(VIEW_RES)=r_code::Atom::Float(new_res);
 		}
 		acc_res=0;
 		res_changes=0;
@@ -100,7 +111,7 @@ namespace	r_exec{
 		if(sln_changes){
 
 			change=-code(VIEW_SLN).asFloat();
-			float32	new_sln=acc_sln/sln_changes;
+			float32	new_sln=get_sln()+acc_sln/sln_changes;
 			if(new_sln<0)
 				new_sln=0;
 			else	if(new_sln>1)
@@ -144,7 +155,7 @@ namespace	r_exec{
 
 		if(act_vis_changes){
 
-			float32	new_act_vis=acc_act_vis/act_vis_changes;
+			float32	new_act_vis=get_act_vis()+acc_act_vis/act_vis_changes;
 			if(new_act_vis<0)
 				new_act_vis=0;
 			else	if(new_act_vis>1)
@@ -171,7 +182,7 @@ namespace	r_exec{
 		code(7)=r_code::Atom::Timestamp();						//	ijt will be set at injection time.
 		references[0]=destination;
 		references[1]=origin;
-		reset_init_values();
+		reset_init_sln();
 
 		object=marker;
 	}

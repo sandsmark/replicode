@@ -12,11 +12,13 @@ namespace	r_exec{
 	template<class	O,class	H,class	E>	Mem<O,H,E>::Mem(){
 
 		object_register_sem=new	FastSemaphore(1,1);
+		objects_sem=new	FastSemaphore(1,1);
 	}
 
 	template<class	O,class	H,class	E>	Mem<O,H,E>::~Mem(){
 
 		delete	object_register_sem;
+		delete	objects_sem;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -39,21 +41,25 @@ namespace	r_exec{
 		object_register_sem->acquire();
 		object_register.erase((O	*)object);
 		object_register_sem->release();
+
+		objects_sem->acquire();
+		objects.remove(object);
+		objects_sem->release();
 	}
 
 	template<class	O,class	H,class	E>	View	*Mem<O,H,E>::find_view(Code	*object,Code	*group){
 
-		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
-
 		((O	*)object)->acq_views();
 
-		for(v=((O	*)object)->views.begin();v!=((O	*)object)->views.end();++v)
-			if((*v)->get_host()==group){
+		r_code::View	probe;
+		probe.references[0]=group;
 
-				View	*found=new	View(*v);
-				((O	*)object)->rel_views();
-				return	found;
-			}
+		UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v=object->views.find(&probe);
+		if(v!=object->views.end()){
+
+			((O	*)object)->rel_views();
+			return	new	View((r_exec::View	*)*v);
+		}
 
 		((O	*)object)->rel_views();
 		return	NULL;
@@ -73,6 +79,8 @@ namespace	r_exec{
 
 	template<class	O,class	H,class	E>	void	Mem<O,H,E>::load(std::vector<r_code::Code	*>	*objects){	//	NB: no cov at init time.
 
+		need_reset=true;
+
 		uint32	i;
 		reduction_cores=new	ReductionCore	*[reduction_core_count];
 		for(i=0;i<reduction_core_count;++i)
@@ -83,22 +91,25 @@ namespace	r_exec{
 
 		//	load root
 		root=(Group	*)(*objects)[0];
+		this->objects.push_back(root);
+		initial_groups.push_back(root);
+
 		//	load conveniences
 		_stdin=(Group	*)(*objects)[1];
 		_stdout=(Group	*)(*objects)[2];
 		_self=(O	*)(*objects)[3];
 
-		for(uint32	i=1;i<objects->size();++i){
+		for(uint32	i=1;i<objects->size();++i){	//	skip root as it has no initial views.
 
 			O	*object=(O	*)(*objects)[i];
 
-			for(uint16	i=0;i<object->initial_views.size();++i){
+			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	it;
+			for(it=object->views.begin();it!=object->views.end();++it){
 
 				//	init hosts' member_set and object's view_map.
-				View	*view=(View	*)object->initial_views[i];
-				view->object=object;
+				View	*view=(r_exec::View	*)*it;
+				view->set_object(object);
 				Group	*host=view->get_host();
-				object->views.insert(view);
 
 				switch(GetType(object)){
 				case	ObjectType::GROUP:{
@@ -142,7 +153,8 @@ namespace	r_exec{
 					break;
 				}
 			}
-			object->initial_views.as_std()->clear();
+			
+			this->objects.push_back(object);
 
 			if(GetType(object)!=ObjectType::GROUP)	//	load non-group object in regsister and io map.
 				object_register.insert(object);
@@ -154,11 +166,6 @@ namespace	r_exec{
 	template<class	O,class	H,class	E>	void	Mem<O,H,E>::start(){
 
 		uint32	i;
-		for(i=0;i<reduction_core_count;++i)
-			reduction_cores[i]->start(ReductionCore::Run);
-		for(i=0;i<time_core_count;++i)
-			time_cores[i]->start(TimeCore::Run);
-
 		uint64	now=Now();
 		for(i=0;i<initial_groups.size();++i){
 
@@ -166,37 +173,39 @@ namespace	r_exec{
 			bool	c_active=g->get_c_act()>g->get_c_act_thr();
 			bool	c_salient=g->get_c_sln()>g->get_c_sln_thr();
 
+			FOR_ALL_VIEWS_BEGIN(g,v)
+				r_code::Timestamp::Set<View>(v->second,VIEW_IJT,now);	//	init injection time for the view.
+			FOR_ALL_VIEWS_END
+
 			if(c_active){
 
 				UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 
 				//	build signaling jobs for active input-less overlays.
-				for(v=g->input_less_ipgm_views_begin();v!=g->input_less_ipgm_views_end();v=g->next_input_less_ipgm_view(v)){
+				for(v=g->input_less_ipgm_views.begin();v!=g->input_less_ipgm_views.end();++v){
 
 					TimeJob	j(new	InputLessPGMSignalingJob(v->second->controller),now+g->get_spr()*base_period);
 					time_job_queue.push(j);
 				}
 
 				//	build signaling jobs for active anti-pgm overlays.
-				for(v=g->anti_ipgm_views_begin();v!=g->anti_ipgm_views_end();v=g->next_anti_pgm_view(v)){
+				for(v=g->anti_ipgm_views.begin();v!=g->anti_ipgm_views.end();++v){
 
-					TimeJob	j(new	AntiPGMSignalingJob(v->second->controller),now+Timestamp::Get(&v->second->controller->getIPGM()->references(0)->code(PGM_TSC)));
+					TimeJob	j(new	AntiPGMSignalingJob(v->second->controller),now+Timestamp::Get<O>(v->second->controller->getIPGM()->references(0),PGM_TSC));
 					time_job_queue.push(j);
 				}
 
 				if(c_salient){
 
 					//	build reduction jobs for each salient view and each active overlay.
-					UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
-					for(v=g->views_begin();v!=g->views_end();v=g->next_view(v)){
+					FOR_ALL_VIEWS_BEGIN(g,v)
 						
-						r_code::Timestamp::Set(&v->second->code(VIEW_IJT),now);	//	init injection time for the view.
 						if(v->second->get_sln()>g->get_sln_thr()){	//	salient view.
 
 							g->newly_salient_views.push_back(v->second);
 							_inject_reduction_jobs(v->second,g);
 						}
-					}
+					FOR_ALL_VIEWS_END
 				}
 			}
 
@@ -206,6 +215,11 @@ namespace	r_exec{
 		}
 
 		initial_groups.clear();
+
+		for(i=0;i<reduction_core_count;++i)
+			reduction_cores[i]->start(ReductionCore::Run);
+		for(i=0;i<time_core_count;++i)
+			time_cores[i]->start(TimeCore::Run);
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -213,8 +227,8 @@ namespace	r_exec{
 	template<class	O,class	H,class	E>	r_comp::Image	*Mem<O,H,E>::getImage(){
 
 		r_comp::Image	*image=new	r_comp::Image();
-		UNORDERED_SET<O	*,H,E>::iterator	i;
-		for(i=object_register.begin();i!=object_register.end();++i)
+		std::list<Code	*>::const_iterator	i;
+		for(i=objects.begin();i!=objects.end();++i)
 			image->operator	<<(*i);
 		return	image;
 	}
@@ -223,14 +237,14 @@ namespace	r_exec{
 
 	template<class	O,class	H,class	E>	void	Mem<O,H,E>::inject(O	*object,View	*view){
 
-		view->object=object;
+		view->set_object(object);
 		injectNow(view);
 	}
 
 	template<class	O,class	H,class	E>	void	Mem<O,H,E>::inject(View	*view){
 
 		uint64	now=Now();
-		uint64	ijt=r_code::Timestamp::Get(&view->code(VIEW_IJT));
+		uint64	ijt=view->get_ijt();
 		if(ijt<=now)
 			injectNow(view);
 		else{
@@ -266,10 +280,14 @@ namespace	r_exec{
 
 				object->views.insert(view);
 				uint64	now=Now();
-				r_code::Timestamp::Set(&view->code(VIEW_IJT),now);
+				r_code::Timestamp::Set<View>(view,VIEW_IJT,now);
 
 				object_register.insert(object);
 				object_register_sem->release();
+
+				objects_sem->acquire();
+				objects.push_back(object);
+				objects_sem->release();
 
 				switch(GetType(object)){
 				case	ObjectType::IPGM:{
@@ -292,7 +310,7 @@ namespace	r_exec{
 						for(uint32	i=0;i<host->newly_salient_views.size();++i)
 							o->take_input(host->newly_salient_views[i],this);	//	view will be copied.
 
-						TimeJob	j(new	AntiPGMSignalingJob(o),now+Timestamp::Get(&o->getIPGM()->references(0)->code(PGM_TSC)));
+						TimeJob	j(new	AntiPGMSignalingJob(o),now+Timestamp::Get<O>(o->getIPGM()->references(0),PGM_TSC));
 						time_job_queue.push(j);
 		
 					}
@@ -346,7 +364,7 @@ namespace	r_exec{
 
 	template<class	O,class	H,class	E>	void	Mem<O,H,E>::_inject_existing_object_now(View	*view,O	*object,Group	*host){
 
-		view->object=object;	//	the object already exists (content-wise): have the view point to the existing one.
+		view->set_object(object);	//	the object already exists (content-wise): have the view point to the existing one.
 
 		object->acq_views();
 		View	*existing_view=find_view(object,host);
@@ -390,12 +408,16 @@ namespace	r_exec{
 
 	template<class	O,class	H,class	E>	void	Mem<O,H,E>::_inject_group_now(View	*view,Group	*object,Group	*host){	//	groups are always new; no cov for groups; no need to protect object.
 
+		objects_sem->acquire();
+		objects.push_back(object);
+		objects_sem->release();
+
 		host->acquire();
 
 		host->group_views[view->getOID()]=view;
 
 		uint64	now=Now();
-		r_code::Timestamp::Set(&view->code(VIEW_IJT),now);
+		r_code::Timestamp::Set<View>(view,VIEW_IJT,now);
 		object->views.insert(view);
 
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr()){	//	host is c-salient and view is salient.
@@ -420,10 +442,15 @@ namespace	r_exec{
 													//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
 		Group	*host=view->get_host();
 		LObject	*object=(LObject	*)view->object;
-		
-		host->acquire();	//	TODO: only if ntf_grp!=producing grp (the latter is already protected in an update call).
 
-		r_code::Timestamp::Set(&view->code(VIEW_IJT),Now());
+		objects_sem->acquire();
+		objects.push_back(object);
+		objects_sem->release();
+		
+		if(lock)
+			host->acquire();
+
+		r_code::Timestamp::Set<View>(view,VIEW_IJT,Now());
 		host->notification_views[view->getOID()]=view;
 
 		object->views.insert(view);
@@ -431,7 +458,8 @@ namespace	r_exec{
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.
 			_inject_reduction_jobs(view,host);
 
-		host->release();
+		if(lock)
+			host->release();
 	}
 
 	template<class	O,class	H,class	E>	void	Mem<O,H,E>::update(Group	*group){
@@ -470,13 +498,12 @@ namespace	r_exec{
 
 		group->reset_stats();
 
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
-		for(v=group->views_begin();v!=group->views_end();v=group->next_view(v)){
+		FOR_ALL_VIEWS_BEGIN_NO_INC(group,v)
 
 			//	update resilience.
 			v->second->mod_res(-1);
 			float32	res=group->update_res(v->second,this);
-			if(res<=0	&&	now-v->second->get_ijt()>=group->get_upr()){	//	if now-ijt<upr, let the view live for one upr.
+			if(res>0){
 
 				//	update saliency (apply decay).
 				bool	wiew_was_salient=v->second->get_sln()>group->get_sln_thr();
@@ -548,6 +575,7 @@ namespace	r_exec{
 							group->new_controllers.push_back(v->second->controller);
 					}
 				}
+				++v;
 			}else{	//	view has no resilience.
 
 				if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM)	//	if ipgm view, kill the overlay.
@@ -559,27 +587,27 @@ namespace	r_exec{
 
 				//	delete the view.
 				if(v->second->isNotification())
-					group->notification_views.erase(v->first);
+					v=group->notification_views.erase(v);
 				else	switch(GetType(v->second->object)){
 				case	ObjectType::IPGM:
-					group->ipgm_views.erase(v->first);
+					v=group->ipgm_views.erase(v);
 					break;
 				case	ObjectType::ANTI_IPGM:
-					group->anti_ipgm_views.erase(v->first);
+					v=group->anti_ipgm_views.erase(v);
 					break;
 				case	ObjectType::INPUT_LESS_IPGM:
-					group->input_less_ipgm_views.erase(v->first);
+					v=group->input_less_ipgm_views.erase(v);
 					break;
 				case	ObjectType::OBJECT:
 				case	ObjectType::MARKER:
-					group->other_views.erase(v->first);
+					v=group->other_views.erase(v);
 					break;
 				case	ObjectType::GROUP:
-					group->group_views.erase(v->first);
+					v=group->group_views.erase(v);
 					break;
 				}
 			}
-		}
+		FOR_ALL_VIEWS_END
 
 		if(group_is_c_salient){	//	build reduction jobs.
 
@@ -606,7 +634,7 @@ namespace	r_exec{
 				switch(GetType(group->new_controllers[i]->getIPGM())){
 				case	ObjectType::ANTI_IPGM:{	//	inject signaling jobs for |ipgm (tsc).
 
-					TimeJob	j(new	AntiPGMSignalingJob(group->new_controllers[i]),now+Timestamp::Get(&group->new_controllers[i]->getIPGM()->references(0)->code(PGM_TSC)));
+					TimeJob	j(new	AntiPGMSignalingJob(group->new_controllers[i]),now+Timestamp::Get<O>(group->new_controllers[i]->getIPGM()->references(0),PGM_TSC));
 					time_job_queue.push(j);
 					break;
 				}case	ObjectType::INPUT_LESS_IPGM:{	//	inject a signaling job for an input-less pgm (sfr).
@@ -641,11 +669,11 @@ namespace	r_exec{
 		//	feedback can happen, i.e. m:(mk o1 o2); o1.vw.g propag -> o1 propag ->m propag -> o2 propag o2.vw.g, next upr in g, o2 propag -> m propag -> o1 propag -> o1,vw.g: loop!
 		//	to avoid this, have the psln_thr set to 1 in o2: this is applicaton-dependent.
 		object->acq_views();
-		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	it;
+		UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	it;
 		for(it=object->views.begin();it!=object->views.end();++it){
 
-			float32	morphed_sln_change=View::MorphChange(change,source_sln_thr,(*it)->get_host()->get_sln_thr());
-			(*it)->get_host()->pending_operations.push_back(Group::PendingOperation((*it)->getOID(),VIEW_RES,Group::MOD,morphed_sln_change));
+			float32	morphed_sln_change=View::MorphChange(change,source_sln_thr,((r_exec::View*)*it)->get_host()->get_sln_thr());
+			((r_exec::View*)*it)->get_host()->pending_operations.push_back(Group::PendingOperation(((r_exec::View*)*it)->getOID(),VIEW_RES,Group::MOD,morphed_sln_change));
 		}
 		object->rel_views();
 	}
@@ -657,12 +685,12 @@ namespace	r_exec{
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
 
 			//	build reduction jobs from host's own inputs and own overlays.
-			UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
-			for(v=host->ipgm_views_with_inputs_begin();v!=host->ipgm_views_with_inputs_end();v=host->next_ipgm_view_with_inputs(v)){
+			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(host,v)
 
 				if(v->second->get_act_vis()>host->get_sln_thr())	//	active ipgm view.
 					v->second->controller->take_input(v->second,this);	//	view will be copied.
-			}
+
+			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
 		}
 
 		//	build reduction jobs from host's own inputs and overlays from viewing groups, if no cov and view is not a notification.
@@ -674,12 +702,12 @@ namespace	r_exec{
 			if(vg->second	||	view->isNotification())	//	cov==true or notification.
 				continue;
 
-			UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
-			for(v=vg->first->ipgm_views_with_inputs_begin();v!=vg->first->ipgm_views_with_inputs_end();v=vg->first->next_ipgm_view_with_inputs(v)){
+			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
 
 				if(v->second->get_act_vis()>vg->first->get_sln_thr())	//	active ipgm view.
 					v->second->controller->take_input(v->second,this);			//	view will be copied.
-			}
+			
+			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
 		}
 	}
 

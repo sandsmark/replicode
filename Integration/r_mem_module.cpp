@@ -84,7 +84,7 @@ void	RMem::inject(RObject	*object,uint16	nodeID,STDGroupID	destination){
 	view->code(write_index++)=Atom::SSet(r_exec::View::ViewOpcode,arity);
 	view->code(write_index++)=Atom::UndefinedFloat();			//	oid; will be set by the rMem.
 	view->code(write_index++)=Atom::IPointer(extent_index);		//	ijt; will be set by the rMem.
-	Timestamp::Set(&view->code(write_index-1),r_exec::Now());
+	Timestamp::Set(&view->code(view->code(write_index-1).asIndex()),r_exec::Now());
 	view->code(write_index++)=Atom::Float(1.0);					//	sln.
 	view->code(write_index++)=Atom::Float(1.0);					//	res is set to 1 upr of the destination group.
 	view->code(write_index++)=Atom::RPointer(0);				//	stdin is the only reference.

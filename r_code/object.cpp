@@ -99,8 +99,9 @@ namespace	r_code{
 		for(i=0;i<source->code_size();++i)
 			code[i]=source->code(i);
 
-		for(i=0;i<source->initial_views.size();++i)
-			views[i]=new	SysView(source->initial_views[i]);
+		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
+		for(i=0,v=source->views.begin();v!=source->views.end();++i,++v)
+			views[i]=new	SysView(*v);
 	}
 
 	SysObject::~SysObject(){
@@ -213,8 +214,6 @@ namespace	r_code{
 	}
 
 	Code::~Code(){
-
-		initial_views.as_std()->clear();
 	}
 
 	void	Code::load(SysObject	*source){

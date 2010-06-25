@@ -70,6 +70,8 @@ namespace	r_exec{
 	bool	Init(const	char	*user_operator_library_path,
 				uint64			(*time_base)()){
 
+		Now=time_base;
+
 		UNORDERED_MAP<std::string,r_comp::Class>::iterator it;
 		for(it=Metadata.classes.begin();it!=Metadata.classes.end();++it){
 
@@ -202,8 +204,6 @@ namespace	r_exec{
 	bool	Init(const	char	*user_operator_library_path,
 				uint64			(*time_base)(),
 				const	char	*seed_path){
-
-		Now=time_base;
 
 		std::string	error;
 		if(!Compile(seed_path,error,true)){

@@ -440,7 +440,7 @@ namespace	r_exec{
 					Context	_view=args.getChild(2);
 					View	*view=new	View();
 					_view.copy(view,0);
-					view->object=object;
+					view->set_object(object);
 
 					mem->inject(view);
 				}else	if(function[0].asOpcode()==Opcodes::Eject){	//	args:[object view destination_node]; view.grp=destination grp (stdin ot stdout); retrieve the object and create a view.
@@ -450,7 +450,7 @@ namespace	r_exec{
 					Context	_view=args.getChild(2);
 					View	*view=new	View();
 					_view.copy(view,0);
-					view->object=object;
+					view->set_object(object);
 
 					Context	node=args.getChild(3);
 
@@ -622,7 +622,7 @@ namespace	r_exec{
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
 
-			ReductionJob	j(new	View(input),*o,now+Timestamp::Get(&getIPGM()->references(0)->code(PGM_TSC)));
+			ReductionJob	j(new	View(input),*o,now+Timestamp::Get<Code>(getIPGM()->references(0),PGM_TSC));
 			mem->pushReductionJob(j);
 		}
 	}
@@ -686,7 +686,7 @@ namespace	r_exec{
 			host->get_c_act()>host->get_c_act_thr()	&&		//	c-active group.
 			host->get_c_sln()>host->get_c_sln_thr()){		//	c-salient group.
 
-			TimeJob	next_job(new	AntiPGMSignalingJob(this),Now()+Timestamp::Get(&getIPGM()->references(0)->code(PGM_TSC)));
+			TimeJob	next_job(new	AntiPGMSignalingJob(this),Now()+Timestamp::Get<Code>(getIPGM()->references(0),PGM_TSC));
 			mem->pushTimeJob(next_job);
 		}
 

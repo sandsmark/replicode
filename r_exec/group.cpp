@@ -85,24 +85,24 @@ namespace	r_exec{
 
 		if(sln_change_monitoring_periods_to_go==0){
 
-			UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
-			for(v=non_ntf_views_begin();v!=non_ntf_views_end();v=next_non_ntf_view(v)){
+			FOR_ALL_NON_NTF_VIEWS_BEGIN(this,v)
 
 				float32	change=v->second->update_sln_delta();
 				if(fabs(change)>get_sln_chg_thr())
 					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkSlnChg(v->second->object,change)),false);
-			}
+			
+			FOR_ALL_NON_NTF_VIEWS_END
 		}
 
 		if(act_change_monitoring_periods_to_go==0){
 
-			UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
-			for(v=non_ntf_views_begin();v!=non_ntf_views_end();v=next_non_ntf_view(v)){
+			FOR_ALL_NON_NTF_VIEWS_BEGIN(this,v)
 
 				float32	change=v->second->update_act_delta();
 				if(fabs(change)>get_act_chg_thr())
 					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkActChg(v->second->object,change)),false);
-			}
+			
+			FOR_ALL_NON_NTF_VIEWS_END
 		}
 	}
 

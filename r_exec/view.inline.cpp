@@ -15,16 +15,18 @@ namespace	r_exec{
 		code(VIEW_OID)=GetOID();
 
 		reset_ctrl_values();
-		reset_init_values();
+		reset_init_sln();
+		reset_init_act();
 	}
 
-	inline	View::View(View	*view):r_code::View(){
+	inline	View::View(const	View	*view):r_code::View(){
 
 		object=view->object;
 		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom)+2*sizeof(Object	*));	//	reference_set is contiguous to code; memcpy in one go.
 
 		reset_ctrl_values();
-		reset_init_values();
+		reset_init_sln();
+		reset_init_act();
 	}
 
 	inline	View::~View(){
@@ -48,7 +50,7 @@ namespace	r_exec{
 
 	inline	uint64	View::get_ijt()	const{
 
-		return	Timestamp::Get(_code+VIEW_IJT);
+		return	Timestamp::Get(_code+_code[VIEW_IJT].asIndex());
 	}
 
 	inline	float32	View::get_res(){

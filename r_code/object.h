@@ -47,7 +47,7 @@ namespace	r_code{
 	public:
 		r_code::vector<Atom>	code;
 		r_code::vector<uint32>	references;	//	for views: 0, 1 or 2 elements; these are indexes in the relocation segment for grp (exception: not for root) and possibly org
-												//	for sys-objects: any number
+											//	for sys-objects: any number
 		virtual	void	write(word32	*data)=0;
 		virtual	void	read(word32		*data)=0;
 		virtual	void	trace()=0;
@@ -95,7 +95,7 @@ namespace	r_code{
 		Atom	_code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, oid, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
 	public:
 		P<Code>	object;						//	viewed object.
-		Code	*references[2];				//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group).
+		Code	*references[2];				//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group in references[0]).
 
 		View();
 		View(SysView	*source,Code	*object);
@@ -103,6 +103,20 @@ namespace	r_code{
 
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	code(uint16	i)	const{	return	_code[i];	}
+
+		class	Hash{
+		public:
+			size_t	operator	()(View	*v)	const{
+				return	(size_t)(Code	*)v->references[0];
+			}
+		};
+
+		class	Equal{
+		public:
+			bool	operator	()(const	View	*lhs,const	View	*rhs)	const{
+				return	lhs==rhs;
+			}
+		};
 	};
 
 	class	dll_export	Code:
@@ -112,7 +126,7 @@ namespace	r_code{
 		template<class	V>	void	build_views(SysObject	*source){
 
 			for(uint16	i=0;i<source->views.size();++i)
-				initial_views[i]=new	V(source->views[i],NULL);	//	no ref to the object: avoids circular deletion when not used in rMem.
+				views.insert(new	V(source->views[i],this));
 		}
 	public:
 		virtual	Atom	&code(uint16	i)=0;
@@ -122,9 +136,8 @@ namespace	r_code{
 		virtual	P<Code>	&references(uint16	i)	const=0;
 		virtual	uint16	references_size()	const=0;
 
-		r_code::vector<P<Code> >	markers;
-
-		r_code::vector<P<View> >	initial_views;
+		r_code::vector<P<Code> >						markers;
+		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	//	buckets indexed by groups.
 
 		Code();
 		virtual	~Code();

@@ -2254,7 +2254,7 @@ return_false:
 
 			if(write){
 
-				current_object->code[write_index]=Atom::Float(-1);
+				current_object->code[write_index]=Atom(0x3FC00000);	//	+INF; format: IEEE 754 32 bits.
 			}
 			return	true;
 		}

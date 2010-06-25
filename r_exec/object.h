@@ -39,8 +39,6 @@ namespace	r_exec{
 		Object();
 		Object(r_code::Mem	*mem);
 	public:
-		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;
-
 		virtual	~Object();	//	un-registers from the rMem's object_register.
 
 		void	compute_hash_value();
@@ -97,7 +95,7 @@ namespace	r_exec{
 		static	LObject	*Pack(Code	*object){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
 
 		LObject():Object<r_code::Object>(){}
-		LObject(r_code::SysObject	*source,r_code::Mem	*m):Object<r_code::Object>(mem){
+		LObject(r_code::SysObject	*source,r_code::Mem	*m):Object<r_code::Object>(m){
 		
 			load(source);
 			build_views<r_exec::View>(source);
