@@ -1,6 +1,4 @@
 #include	"decompiler.h"
-#include	"compiler.h"
-#include	"preprocessor.h"
 
 #include	"mem.h"
 #include	"init.h"
