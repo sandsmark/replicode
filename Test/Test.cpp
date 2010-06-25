@@ -5,8 +5,6 @@
 
 #include	"image_impl.h"
 
-#include	<iostream>
-
 
 using	namespace	r_comp;
 
