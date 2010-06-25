@@ -3,8 +3,6 @@
 #include	"mem.h"
 #include	"init.h"
 
-#include	"../CoreLibrary/utils.h"
-
 #include	"image_impl.h"
 
 #include	<iostream>
