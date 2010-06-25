@@ -5,6 +5,8 @@
 !class (mk.val (_obj {object: attribute: value:}))
 !class (mk.tag (_obj {object: tag:st}))
 
+!class (ValueClass (_obj {value:nb}))
+
 !dfn (sample_io_start :nb)
 !dfn (sample_io_stop)
 

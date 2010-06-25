@@ -1,0 +1,14 @@
+!load C:/Work/Replicode/test/user.classes.replicode
+
+pos1:(mk.val
+self
+position
+(vec3 0 0 0)
+|[]; view
+|[]; mks
+|[]; vws
+1; psln_thr
+)
+
+[]
+   [|nb now 1 1 stdin nil]
