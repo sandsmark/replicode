@@ -83,17 +83,17 @@ public:
 	}
 	void	react(ImageMessage	*p){
 		OUTPUT<<"RMem "<<"got an image"<<std::endl;
-		if(get_state()==STARTED){
+		//if(get_state()==STARTED){
 
 			r_comp::Image	*image=new	r_comp::Image();
 			image->load<ImageMessage>(p);
 			load(image);	//	stop the mem, reload and restart.
 			delete	image;
-		}
+		//}
 	}
 	void	react(CodePayload	*p){
 		OUTPUT<<"RMem "<<"got input code"<<std::endl;
-		inject(new	RObject(p),p->senderNodeID(),p->destination);	//	load input in the rMem.
+		inject(new	RObject(p,this),p->senderNodeID(),p->destination);	//	load input in the rMem.
 	}
 MODULE_CLASS_END(RMem)
 

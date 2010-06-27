@@ -42,15 +42,7 @@ template<class	U>	inline	void	NetworkMem<U>::eject(r_exec::View	*view,uint16	nod
 	else
 		destination=STDOUT;
 
-	CodePayload	*c;
-	if(!view->object->is_compact()){
-
-		c=new(view->object->code_size()+view->object->references_size())	CodePayload(view->object->code_size());
-		c->load(view->object);
-	}else
-		c=((RCode	*)view->object)->get_payload();
-
-	NODE->send(this,c,NODE->id(),N::PRIMARY);	//	we use for now one single node. In the future, nodeID referes to a node name (ex: 1 -> "node1").
+	NODE->send(this,((RCode	*)view->object)->get_payload(),NODE->id(),N::PRIMARY);	//	we use for now one single node. In the future, nodeID referes to a node name (ex: 1 -> "node1").
 }
 
 template<class	U>	inline	void	NetworkMem<U>::eject(r_exec::LObject	*command,uint16	nodeID){

@@ -56,19 +56,23 @@ int32	main(int	argc,char	**argv){
 		r_code::vector<r_code::Code	*>	ram_objects;
 		r_exec::Seed.getObjects(&r_exec::Metadata,mem,ram_objects);
 
-		mem->init(100000,1,1);
+		mem->init(100000,4,4);
 		mem->load(ram_objects.as_std());
 		mem->start();
 		uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
 		mem->stop();
+
+		r_comp::Image	*image=mem->getImage();
 
 		delete	mem;
 
 		Decompiler			decompiler;
 		std::ostringstream	decompiled_code;
 		decompiler.init(&r_exec::Metadata);
-		decompiler.decompile(&r_exec::Seed,&decompiled_code);
+		decompiler.decompile(image,&decompiled_code);
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
+
+		delete	image;
 	}
 
 	return	0;

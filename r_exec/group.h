@@ -116,25 +116,62 @@ namespace	r_exec{
 		//	Populated upon ipgm injection; used at update time; cleared afterward.
 		std::vector<IPGMController	*>	new_controllers;
 
-		typedef	enum{
-			MOD=0,
-			SET=1
-		}OpType;
-
-		class	PendingOperation{
+		class	Operation{
+		protected:
+			Operation(uint32	oid):oid(oid){}
 		public:
-			PendingOperation(uint32	oid,uint16	member_index,OpType	operation,float32	value):oid(oid),member_index(member_index),operation(operation),value(value){}
-			uint32	oid;		//	of the view.
-			uint16	member_index;
-			OpType	operation;
-			float32	value;
+			const	uint32	oid;	//	of the view.
+			virtual	void	execute(Group	*g)	const=0;
+		};
+
+		class	ModSet:
+		public	Operation{
+		protected:
+			ModSet(uint32	oid,uint16	member_index,float32	value):Operation(oid),member_index(member_index),value(value){}
+			const	uint16	member_index;
+			const	float32	value;
+		};
+
+		class	Mod:
+		public	ModSet{
+		public:
+			Mod(uint32	oid,uint16	member_index,float32	value):ModSet(oid,member_index,value){}
+			void	execute(Group	*g)	const{
+
+				View	*v=g->get_view(oid);
+				if(v)
+					v->mod(member_index,value);
+			}
+		};
+
+		class	Set:
+		public	ModSet{
+		public:
+			Set(uint32	oid,uint16	member_index,float32	value):ModSet(oid,member_index,value){}
+			void	execute(Group	*g)	const{
+
+				View	*v=g->get_view(oid);
+				if(v)
+					v->set(member_index,value);
+			}
+		};
+
+		//	For marker views only.
+		class	Del:
+		public	Operation{
+		public:
+			Del(uint32	oid):Operation(oid){}
+			void	execute(Group	*g)	const{
+
+				g->other_views.erase(oid);
+			}
 		};
 
 		//	Pending mod/set operations on the group's view, exploited and cleared at update time.
-		std::vector<PendingOperation>	pending_operations;
+		std::vector<Operation	*>	pending_operations;
 
-		Group();
-		Group(r_code::SysObject	*source);
+		Group(r_code::Mem	*m);
+		Group(r_code::SysObject	*source,r_code::Mem	*m);
 		~Group();
 
 		bool	all_views_cond(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
@@ -335,6 +372,7 @@ namespace	r_exec{
 }
 
 
+#include	"object.tpl.cpp"
 #include	"group.inline.cpp"
 
 

@@ -60,7 +60,7 @@ namespace	r_exec{
 
 		void	addReference(Code	*destination,uint16	&write_index)	const{
 
-			destination->add_reference(object->references(code[index].asIndex()));
+			destination->add_reference(object->get_reference(code[index].asIndex()));
 			destination->code(write_index++)=Atom::RPointer(destination->references_size()-1);
 		}
 
@@ -71,7 +71,7 @@ namespace	r_exec{
 				r_ptr_index=1;
 			else
 				r_ptr_index=0;
-			destination->references[r_ptr_index]=object->references(code[index].asIndex());
+			destination->references[r_ptr_index]=object->get_reference(code[index].asIndex());
 			destination->code(write_index++)=Atom::RPointer(r_ptr_index);
 		}
 	public:
@@ -92,9 +92,12 @@ namespace	r_exec{
 				return	Context(object,NULL,code,index,NULL,REFERENCE).dereference();
 			case	VIEW:
 				return	Context(object,view,code,index,NULL,VIEW).dereference();
-			case	MKS:
-				return	Context(object->markers[index-1],0);
-			case	VWS:
+			case	MKS:{
+				uint16	i=0;
+				std::list<Code	*>::const_iterator	m;
+				for(m=object->markers.begin();i<index-1;++m,++i);
+				return	Context(*m,0);
+			}case	VWS:
 				return	Context();	//	never used for iterating views (unexposed).
 			default:	//	undefined context.
 				return	Context();
@@ -154,7 +157,7 @@ namespace	r_exec{
 			return	overlay->values.size()-1;
 		}
 
-		uint16	addProduction(LObject	*object)	const{
+		uint16	addProduction(Code	*object)	const{
 			overlay->productions.push_back(object);
 			return	overlay->productions.size()-1;
 		}
@@ -231,6 +234,9 @@ namespace	r_exec{
 
 		//	'this' is a context on a pattern skeleton.
 		bool	match(const	Context	&input)	const;
+
+		//	called by operators.
+		r_code::Code	*buildObject(Atom	head)	const{	return	overlay->buildObject(head);	}
 	};
 }
 

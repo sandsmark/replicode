@@ -118,6 +118,8 @@ namespace	r_exec{
 
 		r_code::Code	*getInputObject(uint16	i)	const;
 		r_exec::View	*getInputView(uint16	i)	const;
+
+		r_code::Code	*buildObject(Atom	head)	const;
 	};
 
 	class	r_exec_dll	AntiOverlay:
@@ -134,47 +136,35 @@ namespace	r_exec{
 		void	kill();
 		bool	is_alive()	const;
 
-		void	reduce(r_exec::View	*input,_Mem	*mem);	//	called upon the processing of a reduction job.
+		void	reduce(r_exec::View	*input);	//	called upon the processing of a reduction job.
 	};
 
 	class	r_exec_dll	IPGMController:
 	public	_Object{
 	private:
+		_Mem					*mem;
 		r_code::View			*ipgm_view;
 		bool					alive;
 		std::list<P<Overlay> >	overlays;
 		bool					successful_match;
 	public:
-		IPGMController(r_code::View	*ipgm_view):_Object(),ipgm_view(ipgm_view),alive(true),successful_match(false){}
+		IPGMController(_Mem	*m,r_code::View	*ipgm_view):_Object(),mem(m),ipgm_view(ipgm_view),alive(true),successful_match(false){}
 		~IPGMController(){}
 
+		_Mem			*get_mem()		const{	return	mem;	}
 		r_code::Code	*getIPGM()		const;
 		r_exec::View	*getIPGMView()	const;
 
 		void	kill();
 		bool	is_alive()	const;
 
-		void	take_input(r_exec::View	*input,_Mem	*mem);	//	push one job for each overlay; called by the rMem at update time and at injection time.
-		void	signal_anti_pgm(_Mem	*mem);
-		void	signal_input_less_pgm(_Mem	*mem);
+		void	take_input(r_exec::View	*input);	//	push one job for each overlay; called by the rMem at update time and at injection time.
+		void	signal_anti_pgm();
+		void	signal_input_less_pgm();
 
 		void	remove(Overlay	*overlay);
 		void	add(Overlay	*overlay);
-		void	restart(AntiOverlay	*overlay,_Mem	*mem,bool	match);
-
-		class	Hash{
-		public:
-			size_t	operator	()(IPGMController	*o)	const{
-				return	(size_t)o;
-			}
-		};
-
-		class	Equal{
-		public:
-			bool	operator	()(const	IPGMController	*lhs,const	IPGMController	*rhs)	const{
-				return	lhs==rhs;
-			}
-		};
+		void	restart(AntiOverlay	*overlay,bool	match);
 	};
 }
 

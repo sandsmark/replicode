@@ -143,7 +143,9 @@ namespace	r_exec{
 
 		//	From rMem to I/O device.
 		//	To be redefined by object transport aware subcalsses.
-		virtual	void	eject(LObject	*command,uint16	nodeID);
+		virtual	void	eject(Code	*command,uint16	nodeID);
+
+		virtual	r_code::Code	*buildObject(Atom	head)=0;
 	};
 
 	//	O is the class of the objects held by the Mem.
@@ -166,6 +168,7 @@ namespace	r_exec{
 		void	_inject_existing_object_now(View	*view,O	*object,Group	*host);
 		void	_inject_reduction_jobs(View	*view,Group	*host);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
 																//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
+
 		void	_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr);
 		void	_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path);
 		void	_propagate_sln(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path);
@@ -179,8 +182,11 @@ namespace	r_exec{
 		Mem();
 		virtual	~Mem();
 
+		//	Called by r_comp::Image.
 		r_code::Code	*buildObject(r_code::SysObject	*source);
-		r_code::Code	*buildGroup(r_code::SysObject	*source);
+
+		//	Called by operators and overlays.
+		r_code::Code	*buildObject(Atom	head);
 
 		void	load(std::vector<r_code::Code	*>	*objects);	//	call before start; 0: root, 1.stdin, 2:stdout, 3:self: these objects must be defined in the source code in that order; no mod/set/eje will be executed (only inj); ijt will be set at now=Time::Get() whatever the source code.
 		void	start();

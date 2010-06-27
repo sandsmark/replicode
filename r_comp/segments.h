@@ -129,8 +129,8 @@ namespace	r_comp{
 									int32	referencing_view_index,
 									uint32	reference_pointer_index);
 		void	addMarkerReference(uint32	referenced_object_index,
-									uint32	referencing_object_index,
-									uint32	reference_pointer_index);
+									uint32	referencing_object_index/*,
+									uint32	reference_pointer_index*/);
 
 		void	write(word32	*data);
 		void	read(word32		*data);

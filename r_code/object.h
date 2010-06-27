@@ -36,6 +36,8 @@
 #include	"base.h"
 #include	"replicode_defs.h"
 
+#include	<list>
+
 
 using	namespace	core;
 
@@ -97,9 +99,19 @@ namespace	r_code{
 		P<Code>	object;						//	viewed object.
 		Code	*references[2];				//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group in references[0]).
 
-		View();
-		View(SysView	*source,Code	*object);
-		virtual	~View();
+		View():object(NULL){
+
+			references[0]=references[1]=NULL;
+		}
+
+		View(SysView	*source,Code	*object){
+
+			for(uint32	i=0;i<source->code.size();++i)
+				_code[i]=source->code[i];
+			references[0]=references[1]=NULL;
+		}
+
+		virtual	~View(){}
 
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	code(uint16	i)	const{	return	_code[i];	}
@@ -122,7 +134,11 @@ namespace	r_code{
 	class	dll_export	Code:
 	public	_Object{
 	protected:
-		void	load(SysObject	*source);
+		void	load(SysObject	*source){
+
+			for(uint16	i=0;i<source->code.size();++i)
+				code(i)=source->code[i];
+		}
 		template<class	V>	void	build_views(SysObject	*source){
 
 			for(uint16	i=0;i<source->views.size();++i)
@@ -132,47 +148,74 @@ namespace	r_code{
 		virtual	Atom	&code(uint16	i)=0;
 		virtual	Atom	&code(uint16	i)	const=0;
 		virtual	uint16	code_size()	const=0;
-		virtual	P<Code>	&references(uint16	i)=0;
-		virtual	P<Code>	&references(uint16	i)	const=0;
+		virtual	void	set_reference(uint16	i,Code	*object)=0;
+		virtual	Code	*get_reference(uint16	i)	const=0;
 		virtual	uint16	references_size()	const=0;
 
-		r_code::vector<P<Code> >						markers;
-		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	//	buckets indexed by groups.
+		virtual	bool	is_compact()	const{	return	false;	}
 
-		Code();
-		virtual	~Code();
+		std::list<Code	*>								markers;
+		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	//	indexed by groups.
+
+		Code(){}
+		virtual	~Code(){}
 
 		virtual	void	mod(uint16	member_index,float32	value){};
 		virtual	void	set(uint16	member_index,float32	value){};
 		virtual	View	*find_view(Code	*group,bool	lock){	return	NULL;	}
-		virtual	bool	is_compact()	const{	return	false;	}
-		virtual	void	add_reference(Code	*object)	const{}
+		virtual	void	add_reference(Code	*object)	const{}	//	called only on local objects.
+
+		virtual	void	kill(Code	*origin){	delete	this;	}	//	called only on markers.
+		virtual	void	remove_marker(Code	*m)=0;
 	};
 
-	class	dll_export	Object:
+	//	Implementation for local objects (non distributed).
+	class	dll_export	LObject:
 	public	Code{
-	private:
-		r_code::vector<Atom>		_code;
-		r_code::vector<P<Code> >	_references;
+	protected:
+		r_code::vector<Atom>	_code;
+		r_code::vector<Code	*>	_references;
 	public:
-		Object();
-		Object(SysObject	*source);
-		virtual	~Object();
+		LObject():Code(){}
+		LObject(SysObject	*source):Code(){
+			
+			load(source);
+			build_views<View>(source);
+		}
+		virtual	~LObject(){	//	delete references if non-marker; kill all markers.
+
+			if(code(0).getDescriptor()!=Atom::MARKER)
+				for(uint16	i=0;references_size();++i)
+					get_reference(i)->decRef();
+
+			std::list<Code	*>::const_iterator	m;
+			for(m=markers.begin();m!=markers.end();++m)
+				(*m)->kill(this);
+		}
 
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	&code(uint16	i)	const{	return	(*_code.as_std())[i];	}
 		uint16	code_size()	const{	return	_code.size();	}
-		P<Code>	&references(uint16	i){	return	_references[i];	}
-		P<Code>	&references(uint16	i)	const{	return	(*_references.as_std())[i];	}
+		void	set_reference(uint16	i,Code	*object){
+			
+			_references[i]=object;
+			if(_code[0].getDescriptor()!=Atom::MARKER)
+				object->incRef();
+		}
+		Code	*get_reference(uint16	i)	const{	return	(*_references.as_std())[i];	}
 		uint16	references_size()	const{	return	_references.size();	}
 
-		void	add_reference(Code	*object)	const{	_references.as_std()->push_back(object);	}
+		void	add_reference(Code	*object)	const{
+			
+			_references.as_std()->push_back(object);
+			if(code(0).getDescriptor()!=Atom::MARKER)
+				object->incRef();
+		}
 	};
 
 	class	Mem{
 	public:
 		virtual	Code	*buildObject(SysObject	*source)=0;
-		virtual	Code	*buildGroup(SysObject	*source)=0;
 		virtual	void	deleteObject(Code	*object)=0;
 	};
 }

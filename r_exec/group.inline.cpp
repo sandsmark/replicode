@@ -30,14 +30,14 @@
 
 namespace	r_exec{
 
-	inline	Group::Group():LObject(),FastSemaphore(1,1){
+	inline	Group::Group(r_code::Mem	*m):LObject(m),FastSemaphore(1,1){
 
 		reset_ctrl_values();
 		reset_stats();
 		reset_decay_values();
 	}
 
-	inline	Group::Group(r_code::SysObject	*source):LObject(source,NULL),FastSemaphore(1,1){
+	inline	Group::Group(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),FastSemaphore(1,1){
 
 		reset_ctrl_values();
 		reset_stats();
@@ -272,7 +272,7 @@ namespace	r_exec{
 			return	this;
 
 		uint32	index=code(GRP_NTF_GRP).asIndex();
-		return	(Group	*)references(index);
+		return	(Group	*)get_reference(index);
 	}
 
 	inline	void	Group::_mod_0_positive(uint16	member_index,float32	value){

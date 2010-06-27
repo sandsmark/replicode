@@ -49,22 +49,34 @@ namespace	r_exec{
 
 	template<class	O>	r_code::Code	*Mem<O>::buildObject(r_code::SysObject	*source){
 
-		return	new	O(source,this);
+		switch(source->code[0].getDescriptor()){
+		case	Atom::GROUP:
+			return	new	Group(source,this);
+		default:
+			return	new	O(source,this);
+		}
 	}
 
-	template<class	O>	r_code::Code	*Mem<O>::buildGroup(r_code::SysObject	*source){
+	template<class	O>	r_code::Code	*Mem<O>::buildObject(Atom	head){
 
-		return	new	Group(source);
+		switch(head.getDescriptor()){
+		case	Atom::GROUP:
+			return	new	Group(this);
+		default:
+			return	new	LObject(this);
+		}
 	}
 
 	////////////////////////////////////////////////////////////////
 
 	template<class	O>	void	Mem<O>::deleteObject(Code	*object){
 
-		//	erase from object_register.
-		object_register_sem->acquire();
-		object_register.erase(((O	*)object)->position_in_object_register);
-		object_register_sem->release();
+		if(!IsNotification(object)	&&	GetType(object)!=GROUP){
+
+			object_register_sem->acquire();
+			object_register.erase(((O	*)object)->position_in_object_register);
+			object_register_sem->release();
+		}
 
 		objects_sem->acquire();
 		objects.erase(((O	*)object)->position_in_objects);
@@ -131,7 +143,7 @@ namespace	r_exec{
 					host->ipgm_views[view->getOID()]=view;
 					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
 
-						IPGMController	*o=new	IPGMController(view);	//	now will be added to the deadline at start time.
+						IPGMController	*o=new	IPGMController(this,view);	//	now will be added to the deadline at start time.
 						view->controller=o;	//	init the view's overlay.
 					}
 					break;
@@ -139,7 +151,7 @@ namespace	r_exec{
 					host->input_less_ipgm_views[view->getOID()]=view;
 					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
 
-						IPGMController	*o=new	IPGMController(view);	//	now will be added to the deadline at start time.
+						IPGMController	*o=new	IPGMController(this,view);	//	now will be added to the deadline at start time.
 						view->controller=o;	//	init the view's overlay.
 					}
 					break;
@@ -147,12 +159,12 @@ namespace	r_exec{
 					host->anti_ipgm_views[view->getOID()]=view;
 					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
 
-						IPGMController	*o=new	IPGMController(view);	//	now will be added to the deadline at start time.
+						IPGMController	*o=new	IPGMController(this,view);	//	now will be added to the deadline at start time.
 						view->controller=o;	//	init the view's overlay.
 					}
 					break;
 				case	ObjectType::OBJECT:
-				case	ObjectType::MARKER:
+				case	ObjectType::MARKER:	//	marked objects come with their markers vector populated (Image::unpackObjects).
 					host->other_views[view->getOID()]=view;
 					break;
 				}
@@ -202,7 +214,7 @@ namespace	r_exec{
 				//	build signaling jobs for active anti-pgm overlays.
 				for(v=g->anti_ipgm_views.begin();v!=g->anti_ipgm_views.end();++v){
 
-					TimeJob	j(new	AntiPGMSignalingJob(v->second->controller),now+Timestamp::Get<O>(v->second->controller->getIPGM()->references(0),PGM_TSC));
+					TimeJob	j(new	AntiPGMSignalingJob(v->second->controller),now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
 					time_job_queue->push(j);
 				}
 
@@ -278,7 +290,7 @@ namespace	r_exec{
 
 			O	*object;
 			if(O::RequiresPacking())	//	false if LObject, true for network-aware objects.
-				view->object=O::Pack(view->object);	//	non compact form will be deleted (P<> in view) if not an instance of O; compact forms are left unchanged.
+				view->object=O::Pack(view->object,this);	//	non compact form will be deleted (P<> in view) if not an instance of O; compact forms are left unchanged.
 			object=(O	*)view->object;
 
 			object_register_sem->acquire();
@@ -306,31 +318,31 @@ namespace	r_exec{
 				case	ObjectType::IPGM:{
 
 					host->ipgm_views[view->getOID()]=view;
-					IPGMController	*o=new	IPGMController(view);
+					IPGMController	*o=new	IPGMController(this,view);
 					view->controller=o;
 					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
 						for(uint32	i=0;i<host->newly_salient_views.size();++i)
-							o->take_input(host->newly_salient_views[i],this);	//	view will be copied.
+							o->take_input(host->newly_salient_views[i]);	//	view will be copied.
 					}
 					break;
 				}case	ObjectType::ANTI_IPGM:{
 					host->anti_ipgm_views[view->getOID()]=view;
-					IPGMController	*o=new	IPGMController(view);
+					IPGMController	*o=new	IPGMController(this,view);
 					view->controller=o;
 					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
 						for(uint32	i=0;i<host->newly_salient_views.size();++i)
-							o->take_input(host->newly_salient_views[i],this);	//	view will be copied.
+							o->take_input(host->newly_salient_views[i]);	//	view will be copied.
 
-						TimeJob	j(new	AntiPGMSignalingJob(o),now+Timestamp::Get<O>(o->getIPGM()->references(0),PGM_TSC));
+						TimeJob	j(new	AntiPGMSignalingJob(o),now+Timestamp::Get<Code>(o->getIPGM()->get_reference(0),PGM_TSC));
 						time_job_queue->push(j);
 		
 					}
 					break;
 				}case	ObjectType::INPUT_LESS_IPGM:{
 					host->input_less_ipgm_views[view->getOID()]=view;
-					IPGMController	*o=new	IPGMController(view);
+					IPGMController	*o=new	IPGMController(this,view);
 					view->controller=o;
 					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
@@ -341,9 +353,9 @@ namespace	r_exec{
 				}case	ObjectType::MARKER:	//	the marker does not exist yet: add it to the mks of its references.
 					for(uint32	i=0;i<object->references_size();++i){
 
-						((O	*)object->references(i))->acq_marker_set();
-						object->references(i)->markers.push_back(object);
-						((O	*)object->references(i))->rel_marker_set();
+						((O	*)object->get_reference(i))->acq_markers();
+						object->get_reference(i)->markers.push_back(object);
+						((O	*)object->get_reference(i))->rel_markers();
 					}
 				case	ObjectType::OBJECT:{
 					host->other_views[view->getOID()]=view;
@@ -362,7 +374,7 @@ namespace	r_exec{
 					_inject_reduction_jobs(view,host);
 
 				if(host->get_ntf_new()==1)	//	the view cannot be a ntf view (would use injectNotificationNow instead).
-					injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(object)),false);	//	the object appears for the first time in the group: notify.
+					injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),false);	//	the object appears for the first time in the group: notify.
 
 				host->release();
 			}
@@ -407,13 +419,13 @@ namespace	r_exec{
 
 			object->rel_views();
 
-			host->pending_operations.push_back(Group::PendingOperation(existing_view->getOID(),VIEW_RES,Group::SET,view->get_res()));
-			host->pending_operations.push_back(Group::PendingOperation(existing_view->getOID(),VIEW_SLN,Group::SET,view->get_sln()));
+			host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),VIEW_RES,view->get_res()));
+			host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),VIEW_SLN,view->get_sln()));
 			switch(GetType(object)){
 			case	ObjectType::IPGM:
 			case	ObjectType::ANTI_IPGM:
 			case	ObjectType::INPUT_LESS_IPGM:
-				host->pending_operations.push_back(Group::PendingOperation(existing_view->getOID(),IPGM_VIEW_ACT,Group::SET,view->get_act_vis()));
+				host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),IPGM_VIEW_ACT,view->get_act_vis()));
 				break;
 			}
 		}
@@ -446,7 +458,7 @@ namespace	r_exec{
 		time_job_queue->push(j);
 
 		if(host->get_ntf_new()==1)
-			injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(object)),false);	//	the group appears for the first time in the group: notify.
+			injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),false);	//	the group appears for the first time in the group: notify.
 
 		host->release();
 	}
@@ -486,16 +498,8 @@ namespace	r_exec{
 		//	execute pending operations.
 		for(uint32	i=0;i<group->pending_operations.size();++i){
 
-			View	*v=group->get_view(group->pending_operations[i].oid);
-			if(v)
-				switch(group->pending_operations[i].operation){
-				case	Group::MOD:
-					v->mod(group->pending_operations[i].member_index,group->pending_operations[i].value);
-					break;
-				case	Group::SET:
-					v->set(group->pending_operations[i].member_index,group->pending_operations[i].value);
-					break;
-				}
+			group->pending_operations[i]->execute(group);
+			delete	group->pending_operations[i];
 		}
 		group->pending_operations.clear();
 
@@ -647,7 +651,7 @@ namespace	r_exec{
 				switch(GetType(group->new_controllers[i]->getIPGM())){
 				case	ObjectType::ANTI_IPGM:{	//	inject signaling jobs for |ipgm (tsc).
 
-					TimeJob	j(new	AntiPGMSignalingJob(group->new_controllers[i]),now+Timestamp::Get<O>(group->new_controllers[i]->getIPGM()->references(0),PGM_TSC));
+					TimeJob	j(new	AntiPGMSignalingJob(group->new_controllers[i]),now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
 					time_job_queue->push(j);
 					break;
 				}case	ObjectType::INPUT_LESS_IPGM:{	//	inject a signaling job for an input-less pgm (sfr).
@@ -686,7 +690,7 @@ namespace	r_exec{
 		for(it=object->views.begin();it!=object->views.end();++it){
 
 			float32	morphed_sln_change=View::MorphChange(change,source_sln_thr,((r_exec::View*)*it)->get_host()->get_sln_thr());
-			((r_exec::View*)*it)->get_host()->pending_operations.push_back(Group::PendingOperation(((r_exec::View*)*it)->getOID(),VIEW_RES,Group::MOD,morphed_sln_change));
+			((r_exec::View*)*it)->get_host()->pending_operations.push_back(new	Group::Mod(((r_exec::View*)*it)->getOID(),VIEW_RES,morphed_sln_change));
 		}
 		object->rel_views();
 	}
@@ -701,7 +705,7 @@ namespace	r_exec{
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(host,v)
 
 				if(v->second->get_act_vis()>host->get_sln_thr())	//	active ipgm view.
-					v->second->controller->take_input(v->second,this);	//	view will be copied.
+					v->second->controller->take_input(v->second);	//	view will be copied.
 
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
 		}
@@ -718,7 +722,7 @@ namespace	r_exec{
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
 
 				if(v->second->get_act_vis()>vg->first->get_sln_thr())	//	active ipgm view.
-					v->second->controller->take_input(v->second,this);			//	view will be copied.
+					v->second->controller->take_input(v->second);			//	view will be copied.
 			
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
 		}
@@ -734,19 +738,20 @@ namespace	r_exec{
 			if(GetType(object)==ObjectType::MARKER){	//	if marker, propagate to references.
 
 				for(uint32	i=0;object->references_size();++i)
-					_propagate_sln(object->references(i),change,source_sln_thr,path);
+					_propagate_sln((O	*)object->get_reference(i),change,source_sln_thr,path);
 			}
 
 			//	propagate to markers
-			object->acq_marker_set();
-			for(uint32	i=0;object->markers.size();++i)
-				_propagate_sln(object->markers[i],change,source_sln_thr,path);
-			object->rel_marker_set();
+			object->acq_markers();
+			std::list<Code	*>::const_iterator	m;
+			for(m=object->markers.begin();m!=object->markers.end();++m)
+				_propagate_sln((O	*)*m,change,source_sln_thr,path);
+			object->rel_markers();
 		}
 	}
 
 	template<class	O>	void	Mem<O>::_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path){
-		
+			
 		//	prevent loops.
 		for(uint32	i=0;i<path.size();++i)
 			if(path[i]==object)
@@ -758,13 +763,14 @@ namespace	r_exec{
 
 			if(GetType(object)==ObjectType::MARKER)	//	if marker, propagate to references.
 				for(uint32	i=0;object->references_size();++i)
-					_propagate_sln(object->references(i),change,source_sln_thr,path);
+					_propagate_sln((O	*)object->get_reference(i),change,source_sln_thr,path);
 
 			//	propagate to markers
-			object->acq_marker_set();
-			for(uint32	i=0;object->markers.size();++i)
-				_propagate_sln(object->markers[i],change,source_sln_thr,path);
-			object->rel_marker_set();
+			object->acq_markers();
+			std::list<Code	*>::const_iterator	m;
+			for(m=object->markers.begin();m!=object->markers.end();++m)
+				_propagate_sln((O	*)*m,change,source_sln_thr,path);
+			object->rel_markers();
 		}
 	}
 

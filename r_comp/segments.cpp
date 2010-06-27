@@ -373,9 +373,9 @@ namespace	r_comp{
 		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,referencing_view_index,reference_pointer_index));
 	}
 
-	void	RelocationSegment::addMarkerReference(uint32	referenced_object_index,uint32	referencing_object_index,uint32	reference_pointer_index){
+	void	RelocationSegment::addMarkerReference(uint32	referenced_object_index,uint32	referencing_object_index/*,uint32	reference_pointer_index*/){
 
-		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,-2,reference_pointer_index));
+		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,-2,0/*reference_pointer_index*/));
 	}
 	
 	void	RelocationSegment::write(word32	*data){
@@ -446,11 +446,11 @@ namespace	r_comp{
 		SysObject	*sys_object=new	SysObject(object);
 		addObject(sys_object);
 
-		uint32	i;
-		for(i=0;i<object->references_size();++i)	//	follow reference pointers and recurse
-			*this<<object->references(i);
-		for(i=0;i<object->markers.size();++i)	//	follow marker pointers and recurse
-			*this<<object->markers[i];
+		for(uint32	i=0;i<object->references_size();++i)	//	follow reference pointers and recurse.
+			*this<<object->get_reference(i);
+		std::list<Code	*>::const_iterator	m;
+		for(m=object->markers.begin();m!=object->markers.end();++m)	//	follow marker pointers and recurse.
+			*this<<*m;
 
 		buildReferences(sys_object,object,object_index);
 		return	*this;
@@ -463,7 +463,7 @@ namespace	r_comp{
 		uint32	referenced_object_index;
 		for(i=0;i<object->references_size();++i){
 
-			referenced_object_index=ptrs_to_indices.find(object->references(i))->second;
+			referenced_object_index=ptrs_to_indices.find(object->get_reference(i))->second;
 			sys_object->references.push_back(referenced_object_index);
 			relocation_segment.addObjectReference(referenced_object_index,object_index,i);
 		}
@@ -478,31 +478,26 @@ namespace	r_comp{
 					relocation_segment.addViewReference(referenced_object_index,object_index,i,j);
 				}
 			}
-		for(i=0;i<object->markers.size();++i){
+		std::list<Code	*>::const_iterator	m;
+		for(m=object->markers.begin();m!=object->markers.end();++m){
 
-			referenced_object_index=ptrs_to_indices.find(object->markers[i])->second;
+			referenced_object_index=ptrs_to_indices.find(*m)->second;
 			sys_object->markers.push_back(referenced_object_index);
-			relocation_segment.addMarkerReference(referenced_object_index,object_index,i);
+			relocation_segment.addMarkerReference(referenced_object_index,object_index);
 		}
 	}
 
 	void	Image::getObjects(Metadata	*class_image,Mem	*mem,r_code::vector<Code	*>	&ram_objects){
 
-		for(uint32	i=0;i<code_segment.objects.size();++i){
-
-			uint16	opcode=code_segment.objects[i]->code[0].asOpcode();
-			if(opcode==class_image->classes.find("grp")->second.atom.asOpcode())
-				ram_objects[i]=mem->buildGroup(code_segment.objects[i]);
-			else
-				ram_objects[i]=mem->buildObject(code_segment.objects[i]);
-		}
+		for(uint32	i=0;i<code_segment.objects.size();++i)
+			ram_objects[i]=mem->buildObject(code_segment.objects[i]);
 		unpackObjects(ram_objects);
 	}
 
 	void	Image::unpackObjects(r_code::vector<Code	*>	&ram_objects){
 
 		//	Translate indices into pointers
-		for(uint32	i=0;i<relocation_segment.entries.size();++i){	//	for each allocated object, write its address in the reference set of the objects or views that reference it
+		for(uint32	i=0;i<relocation_segment.entries.size();++i){	//	for each allocated object, write its address in the reference set of the objects or views that reference it.
 
 			r_code::Code				*referenced_object=ram_objects[i];
 			RelocationSegment::Entry	e=relocation_segment.entries[i];
@@ -512,10 +507,11 @@ namespace	r_comp{
 				r_code::Code	*referencing_object=ram_objects[p.object_index];
 				switch(p.view_index){
 				case	-1:
-					referencing_object->references(p.pointer_index)=referenced_object;
+					referencing_object->set_reference(p.pointer_index,referenced_object);
 					break;
 				case	-2:
-					referencing_object->markers[p.pointer_index]=referenced_object;
+					//referencing_object->markers[p.pointer_index]=referenced_object;
+					referencing_object->markers.push_back(referenced_object);
 					break;
 				default:{
 					UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v=referencing_object->views.begin();

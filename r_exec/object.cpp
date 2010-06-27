@@ -29,6 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"object.h"
+#include	"group.h"
 #include	"opcodes.h"
 
 
@@ -53,9 +54,9 @@ namespace	r_exec{
 
 		switch(object->code(0).getDescriptor()){
 		case	Atom::INSTANTIATED_PROGRAM:
-			if(object->references(0)->code(0).asOpcode()==Opcodes::PGM){
+			if(object->get_reference(0)->code(0).asOpcode()==Opcodes::PGM){
 
-				if(object->references(0)->code(object->references(0)->code(PGM_INPUTS).asIndex()).getAtomCount()>0)
+				if(object->get_reference(0)->code(object->get_reference(0)->code(PGM_INPUTS).asIndex()).getAtomCount()>0)
 					return	IPGM;
 				else
 					return	ANTI_IPGM;

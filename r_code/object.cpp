@@ -207,49 +207,4 @@ namespace	r_code{
 				std::cout<<j<<" "<<views[k]->references[j]<<std::endl;
 		}
 	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	Code::Code(){
-	}
-
-	Code::~Code(){
-	}
-
-	void	Code::load(SysObject	*source){
-
-		for(uint16	i=0;i<source->code.size();++i)
-			code(i)=source->code[i];
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	Object::Object():Code(){
-	}
-
-	Object::Object(SysObject	*source){
-
-		load(source);
-		build_views<View>(source);
-	}
-
-	Object::~Object(){
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	View::View():object(NULL){
-
-		references[0]=references[1]=NULL;
-	}
-
-	View::View(SysView	*source,Code	*object):object(object){
-
-		for(uint32	i=0;i<source->code.size();++i)
-			_code[i]=source->code[i];
-		references[0]=references[1]=NULL;
-	}
-
-	View::~View(){
-	}
 }

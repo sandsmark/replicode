@@ -122,7 +122,7 @@ namespace	r_exec{
 	class	r_exec_dll	NotificationView:
 	public	View{
 	public:
-		NotificationView(Group	*origin,Group	*destination,LObject	*marker);	//	res=1, sln=1.
+		NotificationView(Group	*origin,Group	*destination,Code	*marker);	//	res=1, sln=1.
 
 		bool	isNotification()	const;
 	};

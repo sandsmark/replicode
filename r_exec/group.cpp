@@ -119,7 +119,7 @@ namespace	r_exec{
 
 				float32	change=v->second->update_sln_delta();
 				if(fabs(change)>get_sln_chg_thr())
-					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkSlnChg(v->second->object,change)),false);
+					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkSlnChg(mem,v->second->object,change)),false);
 			
 			FOR_ALL_NON_NTF_VIEWS_END
 		}
@@ -130,7 +130,7 @@ namespace	r_exec{
 
 				float32	change=v->second->update_act_delta();
 				if(fabs(change)>get_act_chg_thr())
-					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkActChg(v->second->object,change)),false);
+					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkActChg(mem,v->second->object,change)),false);
 			
 			FOR_ALL_NON_NTF_VIEWS_END
 		}
@@ -291,7 +291,7 @@ namespace	r_exec{
 
 		float	res=v->update_res();
 		if(!v->isNotification()	&&	res>0	&&	res<get_low_res_thr())
-			mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkLowRes(v->object)),false);
+			mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkLowRes(mem,v->object)),false);
 		return	res;
 	}
 
@@ -308,11 +308,11 @@ namespace	r_exec{
 			if(v->periods_at_high_sln==get_sln_ntf_prd()){
 
 				v->periods_at_high_sln=0;
-				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkHighSln(v->object)),false);
+				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkHighSln(mem,v->object)),false);
 			}else	if(v->periods_at_low_sln==get_sln_ntf_prd()){
 
 				v->periods_at_low_sln=0;
-				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkLowSln(v->object)),false);
+				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkLowSln(mem,v->object)),false);
 			}
 		}
 		return	sln;
@@ -328,11 +328,11 @@ namespace	r_exec{
 			if(v->periods_at_high_act==get_act_ntf_prd()){
 
 				v->periods_at_high_act=0;
-				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkHighAct(v->object)),false);
+				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkHighAct(mem,v->object)),false);
 			}else	if(v->periods_at_low_act==get_act_ntf_prd()){
 
 				v->periods_at_low_act=0;
-				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkLowAct(v->object)),false);
+				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkLowAct(mem,v->object)),false);
 			}
 		}
 		return	act;

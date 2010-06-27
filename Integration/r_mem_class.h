@@ -60,6 +60,7 @@ public	CStorage<ImageCore<U>,word32>{
 public:
 	_Image():CStorage<ImageCore<U>,word32>(){}
 	_Image(uint32	map_size,uint32	code_size,uint32	reloc_size){
+
 		_map_size=map_size;
 		_code_size=code_size;
 		_reloc_size=reloc_size;
@@ -83,7 +84,7 @@ public:
 
 	r_exec::_Mem::STDGroupID	destination;	//	unused except when received by RMems.
 	uint32						code_size;		//	in the CStorage below.
-	RObject						*stem;			//	used by rMems to retrieve the RObject associated with a constant or cached shared object.
+	RObject						*stem;			//	used by rMems to retrieve the RObject/RMarker associated with a constant or cached shared object.
 };
 
 //	Stores the code and the references in one array.
@@ -101,86 +102,107 @@ public:
 
 	~CodePayload(){
 
-		uint16	ref_count=_capacity-code_size;
-		for(uint16	i=0;i<ref_count;++i)
-			*((P<Code>	*)&data(code_size+i))=NULL;
-	}
+		if(data(0).getDescriptor()!=Atom::MARKER){
 
-	void	load(r_exec::LObject	*object){
-
-		for(uint16	i=0;i<object->code_size();++i)
-			data(i)=object->code(i);
-		for(uint16	i=0;i<object->references_size();++i)
-			*((P<Code>	*)&data(code_size+i))=object->references(i);
+			uint16	ref_count=_capacity-code_size;
+			for(uint16	i=0;i<ref_count;++i)
+				((Code	*)&data(code_size+i))->decRef();
+		}
 	}
 
 	uint16		ptrCount()	const{	return	_capacity-code_size;	}
-	__Payload	*getPtr(uint16	i)	const;	//	returns the payloads held by the RObjects.
+	__Payload	*getPtr(uint16	i)	const;
 };
 
 //	Instantiated on the RMem side (not on the device side).
 //	This code does not travel.
+//	same level of abstraction as r_code::Code.
 class	RCode:
-public	r_code::Code{
+public	Code{
 protected:
 	P<CodePayload>	payload;
-	Atom			*_code;		//	taken from the payload to avoid frequent indirections
+	Atom			*_code;		//	taken from the payload to avoid frequent indirections.
 	uint16			_code_size;	//	idem.
+
+	RCode():payload(NULL){}
 public:
 	Atom	&code(uint16	i){	return	_code[i];	}
 	Atom	&code(uint16	i)	const{	return	_code[i];	}
 	uint16	code_size()	const{	return	_code_size;	}
-	P<Code>	&references(uint16	i){	return	*((P<Code>	*)&_code[_code_size+i]);	}
-	P<Code>	&references(uint16	i)	const{	return	*((P<Code>	*)&_code[_code_size+i]);	}
+	Code	*get_reference(uint16	i)	const{	return	(Code	*)(&_code[_code_size+i]);	}
+	void	set_reference(uint16	i,Code	*object){
+		
+		(*(Code	**)(&_code[_code_size+i]))=object;
+		if(_code[0].getDescriptor()!=Atom::MARKER)
+			object->incRef();
+	}
 	uint16	references_size()	const{	return	payload->getCapacity()-_code_size;	}
 
-	RCode():payload(NULL){}
-	~RCode(){}
-
-	bool	is_compact()	const{	return	true;	}
+	virtual	~RCode(){
+	
+		std::list<Code	*>::const_iterator	m;
+		for(m=markers.begin();m!=markers.end();++m)
+			(*m)->kill(this);
+	}
 
 	void	set_payload(CodePayload	*p,RObject	*s){
+
 		payload=p;
 		_code=payload->data();
 		payload->stem=s;
 		_code_size=payload->code_size;
 	}
 	CodePayload	*get_payload()	const{	return	payload;	}
+
+	bool	is_compact()	const{	return	true;	}
 };
 
-//	RemoteObject.
+//	Remote	object.
 //	Same level of abstraction as r_exec::LObject.
 //	This code does not travel: it acts like a stem holding the payload and lives inside the rMems; ejections actually eject the payload.
 class	RObject:
 public	r_exec::Object<RCode,RObject>{
 public:
 	static	bool	RequiresPacking(){	return	true;	}
-	static	RObject	*Pack(Code	*object){	//	no need to copy any views or markers, there are none (the object is freshly built).
+	static	RObject	*Pack(Code	*object,r_code::Mem	*m){	//	no need to copy any views or markers, there are none (the object is freshly built).
 
 		if(object->is_compact())	//	already an RObject.
 			return	(RObject	*)object;
 
-		RObject	*r=new	RObject();
+		RObject	*r=new	RObject(m);
 		r->set_payload(new(object->code_size()+object->references_size())	CodePayload(object->code_size()),r);
 		for(uint16	i=0;i<object->code_size();++i)
 			r->code(i)=object->code(i);
 		for(uint16	i=0;i<object->references_size();++i)
-			r->references(i)=object->references(i);
+			r->set_reference(i,object->get_reference(i));
 		return	r;
 	}
-
-	RObject():r_exec::Object<RCode,RObject>(){}
+	RObject(r_code::Mem	*m):r_exec::Object<RCode,RObject>(m){}
 	RObject(r_code::SysObject	*source,r_code::Mem	*m):r_exec::Object<RCode,RObject>(m){
 		
 		set_payload(new(source->code.size()+source->references.size())	CodePayload(source->code.size()),this);
 		load(source);
 		build_views<r_exec::View>(source);
 	}
-	RObject(CodePayload	*p):r_exec::Object<RCode,RObject>(){
+	RObject(CodePayload	*p,r_code::Mem	*m):r_exec::Object<RCode,RObject>(m){
 
 		set_payload(p,this);
 	}
 	~RObject(){}
+
+	void	remove_marker(Code	*m){
+		
+		acq_markers();
+		std::list<Code	*>::const_iterator	_m;
+		for(_m=markers.begin();_m!=markers.end();){
+
+			if(*_m==m)
+				_m=markers.erase(_m);
+			else
+				++m;
+		}
+		rel_markers();
+	}
 };
 
 //	Command sent by RMems to devices.
@@ -216,7 +238,7 @@ public:
 		for(uint16	i=0;i<object->code_size();++i)
 			data(i)=object->code(i);
 		for(uint16	i=0;i<object->references_size();++i)
-			*((P<Code>	*)&data(code_size+i))=object->references(i);
+			*((P<Code>	*)&data(code_size+i))=object->get_reference(i);
 	}
 };
 

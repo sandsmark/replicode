@@ -38,52 +38,56 @@
 namespace	r_exec{
 	namespace	factory{
 
+		//	Notification markers are not put in their references marker sets.
+		//	They are not used to propagate saliency changes.
+		//	They are encoded as Atom::Object instead of Atom::Marker.
+
 		class	r_exec_dll	MkNew:
 		public	LObject{
 		public:
-			MkNew(Code	*object);
+			MkNew(r_code::Mem	*m,Code	*object);
 		};
 
 		class	r_exec_dll	MkLowRes:
 		public	LObject{
 		public:
-			MkLowRes(Code	*object);
+			MkLowRes(r_code::Mem	*m,Code	*object);
 		};
 
 		class	r_exec_dll	MkLowSln:
 		public	LObject{
 		public:
-			MkLowSln(Code	*object);
+			MkLowSln(r_code::Mem	*m,Code	*object);
 		};
 
 		class	r_exec_dll	MkHighSln:
 		public	LObject{
 		public:
-			MkHighSln(Code	*object);
+			MkHighSln(r_code::Mem	*m,Code	*object);
 		};
 
 		class	r_exec_dll	MkLowAct:
 		public	LObject{
 		public:
-			MkLowAct(Code	*object);
+			MkLowAct(r_code::Mem	*m,Code	*object);
 		};
 
 		class	r_exec_dll	MkHighAct:
 		public	LObject{
 		public:
-			MkHighAct(Code	*object);
+			MkHighAct(r_code::Mem	*m,Code	*object);
 		};
 
 		class	r_exec_dll	MkSlnChg:
 		public	LObject{
 		public:
-			MkSlnChg(Code	*object,float32	value);
+			MkSlnChg(r_code::Mem	*m,Code	*object,float32	value);
 		};
 
 		class	r_exec_dll	MkActChg:
 		public	LObject{
 		public:
-			MkActChg(Code	*object,float32	value);
+			MkActChg(r_code::Mem	*m,Code	*object,float32	value);
 		};
 	}
 }

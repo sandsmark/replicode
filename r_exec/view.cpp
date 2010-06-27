@@ -199,7 +199,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	NotificationView::NotificationView(Group	*origin,Group	*destination,LObject	*marker):View(){
+	NotificationView::NotificationView(Group	*origin,Group	*destination,Code	*marker):View(){
 
 		uint32	write_index=0;
 		code(write_index++)=r_code::Atom::SSet(ViewOpcode,6);	//	Structured Set.

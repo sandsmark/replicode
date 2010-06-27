@@ -91,9 +91,9 @@ namespace	r_exec{
 	Overlay::Overlay(IPGMController	*c):_Object(),controller(c){
 
 		//	copy the original pgm code.
-		pgm_code_size=getIPGM()->references(0)->code_size();
+		pgm_code_size=getIPGM()->get_reference(0)->code_size();
 		pgm_code=new	r_code::Atom[pgm_code_size];
-		memcpy(pgm_code,&getIPGM()->references(0)->code(0),pgm_code_size*sizeof(r_code::Atom));
+		memcpy(pgm_code,&getIPGM()->get_reference(0)->code(0),pgm_code_size*sizeof(r_code::Atom));
 		
 		value_commit_index=0;
 
@@ -134,7 +134,7 @@ namespace	r_exec{
 		pgm_code=new	r_code::Atom[pgm_code_size];
 		memcpy(pgm_code,original->pgm_code,pgm_code_size*sizeof(r_code::Atom));	//	copy patched code.
 
-		Atom	*original_code=&getIPGM()->references(0)->code(0);
+		Atom	*original_code=&getIPGM()->get_reference(0)->code(0);
 		for(uint16	i=0;i<original->patch_indices.size();++i)	//	unpatch code.
 			pgm_code[i]=original_code[patch_indices[i]];
 
@@ -153,6 +153,11 @@ namespace	r_exec{
 	inline	Overlay::~Overlay(){
 
 		delete[]	pgm_code;
+	}
+
+	r_code::Code	*Overlay::buildObject(Atom	head)	const{
+		
+		return	controller->get_mem()->buildObject(head);
 	}
 
 	void	Overlay::patch_tpl_args(){	//	no rollback on that part of the code.
@@ -226,7 +231,7 @@ namespace	r_exec{
 
 	inline	void	Overlay::rollback(){
 
-		Atom	*original_code=&getIPGM()->references(0)->code(0);
+		Atom	*original_code=&getIPGM()->get_reference(0)->code(0);
 		for(uint16	i=0;i<patch_indices.size();++i)	//	upatch code.
 			pgm_code[i]=original_code[patch_indices[i]];
 
@@ -245,7 +250,7 @@ namespace	r_exec{
 
 	inline	void	Overlay::reset(){
 
-		memcpy(pgm_code,&getIPGM()->references(0)->code(0),pgm_code_size*sizeof(r_code::Atom));	//	restore code to prisitne copy.
+		memcpy(pgm_code,&getIPGM()->get_reference(0)->code(0),pgm_code_size*sizeof(r_code::Atom));	//	restore code to prisitne copy.
 		patch_tpl_args();
 
 		patch_indices.clear();
@@ -338,7 +343,7 @@ namespace	r_exec{
 	inline	bool	Overlay::_match_skeleton(r_exec::View	*input,uint16	pattern_index){
 
 		Context	input_object=Context::GetContextFromInput(input,this);
-		Context	pattern_skeleton(getIPGM()->references(0),getIPGMView(),pgm_code,pgm_code[pattern_index+1].asIndex(),this);	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
+		Context	pattern_skeleton(getIPGM()->get_reference(0),getIPGMView(),pgm_code,pgm_code[pattern_index+1].asIndex(),this);	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
 		return	pattern_skeleton.match(input_object);
 	}
 
@@ -360,7 +365,7 @@ namespace	r_exec{
 
 	inline	bool	Overlay::evaluate(uint16	index){
 
-		Context	c(getIPGM()->references(0),getIPGMView(),pgm_code,index,this);
+		Context	c(getIPGM()->get_reference(0),getIPGMView(),pgm_code,index,this);
 		return	c.evaluate(index);
 	}
 
@@ -374,7 +379,7 @@ namespace	r_exec{
 				return	false;
 			}
 
-			Context	cmd(getIPGM()->references(0),NULL,pgm_code,i,this);
+			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,i,this);
 			cmd.dereference();
 
 			Context	function=cmd.getChild(1);
@@ -406,7 +411,7 @@ namespace	r_exec{
 					default:{
 
 						Context	_object=args.getChild(1);
-						object=new	LObject();
+						object=controller->get_mem()->buildObject(_object[0]);
 						_object.copy(object,0);
 
 						productions.push_back(object);
@@ -419,14 +424,15 @@ namespace	r_exec{
 
 		uint16	write_index=0;
 		uint16	extent_index=MK_RDX_ARITY+1;
-		LObject	*mk_rdx;
-		bool	notify_rdx=getIPGM()->references(0)->code(PGM_NFR)==1;
+		Code	*mk_rdx;
+		bool	notify_rdx=getIPGM()->get_reference(0)->code(PGM_NFR)==1;
 		if(notify_rdx){	//	the productions are command objects (cmd); all productions are notified.
 
-			mk_rdx=new	LObject();
 			if(getIPGM()->code(0).asOpcode()==Opcodes::PGM){
 
-				mk_rdx->code(write_index++)=Atom::Object(Opcodes::PGM,MK_RDX_ARITY);
+				mk_rdx=controller->get_mem()->buildObject(Atom::Object(Opcodes::MkRdx,MK_RDX_ARITY));
+
+				mk_rdx->code(write_index++)=Atom::Object(Opcodes::MkRdx,MK_RDX_ARITY);
 				mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
 				mk_rdx->add_reference(getIPGM());
 				mk_rdx->code(write_index++)=Atom::IPointer(extent_index);	//	inputs.
@@ -438,7 +444,9 @@ namespace	r_exec{
 				}
 			}else	if(getIPGM()->code(0).asOpcode()==Opcodes::AntiPGM){
 
-				mk_rdx->code(write_index++)=Atom::Object(Opcodes::AntiPGM,MK_RDX_ARITY);
+				mk_rdx=controller->get_mem()->buildObject(Atom::Object(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY));
+
+				mk_rdx->code(write_index++)=Atom::Object(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY);
 				mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
 				mk_rdx->add_reference(getIPGM());
 			}
@@ -453,7 +461,7 @@ namespace	r_exec{
 		
 		for(uint16	i=first_production_index;i<=last_production_index;++i){	//	all productions have evaluated correctly; now we can execute the commands.
 
-			Context	cmd(getIPGM()->references(0),NULL,pgm_code,i,this);
+			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,i,this);
 			cmd.dereference();
 
 			Context	function=cmd.getChild(1);
@@ -502,7 +510,7 @@ namespace	r_exec{
 
 							Group	*g=(Group	*)object;
 							g->acquire();
-							g->pending_operations.push_back(Group::PendingOperation(view_oid,member_index,Group::MOD,value));
+							g->pending_operations.push_back(new	Group::Mod(view_oid,member_index,value));
 							g->release();
 							break;
 						}case	Context::TYPE_OBJECT:
@@ -534,7 +542,7 @@ namespace	r_exec{
 
 							Group	*g=(Group	*)object;
 							g->acquire();
-							g->pending_operations.push_back(Group::PendingOperation(view_oid,member_index,Group::SET,value));
+							g->pending_operations.push_back(new	Group::Set(view_oid,member_index,value));
 							g->release();
 							break;
 						}case	Context::TYPE_OBJECT:
@@ -569,7 +577,7 @@ namespace	r_exec{
 				}
 			}else{	//	in case of an external device, create a cmd object and send it.
 
-				LObject	*command=new	LObject();
+				Code	*command=controller->get_mem()->buildObject(cmd[0]);
 				cmd.copy(command,0);
 
 				mem->eject(command,command->code(CMD_DEVICE).getNodeID());
@@ -600,7 +608,7 @@ namespace	r_exec{
 	inline	AntiOverlay::~AntiOverlay(){
 	}
 
-	void	AntiOverlay::reduce(r_exec::View	*input,_Mem	*mem){
+	void	AntiOverlay::reduce(r_exec::View	*input){
 
 		uint16	input_index;
 		switch(match(input,input_index)){
@@ -609,7 +617,7 @@ namespace	r_exec{
 
 				if(check_timings()	&&	check_guards()){
 
-					controller->restart(this,mem,true);
+					controller->restart(this,true);
 					return;
 				}
 			}else{
@@ -636,22 +644,22 @@ namespace	r_exec{
 			(*o)->kill();
 	}
 
-	void	IPGMController::take_input(r_exec::View	*input,_Mem	*mem){	//	will never be called on an input-less controller.
+	void	IPGMController::take_input(r_exec::View	*input){	//	will never be called on an input-less controller.
 
 		if(overlays.size()==0)
-			overlays.push_back(getIPGM()->references(0)->code(0).asOpcode()==Opcodes::AntiPGM?new	AntiOverlay(this):new	Overlay(this));
+			overlays.push_back(getIPGM()->get_reference(0)->code(0).asOpcode()==Opcodes::AntiPGM?new	AntiOverlay(this):new	Overlay(this));
 
 		uint64	now=Now();
 
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
 
-			ReductionJob	j(new	View(input),*o,now+Timestamp::Get<Code>(getIPGM()->references(0),PGM_TSC));
+			ReductionJob	j(new	View(input),*o,now+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
 			mem->pushReductionJob(j);
 		}
 	}
 
-	void	IPGMController::signal_anti_pgm(_Mem	*mem){	//	next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
+	void	IPGMController::signal_anti_pgm(){	//	next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
 
 		AntiOverlay	*o;
 		if(overlays.size()==0){
@@ -663,10 +671,10 @@ namespace	r_exec{
 
 		if(!successful_match)
 			o->inject_productions(mem);
-		restart(o,mem,false);
+		restart(o,false);
 	}
 
-	void	IPGMController::signal_input_less_pgm(_Mem	*mem){	//	next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
+	void	IPGMController::signal_input_less_pgm(){	//	next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
 
 		Overlay	*o;
 		if(overlays.size()==0){
@@ -701,7 +709,7 @@ namespace	r_exec{
 		overlays.push_back(overlay);
 	}
 
-	void	IPGMController::restart(AntiOverlay	*overlay,_Mem	*mem,bool	match){	//	one overlay matched all its inputs, timings and guards: push a new signaling job, 
+	void	IPGMController::restart(AntiOverlay	*overlay,bool	match){	//	one overlay matched all its inputs, timings and guards: push a new signaling job, 
 																					//	keep the overlay alive (ita has been reset and shall take new inputs) and kill all others.
 		overlay->reset();
 		
@@ -710,7 +718,7 @@ namespace	r_exec{
 			host->get_c_act()>host->get_c_act_thr()	&&		//	c-active group.
 			host->get_c_sln()>host->get_c_sln_thr()){		//	c-salient group.
 
-			TimeJob	next_job(new	AntiPGMSignalingJob(this),Now()+Timestamp::Get<Code>(getIPGM()->references(0),PGM_TSC));
+			TimeJob	next_job(new	AntiPGMSignalingJob(this),Now()+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
 			mem->pushTimeJob(next_job);
 		}
 

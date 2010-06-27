@@ -471,7 +471,7 @@ namespace	r_exec{
 			//	create an ipgm or an igol in the production array.
 			if(_object->code(0).asOpcode()==Opcodes::PGM	||	_object->code(0).asOpcode()==Opcodes::AntiPGM){
 
-				LObject	*ipgm=new	LObject();
+				Code	*ipgm=context.buildObject(_object->code(0));
 
 				uint16	write_index=0;
 				ipgm->code(write_index++)=Atom::InstantiatedProgram(Opcodes::IPGM,IPGM_IGOL_ARITY);
@@ -484,14 +484,14 @@ namespace	r_exec{
 
 				args.copy(_object,write_index);	//	writes after psln_thr.
 
-				ipgm->references(0)=_object;
+				ipgm->set_reference(0,_object);
 				context.setAtomicResult(Atom::ProductionPointer(context.addProduction(ipgm)));
 				return	true;
 			}
 
 			if(_object->code(0).asOpcode()==Opcodes::Goal	||	_object->code(0).asOpcode()==Opcodes::AntiGoal){
 
-				LObject	*igol=new	LObject();
+				Code	*igol=context.buildObject(_object->code(0));
 
 				uint16	write_index=0;
 				igol->code(write_index++)=Atom::Object(Opcodes::IGoal,IPGM_IGOL_ARITY);
@@ -504,7 +504,7 @@ namespace	r_exec{
 
 				args.copy(_object,write_index);	//	writes after psln_thr.
 
-				igol->references(0)=_object;
+				igol->set_reference(0,_object);
 				context.setAtomicResult(Atom::ProductionPointer(context.addProduction(igol)));
 				return	true;
 			}

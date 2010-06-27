@@ -3,5 +3,5 @@
 
 __Payload	*CodePayload::getPtr(uint16	i)	const{
 	
-	return	((RObject	*)(P<RObject>	*)&data(code_size+i))->get_payload();
+	return	((RObject	*)&data(code_size+i))->get_payload();
 }

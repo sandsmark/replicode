@@ -64,13 +64,18 @@ namespace	r_exec{
 
 		FastSemaphore	*psln_thr_sem;
 		FastSemaphore	*views_sem;
-		FastSemaphore	*marker_set_sem;
+		FastSemaphore	*markers_sem;
 	protected:
 		r_code::Mem	*mem;
+		
+		bool	killed;	//	used only for markers.
+		void	delete_views();
 
-		Object(r_code::Mem	*mem=NULL);
+		Object(r_code::Mem	*mem);
 	public:
 		virtual	~Object();	//	un-registers from the rMem's object_register.
+
+		void	kill(Code	*origin);	//	origin is a reference of the marker being deleted that holds this marker in its marker set.
 
 		void	compute_hash_value();
 
@@ -78,13 +83,12 @@ namespace	r_exec{
 
 		void	acq_views()			const{	views_sem->acquire();	}
 		void	rel_views()			const{	views_sem->release();	}
-		void	acq_marker_set()	const{	marker_set_sem->acquire();	}
-		void	rel_marker_set()	const{	marker_set_sem->release();	}
+		void	acq_markers()	const{	markers_sem->acquire();	}
+		void	rel_markers()	const{	markers_sem->release();	}
 
 		//	Target psln_thr only.
-		virtual	void	set(uint16	member_index,float32	value);
-		virtual	void	mod(uint16	member_index,float32	value);
-
+		void	set(uint16	member_index,float32	value);
+		void	mod(uint16	member_index,float32	value);
 		View	*find_view(Code	*group,bool	lock);
 
 		class	Hash{
@@ -105,7 +109,7 @@ namespace	r_exec{
 					return	false;
 				uint32	i;
 				for(i=0;i<lhs->references_size();++i)
-					if(lhs->references(i)!=rhs->references(i))
+					if(lhs->get_reference(i)!=rhs->get_reference(i))
 						return	false;
 				for(i=0;i<lhs->code_size();++i)
 					if(lhs->code(i)!=rhs->code(i))
@@ -120,27 +124,37 @@ namespace	r_exec{
 	};
 
 	//	Local object.
-	//	Used for r-code that does not travel across networks.
-	//	Used for construction.
-	//	If the mem is network-aware, instances will be packed into a suitable form.
+	//	Used for r-code that does not travel across networks (groups and notifications) or when the rMem is not distributed.
+	//	Markers are killed when at least one of their references dies (held by their views).
+	//	Marker deletion is performed by registering pending delete operations in the groups they are projected onto.
 	class	r_exec_dll	LObject:
-	public	Object<r_code::Object,LObject>{
+	public	Object<r_code::LObject,LObject>{
 	public:
 		static	bool	RequiresPacking(){	return	false;	}
-		static	LObject	*Pack(Code	*object){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
-
-		LObject():Object<r_code::Object,LObject>(){}
-		LObject(r_code::SysObject	*source,r_code::Mem	*m):Object<r_code::Object,LObject>(m){
+		static	LObject	*Pack(Code	*object,r_code::Mem	*m){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
+		LObject(r_code::Mem	*m):Object<r_code::LObject,LObject>(m){}
+		LObject(r_code::SysObject	*source,r_code::Mem	*m):Object<r_code::LObject,LObject>(m){
 		
 			load(source);
 			build_views<r_exec::View>(source);
 		}
-		~LObject(){}
+		virtual	~LObject(){}
+
+		void	remove_marker(Code	*m){
+			
+			acq_markers();
+			std::list<Code	*>::const_iterator	_m;
+			for(_m=markers.begin();_m!=markers.end();){
+
+				if(*_m==m)
+					_m=markers.erase(_m);
+				else
+					++m;
+			}
+			rel_markers();
+		}
 	};
 }
-
-
-#include	"object.tpl.cpp"
 
 
 #endif

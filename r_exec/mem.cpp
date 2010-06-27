@@ -156,12 +156,12 @@ namespace	r_exec{
 
 	void	_Mem::update(AntiPGMSignalingJob	*j){
 
-		j->controller->signal_anti_pgm(this);
+		j->controller->signal_anti_pgm();
 	}
 
 	void	_Mem::update(InputLessPGMSignalingJob	*j){
 
-		j->controller->signal_input_less_pgm(this);
+		j->controller->signal_input_less_pgm();
 	}
 
 	void	_Mem::update(InjectionJob	*j){
@@ -174,6 +174,6 @@ namespace	r_exec{
 	void	_Mem::eject(View	*view,uint16	nodeID){
 	}
 
-	void	_Mem::eject(LObject	*object,uint16	nodeID){
+	void	_Mem::eject(Code	*object,uint16	nodeID){
 	}
 }
