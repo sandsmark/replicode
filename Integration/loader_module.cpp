@@ -52,6 +52,8 @@ void	Loader::compile(const	std::string	&filename){
 		//image->trace();
 	}
 
+	//	TMP: generate an image for Tamas.
+	/*
 	ofstream	output("c:/work/replicode/test/test.visualizer.replicode.image",ios::binary|ios::out);
 	ImageMessage::Write(image,output);
 	output.close();
@@ -65,5 +67,5 @@ void	Loader::compile(const	std::string	&filename){
 
 	img->trace();
 
-	delete	img;
+	delete	img;*/
 }
