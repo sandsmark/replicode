@@ -37,17 +37,15 @@
 LOAD_MODULE(RMem)
 
 void	RMem::initialize(){
-/*
-	r_exec::Mem<RObject>::init(100000,8,8);
+
+	r_exec::Mem<RObject>::init(100000,2,2);
 
 	r_code::vector<r_code::Code	*>	objects;
 	r_exec::Seed.getObjects(&r_exec::Metadata,this,objects);
-	r_exec::Mem<RObject>::load(objects.as_std());*/
+	r_exec::Mem<RObject>::load(objects.as_std());
 }
 
 void	RMem::finalize(){
-
-	//r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::stop();
 }
 
 void	RMem::decompile(r_comp::Image	*image){
@@ -69,12 +67,16 @@ void	RMem::load(r_comp::Image	*image){
 	image->getObjects(&r_exec::Metadata,this,objects);
 
 	//r_exec::Mem<RObject>::load(objects.as_std());
-
 	//r_exec::Mem<RObject>::start();
 }
 
 void	RMem::inject(RObject	*object,uint16	nodeID,STDGroupID	destination){
-/*
+
+	//	TODO.
+	//	inject references first: build stems for the CodePayloads.
+	//	push all the created RObjects in a list, and inject in reverse.
+
+/*	OLD CODE
 	r_exec::View	*view=new	r_exec::View();
 
 	const	uint32	arity=6;	//	reminder: opcode not included in the arity
@@ -90,9 +92,9 @@ void	RMem::inject(RObject	*object,uint16	nodeID,STDGroupID	destination){
 	view->code(write_index++)=Atom::RPointer(0);				//	stdin is the only reference.
 	view->code(write_index++)=Atom::Node(nodeID);				//	org.
 	if(destination==r_exec::_Mem::STDIN)
-		view->references[0]=r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::get_stdin();
+		view->references[0]=r_exec::Mem<RObject>::get_stdin();
 	else
-		view->references[0]=r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::get_stdin();
+		view->references[0]=r_exec::Mem<RObject>::get_stdin();
 
-	r_exec::Mem<RObject,RObject::Hash,RObject::Equal>::inject(object,view);
+	r_exec::Mem<RObject>::inject(object,view);
 */}

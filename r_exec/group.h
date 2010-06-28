@@ -156,17 +156,6 @@ namespace	r_exec{
 			}
 		};
 
-		//	For marker views only.
-		class	Del:
-		public	Operation{
-		public:
-			Del(uint32	oid):Operation(oid){}
-			void	execute(Group	*g)	const{
-
-				g->other_views.erase(oid);
-			}
-		};
-
 		//	Pending mod/set operations on the group's view, exploited and cleared at update time.
 		std::vector<Operation	*>	pending_operations;
 

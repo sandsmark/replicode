@@ -83,13 +83,11 @@ public:
 	}
 	void	react(ImageMessage	*p){
 		OUTPUT<<"RMem "<<"got an image"<<std::endl;
-		//if(get_state()==STARTED){
 
-			r_comp::Image	*image=new	r_comp::Image();
-			image->load<ImageMessage>(p);
-			load(image);	//	stop the mem, reload and restart.
-			delete	image;
-		//}
+		r_comp::Image	*image=new	r_comp::Image();
+		image->load<ImageMessage>(p);
+		load(image);	//	stop the mem, reload and restart.
+		delete	image;
 	}
 	void	react(CodePayload	*p){
 		OUTPUT<<"RMem "<<"got input code"<<std::endl;

@@ -38,7 +38,7 @@ namespace	r_exec{
 	_Mem::~_Mem(){
 
 		if(state==STARTED)
-			reset();
+			stop();
 		root=NULL;
 	}
 
@@ -109,6 +109,11 @@ namespace	r_exec{
 	void	_Mem::stop(){
 
 		state_sem->acquire();
+		if(state!=STARTED){
+
+			state_sem->release();
+			return;
+		}
 		state=STOPPED;
 
 		uint32	i;

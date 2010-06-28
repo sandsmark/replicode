@@ -47,6 +47,8 @@ protected:
 	uint32	code_size()		const;
 	uint32	reloc_size()	const;
 	word32	*data()			const;
+	word32	&data(uint32	i);
+	word32	&data(uint32	i)	const;
 public:
 	void	*operator	new(size_t,uint32	data_size);
 	void	operator delete(void	*o);

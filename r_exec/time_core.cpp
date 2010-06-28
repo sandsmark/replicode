@@ -39,6 +39,8 @@ namespace	r_exec{
 
 		TimeCore	*_this=((TimeCore	*)args);
 
+		std::cout<<"Time Core created.\n";
+
 		while(1){
 
 			TimeJob	j=_this->mem->popTimeJob();
@@ -57,7 +59,7 @@ namespace	r_exec{
 				continue;
 			}else{	//	we are late: report.
 
-				std::cout<<"TimeCore report: late on target. Target was: "<<target<<" lag: "<<-deadline/1000<<" ms"<<std::endl;
+				std::cout<<"Time Core report: late on target: "<<-deadline/1000<<" ms behind."<<std::endl;
 			}
 process:
 			j.job->update(_this->mem);

@@ -70,3 +70,13 @@ word32	*ImageImpl::data()	const{
 
 	return	_data;
 }
+
+word32	&ImageImpl::data(uint32	i){
+
+	return	_data[i];
+}
+
+word32	&ImageImpl::data(uint32	i)	const{
+
+	return	_data[i];
+}

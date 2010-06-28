@@ -63,7 +63,10 @@ namespace	r_exec{
 		case	Atom::GROUP:
 			return	new	Group(this);
 		default:
-			return	new	LObject(this);
+			if(O::RequiresPacking())
+				return	new	r_code::LObject();	//	temporary sand box for assembling code; will be packed into an O at injection time.
+			else
+				return	new	O(this);
 		}
 	}
 
@@ -117,12 +120,12 @@ namespace	r_exec{
 
 		for(uint32	i=1;i<objects->size();++i){	//	skip root as it has no initial views.
 
-			O	*object=(O	*)(*objects)[i];
+			Code	*object=(*objects)[i];
 
 			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	it;
 			for(it=object->views.begin();it!=object->views.end();++it){
 
-				//	init hosts' member_set and object's view_map.
+				//	init hosts' member_set.
 				View	*view=(r_exec::View	*)*it;
 				view->set_object(object);
 				Group	*host=view->get_host();
@@ -169,17 +172,23 @@ namespace	r_exec{
 					break;
 				}
 			}
-			
-			object->position_in_objects=this->objects.insert(this->objects.end(),object);
 
-			if(GetType(object)!=ObjectType::GROUP)	//	load non-group object in regsister and io map.
-				object->position_in_object_register=object_register.insert(object).first;
-			else
+			if(GetType(object)!=ObjectType::GROUP){	//	load non-group object in regsister.
+
+				((O	*)object)->position_in_object_register=object_register.insert((O	*)object).first;
+				((O	*)object)->position_in_objects=this->objects.insert(this->objects.end(),object);
+			}else{
+
+				((Group	*)object)->position_in_objects=this->objects.insert(this->objects.end(),object);
 				initial_groups.push_back((Group	*)object);	//	convenience to create initial update jobs - see start().
+			}
 		}
 	}
 
 	template<class	O>	void	Mem<O>::start(){
+
+		if(state==STARTED)
+			return;
 
 		object_register_sem=new	FastSemaphore(1,1);
 		objects_sem=new	FastSemaphore(1,1);
@@ -530,7 +539,7 @@ namespace	r_exec{
 				if(group_is_c_salient	&&	!wiew_was_salient	&&	wiew_is_salient)	//	record as a newly salient view.
 					group->newly_salient_views.push_back(v->second);
 
-				_initiate_sln_propagation(v->second->object,sln_change,group->get_sln_thr());	//	inject sln propagation jobs.
+				//_initiate_sln_propagation(v->second->object,sln_change,group->get_sln_thr());	//	inject sln propagation jobs.
 
 				if(v->second->object->code(0).getDescriptor()==Atom::GROUP){
 
@@ -737,7 +746,7 @@ namespace	r_exec{
 
 			if(GetType(object)==ObjectType::MARKER){	//	if marker, propagate to references.
 
-				for(uint32	i=0;object->references_size();++i)
+				for(uint32	i=0;i<object->references_size();++i)
 					_propagate_sln((O	*)object->get_reference(i),change,source_sln_thr,path);
 			}
 
@@ -762,7 +771,7 @@ namespace	r_exec{
 			path.push_back(object);
 
 			if(GetType(object)==ObjectType::MARKER)	//	if marker, propagate to references.
-				for(uint32	i=0;object->references_size();++i)
+				for(uint32	i=0;i<object->references_size();++i)
 					_propagate_sln((O	*)object->get_reference(i),change,source_sln_thr,path);
 
 			//	propagate to markers

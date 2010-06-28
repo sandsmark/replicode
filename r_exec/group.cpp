@@ -110,6 +110,8 @@ namespace	r_exec{
 
 	void	Group::update_stats(_Mem	*mem){
 
+		--decay_periods_to_go;
+
 		avg_sln=avg_sln/(float32)sln_updates;
 		avg_act=avg_act/(float32)act_updates;
 
@@ -137,7 +139,7 @@ namespace	r_exec{
 	}
 
 	void	Group::reset_decay_values(){
-
+		
 		sln_thr_decay=0;
 		sln_decay=0;
 		decay_periods_to_go=-1;
@@ -147,16 +149,18 @@ namespace	r_exec{
 
 	float32	Group::update_sln_thr(){
 
-		if(code(GRP_DCY_PER).asFloat()==0)
+		float32	percentage=code(GRP_DCY_PER).asFloat();
+		float32	period=code(GRP_DCY_PRD).asFloat();
+		if(percentage==0	||	period==0)
 			reset_decay_values();
 		else{
 
-			decay_periods_to_go=code(GRP_DCY_PRD).asFloat();
-			float32	percentage_per_period=code(GRP_DCY_PER).asFloat()/(float32)decay_periods_to_go;
-
+			float32	percentage_per_period=percentage/period;
 			if(percentage_per_period!=decay_percentage_per_period	||	code(GRP_DCY_TGT).asFloat()!=decay_target){	//	recompute decay.
 
+				decay_periods_to_go=period;
 				decay_percentage_per_period=percentage_per_period;
+				decay_target=code(GRP_DCY_TGT).asFloat();
 
 				if(code(GRP_DCY_TGT).asFloat()==0){
 

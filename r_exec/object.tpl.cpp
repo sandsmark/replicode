@@ -30,7 +30,7 @@
 
 namespace	r_exec{
 
-	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),mem(mem),hash_value(0),killed(false){
+	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),mem(mem),hash_value(0){
 
 		psln_thr_sem=new	FastSemaphore(1,1);
 		views_sem=new	FastSemaphore(1,1);
@@ -39,12 +39,10 @@ namespace	r_exec{
 
 	template<class	C,class	U>	Object<C,U>::~Object(){
 
-		if(code(0).getDescriptor()==Atom::MARKER	&&	!killed){	//	happens when the last view dies and not triggered by the death of one reference.
+		if(code(0).getDescriptor()==Atom::MARKER){
 
 			for(uint16	i=0;i<references_size();++i)
 				get_reference(i)->remove_marker(this);
-
-			delete_views();
 		}
 
 		if(mem)
@@ -52,29 +50,6 @@ namespace	r_exec{
 		delete	psln_thr_sem;
 		delete	views_sem;
 		delete	markers_sem;
-	}
-
-	template<class	C,class	U>	void	Object<C,U>::delete_views(){
-
-		//	delete all views; the deletion of the last one will actually delete the marker.
-		UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v;
-		for(v=views.begin();v!=views.end();++v){
-
-			((View	*)(*v))->get_host()->acquire();
-			((View	*)(*v))->get_host()->pending_operations.push_back(new	Group::Del(((View	*)(*v))->getOID()));
-			((View	*)(*v))->get_host()->release();
-		}
-	}
-
-	template<class	C,class	U>	void	Object<C,U>::kill(Code	*origin){
-
-		for(uint16	i=0;i<references_size();++i)
-			if(get_reference(i)!=origin)
-				get_reference(i)->remove_marker(this);
-
-		delete_views();
-
-		killed=true;
 	}
 
 	template<class	C,class	U>	void	Object<C,U>::compute_hash_value(){

@@ -51,4 +51,19 @@ void	Loader::compile(const	std::string	&filename){
 		image=r_exec::Seed.serialize<ImageMessage>();
 		//image->trace();
 	}
+
+	ofstream	output("c:/work/replicode/test/test.visualizer.replicode.image",ios::binary|ios::out);
+	ImageMessage::Write(image,output);
+	output.close();
+
+	ifstream	input("c:/work/replicode/test/test.visualizer.replicode.image",ios::binary|ios::in);
+	if(!input.good())
+		return;
+
+	ImageMessage	*img=(ImageMessage	*)ImageMessage::Read(input);
+	input.close();
+
+	img->trace();
+
+	delete	img;
 }

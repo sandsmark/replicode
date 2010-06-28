@@ -37,17 +37,21 @@ namespace	r_exec{
 
 	bool	IsNotification(Code	*object){
 
-		return	object->code(0).getDescriptor()==Atom::MARKER	&&
-				(object->code(0).asOpcode()==Opcodes::MkActChg	||
-				object->code(0).asOpcode()==Opcodes::MkAntiRdx	||
-				object->code(0).asOpcode()==Opcodes::MkHighAct	||
-				object->code(0).asOpcode()==Opcodes::MkHighSln	||
-				object->code(0).asOpcode()==Opcodes::MkLowAct	||
-				object->code(0).asOpcode()==Opcodes::MkLowRes	||
-				object->code(0).asOpcode()==Opcodes::MkLowSln	||
-				object->code(0).asOpcode()==Opcodes::MkNew		||
-				object->code(0).asOpcode()==Opcodes::MkRdx		||
-				object->code(0).asOpcode()==Opcodes::MkSlnChg);
+		switch(object->code(0).getDescriptor()){
+		case	Atom::OBJECT:
+			return	object->code(0).asOpcode()==Opcodes::MkActChg	||
+					object->code(0).asOpcode()==Opcodes::MkAntiRdx	||
+					object->code(0).asOpcode()==Opcodes::MkHighAct	||
+					object->code(0).asOpcode()==Opcodes::MkHighSln	||
+					object->code(0).asOpcode()==Opcodes::MkLowAct	||
+					object->code(0).asOpcode()==Opcodes::MkLowRes	||
+					object->code(0).asOpcode()==Opcodes::MkLowSln	||
+					object->code(0).asOpcode()==Opcodes::MkNew		||
+					object->code(0).asOpcode()==Opcodes::MkRdx		||
+					object->code(0).asOpcode()==Opcodes::MkSlnChg;
+		default:
+			return	false;
+		}
 	}
 
 	ObjectType	GetType(Code	*object){

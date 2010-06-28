@@ -39,6 +39,8 @@ namespace	r_exec{
 
 		ReductionCore	*_this=((ReductionCore	*)args);
 
+		std::cout<<"Reduction Core created.\n";
+
 		while(1){
 
 			ReductionJob	j=_this->mem->popReductionJob();

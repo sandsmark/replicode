@@ -102,16 +102,14 @@ public:
 
 	~CodePayload(){
 
-		if(data(0).getDescriptor()!=Atom::MARKER){
-
-			uint16	ref_count=_capacity-code_size;
-			for(uint16	i=0;i<ref_count;++i)
-				((Code	*)&data(code_size+i))->decRef();
-		}
+		uint16	ref_count=_capacity-code_size;
+		for(uint16	i=0;i<ref_count;++i)
+			*((P<Code>	*)&data(code_size+i))=NULL;
 	}
 
 	uint16		ptrCount()	const{	return	_capacity-code_size;	}
 	__Payload	*getPtr(uint16	i)	const;
+	void		setPtr(uint16	i,__Payload	*p);
 };
 
 //	Instantiated on the RMem side (not on the device side).
@@ -130,20 +128,10 @@ public:
 	Atom	&code(uint16	i)	const{	return	_code[i];	}
 	uint16	code_size()	const{	return	_code_size;	}
 	Code	*get_reference(uint16	i)	const{	return	(Code	*)(&_code[_code_size+i]);	}
-	void	set_reference(uint16	i,Code	*object){
-		
-		(*(Code	**)(&_code[_code_size+i]))=object;
-		if(_code[0].getDescriptor()!=Atom::MARKER)
-			object->incRef();
-	}
+	void	set_reference(uint16	i,Code	*object){	(*(P<Code>	*)(&_code[_code_size+i]))=object;	}
 	uint16	references_size()	const{	return	payload->getCapacity()-_code_size;	}
 
-	virtual	~RCode(){
-	
-		std::list<Code	*>::const_iterator	m;
-		for(m=markers.begin();m!=markers.end();++m)
-			(*m)->kill(this);
-	}
+	virtual	~RCode(){}
 
 	void	set_payload(CodePayload	*p,RObject	*s){
 

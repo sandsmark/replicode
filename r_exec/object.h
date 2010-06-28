@@ -68,9 +68,6 @@ namespace	r_exec{
 	protected:
 		r_code::Mem	*mem;
 		
-		bool	killed;	//	used only for markers.
-		void	delete_views();
-
 		Object(r_code::Mem	*mem);
 	public:
 		virtual	~Object();	//	un-registers from the rMem's object_register.

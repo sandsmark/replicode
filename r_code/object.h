@@ -164,17 +164,15 @@ namespace	r_code{
 		virtual	void	set(uint16	member_index,float32	value){};
 		virtual	View	*find_view(Code	*group,bool	lock){	return	NULL;	}
 		virtual	void	add_reference(Code	*object)	const{}	//	called only on local objects.
-
-		virtual	void	kill(Code	*origin){	delete	this;	}	//	called only on markers.
-		virtual	void	remove_marker(Code	*m)=0;
+		virtual	void	remove_marker(Code	*m){};
 	};
 
 	//	Implementation for local objects (non distributed).
 	class	dll_export	LObject:
 	public	Code{
 	protected:
-		r_code::vector<Atom>	_code;
-		r_code::vector<Code	*>	_references;
+		r_code::vector<Atom>		_code;
+		r_code::vector<P<Code> >	_references;
 	public:
 		LObject():Code(){}
 		LObject(SysObject	*source):Code(){
@@ -182,35 +180,15 @@ namespace	r_code{
 			load(source);
 			build_views<View>(source);
 		}
-		virtual	~LObject(){	//	delete references if non-marker; kill all markers.
-
-			if(code(0).getDescriptor()!=Atom::MARKER)
-				for(uint16	i=0;references_size();++i)
-					get_reference(i)->decRef();
-
-			std::list<Code	*>::const_iterator	m;
-			for(m=markers.begin();m!=markers.end();++m)
-				(*m)->kill(this);
-		}
+		virtual	~LObject(){}
 
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	&code(uint16	i)	const{	return	(*_code.as_std())[i];	}
 		uint16	code_size()	const{	return	_code.size();	}
-		void	set_reference(uint16	i,Code	*object){
-			
-			_references[i]=object;
-			if(_code[0].getDescriptor()!=Atom::MARKER)
-				object->incRef();
-		}
+		void	set_reference(uint16	i,Code	*object){	_references[i]=object;	}
 		Code	*get_reference(uint16	i)	const{	return	(*_references.as_std())[i];	}
 		uint16	references_size()	const{	return	_references.size();	}
-
-		void	add_reference(Code	*object)	const{
-			
-			_references.as_std()->push_back(object);
-			if(code(0).getDescriptor()!=Atom::MARKER)
-				object->incRef();
-		}
+		void	add_reference(Code	*object)	const{	_references.as_std()->push_back(object);	}
 	};
 
 	class	Mem{
