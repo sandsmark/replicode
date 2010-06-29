@@ -100,11 +100,11 @@ namespace	r_comp{
 			bool	after_tail_wildcard=false;
 			indents=0;
 
-			switch(i){
-			case	0:	s="root";break;
-			case	1:	s="stdin";break;
-			case	2:	s="stdout";break;
-			case	3:	s="self";break;
+			switch(sys_object->axiom){
+			case	SysObject::ROOT_GRP:	s="root";break;
+			case	SysObject::STDIN_GRP:	s="stdin";break;
+			case	SysObject::STDOUT_GRP:	s="stdout";break;
+			case	SysObject::SELF_ENT:	s="self";break;
 			default:
 				sprintf(buffer,"%d",last_object_ID++);
 				s=metadata->getClass(current_object->code[0].asOpcode())->str_opcode;
@@ -258,7 +258,7 @@ namespace	r_comp{
 
 			if(a.atom==0x3FFFFFFF)
 				out_stream->push("|nb",read_index);
-			else	if(a.atom==0x3FC00000)
+			else	if(a==Atom::PlusInfinity())
 				out_stream->push("forever",read_index);
 			else{
 

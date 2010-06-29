@@ -139,10 +139,6 @@ namespace	r_comp{
 		bool	label(std::string	&l);
 		bool	variable(std::string	&v);
 		bool	this_();
-		bool	self();
-		bool	stdin_();
-		bool	stdout_();
-		bool	root();
 		bool	local_reference(uint16	&index,const	ReturnType	t);										//	must conform to t; indicates if the ref is to ba valuated in the value array (in_pattern set to true).
 		bool	global_reference(uint16	&index,const	ReturnType	t);										//	no conformance: return type==ANY.
 		bool	this_indirection(std::vector<uint16>	&v,const	ReturnType	t);							//	ex: this.res.

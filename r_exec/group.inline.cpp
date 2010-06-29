@@ -30,14 +30,63 @@
 
 namespace	r_exec{
 
-	inline	Group::Group(r_code::Mem	*m):LObject(m),FastSemaphore(1,1){
+	inline	bool	Group::is_running()	const{
+
+		if(views.size()>0)
+			return	true;
+	}
+
+	inline	bool	Group::is_invalidated()	const{
+
+		return	invalidated;
+	}
+
+	inline	void	Group::clear(){
+
+		if(invalidated)
+			return;
+		invalidated=true;
+		
+		if(mem)
+			mem->deleteObject(this);
+
+		//	unregister from all groups it views.
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	gv;
+		for(gv=group_views.begin();gv!=group_views.end();++gv){
+
+			((Group	*)gv->second->object)->acquire();
+			((Group	*)gv->second->object)->viewing_groups.erase(this);
+			((Group	*)gv->second->object)->release();
+		}
+
+		//	remove all views that are hosted by this group.
+		FOR_ALL_VIEWS_BEGIN(this,v)
+
+			if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM)	//	if ipgm view, kill the overlay.
+				v->second->controller->kill();
+
+			v->second->object->acq_views();
+			v->second->object->views.erase(v->second);	//	delete view from object's views.
+			v->second->object->rel_views();
+		
+		FOR_ALL_VIEWS_END
+
+		notification_views.clear();
+		ipgm_views.clear();
+		anti_ipgm_views.clear();
+		input_less_ipgm_views.clear();
+		other_views.clear();
+		group_views.clear();
+	}
+
+	inline	Group::Group(r_code::Mem	*m):LObject(m),FastSemaphore(1,1),invalidated(false){
 
 		reset_ctrl_values();
 		reset_stats();
 		reset_decay_values();
 	}
 
-	inline	Group::Group(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),FastSemaphore(1,1){
+	inline	Group::Group(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),FastSemaphore(1,1),invalidated(false){
 
 		reset_ctrl_values();
 		reset_stats();
@@ -45,6 +94,8 @@ namespace	r_exec{
 	}
 
 	inline	Group::~Group(){
+
+		clear();
 	}
 
 	inline	uint32	Group::get_upr(){

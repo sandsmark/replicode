@@ -150,7 +150,17 @@ namespace	r_comp{
 			return	false;
 		}else{
 
-			current_object=new	SysObject();
+			if(l=="root")
+				current_object=new	SysObject(SysObject::ROOT_GRP);
+			else	if(l=="stdin")
+				current_object=new	SysObject(SysObject::STDIN_GRP);
+			else	if(l=="stdout")
+				current_object=new	SysObject(SysObject::STDOUT_GRP);
+			else	if(l=="self")
+				current_object=new	SysObject(SysObject::SELF_ENT);
+			else
+				current_object=new	SysObject(SysObject::NON_STD);
+
 			if(lbl)
 				global_references[l]=Reference(_image->code_segment.objects.size(),current_class,Class());
 		}
@@ -808,46 +818,6 @@ return_false:
 
 		std::streampos	i=in_stream->tellg();
 		if(match_symbol_separator("this",false))
-			return	true;
-		in_stream->clear();
-		in_stream->seekg(i);
-		return	false;
-	}
-
-	bool	Compiler::self(){
-
-		std::streampos	i=in_stream->tellg();
-		if(match_symbol_separator("self",false))
-			return	true;
-		in_stream->clear();
-		in_stream->seekg(i);
-		return	false;
-	}
-
-	bool	Compiler::stdin_(){
-
-		std::streampos	i=in_stream->tellg();
-		if(match_symbol_separator("stdin",false))
-			return	true;
-		in_stream->clear();
-		in_stream->seekg(i);
-		return	false;
-	}
-
-	bool	Compiler::stdout_(){
-
-		std::streampos	i=in_stream->tellg();
-		if(match_symbol_separator("stdout",false))
-			return	true;
-		in_stream->clear();
-		in_stream->seekg(i);
-		return	false;
-	}
-
-	bool	Compiler::root(){
-
-		std::streampos	i=in_stream->tellg();
-		if(match_symbol_separator("root",false))
 			return	true;
 		in_stream->clear();
 		in_stream->seekg(i);
@@ -2254,7 +2224,7 @@ return_false:
 
 			if(write){
 
-				current_object->code[write_index]=Atom(0x3FC00000);	//	+INF; format: IEEE 754 32 bits.
+				current_object->code[write_index]=Atom::PlusInfinity();
 			}
 			return	true;
 		}

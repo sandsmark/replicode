@@ -231,7 +231,7 @@ namespace	r_exec{
 
 			Context	_group=c.getChild(VIEW_HOST);
 			object=_group.getObject();
-			view_oid=c[VIEW_OID].asFloat();
+			view_oid=c[VIEW_OID].atom;	//	oid is hidden at the end of the view code; stored directly as a uint32.
 			object_type=TYPE_VIEW;
 			break;
 		}default:	//	atomic value or ill-formed mod/set expression.

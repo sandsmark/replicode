@@ -39,12 +39,12 @@ namespace	r_exec{
 
 	uint32	View::LastOID=0;
 
-	Atom	View::GetOID(){
+	uint32	View::GetOID(){
 
 		OID_sem.acquire();
 		uint32	oid=LastOID++;
 		OID_sem.release();
-		return	Atom::Float(oid);
+		return	oid;
 	}
 
 	uint16	View::ViewOpcode;
@@ -70,7 +70,7 @@ namespace	r_exec{
 		Group	*source=view->get_host();
 		object=view->object;
 		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom));
-		code(VIEW_OID)=GetOID();
+		_code[VIEW_OID].atom=GetOID();
 		references[0]=group;		//	host.
 		references[1]=source;	//	origin.
 
@@ -203,13 +203,12 @@ namespace	r_exec{
 
 		uint32	write_index=0;
 		code(write_index++)=r_code::Atom::SSet(ViewOpcode,6);	//	Structured Set.
-		code(write_index++)=GetOID();							//	oid
-		code(write_index++)=r_code::Atom::IPointer(7);			//	iptr to ijt.
+		code(write_index++)=r_code::Atom::IPointer(6);			//	iptr to ijt.
 		code(write_index++)=r_code::Atom::Float(1);				//	sln.
 		code(write_index++)=r_code::Atom::Float(1);				//	res.
 		code(write_index++)=r_code::Atom::RPointer(0);			//	destination.
 		code(write_index++)=r_code::Atom::RPointer(1);			//	origin.
-		code(7)=r_code::Atom::Timestamp();						//	ijt will be set at injection time.
+		code(6)=r_code::Atom::Timestamp();						//	ijt will be set at injection time.
 		references[0]=destination;
 		references[1]=origin;
 		reset_init_sln();

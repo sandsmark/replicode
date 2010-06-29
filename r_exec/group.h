@@ -94,6 +94,8 @@ namespace	r_exec{
 		void	_set_0_plus1(uint16	member_index,float32	value);
 		void	_set_minus1_plus1(uint16	member_index,float32	value);
 		void	_set_0_1(uint16	member_index,float32	value);
+
+		bool	invalidated;
 	public:
 		//	xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
 		//	Active overlays are to be found in xxx_ipgm_views.
@@ -162,6 +164,10 @@ namespace	r_exec{
 		Group(r_code::Mem	*m);
 		Group(r_code::SysObject	*source,r_code::Mem	*m);
 		~Group();
+
+		bool	is_running()	const;	//	false when has no views.
+		void	clear();				//	removes all views of itself and of any other object.
+		bool	is_invalidated()	const;
 
 		bool	all_views_cond(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
 			static	uint8	selector=0;

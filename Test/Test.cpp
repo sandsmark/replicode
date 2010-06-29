@@ -50,13 +50,13 @@ int32	main(int	argc,char	**argv){
 		std::cerr<<" <- "<<error<<std::endl;
 		return	1;
 	}else{
-/*
+
 		r_exec::Mem<r_exec::LObject>	*mem=new	r_exec::Mem<r_exec::LObject>();
 
 		r_code::vector<r_code::Code	*>	ram_objects;
 		r_exec::Seed.getObjects(&r_exec::Metadata,mem,ram_objects);
 
-		mem->init(100000,4,4);
+		mem->init(100000,1,1);
 		mem->load(ram_objects.as_std());
 		mem->start();
 		//uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
@@ -66,14 +66,14 @@ int32	main(int	argc,char	**argv){
 		r_comp::Image	*image=mem->getImage();
 
 		delete	mem;
-		*/r_comp::Image	*image=&r_exec::Seed;
+
 		Decompiler			decompiler;
 		std::ostringstream	decompiled_code;
 		decompiler.init(&r_exec::Metadata);
 		decompiler.decompile(image,&decompiled_code);
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 
-		//delete	image;
+		delete	image;
 	}
 
 	return	0;

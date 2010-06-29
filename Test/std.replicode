@@ -1,9 +1,9 @@
 ; std.replicode
 
 ;mapping objects -> r-code
-!class (view[] oid:nb ijt:us sln:nb res:nb grp:grp org:)
-!class (grp_view[] oid:nb ijt:us sln:nb res:nb grp:grp org: vis:nb cov:nb)
-!class (react_view[] oid:nb ijt:us sln:nb res:nb grp:grp org: act:nb)
+!class (view[] ijt:us sln:nb res:nb grp:grp org:)
+!class (grp_view[] ijt:us sln:nb res:nb grp:grp org: vis:nb cov:nb)
+!class (react_view[] ijt:us sln:nb res:nb grp:grp org: act:nb)
 !class (_obj :~ vw:view mks:[] vws:[::view] psln_thr:nb)
 !class (_grp_obj :~ vw:grp_view mks:[] vws:[::grp_view] psln_thr:nb)
 !class (_ins_react_obj :~ vw:react_view mks:[] vws:[::react_view] psln_thr:nb)

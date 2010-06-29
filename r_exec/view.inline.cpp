@@ -35,14 +35,14 @@ namespace	r_exec{
 
 	inline	View::View():r_code::View(){
 
-		code(VIEW_OID)=GetOID();
+		_code[VIEW_OID].atom=GetOID();
 
 		reset_ctrl_values();
 	}
 
 	inline	View::View(r_code::SysView	*source,r_code::Code	*object):r_code::View(source,object){
 
-		code(VIEW_OID)=GetOID();
+		_code[VIEW_OID].atom=GetOID();
 
 		reset_ctrl_values();
 		reset_init_sln();
@@ -64,7 +64,7 @@ namespace	r_exec{
 
 	inline	uint32	View::getOID()	const{
 
-		return	code(VIEW_OID).asFloat();
+		return	_code[VIEW_OID].atom;
 	}
 
 	inline	bool	View::isNotification()	const{

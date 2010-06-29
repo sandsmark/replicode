@@ -74,10 +74,20 @@ namespace	r_code{
 	class	dll_export	SysObject:
 	public	ImageObject{
 	public:
+		typedef	enum{
+			ROOT_GRP=0,
+			STDIN_GRP=1,
+			STDOUT_GRP=2,
+			SELF_ENT=3,
+			NON_STD=4
+		}Axiom;
+
 		r_code::vector<uint32>		markers;		//	indexes in the relocation segment
 		r_code::vector<SysView	*>	views;
 
-		SysObject();
+		Axiom	axiom;
+
+		SysObject(Axiom	a);
 		SysObject(Code	*source);
 		~SysObject();
 
@@ -133,11 +143,14 @@ namespace	r_code{
 
 	class	dll_export	Code:
 	public	_Object{
+	private:
+		SysObject::Axiom	axiom;
 	protected:
 		void	load(SysObject	*source){
 
 			for(uint16	i=0;i<source->code.size();++i)
 				code(i)=source->code[i];
+			axiom=source->axiom;
 		}
 		template<class	V>	void	build_views(SysObject	*source){
 
@@ -157,6 +170,11 @@ namespace	r_code{
 		std::list<Code	*>								markers;
 		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	//	indexed by groups.
 
+		virtual	void	acq_views()		const{}
+		virtual	void	rel_views()		const{}
+		virtual	void	acq_markers()	const{}
+		virtual	void	rel_markers()	const{}
+
 		Code(){}
 		virtual	~Code(){}
 
@@ -164,7 +182,25 @@ namespace	r_code{
 		virtual	void	set(uint16	member_index,float32	value){};
 		virtual	View	*find_view(Code	*group,bool	lock){	return	NULL;	}
 		virtual	void	add_reference(Code	*object)	const{}	//	called only on local objects.
-		virtual	void	remove_marker(Code	*m){};
+		void	remove_marker(Code	*m){
+			
+			acq_markers();
+			std::list<Code	*>::const_iterator	_m;
+			for(_m=markers.begin();_m!=markers.end();){
+
+				if(*_m==m)
+					_m=markers.erase(_m);
+				else
+					++m;
+			}
+			rel_markers();
+		}
+
+		SysObject::Axiom	get_axiom()	const{	return	axiom;	}
+
+		std::list<Code	*>::const_iterator	position_in_objects;
+
+		virtual	bool	is_invalidated()	const{	return	false;	}
 	};
 
 	//	Implementation for local objects (non distributed).

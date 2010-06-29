@@ -72,14 +72,12 @@ namespace	r_exec{
 	public:
 		virtual	~Object();	//	un-registers from the rMem's object_register.
 
-		void	kill(Code	*origin);	//	origin is a reference of the marker being deleted that holds this marker in its marker set.
-
 		void	compute_hash_value();
 
 		float32	get_psln_thr();
 
-		void	acq_views()			const{	views_sem->acquire();	}
-		void	rel_views()			const{	views_sem->release();	}
+		void	acq_views()		const{	views_sem->acquire();	}
+		void	rel_views()		const{	views_sem->release();	}
 		void	acq_markers()	const{	markers_sem->acquire();	}
 		void	rel_markers()	const{	markers_sem->release();	}
 
@@ -116,7 +114,6 @@ namespace	r_exec{
 		};
 
 		//	for un-registering in the rMem upon deletion.
-		std::list<Code	*>::const_iterator																position_in_objects;
 		typename	UNORDERED_SET<U	*,typename	Object::Hash,typename	Object::Equal>::const_iterator	position_in_object_register;
 	};
 
@@ -136,20 +133,6 @@ namespace	r_exec{
 			build_views<r_exec::View>(source);
 		}
 		virtual	~LObject(){}
-
-		void	remove_marker(Code	*m){
-			
-			acq_markers();
-			std::list<Code	*>::const_iterator	_m;
-			for(_m=markers.begin();_m!=markers.end();){
-
-				if(*_m==m)
-					_m=markers.erase(_m);
-				else
-					++m;
-			}
-			rel_markers();
-		}
 	};
 }
 

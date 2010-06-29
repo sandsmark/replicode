@@ -81,8 +81,11 @@ namespace	r_exec{
 			object_register_sem->release();
 		}
 
+		if(object->is_invalidated())
+			return;
+
 		objects_sem->acquire();
-		objects.erase(((O	*)object)->position_in_objects);
+		objects.erase(object->position_in_objects);
 		objects_sem->release();
 	}
 
@@ -108,19 +111,25 @@ namespace	r_exec{
 		for(i=0;i<time_core_count;++i)
 			time_cores[i]=new	TimeCore(this);
 
-		//	load root
+		//	load root (always comes first).
 		root=(Group	*)(*objects)[0];
 		this->objects.push_back(root);
 		initial_groups.push_back(root);
 
-		//	load conveniences
-		_stdin=(Group	*)(*objects)[1];
-		_stdout=(Group	*)(*objects)[2];
-		_self=(O	*)(*objects)[3];
-
 		for(uint32	i=1;i<objects->size();++i){	//	skip root as it has no initial views.
 
 			Code	*object=(*objects)[i];
+			switch(object->get_axiom()){
+			case	SysObject::STDIN_GRP:
+				_stdin=(Group	*)(*objects)[i];
+				break;
+			case	SysObject::STDOUT_GRP:
+				_stdout=(Group	*)(*objects)[i];
+				break;
+			case	SysObject::SELF_ENT:
+				_self=(O	*)(*objects)[i];
+				break;
+			}
 
 			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	it;
 			for(it=object->views.begin();it!=object->views.end();++it){
@@ -173,15 +182,11 @@ namespace	r_exec{
 				}
 			}
 
-			if(GetType(object)!=ObjectType::GROUP){	//	load non-group object in regsister.
-
+			object->position_in_objects=this->objects.insert(this->objects.end(),object);
+			if(GetType(object)!=ObjectType::GROUP)	//	load non-group object in regsister.
 				((O	*)object)->position_in_object_register=object_register.insert((O	*)object).first;
-				((O	*)object)->position_in_objects=this->objects.insert(this->objects.end(),object);
-			}else{
-
-				((Group	*)object)->position_in_objects=this->objects.insert(this->objects.end(),object);
+			else
 				initial_groups.push_back((Group	*)object);	//	convenience to create initial update jobs - see start().
-			}
 		}
 	}
 
@@ -362,9 +367,9 @@ namespace	r_exec{
 				}case	ObjectType::MARKER:	//	the marker does not exist yet: add it to the mks of its references.
 					for(uint32	i=0;i<object->references_size();++i){
 
-						((O	*)object->get_reference(i))->acq_markers();
+						object->get_reference(i)->acq_markers();
 						object->get_reference(i)->markers.push_back(object);
-						((O	*)object->get_reference(i))->rel_markers();
+						object->get_reference(i)->rel_markers();
 					}
 				case	ObjectType::OBJECT:{
 					host->other_views[view->getOID()]=view;
@@ -496,11 +501,17 @@ namespace	r_exec{
 			host->release();
 	}
 
-	template<class	O>	void	Mem<O>::update(Group	*group){
-
+	template<class	O>	void	Mem<O>::update(Group	*group){		
+			
 		uint64	now=Now();
 
 		group->acquire();
+
+		if(!group->is_running()){
+
+			group->clear();
+			return;
+		}
 
 		group->newly_salient_views.clear();
 
@@ -511,6 +522,8 @@ namespace	r_exec{
 			delete	group->pending_operations[i];
 		}
 		group->pending_operations.clear();
+
+		float32	former_sln_thr=group->get_sln_thr();
 
 		//	update group's ctrl values.
 		group->update_sln_thr();	//	applies decay on sln thr. 
@@ -532,7 +545,7 @@ namespace	r_exec{
 			if(res>0){
 
 				//	update saliency (apply decay).
-				bool	wiew_was_salient=v->second->get_sln()>group->get_sln_thr();
+				bool	wiew_was_salient=v->second->get_sln()>former_sln_thr;
 				float32	sln_change;
 				bool	wiew_is_salient=group->update_sln(v->second,sln_change,this)>group->get_sln_thr();
 
@@ -607,9 +620,9 @@ namespace	r_exec{
 				if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM)	//	if ipgm view, kill the overlay.
 					v->second->controller->kill();
 
-				((O	*)v->second->object)->acq_views();
-				((O	*)v->second->object)->views.erase(v->second);	//	delete view from object's views.
-				((O	*)v->second->object)->rel_views();
+				v->second->object->acq_views();
+				v->second->object->views.erase(v->second);	//	delete view from object's views.
+				v->second->object->rel_views();
 
 				//	delete the view.
 				if(v->second->isNotification())
@@ -686,10 +699,10 @@ namespace	r_exec{
 
 	template<class	O>	void	Mem<O>::update(SaliencyPropagationJob	*j){
 		
-		propagate_sln((O	*)j->object,j->sln_change,j->source_sln_thr);
+		propagate_sln(j->object,j->sln_change,j->source_sln_thr);
 	}
 
-	template<class	O>	void	Mem<O>::propagate_sln(O	*object,float32	change,float32	source_sln_thr){
+	template<class	O>	void	Mem<O>::propagate_sln(Code	*object,float32	change,float32	source_sln_thr){
 
 		//	apply morphed change to views.
 		//	feedback can happen, i.e. m:(mk o1 o2); o1.vw.g propag -> o1 propag ->m propag -> o2 propag o2.vw.g, next upr in g, o2 propag -> m propag -> o1 propag -> o1,vw.g: loop!
@@ -737,29 +750,29 @@ namespace	r_exec{
 		}
 	}
 
-	template<class	O>	void	Mem<O>::_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr){
+	template<class	O>	void	Mem<O>::_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr){
 		
 		if(fabs(change)>object->get_psln_thr()){
 
-			std::vector<O	*>	path;
+			std::vector<Code	*>	path;
 			path.push_back(object);
 
 			if(GetType(object)==ObjectType::MARKER){	//	if marker, propagate to references.
 
 				for(uint32	i=0;i<object->references_size();++i)
-					_propagate_sln((O	*)object->get_reference(i),change,source_sln_thr,path);
+					_propagate_sln(object->get_reference(i),change,source_sln_thr,path);
 			}
 
 			//	propagate to markers
 			object->acq_markers();
 			std::list<Code	*>::const_iterator	m;
 			for(m=object->markers.begin();m!=object->markers.end();++m)
-				_propagate_sln((O	*)*m,change,source_sln_thr,path);
+				_propagate_sln(*m,change,source_sln_thr,path);
 			object->rel_markers();
 		}
 	}
 
-	template<class	O>	void	Mem<O>::_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path){
+	template<class	O>	void	Mem<O>::_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path){
 			
 		//	prevent loops.
 		for(uint32	i=0;i<path.size();++i)
@@ -772,18 +785,18 @@ namespace	r_exec{
 
 			if(GetType(object)==ObjectType::MARKER)	//	if marker, propagate to references.
 				for(uint32	i=0;i<object->references_size();++i)
-					_propagate_sln((O	*)object->get_reference(i),change,source_sln_thr,path);
+					_propagate_sln(object->get_reference(i),change,source_sln_thr,path);
 
 			//	propagate to markers
 			object->acq_markers();
 			std::list<Code	*>::const_iterator	m;
 			for(m=object->markers.begin();m!=object->markers.end();++m)
-				_propagate_sln((O	*)*m,change,source_sln_thr,path);
+				_propagate_sln(*m,change,source_sln_thr,path);
 			object->rel_markers();
 		}
 	}
 
-	template<class	O>	void	Mem<O>::_propagate_sln(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path){
+	template<class	O>	void	Mem<O>::_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path){
 
 		//	prevent loops.
 		for(uint32	i=0;i<path.size();++i)

@@ -81,10 +81,10 @@ namespace	r_exec{
 
 		avg_sln=0;
 		high_sln=0;
-		low_sln=0;
+		low_sln=1;
 		avg_act=0;
 		high_act=0;
-		low_act=0;
+		low_act=1;
 
 		sln_updates=0;
 		act_updates=0;
@@ -110,10 +110,20 @@ namespace	r_exec{
 
 	void	Group::update_stats(_Mem	*mem){
 
-		--decay_periods_to_go;
+		if(decay_periods_to_go>0)
+			--decay_periods_to_go;
 
-		avg_sln=avg_sln/(float32)sln_updates;
-		avg_act=avg_act/(float32)act_updates;
+		if(sln_updates)
+			avg_sln=avg_sln/(float32)sln_updates;
+		if(act_updates)
+			avg_act=avg_act/(float32)act_updates;
+
+		code(GRP_AVG_SLN)=Atom::Float(avg_sln);
+		code(GRP_AVG_ACT)=Atom::Float(avg_act);
+		code(GRP_HIGH_SLN)=Atom::Float(high_sln);
+		code(GRP_LOW_SLN)=Atom::Float(low_sln);
+		code(GRP_HIGH_ACT)=Atom::Float(high_act);
+		code(GRP_LOW_ACT)=Atom::Float(low_act);
 
 		if(sln_change_monitoring_periods_to_go==0){
 
@@ -175,15 +185,14 @@ namespace	r_exec{
 		}
 
 		if(decay_periods_to_go>0){
-
-			--decay_periods_to_go;
+			
 			if(sln_thr_decay!=0)
 				mod_sln_thr(get_sln_thr()*sln_thr_decay);
 		}
 		
 		if(sln_thr_changes){
 
-			float32	new_sln_thr=acc_sln_thr/sln_thr_changes;
+			float32	new_sln_thr=get_sln_thr()+acc_sln_thr/sln_thr_changes;
 			if(new_sln_thr<0)
 				new_sln_thr=0;
 			else	if(new_sln_thr>1)
@@ -199,7 +208,7 @@ namespace	r_exec{
 
 		if(act_thr_changes){
 
-			float32	new_act_thr=acc_act_thr/act_thr_changes;
+			float32	new_act_thr=get_act_thr()+acc_act_thr/act_thr_changes;
 			if(new_act_thr<0)
 				new_act_thr=0;
 			else	if(new_act_thr>1)
@@ -215,7 +224,7 @@ namespace	r_exec{
 
 		if(vis_thr_changes){
 
-			float32	new_vis_thr=acc_vis_thr/vis_thr_changes;
+			float32	new_vis_thr=get_vis_thr()+acc_vis_thr/vis_thr_changes;
 			if(new_vis_thr<0)
 				new_vis_thr=0;
 			else	if(new_vis_thr>1)
@@ -231,7 +240,7 @@ namespace	r_exec{
 
 		if(c_sln_changes){
 
-			float32	new_c_sln=acc_c_sln/c_sln_changes;
+			float32	new_c_sln=get_c_sln()+acc_c_sln/c_sln_changes;
 			if(new_c_sln<0)
 				new_c_sln=0;
 			else	if(new_c_sln>1)
@@ -247,7 +256,7 @@ namespace	r_exec{
 
 		if(c_act_changes){
 
-			float32	new_c_act=acc_c_act/c_act_changes;
+			float32	new_c_act=get_c_act()+acc_c_act/c_act_changes;
 			if(new_c_act<0)
 				new_c_act=0;
 			else	if(new_c_act>1)
@@ -263,7 +272,7 @@ namespace	r_exec{
 
 		if(c_sln_thr_changes){
 
-			float32	new_c_sln_thr=acc_c_sln_thr/c_sln_thr_changes;
+			float32	new_c_sln_thr=get_c_sln_thr()+acc_c_sln_thr/c_sln_thr_changes;
 			if(new_c_sln_thr<0)
 				new_c_sln_thr=0;
 			else	if(new_c_sln_thr>1)
@@ -279,7 +288,7 @@ namespace	r_exec{
 
 		if(c_act_thr_changes){
 
-			float32	new_c_act_thr=acc_c_act_thr/c_act_thr_changes;
+			float32	new_c_act_thr=get_c_act_thr()+acc_c_act_thr/c_act_thr_changes;
 			if(new_c_act_thr<0)
 				new_c_act_thr=0;
 			else	if(new_c_act_thr>1)
@@ -301,11 +310,15 @@ namespace	r_exec{
 
 	float32	Group::update_sln(View	*v,float32	&change,_Mem	*mem){
 
-		if(decay_periods_to_go>=0	&&	sln_decay!=0)
+		if(decay_periods_to_go>0	&&	sln_decay!=0)
 			v->mod_sln(v->get_sln()*sln_decay);
 
 		float32	sln=v->update_sln(change,get_low_sln_thr(),get_high_sln_thr());
 		avg_sln+=sln;
+		if(sln>high_sln)
+			high_sln=sln;
+		else	if(sln<low_sln)
+			low_sln=sln;
 		++sln_updates;
 		if(!v->isNotification()){
 
@@ -326,6 +339,10 @@ namespace	r_exec{
 
 		float32	act=v->update_act(get_low_act_thr(),get_high_act_thr());
 		avg_act+=act;
+		if(act>high_act)
+			high_act=act;
+		else	if(act<low_act)
+			low_act=act;
 		++act_updates;
 		if(!v->isNotification()){
 

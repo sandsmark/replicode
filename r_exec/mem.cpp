@@ -157,6 +157,7 @@ namespace	r_exec{
 	void	_Mem::update(UpdateJob	*j){
 
 		update((Group	*)j->group);
+		j->group=NULL;
 	}
 
 	void	_Mem::update(AntiPGMSignalingJob	*j){

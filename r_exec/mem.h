@@ -161,7 +161,7 @@ namespace	r_exec{
 		void	injectNow(View	*view);													//	also called by inject() (see below).
 		void	injectCopyNow(View	*view,Group	*destination);							//	for cov; NB: no cov for groups, pgm or notifications.
 		void	update(Group	*group);												//	checks for exiting objects and injects.
-		void	propagate_sln(O	*object,float32	change,float32	source_sln_thr);	//	calls mod_sln on the object's view with morphed sln changes.
+		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);	//	calls mod_sln on the object's view with morphed sln changes.
 
 		//	Utilities.
 		void	_inject_group_now(View	*view,Group	*object,Group	*host);
@@ -169,9 +169,9 @@ namespace	r_exec{
 		void	_inject_reduction_jobs(View	*view,Group	*host);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
 																//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
 
-		void	_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr);
-		void	_initiate_sln_propagation(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path);
-		void	_propagate_sln(O	*object,float32	change,float32	source_sln_thr,std::vector<O	*>	&path);
+		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr);
+		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
+		void	_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
 
 		std::vector<Group	*>	initial_groups;	//	convenience; cleared after start();
 	protected:
@@ -188,7 +188,7 @@ namespace	r_exec{
 		//	Called by operators and overlays.
 		r_code::Code	*buildObject(Atom	head);
 
-		void	load(std::vector<r_code::Code	*>	*objects);	//	call before start; 0: root, 1.stdin, 2:stdout, 3:self: these objects must be defined in the source code in that order; no mod/set/eje will be executed (only inj); ijt will be set at now=Time::Get() whatever the source code.
+		void	load(std::vector<r_code::Code	*>	*objects);	//	call before start; no mod/set/eje will be executed (only inj); ijt will be set at now=Time::Get() whatever the source code.
 		void	start();
 
 		void	deleteObject(Code	*object);

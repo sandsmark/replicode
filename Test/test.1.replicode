@@ -9,4 +9,4 @@ position
 )
 
 []
-   [|nb now 1 20 stdin nil]
+   [now 0.9 2 g1 nil]

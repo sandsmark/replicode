@@ -41,7 +41,7 @@ root:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-root; ntf_grp
+nil; ntf_grp
 |[]; view
 |[]; mks
 |[]; vws
@@ -49,12 +49,12 @@ root; ntf_grp
 )
 
 []
-   [|nb now 1 forever nil nil 0 0]
+   [now 1 forever nil nil 0 0]
 
-stdin:(grp
+g1:(grp
 1; upr
 1; spr
-0; sln_thr
+1; sln_thr
 0; act-thr
 0; vis_thr
 1; c_sln
@@ -63,7 +63,7 @@ stdin:(grp
 0; c_act_thr
 -0.2; dcy_per
 0; dcy_tgt
-2; dcy_prd
+0; dcy_prd
 1; sln_chg_thr
 2; sln_chg_prd
 1; act_chg_thr
@@ -75,14 +75,14 @@ stdin:(grp
 0; high_act
 0; low_act
 1; high_sln_thr
-0.9; low_sln_thr
+0; low_sln_thr
 1; sln_ntf_prd
 1; high_act_thr
 0; low_act_thr
 1; act_ntf_prd
 0; ntf_new
-2; low_res_thr
-stdin; ntf_grp
+0; low_res_thr
+nil; ntf_grp
 |[]; view
 |[]; mks
 |[]; vws
@@ -90,7 +90,49 @@ stdin; ntf_grp
 )
 
 []
-   [|nb now 1 forever root nil 0 0]
+   [now 1 3 root nil 0 0]
+
+stdin:(grp
+1; upr
+1; spr
+0; sln_thr
+0; act_thr
+0; vis_thr
+1; c_sln
+0; c_sln_thr
+1; c_act
+0; c_act_thr
+0; dcy_per
+0; dcy_tgt
+1; dcy_prd
+1; sln_chg_thr
+1; sln_chg_prd
+1; act_chg_thr
+1; act_chg_prd
+0; avg_sln
+0; high_sln
+0; low_sln
+0; avg_act
+0; high_act
+0; low_act
+1; high_sln_thr
+0; low_sln_thr
+1; sln_ntf_prd
+1; high_act_thr
+0; low_act_thr
+1; act_ntf_prd
+0; ntf_new
+0; low_res_thr
+root; ntf_grp
+|[]; view
+|[]; mks
+|[]; vws
+1; psln_thr
+)
+
+[]
+   [now 1 forever root nil 0 0]
+   [now 1 forever g1 nil 0 0]
 
 stdout:(grp
 1; upr
@@ -123,7 +165,7 @@ stdout:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-stdout; ntf_grp
+root; ntf_grp
 |[]; view
 |[]; mks
 |[]; vws
@@ -131,7 +173,7 @@ stdout; ntf_grp
 )
 
 []
-   [|nb now 1 forever root nil 0 0]
+   [now 1 forever root nil 0 0]
 
 self:(ent
 |[]; view
@@ -141,7 +183,7 @@ self:(ent
 )
 
 []
-   [|nb now 1 forever root nil]
+   [now 1 forever root nil]
 
 position:(ent
 |[]; view
@@ -151,4 +193,4 @@ position:(ent
 )
 
 []
-   [|nb now 1 forever root nil]
+   [now 1 forever root nil]

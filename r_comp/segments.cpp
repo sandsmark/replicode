@@ -318,7 +318,7 @@ namespace	r_comp{
 		uint32	offset=0;
 		for(uint32	i=0;i<object_count;++i){
 
-			SysObject	*o=new	SysObject();
+			SysObject	*o=new	SysObject(SysObject::NON_STD);
 			o->read(data+offset);
 			objects.push_back(o);
 			offset+=o->getSize();

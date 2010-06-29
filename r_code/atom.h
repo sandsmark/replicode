@@ -82,7 +82,7 @@ namespace	r_code{
 			GROUP=0xC9
 		}Type;
 		// encoders
-		static	Atom	Float(float32 f);	//	IEEE 754 32 bits encoding >> 1.
+		static	Atom	Float(float32 f);	//	IEEE 754 32 bits encoding; shifted by 1 to the right (loss of precison).
 		static	Atom	PlusInfinity();
 		static	Atom	MinusInfinity();
 		static	Atom	UndefinedFloat();

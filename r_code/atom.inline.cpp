@@ -1,26 +1,26 @@
+#include	<iostream>
 namespace	r_code{
 
 	inline	Atom	Atom::Float(float32	f){
 
-		uint32	_f=*reinterpret_cast<uint32*>(&f);
-		return	Atom(_f>>1);
+		float32	_f=f;
+		uint32	a=*reinterpret_cast<uint32	*>(&_f);
+		return	Atom(a>>1);
 	}
 
 	inline	Atom	Atom::PlusInfinity(){
 
-		uint32	inf=0x7F800000>>1;
-		return	Atom(inf);
+		return	Atom(0x3FC00000);
 	}
 
 	inline	Atom	Atom::MinusInfinity(){
 
-		uint32	inf=0xFF800000>>1;
-		return	Atom(inf);
+		return	Atom(0x7FC00000);
 	}
 
 	inline	Atom	Atom::UndefinedFloat(){
 		
-		return	Atom(0x3FFFFFFF);
+		return	Atom(0xFFFFFFF);
 	}
 
 	inline	Atom	Atom::Nil(){
@@ -243,7 +243,8 @@ namespace	r_code{
 
 	inline	bool	Atom::readsAsNil()	const{
 
-		return	atom==0x3FFFFFFF	||
+		return	atom==0x80000000	||
+				atom==0x3FFFFFFF	||
 				atom==0x81FFFFFF	||
 				atom==0xC1000000	||
 				atom==0xA0FFFFFF	||
@@ -254,8 +255,8 @@ namespace	r_code{
 
 	inline	float32	Atom::asFloat()	const{
 
-		int32	a=atom<<1;
-		return	*reinterpret_cast<float32	*>(&a);
+		uint32	_f=atom<<1;
+		return	*reinterpret_cast<const	float32	*>(&_f);
 	}
 
 	inline	bool	Atom::asBoolean()	const{

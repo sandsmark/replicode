@@ -41,12 +41,15 @@ namespace	r_exec{
 	class	Group;
 	class	LObject;
 
-	//	OID is the 2nd atom in code.
+	//	OID is hidden at _code[VIEW_OID].
 	//	Shared resources:
 	//		none: all mod/set operations are pushed on the group and executed at update time.
 	class	r_exec_dll	View:
 	public	r_code::View{
 	private:
+		static	uint32	LastOID;
+		static	uint32	GetOID();
+
 		//	Ctrl values.
 		uint32	sln_changes;
 		float32	acc_sln;
@@ -60,9 +63,6 @@ namespace	r_exec{
 		float32	initial_sln;
 		float32	initial_act;
 	protected:
-		static	uint32	LastOID;
-		static	Atom	GetOID();
-
 		void	reset_init_sln();
 		void	reset_init_act();
 	public:
