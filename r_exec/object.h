@@ -97,12 +97,8 @@ namespace	r_exec{
 
 		class	Equal{
 		public:
-			bool	operator	()(const	U	*lhs,const	U	*rhs)	const{
-				if(lhs->references_size()!=rhs->references_size())
-					return	false;
-				if(lhs->code_size()!=rhs->code_size())
-					return	false;
-				uint32	i;
+			bool	operator	()(const	U	*lhs,const	U	*rhs)	const{	//	lhs and rhs have the same hash value, i.e. same opcode, same code size and same reference size.
+				uint16	i;
 				for(i=0;i<lhs->references_size();++i)
 					if(lhs->get_reference(i)!=rhs->get_reference(i))
 						return	false;

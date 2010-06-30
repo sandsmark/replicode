@@ -51,17 +51,32 @@ namespace	r_exec{
 
 	float32	View::MorphValue(float32	value,float32	source_thr,float32	destination_thr){
 
-		if(source_thr>0)
-			return	value*destination_thr/source_thr;
-		if(value==0)	//	i.e. value==source_thr.
+		if(value==0)
 			return	destination_thr;
+		
+		if(source_thr>0){
+
+			if(destination_thr>0){
+
+				float32	r=value*destination_thr/source_thr;
+				if(r>1)	//	handles precision errors.
+					r=1;
+				return	r;
+			}else
+				return	value;
+		}
 		return	destination_thr+value;
 	}
 
-	float32	View::MorphChange(float32	change,float32	source_thr,float32	destination_thr){
+	float32	View::MorphChange(float32	change,float32	source_thr,float32	destination_thr){	//	change is always >0.
 
-		if(source_thr>0)
-			return	change*destination_thr/source_thr;
+		if(source_thr>0){
+
+			if(destination_thr>0)
+				return	change*destination_thr/source_thr;
+			else
+				return	change;
+		}
 		return	destination_thr+change;
 	}
 
@@ -75,12 +90,12 @@ namespace	r_exec{
 		references[1]=source;	//	origin.
 
 		//	morph ctrl values; NB: res is not morphed as it is expressed as a multiple of the upr.
-		code(VIEW_SLN)=MorphValue(view->code(VIEW_SLN).asFloat(),source->get_sln_thr(),group->get_sln_thr());
+		code(VIEW_SLN)=Atom::Float(MorphValue(view->code(VIEW_SLN).asFloat(),source->get_sln_thr(),group->get_sln_thr()));
 		switch(object->code(0).getDescriptor()){
 		case	Atom::GROUP:
-			code(VIEW_ACT_VIS)=MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_vis_thr(),group->get_vis_thr());
+			code(VIEW_ACT_VIS)=Atom::Float(MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_vis_thr(),group->get_vis_thr()));
 		case	Atom::INSTANTIATED_PROGRAM:
-			code(VIEW_ACT_VIS)=MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_act_thr(),group->get_act_thr());
+			code(VIEW_ACT_VIS)=Atom::Float(MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_act_thr(),group->get_act_thr()));
 		}
 
 		reset_ctrl_values();
@@ -136,20 +151,17 @@ namespace	r_exec{
 		return	get_res();
 	}
 
-	float32	View::update_sln(float32	&change,float32	low,float32	high){
+	float32	View::update_sln(float32	low,float32	high){
 
 		if(sln_changes){
 
-			change=-code(VIEW_SLN).asFloat();
 			float32	new_sln=get_sln()+acc_sln/sln_changes;
 			if(new_sln<0)
 				new_sln=0;
 			else	if(new_sln>1)
 				new_sln=1;
 			code(VIEW_SLN)=r_code::Atom::Float(new_sln);
-			change+=code(VIEW_SLN).asFloat();
-		}else
-			change=0;
+		}
 		acc_sln=0;
 		sln_changes=0;
 		if(get_sln()<low)

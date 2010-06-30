@@ -81,9 +81,9 @@ namespace	r_comp{
 
 	class	dll_export	ObjectMap{
 	public:
-		r_code::vector<uint32>	objects;
+		r_code::vector<uint16>	objects;
 
-		void	shift(uint32	offset);
+		void	shift(uint16	offset);
 
 		void	write(word32	*data);
 		void	read(word32		*data,uint32	size);
@@ -97,7 +97,7 @@ namespace	r_comp{
 		~CodeSegment();
 		
 		void	write(word32	*data);
-		void	read(word32		*data,uint32	object_count);
+		void	read(word32		*data,uint16	object_count);
 		uint32	getSize();
 	};
 
@@ -105,11 +105,11 @@ namespace	r_comp{
 	public:
 		class	dll_export	PointerIndex{
 		public:
-			uint32	object_index;	//	index of a referencing object in CodeSegment::objects.
-			int32	view_index;		//	index of a view in the object's view set.
-			uint32	pointer_index;	//	index of a pointer in CodeSegment::objects[object_index].
+			uint16	object_index;	//	index of a referencing object in CodeSegment::objects.
+			int16	view_index;		//	index of a view in the object's view set.
+			uint16	pointer_index;	//	index of a pointer in CodeSegment::objects[object_index].
 			PointerIndex();
-			PointerIndex(uint32	object_index,int32	view_index,uint32	pointer_index);
+			PointerIndex(uint16	object_index,int16	view_index,uint16	pointer_index);
 		};
 		class	dll_export	Entry{
 		public:
@@ -121,16 +121,15 @@ namespace	r_comp{
 
 		r_code::vector<Entry>	entries;
 
-		void	addObjectReference(uint32	referenced_object_index,
-									uint32	referencing_object_index,
-									uint32	reference_pointer_index);
-		void	addViewReference(uint32	referenced_object_index,
-									uint32	referencing_object_index,
-									int32	referencing_view_index,
-									uint32	reference_pointer_index);
-		void	addMarkerReference(uint32	referenced_object_index,
-									uint32	referencing_object_index/*,
-									uint32	reference_pointer_index*/);
+		void	addObjectReference(uint16	referenced_object_index,
+									uint16	referencing_object_index,
+									uint16	reference_pointer_index);
+		void	addViewReference(uint16	referenced_object_index,
+									uint16	referencing_object_index,
+									int16	referencing_view_index,
+									uint16	reference_pointer_index);
+		void	addMarkerReference(uint16	referenced_object_index,
+									uint16	referencing_object_index);
 
 		void	write(word32	*data);
 		void	read(word32		*data);
@@ -140,8 +139,8 @@ namespace	r_comp{
 	class	dll_export	Image{
 	private:
 		uint32	map_offset;
-		UNORDERED_MAP<r_code::Code	*,uint32>	ptrs_to_indices;	//	used for >> in memory.
-		void	buildReferences(SysObject	*sys_object,r_code::Code	*object,uint32	object_index);
+		UNORDERED_MAP<r_code::Code	*,uint16>	ptrs_to_indices;	//	used for >> in memory.
+		void	buildReferences(SysObject	*sys_object,r_code::Code	*object,uint16	object_index);
 		void	unpackObjects(r_code::vector<Code	*>	&ram_objects);
 	public:
 		ObjectMap			object_map;
@@ -153,7 +152,7 @@ namespace	r_comp{
 
 		void	addObject(SysObject	*object);
 
-		void	getObjects(Metadata	*metadata,Mem	*mem,r_code::vector<r_code::Code	*>	&ram_objects);
+		void	getObjects(Mem	*mem,r_code::vector<r_code::Code	*>	&ram_objects);
 		template<class	O>	void	getObjects(r_code::vector<Code	*>	&ram_objects){
 
 			for(uint32	i=0;i<code_segment.objects.size();++i){

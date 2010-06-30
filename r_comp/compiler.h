@@ -169,7 +169,7 @@ namespace	r_comp{
 		bool	set(bool	&indented,uint16	write_index,uint16	&extent_index,bool	write);							//	no conformance, i.e. set of anything.
 		bool	set(bool	&indented,const	Class	&p,uint16	write_index,uint16	&extent_index,bool	write);			//	must conform to p.
 		
-		uint16	set_element_count(bool	indented);	//	returns the number of elements in a set; parses the stream (write set to false) until it finds the end of the set and rewinds (write set back to true).
+		uint8	set_element_count(bool	indented);	//	returns the number of elements in a set; parses the stream (write set to false) until it finds the end of the set and rewinds (write set back to true).
 		bool	read(const	StructureMember	&m,bool	&indented,bool	enforce,uint16	write_index,uint16	&extent_index,bool	write);
 
 		OutStream	*out_stream;

@@ -169,8 +169,7 @@ namespace	r_exec{
 		void	clear();				//	removes all views of itself and of any other object.
 		bool	is_invalidated()	const;
 
-		bool	all_views_cond(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
-			static	uint8	selector=0;
+		bool	all_views_cond(uint8	&selector,UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
 			while(it==end){
 				switch(selector++){
 				case	0:
@@ -202,20 +201,21 @@ namespace	r_exec{
 		}
 
 #define	FOR_ALL_VIEWS_BEGIN(g,it)	{	\
+		uint8	selector;				\
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	it=g->ipgm_views.begin();	\
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	end=g->ipgm_views.end();	\
-		for(;g->all_views_cond(it,end);++it){
+		for(selector=0;g->all_views_cond(selector,it,end);++it){
 
 #define	FOR_ALL_VIEWS_BEGIN_NO_INC(g,it)	{	\
+		uint8	selector;						\
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	it=g->ipgm_views.begin();	\
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	end=g->ipgm_views.end();	\
-		for(;g->all_views_cond(it,end);){
+		for(selector=0;g->all_views_cond(selector,it,end);){
 			
 #define	FOR_ALL_VIEWS_END	}	\
 		}
 
-		bool	ipgm_views_with_inputs_cond(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
-			static	uint8	selector=0;
+		bool	ipgm_views_with_inputs_cond(uint8	&selector,UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
 			while(it==end){
 				switch(selector++){
 				case	0:
@@ -231,15 +231,15 @@ namespace	r_exec{
 		}
 
 #define	FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(g,it)	{	\
+		uint8	selector;								\
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	it=g->ipgm_views.begin();	\
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	end=g->ipgm_views.end();	\
-		for(;g->ipgm_views_with_inputs_cond(it,end);++it){
+		for(selector=0;g->ipgm_views_with_inputs_cond(selector,it,end);++it){
 
 #define	FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END	}	\
 		}	
 
-		bool	non_ntf_views_cond(UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
-			static	uint8	selector=0;
+		bool	non_ntf_views_cond(uint8	&selector,UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
 			while(it==end){
 				switch(selector++){
 				case	0:
@@ -267,9 +267,10 @@ namespace	r_exec{
 		}
 
 #define	FOR_ALL_NON_NTF_VIEWS_BEGIN(g,it)	{	\
+		uint8	selector;						\
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	it=g->ipgm_views.begin();	\
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	end=g->ipgm_views.end();	\
-		for(;g->non_ntf_views_cond(it,end);++it){
+		for(selector=0;g->non_ntf_views_cond(selector,it,end);++it){
 			
 #define	FOR_ALL_NON_NTF_VIEWS_END	}	\
 		}
@@ -338,7 +339,7 @@ namespace	r_exec{
 
 		//	Delegate to views; update stats and notifies.
 		float32	update_res(View	*v,_Mem	*mem);
-		float32	update_sln(View	*v,float32	&change,_Mem	*mem);	//	applies decay if any.
+		float32	update_sln(View	*v,_Mem	*mem);	//	applies decay if any.
 		float32	update_act(View	*v,_Mem	*mem);
 
 		//	Target upr, spr, c_sln, c_act, sln_thr, act_thr, vis_thr, c_sln_thr, c-act_thr, sln_chg_thr,

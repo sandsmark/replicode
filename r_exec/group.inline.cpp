@@ -32,8 +32,7 @@ namespace	r_exec{
 
 	inline	bool	Group::is_running()	const{
 
-		if(views.size()>0)
-			return	true;
+		return	views.size()>0;
 	}
 
 	inline	bool	Group::is_invalidated()	const{
@@ -322,7 +321,7 @@ namespace	r_exec{
 		if(code(GRP_NTF_GRP).readsAsNil())
 			return	this;
 
-		uint32	index=code(GRP_NTF_GRP).asIndex();
+		uint16	index=code(GRP_NTF_GRP).asIndex();
 		return	(Group	*)get_reference(index);
 	}
 

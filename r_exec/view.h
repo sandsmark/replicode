@@ -79,7 +79,7 @@ namespace	r_exec{
 		uint32	periods_at_high_act;
 
 		View();
-		View(r_code::SysView	*source,r_code::Code	*object);
+		View(r_code::SysView	*source,r_code::Code	*object,uint16	index);
 		View(View	*view,Group	*group);	//	copy the view and assigns it to the group (used for cov); morph ctrl values.
 		View(const	View	*view);			//	simple copy.
 		~View();
@@ -107,7 +107,7 @@ namespace	r_exec{
 		void	set_act_vis(float32	value);
 
 		float32	update_res();
-		float32	update_sln(float32	&change,float32	low,float32	high);
+		float32	update_sln(float32	low,float32	high);
 		float32	update_act(float32	low,float32	high);
 		float32	update_vis();
 

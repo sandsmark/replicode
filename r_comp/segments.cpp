@@ -114,9 +114,9 @@ namespace	r_comp{
 		
 	void	Metadata::read(word32	*data,uint32	size){
 		
-		uint32	class_count=data[0];
-		uint32	i;
-		uint32	offset=1;
+		uint16	class_count=data[0];
+		uint16	i;
+		uint16	offset=1;
 		for(i=0;i<class_count;++i){
 
 			Class	c;
@@ -125,7 +125,7 @@ namespace	r_comp{
 			offset+=c.getSize();
 		}
 
-		uint32	classes_count=data[offset++];
+		uint16	classes_count=data[offset++];
 		for(i=0;i<classes_count;++i){
 
 			std::string	s;
@@ -134,7 +134,7 @@ namespace	r_comp{
 			classes[s]=classes_by_opcodes[data[offset++]];
 		}
 
-		uint32	sys_classes_count=data[offset++];
+		uint16	sys_classes_count=data[offset++];
 		for(i=0;i<sys_classes_count;++i){
 
 			std::string	s;
@@ -143,7 +143,7 @@ namespace	r_comp{
 			sys_classes[s]=classes_by_opcodes[data[offset++]];
 		}
 
-		uint32	class_names_count=data[offset++];
+		uint16	class_names_count=data[offset++];
 		for(i=0;i<class_names_count;++i){
 
 			std::string	s;
@@ -152,7 +152,7 @@ namespace	r_comp{
 			offset+=r_code::GetSize(s);
 		}
 
-		uint32	operator_names_count=data[offset++];
+		uint16	operator_names_count=data[offset++];
 		for(i=0;i<operator_names_count;++i){
 
 			std::string	s;
@@ -161,7 +161,7 @@ namespace	r_comp{
 			offset+=r_code::GetSize(s);
 		}
 
-		uint32	function_names_count=data[offset++];
+		uint16	function_names_count=data[offset++];
 		for(i=0;i<function_names_count;++i){
 
 			std::string	s;
@@ -272,7 +272,7 @@ namespace	r_comp{
 
 	////////////////////////////////////////////////////////////////
 
-	void	ObjectMap::shift(uint32	offset){
+	void	ObjectMap::shift(uint16	offset){
 
 		for(uint32	i=0;i<objects.size();++i)
 			objects[i]+=offset;
@@ -286,7 +286,7 @@ namespace	r_comp{
 
 	void	ObjectMap::read(word32	*data,uint32	size){
 
-		for(uint32	i=0;i<size;++i)
+		for(uint16	i=0;i<size;++i)
 			objects.push_back(data[i]);
 	}
 
@@ -313,10 +313,10 @@ namespace	r_comp{
 		}
 	}
 
-	void	CodeSegment::read(word32	*data,uint32	object_count){
+	void	CodeSegment::read(word32	*data,uint16	object_count){
 
-		uint32	offset=0;
-		for(uint32	i=0;i<object_count;++i){
+		uint16	offset=0;
+		for(uint16	i=0;i<object_count;++i){
 
 			SysObject	*o=new	SysObject(SysObject::NON_STD);
 			o->read(data+offset);
@@ -338,13 +338,13 @@ namespace	r_comp{
 	RelocationSegment::PointerIndex::PointerIndex():object_index(0),pointer_index(0){
 	}
 
-	RelocationSegment::PointerIndex::PointerIndex(uint32	object_index,int32	view_index,uint32	pointer_index):object_index(object_index),view_index(view_index),pointer_index(pointer_index){
+	RelocationSegment::PointerIndex::PointerIndex(uint16	object_index,int16	view_index,uint16	pointer_index):object_index(object_index),view_index(view_index),pointer_index(pointer_index){
 	}
 
 	void	RelocationSegment::Entry::write(word32	*data){
 
 		data[0]=pointer_indexes.size();
-		for(uint32	i=0;i<pointer_indexes.size();++i){
+		for(uint16	i=0;i<pointer_indexes.size();++i){
 
 			data[1+i*3]=pointer_indexes[i].object_index;
 			data[2+i*3]=pointer_indexes[i].view_index;
@@ -354,7 +354,7 @@ namespace	r_comp{
 
 	void	RelocationSegment::Entry::read(word32	*data){
 
-		for(uint32	i=0;i<(uint32)data[0];++i)
+		for(uint16	i=0;i<(uint32)data[0];++i)
 			pointer_indexes.push_back(PointerIndex(data[1+i*3],data[2+i*3],data[3+i*3]));
 	}
 
@@ -363,17 +363,17 @@ namespace	r_comp{
 		return	1+pointer_indexes.size()*3;
 	}
 
-	void	RelocationSegment::addObjectReference(uint32	referenced_object_index,uint32	referencing_object_index,uint32	reference_pointer_index){
+	void	RelocationSegment::addObjectReference(uint16	referenced_object_index,uint16	referencing_object_index,uint16	reference_pointer_index){
 
 		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,-1,reference_pointer_index));
 	}
 
-	void	RelocationSegment::addViewReference(uint32	referenced_object_index,uint32	referencing_object_index,int32	referencing_view_index,uint32	reference_pointer_index){
+	void	RelocationSegment::addViewReference(uint16	referenced_object_index,uint16	referencing_object_index,int16	referencing_view_index,uint16	reference_pointer_index){
 
 		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,referencing_view_index,reference_pointer_index));
 	}
 
-	void	RelocationSegment::addMarkerReference(uint32	referenced_object_index,uint32	referencing_object_index/*,uint32	reference_pointer_index*/){
+	void	RelocationSegment::addMarkerReference(uint16	referenced_object_index,uint16	referencing_object_index){
 
 		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,-2,0/*reference_pointer_index*/));
 	}
@@ -381,8 +381,8 @@ namespace	r_comp{
 	void	RelocationSegment::write(word32	*data){
 
 		data[0]=entries.size();
-		uint32	offset=1;
-		for(uint32	i=0;i<entries.size();++i){
+		uint16	offset=1;
+		for(uint16	i=0;i<entries.size();++i){
 
 			entries[i].write(data+offset);
 			offset+=entries[i].getSize();
@@ -391,9 +391,9 @@ namespace	r_comp{
 
 	void	RelocationSegment::read(word32	*data){
 
-		uint32	entry_count=data[0];
-		uint32	offset=1;
-		for(uint32	i=0;i<entry_count;++i){
+		uint16	entry_count=data[0];
+		uint16	offset=1;
+		for(uint16	i=0;i<entry_count;++i){
 
 			Entry	e;
 			e.read(data+offset);
@@ -404,8 +404,8 @@ namespace	r_comp{
 
 	uint32	RelocationSegment::getSize(){
 
-		uint32	size=1;
-		for(uint32	i=0;i<entries.size();++i)
+		uint16	size=1;
+		for(uint16	i=0;i<entries.size();++i)
 			size+=entries[i].getSize();
 		return	size;
 	}
@@ -427,7 +427,7 @@ namespace	r_comp{
 
 	Image	&Image::operator	<<(r_code::vector<Code	*>	&ram_objects){
 
-		uint32	i;
+		uint16	i;
 		for(i=0;i<ram_objects.size();++i)
 			*this<<ram_objects[i];
 		return	*this;
@@ -435,18 +435,18 @@ namespace	r_comp{
 
 	Image	&Image::operator	<<(Code	*object){
 
-		static	uint32	Last_index=0;
+		static	uint16	Last_index=0;
 
-		UNORDERED_MAP<Code	*,uint32>::iterator	it=ptrs_to_indices.find(object);
+		UNORDERED_MAP<Code	*,uint16>::iterator	it=ptrs_to_indices.find(object);
 		if(it!=ptrs_to_indices.end())	//	object already there
 			return	*this;
 
-		uint32	object_index;
+		uint16	object_index;
 		ptrs_to_indices[object]=object_index=Last_index++;
 		SysObject	*sys_object=new	SysObject(object);
 		addObject(sys_object);
 
-		for(uint32	i=0;i<object->references_size();++i)	//	follow reference pointers and recurse.
+		for(uint16	i=0;i<object->references_size();++i)	//	follow reference pointers and recurse.
 			*this<<object->get_reference(i);
 		std::list<Code	*>::const_iterator	m;
 		for(m=object->markers.begin();m!=object->markers.end();++m)	//	follow marker pointers and recurse.
@@ -456,11 +456,11 @@ namespace	r_comp{
 		return	*this;
 	}
 
-	void	Image::buildReferences(SysObject	*sys_object,Code	*object,uint32	object_index){
+	void	Image::buildReferences(SysObject	*sys_object,Code	*object,uint16	object_index){
 
 		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references and markers
-		uint32	i;
-		uint32	referenced_object_index;
+		uint16	i;
+		uint16	referenced_object_index;
 		for(i=0;i<object->references_size();++i){
 
 			referenced_object_index=ptrs_to_indices.find(object->get_reference(i))->second;
@@ -469,7 +469,7 @@ namespace	r_comp{
 		}
 		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
 		for(i=0,v=object->views.begin();v!=object->views.end();++i,++v)
-			for(uint32	j=0;j<2;++j){	//	2 refs maximum; may be NULL.
+			for(uint8	j=0;j<2;++j){	//	2 refs maximum; may be NULL.
 
 				if((*v)->references[j]){
 
@@ -487,9 +487,9 @@ namespace	r_comp{
 		}
 	}
 
-	void	Image::getObjects(Metadata	*class_image,Mem	*mem,r_code::vector<Code	*>	&ram_objects){
+	void	Image::getObjects(Mem	*mem,r_code::vector<Code	*>	&ram_objects){
 
-		for(uint32	i=0;i<code_segment.objects.size();++i)
+		for(uint16	i=0;i<code_segment.objects.size();++i)
 			ram_objects[i]=mem->buildObject(code_segment.objects[i]);
 		unpackObjects(ram_objects);
 	}
@@ -497,11 +497,11 @@ namespace	r_comp{
 	void	Image::unpackObjects(r_code::vector<Code	*>	&ram_objects){
 
 		//	Translate indices into pointers
-		for(uint32	i=0;i<relocation_segment.entries.size();++i){	//	for each allocated object, write its address in the reference set of the objects or views that reference it.
+		for(uint16	i=0;i<relocation_segment.entries.size();++i){	//	for each allocated object, write its address in the reference set of the objects or views that reference it.
 
 			r_code::Code				*referenced_object=ram_objects[i];
 			RelocationSegment::Entry	e=relocation_segment.entries[i];
-			for(uint32	j=0;j<e.pointer_indexes.size();++j){
+			for(uint16	j=0;j<e.pointer_indexes.size();++j){
 
 				RelocationSegment::PointerIndex	p=e.pointer_indexes[j];
 				r_code::Code	*referencing_object=ram_objects[p.object_index];
@@ -514,9 +514,15 @@ namespace	r_comp{
 					referencing_object->markers.push_back(referenced_object);
 					break;
 				default:{
-					UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v=referencing_object->views.begin();
-					for(uint32	j=0;j<p.view_index;++j,++v);
-					(*v)->references[p.pointer_index]=referenced_object;
+					UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
+					for(v=referencing_object->views.begin();v!=referencing_object->views.end();++v){
+
+						if((*v)->get_index()==p.view_index){
+
+							(*v)->references[p.pointer_index]=referenced_object;
+							break;
+						}
+					}
 					break;
 				}
 				}

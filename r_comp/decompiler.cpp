@@ -92,7 +92,7 @@ namespace	r_comp{
 
 		closing_set=false;
 
-		for(uint32	i=0;i<image->code_segment.objects.size();++i){
+		for(uint16	i=0;i<image->code_segment.objects.size();++i){
 
 			current_object=image->code_segment.objects[i];
 			SysObject	*sys_object=(SysObject	*)current_object;
@@ -124,11 +124,11 @@ namespace	r_comp{
 			write_indent(0);
 			write_indent(0);
 
-			uint32	view_count=sys_object->views.size();
+			uint16	view_count=sys_object->views.size();
 			if(view_count){	//	write the set of views
 
 				*out_stream<<"[]; view set";
-				for(uint32	i=0;i<view_count;++i){
+				for(uint16	i=0;i<view_count;++i){
 
 					write_indent(3);
 					current_object=sys_object->views[i];
@@ -136,7 +136,7 @@ namespace	r_comp{
 					after_tail_wildcard=false;
 					*out_stream<<"[";
 					uint16	arity=current_object->code[0].getAtomCount();
-					for(uint32	j=1;j<=arity;++j){
+					for(uint16	j=1;j<=arity;++j){
 
 						write_any(read_index+j,after_tail_wildcard);
 						if(j<arity)
@@ -304,8 +304,7 @@ namespace	r_comp{
 					out_stream->push("|st",read_index);
 				else{
 
-					uint16		char_count=atom.atom	&	0x0000FFFF;
-					uint8		block_offset=1;
+					uint8	block_offset=1;
 					std::string	s;
 					s+=(char	*)&current_object->code[index+block_offset].atom;
 					*out_stream<<'\"'<<s<<'\"';

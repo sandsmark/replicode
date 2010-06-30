@@ -48,7 +48,7 @@ namespace	r_code{
 	class	dll_export	ImageObject{
 	public:
 		r_code::vector<Atom>	code;
-		r_code::vector<uint32>	references;	//	for views: 0, 1 or 2 elements; these are indexes in the relocation segment for grp (exception: not for root) and possibly org
+		r_code::vector<uint16>	references;	//	for views: 0, 1 or 2 elements; these are indexes in the relocation segment for grp (exception: not for root) and possibly org
 											//	for sys-objects: any number
 		virtual	void	write(word32	*data)=0;
 		virtual	void	read(word32		*data)=0;
@@ -105,6 +105,8 @@ namespace	r_code{
 	public	_Object{
 	protected:
 		Atom	_code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, oid, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
+	private:
+		uint16	index;						//	for unpacking: index is the index of the view in the SysObject.
 	public:
 		P<Code>	object;						//	viewed object.
 		Code	*references[2];				//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group in references[0]).
@@ -114,14 +116,17 @@ namespace	r_code{
 			references[0]=references[1]=NULL;
 		}
 
-		View(SysView	*source,Code	*object){
+		View(SysView	*source,Code	*object,uint16	index){
 
-			for(uint32	i=0;i<source->code.size();++i)
+			this->index=index;
+			for(uint16	i=0;i<source->code.size();++i)
 				_code[i]=source->code[i];
 			references[0]=references[1]=NULL;
 		}
 
 		virtual	~View(){}
+
+		uint16	get_index()	const{	return	index;	}
 
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	code(uint16	i)	const{	return	_code[i];	}
@@ -129,7 +134,7 @@ namespace	r_code{
 		class	Hash{
 		public:
 			size_t	operator	()(View	*v)	const{
-				return	(size_t)(Code	*)v->references[0];
+				return	(size_t)(Code	*)v->references[0];	//	i.e. the group the view belongs to.
 			}
 		};
 
@@ -155,9 +160,11 @@ namespace	r_code{
 		template<class	V>	void	build_views(SysObject	*source){
 
 			for(uint16	i=0;i<source->views.size();++i)
-				views.insert(new	V(source->views[i],this));
+				views.insert(new	V(source->views[i],this,i));
 		}
 	public:
+		SysObject::Axiom	get_axiom()	const{	return	axiom;	}
+
 		virtual	Atom	&code(uint16	i)=0;
 		virtual	Atom	&code(uint16	i)	const=0;
 		virtual	uint16	code_size()	const=0;
@@ -165,7 +172,8 @@ namespace	r_code{
 		virtual	Code	*get_reference(uint16	i)	const=0;
 		virtual	uint16	references_size()	const=0;
 
-		virtual	bool	is_compact()	const{	return	false;	}
+		virtual	bool	is_compact()		const{	return	false;	}
+		virtual	bool	is_invalidated()	const{	return	false;	}
 
 		std::list<Code	*>								markers;
 		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	//	indexed by groups.
@@ -174,6 +182,8 @@ namespace	r_code{
 		virtual	void	rel_views()		const{}
 		virtual	void	acq_markers()	const{}
 		virtual	void	rel_markers()	const{}
+
+		virtual	float32	get_psln_thr(){	return	1;	}
 
 		Code(){}
 		virtual	~Code(){}
@@ -196,11 +206,7 @@ namespace	r_code{
 			rel_markers();
 		}
 
-		SysObject::Axiom	get_axiom()	const{	return	axiom;	}
-
 		std::list<Code	*>::const_iterator	position_in_objects;
-
-		virtual	bool	is_invalidated()	const{	return	false;	}
 	};
 
 	//	Implementation for local objects (non distributed).

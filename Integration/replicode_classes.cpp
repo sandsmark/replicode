@@ -67,7 +67,7 @@ void	Vec3::write(Atom	*code,uint16	&index)	const{
 
 	const	uint16	arity=3;
 	code[index]=Atom::Object(Opcode,arity);
-	code[++index]=data[0];
-	code[++index]=data[1];
-	code[++index]=data[2];
+	code[++index]=Atom::Float(data[0]);
+	code[++index]=Atom::Float(data[1]);
+	code[++index]=Atom::Float(data[2]);
 }

@@ -42,7 +42,9 @@ int32	main(int	argc,char	**argv){
 
 	core::Time::Init(1000);
 
+	std::cout<<"compiling ...\n";
 	r_exec::Init("C:/Work/Replicode/Debug/usr_operators.dll",Time::Get,"C:/Work/Replicode/Test/user.classes.replicode");
+	std::cout<<"... done\n";
 
 	std::string	error;
 	if(!r_exec::Compile(argv[1],error)){
@@ -54,13 +56,15 @@ int32	main(int	argc,char	**argv){
 		r_exec::Mem<r_exec::LObject>	*mem=new	r_exec::Mem<r_exec::LObject>();
 
 		r_code::vector<r_code::Code	*>	ram_objects;
-		r_exec::Seed.getObjects(&r_exec::Metadata,mem,ram_objects);
+		r_exec::Seed.getObjects(mem,ram_objects);
 
-		mem->init(100000,1,1);
+		mem->init(100000,4,4);
 		mem->load(ram_objects.as_std());
 		mem->start();
 		//uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
+		std::cout<<"sleeping 1000\n";
 		Thread::Sleep(1000);
+		std::cout<<"stopping rMem\n";
 		mem->stop();
 
 		r_comp::Image	*image=mem->getImage();
@@ -70,7 +74,9 @@ int32	main(int	argc,char	**argv){
 		Decompiler			decompiler;
 		std::ostringstream	decompiled_code;
 		decompiler.init(&r_exec::Metadata);
+		std::cout<<"decompiling ...\n";
 		decompiler.decompile(image,&decompiled_code);
+		std::cout<<"... done\n";
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 
 		delete	image;

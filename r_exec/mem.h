@@ -44,6 +44,15 @@
 
 namespace	r_exec{
 
+	//	The rMem.
+	//	Maintains 2 pipes of jobs (injection, update, etc.). each job is processed asynchronously by instances of ReductionCore and TimeCore.
+	//	Pipes and threads are created at starting time and deleted at stopping time.
+	//	Groups and IPGMControllers are cleared up when only held by jobs;
+	//		- when a group is not projected anywhere anymore, it is invalidated (it releses all its views) and when a job attempts an update, the latter is cancelled.
+	//		- when a reduction core attempts to perform a reduciton for an ipgm-controller that is not projected anywhere anymore, the reduction is cancelled.
+	//	In addition:
+	//		- when an object is scheduled for injection and the target group does not exist anymore (or is invalidated), the injection is cancelled.
+	//	Main processing in _Mem::update().
 	class	r_exec_dll	_Mem:
 	public	r_code::Mem{
 	public:
@@ -72,12 +81,23 @@ namespace	r_exec{
 
 		void	reset();	//	clear the content of the mem.
 
-		virtual	void	injectNow(View	*view)=0;
-		virtual	void	injectCopyNow(View	*view,Group	*destination)=0;
-		virtual	void	update(Group	*group)=0;
-
 		FastSemaphore	*object_register_sem;
 		FastSemaphore	*objects_sem;
+
+		virtual	void	injectNow(View	*view)=0;
+		void	injectCopyNow(View	*view,Group	*destination,uint64	now);	//	for cov; NB: no cov for groups, pgm or notifications.
+		void	update(Group	*group);									//	checks for exiting objects and injects.
+
+		//	Utilities.
+		void	_inject_group_now(View	*view,Group	*object,Group	*host);
+		void	_inject_existing_object_now(View	*view,Code	*object,Group	*host,bool	lock);
+		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);	//	calls mod_sln on the object's view with morphed sln changes.
+		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr);
+		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
+		void	_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
+		void	_inject_reduction_jobs(View	*view,Group	*host);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
+																//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
+		std::vector<Group	*>	initial_groups;	//	convenience; cleared after start();
 
 		_Mem();
 	public:
@@ -94,8 +114,10 @@ namespace	r_exec{
 
 		uint64	get_base_period()	const{	return	base_period;	}
 
-		void	add_delegate(uint64	dealine,_TimeJob	*j);
-		void	remove_delegate(DelegatedCore	*core);
+		void	add_delegate(uint64	dealine,_TimeJob	*j);	//	called by time cores when they are ahead of their deadlines.
+		void	remove_delegate(DelegatedCore	*core);			//	called by delegate cores when they are done.
+
+		void	start();
 		void	stop();	//	after stop() the content is cleared and one has to call load() and start() again.
 
 		State	get_state();
@@ -131,7 +153,7 @@ namespace	r_exec{
 		void	update(InjectionJob	*j);
 
 		//	Called each time an object propagates saliency changes.
-		virtual	void	update(SaliencyPropagationJob	*j)=0;
+		void	update(SaliencyPropagationJob	*j);
 
 		//	Interface for overlays	and I/O devices	////////////////////////////////////////////////////////////////
 		virtual	void	inject(View	*view)=0;
@@ -148,7 +170,11 @@ namespace	r_exec{
 		virtual	r_code::Code	*buildObject(Atom	head)=0;
 	};
 
-	//	O is the class of the objects held by the Mem.
+	//	O is the class of the objects held by the rMem (except groups and notifications):
+	//		r_exec::LObject if non distributed, or
+	//		RObject (see the integration project) when network-aware.
+	//	Notification objects and groups are instances of r_exec::LObject (they are not network-aware).
+	//	Objects are built at reduction time as r_exec:LObjects and packed into instances of O when O is network-aware.
 	//	Shared resources:
 	//		Mem::object_register: accessed by Mem::update, Mem::injectNow and Mem::deleteObject (see above).
 	template<class	O>	class	Mem:
@@ -158,26 +184,14 @@ namespace	r_exec{
 		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>	object_register;	//	to eliminate duplicates (content-wise); does not include groups.
 
 		//	Functions called by internal processing of jobs (see internal processing section below).
-		void	injectNow(View	*view);													//	also called by inject() (see below).
-		void	injectCopyNow(View	*view,Group	*destination);							//	for cov; NB: no cov for groups, pgm or notifications.
-		void	update(Group	*group);												//	checks for exiting objects and injects.
-		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);	//	calls mod_sln on the object's view with morphed sln changes.
-
+		void	injectNow(View	*view);	//	also called by inject() (see below).
+		
 		//	Utilities.
 		void	_inject_group_now(View	*view,Group	*object,Group	*host);
-		void	_inject_existing_object_now(View	*view,O	*object,Group	*host);
-		void	_inject_reduction_jobs(View	*view,Group	*host);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
-																//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
-
-		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr);
-		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
-		void	_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
-
-		std::vector<Group	*>	initial_groups;	//	convenience; cleared after start();
 	protected:
 		Group	*_stdin;	//	convenience.
 		Group	*_stdout;	//	convenience.
-		O		*_self;		//	convenience.
+		O		*_self;		//	convenience (unused for now).
 	public:
 		Mem();
 		virtual	~Mem();
@@ -188,16 +202,16 @@ namespace	r_exec{
 		//	Called by operators and overlays.
 		r_code::Code	*buildObject(Atom	head);
 
-		void	load(std::vector<r_code::Code	*>	*objects);	//	call before start; no mod/set/eje will be executed (only inj); ijt will be set at now=Time::Get() whatever the source code.
-		void	start();
+		void	load(std::vector<r_code::Code	*>	*objects);	//	call before start; no mod/set/eje will be executed (only inj);
+																//	ijt will be set at now=Time::Get() whatever the source code.
+		void	deleteObject(Code	*object);	//	called by object destructors/Group::clear().
 
-		void	deleteObject(Code	*object);
-
+		//	called upon reception of a remote object (for converting STDGroupID into actual objects).
 		Group	*get_stdin()	const;
 		Group	*get_stdout()	const;
 
 		//	External device I/O	////////////////////////////////////////////////////////////////
-		r_comp::Image	*getImage();	//	create an image; fill with all objects; call only when suspended/stopped.
+		r_comp::Image	*getImage();	//	create an image; fill with all objects; call only when stopped.
 
 		//	Executive device functions	////////////////////////////////////////////////////////
 		
@@ -210,7 +224,7 @@ namespace	r_exec{
 		//	Variant of injectNow optimized for notifications.
 		void	injectNotificationNow(View	*view,bool	lock);
 
-		//	Called by cores.	////////////////////////////////////////////////////////////////
+		//	Called by time cores.	////////////////////////////////////////////////////////////////
 		void	update(SaliencyPropagationJob	*j);
 	};
 }

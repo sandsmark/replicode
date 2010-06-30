@@ -168,7 +168,6 @@ namespace	r_exec{
 		for(uint16	i=1;i<=arg_count;++i){	//	pgm_code[tpl_arg_set_index+i] is a pattern's opcode.
 
 			uint16	skel_index=pgm_code[tpl_arg_set_index+i+1].asIndex();
-			uint16	skel_atom_count=pgm_code[skel_index].getAtomCount();
 			uint16	ipgm_arg_index=getIPGM()->code(ipgm_arg_set_index+i).asIndex();
 
 			patch_tpl_code(skel_index,ipgm_arg_index);

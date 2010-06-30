@@ -308,12 +308,12 @@ namespace	r_exec{
 		return	res;
 	}
 
-	float32	Group::update_sln(View	*v,float32	&change,_Mem	*mem){
+	float32	Group::update_sln(View	*v,_Mem	*mem){
 
 		if(decay_periods_to_go>0	&&	sln_decay!=0)
 			v->mod_sln(v->get_sln()*sln_decay);
 
-		float32	sln=v->update_sln(change,get_low_sln_thr(),get_high_sln_thr());
+		float32	sln=v->update_sln(get_low_sln_thr(),get_high_sln_thr());
 		avg_sln+=sln;
 		if(sln>high_sln)
 			high_sln=sln;

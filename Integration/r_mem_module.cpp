@@ -41,7 +41,7 @@ void	RMem::initialize(){
 	r_exec::Mem<RObject>::init(100000,2,2);
 
 	r_code::vector<r_code::Code	*>	objects;
-	r_exec::Seed.getObjects(&r_exec::Metadata,this,objects);
+	r_exec::Seed.getObjects(this,objects);
 	r_exec::Mem<RObject>::load(objects.as_std());
 }
 
@@ -64,7 +64,7 @@ void	RMem::load(r_comp::Image	*image){
 	decompile(image);	//	for debugging.
 
 	r_code::vector<r_code::Code	*>	objects;
-	image->getObjects(&r_exec::Metadata,this,objects);
+	image->getObjects(this,objects);
 
 	//r_exec::Mem<RObject>::load(objects.as_std());
 	//r_exec::Mem<RObject>::start();

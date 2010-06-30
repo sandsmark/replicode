@@ -95,7 +95,6 @@ namespace	r_comp{
 			case	'!':
 				set_error("error: found preprocessor directive");
 				error=this->error;
-				delete	_image;
 				return	false;
 			default:
 				if(in_stream->eof())
@@ -103,7 +102,6 @@ namespace	r_comp{
 				if(!read_sys_object()){
 
 					error=this->error;
-					delete	_image;
 					return	false;
 				}
 				current_object_index++;
@@ -1516,7 +1514,7 @@ return_false:
 		if(write){
 
 			current_object->code[write_index]=Atom::IPointer(extent_index);
-			uint16	element_count=set_element_count(indented);
+			uint8	element_count=set_element_count(indented);
 			current_object->code[extent_index++]=Atom::Set(element_count);
 			content_write_index=extent_index;
 			extent_index+=element_count;
@@ -1581,7 +1579,7 @@ return_false:
 		if(write){
 
 			current_object->code[write_index]=Atom::IPointer(extent_index);
-			uint16	element_count;
+			uint8	element_count;
 			if(p.atom.getDescriptor()==Atom::S_SET	&&	p.use_as!=StructureMember::I_SET){
 
 				element_count=p.atom.getAtomCount();
@@ -1674,10 +1672,10 @@ return_false:
 		return	false;
 	}
 
-	uint16	Compiler::set_element_count(bool	indented){	//	error checking is done in set(). This is a naive implementation: basically it parses the whole set depth-first. That's very slow and shall be replaced by a more clever design (avoiding deliving in the depths of the elements of the set).
+	uint8	Compiler::set_element_count(bool	indented){	//	error checking is done in set(). This is a naive implementation: basically it parses the whole set depth-first. That's very slow and shall be replaced by a more clever design (avoiding deliving in the depths of the elements of the set).
 
 		Output=false;
-		uint16	count=0;
+		uint8	count=0;
 		State	s=save_state();
 		indent(false);
 		bool	_indented=false;

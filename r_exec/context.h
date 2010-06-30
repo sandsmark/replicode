@@ -120,7 +120,7 @@ namespace	r_exec{
 		bool	operator	==(const	Context	&c)	const;
 		bool	operator	!=(const	Context	&c)	const;
 
-		Atom	&operator	[](uint16	i)	const{	return	code[index+1];	}
+		Atom	&operator	[](uint16	i)	const{	return	code[index+i];	}
 		Code	*getObject()				const{	return	object;	}
 		uint16	getIndex()					const{	return	index;	}
 

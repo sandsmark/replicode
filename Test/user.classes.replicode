@@ -90,21 +90,21 @@ nil; ntf_grp
 )
 
 []
-   [now 1 3 root nil 0 0]
+   [now 1 forever root nil 0 0]
 
 stdin:(grp
 1; upr
 1; spr
-0; sln_thr
+1; sln_thr
 0; act_thr
 0; vis_thr
 1; c_sln
 0; c_sln_thr
 1; c_act
 0; c_act_thr
-0; dcy_per
-0; dcy_tgt
-1; dcy_prd
+-0.2; dcy_per
+1; dcy_tgt
+2; dcy_prd
 1; sln_chg_thr
 1; sln_chg_prd
 1; act_chg_thr
@@ -132,7 +132,7 @@ root; ntf_grp
 
 []
    [now 1 forever root nil 0 0]
-   [now 1 forever g1 nil 0 0]
+   [now 1 forever g1 nil 1 1]; last 2 members: vis and cov
 
 stdout:(grp
 1; upr
@@ -179,11 +179,11 @@ self:(ent
 |[]; view
 |[]; mks
 |[]; vws
-1; psln_thr
+0; psln_thr
 )
 
 []
-   [now 1 forever root nil]
+   [now 0 forever root nil]
 
 position:(ent
 |[]; view
@@ -193,4 +193,4 @@ position:(ent
 )
 
 []
-   [now 1 forever root nil]
+   [now 0 forever root nil]
