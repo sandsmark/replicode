@@ -30,7 +30,7 @@
 
 namespace	r_exec{
 
-	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),mem(mem),hash_value(0){
+	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),mem(mem),hash_value(0),invalidated(false){
 
 		psln_thr_sem=new	FastSemaphore(1,1);
 		views_sem=new	FastSemaphore(1,1);
@@ -38,6 +38,24 @@ namespace	r_exec{
 	}
 
 	template<class	C,class	U>	Object<C,U>::~Object(){
+
+		invalidate();
+
+		delete	psln_thr_sem;
+		delete	views_sem;
+		delete	markers_sem;
+	}
+
+	template<class	C,class	U>	bool	Object<C,U>::is_invalidated()	const{
+
+		return	invalidated;
+	}
+
+	template<class	C,class	U>	bool	Object<C,U>::invalidate(){
+
+		if(invalidated)
+			return	true;
+		invalidated=true;
 
 		if(code(0).getDescriptor()==Atom::MARKER){
 
@@ -47,17 +65,16 @@ namespace	r_exec{
 
 		if(mem)
 			mem->deleteObject(this);
-		delete	psln_thr_sem;
-		delete	views_sem;
-		delete	markers_sem;
+
+		return	false;
 	}
 
 	template<class	C,class	U>	void	Object<C,U>::compute_hash_value(){
 
-			hash_value=code(0).asOpcode()<<20;				//	12 bits for the opcode.
-			hash_value|=(code_size()	&	0x00000FFF)<<8;	//	12 bits for the code size.
-			hash_value|=references_size()	&	0x000000FF;	//	8 bits for the reference set size.
-		}
+		hash_value=code(0).asOpcode()<<20;				//	12 bits for the opcode.
+		hash_value|=(code_size()	&	0x00000FFF)<<8;	//	12 bits for the code size.
+		hash_value|=references_size()	&	0x000000FF;	//	8 bits for the reference set size.
+	}
 
 	template<class	C,class	U>	float32	Object<C,U>::get_psln_thr(){
 

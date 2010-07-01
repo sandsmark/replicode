@@ -88,7 +88,7 @@
 
 namespace	r_exec{
 
-	Overlay::Overlay(IPGMController	*c):_Object(),controller(c){
+	Overlay::Overlay(IPGMController	*c):_Object(),controller(c),alive(true){
 
 		//	copy the original pgm code.
 		pgm_code_size=getIPGM()->get_reference(0)->code_size();
@@ -120,7 +120,7 @@ namespace	r_exec{
 		last_production_index=first_production_index+pgm_code[production_set_index].getAtomCount()-1;
 	}
 
-	Overlay::Overlay(Overlay	*original,uint16	last_input_index,uint16	value_commit_index):_Object(){
+	Overlay::Overlay(Overlay	*original,uint16	last_input_index,uint16	value_commit_index):_Object(),alive(true){
 
 		controller=original->controller;
 
@@ -221,11 +221,6 @@ namespace	r_exec{
 				break;
 			}
 		}
-	}
-
-	bool	Overlay::is_alive()	const{
-
-		return	controller->is_alive();
 	}
 
 	inline	void	Overlay::rollback(){
@@ -598,10 +593,10 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	inline	AntiOverlay::AntiOverlay(IPGMController	*c):Overlay(c),alive(true){
+	inline	AntiOverlay::AntiOverlay(IPGMController	*c):Overlay(c){
 	}
 
-	inline	AntiOverlay::AntiOverlay(AntiOverlay	*original,uint16	last_input_index,uint16	value_limit):Overlay(original,last_input_index,value_limit),alive(true){
+	inline	AntiOverlay::AntiOverlay(AntiOverlay	*original,uint16	last_input_index,uint16	value_limit):Overlay(original,last_input_index,value_limit){
 	}
 
 	inline	AntiOverlay::~AntiOverlay(){

@@ -174,6 +174,7 @@ namespace	r_code{
 
 		virtual	bool	is_compact()		const{	return	false;	}
 		virtual	bool	is_invalidated()	const{	return	false;	}
+		virtual	bool	invalidate()	{ return	false;	}
 
 		std::list<Code	*>								markers;
 		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	//	indexed by groups.

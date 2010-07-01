@@ -49,9 +49,10 @@ namespace	r_exec{
 	//	Pipes and threads are created at starting time and deleted at stopping time.
 	//	Groups and IPGMControllers are cleared up when only held by jobs;
 	//		- when a group is not projected anywhere anymore, it is invalidated (it releses all its views) and when a job attempts an update, the latter is cancelled.
-	//		- when a reduction core attempts to perform a reduciton for an ipgm-controller that is not projected anywhere anymore, the reduction is cancelled.
+	//		- when a reduction core attempts to perform a reduction for an ipgm-controller that is not projected anywhere anymore, the reduction is cancelled.
 	//	In addition:
 	//		- when an object is scheduled for injection and the target group does not exist anymore (or is invalidated), the injection is cancelled.
+	//		- when an object is scheduled for propagation of sln changes and has no view anymore, the operation is cancelled.
 	//	Main processing in _Mem::update().
 	class	r_exec_dll	_Mem:
 	public	r_code::Mem{
@@ -155,7 +156,7 @@ namespace	r_exec{
 		//	Called each time an object propagates saliency changes.
 		void	update(SaliencyPropagationJob	*j);
 
-		//	Interface for overlays	and I/O devices	////////////////////////////////////////////////////////////////
+		//	Interface for overlays and I/O devices	////////////////////////////////////////////////////////////////
 		virtual	void	inject(View	*view)=0;
 
 		//	rMem to rMem.

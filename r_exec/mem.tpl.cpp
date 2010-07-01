@@ -81,9 +81,6 @@ namespace	r_exec{
 			object_register_sem->release();
 		}
 
-		if(object->is_invalidated())
-			return;
-
 		objects_sem->acquire();
 		objects.erase(object->position_in_objects);
 		objects_sem->release();
@@ -217,6 +214,7 @@ namespace	r_exec{
 			injectNow(view);
 		else{
 
+			//	TODO: if target grp does not exist anymore, abort operation.
 			TimeJob	j(new	InjectionJob(view),ijt);
 			time_job_queue->push(j);
 		}
@@ -225,6 +223,8 @@ namespace	r_exec{
 	////////////////////////////////////////////////////////////////
 
 	template<class	O>	void	Mem<O>::injectNow(View	*view){
+
+		//	TODO: if target grp does not exist, abort operation.
 
 		Group	*host=view->get_host();
 		if(view->object->code(0).getDescriptor()==Atom::GROUP)

@@ -30,24 +30,29 @@
 
 namespace	r_exec{
 
-	inline	bool	Group::is_running()	const{
+	inline	Group::Group(r_code::Mem	*m):LObject(m),FastSemaphore(1,1){
 
-		return	views.size()>0;
+		reset_ctrl_values();
+		reset_stats();
+		reset_decay_values();
 	}
 
-	inline	bool	Group::is_invalidated()	const{
+	inline	Group::Group(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),FastSemaphore(1,1){
 
-		return	invalidated;
+		reset_ctrl_values();
+		reset_stats();
+		reset_decay_values();
 	}
 
-	inline	void	Group::clear(){
+	inline	Group::~Group(){
 
-		if(invalidated)
-			return;
-		invalidated=true;
-		
-		if(mem)
-			mem->deleteObject(this);
+		invalidate();
+	}
+
+	inline	bool	Group::invalidate(){
+
+		if(LObject::invalidate())
+			return	true;
 
 		//	unregister from all groups it views.
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	gv;
@@ -76,25 +81,8 @@ namespace	r_exec{
 		input_less_ipgm_views.clear();
 		other_views.clear();
 		group_views.clear();
-	}
 
-	inline	Group::Group(r_code::Mem	*m):LObject(m),FastSemaphore(1,1),invalidated(false){
-
-		reset_ctrl_values();
-		reset_stats();
-		reset_decay_values();
-	}
-
-	inline	Group::Group(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),FastSemaphore(1,1),invalidated(false){
-
-		reset_ctrl_values();
-		reset_stats();
-		reset_decay_values();
-	}
-
-	inline	Group::~Group(){
-
-		clear();
+		return	false;
 	}
 
 	inline	uint32	Group::get_upr(){

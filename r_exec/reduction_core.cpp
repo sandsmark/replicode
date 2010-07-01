@@ -49,7 +49,8 @@ namespace	r_exec{
 				uint64	now=Now();
 				if(j.deadline>now)	//	in case of an input-less pgm or an |pgm, signaling jobs will inject productions if any.
 					j.overlay->reduce(j.input,_this->mem);
-			}
+			}else
+				j.overlay=NULL;
 		}
 
 		thread_ret_val(0);

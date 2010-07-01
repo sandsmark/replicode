@@ -135,12 +135,13 @@ namespace	r_code{
 		//	at this point, i is at the first word32 of the first object in the code segment
 		std::cout<<"===Code Segment==="<<std::endl;
 		uint32	code_start=map_size();
-		for(uint32	j=0;j<code_start;++j){	//	read object map: data[data[j]] is the first word32 of an object, data[data[j]+4] is the first atom
+		for(uint32	j=0;j<code_start;++j){	//	read object map: data[data[j]] is the first word32 of an object, data[data[j]+5] is the first atom
 
-			uint32	object_code_size=data(data(j));
-			uint32	object_reference_set_size=data(data(j)+1);
-			uint32	object_marker_set_size=data(data(j)+2);
-			uint32	object_view_set_size=data(data(j)+3);
+			uint32	object_axiom=data(data(j));
+			uint32	object_code_size=data(data(j)+1);
+			uint32	object_reference_set_size=data(data(j)+2);
+			uint32	object_marker_set_size=data(data(j)+3);
+			uint32	object_view_set_size=data(data(j)+4);
 			std::cout<<"---object---\n";
 			std::cout<<i++<<" code size: "<<object_reference_set_size<<std::endl;
 			std::cout<<i++<<" reference set size: "<<object_reference_set_size<<std::endl;
@@ -148,7 +149,7 @@ namespace	r_code{
 			std::cout<<i++<<" view set size: "<<object_view_set_size<<std::endl;
 			
 			std::cout<<"---code---\n";
-			for(;i<data(j)+4+object_code_size;++i){
+			for(;i<data(j)+5+object_code_size;++i){
 
 				std::cout<<i<<" ";
 				((Atom	*)&data(i))->trace();
@@ -156,11 +157,11 @@ namespace	r_code{
 			}
 
 			std::cout<<"---reference set---\n";
-			for(;i<data(j)+4+object_code_size+object_reference_set_size;++i)
+			for(;i<data(j)+5+object_code_size+object_reference_set_size;++i)
 				std::cout<<i<<" "<<data(i)<<std::endl;
 
 			std::cout<<"---marker set---\n";
-			for(;i<data(j)+4+object_code_size+object_reference_set_size+object_marker_set_size;++i)
+			for(;i<data(j)+5+object_code_size+object_reference_set_size+object_marker_set_size;++i)
 				std::cout<<i<<" "<<data(i)<<std::endl;
 
 			std::cout<<"---view set---\n";

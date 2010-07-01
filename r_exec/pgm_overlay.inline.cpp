@@ -31,6 +31,13 @@
 namespace	r_exec{
 
 	inline	void	Overlay::kill(){
+		
+		alive=false;
+	}
+
+	inline	bool	Overlay::is_alive()	const{
+		
+		return	alive;
 	}
 
 	inline	r_code::Code	*Overlay::getIPGM()	const{	
@@ -57,18 +64,6 @@ namespace	r_exec{
 
 		pgm_code[index]=value;
 		patch_indices.push_back(index);
-	}
-
-	////////////////////////////////////////////////////////////////
-
-	inline	void	AntiOverlay::kill(){
-		
-		alive=false;
-	}
-	
-	inline	bool	AntiOverlay::is_alive()	const{
-		
-		return	alive;
 	}
 
 	////////////////////////////////////////////////////////////////

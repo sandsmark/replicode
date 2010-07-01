@@ -62,6 +62,8 @@ namespace	r_exec{
 	private:
 		size_t	hash_value;
 
+		bool	invalidated;
+
 		FastSemaphore	*psln_thr_sem;
 		FastSemaphore	*views_sem;
 		FastSemaphore	*markers_sem;
@@ -71,6 +73,9 @@ namespace	r_exec{
 		Object(r_code::Mem	*mem);
 	public:
 		virtual	~Object();	//	un-registers from the rMem's object_register.
+
+		bool	is_invalidated()	const;
+		virtual	bool	invalidate();	//	return false when was not invalidated, true otherwise.
 
 		void	compute_hash_value();
 

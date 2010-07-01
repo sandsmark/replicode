@@ -233,19 +233,20 @@ namespace	r_exec{
 
 	void	_Mem::update(AntiPGMSignalingJob	*j){
 
-		j->controller->signal_anti_pgm();
+		if(j->controller->is_alive())
+			j->controller->signal_anti_pgm();
 		j->controller=NULL;
 	}
 
 	void	_Mem::update(InputLessPGMSignalingJob	*j){
 
-		j->controller->signal_input_less_pgm();
+		if(j->controller->is_alive())
+			j->controller->signal_input_less_pgm();
 		j->controller=NULL;
 	}
 
 	void	_Mem::update(InjectionJob	*j){
 
-		//	TODO: if target grp does not exist, abort operation.
 		injectNow(j->view);
 		j->view=NULL;
 	}
@@ -327,9 +328,10 @@ namespace	r_exec{
 
 		group->acquire();
 
-		if(!group->is_running()){
+		if(group!=root	&&	group->views.size()==0){
 
-			group->clear();
+			group->invalidate();
+			group->release();
 			return;
 		}
 
@@ -451,7 +453,10 @@ namespace	r_exec{
 					v->second->controller->kill();
 
 				v->second->object->acq_views();
-				v->second->object->views.erase(v->second);	//	delete view from object's views.
+				if(v->second->object->views.size()>1)
+					v->second->object->views.erase(v->second);	//	delete view from object's views.
+				else
+					v->second->object->invalidate();
 				v->second->object->rel_views();
 
 				//	delete the view.
@@ -567,6 +572,14 @@ namespace	r_exec{
 		//		- feedback can happen, i.e. m:(mk o1 o2); o1.vw.g propag -> o1 propag ->m propag -> o2 propag o2.vw.g, next upr in g, o2 propag -> m propag -> o1 propag -> o1,vw.g: loop spreding accross several upr.
 		//		- to avoid this, have the psln_thr set to 1 in o2: this is applicaton-dependent.
 		object->acq_views();
+
+		if(object->views.size()==0){
+
+			object->invalidate();
+			object->rel_views();
+			return;
+		}
+
 		UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	it;
 		for(it=object->views.begin();it!=object->views.end();++it){
 

@@ -50,6 +50,8 @@ namespace	r_exec{
 	public	_Object{
 	friend	class	IPGMController;
 	friend	class	Context;
+	private:
+		bool	alive;
 	protected:
 		//	Copy of the pgm code. Will be patched during matching and evaluation:
 		//	any area indexed by a vl_ptr will be overwritten with:
@@ -108,8 +110,8 @@ namespace	r_exec{
 	public:
 		virtual	~Overlay();
 
-		virtual	void	kill();
-		virtual	bool	is_alive()	const;
+		void	kill();
+		bool	is_alive()	const;
 
 		virtual	void	reduce(r_exec::View	*input,_Mem	*mem);	//	called upon the processing of a reduction job.
 
@@ -126,15 +128,10 @@ namespace	r_exec{
 	public	Overlay{
 	friend	class	IPGMController;
 	private:
-		bool	alive;
-
 		AntiOverlay(IPGMController	*c);
 		AntiOverlay(AntiOverlay	*original,uint16	last_input_index,uint16	value_limit);
 	public:
 		~AntiOverlay();
-
-		void	kill();
-		bool	is_alive()	const;
 
 		void	reduce(r_exec::View	*input);	//	called upon the processing of a reduction job.
 	};
