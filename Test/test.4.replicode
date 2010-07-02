@@ -13,7 +13,7 @@ P1:(pgm
    |[]; guards
 []; prods
    (inj [(mk.last_known m |[] |[] |[] 0) [|nb now 1 4 nil nil]]); builds L.
-   (inj [(ins P1 [m ijt]) [|nb now 1 forever stdin nil]]); instantiates P1 with m as actual template arguments.
+   (inj [(ins P1 [m ijt]) [now 1 forever stdin nil]]); instantiates P1 with m as actual template arguments.
    (set [this.vw.res 0]); kills the original ipgm.
    (mod [v.sln -0.5]); just for quick testing; shall not be there!
 1000000us; tsc
@@ -36,8 +36,8 @@ P2:(pgm
    |[]; timings
    |[]; guards
 []; productions
-   (inj [(ins P1 [m ijt]) [|nb now 1 4 stdin nil]])
-   (inj [(ins P2 [m.object]) [|nb now 1 4 stdin nil]])
+   (inj [(ins P1 [m ijt]) [now 1 4 stdin nil]])
+   (inj [(ins P2 [m.object]) [now 1 4 stdin nil]])
 1000000us; tsc
 0; nfr
 |[]; view

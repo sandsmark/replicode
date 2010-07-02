@@ -40,6 +40,12 @@ namespace	r_exec{
 		return	alive;
 	}
 
+	inline	void	Overlay::patch_code(uint16	index,Atom	value){
+
+		pgm_code[index]=value;
+		patch_indices.push_back(index);
+	}
+
 	inline	r_code::Code	*Overlay::getIPGM()	const{	
 		
 		return	controller->getIPGM();
@@ -49,22 +55,23 @@ namespace	r_exec{
 		
 		return	controller->getIPGMView();
 	}
-	
+
 	inline	r_code::Code	*Overlay::getInputObject(uint16	i)	const{	
+		
+		return	NULL;
+	}
+
+	////////////////////////////////////////////////////////////////
+	
+	inline	r_code::Code	*IOverlay::getInputObject(uint16	i)	const{	
 		
 		return	input_views[i]->object;
 	}
 	
-	inline	r_exec::View	*Overlay::getInputView(uint16	i)	const{	
-		
-		return	(r_exec::View*)&input_views[i];
-	}
-
-	inline	void	Overlay::patch_code(uint16	index,Atom	value){
-
-		pgm_code[index]=value;
-		patch_indices.push_back(index);
-	}
+	//inline	r_exec::View	*IOverlay::getInputView(uint16	i)	const{	
+	//	
+	//	return	(r_exec::View*)&input_views[i];
+	//}
 
 	////////////////////////////////////////////////////////////////
 

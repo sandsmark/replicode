@@ -234,6 +234,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\test.2.replicode"
+				>
+			</File>
+			<File
 				RelativePath=".\test.4.replicode"
 				>
 				<FileConfiguration

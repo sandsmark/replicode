@@ -42,7 +42,7 @@ namespace	r_exec{
 			code(write_index++)=r_code::Atom::View();
 			code(write_index++)=r_code::Atom::Mks();
 			code(write_index++)=r_code::Atom::Vws();
-			code(write_index++)=r_code::Atom::Float(1);		//	psln_thr.
+			code(write_index++)=r_code::Atom::Float(0);		//	psln_thr.
 			set_reference(0,object);
 		}
 
@@ -56,7 +56,7 @@ namespace	r_exec{
 			code(write_index++)=r_code::Atom::View();
 			code(write_index++)=r_code::Atom::Mks();
 			code(write_index++)=r_code::Atom::Vws();
-			code(write_index++)=r_code::Atom::Float(1);		//	psln_thr.
+			code(write_index++)=r_code::Atom::Float(0);		//	psln_thr.
 			set_reference(0,object);
 		}
 
@@ -70,7 +70,7 @@ namespace	r_exec{
 			code(write_index++)=r_code::Atom::View();
 			code(write_index++)=r_code::Atom::Mks();
 			code(write_index++)=r_code::Atom::Vws();
-			code(write_index++)=r_code::Atom::Float(1);		//	psln_thr.
+			code(write_index++)=r_code::Atom::Float(0);		//	psln_thr.
 			set_reference(0,object);
 		}
 
@@ -84,7 +84,7 @@ namespace	r_exec{
 			code(write_index++)=r_code::Atom::View();
 			code(write_index++)=r_code::Atom::Mks();
 			code(write_index++)=r_code::Atom::Vws();
-			code(write_index++)=r_code::Atom::Float(1);		//	psln_thr.
+			code(write_index++)=r_code::Atom::Float(0);		//	psln_thr.
 			set_reference(0,object);
 		}
 
@@ -98,7 +98,7 @@ namespace	r_exec{
 			code(write_index++)=r_code::Atom::View();
 			code(write_index++)=r_code::Atom::Mks();
 			code(write_index++)=r_code::Atom::Vws();
-			code(write_index++)=r_code::Atom::Float(1);		//	psln_thr.
+			code(write_index++)=r_code::Atom::Float(0);		//	psln_thr.
 			set_reference(0,object);
 		}
 
@@ -112,7 +112,7 @@ namespace	r_exec{
 			code(write_index++)=r_code::Atom::View();
 			code(write_index++)=r_code::Atom::Mks();
 			code(write_index++)=r_code::Atom::Vws();
-			code(write_index++)=r_code::Atom::Float(1);		//	psln_thr.
+			code(write_index++)=r_code::Atom::Float(0);		//	psln_thr.
 			set_reference(0,object);
 		}
 
@@ -127,7 +127,7 @@ namespace	r_exec{
 			code(write_index++)=r_code::Atom::View();
 			code(write_index++)=r_code::Atom::Mks();
 			code(write_index++)=r_code::Atom::Vws();
-			code(write_index++)=r_code::Atom::Float(1);		//	psln_thr.
+			code(write_index++)=r_code::Atom::Float(0);		//	psln_thr.
 			set_reference(0,object);
 		}
 
@@ -142,7 +142,7 @@ namespace	r_exec{
 			code(write_index++)=r_code::Atom::View();
 			code(write_index++)=r_code::Atom::Mks();
 			code(write_index++)=r_code::Atom::Vws();
-			code(write_index++)=r_code::Atom::Float(1);		//	psln_thr.
+			code(write_index++)=r_code::Atom::Float(0);		//	psln_thr.
 			set_reference(0,object);
 		}
 	}

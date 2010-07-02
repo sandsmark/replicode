@@ -62,6 +62,52 @@ namespace	r_exec{
 		uint16	pgm_code_size;
 
 		//	Convenience.
+		uint16	first_production_index;
+		uint16	last_production_index;
+
+		std::vector<Atom>		values;			//	value array.
+		std::vector<P<Code> >	productions;	//	receives the results of ins, inj and eje; views are retrieved (fvw) or built (reduction) in the value array.
+
+		bool	evaluate(uint16	index);			//	evaluates the pgm_code at the specified index.
+		bool	inject_productions(_Mem	*mem);	//	return true upon successful evaluation.
+
+		virtual	Code	*get_mk_rdx(uint16	&extent_index)	const;
+
+		std::vector<uint16>	patch_indices;		//	indices where patches are applied; used for rollbacks.
+		uint16				value_commit_index;	//	index of the last computed value+1; used for rollbacks.
+		void				patch_code(uint16	index,Atom	value);
+		void				patch_tpl_args();	//	no views in tpl args; patches the ptn skeleton's first atom with IPGM_PTR with an index in the ipgm arg set; patches wildcards with similar IPGM_PTRs.
+		void				patch_tpl_code(uint16	pgm_code_index,uint16	ipgm_code_index);	//	to recurse.
+		virtual	void		patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index);	//	defined in IOverlay.
+
+		void	rollback();	//	reset the overlay to the last commited state: unpatch code and values.
+		void	commit();	//	empty the patch_indices and set value_commit_index to values.size().
+
+		IPGMController	*controller;
+
+		Overlay();
+		Overlay(IPGMController	*c);
+	public:
+		virtual	~Overlay();
+
+		void	kill();
+		bool	is_alive()	const;
+
+		r_code::Code	*getIPGM()		const;
+		r_exec::View	*getIPGMView()	const;
+
+		virtual	r_code::Code	*getInputObject(uint16	i)	const;	//	defined in Overlay.
+
+		r_code::Code	*buildObject(Atom	head)	const;
+	};
+
+	//	Overlay with inputs.
+	class	r_exec_dll	IOverlay:
+	public	Overlay{
+	friend	class	IPGMController;
+	friend	class	Context;
+	protected:
+		//	Convenience.
 		uint16	first_timing_constraint_index;
 		uint16	last_timing_constraint_index;
 		uint16	first_guard_index;
@@ -69,14 +115,8 @@ namespace	r_exec{
 		uint16	first_production_index;
 		uint16	last_production_index;
 
-		std::vector<Atom>	values;				//	value array.
-		uint16				value_commit_index;	//	index of the last computed value+1; used for rollbacks.
-		std::vector<uint16>	patch_indices;		//	indices where patches are applied; used for rollbacks.
-
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
-
-		std::vector<P<Code> >			productions;	//	receives the results of ins, inj and eje; views are retrieved (fvw) or built (reduction) in the value array.
 
 		typedef	enum{
 			SUCCESS=0,
@@ -87,49 +127,36 @@ namespace	r_exec{
 		MatchResult	match(r_exec::View	*input,uint16	&input_index);	//	delegates to _match; input_index is set to the index of the pattern that matched the input.
 		bool		check_timings();									//	return true upon successful evaluation.
 		bool		check_guards();										//	return true upon successful evaluation.
-		bool		inject_productions(_Mem	*mem);						//	return true upon successful evaluation.
-
+		
 		MatchResult	_match(r_exec::View	*input,uint16	pattern_index);	//	delegates to -match_pattern
 		MatchResult	_match_pattern(r_exec::View	*input,uint16	pattern_index);	//	return SUCCESS upon a successful match, IMPOSSIBLE if the input is not of the right class, FAILURE otherwise.
 		bool		_match_skeleton(r_exec::View	*input,uint16	pattern_index);
-		bool		evaluate(uint16	index);	//	evaluates the pgm_code at the specified index.
 
-		void		rollback();	//	reset the overlay to the last commited state: unpatch code and values.
-		void		commit();	//	empty the patch_indices and set value_commit_index to values.size().
 		void		reset();	//	reset to original state (pristine copy of the pgm code and empty value set).
 
-		void		patch_tpl_args();	//	no views in tpl args; patches the ptn skeleton's first atom with IPGM_PTR with an index in the ipgm arg set; patches wildcards with similar IPGM_PTRs.
-		void		patch_tpl_code(uint16	pgm_code_index,uint16	ipgm_code_index);	//	to recurse.
-		void		patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index);
-		void		patch_code(uint16	index,Atom	value);
+		void	patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index);
 
-		IPGMController	*controller;
+		virtual	Code	*get_mk_rdx(uint16	&extent_index)	const;
 
-		Overlay(IPGMController	*c);
-		Overlay(Overlay	*original,uint16	last_input_index,uint16	value_commit_index);	//	copy from the original and rollback.
+		IOverlay(IPGMController	*c);
+		IOverlay(IOverlay	*original,uint16	last_input_index,uint16	value_commit_index);	//	copy from the original and rollback.
 	public:
-		virtual	~Overlay();
-
-		void	kill();
-		bool	is_alive()	const;
+		virtual	~IOverlay();
 
 		virtual	void	reduce(r_exec::View	*input,_Mem	*mem);	//	called upon the processing of a reduction job.
 
-		r_code::Code	*getIPGM()		const;
-		r_exec::View	*getIPGMView()	const;
-
 		r_code::Code	*getInputObject(uint16	i)	const;
-		r_exec::View	*getInputView(uint16	i)	const;
-
-		r_code::Code	*buildObject(Atom	head)	const;
+		//r_exec::View	*getInputView(uint16	i)	const;
 	};
 
 	class	r_exec_dll	AntiOverlay:
-	public	Overlay{
+	public	IOverlay{
 	friend	class	IPGMController;
 	private:
 		AntiOverlay(IPGMController	*c);
 		AntiOverlay(AntiOverlay	*original,uint16	last_input_index,uint16	value_limit);
+	protected:
+		Code	*get_mk_rdx(uint16	&extent_index)	const;
 	public:
 		~AntiOverlay();
 
@@ -159,8 +186,8 @@ namespace	r_exec{
 		void	signal_anti_pgm();
 		void	signal_input_less_pgm();
 
-		void	remove(Overlay	*overlay);
-		void	add(Overlay	*overlay);
+		void	remove(IOverlay	*overlay);
+		void	add(IOverlay	*overlay);
 		void	restart(AntiOverlay	*overlay,bool	match);
 	};
 }

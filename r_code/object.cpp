@@ -169,7 +169,7 @@ namespace	r_code{
 		uint32	view_set_size=0;
 		for(uint32	i=0;i<views.size();++i)
 			view_set_size+=views[i]->getSize();
-		return	4+4+code.size()+references.size()+markers.size()+view_set_size;
+		return	5+code.size()+references.size()+markers.size()+view_set_size;
 	}
 
 	void	SysObject::trace(){
@@ -182,7 +182,7 @@ namespace	r_code{
 		case	SELF_ENT:	std::cout<<"self\n";	break;
 		default:	std::cout<<"non standard\n";	break;
 		}
-		std::cout<<"code size: "<<references.size()<<std::endl;
+		std::cout<<"code size: "<<code.size()<<std::endl;
 		std::cout<<"reference set size: "<<references.size()<<std::endl;
 		std::cout<<"marker set size: "<<markers.size()<<std::endl;
 		std::cout<<"view set size: "<<views.size()<<std::endl;

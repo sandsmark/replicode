@@ -90,7 +90,7 @@ nil; ntf_grp
 )
 
 []
-   [now 1 3 root nil 0 0]
+   [now 1 forever root nil 0 0]
 
 stdin:(grp
 1; upr

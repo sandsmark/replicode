@@ -60,7 +60,7 @@ namespace	r_exec{
 
 		void	addReference(Code	*destination,uint16	&write_index)	const{
 
-			destination->add_reference(object->get_reference(code[index].asIndex()));
+			destination->add_reference(object->get_reference(head().asIndex()));
 			destination->code(write_index++)=Atom::RPointer(destination->references_size()-1);
 		}
 
@@ -71,7 +71,7 @@ namespace	r_exec{
 				r_ptr_index=1;
 			else
 				r_ptr_index=0;
-			destination->references[r_ptr_index]=object->get_reference(code[index].asIndex());
+			destination->references[r_ptr_index]=object->get_reference(head().asIndex());
 			destination->code(write_index++)=Atom::RPointer(r_ptr_index);
 		}
 	public:
@@ -80,35 +80,13 @@ namespace	r_exec{
 		Context():object(NULL),view(NULL),code(NULL),index(0),overlay(NULL),data(UNDEFINED){}	//	undefined context (happens when accessing the view of an object when it has not been provided).
 		Context(Code	*object,View	*view,Atom	*code,uint16	index,Overlay	*const	overlay,Data	data=ORIGINAL_PGM):object(object),view(view),code(code),index(index),overlay(overlay),data(data){}
 		Context(Code	*object,uint16	index):object(object),view(NULL),code(&object->code(0)),index(index),overlay(NULL),data(REFERENCE){}
+		Context(Code	*object,Data	data):object(object),view(NULL),code(&object->code(0)),index(0),overlay(NULL),data(data){}
 
-		bool	evaluate(uint16	&index)					const;	//	index is set to the index of the result, undefined in case of failure.
-		bool	evaluate_no_dereference(uint16	&index)	const;
-
-		Context	getChild(uint16	index)	const{
-			switch(data){
-			case	ORIGINAL_PGM:
-				return	Context(object,view,code,index,overlay,ORIGINAL_PGM).dereference();
-			case	REFERENCE:
-				return	Context(object,NULL,code,index,NULL,REFERENCE).dereference();
-			case	VIEW:
-				return	Context(object,view,code,index,NULL,VIEW).dereference();
-			case	MKS:{
-				uint16	i=0;
-				std::list<Code	*>::const_iterator	m;
-				for(m=object->markers.begin();i<index-1;++m,++i);
-				return	Context(*m,0);
-			}case	VWS:
-				return	Context();	//	never used for iterating views (unexposed).
-			default:	//	undefined context.
-				return	Context();
-			}
-		}
-
-		uint16	getChildrenCount()	const{
-			return	code[index].getAtomCount();
-		}
+		bool	evaluate(uint16	&result_index)						const;	//	index is set to the index of the result, undefined in case of failure.
+		bool	evaluate_no_dereference(uint16	&result_index)		const;
 
 		Context	&operator	=(Context	&c){
+			
 			object=c.object;
 			view=c.view;
 			code=c.code;
@@ -120,6 +98,28 @@ namespace	r_exec{
 		bool	operator	==(const	Context	&c)	const;
 		bool	operator	!=(const	Context	&c)	const;
 
+		Atom	head()					const{	return	code[index];	}
+		uint16	getChildrenCount()		const{	return	code[index].getAtomCount();	}
+		Context	getChild(uint16	index)	const{
+			
+			switch(data){
+			case	ORIGINAL_PGM:
+				return	Context(object,view,code,this->index+index,overlay,ORIGINAL_PGM).dereference();
+			case	REFERENCE:
+				return	Context(object,NULL,code,this->index+index,NULL,REFERENCE).dereference();
+			case	VIEW:
+				return	Context(object,view,code,this->index+index,NULL,VIEW).dereference();
+			case	MKS:{
+				uint16	i=0;
+				std::list<Code	*>::const_iterator	m;
+				for(m=object->markers.begin();i<this->index+index-1;++m,++i);
+				return	Context(*m,0);
+			}case	VWS:
+				return	Context();	//	never used for iterating views (unexposed).
+			default:	//	undefined context.
+				return	Context();
+			}
+		}
 		Atom	&operator	[](uint16	i)	const{	return	code[index+i];	}
 		Code	*getObject()				const{	return	object;	}
 		uint16	getIndex()					const{	return	index;	}
@@ -133,11 +133,13 @@ namespace	r_exec{
 		void	rollback()	const{	overlay->rollback();	}
 
 		uint16	setAtomicResult(Atom	a)		const{	//	patch code with 32 bits data.
+			
 			overlay->patch_code(index,a);
 			return	index;
 		}
 
 		uint16	setTimestampResult(uint64	t)	const{	//	patch code with a VALUE_PTR
+			
 			overlay->patch_code(index,Atom::ValuePointer(overlay->values.size()));
 			overlay->values.resize(overlay->values.size()+3);
 			uint16	index=overlay->values.size()-3;
@@ -146,6 +148,7 @@ namespace	r_exec{
 		}
 
 		uint16	setCompoundResultHead(Atom	a)	const{	//	patch code with a VALUE_PTR.
+			
 			uint16	index=overlay->values.size();
 			overlay->patch_code(index,Atom::ValuePointer(index));
 			addCompoundResultPart(a);
@@ -153,25 +156,28 @@ namespace	r_exec{
 		}
 
 		uint16	addCompoundResultPart(Atom	a)	const{	//	store result in the value array.
+			
 			overlay->values.push_back(a);
 			return	overlay->values.size()-1;
 		}
 
 		uint16	addProduction(Code	*object)	const{
+			
 			overlay->productions.push_back(object);
 			return	overlay->productions.size()-1;
 		}
 
 		template<class	C>	void	copy(C	*destination,uint16	write_index)	const{	//	assumes the context is a structure; C: Object or View.
-			uint16	extent_index;
+			
+			uint16	extent_index=0;
 			copy(destination,write_index,extent_index);
 		}
 
 		template<class	C>	void	copy(C	*destination,uint16	_write_index,uint16	&extent_index)	const{	//	convenience.
-
+/*
 			uint16	write_index=_write_index;
 
-			switch(code[index].getDescriptor()){
+			switch(head().getDescriptor()){
 			case	Atom::I_PTR:
 			case	Atom::VL_PTR:
 			case	Atom::C_PTR:
@@ -196,18 +202,17 @@ namespace	r_exec{
 			case	Atom::OPERATOR:
 			case	Atom::OBJECT:
 			case	Atom::MARKER:
+			case	Atom::INSTANTIATED_PROGRAM:
+			case	Atom::GROUP:
 			case	Atom::SET:
 			case	Atom::S_SET:
 			case	Atom::STRING:
 			case	Atom::TIMESTAMP:{
 
-				uint16	atom_count=code[index].getAtomCount();
+				destination->code(extent_index++)=head();
+
+				uint16	atom_count=getChildrenCount();
 				extent_index=write_index+atom_count+1;
-
-				destination->code(write_index++)=Atom::IPointer(extent_index);
-				destination->code(extent_index++)=code[index];
-
-				uint16	new_extent_index;
 				for(uint16	i=1;i<=atom_count;++i){
 
 					Context	c=getChild(i);
@@ -217,9 +222,9 @@ namespace	r_exec{
 				break;
 			}
 			default:
-				destination->code(write_index)=code[index];
+				destination->code(write_index)=head();
 				break;
-			}
+			}*/
 		}
 
 		typedef	enum{
@@ -237,6 +242,8 @@ namespace	r_exec{
 
 		//	called by operators.
 		r_code::Code	*buildObject(Atom	head)	const{	return	overlay->buildObject(head);	}
+
+		void	trace()	const;
 	};
 }
 

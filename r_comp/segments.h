@@ -158,7 +158,7 @@ namespace	r_comp{
 			for(uint32	i=0;i<code_segment.objects.size();++i){
 
 				uint16	opcode=code_segment.objects[i]->code[0].asOpcode();
-				ram_objects[i]=new	O(code_segment.objects[i],NULL);
+				ram_objects[i]=new	O(code_segment.objects[i]);
 			}
 			unpackObjects(ram_objects);
 		}

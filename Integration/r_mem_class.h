@@ -166,7 +166,7 @@ public:
 		return	r;
 	}
 	RObject(r_code::Mem	*m):r_exec::Object<RCode,RObject>(m){}
-	RObject(r_code::SysObject	*source,r_code::Mem	*m):r_exec::Object<RCode,RObject>(m){
+	RObject(r_code::SysObject	*source,r_code::Mem	*m=NULL):r_exec::Object<RCode,RObject>(m){
 		
 		set_payload(new(source->code.size()+source->references.size())	CodePayload(source->code.size()),this);
 		load(source);

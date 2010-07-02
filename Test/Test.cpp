@@ -58,12 +58,12 @@ int32	main(int	argc,char	**argv){
 		r_code::vector<r_code::Code	*>	ram_objects;
 		r_exec::Seed.getObjects(mem,ram_objects);
 
-		mem->init(100000,4,4);
+		mem->init(100000,1,1);
 		mem->load(ram_objects.as_std());
 		mem->start();
 		//uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
 		std::cout<<"sleeping 1000\n";
-		Thread::Sleep(1000);
+		Thread::Sleep(1000000);
 		std::cout<<"stopping rMem\n";
 		mem->stop();
 

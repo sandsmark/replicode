@@ -128,7 +128,7 @@ namespace	r_exec{
 		static	bool	RequiresPacking(){	return	false;	}
 		static	LObject	*Pack(Code	*object,r_code::Mem	*m){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
 		LObject(r_code::Mem	*m):Object<r_code::LObject,LObject>(m){}
-		LObject(r_code::SysObject	*source,r_code::Mem	*m):Object<r_code::LObject,LObject>(m){
+		LObject(r_code::SysObject	*source,r_code::Mem	*m=NULL):Object<r_code::LObject,LObject>(m){
 		
 			load(source);
 			build_views<r_exec::View>(source);

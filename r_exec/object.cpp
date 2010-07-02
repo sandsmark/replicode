@@ -63,7 +63,7 @@ namespace	r_exec{
 				if(object->get_reference(0)->code(object->get_reference(0)->code(PGM_INPUTS).asIndex()).getAtomCount()>0)
 					return	IPGM;
 				else
-					return	ANTI_IPGM;
+					return	INPUT_LESS_IPGM;
 			}else
 				return	ANTI_IPGM;
 		case	Atom::OBJECT:

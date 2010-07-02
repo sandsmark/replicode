@@ -40,10 +40,10 @@ namespace	r_exec{
 	class	r_exec_dll	ReductionJob{
 	public:
 		P<View>		input;
-		P<Overlay>	overlay;
+		P<IOverlay>	overlay;
 		uint64		deadline;	//	for ipgm with inputs.
 		ReductionJob();
-		ReductionJob(View	*input,Overlay	*overlay,uint64	deadline);
+		ReductionJob(View	*input,IOverlay	*overlay,uint64	deadline);
 	};
 }
 

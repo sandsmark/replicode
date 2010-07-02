@@ -143,7 +143,15 @@ namespace	r_code{
 			uint32	object_marker_set_size=data(data(j)+3);
 			uint32	object_view_set_size=data(data(j)+4);
 			std::cout<<"---object---\n";
-			std::cout<<i++<<" code size: "<<object_reference_set_size<<std::endl;
+			std::cout<<i++;
+			switch(object_axiom){
+			case	SysObject::ROOT_GRP:	std::cout<<" root\n";	break;
+			case	SysObject::STDIN_GRP:	std::cout<<" stdin\n";	break;
+			case	SysObject::STDOUT_GRP:	std::cout<<" stdout\n";	break;
+			case	SysObject::SELF_ENT:	std::cout<<" self\n";	break;
+			default:	std::cout<<" non standard\n";	break;
+			}
+			std::cout<<i++<<" code size: "<<object_code_size<<std::endl;
 			std::cout<<i++<<" reference set size: "<<object_reference_set_size<<std::endl;
 			std::cout<<i++<<" marker set size: "<<object_marker_set_size<<std::endl;
 			std::cout<<i++<<" view set size: "<<object_view_set_size<<std::endl;

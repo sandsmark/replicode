@@ -83,19 +83,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs[0].isFloat()){
+		if(lhs.head().isFloat()){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 
-				bool	r=lhs[0].asFloat()>rhs[0].asFloat();
+				bool	r=lhs.head().asFloat()>rhs.head().asFloat();
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(&lhs[0])>Timestamp::Get(&rhs[0]);
+				bool	r=Timestamp::Get(&lhs.head())>Timestamp::Get(&rhs.head());
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -112,19 +112,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs[0].isFloat()){
+		if(lhs.head().isFloat()){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 
-				bool	r=lhs[0].asFloat()<rhs[0].asFloat();
+				bool	r=lhs.head().asFloat()<rhs.head().asFloat();
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(&lhs[0])<Timestamp::Get(&rhs[0]);
+				bool	r=Timestamp::Get(&lhs.head())<Timestamp::Get(&rhs.head());
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -141,19 +141,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs[0].isFloat()){
+		if(lhs.head().isFloat()){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 
-				bool	r=lhs[0].asFloat()>=rhs[0].asFloat();
+				bool	r=lhs.head().asFloat()>=rhs.head().asFloat();
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(&lhs[0])>=Timestamp::Get(&rhs[0]);
+				bool	r=Timestamp::Get(&lhs.head())>=Timestamp::Get(&rhs.head());
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -170,19 +170,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs[0].isFloat()){
+		if(lhs.head().isFloat()){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 
-				bool	r=lhs[0].asFloat()<=rhs[0].asFloat();
+				bool	r=lhs.head().asFloat()<=rhs.head().asFloat();
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(&lhs[0])<=Timestamp::Get(&rhs[0]);
+				bool	r=Timestamp::Get(&lhs.head())<=Timestamp::Get(&rhs.head());
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -199,18 +199,18 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs[0].isFloat()){
+		if(lhs.head().isFloat()){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 
-				index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()+rhs[0].asFloat()));
+				index=context.setAtomicResult(Atom::Float(lhs.head().asFloat()+rhs.head().asFloat()));
 				return	true;
 			}
-		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				index=context.setTimestampResult(Timestamp::Get(&lhs[0])+Timestamp::Get(&rhs[0]));
+				index=context.setTimestampResult(Timestamp::Get(&lhs.head())+Timestamp::Get(&rhs.head()));
 				return	true;
 			}
 		}
@@ -226,18 +226,18 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs[0].isFloat()){
+		if(lhs.head().isFloat()){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 
-				index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()-rhs[0].asFloat()));
+				index=context.setAtomicResult(Atom::Float(lhs.head().asFloat()-rhs.head().asFloat()));
 				return	true;
 			}
-		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				index=context.setTimestampResult(Timestamp::Get(&lhs[0])-Timestamp::Get(&rhs[0]));
+				index=context.setTimestampResult(Timestamp::Get(&lhs.head())-Timestamp::Get(&rhs.head()));
 				return	true;
 			}
 		}
@@ -253,26 +253,26 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs[0].isFloat()){
+		if(lhs.head().isFloat()){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 
-				index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()*rhs[0].asFloat()));
+				index=context.setAtomicResult(Atom::Float(lhs.head().asFloat()*rhs.head().asFloat()));
 				return	true;
-			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			}else	if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				index=context.setAtomicResult(Atom::Float(Timestamp::Get(&rhs[0])*lhs[0].asFloat()));
+				index=context.setAtomicResult(Atom::Float(Timestamp::Get(&rhs.head())*lhs.head().asFloat()));
 				return	true;
 			}
-		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 
-				index=context.setTimestampResult(Timestamp::Get(&lhs[0])*rhs[0].asFloat());
+				index=context.setTimestampResult(Timestamp::Get(&lhs.head())*rhs.head().asFloat());
 				return	true;
-			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			}else	if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				index=context.setAtomicResult(Atom::Float(Timestamp::Get(&lhs[0])*Timestamp::Get(&lhs[0])));
+				index=context.setAtomicResult(Atom::Float(Timestamp::Get(&lhs.head())*Timestamp::Get(&lhs.head())));
 				return	true;
 			}
 		}
@@ -288,40 +288,40 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs[0].isFloat()){
+		if(lhs.head().isFloat()){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 				
-				if(rhs[0].asFloat()!=0){
+				if(rhs.head().asFloat()!=0){
 
-					index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()/rhs[0].asFloat()));
+					index=context.setAtomicResult(Atom::Float(lhs.head().asFloat()/rhs.head().asFloat()));
 					return	true;
 				}
-			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			}else	if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				float64	rhs_t=(float64)Timestamp::Get(&rhs[0]);
+				float64	rhs_t=(float64)Timestamp::Get(&rhs.head());
 				if(rhs_t!=0){
 
-					index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()/rhs_t));
+					index=context.setAtomicResult(Atom::Float(lhs.head().asFloat()/rhs_t));
 					return	true;
 				}
 			}
-		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 				
-				if(rhs[0].asFloat()!=0){
+				if(rhs.head().asFloat()!=0){
 
-					float64	lhs_t=(float64)Timestamp::Get(&lhs[0]);
-					index=context.setTimestampResult(lhs_t/rhs[0].asFloat());
+					float64	lhs_t=(float64)Timestamp::Get(&lhs.head());
+					index=context.setTimestampResult(lhs_t/rhs.head().asFloat());
 					return	true;
 				}
-			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			}else	if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				float64	rhs_t=(float64)Timestamp::Get(&rhs[0]);
+				float64	rhs_t=(float64)Timestamp::Get(&rhs.head());
 				if(rhs_t!=0){
 
-					float64	lhs_t=(float64)Timestamp::Get(&lhs[0]);
+					float64	lhs_t=(float64)Timestamp::Get(&lhs.head());
 					index=context.setAtomicResult(Atom::Float(lhs_t/rhs_t));
 					return	true;
 				}
@@ -339,19 +339,19 @@ namespace	r_exec{
 		Context	lhs=context.getChild(1);
 		Context	rhs=context.getChild(2);
 
-		if(lhs[0].isFloat()){
+		if(lhs.head().isFloat()){
 
-			if(rhs[0].isFloat()){
+			if(rhs.head().isFloat()){
 
-				index=context.setAtomicResult(Atom::Float(abs(lhs[0].asFloat()-rhs[0].asFloat())));
+				index=context.setAtomicResult(Atom::Float(abs(lhs.head().asFloat()-rhs.head().asFloat())));
 				return	true;
 			}
-		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
 
-				uint64	lhs_t=Timestamp::Get(&lhs[0]);
-				uint64	rhs_t=Timestamp::Get(&rhs[0]);
+				uint64	lhs_t=Timestamp::Get(&lhs.head());
+				uint64	rhs_t=Timestamp::Get(&rhs.head());
 				index=context.setTimestampResult(abs((float64)(lhs_t-rhs_t)));
 				return	true;
 			}
@@ -541,7 +541,7 @@ namespace	r_exec{
 			uint16	unused_index;
 			for(uint16	i=1;i<=guard_count;++i){
 
-				if(!guard_set.getChild(i).evaluate(unused_index))	//	WARNING: no check for duplicates.
+				if(!guard_set.getChild(i).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
 					return	false;
 			}
 
@@ -560,7 +560,7 @@ namespace	r_exec{
 			uint16	unused_index;
 			for(uint16	i=1;i<=guard_count;++i){
 
-				if(guard_set.getChild(i).evaluate(unused_index))	//	WARNING: no check for duplicates.
+				if(guard_set.getChild(i).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
 					return	false;
 			}
 
@@ -576,7 +576,7 @@ build_productions:
 		uint16	production_index;
 		for(uint16	i=1;i<production_count;++i){
 
-			productions.getChild(i).evaluate(production_index);
+			productions.getChild(i).evaluate_no_dereference(production_index);
 			production_indices.push_back(production_index);
 		}
 
