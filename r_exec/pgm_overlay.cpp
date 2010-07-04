@@ -119,7 +119,7 @@ namespace	r_exec{
 
 		Atom	*original_code=&getIPGM()->get_reference(0)->code(0);
 		for(uint16	i=0;i<patch_indices.size();++i)	//	upatch code.
-			pgm_code[i]=original_code[patch_indices[i]];
+			pgm_code[patch_indices[i]]=original_code[patch_indices[i]];
 
 		if(value_commit_index!=values.size()){	//	shrink the values down to the last commit index.
 
@@ -187,15 +187,16 @@ namespace	r_exec{
 
 			if(!evaluate(i)){
 
+				rollback();
 				productions.clear();
 				return	false;
 			}
 
 			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,i,this);
-			cmd.dereference();
+			cmd=*cmd;
 
-			Context	function=cmd.getChild(1);
-			Context	device=cmd.getChild(2);
+			Context	function=*cmd.getChild(1);
+			Context	device=*cmd.getChild(2);
 
 			//	layout of a command:
 			//	0	>cmd opcode
@@ -206,7 +207,7 @@ namespace	r_exec{
 			//	5	>first arg
 
 			//	identify the production of new objects.
-			Context	args=cmd.getChild(4);
+			Context	args=*cmd.getChild(4);
 			if(device.head().atom==EXECUTIVE_DEVICE){
 
 				if(function.head().asOpcode()==Opcodes::Inject	||
@@ -214,9 +215,11 @@ namespace	r_exec{
 
 					Code	*object;
 					Context	arg1=args.getChild(1);
+					uint16	index=arg1.getIndex();
+					arg1=*arg1;
 					switch(arg1.head().getDescriptor()){
 					case	Atom::PROD_PTR:
-						object=productions[arg1.head().asIndex()];
+						object=productions[index];
 						break;
 					case	Atom::R_PTR:
 						object=arg1.getObject();
@@ -224,10 +227,12 @@ namespace	r_exec{
 					default:{
 
 						object=controller->get_mem()->buildObject(arg1.head());
+						//arg1.trace();
 						arg1.copy(object,0);
 
 						productions.push_back(object);
-						patch_code(args.getIndex()+1,Atom::ProductionPointer(arg1.head().asIndex()));	//	so that this new object can be referenced in subsequent productions without needing another copy.
+						patch_code(index,Atom::ProductionPointer(productions.size()-1));	//	so that this new object can be referenced in subsequent productions without needing another copy.
+						//arg1.trace();
 					}
 					}
 				}
@@ -236,56 +241,58 @@ namespace	r_exec{
 
 		Code	*mk_rdx;
 		uint16	extent_index;
-		bool	notify_rdx=getIPGM()->get_reference(0)->code(PGM_NFR)==1;
+		bool	notify_rdx=getIPGM()->get_reference(0)->code(PGM_NFR).asFloat()==1;
 		if(notify_rdx)	//	the productions are command objects (cmd); all productions are notified.
 			mk_rdx=get_mk_rdx(extent_index);
 		
+		uint64	now=Now();
 		for(uint16	i=first_production_index;i<=last_production_index;++i){	//	all productions have evaluated correctly; now we can execute the commands.
 
 			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,i,this);
-			cmd.dereference();
+			cmd=*cmd;
 
-			Context	function=cmd.getChild(1);
-			Context	device=cmd.getChild(2);
+			Context	function=*cmd.getChild(1);
+			Context	device=*cmd.getChild(2);
 
 			//	call device functions.
-			Context	args=cmd.getChild(4);
+			Context	args=*cmd.getChild(4);
 			if(device.head().atom==EXECUTIVE_DEVICE){
 
 				if(function.head().asOpcode()==Opcodes::Inject){	//	args:[object view]; retrieve the object and create a view.
 
-					Code	*object=args.getChild(1).getObject();
+					Code	*object=(*args.getChild(1)).getObject();
 					
-					Context	_view=args.getChild(2);
+					Context	_view=*args.getChild(2);
 					View	*view=new	View();
+					//_view.trace();
 					_view.copy(view,0);
 					view->set_object(object);
 
 					mem->inject(view);
 				}else	if(function.head().asOpcode()==Opcodes::Eject){	//	args:[object view destination_node]; view.grp=destination grp (stdin ot stdout); retrieve the object and create a view.
 
-					Code	*object=args.getChild(1).getObject();
+					Code	*object=(*args.getChild(1)).getObject();
 					
-					Context	_view=args.getChild(2);
+					Context	_view=*args.getChild(2);
 					View	*view=new	View();
 					_view.copy(view,0);
 					view->set_object(object);
 
-					Context	node=args.getChild(3);
+					Context	node=*args.getChild(3);
 
 					mem->eject(view,node[0].getNodeID());
-				}else	if(function.head().asOpcode()==Opcodes::Mod){	//	args:[cptr value].
+				}else	if(function.head().asOpcode()==Opcodes::Mod){	//	args:[iptr-to-cptr value].
 
 					void	*object;
 					Context::ObjectType	object_type;
 					uint16	member_index;
 					uint32	view_oid;
-					args.getChildAsMember(1,object,view_oid,object_type,member_index);
+					(*args.getChild(1)).getChildAsMember(1,object,view_oid,object_type,member_index);
 
 					if(object){
 						
-						Context	_value=args.getChild(2);
-						float32	value=_value[0].asFloat();
+						Context	_value=*args.getChild(2);
+						float32	value=_value.head().asFloat();
 						switch(object_type){
 						case	Context::TYPE_VIEW:{	//	add the target and value to the group's pending operations.
 
@@ -306,18 +313,18 @@ namespace	r_exec{
 							return	false;
 						}
 					}
-				}else	if(function.head().asOpcode()==Opcodes::Set){	//	args:[cptr value].
+				}else	if(function.head().asOpcode()==Opcodes::Set){	//	args:[iptr-to-cptr value].
 
 					void	*object;
 					Context::ObjectType	object_type;
 					uint16	member_index;
 					uint32	view_oid;
-					args.getChildAsMember(1,object,view_oid,object_type,member_index);
+					(*args.getChild(1)).getChildAsMember(1,object,view_oid,object_type,member_index);
 
 					if(object){
 						
-						Context	_value=args.getChild(2);
-						float32	value=_value[0].asFloat();
+						Context	_value=*args.getChild(2);
+						float32	value=_value.head().asFloat();
 						switch(object_type){
 						case	Context::TYPE_VIEW:{	//	add the target and value to the group's pending operations.
 
@@ -363,17 +370,18 @@ namespace	r_exec{
 
 				mem->eject(command,command->code(CMD_DEVICE).getNodeID());
 			}
-
-			if(notify_rdx)
-				cmd.copy(mk_rdx,extent_index,extent_index);
 		}
 
 		if(notify_rdx){
+
+			Context	prods(getIPGM()->get_reference(0),NULL,pgm_code,pgm_code[PGM_PRODS].asIndex(),this);
+			prods.copy(mk_rdx,extent_index);
 
 			NotificationView	*v=new	NotificationView(getIPGMView()->get_host(),getIPGMView()->get_host()->get_ntf_grp(),mk_rdx);
 			mem->injectNotificationNow(v,true);
 		}
 
+		rollback();
 		productions.clear();
 		return	true;
 	}
@@ -390,12 +398,11 @@ namespace	r_exec{
 		mk_rdx->add_reference(getIPGM());
 		mk_rdx->code(write_index++)=Atom::IPointer(extent_index);	//	inputs.
 		mk_rdx->code(extent_index++)=Atom::Set(0);
-		mk_rdx->code(write_index++)=Atom::IPointer(extent_index);		//	productions.
+		mk_rdx->code(write_index++)=Atom::IPointer(extent_index);	//	productions.
 		mk_rdx->code(write_index++)=Atom::View();
 		mk_rdx->code(write_index++)=Atom::Vws();
 		mk_rdx->code(write_index++)=Atom::Mks();
-		mk_rdx->code(write_index++)=Atom::Float(0);						//	psln_thr.
-		mk_rdx->code(extent_index++)=Atom::Set(last_production_index-first_production_index+1);	//	number of productions.
+		mk_rdx->code(write_index++)=Atom::Float(1);					//	psln_thr.
 
 		return	mk_rdx;
 	}
@@ -612,12 +619,11 @@ namespace	r_exec{
 			mk_rdx->code(extent_index++)=Atom::RPointer(i+1);
 			mk_rdx->add_reference(input_views[i]->object);
 		}
-		mk_rdx->code(write_index++)=Atom::IPointer(extent_index);		//	productions.
+		mk_rdx->code(write_index++)=Atom::IPointer(extent_index);	//	productions.
 		mk_rdx->code(write_index++)=Atom::View();
 		mk_rdx->code(write_index++)=Atom::Vws();
 		mk_rdx->code(write_index++)=Atom::Mks();
-		mk_rdx->code(write_index++)=Atom::Float(0);						//	psln_thr.
-		mk_rdx->code(extent_index++)=Atom::Set(last_production_index-first_production_index+1);	//	number of productions.
+		mk_rdx->code(write_index++)=Atom::Float(1);					//	psln_thr.
 
 		return	mk_rdx;
 	}
@@ -672,8 +678,7 @@ namespace	r_exec{
 		mk_rdx->code(write_index++)=Atom::View();
 		mk_rdx->code(write_index++)=Atom::Vws();
 		mk_rdx->code(write_index++)=Atom::Mks();
-		mk_rdx->code(write_index++)=Atom::Float(0);						//	psln_thr.
-		mk_rdx->code(extent_index++)=Atom::Set(last_production_index-first_production_index+1);	//	number of productions.
+		mk_rdx->code(write_index++)=Atom::Float(1);					//	psln_thr.
 
 		return	mk_rdx;
 	}

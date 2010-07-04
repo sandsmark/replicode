@@ -438,7 +438,7 @@ namespace	r_comp{
 		static	uint16	Last_index=0;
 
 		UNORDERED_MAP<Code	*,uint16>::iterator	it=ptrs_to_indices.find(object);
-		if(it!=ptrs_to_indices.end())	//	object already there
+		if(it!=ptrs_to_indices.end())	//	object already there.
 			return	*this;
 
 		uint16	object_index;
@@ -458,7 +458,7 @@ namespace	r_comp{
 
 	void	Image::buildReferences(SysObject	*sys_object,Code	*object,uint16	object_index){
 
-		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references and markers
+		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references and markers.
 		uint16	i;
 		uint16	referenced_object_index;
 		for(i=0;i<object->references_size();++i){
@@ -496,7 +496,7 @@ namespace	r_comp{
 
 	void	Image::unpackObjects(r_code::vector<Code	*>	&ram_objects){
 
-		//	Translate indices into pointers
+		//	Translate indices into pointers.
 		for(uint16	i=0;i<relocation_segment.entries.size();++i){	//	for each allocated object, write its address in the reference set of the objects or views that reference it.
 
 			r_code::Code				*referenced_object=ram_objects[i];
@@ -513,18 +513,9 @@ namespace	r_comp{
 					//referencing_object->markers[p.pointer_index]=referenced_object;
 					referencing_object->markers.push_back(referenced_object);
 					break;
-				default:{
-					UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
-					for(v=referencing_object->views.begin();v!=referencing_object->views.end();++v){
-
-						if((*v)->get_index()==p.view_index){
-
-							(*v)->references[p.pointer_index]=referenced_object;
-							break;
-						}
-					}
+				default:	//	build a view, assign the referenced to the selected reference and insert in the referencing object.
+					referencing_object->build_view(code_segment.objects[p.object_index]->views[p.view_index],p.pointer_index,referenced_object);
 					break;
-				}
 				}
 			}
 		}

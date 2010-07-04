@@ -61,12 +61,12 @@ namespace	r_exec{
 
 		switch(head.getDescriptor()){
 		case	Atom::GROUP:
-			return	new	Group(this);
+			return	new	Group();
 		default:
 			if(O::RequiresPacking())
 				return	new	r_code::LObject();	//	temporary sand box for assembling code; will be packed into an O at injection time.
 			else
-				return	new	O(this);
+				return	new	O();
 		}
 	}
 
@@ -253,6 +253,7 @@ namespace	r_exec{
 				object->position_in_object_register=object_register.insert(object).first;
 				object_register_sem->release();
 
+				object->bind(this);
 				objects_sem->acquire();
 				object->position_in_objects=objects.insert(objects.end(),object);
 				objects_sem->release();
@@ -326,6 +327,7 @@ namespace	r_exec{
 
 	template<class	O>	void	Mem<O>::_inject_group_now(View	*view,Group	*object,Group	*host){	//	groups are always new; no cov for groups; no need to protect object.
 
+		object->bind(this);
 		objects_sem->acquire();
 		object->position_in_objects=objects.insert(objects.end(),object);
 		objects_sem->release();
@@ -361,6 +363,7 @@ namespace	r_exec{
 		Group	*host=view->get_host();
 		LObject	*object=(LObject	*)view->object;
 
+		object->bind(this);
 		objects_sem->acquire();
 		object->position_in_objects=objects.insert(objects.end(),object);
 		objects_sem->release();

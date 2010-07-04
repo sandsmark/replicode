@@ -163,8 +163,9 @@ namespace	r_exec{
 			}
 
 			//	inject the next update job for the group.
-//DEBUG RDX			TimeJob	j(new	UpdateJob(g),now+g->get_upr()*base_period);
-//			time_job_queue->push(j);
+//DEBUG RDX	
+			TimeJob	j(new	UpdateJob(g),now+g->get_upr()*base_period);
+			time_job_queue->push(j);
 		}
 
 		initial_groups.clear();

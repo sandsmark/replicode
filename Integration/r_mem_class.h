@@ -165,12 +165,11 @@ public:
 			r->set_reference(i,object->get_reference(i));
 		return	r;
 	}
-	RObject(r_code::Mem	*m):r_exec::Object<RCode,RObject>(m){}
+	RObject(r_code::Mem	*m=NULL):r_exec::Object<RCode,RObject>(m){}
 	RObject(r_code::SysObject	*source,r_code::Mem	*m=NULL):r_exec::Object<RCode,RObject>(m){
 		
 		set_payload(new(source->code.size()+source->references.size())	CodePayload(source->code.size()),this);
 		load(source);
-		build_views<r_exec::View>(source);
 	}
 	RObject(CodePayload	*p,r_code::Mem	*m):r_exec::Object<RCode,RObject>(m){
 

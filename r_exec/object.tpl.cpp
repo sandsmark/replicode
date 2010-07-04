@@ -57,14 +57,16 @@ namespace	r_exec{
 			return	true;
 		invalidated=true;
 
-		if(code(0).getDescriptor()==Atom::MARKER){
+		if(mem){
 
-			for(uint16	i=0;i<references_size();++i)
-				get_reference(i)->remove_marker(this);
-		}
+			if(code(0).getDescriptor()==Atom::MARKER){
 
-		if(mem)
+				for(uint16	i=0;i<references_size();++i)
+					get_reference(i)->remove_marker(this);
+			}
+		
 			mem->deleteObject(this);
+		}
 
 		return	false;
 	}

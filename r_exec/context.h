@@ -58,13 +58,13 @@ namespace	r_exec{
 		}Data;
 		Data	data;
 
-		void	addReference(Code	*destination,uint16	&write_index)	const{
+		void	addReference(Code	*destination,uint16	write_index,Code	*referenced_object)	const{
 
-			destination->add_reference(object->get_reference(head().asIndex()));
-			destination->code(write_index++)=Atom::RPointer(destination->references_size()-1);
+			destination->add_reference(referenced_object);
+			destination->code(write_index)=Atom::RPointer(destination->references_size()-1);
 		}
 
-		void	addReference(View	*destination,uint16	&write_index)	const{	//	view references are set in order (indices 0 then 1).
+		void	addReference(View	*destination,uint16	write_index,Code	*referenced_object)	const{	//	view references are set in order (indices 0 then 1).
 
 			uint16	r_ptr_index;
 			if(destination->references[0])	//	first ref already in place
@@ -72,7 +72,66 @@ namespace	r_exec{
 			else
 				r_ptr_index=0;
 			destination->references[r_ptr_index]=object->get_reference(head().asIndex());
-			destination->code(write_index++)=Atom::RPointer(r_ptr_index);
+			destination->code(write_index)=Atom::RPointer(r_ptr_index);
+		}
+
+		template<class	C>	void	copy_structure(C	*destination,uint16	write_index,uint16	&extent_index)	const{	//	assumes the context is a structure; C: Object or View.
+			
+			destination->code(write_index++)=head();
+
+			uint16	atom_count=getChildrenCount();
+			extent_index=write_index+atom_count;
+			for(uint16	i=1;i<=atom_count;++i){
+
+				Context	c=getChild(i);
+				c.copy_member(destination,write_index++,extent_index);
+			}
+		}
+
+		template<class	C>	void	copy_member(C	*destination,uint16	write_index,uint16	&extent_index)	const{
+
+			switch(head().getDescriptor()){
+			case	Atom::I_PTR:
+			case	Atom::VL_PTR:
+			case	Atom::C_PTR:
+			case	Atom::VALUE_PTR:
+			case	Atom::IPGM_PTR:
+			case	Atom::IN_OBJ_PTR:
+			case	Atom::IN_VW_PTR:
+			case	Atom::THIS:{
+
+				if(data==REFERENCE	&&	index==0)	//	points to an object, not to one of its members.
+					addReference(destination,write_index,object);
+				else{
+
+					Context	c=operator	*();
+					destination->code(write_index)=Atom::IPointer(extent_index);
+					c.copy_structure(destination,extent_index,extent_index);
+				}
+				break;
+			}
+			case	Atom::R_PTR:
+				addReference(destination,write_index,object->get_reference(head().asIndex()));
+				break;
+			case	Atom::PROD_PTR:
+				addReference(destination,write_index,overlay->productions[head().asIndex()]);
+				break;
+			case	Atom::OPERATOR:
+			case	Atom::OBJECT:
+			case	Atom::MARKER:
+			case	Atom::INSTANTIATED_PROGRAM:
+			case	Atom::GROUP:
+			case	Atom::SET:
+			case	Atom::S_SET:
+			case	Atom::STRING:
+			case	Atom::TIMESTAMP:
+				destination->code(write_index)=Atom::IPointer(extent_index);
+				copy_structure(destination,extent_index,extent_index);
+				break;
+			default:
+				destination->code(write_index)=head();
+				break;
+			}
 		}
 	public:
 		static	Context	GetContextFromInput(View	*input,Overlay	*overlay){	return	Context(input->object,input,&input->object->code(0),0,overlay,REFERENCE);	}
@@ -104,12 +163,13 @@ namespace	r_exec{
 			
 			switch(data){
 			case	ORIGINAL_PGM:
-				return	Context(object,view,code,this->index+index,overlay,ORIGINAL_PGM).dereference();
+				return	Context(object,view,code,this->index+index,overlay,ORIGINAL_PGM);
 			case	REFERENCE:
-				return	Context(object,NULL,code,this->index+index,NULL,REFERENCE).dereference();
+				return	Context(object,view,code,this->index+index,overlay,REFERENCE);
 			case	VIEW:
-				return	Context(object,view,code,this->index+index,NULL,VIEW).dereference();
+				return	Context(object,view,code,this->index+index,NULL,VIEW);
 			case	MKS:{
+
 				uint16	i=0;
 				std::list<Code	*>::const_iterator	m;
 				for(m=object->markers.begin();i<this->index+index-1;++m,++i);
@@ -124,7 +184,7 @@ namespace	r_exec{
 		Code	*getObject()				const{	return	object;	}
 		uint16	getIndex()					const{	return	index;	}
 
-		Context	dereference()	const;
+		Context	operator	*()	const;
 
 		void	patch_code(uint16	location,Atom	value)						const{	overlay->patch_code(location,value);	}
 		void	patch_input_code(uint16	pgm_code_index,uint16	input_index)	const{	overlay->patch_input_code(pgm_code_index,input_index,0);	}
@@ -167,64 +227,10 @@ namespace	r_exec{
 			return	overlay->productions.size()-1;
 		}
 
-		template<class	C>	void	copy(C	*destination,uint16	write_index)	const{	//	assumes the context is a structure; C: Object or View.
+		template<class	C>	void	copy(C	*destination,uint16	write_index)	const{
 			
 			uint16	extent_index=0;
-			copy(destination,write_index,extent_index);
-		}
-
-		template<class	C>	void	copy(C	*destination,uint16	_write_index,uint16	&extent_index)	const{	//	convenience.
-/*
-			uint16	write_index=_write_index;
-
-			switch(head().getDescriptor()){
-			case	Atom::I_PTR:
-			case	Atom::VL_PTR:
-			case	Atom::C_PTR:
-			case	Atom::VALUE_PTR:
-			case	Atom::IPGM_PTR:
-			case	Atom::IN_OBJ_PTR:
-			case	Atom::IN_VW_PTR:
-			case	Atom::VIEW:
-			case	Atom::THIS:{
-
-				Context	c=dereference();
-				if(c.data==REFERENCE	&&	c.index==0)	//	c points to an object, not to one of its members.
-					c.addReference(destination,write_index);
-				else
-					c.copy(destination,write_index,extent_index);
-				break;
-			}
-			case	Atom::R_PTR:
-			case	Atom::PROD_PTR:
-				addReference(destination,write_index);
-				break;
-			case	Atom::OPERATOR:
-			case	Atom::OBJECT:
-			case	Atom::MARKER:
-			case	Atom::INSTANTIATED_PROGRAM:
-			case	Atom::GROUP:
-			case	Atom::SET:
-			case	Atom::S_SET:
-			case	Atom::STRING:
-			case	Atom::TIMESTAMP:{
-
-				destination->code(extent_index++)=head();
-
-				uint16	atom_count=getChildrenCount();
-				extent_index=write_index+atom_count+1;
-				for(uint16	i=1;i<=atom_count;++i){
-
-					Context	c=getChild(i);
-					c.copy(destination,extent_index++,new_extent_index);
-				}
-				extent_index=new_extent_index;
-				break;
-			}
-			default:
-				destination->code(write_index)=head();
-				break;
-			}*/
+			copy_structure(destination,write_index,extent_index);
 		}
 
 		typedef	enum{
@@ -235,7 +241,7 @@ namespace	r_exec{
 		}ObjectType;
 
 		//	To retrieve objects, groups and views in mod/set expressions; views are copied.
-		void	getChildAsMember(uint16	index,void	*&object,uint32	&view_oid,ObjectType	object_type,uint16	member_index)	const;
+		void	getChildAsMember(uint16	index,void	*&object,uint32	&view_oid,ObjectType	&object_type,uint16	&member_index)	const;
 
 		//	'this' is a context on a pattern skeleton.
 		bool	match(const	Context	&input)	const;

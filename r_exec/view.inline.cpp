@@ -40,7 +40,7 @@ namespace	r_exec{
 		reset_ctrl_values();
 	}
 
-	inline	View::View(r_code::SysView	*source,r_code::Code	*object,uint16	index):r_code::View(source,object,index){
+	inline	View::View(r_code::SysView	*source,r_code::Code	*object):r_code::View(source,object){
 
 		_code[VIEW_OID].atom=GetOID();
 

@@ -90,6 +90,24 @@ namespace	r_comp{
 		char		buffer[255];
 		std::string	s;
 
+		//	populate object names first so they can be referenced in any order.
+		for(uint16	i=0;i<image->code_segment.objects.size();++i){
+
+			SysObject	*sys_object=(SysObject	*)image->code_segment.objects[i];
+			switch(sys_object->axiom){
+			case	SysObject::ROOT_GRP:	s="root";break;
+			case	SysObject::STDIN_GRP:	s="stdin";break;
+			case	SysObject::STDOUT_GRP:	s="stdout";break;
+			case	SysObject::SELF_ENT:	s="self";break;
+			default:
+				sprintf(buffer,"%d",last_object_ID++);
+				s=metadata->getClass(sys_object->code[0].asOpcode())->str_opcode;
+				s+=buffer;
+				break;
+			}
+			object_names[i]=s;
+		}
+
 		closing_set=false;
 
 		for(uint16	i=0;i<image->code_segment.objects.size();++i){
@@ -100,18 +118,7 @@ namespace	r_comp{
 			bool	after_tail_wildcard=false;
 			indents=0;
 
-			switch(sys_object->axiom){
-			case	SysObject::ROOT_GRP:	s="root";break;
-			case	SysObject::STDIN_GRP:	s="stdin";break;
-			case	SysObject::STDOUT_GRP:	s="stdout";break;
-			case	SysObject::SELF_ENT:	s="self";break;
-			default:
-				sprintf(buffer,"%d",last_object_ID++);
-				s=metadata->getClass(current_object->code[0].asOpcode())->str_opcode;
-				s+=buffer;
-				break;
-			}
-			object_names[i]=s;
+			s=object_names[i];
 			s+=":";
 			*out_stream<<s;
 
@@ -289,6 +296,8 @@ namespace	r_comp{
 			switch(atom.getDescriptor()){	//	structures.
 			case	Atom::OBJECT:
 			case	Atom::MARKER:
+			case	Atom::GROUP:
+			case	Atom::INSTANTIATED_PROGRAM:
 			case	Atom::OPERATOR:
 				write_expression(index);
 				break;
@@ -315,6 +324,7 @@ namespace	r_comp{
 					out_stream->push("|us",read_index);
 				else{
 					uint64	ts=((uint64)(current_object->code[index+1].atom))<<32	|	((uint64)(current_object->code[index+2].atom));
+					*out_stream<<std::dec;
 					out_stream->push(ts,read_index);
 					*out_stream<<"us";
 				}

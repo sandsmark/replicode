@@ -159,7 +159,7 @@ namespace	r_exec{
 		//	Pending mod/set operations on the group's view, exploited and cleared at update time.
 		std::vector<Operation	*>	pending_operations;
 
-		Group(r_code::Mem	*m);
+		Group(r_code::Mem	*m=NULL);
 		Group(r_code::SysObject	*source,r_code::Mem	*m);
 		~Group();
 

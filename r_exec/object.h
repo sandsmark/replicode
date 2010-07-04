@@ -74,6 +74,13 @@ namespace	r_exec{
 	public:
 		virtual	~Object();	//	un-registers from the rMem's object_register.
 
+		void	build_view(SysView	*source,uint16	reference_index,Code	*referenced_object){
+
+			return	Code::build_view<r_exec::View>(source,reference_index,referenced_object);
+		}
+
+		void	bind(r_code::Mem	*mem){	this->mem=mem;	}
+
 		bool	is_invalidated()	const;
 		virtual	bool	invalidate();	//	return false when was not invalidated, true otherwise.
 
@@ -127,11 +134,10 @@ namespace	r_exec{
 	public:
 		static	bool	RequiresPacking(){	return	false;	}
 		static	LObject	*Pack(Code	*object,r_code::Mem	*m){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
-		LObject(r_code::Mem	*m):Object<r_code::LObject,LObject>(m){}
+		LObject(r_code::Mem	*m=NULL):Object<r_code::LObject,LObject>(m){}
 		LObject(r_code::SysObject	*source,r_code::Mem	*m=NULL):Object<r_code::LObject,LObject>(m){
 		
 			load(source);
-			build_views<r_exec::View>(source);
 		}
 		virtual	~LObject(){}
 	};

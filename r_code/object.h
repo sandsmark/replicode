@@ -116,17 +116,14 @@ namespace	r_code{
 			references[0]=references[1]=NULL;
 		}
 
-		View(SysView	*source,Code	*object,uint16	index){
+		View(SysView	*source,Code	*object){
 
-			this->index=index;
 			for(uint16	i=0;i<source->code.size();++i)
 				_code[i]=source->code[i];
 			references[0]=references[1]=NULL;
 		}
 
 		virtual	~View(){}
-
-		uint16	get_index()	const{	return	index;	}
 
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	code(uint16	i)	const{	return	_code[i];	}
@@ -141,7 +138,7 @@ namespace	r_code{
 		class	Equal{
 		public:
 			bool	operator	()(const	View	*lhs,const	View	*rhs)	const{
-				return	lhs==rhs;
+				return	lhs->references[0]==rhs->references[0];
 			}
 		};
 	};
@@ -157,10 +154,11 @@ namespace	r_code{
 				code(i)=source->code[i];
 			axiom=source->axiom;
 		}
-		template<class	V>	void	build_views(SysObject	*source){
+		template<class	V>	void	build_view(SysView	*source,uint16	reference_index,Code	*referenced_object){
 
-			for(uint16	i=0;i<source->views.size();++i)
-				views.insert(new	V(source->views[i],this,i));
+			V	*view=new	V(source,this);
+			view->references[reference_index]=referenced_object;
+			views.insert(view);
 		}
 	public:
 		SysObject::Axiom	get_axiom()	const{	return	axiom;	}
@@ -179,6 +177,8 @@ namespace	r_code{
 		std::list<Code	*>								markers;
 		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	//	indexed by groups.
 
+		virtual	void	build_view(SysView	*source,uint16	reference_index,Code	*referenced_object)=0;
+
 		virtual	void	acq_views()		const{}
 		virtual	void	rel_views()		const{}
 		virtual	void	acq_markers()	const{}
@@ -186,7 +186,7 @@ namespace	r_code{
 
 		virtual	float32	get_psln_thr(){	return	1;	}
 
-		Code(){}
+		Code():axiom(SysObject::NON_STD){}
 		virtual	~Code(){}
 
 		virtual	void	mod(uint16	member_index,float32	value){};
@@ -221,9 +221,13 @@ namespace	r_code{
 		LObject(SysObject	*source):Code(){
 			
 			load(source);
-			build_views<View>(source);
 		}
 		virtual	~LObject(){}
+
+		void	build_view(SysView	*source,uint16	reference_index,Code	*referenced_object){
+
+			return	Code::build_view<View>(source,reference_index,referenced_object);
+		}
 
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	&code(uint16	i)	const{	return	(*_code.as_std())[i];	}

@@ -62,7 +62,7 @@ namespace	r_exec{
 
 	bool	equ(const	Context	&context,uint16	&index){
 
-		bool	r=context.getChild(1)==context.getChild(2);
+		bool	r=*context.getChild(1)==*context.getChild(2);
 		index=context.setAtomicResult(Atom::Boolean(r));
 		return	r;
 	}
@@ -71,7 +71,7 @@ namespace	r_exec{
 
 	bool	neq(const	Context	&context,uint16	&index){
 
-		bool	r=context.getChild(1)!=context.getChild(2);
+		bool	r=*context.getChild(1)!=*context.getChild(2);
 		index=context.setAtomicResult(Atom::Boolean(r));
 		return	r;
 	}
@@ -80,8 +80,8 @@ namespace	r_exec{
 
 	bool	gtr(const	Context	&context,uint16	&index){
 
-		Context	lhs=context.getChild(1);
-		Context	rhs=context.getChild(2);
+		Context	lhs=*context.getChild(1);
+		Context	rhs=*context.getChild(2);
 
 		if(lhs.head().isFloat()){
 
@@ -109,8 +109,8 @@ namespace	r_exec{
 
 	bool	lsr(const	Context	&context,uint16	&index){
 
-		Context	lhs=context.getChild(1);
-		Context	rhs=context.getChild(2);
+		Context	lhs=*context.getChild(1);
+		Context	rhs=*context.getChild(2);
 
 		if(lhs.head().isFloat()){
 
@@ -138,8 +138,8 @@ namespace	r_exec{
 
 	bool	gte(const	Context	&context,uint16	&index){
 
-		Context	lhs=context.getChild(1);
-		Context	rhs=context.getChild(2);
+		Context	lhs=*context.getChild(1);
+		Context	rhs=*context.getChild(2);
 
 		if(lhs.head().isFloat()){
 
@@ -167,8 +167,8 @@ namespace	r_exec{
 
 	bool	lse(const	Context	&context,uint16	&index){
 
-		Context	lhs=context.getChild(1);
-		Context	rhs=context.getChild(2);
+		Context	lhs=*context.getChild(1);
+		Context	rhs=*context.getChild(2);
 
 		if(lhs.head().isFloat()){
 
@@ -196,8 +196,8 @@ namespace	r_exec{
 
 	bool	add(const	Context	&context,uint16	&index){
 
-		Context	lhs=context.getChild(1);
-		Context	rhs=context.getChild(2);
+		Context	lhs=*context.getChild(1);
+		Context	rhs=*context.getChild(2);
 
 		if(lhs.head().isFloat()){
 
@@ -223,8 +223,8 @@ namespace	r_exec{
 
 	bool	sub(const	Context	&context,uint16	&index){
 
-		Context	lhs=context.getChild(1);
-		Context	rhs=context.getChild(2);
+		Context	lhs=*context.getChild(1);
+		Context	rhs=*context.getChild(2);
 
 		if(lhs.head().isFloat()){
 
@@ -250,8 +250,8 @@ namespace	r_exec{
 
 	bool	mul(const	Context	&context,uint16	&index){
 
-		Context	lhs=context.getChild(1);
-		Context	rhs=context.getChild(2);
+		Context	lhs=*context.getChild(1);
+		Context	rhs=*context.getChild(2);
 
 		if(lhs.head().isFloat()){
 
@@ -285,8 +285,8 @@ namespace	r_exec{
 
 	bool	div(const	Context	&context,uint16	&index){
 
-		Context	lhs=context.getChild(1);
-		Context	rhs=context.getChild(2);
+		Context	lhs=*context.getChild(1);
+		Context	rhs=*context.getChild(2);
 
 		if(lhs.head().isFloat()){
 
@@ -336,8 +336,8 @@ namespace	r_exec{
 
 	bool	dis(const	Context	&context,uint16	&index){	
 
-		Context	lhs=context.getChild(1);
-		Context	rhs=context.getChild(2);
+		Context	lhs=*context.getChild(1);
+		Context	rhs=*context.getChild(2);
 
 		if(lhs.head().isFloat()){
 
@@ -365,7 +365,7 @@ namespace	r_exec{
 
 	bool	ln(const	Context	&context,uint16	&index){
 
-		Context	arg=context.getChild(1);
+		Context	arg=*context.getChild(1);
 		
 		if(arg[0].isFloat()){
 
@@ -384,7 +384,7 @@ namespace	r_exec{
 
 	bool	exp(const	Context	&context,uint16	&index){
 
-		Context	arg=context.getChild(1);
+		Context	arg=*context.getChild(1);
 		
 		if(arg[0].isFloat()){
 
@@ -400,7 +400,7 @@ namespace	r_exec{
 
 	bool	log(const	Context	&context,uint16	&index){
 
-		Context	arg=context.getChild(1);
+		Context	arg=*context.getChild(1);
 		
 		if(arg[0].isFloat()){
 
@@ -419,7 +419,7 @@ namespace	r_exec{
 
 	bool	e10(const	Context	&context,uint16	&index){
 
-		Context	arg=context.getChild(1);
+		Context	arg=*context.getChild(1);
 		
 		if(arg[0].isFloat()){
 
@@ -442,8 +442,8 @@ namespace	r_exec{
 
 	bool	ins(const	Context	&context,uint16	&index){
 
-		Context	object=context.getChild(1);
-		Context	args=context.getChild(2);
+		Context	object=*context.getChild(1);
+		Context	args=*context.getChild(2);
 
 		Code	*_object=object.getObject();
 		if(_object	&&	args[0].getDescriptor()==Atom::SET){
@@ -459,7 +459,7 @@ namespace	r_exec{
 			//	match args with the tpl patterns in _object.
 			for(uint16	i=1;i<=arg_count;++i){
 
-				Context	arg=args.getChild(i);
+				Context	arg=*args.getChild(i);
 				Context	skel=Context(_object,pattern_set_index+i);
 				if(!skel.match(arg)){
 
@@ -525,7 +525,7 @@ namespace	r_exec{
 
 	bool	match(const	Context	&input,const	Context	&pattern,const	Context	&productions,std::vector<uint16>	&production_indices){
 
-		Context	pattern_skeleton=pattern.getChild(1);
+		Context	pattern_skeleton=*pattern.getChild(1);
 
 		if(pattern[0].asOpcode()==Opcodes::PTN){
 			
@@ -536,12 +536,12 @@ namespace	r_exec{
 			pattern.patch_input_code(pattern.getIndex(),input.getIndex());
 
 			//	evaluate the set of guards.
-			Context	guard_set=pattern.getChild(2);
+			Context	guard_set=*pattern.getChild(2);
 			uint16	guard_count=guard_set.getChildrenCount();
 			uint16	unused_index;
 			for(uint16	i=1;i<=guard_count;++i){
 
-				if(!guard_set.getChild(i).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
+				if(!(*guard_set.getChild(i)).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
 					return	false;
 			}
 
@@ -555,12 +555,12 @@ namespace	r_exec{
 				return	false;
 
 			//	evaluate the set of guards.
-			Context	guard_set=pattern.getChild(2);
+			Context	guard_set=*pattern.getChild(2);
 			uint16	guard_count=guard_set.getChildrenCount();
 			uint16	unused_index;
 			for(uint16	i=1;i<=guard_count;++i){
 
-				if(guard_set.getChild(i).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
+				if((*guard_set.getChild(i)).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
 					return	false;
 			}
 
@@ -576,7 +576,7 @@ build_productions:
 		uint16	production_index;
 		for(uint16	i=1;i<production_count;++i){
 
-			productions.getChild(i).evaluate_no_dereference(production_index);
+			(*productions.getChild(i)).evaluate_no_dereference(production_index);
 			production_indices.push_back(production_index);
 		}
 
@@ -585,11 +585,11 @@ build_productions:
 
 	void	reduce(const	Context	&context,const	Context	&input_set,const	Context	&section,std::vector<uint16>	&input_indices,std::vector<uint16>	&production_indices){
 
-		Context	patterns=section.getChild(1);
+		Context	patterns=*section.getChild(1);
 		if(patterns[0].getDescriptor()!=Atom::SET)
 			return;
 
-		Context	productions=section.getChild(2);
+		Context	productions=*section.getChild(2);
 		if(productions[0].getDescriptor()!=Atom::SET)
 			return;
 
@@ -607,7 +607,7 @@ build_productions:
 			bool	failure=false;
 			for(uint16	j=0;j<pattern_count;++j){
 
-				if(!match(input_set.getChild(*i),patterns.getChild(j),productions,production_indices)){
+				if(!match(*input_set.getChild(*i),patterns.getChild(j),productions,production_indices)){
 
 					failure=true;
 					context.rollback();
@@ -624,11 +624,11 @@ build_productions:
 
 	bool	red(const	Context	&context,uint16	&index){	//	reminder: all inputs have already been evaluated (but not the patterns).
 
-		Context	input_set=context.getChild(1);
+		Context	input_set=*context.getChild(1);
 
 		//	a section is a set of 2 sets: 8a) a set of patterns and, (b) a set of productions.
-		Context	positive_section=context.getChild(2);
-		Context	negative_section=context.getChild(3);
+		Context	positive_section=*context.getChild(2);
+		Context	negative_section=*context.getChild(3);
 
 		std::vector<uint16>	input_indices;		//	todo list of inputs to match.
 		for(uint16	i=1;i<=input_set.getChildrenCount();++i)
@@ -694,8 +694,8 @@ failure:
 
 	bool	fvw(const	Context	&context,uint16	&index){
 
-		Context	object=context.getChild(1);
-		Context	group=context.getChild(2);
+		Context	object=*context.getChild(1);
+		Context	group=*context.getChild(2);
 
 		Code	*_object=object.getObject();
 		Group	*_group=(Group	*)group.getObject();

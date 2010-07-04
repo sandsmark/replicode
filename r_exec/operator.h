@@ -52,7 +52,7 @@ namespace	r_exec{
 		void	setOverload(bool	(*o)(const	Context	&,uint16	&)){	_overload=o;	}
 
 		bool	operator	()(const	Context	&context,uint16	&index)	const{
-			if(!_operator(context,index))
+			if(_operator(context,index))
 				return	true;
 			if(_overload)
 				return	_overload(context,index);

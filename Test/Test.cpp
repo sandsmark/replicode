@@ -62,9 +62,9 @@ int32	main(int	argc,char	**argv){
 		mem->load(ram_objects.as_std());
 		mem->start();
 		//uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
-		std::cout<<"sleeping 1000\n";
-		Thread::Sleep(1000000);
-		std::cout<<"stopping rMem\n";
+		std::cout<<"\nsleeping 1000\n";
+		Thread::Sleep(1000);
+		std::cout<<"\nstopping rMem\n";
 		mem->stop();
 
 		r_comp::Image	*image=mem->getImage();
@@ -74,7 +74,7 @@ int32	main(int	argc,char	**argv){
 		Decompiler			decompiler;
 		std::ostringstream	decompiled_code;
 		decompiler.init(&r_exec::Metadata);
-		std::cout<<"decompiling ...\n";
+		std::cout<<"\ndecompiling ...\n";
 		decompiler.decompile(image,&decompiled_code);
 		std::cout<<"... done\n";
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
