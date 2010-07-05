@@ -251,6 +251,18 @@ namespace	r_exec{
 		j->view=NULL;
 	}
 
+	void	_Mem::update(EInjectionJob	*j){
+
+		injectExistingObjectNow(j->view,j->view->object,j->view->get_host(),true);
+		j->view=NULL;
+	}
+
+	void	_Mem::update(GInjectionJob	*j){
+
+		injectGroupNow(j->view,j->group,j->host);
+		j->view=NULL;
+	}
+
 	void	_Mem::update(SaliencyPropagationJob	*j){
 		
 		propagate_sln(j->object,j->sln_change,j->source_sln_thr);
@@ -271,10 +283,10 @@ namespace	r_exec{
 
 		View	*copied_view=new	View(view,destination);	//	ctrl values are morphed.
 		r_code::Timestamp::Set<View>(copied_view,VIEW_IJT,now);
-		_inject_existing_object_now(copied_view,view->object,destination,true);
+		injectExistingObjectNow(copied_view,view->object,destination,true);
 	}
 
-	void	_Mem::_inject_existing_object_now(View	*view,Code	*object,Group	*host,bool	lock){
+	void	_Mem::injectExistingObjectNow(View	*view,Code	*object,Group	*host,bool	lock){
 
 		view->set_object(object);	//	the object already exists (content-wise): have the view point to the existing one.
 

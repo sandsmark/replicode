@@ -85,13 +85,13 @@ namespace	r_exec{
 		FastSemaphore	*object_register_sem;
 		FastSemaphore	*objects_sem;
 
-		virtual	Code	*injectNow(View	*view)=0;
+		virtual	void	injectNow(View	*view)=0;
+		virtual	void	injectGroupNow(View	*view,Group	*object,Group	*host)=0;
+		void	injectExistingObjectNow(View	*view,Code	*object,Group	*host,bool	lock);
 		void	injectCopyNow(View	*view,Group	*destination,uint64	now);	//	for cov; NB: no cov for groups, pgm or notifications.
 		void	update(Group	*group);									//	checks for exiting objects and injects.
 
 		//	Utilities.
-		void	_inject_group_now(View	*view,Group	*object,Group	*host);
-		void	_inject_existing_object_now(View	*view,Code	*object,Group	*host,bool	lock);
 		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);	//	calls mod_sln on the object's view with morphed sln changes.
 		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr);
 		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
@@ -151,7 +151,9 @@ namespace	r_exec{
 		void	update(InputLessPGMSignalingJob	*j);
 
 		//	Called each time a view is to be injected in the future.
-		void	update(InjectionJob	*j);
+		void	update(InjectionJob		*j);	//	new object.
+		void	update(EInjectionJob	*j);	//	existing object.
+		void	update(GInjectionJob	*j);	//	group.
 
 		//	Called each time an object propagates saliency changes.
 		void	update(SaliencyPropagationJob	*j);
@@ -185,10 +187,8 @@ namespace	r_exec{
 		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>	object_register;	//	to eliminate duplicates (content-wise); does not include groups.
 
 		//	Functions called by internal processing of jobs (see internal processing section below).
-		Code	*injectNow(View	*view);	//	also called by inject() (see below).
-		
-		//	Utilities.
-		void	_inject_group_now(View	*view,Group	*object,Group	*host);
+		void	injectNow(View	*view);	//	also called by inject() (see below).
+		void	injectGroupNow(View	*view,Group	*object,Group	*host);
 	protected:
 		Group	*_stdin;	//	convenience.
 		Group	*_stdout;	//	convenience.

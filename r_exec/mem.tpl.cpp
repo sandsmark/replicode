@@ -208,52 +208,23 @@ namespace	r_exec{
 
 	template<class	O>	Code	*Mem<O>::inject(View	*view){
 
-		uint64	now=Now();
-		uint64	ijt=view->get_ijt();
-		if(ijt<=now)
-			return	injectNow(view);
-		else{
+		Group	*host=view->get_host();
 
-			//	TODO: if target grp does not exist anymore, abort operation.
+		host->acquire();
+		if(host->is_invalidated()){
 
-			O	*object;
-			if(O::RequiresPacking())	//	false if LObject, true for network-aware objects.
-				view->object=O::Pack(view->object,this);	//	non compact form will be deleted (P<> in view) if not an instance of O; compact forms are left unchanged.
-			object=(O	*)view->object;
-
-			TimeJob	j(new	InjectionJob(view),ijt);
-			time_job_queue->push(j);
-
-			if(view->object->code(0).getDescriptor()!=Atom::GROUP){
-
-				object_register_sem->acquire();
-				UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>::const_iterator	it=object_register.find(object);
-				if(it!=object_register.end()){
-
-					object_register_sem->release();
-					return	*it;
-				}
-				object_register_sem->release();
-			}
+			host->release();
 			return	NULL;
 		}
-	}
+		host->release();
 
-	////////////////////////////////////////////////////////////////
+		uint64	now=Now();
+		uint64	ijt=view->get_ijt();
 
-	template<class	O>	Code	*Mem<O>::injectNow(View	*view){
-
-		//	TODO: if target grp does not exist, abort operation.
-
-		Group	*host=view->get_host();
-		if(view->object->code(0).getDescriptor()==Atom::GROUP){
-
-			_inject_group_now(view,(Group	*)view->object,host);
-			return	NULL;
-		}else{
+		if(view->object->code(0).getDescriptor()!=Atom::GROUP){
 
 			O	*object;
-			if(O::RequiresPacking())	//	false if LObject, true for network-aware objects.
+			if(O::RequiresPacking())						//	false if LObject, true for network-aware objects.
 				view->object=O::Pack(view->object,this);	//	non compact form will be deleted (P<> in view) if not an instance of O; compact forms are left unchanged.
 			object=(O	*)view->object;
 
@@ -262,94 +233,126 @@ namespace	r_exec{
 			if(it!=object_register.end()){
 
 				object_register_sem->release();
-				_inject_existing_object_now(view,*it,host,true);
+				if(ijt<=now)
+					injectExistingObjectNow(view,*it,host,true);
+				else{
+					
+					TimeJob	j(new	EInjectionJob(view),ijt);
+					time_job_queue->push(j);
+				}
 				return	*it;
-			}else{	//	no equivalent object already exists: we have a new view on a new object; no need to protect either the view or the object.
-
-				host->acquire();
-
-				object->views.insert(view);
-				uint64	now=Now();
-				r_code::Timestamp::Set<View>(view,VIEW_IJT,now);
-
-				object->position_in_object_register=object_register.insert(object).first;
-				object_register_sem->release();
-
-				object->bind(this);
-				objects_sem->acquire();
-				object->position_in_objects=objects.insert(objects.end(),object);
-				objects_sem->release();
-
-				switch(GetType(object)){
-				case	ObjectType::IPGM:{
-
-					host->ipgm_views[view->getOID()]=view;
-					IPGMController	*o=new	IPGMController(this,view);
-					view->controller=o;
-					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
-
-						for(uint32	i=0;i<host->newly_salient_views.size();++i)
-							o->take_input(host->newly_salient_views[i]);	//	view will be copied.
-					}
-					break;
-				}case	ObjectType::ANTI_IPGM:{
-					host->anti_ipgm_views[view->getOID()]=view;
-					IPGMController	*o=new	IPGMController(this,view);
-					view->controller=o;
-					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
-
-						for(uint32	i=0;i<host->newly_salient_views.size();++i)
-							o->take_input(host->newly_salient_views[i]);	//	view will be copied.
-
-						TimeJob	j(new	AntiPGMSignalingJob(o),now+Timestamp::Get<Code>(o->getIPGM()->get_reference(0),PGM_TSC));
-						time_job_queue->push(j);
-		
-					}
-					break;
-				}case	ObjectType::INPUT_LESS_IPGM:{
-					host->input_less_ipgm_views[view->getOID()]=view;
-					IPGMController	*o=new	IPGMController(this,view);
-					view->controller=o;
-					if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
-
-						TimeJob	j(new	InputLessPGMSignalingJob(o),now+host->get_spr()*base_period);
-						time_job_queue->push(j);
-					}
-					break;
-				}case	ObjectType::MARKER:	//	the marker does not exist yet: add it to the mks of its references.
-					for(uint32	i=0;i<object->references_size();++i){
-
-						object->get_reference(i)->acq_markers();
-						object->get_reference(i)->markers.push_back(object);
-						object->get_reference(i)->rel_markers();
-					}
-				case	ObjectType::OBJECT:{
-					host->other_views[view->getOID()]=view;
-					//	cov, i.e. injecting now newly salient views in the viewing groups for which group is visible and has cov.
-					UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
-					for(vg=host->viewing_groups.begin();vg!=host->viewing_groups.end();++vg){
-
-						if(vg->second)	//	cov==true, vieiwing group c-salient and c-active (otherwise it wouldn't be a viewing group).
-							injectCopyNow(view,vg->first,now);
-					}
-					break;
-				}
-				}
-
-				if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.
-					_inject_reduction_jobs(view,host);
-
-				if(host->get_ntf_new()==1)	//	the view cannot be a ntf view (would use injectNotificationNow instead).
-					injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),false);	//	the object appears for the first time in the group: notify.
-
-				host->release();
-
-				return	NULL;
 			}
+			object_register_sem->release();
+			if(ijt<=now)
+				injectNow(view);
+			else{
+				
+				TimeJob	j(new	InjectionJob(view),ijt);
+				time_job_queue->push(j);
+			}
+			return	NULL;
+		}else{
+
+			if(ijt<=now)
+				injectGroupNow(view,(Group	*)view->object,host);
+			else{
+				
+				TimeJob	j(new	GInjectionJob(view,(Group	*)view->object,host),ijt);
+				time_job_queue->push(j);
+			}
+
+			return	NULL;
 		}
 	}
 
-	template<class	O>	void	Mem<O>::_inject_group_now(View	*view,Group	*object,Group	*host){	//	groups are always new; no cov for groups; no need to protect object.
+	////////////////////////////////////////////////////////////////
+
+	template<class	O>	void	Mem<O>::injectNow(View	*view){
+
+		Group	*host=view->get_host();
+
+		O	*object=(O	*)view->object;	//	has been packed if necessary in inject(view).
+		object->views.insert(view);	//	no need to protect object since it's new.
+		uint64	now=Now();
+		r_code::Timestamp::Set<View>(view,VIEW_IJT,now);
+
+		object_register_sem->acquire();
+		object->position_in_object_register=object_register.insert(object).first;
+		object_register_sem->release();
+
+		object->bind(this);
+		objects_sem->acquire();
+		object->position_in_objects=objects.insert(objects.end(),object);
+		objects_sem->release();
+
+		host->acquire();
+
+		switch(GetType(object)){
+		case	ObjectType::IPGM:{
+
+			host->ipgm_views[view->getOID()]=view;
+			IPGMController	*o=new	IPGMController(this,view);
+			view->controller=o;
+			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
+
+				for(uint32	i=0;i<host->newly_salient_views.size();++i)
+					o->take_input(host->newly_salient_views[i]);	//	view will be copied.
+			}
+			break;
+		}case	ObjectType::ANTI_IPGM:{
+			host->anti_ipgm_views[view->getOID()]=view;
+			IPGMController	*o=new	IPGMController(this,view);
+			view->controller=o;
+			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
+
+				for(uint32	i=0;i<host->newly_salient_views.size();++i)
+					o->take_input(host->newly_salient_views[i]);	//	view will be copied.
+
+				TimeJob	j(new	AntiPGMSignalingJob(o),now+Timestamp::Get<Code>(o->getIPGM()->get_reference(0),PGM_TSC));
+				time_job_queue->push(j);
+
+			}
+			break;
+		}case	ObjectType::INPUT_LESS_IPGM:{
+			host->input_less_ipgm_views[view->getOID()]=view;
+			IPGMController	*o=new	IPGMController(this,view);
+			view->controller=o;
+			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
+
+				TimeJob	j(new	InputLessPGMSignalingJob(o),now+host->get_spr()*base_period);
+				time_job_queue->push(j);
+			}
+			break;
+		}case	ObjectType::MARKER:	//	the marker does not exist yet: add it to the mks of its references.
+			for(uint32	i=0;i<object->references_size();++i){
+
+				object->get_reference(i)->acq_markers();
+				object->get_reference(i)->markers.push_back(object);
+				object->get_reference(i)->rel_markers();
+			}
+		case	ObjectType::OBJECT:{
+			host->other_views[view->getOID()]=view;
+			//	cov, i.e. injecting now newly salient views in the viewing groups for which group is visible and has cov.
+			UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
+			for(vg=host->viewing_groups.begin();vg!=host->viewing_groups.end();++vg){
+
+				if(vg->second)	//	cov==true, vieiwing group c-salient and c-active (otherwise it wouldn't be a viewing group).
+					injectCopyNow(view,vg->first,now);
+			}
+			break;
+		}
+		}
+
+		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.
+			_inject_reduction_jobs(view,host);
+
+		if(host->get_ntf_new()==1)	//	the view cannot be a ntf view (would use injectNotificationNow instead).
+			injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),false);	//	the object appears for the first time in the group: notify.
+
+		host->release();
+	}
+
+	template<class	O>	void	Mem<O>::injectGroupNow(View	*view,Group	*object,Group	*host){	//	groups are always new; no cov for groups; no need to protect object.
 
 		object->bind(this);
 		objects_sem->acquire();
