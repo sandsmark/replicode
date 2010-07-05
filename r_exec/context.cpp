@@ -117,7 +117,7 @@ namespace	r_exec{
 			}else
 				return	*Context(object,view,code,head().asIndex(),overlay,data);
 		}case	Atom::I_PTR:
-			if(code[head().asIndex()].isPointer())
+			if(code[head().asIndex()].isPointer()	&&	code[head().asIndex()].getDescriptor()!=Atom::C_PTR)
 				return	*Context(object,view,code,head().asIndex(),overlay,data);
 			return	Context(object,view,code,head().asIndex(),overlay,data);
 		case	Atom::R_PTR:{

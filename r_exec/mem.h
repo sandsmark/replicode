@@ -85,7 +85,7 @@ namespace	r_exec{
 		FastSemaphore	*object_register_sem;
 		FastSemaphore	*objects_sem;
 
-		virtual	void	injectNow(View	*view)=0;
+		virtual	Code	*injectNow(View	*view)=0;
 		void	injectCopyNow(View	*view,Group	*destination,uint64	now);	//	for cov; NB: no cov for groups, pgm or notifications.
 		void	update(Group	*group);									//	checks for exiting objects and injects.
 
@@ -157,7 +157,7 @@ namespace	r_exec{
 		void	update(SaliencyPropagationJob	*j);
 
 		//	Interface for overlays and I/O devices	////////////////////////////////////////////////////////////////
-		virtual	void	inject(View	*view)=0;
+		virtual	Code	*inject(View	*view)=0;	//	returns the existing object if any.
 
 		//	rMem to rMem.
 		//	The view must contain the destintion group (either stdin or stdout) as its grp member.
@@ -185,7 +185,7 @@ namespace	r_exec{
 		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>	object_register;	//	to eliminate duplicates (content-wise); does not include groups.
 
 		//	Functions called by internal processing of jobs (see internal processing section below).
-		void	injectNow(View	*view);	//	also called by inject() (see below).
+		Code	*injectNow(View	*view);	//	also called by inject() (see below).
 		
 		//	Utilities.
 		void	_inject_group_now(View	*view,Group	*object,Group	*host);
@@ -217,7 +217,7 @@ namespace	r_exec{
 		//	Executive device functions	////////////////////////////////////////////////////////
 		
 		//	Called by the reduction core.
-		void	inject(View	*view);
+		Code	*inject(View	*view);
 
 		//	Called by the communication device (I/O).
 		void	inject(O	*object,View	*view);

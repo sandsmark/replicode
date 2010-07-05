@@ -81,10 +81,20 @@ namespace	r_exec{
 
 			uint16	atom_count=getChildrenCount();
 			extent_index=write_index+atom_count;
-			for(uint16	i=1;i<=atom_count;++i){
 
-				Context	c=getChild(i);
-				c.copy_member(destination,write_index++,extent_index);
+			switch(head().getDescriptor()){
+			case	Atom::C_PTR:	//	copy members as is (no dereference).
+			case	Atom::TIMESTAMP:
+				for(uint16	i=1;i<=atom_count;++i)
+					destination->code(write_index++)=(*this)[i];
+				break;
+			default:
+				for(uint16	i=1;i<=atom_count;++i){
+
+					Context	c=getChild(i);
+					c.copy_member(destination,write_index++,extent_index);
+				}
+				break;
 			}
 		}
 
@@ -93,12 +103,10 @@ namespace	r_exec{
 			switch(head().getDescriptor()){
 			case	Atom::I_PTR:
 			case	Atom::VL_PTR:
-			case	Atom::C_PTR:
 			case	Atom::VALUE_PTR:
 			case	Atom::IPGM_PTR:
 			case	Atom::IN_OBJ_PTR:
-			case	Atom::IN_VW_PTR:
-			case	Atom::THIS:{
+			case	Atom::IN_VW_PTR:{
 
 				if(data==REFERENCE	&&	index==0)	//	points to an object, not to one of its members.
 					addReference(destination,write_index,object);
@@ -124,7 +132,6 @@ namespace	r_exec{
 			case	Atom::SET:
 			case	Atom::S_SET:
 			case	Atom::STRING:
-			case	Atom::TIMESTAMP:
 				destination->code(write_index)=Atom::IPointer(extent_index);
 				copy_structure(destination,extent_index,extent_index);
 				break;

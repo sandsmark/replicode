@@ -337,15 +337,8 @@ namespace	r_comp{
 				switch(atom.getDescriptor()){
 				case	Atom::THIS:
 					out_stream->push("this",read_index);
-					opcode=current_object->code[0].asOpcode();
-					//	for reactive objects, this refers to the instantiated reactive object.
-					_class=metadata->classes_by_opcodes[opcode];
-					if(_class.str_opcode=="pgm")
-						opcode=metadata->sys_classes["ipgm"].atom.asOpcode();
-					else	if(_class.str_opcode=="fmd")
-						opcode=metadata->sys_classes["ifmd"].atom.asOpcode();
-					else	if(_class.str_opcode=="imd")
-						opcode=metadata->sys_classes["iimd"].atom.asOpcode();
+					//	this always refers to an instantiated reactive object.
+					opcode=metadata->sys_classes["ipgm"].atom.asOpcode();
 					break;
 				case	Atom::VL_PTR:{
 

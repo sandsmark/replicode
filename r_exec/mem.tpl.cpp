@@ -206,30 +206,51 @@ namespace	r_exec{
 		injectNow(view);
 	}
 
-	template<class	O>	void	Mem<O>::inject(View	*view){
+	template<class	O>	Code	*Mem<O>::inject(View	*view){
 
 		uint64	now=Now();
 		uint64	ijt=view->get_ijt();
 		if(ijt<=now)
-			injectNow(view);
+			return	injectNow(view);
 		else{
 
 			//	TODO: if target grp does not exist anymore, abort operation.
+
+			O	*object;
+			if(O::RequiresPacking())	//	false if LObject, true for network-aware objects.
+				view->object=O::Pack(view->object,this);	//	non compact form will be deleted (P<> in view) if not an instance of O; compact forms are left unchanged.
+			object=(O	*)view->object;
+
 			TimeJob	j(new	InjectionJob(view),ijt);
 			time_job_queue->push(j);
+
+			if(view->object->code(0).getDescriptor()!=Atom::GROUP){
+
+				object_register_sem->acquire();
+				UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>::const_iterator	it=object_register.find(object);
+				if(it!=object_register.end()){
+
+					object_register_sem->release();
+					return	*it;
+				}
+				object_register_sem->release();
+			}
+			return	NULL;
 		}
 	}
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O>	void	Mem<O>::injectNow(View	*view){
+	template<class	O>	Code	*Mem<O>::injectNow(View	*view){
 
 		//	TODO: if target grp does not exist, abort operation.
 
 		Group	*host=view->get_host();
-		if(view->object->code(0).getDescriptor()==Atom::GROUP)
+		if(view->object->code(0).getDescriptor()==Atom::GROUP){
+
 			_inject_group_now(view,(Group	*)view->object,host);
-		else{
+			return	NULL;
+		}else{
 
 			O	*object;
 			if(O::RequiresPacking())	//	false if LObject, true for network-aware objects.
@@ -242,6 +263,7 @@ namespace	r_exec{
 
 				object_register_sem->release();
 				_inject_existing_object_now(view,*it,host,true);
+				return	*it;
 			}else{	//	no equivalent object already exists: we have a new view on a new object; no need to protect either the view or the object.
 
 				host->acquire();
@@ -321,6 +343,8 @@ namespace	r_exec{
 					injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),false);	//	the object appears for the first time in the group: notify.
 
 				host->release();
+
+				return	NULL;
 			}
 		}
 	}

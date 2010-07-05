@@ -99,10 +99,6 @@ namespace	r_exec{
 		memcpy(pgm_code,&getIPGM()->get_reference(0)->code(0),pgm_code_size*sizeof(r_code::Atom));
 
 		patch_tpl_args();
-
-		uint16	production_set_index=pgm_code[PGM_PRODS].asIndex();
-		first_production_index=pgm_code[production_set_index+1].asIndex();
-		last_production_index=first_production_index+pgm_code[production_set_index].getAtomCount()-1;
 	}
 
 	Overlay::~Overlay(){
@@ -183,16 +179,18 @@ namespace	r_exec{
 
 	bool	Overlay::inject_productions(_Mem	*mem){
 
-		for(uint16	i=first_production_index;i<=last_production_index;++i){
+		uint16	production_set_index=pgm_code[PGM_PRODS].asIndex();
+		uint16	production_count=pgm_code[production_set_index].getAtomCount();
+		for(uint16	i=1;i<=production_count;++i){
 
-			if(!evaluate(i)){
+			if(!evaluate(production_set_index+i)){
 
 				rollback();
 				productions.clear();
 				return	false;
 			}
 
-			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,i,this);
+			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,production_set_index+i,this);
 			cmd=*cmd;
 
 			Context	function=*cmd.getChild(1);
@@ -246,9 +244,9 @@ namespace	r_exec{
 			mk_rdx=get_mk_rdx(extent_index);
 		
 		uint64	now=Now();
-		for(uint16	i=first_production_index;i<=last_production_index;++i){	//	all productions have evaluated correctly; now we can execute the commands.
+		for(uint16	i=1;i<=production_count;++i){	//	all productions have evaluated correctly; now we can execute the commands.
 
-			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,i,this);
+			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,production_set_index+i,this);
 			cmd=*cmd;
 
 			Context	function=*cmd.getChild(1);
@@ -260,6 +258,8 @@ namespace	r_exec{
 
 				if(function.head().asOpcode()==Opcodes::Inject){	//	args:[object view]; retrieve the object and create a view.
 
+					uint16	prod_index=args.getChild(1).head().asIndex();
+
 					Code	*object=(*args.getChild(1)).getObject();
 					
 					Context	_view=*args.getChild(2);
@@ -268,7 +268,9 @@ namespace	r_exec{
 					_view.copy(view,0);
 					view->set_object(object);
 
-					mem->inject(view);
+					Code	*existing_object=mem->inject(view);
+					if(existing_object)
+						productions[prod_index]=existing_object;	//	so that the mk.rdx will reference the existing object instead of object, which has been discarded.
 				}else	if(function.head().asOpcode()==Opcodes::Eject){	//	args:[object view destination_node]; view.grp=destination grp (stdin ot stdout); retrieve the object and create a view.
 
 					Code	*object=(*args.getChild(1)).getObject();
@@ -375,6 +377,7 @@ namespace	r_exec{
 		if(notify_rdx){
 
 			Context	prods(getIPGM()->get_reference(0),NULL,pgm_code,pgm_code[PGM_PRODS].asIndex(),this);
+			//prods.trace();
 			prods.copy(mk_rdx,extent_index);
 
 			NotificationView	*v=new	NotificationView(getIPGMView()->get_host(),getIPGMView()->get_host()->get_ntf_grp(),mk_rdx);

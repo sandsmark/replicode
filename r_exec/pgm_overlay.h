@@ -61,10 +61,6 @@ namespace	r_exec{
 		Atom	*pgm_code;
 		uint16	pgm_code_size;
 
-		//	Convenience.
-		uint16	first_production_index;
-		uint16	last_production_index;
-
 		std::vector<Atom>		values;			//	value array.
 		std::vector<P<Code> >	productions;	//	receives the results of ins, inj and eje; views are retrieved (fvw) or built (reduction) in the value array.
 
