@@ -33,20 +33,15 @@ template<class	V>	uint16			MkVal<V>::Opcode;
 
 template<class	V>	CodePayload	*MkVal<V>::New(CodePayload	*entity,CodePayload	*attribute,V	value){
 
-	CodePayload	*r=new(14+2)	CodePayload(14);
+	CodePayload	*r=new(8+2)	CodePayload(8);
 
 	uint16	i=0;
 	r->data(++i)=Atom::RPointer(0);				//	1	ptr to object.
 	r->data(++i)=Atom::RPointer(1);				//	2	ptr to attribute.
 	r->data(++i)=Atom::IPointer(8);				//	3	iptr to vec3.
-	r->data(++i)=Atom::View();					//	4	vw.
-	r->data(++i)=Atom::IPointer(0);				//	5	iptr to vws.
-	r->data(++i)=Atom::IPointer(0);				//	6	iptr to mks.
-	r->data(++i)=Atom::Float(1);				//	7	psln_thr.
+	r->data(++i)=Atom::Float(1);				//	4	psln_thr.
 	++i;
-	value.write(r->data(),i);					//	writes 4 atoms: 8 -> 11
-	r->data(++i)=Atom::Set(0);					//	12	vws.
-	r->data(++i)=Atom::Set(0);					//	13	mks.
+	value.write(r->data(),i);					//	writes 4 atoms: 5 -> 8
 
 	r->data(++i).atom=(uint32)entity;
 	r->data(++i).atom=(uint32)attribute;

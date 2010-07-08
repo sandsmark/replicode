@@ -313,9 +313,12 @@ namespace	r_comp{
 					out_stream->push("|st",read_index);
 				else{
 
-					uint8	block_offset=1;
 					std::string	s;
-					s+=(char	*)&current_object->code[index+block_offset].atom;
+					char	buffer[255];
+					uint8	char_count=(current_object->code[index].atom	&	0x000000FF);
+					memcpy(buffer,&current_object->code[index+1].atom,char_count);
+					buffer[char_count]=0;
+					s+=buffer;
 					*out_stream<<'\"'<<s<<'\"';
 				}
 				break;
@@ -323,6 +326,7 @@ namespace	r_comp{
 				if(atom.readsAsNil())
 					out_stream->push("|us",read_index);
 				else{
+
 					uint64	ts=((uint64)(current_object->code[index+1].atom))<<32	|	((uint64)(current_object->code[index+2].atom));
 					*out_stream<<std::dec;
 					out_stream->push(ts,read_index);
@@ -330,14 +334,13 @@ namespace	r_comp{
 				}
 				break;
 			case	Atom::C_PTR:{
+				
 				uint16	opcode;
-				uint16	member_count=/*current_object->code[0].getAtomCount()*/atom.getAtomCount()-1;	//	-1: the leading atom is the CPtr.
-				atom=current_object->code[index+1];	//	current_object->code[index] is the cptr; members start at 1.
-				Class	_class;
+				uint16	member_count=atom.getAtomCount();
+				atom=current_object->code[index+1];	//	current_object->code[index] is the cptr; lead atom is at index+1; iptrs start at index+2.
 				switch(atom.getDescriptor()){
-				case	Atom::THIS:
+				case	Atom::THIS:	//	this always refers to an instantiated reactive object.
 					out_stream->push("this",read_index);
-					//	this always refers to an instantiated reactive object.
 					opcode=metadata->sys_classes["ipgm"].atom.asOpcode();
 					break;
 				case	Atom::VL_PTR:{
@@ -345,10 +348,14 @@ namespace	r_comp{
 					uint8	cast_opcode=atom.asCastOpcode();
 					while(current_object->code[atom.asIndex()].getDescriptor()==Atom::I_PTR)	// position to a structure or an atomic value.	
 						atom=current_object->code[atom.asIndex()];
-					out_stream->push(get_variable_name(atom.asIndex(),true),read_index);
-					if(cast_opcode==0xFF)
-						opcode=current_object->code[atom.asIndex()].asOpcode();
-					else
+					out_stream->push(get_variable_name(atom.asIndex(),current_object->code[atom.asIndex()].getDescriptor()!=Atom::WILDCARD),read_index);
+					if(cast_opcode==0xFF){
+
+						if(current_object->code[atom.asIndex()].getDescriptor()==Atom::WILDCARD)
+							opcode=current_object->code[atom.asIndex()].asOpcode();
+						else
+							opcode=current_object->code[atom.asIndex()].asOpcode();
+					}else
 						opcode=cast_opcode;
 					break;
 				}case	Atom::R_PTR:{
@@ -360,33 +367,43 @@ namespace	r_comp{
 					out_stream->push("unknown-cptr-lead-type",read_index);
 					break;
 				}
-				uint16	structure_index=0;
-				for(uint16	i=1;i<=member_count;++i){	//	get the opcode of the pointed structure and retrieve the member name from i.
+
+				Class	embedding_class=metadata->classes_by_opcodes[opcode];	//	class defining the members.
+				for(uint16	i=2;i<=member_count;++i){	//	get the class of the pointed structure and retrieve the member name from i.
 
 					std::string	member_name;
-					atom=current_object->code[index+1+i];	//	atom is an I_PTR appearing after the leading atom.
-					Class	embedding_class=metadata->classes_by_opcodes[opcode];	//	class defining the member.
-					member_name=embedding_class.get_member_name(atom.asIndex());
-					*out_stream<<'.'<<member_name;	
-					if(i<member_count){	//	not the last member, point to next structure
-					
-						if(member_name=="vw"){	//	special case: no view structure in the code, vw is just a place holder; vw is the second to last member: write the last member and exit.
+					atom=current_object->code[index+i];	//	atom is an iptr appearing after the leading atom in the cptr.
+					switch(atom.getDescriptor()){
+					case	Atom::VIEW:
+						member_name="vw";
+						break;
+					case	Atom::MKS:
+						member_name="mks";
+						break;
+					case	Atom::VWS:
+						member_name="vws";
+						break;
+					default:
+						member_name=embedding_class.get_member_name(atom.asIndex());
+						if(i<member_count)	//	not the last member, get the next class.
+							embedding_class=*embedding_class.get_member_class(metadata,member_name);
+						break;
+					}
+					*out_stream<<'.'<<member_name;
 
-							atom=current_object->code[index+i+2];	//	atom is the last internal pointer.
-							member_name=embedding_class.get_member_class(metadata,"vw")->get_member_name(atom.asIndex());
-							*out_stream<<'.'<<member_name;
-							break;
-						}else{	//	regular case: the member points to a structure embedded in the code.
+					if(member_name=="vw"){	//	special case: no view structure in the code, vw is just a place holder; vw is the second to last member of the cptr: write the last member and exit.
 
-							uint16	_target_index=structure_index+atom.asIndex();
-							while(current_object->code[_target_index].getDescriptor()==Atom::I_PTR){
-
-								atom=current_object->code[_target_index];
-								_target_index=atom.asIndex();
-							}
-							opcode=current_object->code[atom.asIndex()].asOpcode();
-							structure_index=atom.asIndex()+1;
-						}
+						atom=current_object->code[index+member_count];	//	atom is the last internal pointer.
+						Class	view_class;
+						if(embedding_class.str_opcode=="grp")
+							view_class=metadata->classes.find("grp_view")->second;
+						else	if(embedding_class.str_opcode=="ipgm")
+							view_class=metadata->classes.find("react_view")->second;
+						else
+							view_class=metadata->classes.find("view")->second;
+						member_name=view_class.get_member_name(atom.asIndex());
+						*out_stream<<'.'<<member_name;
+						break;
 					}
 				}
 				break;
@@ -450,7 +467,7 @@ namespace	r_comp{
 				out_stream->push(metadata->function_names[a.asOpcode()],read_index);
 			break;
 		case	Atom::VIEW:
-			out_stream->push("vw",read_index);	//	to be consistent with hand-crafted source code, shall be written |[].
+			out_stream->push("vw",read_index);
 			break;
 		case	Atom::MKS:
 			out_stream->push("mks",read_index);

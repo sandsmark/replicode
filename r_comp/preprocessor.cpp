@@ -1230,27 +1230,25 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 					atom=Atom::Group(class_opcode,members.size());
 				else	if(class_name=="ipgm")
 					atom=Atom::InstantiatedProgram(class_opcode,members.size());
+				else	if(class_name.find("mk.")!=string::npos)
+					atom=Atom::Marker(class_opcode,members.size());
 				else
 					atom=Atom::Object(class_opcode,members.size());
 
-				if(class_type==T_CLASS){	//	find out if the class is a sys class, i.e. has a view
+				if(class_type==T_CLASS){	//	find out if the class is a sys class, i.e. is an instantiation of _obj or of _react_obj.
 
-					for(uint32	i=0;i<members.size();++i)
-						if(members[i].read()==&Compiler::read_view){
-
-							class_type=T_SYS_CLASS;
-							if(class_name.find("mk.")!=std::string::npos)
-								atom=Atom::Marker(class_opcode,members.size());
-							break;
-						}
+					std::string	base_class=s->args.front()->cmd;
+					if(base_class=="_obj"	||	base_class=="_react_obj")
+						class_type=T_SYS_CLASS;
 				}
 
 				metadata->class_names[class_opcode]=class_name;
 				switch(class_type){
 				case	T_SYS_CLASS:
-						metadata->classes_by_opcodes[class_opcode]=metadata->sys_classes[class_name]=Class(atom,class_name,members);
+					metadata->classes_by_opcodes[class_opcode]=metadata->classes[class_name]=metadata->sys_classes[class_name]=Class(atom,class_name,members);
+					break;
 				case	T_CLASS:
-						metadata->classes_by_opcodes[class_opcode]=metadata->classes[class_name]=Class(atom,class_name,members);
+					metadata->classes_by_opcodes[class_opcode]=metadata->classes[class_name]=Class(atom,class_name,members);
 					break;
 				case	T_SET:
 					metadata->classes_by_opcodes[class_opcode]=metadata->classes[class_name]=Class(Atom::SSet(class_opcode,members.size()),class_name,members);

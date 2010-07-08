@@ -38,9 +38,9 @@ namespace	r_code{
 		return	Atom(0x81FFFFFF);
 	}
 
-	inline	Atom	Atom::Wildcard(){
+	inline	Atom	Atom::Wildcard(uint16	opcode){
 		
-		return	Atom(WILDCARD<<24);
+		return	Atom((WILDCARD<<24)+((opcode	&	0x0FFF)<<8));
 	}
 
 	inline	Atom	Atom::TailWildcard(){

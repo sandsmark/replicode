@@ -55,6 +55,8 @@ namespace	r_exec{
 		static	uint16	Goal;
 		static	uint16	AntiGoal;
 
+		static	uint16	Cmd;
+
 		static	uint16	MkRdx;
 		static	uint16	MkAntiRdx;
 

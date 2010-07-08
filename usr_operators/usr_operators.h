@@ -43,7 +43,12 @@ typedef	uint16	(*OpcodeRetriever)(const	char	*);
 extern	"C"{
 void	dll_export	Init(OpcodeRetriever	r);
 uint16	dll_export	GetOperatorCount();
-void	dll_export	GetOperator(Operator	&op,char	*op_name);
+void	dll_export	GetOperatorName(char	*op_name);
+
+bool	dll_export	add(const	r_exec::Context	&context,uint16	&index);
+bool	dll_export	sub(const	r_exec::Context	&context,uint16	&index);
+bool	dll_export	mul(const	r_exec::Context	&context,uint16	&index);
+bool	dll_export	dis(const	r_exec::Context	&context,uint16	&index);
 }
 
 

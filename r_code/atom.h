@@ -89,7 +89,7 @@ namespace	r_code{
 		static	Atom	Nil();
 		static	Atom	Boolean(bool value);
 		static	Atom	UndefinedBoolean();
-		static	Atom	Wildcard();
+		static	Atom	Wildcard(uint16	opcode=0x00);
 		static	Atom	TailWildcard();
 		static	Atom	IPointer(uint16 index);
 		static	Atom	RPointer(uint16 index);
@@ -155,6 +155,7 @@ namespace	r_code{
 		uint8	getDeviceID()	const;	// applicable to devices.
 
 		void	trace()	const;
+		static	void	Trace(Atom	*base,uint16	count);
 	};
 }
 

@@ -203,7 +203,12 @@ namespace	r_comp{
 
 			indent(false);
 
-			current_class=*current_class.get_member_class(_metadata,"vw");
+			if(current_class.str_opcode=="grp")
+				current_class=_metadata->classes.find("grp_view")->second;
+			else	if(current_class.str_opcode=="ipgm")
+				current_class=_metadata->classes.find("react_view")->second;
+			else
+				current_class=_metadata->classes.find("view")->second;
 			current_class.use_as=StructureMember::I_CLASS;
 
 			uint16	count=0;
@@ -855,31 +860,45 @@ return_false:
 		return	false;
 	}
 
-	bool	Compiler::this_indirection(std::vector<uint16>	&v,const	ReturnType	t){
+	bool	Compiler::this_indirection(std::vector<int16>	&v,const	ReturnType	t){
 
 		std::streampos	i=in_stream->tellg();
 		if(match_symbol("this.",false)){
 
-			Class	*p;	//	in general, p starts as the current_class; exception: in pgm, fmd and imd, this refers to the instantiated object.
+			Class	*p;	//	in general, p starts as the current_class; exception: in pgm, this refers to the instantiated program.
 			if(current_class.str_opcode=="pgm")
 				p=&_metadata->sys_classes["ipgm"];
-			else	if(current_class.str_opcode=="fmd")
-				p=&_metadata->sys_classes["ifmd"];
-			else	if(current_class.str_opcode=="imd")
-				p=&_metadata->sys_classes["iimd"];
 			Class		*_p;
 			std::string	m;
 			uint16		index;
 			ReturnType	type;
 			while(member(m)){
 
-				if(!p->get_member_index(_metadata,m,index,_p)){
+				if(m=="vw"){
+
+					_p=&_metadata->classes.find("react_view")->second;
+					type=ANY;
+					v.push_back(-1);
+				}else	if(m=="mks"){
+
+					_p=NULL;
+					type=SET;
+					v.push_back(-2);
+				}else	if(m=="vws"){
+
+					_p=NULL;
+					type=SET;
+					v.push_back(-3);
+				}else	if(!p->get_member_index(_metadata,m,index,_p)){
 
 					set_error(" error: "+m+" is not a member of "+p->str_opcode);
 					break;
+				}else{
+
+					type=p->get_member_type(index);
+					v.push_back(index);
 				}
-				type=p->get_member_type(index);
-				v.push_back(index);
+
 				char	c=(char)in_stream->get();
 				if(c=='.'){
 
@@ -905,7 +924,7 @@ return_false:
 		return	false;
 	}
 
-	bool	Compiler::local_indirection(std::vector<uint16>	&v,const	ReturnType	t,uint16	&cast_opcode){
+	bool	Compiler::local_indirection(std::vector<int16>	&v,const	ReturnType	t,uint16	&cast_opcode){
 
 		std::streampos	i=in_stream->tellg();
 		std::string	m;
@@ -932,13 +951,31 @@ return_false:
 				Class	*_p;
 				while(member(m)){
 
-					if(!p->get_member_index(_metadata,m,index,_p)){
+					if(m=="vw"){
+
+						_p=&_metadata->classes.find("react_view")->second;
+						type=ANY;
+						v.push_back(-1);
+					}else	if(m=="mks"){
+
+						_p=NULL;
+						type=SET;
+						v.push_back(-2);
+					}else	if(m=="vws"){
+
+						_p=NULL;
+						type=SET;
+						v.push_back(-3);
+					}else	if(!p->get_member_index(_metadata,m,index,_p)){
 
 						set_error(" error: "+m+" is not a member of "+p->str_opcode);
 						break;
+					}else{
+
+						type=p->get_member_type(index);
+						v.push_back(index);
 					}
-					type=p->get_member_type(index);
-					v.push_back(index);
+
 					path+='.';
 					path+=m;
 					char	c=(char)in_stream->get();
@@ -967,7 +1004,7 @@ return_false:
 		return	false;
 	}
 
-	bool	Compiler::global_indirection(std::vector<uint16>	&v,const	ReturnType	t){
+	bool	Compiler::global_indirection(std::vector<int16>	&v,const	ReturnType	t){
 
 		std::streampos	i=in_stream->tellg();
 		std::string	m;
@@ -983,16 +1020,34 @@ return_false:
 				bool	first_member=true;
 				while(member(m)){
 
-					if(!p->get_member_index(_metadata,m,index,_p)){
+					if(m=="vw"){
+
+						set_error(" error: vw is not accessible on global references");
+						break;
+					}else	if(m=="mks"){
+
+						_p=NULL;
+						type=SET;
+						v.push_back(-2);
+					}else	if(m=="vws"){
+
+						_p=NULL;
+						type=SET;
+						v.push_back(-3);
+					}else	if(!p->get_member_index(_metadata,m,index,_p)){
 
 						set_error(" error: "+m+" is not a member of "+p->str_opcode);
 						break;
+					}else{
+
+						type=p->get_member_type(index);
+						if(first_member	&&	index==0)	//	indicates the first member; store in the RObject, after the leading atom, hence index=1.
+							index=1;
+						v.push_back(index);
 					}
-					type=p->get_member_type(index);
-					if(first_member	&&	index==0)	//	indicates the first member; store in the RObject, after the leading atom, hence index=1
-						index=1;
+
 					first_member=false;
-					v.push_back(index);
+
 					char	c=(char)in_stream->get();
 					if(c=='.'){
 
@@ -2293,7 +2348,7 @@ return_false:
 			
 				addLocalReference(v,write_index,p);
 				if(write)
-					current_object->code[write_index]=Atom::Wildcard();	//	useless in skeleton expressions (already filled up in expression_head); usefull when the skeleton itself is a variable
+					current_object->code[write_index]=Atom::Wildcard(p.atom.asOpcode());	//	useless in skeleton expressions (already filled up in expression_head); usefull when the skeleton itself is a variable
 				return	true;
 			}else{
 
@@ -2331,7 +2386,7 @@ return_false:
 			}
 			return	true;
 		}
-		std::vector<uint16>	v;
+		std::vector<int16>	v;
 		if(this_indirection(v,t)){
 
 			if(write){
@@ -2339,8 +2394,23 @@ return_false:
 				current_object->code[write_index]=Atom::IPointer(extent_index);
 				current_object->code[extent_index++]=Atom::CPointer(v.size()+1);
 				current_object->code[extent_index++]=Atom::This();
-				for(uint16	i=0;i<v.size();++i)
-					current_object->code[extent_index++]=Atom::IPointer(v[i]);
+				for(uint16	i=0;i<v.size();++i){
+
+					switch(v[i]){
+					case	-1:
+						current_object->code[extent_index++]=Atom::View();
+						break;
+					case	-2:
+						current_object->code[extent_index++]=Atom::Mks();
+						break;
+					case	-3:
+						current_object->code[extent_index++]=Atom::Vws();
+						break;
+					default:
+						current_object->code[extent_index++]=Atom::IPointer(v[i]);
+						break;
+					}
+				}
 			}
 			return	true;
 		}
@@ -2352,8 +2422,23 @@ return_false:
 				current_object->code[write_index]=Atom::IPointer(extent_index);
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::VLPointer(v[0],cast_opcode);
-				for(uint16	i=1;i<v.size();++i)
-					current_object->code[extent_index++]=Atom::IPointer(v[i]);
+				for(uint16	i=1;i<v.size();++i){
+
+					switch(v[i]){
+					case	-1:
+						current_object->code[extent_index++]=Atom::View();
+						break;
+					case	-2:
+						current_object->code[extent_index++]=Atom::Mks();
+						break;
+					case	-3:
+						current_object->code[extent_index++]=Atom::Vws();
+						break;
+					default:
+						current_object->code[extent_index++]=Atom::IPointer(v[i]);
+						break;
+					}
+				}
 			}
 			return	true;
 		}
@@ -2368,8 +2453,20 @@ return_false:
 				current_object->code[write_index]=Atom::IPointer(extent_index);
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::RPointer(v[0]);
-				for(uint16	i=1;i<v.size();++i)
-					current_object->code[extent_index++]=Atom::IPointer(v[i]);
+				for(uint16	i=1;i<v.size();++i){
+
+					switch(v[i]){
+					case	-2:
+						current_object->code[extent_index++]=Atom::Mks();
+						break;
+					case	-3:
+						current_object->code[extent_index++]=Atom::Vws();
+						break;
+					default:
+						current_object->code[extent_index++]=Atom::IPointer(v[i]);
+						break;
+					}
+				}
 			}
 			return	true;
 		}

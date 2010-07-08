@@ -105,12 +105,16 @@ namespace	r_exec{
 
 	inline	void	View::mod_res(float32	value){
 
+		if(code(VIEW_RES)==Atom::PlusInfinity())
+			return;
 		acc_res+=value;
 		++res_changes;
 	}
 
 	inline	void	View::set_res(float32	value){
 
+		if(code(VIEW_RES)==Atom::PlusInfinity())
+			return;
 		acc_res+=value-get_res();
 		++res_changes;
 	}
@@ -123,7 +127,7 @@ namespace	r_exec{
 
 	inline	void	View::set_sln(float32	value){
 
-		acc_res+=value-get_sln();
+		acc_sln+=value-get_sln();
 		++sln_changes;
 	}
 

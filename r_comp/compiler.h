@@ -141,9 +141,9 @@ namespace	r_comp{
 		bool	this_();
 		bool	local_reference(uint16	&index,const	ReturnType	t);										//	must conform to t; indicates if the ref is to ba valuated in the value array (in_pattern set to true).
 		bool	global_reference(uint16	&index,const	ReturnType	t);										//	no conformance: return type==ANY.
-		bool	this_indirection(std::vector<uint16>	&v,const	ReturnType	t);							//	ex: this.res.
-		bool	local_indirection(std::vector<uint16>	&v,const	ReturnType	t,uint16	&cast_opcode);	//	ex: p.res where p is a label/variable declared within the object; cast_opcode=0x0FFF if no cast.
-		bool	global_indirection(std::vector<uint16>	&v,const	ReturnType	t);							//	ex: p.res where p is a label/variable declared outside the object.
+		bool	this_indirection(std::vector<int16>	&v,const	ReturnType	t);								//	ex: this.res.
+		bool	local_indirection(std::vector<int16>	&v,const	ReturnType	t,uint16	&cast_opcode);	//	ex: p.res where p is a label/variable declared within the object; cast_opcode=0x0FFF if no cast.
+		bool	global_indirection(std::vector<int16>	&v,const	ReturnType	t);							//	ex: p.res where p is a label/variable declared outside the object.
 		bool	wildcard();
 		bool	tail_wildcard();
 		bool	timestamp(uint64	&ts);

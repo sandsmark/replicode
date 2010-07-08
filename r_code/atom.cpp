@@ -109,4 +109,15 @@ namespace	r_code{
 			--Members_to_go;
 		}
 	}
+
+	void	Atom::Trace(Atom	*base,uint16	count){
+
+		std::cout<<"--------\n";
+		for(uint16	i=0;i<count;++i){
+
+			std::cout<<i<<"\t";
+			base[i].trace();
+			std::cout<<std::endl;
+		}
+	}
 }

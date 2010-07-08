@@ -62,8 +62,10 @@ namespace	r_exec{
 		delete[]	time_cores;
 
 		std::list<DelegatedCore	*>::const_iterator	d;
+		state_sem->acquire();
 		for(d=delegates.begin();d!=delegates.end();++d)
 			delete	*d;
+		state_sem->release();
 
 		delegates.clear();
 

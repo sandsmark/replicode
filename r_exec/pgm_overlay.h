@@ -108,8 +108,6 @@ namespace	r_exec{
 		uint16	last_timing_constraint_index;
 		uint16	first_guard_index;
 		uint16	last_guard_index;
-		uint16	first_production_index;
-		uint16	last_production_index;
 
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.

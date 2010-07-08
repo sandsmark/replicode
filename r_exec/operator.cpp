@@ -83,19 +83,19 @@ namespace	r_exec{
 		Context	lhs=*context.getChild(1);
 		Context	rhs=*context.getChild(2);
 
-		if(lhs.head().isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 
-				bool	r=lhs.head().asFloat()>rhs.head().asFloat();
+				bool	r=lhs[0].asFloat()>rhs[0].asFloat();
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(&lhs.head())>Timestamp::Get(&rhs.head());
+				bool	r=Timestamp::Get(&lhs[0])>Timestamp::Get(&rhs[0]);
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -112,19 +112,19 @@ namespace	r_exec{
 		Context	lhs=*context.getChild(1);
 		Context	rhs=*context.getChild(2);
 
-		if(lhs.head().isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 
-				bool	r=lhs.head().asFloat()<rhs.head().asFloat();
+				bool	r=lhs[0].asFloat()<rhs[0].asFloat();
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(&lhs.head())<Timestamp::Get(&rhs.head());
+				bool	r=Timestamp::Get(&lhs[0])<Timestamp::Get(&rhs[0]);
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -141,19 +141,19 @@ namespace	r_exec{
 		Context	lhs=*context.getChild(1);
 		Context	rhs=*context.getChild(2);
 
-		if(lhs.head().isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 
-				bool	r=lhs.head().asFloat()>=rhs.head().asFloat();
+				bool	r=lhs[0].asFloat()>=rhs[0].asFloat();
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(&lhs.head())>=Timestamp::Get(&rhs.head());
+				bool	r=Timestamp::Get(&lhs[0])>=Timestamp::Get(&rhs[0]);
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -170,19 +170,19 @@ namespace	r_exec{
 		Context	lhs=*context.getChild(1);
 		Context	rhs=*context.getChild(2);
 
-		if(lhs.head().isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 
-				bool	r=lhs.head().asFloat()<=rhs.head().asFloat();
+				bool	r=lhs[0].asFloat()<=rhs[0].asFloat();
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
-		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				bool	r=Timestamp::Get(&lhs.head())<=Timestamp::Get(&rhs.head());
+				bool	r=Timestamp::Get(&lhs[0])<=Timestamp::Get(&rhs[0]);
 				index=context.setAtomicResult(Atom::Boolean(r));
 				return	r;
 			}
@@ -199,18 +199,30 @@ namespace	r_exec{
 		Context	lhs=*context.getChild(1);
 		Context	rhs=*context.getChild(2);
 
-		if(lhs.head().isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 
-				index=context.setAtomicResult(Atom::Float(lhs.head().asFloat()+rhs.head().asFloat()));
+				if(lhs[0]==Atom::PlusInfinity()){
+
+					index=context.setAtomicResult(Atom::PlusInfinity());
+					return	true;
+				}
+
+				if(rhs[0]==Atom::PlusInfinity()){
+
+					index=context.setAtomicResult(Atom::PlusInfinity());
+					return	true;
+				}
+
+				index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()+rhs[0].asFloat()));
 				return	true;
 			}
-		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				index=context.setTimestampResult(Timestamp::Get(&lhs.head())+Timestamp::Get(&rhs.head()));
+				index=context.setTimestampResult(Timestamp::Get(&lhs[0])+Timestamp::Get(&rhs[0]));
 				return	true;
 			}
 		}
@@ -226,18 +238,30 @@ namespace	r_exec{
 		Context	lhs=*context.getChild(1);
 		Context	rhs=*context.getChild(2);
 
-		if(lhs.head().isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 
-				index=context.setAtomicResult(Atom::Float(lhs.head().asFloat()-rhs.head().asFloat()));
+				if(lhs[0]==Atom::PlusInfinity()){
+
+					index=context.setAtomicResult(Atom::PlusInfinity());
+					return	true;
+				}
+
+				if(rhs[0]==Atom::PlusInfinity()){
+
+					index=context.setAtomicResult(Atom::Float(0));
+					return	true;
+				}
+
+				index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()-rhs[0].asFloat()));
 				return	true;
 			}
-		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				index=context.setTimestampResult(Timestamp::Get(&lhs.head())-Timestamp::Get(&rhs.head()));
+				index=context.setTimestampResult(Timestamp::Get(&lhs[0])-Timestamp::Get(&rhs[0]));
 				return	true;
 			}
 		}
@@ -253,26 +277,62 @@ namespace	r_exec{
 		Context	lhs=*context.getChild(1);
 		Context	rhs=*context.getChild(2);
 
-		if(lhs.head().isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 
-				index=context.setAtomicResult(Atom::Float(lhs.head().asFloat()*rhs.head().asFloat()));
+				if(lhs[0]==Atom::PlusInfinity()){
+					
+					if(rhs[0]==Atom::PlusInfinity()){
+
+						index=context.setAtomicResult(Atom::PlusInfinity());
+						return	true;
+					}
+
+					if(rhs[0].asFloat()>0){
+
+						index=context.setAtomicResult(Atom::PlusInfinity());
+						return	true;
+					}
+
+					if(rhs[0].asFloat()<=0){
+
+						index=context.setAtomicResult(Atom::Float(0));
+						return	true;
+					}
+				}
+
+				if(rhs[0]==Atom::PlusInfinity()){
+
+					if(lhs[0].asFloat()>0){
+
+						index=context.setAtomicResult(Atom::PlusInfinity());
+						return	true;
+					}
+
+					if(lhs[0].asFloat()<=0){
+
+						index=context.setAtomicResult(Atom::Float(0));
+						return	true;
+					}
+				}
+
+				index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()*rhs[0].asFloat()));
 				return	true;
-			}else	if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				index=context.setAtomicResult(Atom::Float(Timestamp::Get(&rhs.head())*lhs.head().asFloat()));
+				index=context.setAtomicResult(Atom::Float(Timestamp::Get(&rhs[0])*lhs[0].asFloat()));
 				return	true;
 			}
-		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 
-				index=context.setTimestampResult(Timestamp::Get(&lhs.head())*rhs.head().asFloat());
+				index=context.setTimestampResult(Timestamp::Get(&lhs[0])*rhs[0].asFloat());
 				return	true;
-			}else	if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				index=context.setAtomicResult(Atom::Float(Timestamp::Get(&lhs.head())*Timestamp::Get(&lhs.head())));
+				index=context.setAtomicResult(Atom::Float(Timestamp::Get(&lhs[0])*Timestamp::Get(&lhs[0])));
 				return	true;
 			}
 		}
@@ -288,40 +348,76 @@ namespace	r_exec{
 		Context	lhs=*context.getChild(1);
 		Context	rhs=*context.getChild(2);
 
-		if(lhs.head().isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 				
-				if(rhs.head().asFloat()!=0){
+				if(rhs[0].asFloat()!=0){
 
-					index=context.setAtomicResult(Atom::Float(lhs.head().asFloat()/rhs.head().asFloat()));
+					if(lhs[0]==Atom::PlusInfinity()){
+
+						if(rhs[0]==Atom::PlusInfinity()){
+
+							index=context.setAtomicResult(Atom::PlusInfinity());
+							return	true;
+						}
+
+						if(rhs[0].asFloat()>0){
+
+							index=context.setAtomicResult(Atom::PlusInfinity());
+							return	true;
+						}
+
+						if(rhs[0].asFloat()<=0){
+
+							index=context.setAtomicResult(Atom::Float(0));
+							return	true;
+						}
+					}
+
+					if(rhs[0]==Atom::PlusInfinity()){
+
+						if(lhs[0].asFloat()>0){
+
+							index=context.setAtomicResult(Atom::PlusInfinity());
+							return	true;
+						}
+
+						if(lhs[0].asFloat()<=0){
+
+							index=context.setAtomicResult(Atom::Float(0));
+							return	true;
+						}
+					}
+
+					index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()/rhs[0].asFloat()));
 					return	true;
 				}
-			}else	if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				float64	rhs_t=(float64)Timestamp::Get(&rhs.head());
+				float64	rhs_t=(float64)Timestamp::Get(&rhs[0]);
 				if(rhs_t!=0){
 
-					index=context.setAtomicResult(Atom::Float(lhs.head().asFloat()/rhs_t));
+					index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()/rhs_t));
 					return	true;
 				}
 			}
-		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 				
-				if(rhs.head().asFloat()!=0){
+				if(rhs[0].asFloat()!=0){
 
-					float64	lhs_t=(float64)Timestamp::Get(&lhs.head());
-					index=context.setTimestampResult(lhs_t/rhs.head().asFloat());
+					float64	lhs_t=(float64)Timestamp::Get(&lhs[0]);
+					index=context.setTimestampResult(lhs_t/rhs[0].asFloat());
 					return	true;
 				}
-			}else	if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				float64	rhs_t=(float64)Timestamp::Get(&rhs.head());
+				float64	rhs_t=(float64)Timestamp::Get(&rhs[0]);
 				if(rhs_t!=0){
 
-					float64	lhs_t=(float64)Timestamp::Get(&lhs.head());
+					float64	lhs_t=(float64)Timestamp::Get(&lhs[0]);
 					index=context.setAtomicResult(Atom::Float(lhs_t/rhs_t));
 					return	true;
 				}
@@ -339,19 +435,19 @@ namespace	r_exec{
 		Context	lhs=*context.getChild(1);
 		Context	rhs=*context.getChild(2);
 
-		if(lhs.head().isFloat()){
+		if(lhs[0].isFloat()){
 
-			if(rhs.head().isFloat()){
+			if(rhs[0].isFloat()){
 
-				index=context.setAtomicResult(Atom::Float(abs(lhs.head().asFloat()-rhs.head().asFloat())));
+				index=context.setAtomicResult(Atom::Float(abs(lhs[0].asFloat()-rhs[0].asFloat())));
 				return	true;
 			}
-		}else	if(lhs.head().getDescriptor()==Atom::TIMESTAMP){
+		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-			if(rhs.head().getDescriptor()==Atom::TIMESTAMP){
+			if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
 
-				uint64	lhs_t=Timestamp::Get(&lhs.head());
-				uint64	rhs_t=Timestamp::Get(&rhs.head());
+				uint64	lhs_t=Timestamp::Get(&lhs[0]);
+				uint64	rhs_t=Timestamp::Get(&rhs[0]);
 				index=context.setTimestampResult(abs((float64)(lhs_t-rhs_t)));
 				return	true;
 			}
@@ -446,9 +542,16 @@ namespace	r_exec{
 		Context	args=*context.getChild(2);
 
 		Code	*_object=object.getObject();
+		if(_object->code(0).asOpcode()!=Opcodes::PGM	&&	_object->code(0).asOpcode()!=Opcodes::AntiPGM	&&		
+			_object->code(0).asOpcode()!=Opcodes::Goal	&&	_object->code(0).asOpcode()!=Opcodes::AntiGoal){
+
+			context.setAtomicResult(Atom::Nil());
+			return	false;
+		}
+
 		if(_object	&&	args[0].getDescriptor()==Atom::SET){
 
-			uint16	pattern_set_index=_object->code(_object->code(PGM_INPUTS).asIndex()+1).asIndex();
+			uint16	pattern_set_index=_object->code(PGM_TPL_ARGS).asIndex();	//	same index for goals.
 			uint16	arg_count=args[0].getAtomCount();
 			if(_object->code(pattern_set_index).getAtomCount()!=arg_count){
 
@@ -457,10 +560,11 @@ namespace	r_exec{
 			}
 			
 			//	match args with the tpl patterns in _object.
+			Context	pattern_set(_object,pattern_set_index);
 			for(uint16	i=1;i<=arg_count;++i){
 
 				Context	arg=*args.getChild(i);
-				Context	skel=Context(_object,pattern_set_index+i);
+				Context	skel=*(*pattern_set.getChild(i)).getChild(1);
 				if(!skel.match(arg)){
 
 					context.setAtomicResult(Atom::Nil());
@@ -469,56 +573,23 @@ namespace	r_exec{
 			}
 
 			//	create an ipgm or an igol in the production array.
-			if(_object->code(0).asOpcode()==Opcodes::PGM	||	_object->code(0).asOpcode()==Opcodes::AntiPGM){
-
-				Code	*ipgm=context.buildObject(_object->code(0));
-
-				uint16	write_index=0;
-				ipgm->code(write_index++)=Atom::InstantiatedProgram(Opcodes::IPGM,IPGM_IGOL_ARITY);
-				ipgm->code(write_index++)=Atom::RPointer(0);	//	points to the pgm object.
-				ipgm->code(write_index++)=Atom::IPointer(IPGM_IGOL_ARITY+1);
-				ipgm->code(write_index++)=Atom::View();
-				ipgm->code(write_index++)=Atom::Vws();
-				ipgm->code(write_index++)=Atom::Mks();
-				ipgm->code(write_index++)=Atom::Float(1);	//	psln_thr.
-
-				args.copy(_object,write_index);	//	writes after psln_thr.
-
-				ipgm->set_reference(0,_object);
-				context.setAtomicResult(Atom::ProductionPointer(context.addProduction(ipgm)));
-				return	true;
-			}
-
-			if(_object->code(0).asOpcode()==Opcodes::Goal	||	_object->code(0).asOpcode()==Opcodes::AntiGoal){
-
-				Code	*igol=context.buildObject(_object->code(0));
-
-				uint16	write_index=0;
-				igol->code(write_index++)=Atom::Object(Opcodes::IGoal,IPGM_IGOL_ARITY);
-				igol->code(write_index++)=Atom::RPointer(0);	//	points to the pgm object.
-				igol->code(write_index++)=Atom::IPointer(IPGM_IGOL_ARITY+1);
-				igol->code(write_index++)=Atom::View();
-				igol->code(write_index++)=Atom::Vws();
-				igol->code(write_index++)=Atom::Mks();
-				igol->code(write_index++)=Atom::Float(1);	//	psln_thr.
-
-				args.copy(_object,write_index);	//	writes after psln_thr.
-
-				igol->set_reference(0,_object);
-				context.setAtomicResult(Atom::ProductionPointer(context.addProduction(igol)));
-				return	true;
-			}
+			Code	*instantiated_object=context.buildObject(_object->code(0));
+			uint16	write_index=0;
+			if(_object->code(0).asOpcode()==Opcodes::PGM	||	_object->code(0).asOpcode()==Opcodes::AntiPGM)			
+				instantiated_object->code(write_index++)=Atom::InstantiatedProgram(Opcodes::IPGM,IPGM_IGOL_ARITY);
+			else	if(_object->code(0).asOpcode()==Opcodes::Goal	||	_object->code(0).asOpcode()==Opcodes::AntiGoal)
+				instantiated_object->code(write_index++)=Atom::Object(Opcodes::IGoal,IPGM_IGOL_ARITY);
+			instantiated_object->code(write_index++)=Atom::RPointer(0);	//	points to the pgm/gol object.
+			instantiated_object->code(write_index++)=Atom::IPointer(IPGM_IGOL_ARITY+1);
+			instantiated_object->code(write_index++)=Atom::Float(1);	//	psln_thr.
+			args.copy(instantiated_object,write_index);					//	writes after psln_thr.
+			instantiated_object->set_reference(0,_object);
+			context.setAtomicResult(Atom::ProductionPointer(context.addProduction(instantiated_object)));
+			return	true;
 		}
 		
 		context.setAtomicResult(Atom::Nil());
 		return	false;
-	}
-
-	////////////////////////////////////////////////////////////////////////////////
-
-	bool	at(const	Context	&context,uint16	&index){
-
-		return	false;	//	TODO.
 	}
 
 	////////////////////////////////////////////////////////////////////////////////

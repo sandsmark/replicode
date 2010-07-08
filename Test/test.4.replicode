@@ -4,23 +4,20 @@ P1:(pgm
    (ptn ref_t: |[]); put view data here, one by one (not in a set, as ptn 1st member must be anything but a set).
 []; input
    []; inputs
-      (ptn m:(mk.val ref_val.object position value: [: ijt: ::] ::) []
-         (> ijt ref_t)
+      (ptn m:(mk.val ref_val.object position value:) []
+         (> m.vw.ijt ref_t)
          (<> value ref_val.value)
          v#view:(fvw m stdin)
       )
    |[]; timing
    |[]; guards
 []; prods
-   (inj [(mk.last_known m |[] |[] |[] 0) [|nb now 1 4 nil nil]]); builds L.
-   (inj [(ins P1 [m ijt]) [now 1 forever stdin nil]]); instantiates P1 with m as actual template arguments.
+   (inj [(mk.last_known m 0) [|nb now 1 4 nil nil]]); builds L.
+   (inj [(ins P1 [m m.vw.ijt]) [now 1 forever stdin nil]]); instantiates P1 with m as actual template arguments.
    (set [this.vw.res 0]); kills the original ipgm.
    (mod [v.sln -0.5]); just for quick testing; shall not be there!
 1000000us; tsc
 0; nfr
-|[]; view
-|[]; mks
-|[]; vws
 0; psln_thr
 )
 
@@ -31,18 +28,15 @@ P2:(pgm
    (ptn ref_b:(ent ::) |[])
 []; input
    []; inputs
-      (ptn m:(mk.val o: position : [: ijt: ::] ::) []
+      (ptn m:(mk.val o: position :) []
          (<> o ref_b)]
    |[]; timings
    |[]; guards
 []; productions
-   (inj [(ins P1 [m ijt]) [now 1 4 stdin nil]])
+   (inj [(ins P1 [m m.vw.ijt]) [now 1 4 stdin nil]])
    (inj [(ins P2 [m.object]) [now 1 4 stdin nil]])
 1000000us; tsc
 0; nfr
-|[]; view
-|[]; mks
-|[]; vws
 0; psln_thr
 )
 
@@ -50,10 +44,7 @@ P2:(pgm
 
 iP2:(ipgm
 P2; code
-[nil]; args
-|[]; view
-|[]; mks
-|[]; vws
+[]; args
 0; psln_thr
 )
 
@@ -71,9 +62,6 @@ P3:(pgm
    (eje [l l.vw 0])
 100000us
 0
-|[]
-|[]
-|[]
 0
 )
 
@@ -81,9 +69,6 @@ P3:(pgm
 
 iP3:(ipgm
 P3
-|[]
-|[]
-|[]
 |[]
 0
 )
@@ -95,16 +80,13 @@ P4:(pgm
 |[]
 []
    []
-      (ptn m:(mk.val : position v:(vec3 ::) ::) |[])
+      (ptn m:(mk.val : position v:(vec3 ::)) |[])
    |[]
    |[]
 []
-   (inj [(mk.val m.object position (vec3 (+ v.x 1) v.y v.z) |[] |[] |[] 0) [(+ m.vw.ijt 1000000us) m.vw.sln m.vw.res m.vw.grp m.vw.org] 0])
+   (inj [(mk.val m.object position (vec3 (+ v.x 1) v.y v.z) 0) [(+ m.vw.ijt 1000000us) m.vw.sln m.vw.res m.vw.grp m.vw.org] 0])
 100000us
 0
-|[]
-|[]
-|[]
 0
 )
 
@@ -112,9 +94,6 @@ P4:(pgm
 
 iP4:(ipgm
 P4
-|[]
-|[]
-|[]
 |[]
 0
 )
@@ -126,9 +105,6 @@ O1:(mk.val
 self
 position
 (vec3 3 3 3)
-|[]
-|[]
-|[]
 0
 )
 
@@ -138,9 +114,6 @@ position
 Tag:(mk.tag
 self
 "a test string"
-|[]
-|[]
-|[]
 0
 )
 

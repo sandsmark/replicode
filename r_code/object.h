@@ -208,6 +208,17 @@ namespace	r_code{
 		}
 
 		std::list<Code	*>::const_iterator	position_in_objects;
+
+		void	trace()	const{
+
+			std::cout<<"--------\n";
+			for(uint16	i=0;i<code_size();++i){
+
+				std::cout<<i<<"\t";
+				code(i).trace();
+				std::cout<<std::endl;
+			}
+		}
 	};
 
 	//	Implementation for local objects (non distributed).

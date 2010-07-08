@@ -87,8 +87,6 @@ namespace	r_exec{
 
 	bool	ins(const	Context	&context,uint16	&index);
 
-	bool	at(const	Context	&context,uint16	&index);	//	TODO.
-
 	bool	red(const	Context	&context,uint16	&index);
 	
 	bool	com(const	Context	&context,uint16	&index);	//	TODO.

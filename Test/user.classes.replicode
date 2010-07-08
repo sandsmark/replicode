@@ -7,12 +7,14 @@
 
 !class (ValueClass (_obj {value:nb}))
 
+!class (tagged_v vector:vec3 string:st)
+
 !dfn (sample_io_start :nb)
 !dfn (sample_io_stop)
 
 root:(grp
 1; upr
-1; spr
+4; spr
 0; sln_thr
 0; act_thr
 0; vis_thr
@@ -42,9 +44,6 @@ root:(grp
 0; ntf_new
 0; low_res_thr
 nil; ntf_grp
-|[]; view
-|[]; mks
-|[]; vws
 1; psln_thr
 )
 
@@ -83,9 +82,6 @@ g1:(grp
 0; ntf_new
 0; low_res_thr
 nil; ntf_grp
-|[]; view
-|[]; mks
-|[]; vws
 1; psln_thr
 )
 
@@ -124,9 +120,6 @@ stdin:(grp
 0; ntf_new
 0; low_res_thr
 root; ntf_grp
-|[]; view
-|[]; mks
-|[]; vws
 1; psln_thr
 )
 
@@ -166,9 +159,6 @@ stdout:(grp
 0; ntf_new
 0; low_res_thr
 root; ntf_grp
-|[]; view
-|[]; mks
-|[]; vws
 1; psln_thr
 )
 
@@ -176,9 +166,6 @@ root; ntf_grp
    [now 1 forever root nil 0 0]
 
 self:(ent
-|[]; view
-|[]; mks
-|[]; vws
 0; psln_thr
 )
 
@@ -186,9 +173,6 @@ self:(ent
    [now 0 forever root nil]
 
 position:(ent
-|[]; view
-|[]; mks
-|[]; vws
 1; psln_thr
 )
 

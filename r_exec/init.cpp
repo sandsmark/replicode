@@ -48,6 +48,8 @@ namespace	r_exec{
 	dll_export	r_comp::Compiler		Compiler;
 	r_exec_dll	r_comp::Preprocessor	Preprocessor;
 
+	SharedLibrary	userOperatorLibrary;
+
 	bool	Compile(std::istream	&source_code,std::string	&error,bool	compile_metadata){
 
 		std::ostringstream	preprocessed_code_out;
@@ -130,6 +132,8 @@ namespace	r_exec{
 		Opcodes::Goal=_Opcodes.find("gol")->second;
 		Opcodes::AntiGoal=_Opcodes.find("|gol")->second;
 
+		Opcodes::Cmd=_Opcodes.find("cmd")->second;
+
 		Opcodes::MkRdx=_Opcodes.find("mk.rdx")->second;
 		Opcodes::MkAntiRdx=_Opcodes.find("mk.|rdx")->second;
 
@@ -178,7 +182,6 @@ namespace	r_exec{
 		Operator::Register(operator_opcode++,e10);
 		Operator::Register(operator_opcode++,syn);
 		Operator::Register(operator_opcode++,ins);
-		Operator::Register(operator_opcode++,at);
 		Operator::Register(operator_opcode++,red);
 		Operator::Register(operator_opcode++,com);
 		Operator::Register(operator_opcode++,spl);
@@ -187,7 +190,6 @@ namespace	r_exec{
 		Operator::Register(operator_opcode++,fvw);
 
 		//	load usr operators.
-		SharedLibrary	userOperatorLibrary;
 		if(!(userOperatorLibrary.load(user_operator_library_path)))
 			exit(-1);
 
@@ -197,25 +199,26 @@ namespace	r_exec{
 		if(!_Init)
 			return	false;
 
-		typedef	bool	(*UserOperator)(const	Context	&,uint16	&);
 		typedef	uint16	(*UserGetOperatorCount)();
 		UserGetOperatorCount	GetOperatorCount=userOperatorLibrary.getFunction<UserGetOperatorCount>("GetOperatorCount");
 		if(!GetOperatorCount)
 			return	false;
 
-		typedef	void	(*UserGetOperator)(UserOperator	&,char	*);
-		UserGetOperator	GetOperator=userOperatorLibrary.getFunction<UserGetOperator>("GetOperator");
-		if(!GetOperator)
+		typedef	void	(*UserGetOperatorName)(char	*);
+		UserGetOperatorName	GetOperatorName=userOperatorLibrary.getFunction<UserGetOperatorName>("GetOperatorName");
+		if(!GetOperatorName)
 			return	false;
 
 		_Init(RetrieveOpcode);
+
+		typedef	bool	(*UserOperator)(const	Context	&,uint16	&);
+
 		uint16	operatorCount=GetOperatorCount();
 		for(uint16	i=0;i<operatorCount;++i){
 
-			UserOperator	op;
 			char			op_name[256];
 			memset(op_name,0,256);
-			GetOperator(op,op_name);
+			GetOperatorName(op_name);
 
 			UNORDERED_MAP<std::string,uint16>::iterator	it=_Opcodes.find(op_name);
 			if(it==_Opcodes.end()){
@@ -223,6 +226,10 @@ namespace	r_exec{
 				std::cerr<<"Operator "<<op_name<<" is undefined"<<std::endl;
 				exit(-1);
 			}
+			UserOperator	op=userOperatorLibrary.getFunction<UserOperator>(op_name);
+			if(!op)
+				return	false;
+
 			Operator::Register(it->second,op);
 		}
 

@@ -38,7 +38,7 @@ namespace	r_exec{
 	bool	IsNotification(Code	*object){
 
 		switch(object->code(0).getDescriptor()){
-		case	Atom::OBJECT:
+		case	Atom::MARKER:
 			return	object->code(0).asOpcode()==Opcodes::MkActChg	||
 					object->code(0).asOpcode()==Opcodes::MkAntiRdx	||
 					object->code(0).asOpcode()==Opcodes::MkHighAct	||

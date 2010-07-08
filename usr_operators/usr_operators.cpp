@@ -43,12 +43,12 @@ bool	add(const	r_exec::Context	&context,uint16	&index){
 	r_exec::Context	lhs=*context.getChild(1);
 	r_exec::Context	rhs=*context.getChild(2);
 
-	if(lhs.head().asOpcode()==Vec3Opcode	&&	rhs.head().asOpcode()==Vec3Opcode){
+	if(lhs[0].asOpcode()==Vec3Opcode	&&	rhs[0].asOpcode()==Vec3Opcode){
 
 		index=context.setCompoundResultHead(Atom::Object(Vec3Opcode,3));
-		context.addCompoundResultPart(Atom::Float((*lhs.getChild(1)).head().asFloat()+rhs.getChild(1).head().asFloat()));
-		context.addCompoundResultPart(Atom::Float((*lhs.getChild(2)).head().asFloat()+rhs.getChild(2).head().asFloat()));
-		context.addCompoundResultPart(Atom::Float((*lhs.getChild(3)).head().asFloat()+rhs.getChild(3).head().asFloat()));
+		context.addCompoundResultPart(Atom::Float((*lhs.getChild(1))[0].asFloat()+rhs.getChild(1)[0].asFloat()));
+		context.addCompoundResultPart(Atom::Float((*lhs.getChild(2))[0].asFloat()+rhs.getChild(2)[0].asFloat()));
+		context.addCompoundResultPart(Atom::Float((*lhs.getChild(3))[0].asFloat()+rhs.getChild(3)[0].asFloat()));
 		return	true;
 	}
 
@@ -63,12 +63,12 @@ bool	sub(const	r_exec::Context	&context,uint16	&index){
 	r_exec::Context	lhs=*context.getChild(1);
 	r_exec::Context	rhs=*context.getChild(2);
 
-	if(lhs.head().asOpcode()==Vec3Opcode	&&	rhs.head().asOpcode()==Vec3Opcode){
+	if(lhs[0].asOpcode()==Vec3Opcode	&&	rhs[0].asOpcode()==Vec3Opcode){
 
 		index=context.setCompoundResultHead(Atom::Object(Vec3Opcode,3));
-		context.addCompoundResultPart(Atom::Float((*lhs.getChild(1)).head().asFloat()-rhs.getChild(1).head().asFloat()));
-		context.addCompoundResultPart(Atom::Float((*lhs.getChild(2)).head().asFloat()-rhs.getChild(2).head().asFloat()));
-		context.addCompoundResultPart(Atom::Float((*lhs.getChild(3)).head().asFloat()-rhs.getChild(3).head().asFloat()));
+		context.addCompoundResultPart(Atom::Float((*lhs.getChild(1))[0].asFloat()-rhs.getChild(1)[0].asFloat()));
+		context.addCompoundResultPart(Atom::Float((*lhs.getChild(2))[0].asFloat()-rhs.getChild(2)[0].asFloat()));
+		context.addCompoundResultPart(Atom::Float((*lhs.getChild(3))[0].asFloat()-rhs.getChild(3)[0].asFloat()));
 		return	true;
 	}
 
@@ -83,24 +83,24 @@ bool	mul(const	r_exec::Context	&context,uint16	&index){
 	r_exec::Context	lhs=*context.getChild(1);
 	r_exec::Context	rhs=*context.getChild(2);
 
-	if(lhs.head().isFloat()){
+	if(lhs[0].isFloat()){
 
-		if(rhs.head().asOpcode()==Vec3Opcode){
+		if(rhs[0].asOpcode()==Vec3Opcode){
 
 			index=context.setCompoundResultHead(Atom::Object(Vec3Opcode,3));
-			context.addCompoundResultPart(Atom::Float(lhs.head().asFloat()*(*rhs.getChild(1)).head().asFloat()));
-			context.addCompoundResultPart(Atom::Float(lhs.head().asFloat()*(*rhs.getChild(2)).head().asFloat()));
-			context.addCompoundResultPart(Atom::Float(lhs.head().asFloat()*(*rhs.getChild(3)).head().asFloat()));
+			context.addCompoundResultPart(Atom::Float(lhs[0].asFloat()*(*rhs.getChild(1))[0].asFloat()));
+			context.addCompoundResultPart(Atom::Float(lhs[0].asFloat()*(*rhs.getChild(2))[0].asFloat()));
+			context.addCompoundResultPart(Atom::Float(lhs[0].asFloat()*(*rhs.getChild(3))[0].asFloat()));
 			return	true;
 		}
-	}else	if(lhs.head().asOpcode()==Vec3Opcode){
+	}else	if(lhs[0].asOpcode()==Vec3Opcode){
 
-		if(rhs.head().isFloat()){
+		if(rhs[0].isFloat()){
 
 			index=context.setCompoundResultHead(Atom::Object(Vec3Opcode,3));
-			context.addCompoundResultPart(Atom::Float((*lhs.getChild(1)).head().asFloat()-rhs.head().asFloat()));
-			context.addCompoundResultPart(Atom::Float((*lhs.getChild(2)).head().asFloat()-rhs.head().asFloat()));
-			context.addCompoundResultPart(Atom::Float((*lhs.getChild(3)).head().asFloat()-rhs.head().asFloat()));
+			context.addCompoundResultPart(Atom::Float((*lhs.getChild(1))[0].asFloat()-rhs[0].asFloat()));
+			context.addCompoundResultPart(Atom::Float((*lhs.getChild(2))[0].asFloat()-rhs[0].asFloat()));
+			context.addCompoundResultPart(Atom::Float((*lhs.getChild(3))[0].asFloat()-rhs[0].asFloat()));
 			return	true;
 		}
 	}
@@ -111,16 +111,16 @@ bool	mul(const	r_exec::Context	&context,uint16	&index){
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool	dis(const	r_exec::Context	&context,uint16	&index){	
+bool	dis(const	r_exec::Context	&context,uint16	&index){
 
 	r_exec::Context	lhs=*context.getChild(1);
 	r_exec::Context	rhs=*context.getChild(2);
 
-	if(lhs.head().asOpcode()==Vec3Opcode	&&	rhs.head().asOpcode()==Vec3Opcode){
+	if(lhs[0].asOpcode()==Vec3Opcode	&&	rhs[0].asOpcode()==Vec3Opcode){
 
-		float32	d1=(*lhs.getChild(1)).head().asFloat()-(*rhs.getChild(1)).head().asFloat();
-		float32	d2=(*lhs.getChild(2)).head().asFloat()-(*rhs.getChild(2)).head().asFloat();
-		float32	d3=(*lhs.getChild(3)).head().asFloat()-(*rhs.getChild(3)).head().asFloat();
+		float32	d1=(*lhs.getChild(1))[0].asFloat()-(*rhs.getChild(1))[0].asFloat();
+		float32	d2=(*lhs.getChild(2))[0].asFloat()-(*rhs.getChild(2))[0].asFloat();
+		float32	d3=(*lhs.getChild(3))[0].asFloat()-(*rhs.getChild(3))[0].asFloat();
 
 		float32	norm2=d1*d1+d2*d2+d3*d3;
 		index=context.setAtomicResult(Atom::Float(sqrt(norm2)));
@@ -147,13 +147,12 @@ uint16	GetOperatorCount(){
 	return	4;
 }
 
-void	GetOperator(Operator	&op,char	*op_name){
+void	GetOperatorName(char	*op_name){
 
 	static	uint16	op_index=0;
 
 	if(op_index==0){
 
-		op=add;
 		std::string	s="add";
 		memcpy(op_name,s.c_str(),s.length());
 		++op_index;
@@ -162,7 +161,6 @@ void	GetOperator(Operator	&op,char	*op_name){
 
 	if(op_index==1){
 
-		op=sub;
 		std::string	s="sub";
 		memcpy(op_name,s.c_str(),s.length());
 		++op_index;
@@ -171,7 +169,6 @@ void	GetOperator(Operator	&op,char	*op_name){
 
 	if(op_index==2){
 
-		op=mul;
 		std::string	s="mul";
 		memcpy(op_name,s.c_str(),s.length());
 		++op_index;
@@ -180,7 +177,6 @@ void	GetOperator(Operator	&op,char	*op_name){
 
 	if(op_index==3){
 
-		op=dis;
 		std::string	s="dis";
 		memcpy(op_name,s.c_str(),s.length());
 		++op_index;

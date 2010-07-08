@@ -87,10 +87,10 @@
 #define	PGM_TSC			4
 #define	PGM_NFR			5
 
-#define	IPGM_IGOL_ARITY	6
+#define	IPGM_IGOL_ARITY	3
 
-#define	MK_RDX_ARITY		7
-#define	MK_ANTI_RDX_ARITY	6
+#define	MK_RDX_ARITY		4
+#define	MK_ANTI_RDX_ARITY	3
 
 #define	EXECUTIVE_DEVICE	0xA1000000
 

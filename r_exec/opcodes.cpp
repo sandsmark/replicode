@@ -46,6 +46,8 @@ namespace	r_exec{
 	uint16	Opcodes::Goal;
 	uint16	Opcodes::AntiGoal;
 
+	uint16	Opcodes::Cmd;
+
 	uint16	Opcodes::MkRdx;
 	uint16	Opcodes::MkAntiRdx;
 

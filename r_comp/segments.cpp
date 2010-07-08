@@ -446,8 +446,15 @@ namespace	r_comp{
 		SysObject	*sys_object=new	SysObject(object);
 		addObject(sys_object);
 
-		for(uint16	i=0;i<object->references_size();++i)	//	follow reference pointers and recurse.
+		for(uint16	i=0;i<object->references_size();++i)			//	follow reference pointers and recurse.
 			*this<<object->get_reference(i);
+		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
+		for(v=object->views.begin();v!=object->views.end();++v)		//	follow view reference pointers and recurse.
+			for(uint8	j=0;j<2;++j){	//	2 refs maximum; may be NULL.
+
+				if((*v)->references[j])
+					*this<<(*v)->references[j];
+			}
 		std::list<Code	*>::const_iterator	m;
 		for(m=object->markers.begin();m!=object->markers.end();++m)	//	follow marker pointers and recurse.
 			*this<<*m;

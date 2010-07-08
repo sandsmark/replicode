@@ -37,15 +37,10 @@ uint16	Entity::Opcode;
 
 CodePayload	*Entity::New(){
 
-	CodePayload	*r=new(7)	CodePayload(7);
+	CodePayload	*r=new(2)	CodePayload(2);
 
-	r->data(1)=Atom::View();		//	vw.
-	r->data(2)=Atom::IPointer(5);	//	iptr to vws.
-	r->data(3)=Atom::IPointer(6);	//	iptr to mks.
-	r->data(4)=Atom::Float(1);		//	psln_thr.
-	r->data(5)=Atom::Set(0);		//	vws.
-	r->data(6)=Atom::Set(0);		//	mks.
-
+	r->data(1)=Atom::Float(1);		//	psln_thr.
+	
 	return	r;
 }
 

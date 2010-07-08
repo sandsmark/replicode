@@ -138,20 +138,17 @@ namespace	r_exec{
 	}
 
 	void	Overlay::patch_tpl_args(){	//	no rollback on that part of the code.
-
+//getIPGM()->trace();
 		uint16	tpl_arg_set_index=pgm_code[PGM_TPL_ARGS].asIndex();			//	index to the set of all tpl patterns.
 		uint16	arg_count=pgm_code[tpl_arg_set_index].getAtomCount();
 		uint16	ipgm_arg_set_index=getIPGM()->code(IPGM_ARGS).asIndex();	//	index to the set of all ipgm tpl args.
-		for(uint16	i=1;i<=arg_count;++i){	//	pgm_code[tpl_arg_set_index+i] is a pattern's opcode.
+		for(uint16	i=1;i<=arg_count;++i){									//	pgm_code[tpl_arg_set_index+i] is an iptr to a pattern.
 
-			uint16	skel_index=pgm_code[tpl_arg_set_index+i+1].asIndex();
-			uint16	ipgm_arg_index=getIPGM()->code(ipgm_arg_set_index+i).asIndex();
-
-			patch_tpl_code(skel_index,ipgm_arg_index);
-
-			//	patch the pgm code with ptrs to the tpl args' actual location in the ipgm code.
-			pgm_code[tpl_arg_set_index+i]=Atom::IPGMPointer(ipgm_arg_set_index+i);
+			Atom	&skel_iptr=pgm_code[pgm_code[tpl_arg_set_index+i].asIndex()+1];
+			patch_tpl_code(skel_iptr.asIndex(),getIPGM()->code(ipgm_arg_set_index+i).asIndex());
+			skel_iptr=Atom::IPGMPointer(ipgm_arg_set_index+i);				//	patch the pgm code with ptrs to the tpl args' actual location in the ipgm code.
 		}
+//Atom::Trace(pgm_code,getIPGM()->get_reference(0)->code_size());
 	}
 
 	void	Overlay::patch_tpl_code(uint16	pgm_code_index,uint16	ipgm_code_index){	//	patch recursively : in pgm_code[index] with IPGM_PTRs until ::.
@@ -206,32 +203,26 @@ namespace	r_exec{
 
 			//	identify the production of new objects.
 			Context	args=*cmd.getChild(4);
-			if(device.head().atom==EXECUTIVE_DEVICE){
+			if(device[0].atom==EXECUTIVE_DEVICE){
 
-				if(function.head().asOpcode()==Opcodes::Inject	||
-					function.head().asOpcode()==Opcodes::Eject){	//	args:[object view]; create an object if not a reference.
+				if(function[0].asOpcode()==Opcodes::Inject	||
+					function[0].asOpcode()==Opcodes::Eject){	//	args:[object view]; create an object if not a reference.
 
 					Code	*object;
 					Context	arg1=args.getChild(1);
 					uint16	index=arg1.getIndex();
-					arg1=*arg1;
-					switch(arg1.head().getDescriptor()){
-					case	Atom::PROD_PTR:
-						object=productions[index];
-						break;
-					case	Atom::R_PTR:
-						object=arg1.getObject();
-						break;
-					default:{
-
-						object=controller->get_mem()->buildObject(arg1.head());
+					arg1.dereference_once();	//	in case of an iptr.
+					switch(arg1[0].getDescriptor()){
+					case	Atom::OBJECT:
+					case	Atom::MARKER:
+					case	Atom::GROUP:
+					case	Atom::INSTANTIATED_PROGRAM:
+						object=controller->get_mem()->buildObject(arg1[0]);
 						//arg1.trace();
 						arg1.copy(object,0);
-
 						productions.push_back(object);
 						patch_code(index,Atom::ProductionPointer(productions.size()-1));	//	so that this new object can be referenced in subsequent productions without needing another copy.
-						//arg1.trace();
-					}
+						break;
 					}
 				}
 			}
@@ -254,24 +245,26 @@ namespace	r_exec{
 
 			//	call device functions.
 			Context	args=*cmd.getChild(4);
-			if(device.head().atom==EXECUTIVE_DEVICE){
+			if(device[0].atom==EXECUTIVE_DEVICE){
 
-				if(function.head().asOpcode()==Opcodes::Inject){	//	args:[object view]; retrieve the object and create a view.
+				if(function[0].asOpcode()==Opcodes::Inject){	//	args:[object view]; retrieve the object and create a view.
 
-					uint16	prod_index=args.getChild(1).head().asIndex();
+					Context	arg1=args.getChild(1);
+					arg1.dereference_once();
+
+					uint16	prod_index=arg1[0].asIndex();	//	args[1] is a prod_ptr.
 
 					Code	*object=(*args.getChild(1)).getObject();
 					
 					Context	_view=*args.getChild(2);
 					View	*view=new	View();
-					//_view.trace();
 					_view.copy(view,0);
 					view->set_object(object);
 
 					Code	*existing_object=mem->inject(view);
 					if(existing_object)
 						productions[prod_index]=existing_object;	//	so that the mk.rdx will reference the existing object instead of object, which has been discarded.
-				}else	if(function.head().asOpcode()==Opcodes::Eject){	//	args:[object view destination_node]; view.grp=destination grp (stdin ot stdout); retrieve the object and create a view.
+				}else	if(function[0].asOpcode()==Opcodes::Eject){	//	args:[object view destination_node]; view.grp=destination grp (stdin ot stdout); retrieve the object and create a view.
 
 					Code	*object=(*args.getChild(1)).getObject();
 					
@@ -283,18 +276,17 @@ namespace	r_exec{
 					Context	node=*args.getChild(3);
 
 					mem->eject(view,node[0].getNodeID());
-				}else	if(function.head().asOpcode()==Opcodes::Mod){	//	args:[iptr-to-cptr value].
+				}else	if(function[0].asOpcode()==Opcodes::Mod){	//	args:[iptr-to-cptr value].
 
-					void	*object;
+					void				*object;
 					Context::ObjectType	object_type;
-					uint16	member_index;
-					uint32	view_oid;
-					(*args.getChild(1)).getChildAsMember(1,object,view_oid,object_type,member_index);
+					int16				member_index;
+					uint32				view_oid;
+					args.getChild(1).getMember(object,view_oid,object_type,member_index);	//	args.getChild(1) is an iptr.
 
 					if(object){
 						
-						Context	_value=*args.getChild(2);
-						float32	value=_value.head().asFloat();
+						float32	value=(*args.getChild(2))[0].asFloat();
 						switch(object_type){
 						case	Context::TYPE_VIEW:{	//	add the target and value to the group's pending operations.
 
@@ -315,18 +307,17 @@ namespace	r_exec{
 							return	false;
 						}
 					}
-				}else	if(function.head().asOpcode()==Opcodes::Set){	//	args:[iptr-to-cptr value].
+				}else	if(function[0].asOpcode()==Opcodes::Set){	//	args:[iptr-to-cptr value].
 
-					void	*object;
+					void				*object;
 					Context::ObjectType	object_type;
-					uint16	member_index;
-					uint32	view_oid;
-					(*args.getChild(1)).getChildAsMember(1,object,view_oid,object_type,member_index);
+					int16				member_index;
+					uint32				view_oid;
+					args.getChild(1).getMember(object,view_oid,object_type,member_index);	//	args.getChild(1) is an iptr.
 
 					if(object){
 						
-						Context	_value=*args.getChild(2);
-						float32	value=_value.head().asFloat();
+						float32	value=(*args.getChild(2))[0].asFloat();
 						switch(object_type){
 						case	Context::TYPE_VIEW:{	//	add the target and value to the group's pending operations.
 
@@ -345,19 +336,19 @@ namespace	r_exec{
 							break;
 						}
 					}
-				}else	if(function.head().asOpcode()==Opcodes::NewClass){
+				}else	if(function[0].asOpcode()==Opcodes::NewClass){
 
-				}else	if(function.head().asOpcode()==Opcodes::DelClass){
+				}else	if(function[0].asOpcode()==Opcodes::DelClass){
 
-				}else	if(function.head().asOpcode()==Opcodes::LDC){
+				}else	if(function[0].asOpcode()==Opcodes::LDC){
 
-				}else	if(function.head().asOpcode()==Opcodes::Swap){
+				}else	if(function[0].asOpcode()==Opcodes::Swap){
 
-				}else	if(function.head().asOpcode()==Opcodes::NewDev){
+				}else	if(function[0].asOpcode()==Opcodes::NewDev){
 
-				}else	if(function.head().asOpcode()==Opcodes::DelDev){
+				}else	if(function[0].asOpcode()==Opcodes::DelDev){
 
-				}else	if(function.head().asOpcode()==Opcodes::Stop){		//	no args.
+				}else	if(function[0].asOpcode()==Opcodes::Stop){		//	no args.
 
 					mem->stop();
 				}else{	//	unknown function.
@@ -367,7 +358,7 @@ namespace	r_exec{
 				}
 			}else{	//	in case of an external device, create a cmd object and send it.
 
-				Code	*command=controller->get_mem()->buildObject(cmd.head());
+				Code	*command=controller->get_mem()->buildObject(cmd[0]);
 				cmd.copy(command,0);
 
 				mem->eject(command,command->code(CMD_DEVICE).getNodeID());
@@ -394,17 +385,14 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_RDX_ARITY+1;
 
-		Code	*mk_rdx=controller->get_mem()->buildObject(Atom::Object(Opcodes::MkRdx,MK_RDX_ARITY));
+		Code	*mk_rdx=controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
 
-		mk_rdx->code(write_index++)=Atom::Object(Opcodes::MkRdx,MK_RDX_ARITY);
+		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
 		mk_rdx->add_reference(getIPGM());
 		mk_rdx->code(write_index++)=Atom::IPointer(extent_index);	//	inputs.
 		mk_rdx->code(extent_index++)=Atom::Set(0);
 		mk_rdx->code(write_index++)=Atom::IPointer(extent_index);	//	productions.
-		mk_rdx->code(write_index++)=Atom::View();
-		mk_rdx->code(write_index++)=Atom::Vws();
-		mk_rdx->code(write_index++)=Atom::Mks();
 		mk_rdx->code(write_index++)=Atom::Float(1);					//	psln_thr.
 
 		return	mk_rdx;
@@ -457,8 +445,6 @@ namespace	r_exec{
 		last_timing_constraint_index=original->last_timing_constraint_index;
 		first_guard_index=original->first_guard_index;
 		last_guard_index=original->last_guard_index;
-		first_production_index=original->first_production_index;
-		last_production_index=original->last_production_index;
 	}
 
 	inline	IOverlay::~IOverlay(){
@@ -610,9 +596,9 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_RDX_ARITY+1;
 
-		Code	*mk_rdx=controller->get_mem()->buildObject(Atom::Object(Opcodes::MkRdx,MK_RDX_ARITY));
+		Code	*mk_rdx=controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
 
-		mk_rdx->code(write_index++)=Atom::Object(Opcodes::MkRdx,MK_RDX_ARITY);
+		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
 		mk_rdx->add_reference(getIPGM());
 		mk_rdx->code(write_index++)=Atom::IPointer(extent_index);	//	inputs.
@@ -623,9 +609,6 @@ namespace	r_exec{
 			mk_rdx->add_reference(input_views[i]->object);
 		}
 		mk_rdx->code(write_index++)=Atom::IPointer(extent_index);	//	productions.
-		mk_rdx->code(write_index++)=Atom::View();
-		mk_rdx->code(write_index++)=Atom::Vws();
-		mk_rdx->code(write_index++)=Atom::Mks();
 		mk_rdx->code(write_index++)=Atom::Float(1);					//	psln_thr.
 
 		return	mk_rdx;
@@ -672,15 +655,12 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_ANTI_RDX_ARITY+1;
 
-		Code	*mk_rdx=controller->get_mem()->buildObject(Atom::Object(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY));
+		Code	*mk_rdx=controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY));
 
-		mk_rdx->code(write_index++)=Atom::Object(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY);
+		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
 		mk_rdx->add_reference(getIPGM());
 		mk_rdx->code(write_index++)=Atom::IPointer(extent_index);	//	productions.
-		mk_rdx->code(write_index++)=Atom::View();
-		mk_rdx->code(write_index++)=Atom::Vws();
-		mk_rdx->code(write_index++)=Atom::Mks();
 		mk_rdx->code(write_index++)=Atom::Float(1);					//	psln_thr.
 
 		return	mk_rdx;
@@ -735,7 +715,7 @@ namespace	r_exec{
 			overlays.push_back(o);
 		}else
 			o=*overlays.begin();
-
+		
 		o->inject_productions(mem);
 
 		Group	*host=getIPGMView()->get_host();
