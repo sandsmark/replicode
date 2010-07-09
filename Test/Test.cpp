@@ -75,7 +75,11 @@ int32	main(int	argc,char	**argv){
 		std::ostringstream	decompiled_code;
 		decompiler.init(&r_exec::Metadata);
 		std::cout<<"\ndecompiling ...\n";
-		decompiler.decompile(image,&decompiled_code);
+		//decompiler.decompile(image,&decompiled_code);
+		decompiler.decompile_references(image);
+		std::cout<<"Which object?\n";
+		uint16	index;std::cin>>index;
+		decompiler.decompile_object(index,&decompiled_code);
 		std::cout<<"... done\n";
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 

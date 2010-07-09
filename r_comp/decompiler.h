@@ -55,6 +55,7 @@ namespace	r_comp{
 		std::string	get_variable_name(uint16	index,bool	postfix);	//	associates iptr/vptr indexes to names; inserts them in out_stream if necessary; when postfix==true, a trailing ':' is added
 
 		UNORDERED_MAP<uint16,std::string>	object_names;				//	in the form class_namexxx where xxx is an integer representing the order of appearence of the object in the image; N.B.: root:0 self:1 stdin:2 stdout:3
+		UNORDERED_MAP<std::string,uint16>	object_indices;				//	inverted version of the object_names.
 		std::string	get_object_name(uint16	index);			//	retrieves the name of an object
 
 		void	write_indent(uint16	i);
@@ -68,7 +69,10 @@ namespace	r_comp{
 		~Decompiler();
 
 		void	init(r_comp::Metadata	*metadata);
-		void	decompile(r_comp::Image		*image,std::ostringstream	*stream);
+		void	decompile(r_comp::Image	*image,std::ostringstream	*stream);					//	decompiles the whole image.
+		void	decompile_references(r_comp::Image	*image);									//	initialize a reference table so that objects can be decompiled individually.
+		void	decompile_object(uint16	object_index,std::ostringstream	*stream);				//	decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
+		void	decompile_object(const	std::string	object_name,std::ostringstream	*stream);	//	decompiles a single object given its name: use this function to follow references.
 	};
 }
 

@@ -556,7 +556,7 @@ namespace	r_exec{
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(host,v)
 
 				if(v->second->get_act_vis()>host->get_sln_thr())	//	active ipgm view.
-					v->second->controller->take_input(v->second);	//	view will be copied.
+					v->second->controller->take_input(view);		//	view will be copied.
 
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
 		}
@@ -573,7 +573,7 @@ namespace	r_exec{
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
 
 				if(v->second->get_act_vis()>vg->first->get_sln_thr())	//	active ipgm view.
-					v->second->controller->take_input(v->second);			//	view will be copied.
+					v->second->controller->take_input(view);			//	view will be copied.
 			
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
 		}

@@ -175,7 +175,7 @@ namespace	r_exec{
 	}
 
 	bool	Overlay::inject_productions(_Mem	*mem){
-
+//Atom::Trace(pgm_code,getIPGM()->get_reference(0)->code_size());
 		uint16	production_set_index=pgm_code[PGM_PRODS].asIndex();
 		uint16	production_count=pgm_code[production_set_index].getAtomCount();
 		for(uint16	i=1;i<=production_count;++i){
@@ -404,19 +404,9 @@ namespace	r_exec{
 
 		//	init the list of pattern indices.
 		uint16	pattern_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+1].asIndex();
-		uint16	first_pattern_index=pgm_code[pattern_set_index+1].asIndex();
-		uint16	last_pattern_index=first_pattern_index+pgm_code[pattern_set_index].getAtomCount()-1;
-		for(uint16	i=first_pattern_index;i<=last_pattern_index;++i)
-			input_pattern_indices.push_back(i);
-
-		//	init convenience indices.
-		uint16	timing_constraint_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+2].asIndex();
-		first_timing_constraint_index=pgm_code[timing_constraint_set_index+1].asIndex();
-		last_timing_constraint_index=first_timing_constraint_index+pgm_code[timing_constraint_set_index].getAtomCount()-1;
-
-		uint16	guard_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+3].asIndex();
-		first_guard_index=pgm_code[guard_set_index+1].asIndex();
-		last_guard_index=first_guard_index+pgm_code[guard_set_index].getAtomCount()-1;
+		uint16	pattern_count=pgm_code[pattern_set_index].getAtomCount();
+		for(uint16	i=1;i<=pattern_count;++i)
+			input_pattern_indices.push_back(pgm_code[pattern_set_index+i].asIndex());
 	}
 
 	IOverlay::IOverlay(IOverlay	*original,uint16	last_input_index,uint16	value_commit_index):Overlay(){
@@ -440,40 +430,9 @@ namespace	r_exec{
 		this->value_commit_index=value_commit_index;
 		for(uint16	i=0;i<value_commit_index;++i)	//	copy values up to the last commit index.
 			values.push_back(original->values[i]);
-
-		first_timing_constraint_index=original->first_timing_constraint_index;
-		last_timing_constraint_index=original->last_timing_constraint_index;
-		first_guard_index=original->first_guard_index;
-		last_guard_index=original->last_guard_index;
 	}
 
 	inline	IOverlay::~IOverlay(){
-	}
-
-	void	IOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){	//	patch recursively : in pgm_code[index] with IN_OBJ_PTRs and IN_VW_PTRs until ::.
-
-		uint16	skel_index=pgm_code[pgm_code_index+1].asIndex();
-		uint16	atom_count=pgm_code[skel_index].getAtomCount();
-		for(uint16	j=1;j<=atom_count;++j){
-
-			switch(pgm_code[skel_index+j].getDescriptor()){
-			case	Atom::WILDCARD:
-				if(j==atom_count-4)	//	view
-					pgm_code[skel_index+j]=Atom::InVwPointer(input_index,input_code_index+j);
-				else
-					pgm_code[pgm_code_index+j]=Atom::InObjPointer(input_index,input_code_index+j);
-				patch_indices.push_back(skel_index+j);
-				break;
-			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
-				return;
-			case	Atom::I_PTR:
-				patch_input_code(pgm_code[skel_index+j].asIndex(),input_index,getInputObject(input_index)->code(skel_index+j).asIndex());
-				patch_indices.push_back(skel_index+j);
-				break;
-			default:	//	leave as is.
-				break;
-			}
-		}
 	}
 
 	inline	void	IOverlay::reset(){
@@ -487,6 +446,32 @@ namespace	r_exec{
 		value_commit_index=0;
 		values.clear();
 		productions.clear();
+	}
+
+	void	IOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){	//	patch recursively : in pgm_code[index] with IN_OBJ_PTRs until ::.
+
+		uint16	skel_index=pgm_code[pgm_code_index+1].asIndex();
+		uint16	atom_count=pgm_code[skel_index].getAtomCount();
+
+		pgm_code[skel_index]=Atom::InObjPointer(input_index,0);	//	replace the skeleton atom by a ptr to the input object.
+
+		for(uint16	j=1;j<=atom_count;++j){
+
+			switch(pgm_code[skel_index+j].getDescriptor()){
+			case	Atom::WILDCARD:
+				pgm_code[pgm_code_index+j]=Atom::InObjPointer(input_index,input_code_index+j);
+				patch_indices.push_back(skel_index+j);
+				break;
+			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
+				return;
+			case	Atom::I_PTR:
+				patch_input_code(pgm_code[skel_index+j].asIndex(),input_index,getInputObject(input_index)->code(skel_index+j).asIndex());
+				patch_indices.push_back(skel_index+j);
+				break;
+			default:	//	leave as is.
+				break;
+			}
+		}
 	}
 
 	void	IOverlay::reduce(r_exec::View	*input,_Mem	*mem){
@@ -558,9 +543,9 @@ namespace	r_exec{
 
 		if(!_match_skeleton(input, pattern_index))
 			return	IMPOSSIBLE;
-		
-		patch_input_code(pattern_index,input_views.size()-1,0);	//	the input has just been pushed on input_views (see match).
 
+		patch_input_code(pattern_index,input_views.size()-1,0);	//	the input has just been pushed on input_views (see match).
+//Atom::Trace(pgm_code,getIPGM()->get_reference(0)->code_size());
 		//	match: evaluate the set of guards.
 		uint16	guard_set_index=pgm_code[pattern_index+2].asIndex();
 		if(!evaluate(guard_set_index))
@@ -577,16 +562,20 @@ namespace	r_exec{
 
 	bool	IOverlay::check_timings(){
 
-		for(uint16	i=first_timing_constraint_index;i<=last_timing_constraint_index;++i)
-			if(!evaluate(i))
+		uint16	timing_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+1].asIndex();
+		uint16	timing_count=pgm_code[timing_set_index].getAtomCount();
+		for(uint16	i=1;i<=timing_count;++i)
+			if(!evaluate(timing_set_index+i))
 				return	false;
 		return	true;
 	}
 
 	bool	IOverlay::check_guards(){
 
-		for(uint16	i=first_guard_index;i<=last_guard_index;++i)
-			if(!evaluate(i))
+		uint16	guard_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+2].asIndex();
+		uint16	guard_count=pgm_code[guard_set_index].getAtomCount();
+		for(uint16	i=1;i<=guard_count;++i)
+			if(!evaluate(guard_set_index+i))
 				return	false;
 		return	true;
 	}

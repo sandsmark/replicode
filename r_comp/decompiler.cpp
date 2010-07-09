@@ -83,12 +83,19 @@ namespace	r_comp{
 
 	void	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream){
 
-		out_stream=new	OutStream(stream);
-		this->image=image;
+		decompile_references(image);
+
+		for(uint16	i=0;i<image->code_segment.objects.size();++i)
+			decompile_object(i,stream);
+	}
+
+	void	Decompiler::decompile_references(r_comp::Image	*image){
 
 		uint32		last_object_ID=0;
 		char		buffer[255];
 		std::string	s;
+
+		this->image=image;
 
 		//	populate object names first so they can be referenced in any order.
 		for(uint16	i=0;i<image->code_segment.objects.size();++i){
@@ -106,56 +113,70 @@ namespace	r_comp{
 				break;
 			}
 			object_names[i]=s;
+			object_indices[s]=i;
 		}
 
 		closing_set=false;
+	}
+	
+	void	Decompiler::decompile_object(uint16	object_index,std::ostringstream	*stream){
 
-		for(uint16	i=0;i<image->code_segment.objects.size();++i){
+		if(!out_stream)
+			out_stream=new	OutStream(stream);
+		else	if(out_stream->stream!=stream){
 
-			current_object=image->code_segment.objects[i];
-			SysObject	*sys_object=(SysObject	*)current_object;
-			uint16	read_index=0;
-			bool	after_tail_wildcard=false;
-			indents=0;
-
-			s=object_names[i];
-			s+=":";
-			*out_stream<<s;
-
-			out_stream->push('(',read_index);
-			write_expression_head(read_index);
-			write_indent(0);
-			write_expression_tail(read_index,true);
-			*out_stream<<')';
-			
-			write_indent(0);
-			write_indent(0);
-
-			uint16	view_count=sys_object->views.size();
-			if(view_count){	//	write the set of views
-
-				*out_stream<<"[]; view set";
-				for(uint16	i=0;i<view_count;++i){
-
-					write_indent(3);
-					current_object=sys_object->views[i];
-					read_index=0;
-					after_tail_wildcard=false;
-					*out_stream<<"[";
-					uint16	arity=current_object->code[0].getAtomCount();
-					for(uint16	j=1;j<=arity;++j){
-
-						write_any(read_index+j,after_tail_wildcard);
-						if(j<arity)
-							*out_stream<<" ";
-					}
-					*out_stream<<"]";
-				}
-			}else
-				*out_stream<<"|[]; view set";
-			write_indent(0);
-			write_indent(0);
+			delete	out_stream;
+			out_stream=new	OutStream(stream);
 		}
+
+		current_object=image->code_segment.objects[object_index];
+		SysObject	*sys_object=(SysObject	*)current_object;
+		uint16	read_index=0;
+		bool	after_tail_wildcard=false;
+		indents=0;
+
+		std::string	s=object_names[object_index];
+		s+=":";
+		*out_stream<<s;
+
+		out_stream->push('(',read_index);
+		write_expression_head(read_index);
+		write_indent(0);
+		write_expression_tail(read_index,true);
+		*out_stream<<')';
+		
+		write_indent(0);
+		write_indent(0);
+
+		uint16	view_count=sys_object->views.size();
+		if(view_count){	//	write the set of views
+
+			*out_stream<<"[]; view set";
+			for(uint16	i=0;i<view_count;++i){
+
+				write_indent(3);
+				current_object=sys_object->views[i];
+				read_index=0;
+				after_tail_wildcard=false;
+				*out_stream<<"[";
+				uint16	arity=current_object->code[0].getAtomCount();
+				for(uint16	j=1;j<=arity;++j){
+
+					write_any(read_index+j,after_tail_wildcard);
+					if(j<arity)
+						*out_stream<<" ";
+				}
+				*out_stream<<"]";
+			}
+		}else
+			*out_stream<<"|[]; view set";
+		write_indent(0);
+		write_indent(0);
+	}
+
+	void	Decompiler::decompile_object(const	std::string	object_name,std::ostringstream	*stream){
+
+		decompile_object(object_indices[object_name],stream);
 	}
 
 	void	Decompiler::write_indent(uint16	i){

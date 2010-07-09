@@ -1,0 +1,26 @@
+P1:(pgm
+|[]; tpl
+[]; input
+   []
+      (ptn in:(ent ::) [v#view:(fvw in root) (> in.vw.res 2) (< in.psln_thr 1)])
+   |[]
+   |[]
+[]; productions
+   (inj [(mk.val in position (vec3 1 2 3) 0) [now v.sln forever root nil]])
+   (mod [in.vw.sln -0.2])
+   (mod [v.sln -0.3])
+4000000us; tsc
+1; nfr
+0; psln_thr
+)
+
+|[]
+
+iP1:(ipgm
+P1; code
+|[]; args
+0; psln_thr
+)
+
+[]
+   [now 0 forever root nil 1]

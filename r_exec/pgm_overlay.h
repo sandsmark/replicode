@@ -92,8 +92,6 @@ namespace	r_exec{
 		r_code::Code	*getIPGM()		const;
 		r_exec::View	*getIPGMView()	const;
 
-		virtual	r_code::Code	*getInputObject(uint16	i)	const;	//	defined in Overlay.
-
 		r_code::Code	*buildObject(Atom	head)	const;
 	};
 
@@ -103,12 +101,6 @@ namespace	r_exec{
 	friend	class	IPGMController;
 	friend	class	Context;
 	protected:
-		//	Convenience.
-		uint16	first_timing_constraint_index;
-		uint16	last_timing_constraint_index;
-		uint16	first_guard_index;
-		uint16	last_guard_index;
-
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
 
@@ -140,7 +132,7 @@ namespace	r_exec{
 		virtual	void	reduce(r_exec::View	*input,_Mem	*mem);	//	called upon the processing of a reduction job.
 
 		r_code::Code	*getInputObject(uint16	i)	const;
-		//r_exec::View	*getInputView(uint16	i)	const;
+		r_code::View	*getInputView(uint16	i)	const;
 	};
 
 	class	r_exec_dll	AntiOverlay:

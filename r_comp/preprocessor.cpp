@@ -1074,11 +1074,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 		switch(m->type){
 		case	RepliStruct::Set:
 			name=m->label.substr(0,m->label.length()-1);
-			if(name=="mks")			//	special case.
-				members.push_back(StructureMember(&Compiler::read_mks,name));
-			else	if(name=="vws")	//	special case.
-				members.push_back(StructureMember(&Compiler::read_vws,name));
-			else	if(m->args.size()==0)	//	anonymous set of anything.
+			if(m->args.size()==0)	//	anonymous set of anything.
 				members.push_back(StructureMember(&Compiler::read_set,name));
 			else{							//	structured set, arg[0].cmd is ::type.
 
@@ -1097,9 +1093,7 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 			p=m->cmd.find(':');
 			name=m->cmd.substr(0,p);
 			type=m->cmd.substr(p+1,m->cmd.length());
-			if(name=="vw")	//	special case.
-				members.push_back(StructureMember(&Compiler::read_view,name,type));
-			else	if(type=="")
+			if(type=="")
 				members.push_back(StructureMember(&Compiler::read_any,name));
 			else	if(type=="nb")
 				members.push_back(StructureMember(&Compiler::read_number,name));

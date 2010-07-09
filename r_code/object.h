@@ -103,13 +103,13 @@ namespace	r_code{
 
 	class	dll_export	View:
 	public	_Object{
-	protected:
-		Atom	_code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, oid, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
 	private:
 		uint16	index;						//	for unpacking: index is the index of the view in the SysObject.
+	protected:
+		Atom	_code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, oid, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
 	public:
-		P<Code>	object;						//	viewed object.
 		Code	*references[2];				//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group in references[0]).
+		P<Code>	object;						//	viewed object.
 
 		View():object(NULL){
 

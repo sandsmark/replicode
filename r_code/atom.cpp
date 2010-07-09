@@ -52,8 +52,7 @@ namespace	r_code{
 		case	VL_PTR:					std::cout<<"vlptr: "<<std::dec<<asIndex();return;
 		case	R_PTR:					std::cout<<"rptr: "<<std::dec<<asIndex();return;
 		case	IPGM_PTR:				std::cout<<"ipgm_ptr: "<<std::dec<<asIndex();return;
-		case	IN_OBJ_PTR:				std::cout<<"in_obj_ptr: "<<std::dec<<asViewIndex()<<" "<<asIndex();return;
-		case	IN_VW_PTR:				std::cout<<"in_vw_ptr: "<<std::dec<<asViewIndex()<<" "<<asIndex();return;
+		case	IN_OBJ_PTR:				std::cout<<"in_obj_ptr: "<<std::dec<<(uint32)asInputIndex()<<" "<<asIndex();return;
 		case	VALUE_PTR:				std::cout<<"value_ptr: "<<std::dec<<asIndex();return;
 		case	PROD_PTR:				std::cout<<"prod_ptr: "<<std::dec<<asIndex();return;
 		case	THIS:					std::cout<<"this";return;

@@ -60,14 +60,13 @@ namespace	r_code{
 			VL_PTR=0x86,		// value pointer.
 			IPGM_PTR=0x87,		// r_exec internal: index of data of a tpl arg held by an ipgm.
 			IN_OBJ_PTR=0x88,	// r_exec internal: index of data held by the object held by an input view.
-			IN_VW_PTR=0x89,		// r_exec internal: index of data held by an input view.
-			VALUE_PTR=0x8A,		// r_exec internal: index of data held by the overlay's value array.
-			PROD_PTR=0x8B,		// r_exec internal: index of data held by the overlay's production array.
+			VALUE_PTR=0x89,		// r_exec internal: index of data held by the overlay's value array.
+			PROD_PTR=0x8A,		// r_exec internal: index of data held by the overlay's production array.
 			THIS=0x90,			// this pointer.
 			VIEW=0x91,
 			MKS=0x92,
 			VWS=0x93,
-			NODE =0xA0,
+			NODE=0xA0,
 			DEVICE=0xA1,
 			DEVICE_FUNCTION=0xA2,
 			C_PTR =0xC0,		// chain pointer.
@@ -96,7 +95,6 @@ namespace	r_code{
 		static	Atom	VLPointer(uint16 index,uint16	cast_opcode=0x0FFF);
 		static	Atom	IPGMPointer(uint16 index);
 		static	Atom	InObjPointer(uint8	inputIndex,uint16 index);
-		static	Atom	InVwPointer(uint8	inputIndex,uint16 index);
 		static	Atom	ValuePointer(uint16 index);
 		static	Atom	ProductionPointer(uint16 index);
 		static	Atom	This();
@@ -142,7 +140,7 @@ namespace	r_code{
 		bool	asBoolean()		const;
 		uint16	asIndex()		const;	// applicable to internal, view, reference,
 										// and value pointers.
-		uint8	asViewIndex()	const;	// applicable to IN_OBJ_PTR and IN_VW_PTR.
+		uint8	asInputIndex()	const;	// applicable to IN_OBJ_PTR.
 		uint16	asOpcode()		const;
 		uint8	asCastOpcode()	const;	// applicable to VL_PTR.
 		uint8	getAtomCount()	const;	// arity of operators and

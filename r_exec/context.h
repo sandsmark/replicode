@@ -54,7 +54,8 @@ namespace	r_exec{
 			VIEW=2,					//		- a view;
 			MKS=3,					//		- the mks or an object;
 			VWS=4,					//		- the vws of an object;
-			UNDEFINED=5
+			VALUE_ARRAY=5,			//		- code in the value array.
+			UNDEFINED=6
 		}Data;
 		Data	data;
 
@@ -115,9 +116,7 @@ namespace	r_exec{
 			switch((*this)[0].getDescriptor()){
 			case	Atom::I_PTR:
 			case	Atom::VALUE_PTR:
-			case	Atom::IPGM_PTR:
-			case	Atom::IN_OBJ_PTR:
-			case	Atom::IN_VW_PTR:{
+			case	Atom::IPGM_PTR:{
 
 				if(data==REFERENCE	&&	index==0)	//	points to an object, not to one of its members.
 					addReference(destination,write_index,object);
@@ -142,16 +141,29 @@ namespace	r_exec{
 				break;
 			}
 			case	Atom::VL_PTR:
-				if(code[(*this)[0].asIndex()].getDescriptor()==Atom::PROD_PTR)
+				if(code[(*this)[0].asIndex()].getDescriptor()==Atom::PROD_PTR){
+
 					addReference(destination,write_index,overlay->productions[code[(*this)[0].asIndex()].asIndex()]);
-				else
+					break;
+				}
+				if(code[(*this)[0].asIndex()].getDescriptor()==Atom::I_PTR){
+
+					if(code[code[(*this)[0].asIndex()].asIndex()].getDescriptor()==Atom::IN_OBJ_PTR){
+
+						addReference(destination,write_index,((IOverlay	*)overlay)->getInputObject(code[code[(*this)[0].asIndex()].asIndex()].asInputIndex()));
+						break;
+					}
 					(**this).copy_member(destination,write_index,extent_index,dereference_cptr);
+				}
 				break;
 			case	Atom::R_PTR:
 				addReference(destination,write_index,object->get_reference((*this)[0].asIndex()));
 				break;
 			case	Atom::PROD_PTR:
-				addReference(destination,write_index,overlay->productions[(*this)[0].asIndex()]);
+				addReference(destination,write_index,overlay->productions[(*this)[0].asInputIndex()]);
+				break;
+			case	Atom::IN_OBJ_PTR:
+				addReference(destination,write_index,((IOverlay	*)overlay)->getInputObject((*this)[0].asIndex()));
 				break;
 			case	Atom::OPERATOR:
 			case	Atom::OBJECT:
@@ -211,6 +223,8 @@ namespace	r_exec{
 				return	Context(*m,0);
 			}case	VWS:
 				return	Context();	//	never used for iterating views (unexposed).
+			case	VALUE_ARRAY:
+				return	Context(object,view,code,this->index+index,overlay,VALUE_ARRAY);
 			default:	//	undefined context.
 				return	Context();
 			}

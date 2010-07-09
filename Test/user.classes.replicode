@@ -86,7 +86,7 @@ nil; ntf_grp
 )
 
 []
-   [now 1 forever root nil 0 0]
+   [now 0 forever root nil 0 0]
 
 stdin:(grp
 1; upr
@@ -124,8 +124,8 @@ root; ntf_grp
 )
 
 []
-   [now 1 forever root nil 0 0]
-   [now 1 forever g1 nil 1 1]; last 2 members: vis and cov
+   [now 0 forever root nil 0 0]
+   [now 0 forever g1 nil 1 1]; last 2 members: vis and cov
 
 stdout:(grp
 1; upr
@@ -163,14 +163,14 @@ root; ntf_grp
 )
 
 []
-   [now 1 forever root nil 0 0]
+   [now 0 forever root nil 0 0]
 
 self:(ent
 0; psln_thr
 )
 
 []
-   [now 0 forever root nil]
+   [now 1 forever root nil]
 
 position:(ent
 1; psln_thr

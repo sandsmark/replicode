@@ -777,12 +777,13 @@ failure:
 		}
 
 		View	*v=(View	*)_object->find_view(_group,true);	//	returns a copy of the view, if any.
-		if(v){	//	copy the view in the value array.
+		if(v){	//	copy the view in the value array: code on VIEW_CODE_MAX_SIZE followed by 2 atoms holding raw pointers to grp and org.
 
-			uint16	atom_count=v->code(0).getAtomCount();
 			index=context.setCompoundResultHead(v->code(0));
-			for(uint16	i=1;i<=atom_count;++i)
+			for(uint16	i=1;i<VIEW_CODE_MAX_SIZE;++i)
 				context.addCompoundResultPart(v->code(i));
+			context.addCompoundResultPart(Atom((uint32)v->references[0]));
+			context.addCompoundResultPart(Atom((uint32)v->references[1]));
 			delete	v;
 			return	true;
 		}

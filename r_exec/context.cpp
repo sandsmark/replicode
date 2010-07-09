@@ -74,6 +74,9 @@ namespace	r_exec{
 			if(input.getChildrenCount()!=atom_count)
 				return	false;
 
+			if((*this)[0].atom!=input[0].atom)
+				return	false;
+
 			for(uint16	i=1;i<=atom_count;++i){
 
 				Context	pc=*getChild(i);
@@ -115,14 +118,15 @@ namespace	r_exec{
 		case	Atom::VL_PTR:{	//	evaluate the code if necessary.
 			
 			Atom	a=code[(*this)[0].asIndex()];
-			uint8	d=a.getDescriptor();
-			if(a.isStructural()	||
-				(a.isPointer()	&&	d!=Atom::VALUE_PTR	&&	d!=Atom::IPGM_PTR	&&	d!=Atom::IN_OBJ_PTR	&&	d!=Atom::IN_VW_PTR	&&	d!=Atom::PROD_PTR)){	//	the target location is not evaluated yet.
+			uint16	structure_index;
+			if(a.getDescriptor()==Atom::I_PTR)	//	dereference once.
+				a=code[structure_index=a.asIndex()];
+			if(a.isStructural()){	//	the target location is not evaluated yet.
 
-				Context	c(object,view,code,(*this)[0].asIndex(),overlay,data);
+				Context	s(object,view,code,structure_index,overlay,data);
 				uint16	unused_index;
-				if(c.evaluate_no_dereference(unused_index))
-					return	c;	//	patched code: atom at VL_PTR's index changed to VALUE_PTR or 32 bits result.
+				if(s.evaluate_no_dereference(unused_index))
+					return	s;	//	patched code: atom at VL_PTR's index changed to VALUE_PTR or 32 bits result.
 				else	//	evaluation failed, return undefined context.
 					return	Context();
 			}else
@@ -139,8 +143,11 @@ namespace	r_exec{
 			for(uint16	i=2;i<=getChildrenCount();++i){
 
 				switch((*this)[i].getDescriptor()){
-				case	Atom::VIEW:
-					c=Context(c.getObject(),c.view,&c.view->code(0),0,NULL,VIEW);
+				case	Atom::VIEW:	//	accessible only for this and input objects.
+					if(c.view)
+						c=Context(c.getObject(),c.view,&c.view->code(0),0,NULL,VIEW);
+					else
+						return	Context();
 					break;
 				case	Atom::MKS:
 					return	Context(c.getObject(),MKS);
@@ -165,14 +172,14 @@ namespace	r_exec{
 		case	Atom::VWS:
 			return	Context(object,VWS);
 		case	Atom::VALUE_PTR:
-			return	Context(object,view,&overlay->values[0],(*this)[0].asIndex(),overlay,data);
+			return	Context(object,view,&overlay->values[0],(*this)[0].asIndex(),overlay,VALUE_ARRAY);
 		case	Atom::IPGM_PTR:
 			return	*Context(overlay->getIPGM(),(*this)[0].asIndex());
-		case	Atom::IN_OBJ_PTR:
-			return	*Context(overlay->getInputObject((*this)[0].asViewIndex()),(*this)[0].asIndex());
-		case	Atom::IN_VW_PTR:
-			return	Context(overlay->getInputObject((*this)[0].asViewIndex()),(*this)[0].asIndex());
-		case	Atom::PROD_PTR:
+		case	Atom::IN_OBJ_PTR:{
+			Code	*input_object=((IOverlay	*)overlay)->getInputObject((*this)[0].asInputIndex());
+			View	*input_view=(r_exec::View*)((IOverlay	*)overlay)->getInputView((*this)[0].asInputIndex());
+			return	*Context(input_object,input_view,&input_object->code(0),(*this)[0].asIndex(),NULL,REFERENCE);
+		}case	Atom::PROD_PTR:
 			return	Context(overlay->productions[(*this)[0].asIndex()],0);
 		default:
 			return	*this;
@@ -253,8 +260,8 @@ namespace	r_exec{
 			member_index=0;
 			return;
 		}
-
-		Context	c=*cptr.getChild(1);	//	this, vl_ptr or rptr.
+//cptr.trace();
+		Context	c=*cptr.getChild(1);	//	this, vl_ptr, value_ptr or rptr.
 		uint16	atom_count=cptr.getChildrenCount();
 		for(uint16	i=2;i<atom_count;++i){	//	stop before the last iptr.
 
@@ -279,7 +286,10 @@ namespace	r_exec{
 			break;
 		case	Atom::SET:		//	dynamically generated views can be sets.
 		case	Atom::S_SET:	//	views are always copied; set the object to the view's group on which to perform an operation for the view's oid.
-			object=c.view->get_host();
+			if(c.data==VALUE_ARRAY)
+				object=(Group	*)c[VIEW_CODE_MAX_SIZE].atom;	//	first reference of grp in a view stored in athe value array.
+			else
+				object=c.view->get_host();
 			view_oid=c[VIEW_OID].atom;	//	oid is hidden at the end of the view code; stored directly as a uint32.
 			object_type=TYPE_VIEW;
 			break;
