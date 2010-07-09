@@ -23,7 +23,7 @@
   </Module>
   <Module class="Loader" name="loader" host="local">
     <Parameters>
-      <Parameter value="c:/work/replicode/test/test.visualizer.replicode" type="string"/>
+      <Parameter value="c:/work/replicode/test/test.3.replicode" type="string"/>
     </Parameters>
     <Projection space="space1" activation_level="1">
       <Subscription message_class="SystemReady"/>

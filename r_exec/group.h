@@ -274,8 +274,7 @@ namespace	r_exec{
 		View	*get_view(uint32	OID);
 
 		uint32	get_upr();
-		uint32	get_spr();
-
+		
 		float32	get_sln_thr();
 		float32	get_act_thr();
 		float32	get_vis_thr();

@@ -139,7 +139,7 @@ namespace	r_exec{
 				//	build signaling jobs for active input-less overlays.
 				for(v=g->input_less_ipgm_views.begin();v!=g->input_less_ipgm_views.end();++v){
 
-					TimeJob	j(new	InputLessPGMSignalingJob(v->second->controller),now+g->get_spr()*base_period);
+					TimeJob	j(new	InputLessPGMSignalingJob(v->second->controller),now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
 					time_job_queue->push(j);
 				}
 
@@ -529,7 +529,7 @@ namespace	r_exec{
 					break;
 				}case	ObjectType::INPUT_LESS_IPGM:{	//	inject a signaling job for an input-less pgm (sfr).
 
-					TimeJob	j(new	InputLessPGMSignalingJob(group->new_controllers[i]),now+group->get_spr()*base_period);
+					TimeJob	j(new	InputLessPGMSignalingJob(group->new_controllers[i]),now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
 					time_job_queue->push(j);
 					break;
 				}

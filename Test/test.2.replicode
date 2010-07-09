@@ -22,7 +22,6 @@ P1:(pgm
    (inj []
       g:(grp
       1; upr
-      1; spr
       0.4; sln_thr
       0; act_thr
       0; vis_thr

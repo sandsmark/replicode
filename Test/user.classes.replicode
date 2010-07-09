@@ -14,7 +14,6 @@
 
 root:(grp
 1; upr
-4; spr
 0; sln_thr
 0; act_thr
 0; vis_thr
@@ -52,7 +51,6 @@ nil; ntf_grp
 
 g1:(grp
 1; upr
-1; spr
 1; sln_thr
 0; act-thr
 0; vis_thr
@@ -90,7 +88,6 @@ nil; ntf_grp
 
 stdin:(grp
 1; upr
-1; spr
 1; sln_thr
 0; act_thr
 0; vis_thr
@@ -129,7 +126,6 @@ root; ntf_grp
 
 stdout:(grp
 1; upr
-1; spr
 0; sln_thr
 0; act_thr
 0; vis_thr
@@ -177,4 +173,4 @@ position:(ent
 )
 
 []
-   [now 0 forever root nil]
+   [now 1 forever root nil]

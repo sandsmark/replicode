@@ -32,6 +32,8 @@
 
 #include	"init.h"
 
+#include	"decompiler.h"
+
 
 LOAD_MODULE(Loader)
 
@@ -54,11 +56,11 @@ void	Loader::compile(const	std::string	&filename){
 
 	//	TMP: generate an image for Tamas.
 	
-	ofstream	output("c:/work/replicode/test/test.visualizer.replicode.image",ios::binary|ios::out);
+	ofstream	output("c:/work/replicode/test/test.3.replicode.image",ios::binary|ios::out);
 	ImageMessage::Write(image,output);
 	output.close();
 
-	ifstream	input("c:/work/replicode/test/test.visualizer.replicode.image",ios::binary|ios::in);
+	ifstream	input("c:/work/replicode/test/test.3.replicode.image",ios::binary|ios::in);
 	if(!input.good())
 		return;
 
@@ -70,7 +72,13 @@ void	Loader::compile(const	std::string	&filename){
 	r_code::vector<Code	*>	objects;
 	r_comp::Image			*i=new	r_comp::Image();
 	i->load(img);
-	i->getObjects<LObject>(objects);
+
+	std::ostringstream	decompiled_code;
+	r_comp::Decompiler	decompiler;
+	decompiler.init(&r_exec::Metadata);
+	decompiler.decompile(i,&decompiled_code);
+	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
+	//i->getObjects<LObject>(objects);
 	delete	i;
 
 	delete	img;

@@ -153,8 +153,8 @@ namespace	r_exec{
 						addReference(destination,write_index,((IOverlay	*)overlay)->getInputObject(code[code[(*this)[0].asIndex()].asIndex()].asInputIndex()));
 						break;
 					}
-					(**this).copy_member(destination,write_index,extent_index,dereference_cptr);
 				}
+				(**this).copy_member(destination,write_index,extent_index,dereference_cptr);
 				break;
 			case	Atom::R_PTR:
 				addReference(destination,write_index,object->get_reference((*this)[0].asIndex()));

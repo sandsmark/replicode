@@ -90,11 +90,6 @@ namespace	r_exec{
 		return	code(GRP_UPR).asFloat();
 	}
 
-	inline	uint32	Group::get_spr(){
-
-		return	code(GRP_SPR).asFloat();
-	}
-
 	inline	float32	Group::get_sln_thr(){
 
 		return	code(GRP_SLN_THR).asFloat();
@@ -379,7 +374,6 @@ namespace	r_exec{
 
 		switch(member_index){
 		case	GRP_UPR:
-		case	GRP_SPR:
 		case	GRP_DCY_PRD:
 		case	GRP_SLN_CHG_PRD:
 		case	GRP_ACT_CHG_PRD:
@@ -427,7 +421,6 @@ namespace	r_exec{
 		
 		switch(member_index){
 		case	GRP_UPR:
-		case	GRP_SPR:
 		case	GRP_DCY_PRD:
 		case	GRP_SLN_CHG_PRD:
 		case	GRP_ACT_CHG_PRD:

@@ -116,6 +116,7 @@ namespace	r_exec{
 		Atom	*original_code=&getIPGM()->get_reference(0)->code(0);
 		for(uint16	i=0;i<patch_indices.size();++i)	//	upatch code.
 			pgm_code[patch_indices[i]]=original_code[patch_indices[i]];
+		patch_indices.clear();
 
 		if(value_commit_index!=values.size()){	//	shrink the values down to the last commit index.
 
@@ -415,7 +416,6 @@ namespace	r_exec{
 
 		input_pattern_indices=original->input_pattern_indices;
 		input_pattern_indices.push_back(last_input_index);		//	put back the last original's input index.
-
 		for(uint16	i=0;i<original->input_views.size()-1;++i)	//	ommit the last original's input view.
 			input_views.push_back(original->input_views[i]);
 
@@ -425,7 +425,7 @@ namespace	r_exec{
 
 		Atom	*original_code=&getIPGM()->get_reference(0)->code(0);
 		for(uint16	i=0;i<original->patch_indices.size();++i)	//	unpatch code.
-			pgm_code[i]=original_code[patch_indices[i]];
+			pgm_code[original->patch_indices[i]]=original_code[original->patch_indices[i]];
 
 		this->value_commit_index=value_commit_index;
 		for(uint16	i=0;i<value_commit_index;++i)	//	copy values up to the last commit index.
@@ -454,12 +454,13 @@ namespace	r_exec{
 		uint16	atom_count=pgm_code[skel_index].getAtomCount();
 
 		pgm_code[skel_index]=Atom::InObjPointer(input_index,0);	//	replace the skeleton atom by a ptr to the input object.
+		patch_indices.push_back(skel_index);
 
 		for(uint16	j=1;j<=atom_count;++j){
 
 			switch(pgm_code[skel_index+j].getDescriptor()){
 			case	Atom::WILDCARD:
-				pgm_code[pgm_code_index+j]=Atom::InObjPointer(input_index,input_code_index+j);
+				pgm_code[skel_index+j]=Atom::InObjPointer(input_index,input_code_index+j);
 				patch_indices.push_back(skel_index+j);
 				break;
 			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
@@ -486,7 +487,7 @@ namespace	r_exec{
 					controller->remove(this);
 					return;
 				}
-			}else{
+			}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
 
 				IOverlay	*offspring=new	IOverlay(this,input_index,value_commit_index);
 				controller->add(offspring);
@@ -494,7 +495,6 @@ namespace	r_exec{
 				return;
 			}
 		case	FAILURE:	//	just rollback: let the overlay match other inputs.
-			input_pattern_indices.push_back(input_index);
 			rollback();
 		}
 	}
@@ -562,7 +562,7 @@ namespace	r_exec{
 
 	bool	IOverlay::check_timings(){
 
-		uint16	timing_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+1].asIndex();
+		uint16	timing_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+2].asIndex();
 		uint16	timing_count=pgm_code[timing_set_index].getAtomCount();
 		for(uint16	i=1;i<=timing_count;++i)
 			if(!evaluate(timing_set_index+i))
@@ -572,7 +572,7 @@ namespace	r_exec{
 
 	bool	IOverlay::check_guards(){
 
-		uint16	guard_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+2].asIndex();
+		uint16	guard_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+3].asIndex();
 		uint16	guard_count=pgm_code[guard_set_index].getAtomCount();
 		for(uint16	i=1;i<=guard_count;++i)
 			if(!evaluate(guard_set_index+i))
@@ -633,8 +633,7 @@ namespace	r_exec{
 				commit();
 				return;
 			}
-		case	FAILURE:	//	just rollback: let the overl match other inputs.
-			input_pattern_indices.push_back(input_index);
+		case	FAILURE:	//	just rollback: let the overlay match other inputs.
 			rollback();
 		}
 	}
@@ -657,6 +656,12 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	IPGMController::IPGMController(_Mem	*m,r_code::View	*ipgm_view):_Object(),mem(m),ipgm_view(ipgm_view),alive(true),successful_match(false),deadline(Now()){
+	}
+	
+	IPGMController::~IPGMController(){
+	}
+
 	void	IPGMController::kill(){
 		
 		alive=false;
@@ -667,10 +672,17 @@ namespace	r_exec{
 
 	void	IPGMController::take_input(r_exec::View	*input){	//	will never be called on an input-less controller.
 
+		uint64	now=Now();
+		if(now>deadline){
+
+			std::list<P<Overlay> >::const_iterator	o;
+			for(o=overlays.begin();o!=overlays.end();++o)
+				(*o)->kill();
+			deadline=now+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
+		}
+
 		if(overlays.size()==0)
 			overlays.push_back(getIPGM()->get_reference(0)->code(0).asOpcode()==Opcodes::AntiPGM?new	AntiOverlay(this):new	IOverlay(this));
-
-		uint64	now=Now();
 
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
@@ -713,7 +725,7 @@ namespace	r_exec{
 			host->get_c_act()>host->get_c_act_thr()			&&	//	c-active group.
 			host->get_c_sln()>host->get_c_sln_thr()){			//	c-salient group.
 
-			TimeJob	next_job(new	InputLessPGMSignalingJob(this),Now()+host->get_spr()*mem->get_base_period());
+			TimeJob	next_job(new	InputLessPGMSignalingJob(this),Now()+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
 			mem->pushTimeJob(next_job);
 		}
 		host->release();

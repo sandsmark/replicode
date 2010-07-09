@@ -319,7 +319,7 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
-				TimeJob	j(new	InputLessPGMSignalingJob(o),now+host->get_spr()*base_period);
+				TimeJob	j(new	InputLessPGMSignalingJob(o),now+Timestamp::Get<Code>(view->object->get_reference(0),PGM_TSC));
 				time_job_queue->push(j);
 			}
 			break;
