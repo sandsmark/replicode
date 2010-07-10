@@ -32,9 +32,9 @@
 
 namespace	r_exec{
 
-	ReductionJob::ReductionJob():input(NULL),overlay(NULL),deadline(0){
+	ReductionJob::ReductionJob():input(NULL),overlay(NULL){
 	}
 
-	ReductionJob::ReductionJob(View	*input,IOverlay	*overlay,uint64	deadline):input(input),overlay(overlay),deadline(deadline){
+	ReductionJob::ReductionJob(View	*input,IOverlay	*overlay):input(input),overlay(overlay){
 	}
 }

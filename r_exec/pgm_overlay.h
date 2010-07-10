@@ -157,8 +157,7 @@ namespace	r_exec{
 		bool					alive;
 		std::list<P<Overlay> >	overlays;
 		bool					successful_match;
-		uint64					deadline;	//	when the deadline is passed, kill all overlays; not used for anti-overlays (handled by time jobs).
-
+		uint64					start_time;	//	when now-start_time>tsc, kill all overlays; not used for anti-overlays (handled by time jobs).
 	public:
 		IPGMController(_Mem	*m,r_code::View	*ipgm_view);
 		~IPGMController();

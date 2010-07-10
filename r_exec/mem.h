@@ -56,12 +56,6 @@ namespace	r_exec{
 	//	Main processing in _Mem::update().
 	class	r_exec_dll	_Mem:
 	public	r_code::Mem{
-	public:
-		typedef	enum{
-			NOT_STARTED=0,
-			STARTED=1,
-			STOPPED=2
-		}State;
 	protected:
 		uint32	base_period;
 
@@ -72,11 +66,18 @@ namespace	r_exec{
 		ReductionCore	**reduction_cores;
 		uint32			time_core_count;
 		TimeCore		**time_cores;
+		uint32			delegate_count;
 
-		std::list<DelegatedCore	*>	delegates;
-
+		typedef	enum{
+			NOT_STARTED=0,
+			RUNNING=1,
+			SUSPENDED=2,
+			STOPPED=3
+		}State;
 		State			state;
 		FastSemaphore	*state_sem;
+		Event			*suspension_lock;
+		FastSemaphore	*stop_sem;
 
 		P<Group>	root;	//	holds everything.
 
@@ -117,11 +118,12 @@ namespace	r_exec{
 
 		void	add_delegate(uint64	dealine,_TimeJob	*j);	//	called by time cores when they are ahead of their deadlines.
 		void	remove_delegate(DelegatedCore	*core);			//	called by delegate cores when they are done.
+		bool	check_state(bool	is_delegate);
 
 		void	start();
 		void	stop();	//	after stop() the content is cleared and one has to call load() and start() again.
-
-		State	get_state();
+		void	suspend();
+		void	resume();
 
 		//	Called by groups at update time.
 		virtual	void	injectNotificationNow(View	*view,bool	lock)=0;

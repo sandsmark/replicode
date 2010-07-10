@@ -213,7 +213,7 @@ namespace	r_exec{
 
 	NotificationView::NotificationView(Group	*origin,Group	*destination,Code	*marker):View(){
 
-		uint32	write_index=0;
+		uint16	write_index=0;
 		code(write_index++)=r_code::Atom::SSet(ViewOpcode,5);	//	Structured Set.
 		code(write_index++)=r_code::Atom::IPointer(6);			//	iptr to ijt.
 		code(write_index++)=r_code::Atom::Float(1);				//	sln.

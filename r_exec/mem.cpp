@@ -37,7 +37,7 @@ namespace	r_exec{
 
 	_Mem::~_Mem(){
 
-		if(state==STARTED)
+		if(state==RUNNING	||	state==SUSPENDED)
 			stop();
 		root=NULL;
 	}
@@ -61,40 +61,56 @@ namespace	r_exec{
 			delete	time_cores[i];
 		delete[]	time_cores;
 
-		std::list<DelegatedCore	*>::const_iterator	d;
-		state_sem->acquire();
-		for(d=delegates.begin();d!=delegates.end();++d)
-			delete	*d;
-		state_sem->release();
-
-		delegates.clear();
-
 		delete	object_register_sem;
 		delete	objects_sem;
 		delete	state_sem;
+		delete	suspension_lock;
+		delete	stop_sem;
 
 		delete	reduction_job_queue;
 		delete	time_job_queue;
 	}
 
-	_Mem::State	_Mem::get_state(){
-
-		state_sem->acquire();
-		State	s=state;
-		state_sem->release();
-
-		return	s;
-	}
-
 	////////////////////////////////////////////////////////////////
 
-	void	_Mem::add_delegate(uint64	dealine,_TimeJob	*j){
+	bool	_Mem::check_state(bool	is_delegate){
 
 		state_sem->acquire();
-		if(state==STARTED){
+		switch(state){
+		case	STOPPED:
+			if(is_delegate){
+				
+				if(--delegate_count==0)
+					stop_sem->release();
+			}
+			state_sem->release();
+			return	false;
+		case	SUSPENDED:
+			state_sem->release();
+			suspension_lock->wait();
+			if(state==STOPPED){
+				
+				if(is_delegate){
+
+					if(--delegate_count==0)
+						stop_sem->release();
+				}
+				return	false;
+			}
+			return	true;
+		case	RUNNING:
+			state_sem->release();
+			return	true;
+		}
+	}
+
+	void	_Mem::add_delegate(uint64	dealine,_TimeJob	*j){
+		
+		state_sem->acquire();
+		if(state==RUNNING){
 
 			DelegatedCore	*d=new	DelegatedCore(this,dealine,j);
-			d->position=delegates.insert(delegates.end(),d);
+			++delegate_count;
 			d->start(DelegatedCore::Wait);
 		}
 		state_sem->release();
@@ -103,19 +119,23 @@ namespace	r_exec{
 	void	_Mem::remove_delegate(DelegatedCore	*core){
 
 		state_sem->acquire();
-		delegates.erase(core->position);
 		delete	core;
+		--delegate_count;
 		state_sem->release();
 	}
 
+	////////////////////////////////////////////////////////////////
+
 	void	_Mem::start(){
 
-		if(state==STARTED)
+		if(state!=STOPPED	&&	state!=NOT_STARTED)
 			return;
 
 		object_register_sem=new	FastSemaphore(1,1);
 		objects_sem=new	FastSemaphore(1,1);
 		state_sem=new	FastSemaphore(1,1);
+		suspension_lock=new	Event();
+		stop_sem=new	FastSemaphore(0,1);
 
 		time_job_queue=new	PipeNN<TimeJob,1024>();
 		reduction_job_queue=new	PipeNN<ReductionJob,1024>();
@@ -171,36 +191,62 @@ namespace	r_exec{
 
 		initial_groups.clear();
 
+		delegate_count=0;
+		state=RUNNING;
+
 		for(i=0;i<reduction_core_count;++i)
 			reduction_cores[i]->start(ReductionCore::Run);
 		for(i=0;i<time_core_count;++i)
 			time_cores[i]->start(TimeCore::Run);
-
-		state=STARTED;
 	}
 
 	void	_Mem::stop(){
 
 		state_sem->acquire();
-		if(state!=STARTED){
+		if(state!=RUNNING	&&	state!=SUSPENDED){
 
 			state_sem->release();
 			return;
 		}
+		if(state==SUSPENDED)
+			suspension_lock->fire();
 		state=STOPPED;
-
+		
 		uint32	i;
 		for(i=0;i<reduction_core_count;++i)
 			Thread::TerminateAndWait(reduction_cores[i]);
 		for(i=0;i<time_core_count;++i)
 			Thread::TerminateAndWait(time_cores[i]);
-
-		std::list<DelegatedCore	*>::const_iterator	d;
-		for(d=delegates.begin();d!=delegates.end();++d)
-			Thread::TerminateAndWait(*d);
-
 		state_sem->release();
+
+		stop_sem->acquire();
+
 		reset();
+	}
+
+	void	_Mem::suspend(){
+
+		state_sem->acquire();
+		if(state!=RUNNING){
+
+			state_sem->release();
+			return;
+		}
+		state=SUSPENDED;
+		state_sem->release();
+	}
+
+	void	_Mem::resume(){
+
+		state_sem->acquire();
+		if(state!=SUSPENDED){
+
+			state_sem->release();
+			return;
+		}
+		suspension_lock->fire();
+		state=RUNNING;
+		state_sem->release();
 	}
 
 	////////////////////////////////////////////////////////////////

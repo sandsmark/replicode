@@ -41,7 +41,7 @@ namespace	r_exec{
 
 		std::cout<<"Time Core created.\n";
 
-		while(1){
+		while(_this->mem->check_state(false)){	//	enter a wait state when the rMem is suspended.
 
 			TimeJob	j=_this->mem->popTimeJob();
 			if(!j.is_alive())
@@ -49,20 +49,19 @@ namespace	r_exec{
 
 			uint64	target=j.target_time;
 			if(target==0)	//	0 means ASAP.
-				goto	process;
+				j.job->update(_this->mem);
+			else{
 
-			uint64	now=Now();
-			int64	deadline=target-now;
-			if(deadline>=0){	//	on time: spawn a delegate to wait for the due time; delegate will die when done.
+				uint64	now=Now();
+				int64	deadline=target-now;
+				if(deadline>=0)	//	on time: spawn a delegate to wait for the due time; delegate will die when done.
+					_this->mem->add_delegate(deadline,j.job);
+				else{	//	we are late: do the job and report.
 
-				_this->mem->add_delegate(deadline,j.job);
-				continue;
-			}else{	//	we are late: report.
-
-				std::cout<<"Time Core report: late on target: "<<-deadline/1000<<" ms behind."<<std::endl;
+					j.job->update(_this->mem);
+					std::cout<<"Time Core report: late on target: "<<-deadline/1000<<" ms behind."<<std::endl;
+				}
 			}
-process:
-			j.job->update(_this->mem);
 		}
 
 		thread_ret_val(0);
@@ -82,12 +81,28 @@ process:
 
 		DelegatedCore	*_this=((DelegatedCore	*)args);
 
-		_this->timer.start(_this->deadline);
-		_this->timer.wait();
-		
-		_this->job->update(_this->mem);
+		uint64	init_time=Now();
+		if(_this->mem->check_state(true)){	//	enter a wait state when the rMem is suspended.
 
-		_this->mem->remove_delegate(_this);
+			uint64	now=Now();
+			_this->deadline-=(now-init_time);
+			if(_this->deadline>0){
+
+				_this->timer.start(_this->deadline);
+				_this->timer.wait();
+
+				if(!_this->mem->check_state(true)){
+
+					delete	_this;
+					thread_ret_val(0);
+				}
+			}
+			
+			_this->job->update(_this->mem);
+			_this->mem->remove_delegate(_this);
+		}else
+			delete	_this;
+
 		thread_ret_val(0);
 	}
 

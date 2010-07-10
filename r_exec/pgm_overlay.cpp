@@ -235,7 +235,6 @@ namespace	r_exec{
 		if(notify_rdx)	//	the productions are command objects (cmd); all productions are notified.
 			mk_rdx=get_mk_rdx(extent_index);
 		
-		uint64	now=Now();
 		for(uint16	i=1;i<=production_count;++i){	//	all productions have evaluated correctly; now we can execute the commands.
 
 			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,production_set_index+i,this);
@@ -656,7 +655,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	IPGMController::IPGMController(_Mem	*m,r_code::View	*ipgm_view):_Object(),mem(m),ipgm_view(ipgm_view),alive(true),successful_match(false),deadline(Now()){
+	IPGMController::IPGMController(_Mem	*m,r_code::View	*ipgm_view):_Object(),mem(m),ipgm_view(ipgm_view),alive(true),successful_match(false),start_time(Now()){
 	}
 	
 	IPGMController::~IPGMController(){
@@ -668,17 +667,21 @@ namespace	r_exec{
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o)
 			(*o)->kill();
+		overlays.clear();
 	}
 
 	void	IPGMController::take_input(r_exec::View	*input){	//	will never be called on an input-less controller.
 
 		uint64	now=Now();
-		if(now>deadline){
+		uint64	tsc=Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
+		if(now-start_time>tsc){
 
 			std::list<P<Overlay> >::const_iterator	o;
 			for(o=overlays.begin();o!=overlays.end();++o)
 				(*o)->kill();
-			deadline=now+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
+			overlays.clear();
+
+			start_time=now;
 		}
 
 		if(overlays.size()==0)
@@ -687,7 +690,7 @@ namespace	r_exec{
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
 
-			ReductionJob	j(new	View(input),*o,now+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
+			ReductionJob	j(new	View(input),*o);
 			mem->pushReductionJob(j);
 		}
 	}
@@ -745,14 +748,14 @@ namespace	r_exec{
 	}
 
 	void	IPGMController::restart(AntiOverlay	*overlay,bool	match){	//	one overlay matched all its inputs, timings and guards: push a new signaling job, 
-																					//	keep the overlay alive (ita has been reset and shall take new inputs) and kill all others.
+																		//	keep the overlay alive (it has been reset and shall take new inputs) and kill all others.
 		overlay->reset();
 		
 		Group	*host=getIPGMView()->get_host();
 		host->acquire();
 		if(getIPGMView()->get_act_vis()>host->get_act_thr()	&&	//	active ipgm.
-			host->get_c_act()>host->get_c_act_thr()	&&		//	c-active group.
-			host->get_c_sln()>host->get_c_sln_thr()){		//	c-salient group.
+			host->get_c_act()>host->get_c_act_thr()	&&			//	c-active group.
+			host->get_c_sln()>host->get_c_sln_thr()){			//	c-salient group.
 
 			TimeJob	next_job(new	AntiPGMSignalingJob(this),Now()+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
 			mem->pushTimeJob(next_job);

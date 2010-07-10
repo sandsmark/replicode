@@ -51,8 +51,6 @@ namespace	r_exec{
 	public:
 		static	thread_ret thread_function_call	Wait(void	*args);
 
-		std::list<DelegatedCore	*>::const_iterator	position;
-
 		DelegatedCore(_Mem	*m,uint64	deadline,_TimeJob	*j);
 		~DelegatedCore();
 	};
@@ -63,6 +61,7 @@ namespace	r_exec{
 		_Mem	*mem;
 	public:
 		static	thread_ret thread_function_call	Run(void	*args);
+
 		TimeCore(_Mem	*m);
 		~TimeCore();
 	};

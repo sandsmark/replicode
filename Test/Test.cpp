@@ -64,10 +64,14 @@ int32	main(int	argc,char	**argv){
 		//uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
 		std::cout<<"\nsleeping 1000\n";
 		Thread::Sleep(1000);
+		mem->suspend();
+		r_comp::Image	*image=mem->getImage();
+		mem->resume();
+		Thread::Sleep(500);
 		std::cout<<"\nstopping rMem\n";
 		mem->stop();
 
-		r_comp::Image	*image=mem->getImage();
+		//r_comp::Image	*image=mem->getImage();
 
 		delete	mem;
 

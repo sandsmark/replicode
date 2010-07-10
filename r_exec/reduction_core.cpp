@@ -41,15 +41,12 @@ namespace	r_exec{
 
 		std::cout<<"Reduction Core created.\n";
 
-		while(1){
+		while(_this->mem->check_state(false)){	//	enter a wait state when the rMem is suspended.
 
 			ReductionJob	j=_this->mem->popReductionJob();
-			if(j.overlay->is_alive()){
-
-				uint64	now=Now();
-				if(j.deadline>now)	//	in case of an input-less pgm or an |pgm, signaling jobs will inject productions if any.
-					j.overlay->reduce(j.input,_this->mem);
-			}else
+			if(j.overlay->is_alive())
+				j.overlay->reduce(j.input,_this->mem);
+			else
 				j.overlay=NULL;
 		}
 

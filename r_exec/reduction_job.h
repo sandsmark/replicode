@@ -41,9 +41,8 @@ namespace	r_exec{
 	public:
 		P<View>		input;
 		P<IOverlay>	overlay;
-		uint64		deadline;	//	for ipgm with inputs.
 		ReductionJob();
-		ReductionJob(View	*input,IOverlay	*overlay,uint64	deadline);
+		ReductionJob(View	*input,IOverlay	*overlay);
 	};
 }
 
