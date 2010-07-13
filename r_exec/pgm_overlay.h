@@ -3,7 +3,7 @@
 //	Author: Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -61,7 +61,7 @@ namespace	r_exec{
 		Atom	*pgm_code;
 		uint16	pgm_code_size;
 
-		std::vector<Atom>		values;			//	value array.
+		r_code::vector<Atom>	values;			//	value array.
 		std::vector<P<Code> >	productions;	//	receives the results of ins, inj and eje; views are retrieved (fvw) or built (reduction) in the value array.
 
 		bool	evaluate(uint16	index);			//	evaluates the pgm_code at the specified index.
@@ -72,6 +72,8 @@ namespace	r_exec{
 		std::vector<uint16>	patch_indices;		//	indices where patches are applied; used for rollbacks.
 		uint16				value_commit_index;	//	index of the last computed value+1; used for rollbacks.
 		void				patch_code(uint16	index,Atom	value);
+		uint16				get_last_patch_index();
+		void				unpatch_code(uint16	patch_index);
 		void				patch_tpl_args();	//	no views in tpl args; patches the ptn skeleton's first atom with IPGM_PTR with an index in the ipgm arg set; patches wildcards with similar IPGM_PTRs.
 		void				patch_tpl_code(uint16	pgm_code_index,uint16	ipgm_code_index);	//	to recurse.
 		virtual	void		patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index);	//	defined in IOverlay.
@@ -80,6 +82,8 @@ namespace	r_exec{
 		void	commit();	//	empty the patch_indices and set value_commit_index to values.size().
 
 		IPGMController	*controller;
+
+		uint64	_now;
 
 		Overlay();
 		Overlay(IPGMController	*c);
@@ -93,6 +97,7 @@ namespace	r_exec{
 		r_exec::View	*getIPGMView()	const;
 
 		r_code::Code	*buildObject(Atom	head)	const;
+		uint64			now()	const;
 	};
 
 	//	Overlay with inputs.
@@ -114,9 +119,8 @@ namespace	r_exec{
 		bool		check_timings();									//	return true upon successful evaluation.
 		bool		check_guards();										//	return true upon successful evaluation.
 		
-		MatchResult	_match(r_exec::View	*input,uint16	pattern_index);	//	delegates to -match_pattern
-		MatchResult	_match_pattern(r_exec::View	*input,uint16	pattern_index);	//	return SUCCESS upon a successful match, IMPOSSIBLE if the input is not of the right class, FAILURE otherwise.
-		bool		_match_skeleton(r_exec::View	*input,uint16	pattern_index);
+		MatchResult	_match(r_exec::View	*input,uint16	pattern_index);		//	delegates to __match.
+		MatchResult	__match(r_exec::View	*input,uint16	pattern_index);	//	return SUCCESS upon a successful match, IMPOSSIBLE if the input is not of the right class, FAILURE otherwise.
 
 		void		reset();	//	reset to original state (pristine copy of the pgm code and empty value set).
 

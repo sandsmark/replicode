@@ -3,7 +3,7 @@
 //	Author: Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -160,7 +160,7 @@ namespace	r_exec{
 				addReference(destination,write_index,object->get_reference((*this)[0].asIndex()));
 				break;
 			case	Atom::PROD_PTR:
-				addReference(destination,write_index,overlay->productions[(*this)[0].asInputIndex()]);
+				addReference(destination,write_index,overlay->productions[(*this)[0].asIndex()]);
 				break;
 			case	Atom::IN_OBJ_PTR:
 				addReference(destination,write_index,((IOverlay	*)overlay)->getInputObject((*this)[0].asIndex()));
@@ -181,6 +181,9 @@ namespace	r_exec{
 				break;
 			}
 		}
+
+		void	Context::copy_structure_to_value_array(bool	prefix,uint16	write_index,uint16	&extent_index);
+		void	Context::copy_member_to_value_array(uint16	child_index,bool	prefix,uint16	write_index,uint16	&extent_index);
 	public:
 		static	Context	GetContextFromInput(View	*input,Overlay	*overlay){	return	Context(input->object,input,&input->object->code(0),0,overlay,REFERENCE);	}
 
@@ -189,8 +192,8 @@ namespace	r_exec{
 		Context(Code	*object,uint16	index):object(object),view(NULL),code(&object->code(0)),index(index),overlay(NULL),data(REFERENCE){}
 		Context(Code	*object,Data	data):object(object),view(NULL),code(&object->code(0)),index(0),overlay(NULL),data(data){}
 
-		bool	evaluate(uint16	&result_index)						const;	//	index is set to the index of the result, undefined in case of failure.
-		bool	evaluate_no_dereference(uint16	&result_index)		const;
+		bool	evaluate(uint16	&result_index)					const;	//	index is set to the index of the result, undefined in case of failure.
+		bool	evaluate_no_dereference(uint16	&result_index)	const;
 
 		Context	&operator	=(Context	&c){
 			
@@ -205,7 +208,24 @@ namespace	r_exec{
 		bool	operator	==(const	Context	&c)	const;
 		bool	operator	!=(const	Context	&c)	const;
 
-		uint16	getChildrenCount()		const{	return	code[index].getAtomCount();	}
+		uint16	getChildrenCount()		const{
+			
+			uint16	c;
+			switch(data){
+			case	MKS:
+				object->acq_markers();
+				c=object->markers.size();
+				object->rel_markers();
+				return	c;
+			case	VWS:
+				object->acq_views();
+				c=object->views.size();
+				object->rel_views();
+				return	c;
+			default:
+				return	code[index].getAtomCount();
+			}
+		}
 		Context	getChild(uint16	index)	const{
 			
 			switch(data){
@@ -219,11 +239,33 @@ namespace	r_exec{
 
 				uint16	i=0;
 				std::list<Code	*>::const_iterator	m;
-				for(m=object->markers.begin();i<this->index+index-1;++m,++i);
+				object->acq_markers();
+				for(m=object->markers.begin();i<index-1;++i,++m){
+
+					if(m==object->markers.end()){	//	happens when the list has changed after the call to getChildrenCount.
+
+						object->rel_markers();
+						return	Context();
+					}
+				}
+				object->rel_markers();
 				return	Context(*m,0);
-			}case	VWS:
-				return	Context();	//	never used for iterating views (unexposed).
-			case	VALUE_ARRAY:
+			}case	VWS:{
+
+				uint16	i=0;
+				UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v;
+				object->acq_views();
+				for(v=object->views.begin();i<index-1;++i,++v){
+
+					if(v==object->views.end()){	//	happens when the list has changed after the call to getChildrenCount.
+
+						object->rel_views();
+						return	Context();
+					}
+				}
+				object->rel_views();
+				return	Context(object,(r_exec::View*)*v,code,this->index+index,NULL,VIEW);
+			}case	VALUE_ARRAY:
 				return	Context(object,view,code,this->index+index,overlay,VALUE_ARRAY);
 			default:	//	undefined context.
 				return	Context();
@@ -235,12 +277,16 @@ namespace	r_exec{
 
 		Context	operator	*()	const;
 		void	dereference_once();
+		bool	is_reference()	const{	return	data==REFERENCE;	}
+		bool	is_undefined()	const{	return	data==UNDEFINED;	}
 
 		void	patch_code(uint16	location,Atom	value)						const{	overlay->patch_code(location,value);	}
 		void	patch_input_code(uint16	pgm_code_index,uint16	input_index)	const{	overlay->patch_input_code(pgm_code_index,input_index,0);	}
 
 		void	commit()	const{	overlay->commit();		}
 		void	rollback()	const{	overlay->rollback();	}
+		uint16	get_last_patch_index()	const{	return	overlay->get_last_patch_index();	}
+		void	unpatch_code(uint16	patch_index)	const{	overlay->unpatch_code(patch_index);	}
 
 		uint16	setAtomicResult(Atom	a)		const{	//	patch code with 32 bits data.
 			
@@ -251,7 +297,7 @@ namespace	r_exec{
 		uint16	setTimestampResult(uint64	t)	const{	//	patch code with a VALUE_PTR
 			
 			overlay->patch_code(index,Atom::ValuePointer(overlay->values.size()));
-			overlay->values.resize(overlay->values.size()+3);
+			overlay->values.as_std()->resize(overlay->values.size()+3);
 			uint16	value_index=overlay->values.size()-3;
 			Timestamp::Set(&overlay->values[value_index],t);
 			return	value_index;
@@ -283,6 +329,13 @@ namespace	r_exec{
 			copy_structure(destination,write_index,extent_index,true);
 		}
 
+		template<class	C>	void	copy(C	*destination,uint16	write_index,uint16	&extent_index)	const{
+			
+			copy_structure(destination,write_index,extent_index,true);
+		}
+
+		void	copy_to_value_array(uint16	&position);
+
 		typedef	enum{
 			TYPE_OBJECT=0,
 			TYPE_VIEW=1,
@@ -298,6 +351,7 @@ namespace	r_exec{
 
 		//	called by operators.
 		r_code::Code	*buildObject(Atom	head)	const{	return	overlay->buildObject(head);	}
+		uint64			now()	const{	return	overlay->now();	}
 
 		void	trace()	const;
 	};

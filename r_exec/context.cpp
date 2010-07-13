@@ -3,7 +3,7 @@
 //	Author: Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -200,14 +200,18 @@ namespace	r_exec{
 		switch(code[index].getDescriptor()){
 		case	Atom::OPERATOR:{
 
-			uint16	atom_count=getChildrenCount();
-			for(uint16	i=1;i<=atom_count;++i){
+			Operator	op=Operator::Get((*this)[0].asOpcode());
+			if(!op.is_red()){	//	red will prevent the evaluation of its productions before reducting its input.
 
-				uint16	unused_result_index;
-				if(!(*getChild(i)).evaluate_no_dereference(unused_result_index))
-					return	false;
+				uint16	atom_count=getChildrenCount();
+				for(uint16	i=1;i<=atom_count;++i){
+
+					uint16	unused_result_index;
+					if(!(*getChild(i)).evaluate_no_dereference(unused_result_index))
+						return	false;
+				}
 			}
-			return	Operator::Get((*this)[0].asOpcode())(*this,result_index);
+			return	op(*this,result_index);
 		}case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::GROUP:
@@ -239,6 +243,77 @@ namespace	r_exec{
 
 		Context	c=**this;
 		return	c.evaluate_no_dereference(result_index);
+	}
+
+	void	Context::copy_to_value_array(uint16	&position){
+
+		position=overlay->values.size();
+		uint16	extent_index;
+		if(code[index].isStructural())
+			copy_structure_to_value_array(false,overlay->values.size(),extent_index);
+		else
+			copy_member_to_value_array(0,false,overlay->values.size(),extent_index);
+	}
+
+	void	Context::copy_structure_to_value_array(bool	prefix,uint16	write_index,uint16	&extent_index){	//	prefix: by itpr or not.
+
+		uint16	atom_count=getChildrenCount();
+		overlay->values[write_index++]=code[index];
+		extent_index=write_index+atom_count;
+		switch(code[index].getDescriptor()){
+		case	Atom::TIMESTAMP:
+			for(uint16	i=1;i<=atom_count;++i)
+				overlay->values[write_index++]=code[index+i];
+			break;
+		default:
+			for(uint16	i=1;i<=atom_count;++i)
+				copy_member_to_value_array(i,prefix,write_index++,extent_index);
+		}
+	}
+
+	void	Context::copy_member_to_value_array(uint16	child_index,bool	prefix,uint16	write_index,uint16	&extent_index){
+
+		uint16	_index=index+child_index;
+		Atom	head;
+dereference:
+		head=code[_index];
+		switch(head.getDescriptor()){	//	dereference until either we reach some non-pointer or a reference or a value pointer.
+		case	Atom::I_PTR:
+		case	Atom::VL_PTR:
+			_index=head.asIndex();
+			goto	dereference;
+		case	Atom::VALUE_PTR:
+			overlay->values[write_index]=Atom::IPointer(head.asIndex());
+			return;
+		case	Atom::PROD_PTR:
+		case	Atom::IN_OBJ_PTR:
+		case	Atom::R_PTR:
+			overlay->values[write_index]=head;
+			return;
+		case	Atom::C_PTR:{
+
+			uint16	saved_index=index;
+			index=_index;
+			Context	cptr=**this;
+			overlay->values[write_index]=cptr[0];
+			index=saved_index;
+			return;
+		}
+		}
+
+		if(head.isStructural()){
+
+			uint16	saved_index=index;
+			index=_index;
+			if(prefix){
+
+				overlay->values[write_index]=Atom::IPointer(extent_index);
+				copy_structure_to_value_array(true,extent_index,extent_index);
+			}else
+				copy_structure_to_value_array(true,write_index,extent_index);
+			index=saved_index;
+		}else
+			overlay->values[write_index]=head;
 	}
 
 	void	Context::getMember(void	*&object,uint32	&view_oid,ObjectType	&object_type,int16	&member_index)	const{

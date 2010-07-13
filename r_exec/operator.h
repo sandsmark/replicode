@@ -3,7 +3,7 @@
 //	Author: Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -36,6 +36,8 @@
 
 namespace	r_exec{
 
+	bool	red(const	Context	&context,uint16	&index);
+
 	class	Operator{
 	private:
 		static	r_code::vector<Operator>	Operators;	//	indexed by opcodes.
@@ -58,6 +60,8 @@ namespace	r_exec{
 				return	_overload(context,index);
 			return	false;
 		}
+
+		bool	is_red()	const{	return	_operator==red;	}
 	};
 
 	//	std operators	////////////////////////////////////////
@@ -86,8 +90,6 @@ namespace	r_exec{
 	bool	syn(const	Context	&context,uint16	&index);	//	TODO.
 
 	bool	ins(const	Context	&context,uint16	&index);
-
-	bool	red(const	Context	&context,uint16	&index);
 	
 	bool	com(const	Context	&context,uint16	&index);	//	TODO.
 

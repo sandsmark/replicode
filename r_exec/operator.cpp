@@ -3,7 +3,7 @@
 //	Author: Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -54,7 +54,7 @@ namespace	r_exec{
 
 	bool	now(const	Context	&context,uint16	&index){
 
-		index=context.setTimestampResult(Now());
+		index=context.setTimestampResult(context.now());	//	all evaluations of now while computing productions must give the same result.
 		return	true;
 	}
 
@@ -594,49 +594,51 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////
 
+	bool	match(const	Context	&input,const	Context	&pattern){	//	in red, patterns like (ptn object: [guards]) are allowed.
+
+		//	patch the pattern with a ptr to the input.
+		if(input.is_reference()){
+
+			uint16	ptr=pattern.addProduction(input.getObject());
+			pattern.patch_code(pattern.getIndex()+1,Atom::ProductionPointer(ptr));
+		}else
+			pattern.patch_code(pattern.getIndex()+1,Atom::IPointer(input.getIndex()));
+
+		//	evaluate the set of guards.
+		Context	guard_set=*pattern.getChild(2);
+		uint16	guard_count=guard_set.getChildrenCount();
+		uint16	unused_index;
+		for(uint16	i=1;i<=guard_count;++i){
+
+			if(!(*guard_set.getChild(i)).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
+				return	false;
+		}
+	}
+
 	bool	match(const	Context	&input,const	Context	&pattern,const	Context	&productions,std::vector<uint16>	&production_indices){
 
-		Context	pattern_skeleton=*pattern.getChild(1);
-
+		Context	&skeleton=Context();
+		uint16	last_patch_index;
 		if(pattern[0].asOpcode()==Opcodes::PTN){
 			
-			if(!pattern_skeleton.match(input))
+			skeleton=*pattern.getChild(1);
+			if(!skeleton.match(input))
+				return	false;
+			last_patch_index=pattern.get_last_patch_index();
+			if(!match(input,pattern))
 				return	false;
 
-			//	patch the pattern with an iptr to the input, i.e. with input.index.
-			pattern.patch_input_code(pattern.getIndex(),input.getIndex());
-
-			//	evaluate the set of guards.
-			Context	guard_set=*pattern.getChild(2);
-			uint16	guard_count=guard_set.getChildrenCount();
-			uint16	unused_index;
-			for(uint16	i=1;i<=guard_count;++i){
-
-				if(!(*guard_set.getChild(i)).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
-					return	false;
-			}
-
 			goto	build_productions;
-			return	true;
 		}
 
 		if(pattern[0].asOpcode()==Opcodes::AntiPTN){
 			
-			if(pattern_skeleton.match(input))
+			skeleton=*pattern.getChild(1);
+			last_patch_index=pattern.get_last_patch_index();
+			if(match(input,pattern))	//	no need to match the skeleton of an |ptn.
 				return	false;
 
-			//	evaluate the set of guards.
-			Context	guard_set=*pattern.getChild(2);
-			uint16	guard_count=guard_set.getChildrenCount();
-			uint16	unused_index;
-			for(uint16	i=1;i<=guard_count;++i){
-
-				if((*guard_set.getChild(i)).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
-					return	false;
-			}
-
 			goto	build_productions;
-			return	true;
 		}
 
 		return	false;
@@ -644,28 +646,28 @@ namespace	r_exec{
 build_productions:
 		//	compute all productions for this input.
 		uint16	production_count=productions.getChildrenCount();
+		uint16	unused_index;
 		uint16	production_index;
-		for(uint16	i=1;i<production_count;++i){
+		for(uint16	i=1;i<=production_count;++i){
 
-			(*productions.getChild(i)).evaluate_no_dereference(production_index);
+			Context	prod=productions.getChild(i);
+			prod.evaluate(unused_index);
+			prod.copy_to_value_array(production_index);
 			production_indices.push_back(production_index);
 		}
 
+		pattern.unpatch_code(last_patch_index);
 		return	true;
 	}
 
 	void	reduce(const	Context	&context,const	Context	&input_set,const	Context	&section,std::vector<uint16>	&input_indices,std::vector<uint16>	&production_indices){
 
-		Context	patterns=*section.getChild(1);
-		if(patterns[0].getDescriptor()!=Atom::SET)
+		Context	pattern=*section.getChild(1);
+		if(pattern[0].asOpcode()!=Opcodes::PTN	&&	pattern[0].asOpcode()!=Opcodes::AntiPTN)
 			return;
 
 		Context	productions=*section.getChild(2);
 		if(productions[0].getDescriptor()!=Atom::SET)
-			return;
-
-		uint16	pattern_count=patterns.getChildrenCount();
-		if(!pattern_count)
 			return;
 
 		uint16	production_count=productions.getChildrenCount();
@@ -673,33 +675,44 @@ build_productions:
 			return;
 
 		std::vector<uint16>::iterator	i;
-		for(i=input_indices.begin();i!=input_indices.end();){	//	to be successful, at least one input must match all the patterns.
+		for(i=input_indices.begin();i!=input_indices.end();){	//	to be successful, at least one input must match the pattern.
+
+			Context	c=*input_set.getChild(*i);
+			if(c.is_undefined()){
+
+				i=input_indices.erase(i);
+				continue;
+			}
 
 			bool	failure=false;
-			for(uint16	j=0;j<pattern_count;++j){
+			if(!match(c,pattern,productions,production_indices)){
 
-				if(!match(*input_set.getChild(*i),patterns.getChild(j),productions,production_indices)){
-
-					failure=true;
-					context.rollback();
-					break;
-				}
+				failure=true;
+				break;
 			}
 
 			if(failure)
 				++i;
-			else	//	all patterns matched: remove the input from the todo list.
+			else	//	pattern matched: remove the input from the todo list.
 				i=input_indices.erase(i);
 		}
 	}
 
-	bool	red(const	Context	&context,uint16	&index){	//	reminder: all inputs have already been evaluated (but not the patterns).
-
+	bool	red(const	Context	&context,uint16	&index){
+//context.trace();
+		uint16	unused_result_index;
 		Context	input_set=*context.getChild(1);
+		if(!input_set.evaluate_no_dereference(unused_result_index))
+			return	false;
 
-		//	a section is a set of 2 sets: 8a) a set of patterns and, (b) a set of productions.
+		//	a section is a set of one pattern and a set of productions.
 		Context	positive_section=*context.getChild(2);
+		if(!(*positive_section.getChild(1)).evaluate_no_dereference(unused_result_index))	//	evaluate the pattern only.
+			return	false;
+
 		Context	negative_section=*context.getChild(3);
+		if(!(*negative_section.getChild(1)).evaluate_no_dereference(unused_result_index))	//	evaluate the pattern only.
+			return	false;
 
 		std::vector<uint16>	input_indices;		//	todo list of inputs to match.
 		for(uint16	i=1;i<=input_set.getChildrenCount();++i)
@@ -707,9 +720,9 @@ build_productions:
 
 		std::vector<uint16>	production_indices;	//	list of productions built upon successful matches.
 
-		if(input_set[0].getDescriptor()!=Atom::SET	||
-			input_set[0].getDescriptor()!=Atom::S_SET	||
-			positive_section[0].getDescriptor()!=Atom::SET	||
+		if(input_set[0].getDescriptor()!=Atom::SET	&&
+			input_set[0].getDescriptor()!=Atom::S_SET	&&
+			positive_section[0].getDescriptor()!=Atom::SET	&&
 			negative_section[0].getDescriptor()!=Atom::SET)
 			goto	failure;
 
@@ -717,15 +730,15 @@ build_productions:
 		if(!input_count)
 			goto	failure;
 
-		reduce(context,input_set,positive_section,input_indices,production_indices);	//	input_indices now filled only with the inputs that did not match all positive patterns.
-		reduce(context,input_set,negative_section,input_indices,production_indices);	//	input_indices now filled only with the inputs that did not match all positive nor all negative patterns.
+		reduce(context,input_set,positive_section,input_indices,production_indices);	//	input_indices now filled only with the inputs that did not match the positive pattern.
+		reduce(context,input_set,negative_section,input_indices,production_indices);	//	input_indices now filled only with the inputs that did not match the positive nor the negative pattern.
 		if(production_indices.size()){
 
+			//	build the set of all productions in the value array.
 			index=context.setCompoundResultHead(Atom::Set(production_indices.size()));
-			for(uint16	i=0;i<production_indices.size();++i)	//	fill the result set with iptrs to productions.
-				context.addCompoundResultPart(Atom::IPointer(i));
-
-			context.commit();
+			for(uint16	i=0;i<production_indices.size();++i)	//	fill the set with iptrs to productions: the latter are copied in the value array.
+				context.addCompoundResultPart(Atom::IPointer(production_indices[i]));
+			//(*context).trace();
 			return	true;
 		}
 failure:

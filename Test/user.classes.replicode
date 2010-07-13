@@ -162,11 +162,11 @@ root; ntf_grp
    [now 0 forever root nil 0 0]
 
 self:(ent
-0; psln_thr
+0.95; psln_thr
 )
 
 []
-   [now 1 forever root nil]
+   [now 0.84 forever root nil]
 
 position:(ent
 1; psln_thr

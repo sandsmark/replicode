@@ -3,7 +3,7 @@
 //	Author: Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -485,13 +485,14 @@ namespace	r_comp{
 					relocation_segment.addViewReference(referenced_object_index,object_index,i,j);
 				}
 			}
+		/* DEPRECATED
 		std::list<Code	*>::const_iterator	m;
 		for(m=object->markers.begin();m!=object->markers.end();++m){
 
 			referenced_object_index=ptrs_to_indices.find(*m)->second;
 			sys_object->markers.push_back(referenced_object_index);
 			relocation_segment.addMarkerReference(referenced_object_index,object_index);
-		}
+		}*/
 	}
 
 	void	Image::getObjects(Mem	*mem,r_code::vector<Code	*>	&ram_objects){
@@ -517,8 +518,8 @@ namespace	r_comp{
 					referencing_object->set_reference(p.pointer_index,referenced_object);
 					break;
 				case	-2:
-					//referencing_object->markers[p.pointer_index]=referenced_object;
-					referencing_object->markers.push_back(referenced_object);
+					//	DEPRECATED
+					//referenced_object->markers.push_back(referencing_object);
 					break;
 				default:	//	build a view, assign the referenced to the selected reference and insert in the referencing object.
 					referencing_object->build_view(code_segment.objects[p.object_index]->views[p.view_index],p.pointer_index,referenced_object);

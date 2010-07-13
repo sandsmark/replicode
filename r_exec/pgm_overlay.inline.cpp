@@ -3,7 +3,7 @@
 //	Author: Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -44,6 +44,19 @@ namespace	r_exec{
 
 		pgm_code[index]=value;
 		patch_indices.push_back(index);
+	}
+
+	inline	uint16	Overlay::get_last_patch_index(){
+
+		return	patch_indices.size();
+	}
+
+	inline	void	Overlay::unpatch_code(uint16	patch_index){
+
+		Atom	*original_code=&getIPGM()->get_reference(0)->code(0);
+		for(uint16	i=patch_index;i<patch_indices.size();++i)
+			pgm_code[patch_indices[i]]=original_code[patch_indices[i]];
+		patch_indices.resize(patch_index);
 	}
 
 	inline	r_code::Code	*Overlay::getIPGM()	const{	

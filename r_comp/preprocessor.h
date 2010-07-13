@@ -3,7 +3,7 @@
 //	Author: Thor List, Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Thor List, Eric Nivel
+//	Copyright (c) 2010, Thor List, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:

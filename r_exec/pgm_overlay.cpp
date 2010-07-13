@@ -3,7 +3,7 @@
 //	Author: Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -91,7 +91,7 @@ namespace	r_exec{
 	Overlay::Overlay():alive(true){
 	}
 
-	Overlay::Overlay(IPGMController	*c):_Object(),controller(c),alive(true),value_commit_index(0){
+	Overlay::Overlay(IPGMController	*c):_Object(),controller(c),alive(true),value_commit_index(0),_now(0){
 
 		//	copy the original pgm code.
 		pgm_code_size=getIPGM()->get_reference(0)->code_size();
@@ -120,7 +120,7 @@ namespace	r_exec{
 
 		if(value_commit_index!=values.size()){	//	shrink the values down to the last commit index.
 
-			values.resize(value_commit_index);
+			values.as_std()->resize(value_commit_index);
 			value_commit_index=values.size();
 		}
 	}
@@ -176,21 +176,37 @@ namespace	r_exec{
 	}
 
 	bool	Overlay::inject_productions(_Mem	*mem){
-//Atom::Trace(pgm_code,getIPGM()->get_reference(0)->code_size());
-		uint16	production_set_index=pgm_code[PGM_PRODS].asIndex();
-		uint16	production_count=pgm_code[production_set_index].getAtomCount();
-		for(uint16	i=1;i<=production_count;++i){
 
-			if(!evaluate(production_set_index+i)){
+		_now=Now();
+
+		uint16	unused_index;
+		bool	in_red=false;	//	if prods are computed by red, we have to evaluate the expression; otherwise, we have to evaluate the prods in the set one by one to be able to reference new objects in this->productions.
+		Context	prods(getIPGM()->get_reference(0),getIPGMView(),pgm_code,pgm_code[PGM_PRODS].asIndex(),this);
+		if(prods[0].getDescriptor()!=Atom::SET){	//	p points to an expression lead by red.
+
+			in_red=true;
+			if(!prods.evaluate(unused_index)){
 
 				rollback();
 				productions.clear();
+				_now=0;
 				return	false;
 			}
+			prods=*prods;//prods.trace();
+		}
 
-			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,production_set_index+i,this);
-			cmd=*cmd;
+		uint16	production_count=prods.getChildrenCount();
+		uint16	inj_eje_count=0;
+		for(uint16	i=1;i<=production_count;++i){
 
+			Context	cmd=*prods.getChild(i);
+			if(!in_red	&&	!cmd.evaluate(unused_index)){
+
+				rollback();
+				productions.clear();
+				_now=0;
+				return	false;
+			}//cmd.trace();
 			Context	function=*cmd.getChild(1);
 			Context	device=*cmd.getChild(2);
 
@@ -212,34 +228,37 @@ namespace	r_exec{
 					Code	*object;
 					Context	arg1=args.getChild(1);
 					uint16	index=arg1.getIndex();
-					arg1.dereference_once();	//	in case of an iptr.
-					switch(arg1[0].getDescriptor()){
-					case	Atom::OBJECT:
-					case	Atom::MARKER:
-					case	Atom::GROUP:
-					case	Atom::INSTANTIATED_PROGRAM:
+					arg1=*arg1;
+					//arg1.trace();
+					if(arg1.is_reference())
+						productions.push_back(arg1.getObject());
+					else{
+
 						object=controller->get_mem()->buildObject(arg1[0]);
-						//arg1.trace();
 						arg1.copy(object,0);
 						productions.push_back(object);
-						patch_code(index,Atom::ProductionPointer(productions.size()-1));	//	so that this new object can be referenced in subsequent productions without needing another copy.
-						break;
 					}
+					patch_code(index,Atom::ProductionPointer(productions.size()-1));
+
+					++inj_eje_count;
 				}
 			}
 		}
 
 		Code	*mk_rdx;
+		uint16	write_index;
 		uint16	extent_index;
-		bool	notify_rdx=getIPGM()->get_reference(0)->code(PGM_NFR).asFloat()==1;
-		if(notify_rdx)	//	the productions are command objects (cmd); all productions are notified.
-			mk_rdx=get_mk_rdx(extent_index);
+		bool	notify_rdx=(getIPGM()->get_reference(0)->code(PGM_NFR).asFloat()==1)	&&	inj_eje_count;
+		if(notify_rdx){	//	the productions are command objects (cmd); only injections/ejections are notified.
+
+			mk_rdx=get_mk_rdx(write_index);
+			mk_rdx->code(write_index++)=Atom::Set(inj_eje_count);
+			extent_index=write_index+inj_eje_count;
+		}
 		
 		for(uint16	i=1;i<=production_count;++i){	//	all productions have evaluated correctly; now we can execute the commands.
 
-			Context	cmd(getIPGM()->get_reference(0),NULL,pgm_code,production_set_index+i,this);
-			cmd=*cmd;
-
+			Context	cmd=*prods.getChild(i);
 			Context	function=*cmd.getChild(1);
 			Context	device=*cmd.getChild(2);
 
@@ -264,6 +283,12 @@ namespace	r_exec{
 					Code	*existing_object=mem->inject(view);
 					if(existing_object)
 						productions[prod_index]=existing_object;	//	so that the mk.rdx will reference the existing object instead of object, which has been discarded.
+
+					if(notify_rdx){
+
+						mk_rdx->code(write_index++)=Atom::IPointer(extent_index);
+						(*prods.getChild(i)).copy(mk_rdx,extent_index,extent_index);
+					}
 				}else	if(function[0].asOpcode()==Opcodes::Eject){	//	args:[object view destination_node]; view.grp=destination grp (stdin ot stdout); retrieve the object and create a view.
 
 					Code	*object=(*args.getChild(1)).getObject();
@@ -276,6 +301,12 @@ namespace	r_exec{
 					Context	node=*args.getChild(3);
 
 					mem->eject(view,node[0].getNodeID());
+
+					if(notify_rdx){
+
+						mk_rdx->code(write_index++)=Atom::IPointer(extent_index);
+						(*prods.getChild(i)).copy(mk_rdx,extent_index,extent_index);
+					}
 				}else	if(function[0].asOpcode()==Opcodes::Mod){	//	args:[iptr-to-cptr value].
 
 					void				*object;
@@ -304,6 +335,7 @@ namespace	r_exec{
 							((Group	*)object)->release();
 							break;
 						default:
+							_now=0;
 							return	false;
 						}
 					}
@@ -354,6 +386,7 @@ namespace	r_exec{
 				}else{	//	unknown function.
 
 					productions.clear();
+					_now=0;
 					return	false;
 				}
 			}else{	//	in case of an external device, create a cmd object and send it.
@@ -367,16 +400,13 @@ namespace	r_exec{
 
 		if(notify_rdx){
 
-			Context	prods(getIPGM()->get_reference(0),NULL,pgm_code,pgm_code[PGM_PRODS].asIndex(),this);
-			//prods.trace();
-			prods.copy(mk_rdx,extent_index);
-
 			NotificationView	*v=new	NotificationView(getIPGMView()->get_host(),getIPGMView()->get_host()->get_ntf_grp(),mk_rdx);
 			mem->injectNotificationNow(v,true);
 		}
 
 		rollback();
 		productions.clear();
+		_now=0;
 		return	true;
 	}
 
@@ -396,6 +426,13 @@ namespace	r_exec{
 		mk_rdx->code(write_index++)=Atom::Float(1);					//	psln_thr.
 
 		return	mk_rdx;
+	}
+
+	uint64	Overlay::now()	const{
+
+		if(_now>0)
+			return	_now;
+		return	Now();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -443,7 +480,7 @@ namespace	r_exec{
 		input_views.clear();
 		input_pattern_indices.clear();
 		value_commit_index=0;
-		values.clear();
+		values.as_std()->clear();
 		productions.clear();
 	}
 
@@ -525,7 +562,7 @@ namespace	r_exec{
 
 		if(pgm_code[pattern_index].asOpcode()==Opcodes::AntiPTN){
 
-			MatchResult	r=_match_pattern(input,pattern_index);
+			MatchResult	r=__match(input,pattern_index);
 			switch(r){
 			case	IMPOSSIBLE:
 			case	FAILURE:
@@ -534,13 +571,15 @@ namespace	r_exec{
 				return	FAILURE;
 			}
 		}else	if(pgm_code[pattern_index].asOpcode()==Opcodes::PTN)
-			return	_match_pattern(input,pattern_index);
+			return	__match(input,pattern_index);
 		return	IMPOSSIBLE;
 	}
 
-	inline	IOverlay::MatchResult	IOverlay::_match_pattern(r_exec::View	*input,uint16	pattern_index){
+	inline	IOverlay::MatchResult	IOverlay::__match(r_exec::View	*input,uint16	pattern_index){
 
-		if(!_match_skeleton(input, pattern_index))
+		Context	input_object=Context::GetContextFromInput(input,this);
+		Context	pattern_skeleton(getIPGM()->get_reference(0),getIPGMView(),pgm_code,pgm_code[pattern_index+1].asIndex(),this);	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
+		if(!pattern_skeleton.match(input_object))
 			return	IMPOSSIBLE;
 
 		patch_input_code(pattern_index,input_views.size()-1,0);	//	the input has just been pushed on input_views (see match).
@@ -550,13 +589,6 @@ namespace	r_exec{
 		if(!evaluate(guard_set_index))
 			return	FAILURE;
 		return	SUCCESS;
-	}
-
-	inline	bool	IOverlay::_match_skeleton(r_exec::View	*input,uint16	pattern_index){
-
-		Context	input_object=Context::GetContextFromInput(input,this);
-		Context	pattern_skeleton(getIPGM()->get_reference(0),getIPGMView(),pgm_code,pgm_code[pattern_index+1].asIndex(),this);	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
-		return	pattern_skeleton.match(input_object);
 	}
 
 	bool	IOverlay::check_timings(){

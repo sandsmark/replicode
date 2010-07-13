@@ -6,7 +6,7 @@ G1:(gol
       (ptn (mk.tag object: s ::) |[])
    |[]
    |[]
-1
+1; psln_thr
 )
 
 []
@@ -57,7 +57,7 @@ P1:(pgm
    )
    (inj [(mk.val self position (- (vec3 v.x v.y v.z) tgv2.vector) 0) [now 1 forever g nil]])
    (set [this.vw.sln (+ g.sln_thr 0.1)])
-4000000us; tsc
+1000000us; tsc
 1; nfr
 0; psln_thr
 )
@@ -69,7 +69,7 @@ P1; code
 []; args
    (tagged_v (vec3 1 2 3) "vector 123")
    (tagged_v (vec3 3 4 5) "vector 345")
-0; psln_thr
+1; psln_thr
 )
 
 []

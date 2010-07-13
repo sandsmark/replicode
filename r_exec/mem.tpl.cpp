@@ -3,7 +3,7 @@
 //	Author: Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -172,8 +172,10 @@ namespace	r_exec{
 						view->controller=o;	//	init the view's overlay.
 					}
 					break;
+				case	ObjectType::MARKER:	//	populate the marker set of the referenced objects.
+					for(uint32	i=0;i<object->references_size();++i)
+						object->get_reference(i)->markers.push_back(object);
 				case	ObjectType::OBJECT:
-				case	ObjectType::MARKER:	//	marked objects come with their markers vector populated (Image::unpackObjects).
 					host->other_views[view->getOID()]=view;
 					break;
 				}

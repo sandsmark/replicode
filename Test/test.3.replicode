@@ -1,9 +1,36 @@
+mk.val1:(mk.val
+self
+position
+(vec3 0 0 0)
+0
+)
+
+[]
+   [now 0.1 forever root nil]
+
+mk.tag1:(mk.tag
+self
+"tag on self"
+1
+)
+
+[]
+   [now 0.1 forever root nil]
+
 P1:(pgm
 []; tpl
    (ptn tgv:(tagged_v vec: :) |[])
 []; input
    []
-      (ptn in:(ent ::) [(> in.vw.res 2) (< in.psln_thr 1)])
+      (ptn in:(ent ::) []
+         (> in.vw.res 2)
+         (< in.psln_thr 1)
+         (red in.mks []
+            (ptn m: [mkv#view:(fvw m root) (> mkv.sln 0)])
+            [m]
+         |[]
+         )
+      )
       (ptn pos:(ent psln:) [(= psln 1)])
    |[]
    []
@@ -11,8 +38,10 @@ P1:(pgm
       (= v.res pos.vw.res)
 []; productions
    (inj [(mk.val in pos vec 0) [now v.sln forever stdout nil]])
+   (inj [(mk.val in pos (vec3 6 7 8) 0) [now in.vw.sln forever stdout nil]])
+   (inj [in [now 0.25 forever stdout nil]])
    (mod [in.vw.sln -0.2])
-   (mod [v.sln -0.3])
+   (mod [this.vw.sln -0.4])
 4000000us; tsc
 1; nfr
 0; psln_thr

@@ -3,7 +3,7 @@
 //	Author: Eric Nivel
 //
 //	BSD license:
-//	Copyright (c) 2008, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -90,11 +90,13 @@ namespace	r_exec{
 			suspension_lock->wait();
 			if(state==STOPPED){
 				
+				state_sem->acquire();
 				if(is_delegate){
 
 					if(--delegate_count==0)
 						stop_sem->release();
 				}
+				state_sem->release();
 				return	false;
 			}
 			return	true;
@@ -110,7 +112,8 @@ namespace	r_exec{
 		if(state==RUNNING){
 
 			DelegatedCore	*d=new	DelegatedCore(this,dealine,j);
-			++delegate_count;
+			if(++delegate_count==1)
+				stop_sem->acquire();
 			d->start(DelegatedCore::Wait);
 		}
 		state_sem->release();
@@ -135,7 +138,7 @@ namespace	r_exec{
 		objects_sem=new	FastSemaphore(1,1);
 		state_sem=new	FastSemaphore(1,1);
 		suspension_lock=new	Event();
-		stop_sem=new	FastSemaphore(0,1);
+		stop_sem=new	Semaphore(1,1);
 
 		time_job_queue=new	PipeNN<TimeJob,1024>();
 		reduction_job_queue=new	PipeNN<ReductionJob,1024>();
@@ -232,6 +235,7 @@ namespace	r_exec{
 			state_sem->release();
 			return;
 		}
+		suspension_lock->reset();
 		state=SUSPENDED;
 		state_sem->release();
 	}
