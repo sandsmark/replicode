@@ -182,8 +182,8 @@ namespace	r_exec{
 			}
 		}
 
-		void	Context::copy_structure_to_value_array(bool	prefix,uint16	write_index,uint16	&extent_index);
-		void	Context::copy_member_to_value_array(uint16	child_index,bool	prefix,uint16	write_index,uint16	&extent_index);
+		void	Context::copy_structure_to_value_array(bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr);
+		void	Context::copy_member_to_value_array(uint16	child_index,bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr);
 	public:
 		static	Context	GetContextFromInput(View	*input,Overlay	*overlay){	return	Context(input->object,input,&input->object->code(0),0,overlay,REFERENCE);	}
 

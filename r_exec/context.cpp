@@ -250,12 +250,12 @@ namespace	r_exec{
 		position=overlay->values.size();
 		uint16	extent_index;
 		if(code[index].isStructural())
-			copy_structure_to_value_array(false,overlay->values.size(),extent_index);
+			copy_structure_to_value_array(false,overlay->values.size(),extent_index,true);
 		else
-			copy_member_to_value_array(0,false,overlay->values.size(),extent_index);
+			copy_member_to_value_array(0,false,overlay->values.size(),extent_index,true);
 	}
 
-	void	Context::copy_structure_to_value_array(bool	prefix,uint16	write_index,uint16	&extent_index){	//	prefix: by itpr or not.
+	void	Context::copy_structure_to_value_array(bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr){	//	prefix: by itpr or not.
 
 		uint16	atom_count=getChildrenCount();
 		overlay->values[write_index++]=code[index];
@@ -266,12 +266,19 @@ namespace	r_exec{
 				overlay->values[write_index++]=code[index+i];
 			break;
 		default:
-			for(uint16	i=1;i<=atom_count;++i)
-				copy_member_to_value_array(i,prefix,write_index++,extent_index);
+			if(is_mod_or_set()){
+
+				for(uint16	i=1;i<=atom_count;++i)
+					copy_member_to_value_array(i,prefix,write_index++,extent_index,i!=3);
+			}else{
+
+				for(uint16	i=1;i<=atom_count;++i)
+					copy_member_to_value_array(i,prefix,write_index++,extent_index,!(!dereference_cptr	&&	i==1));
+			}
 		}
 	}
 
-	void	Context::copy_member_to_value_array(uint16	child_index,bool	prefix,uint16	write_index,uint16	&extent_index){
+	void	Context::copy_member_to_value_array(uint16	child_index,bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr){
 
 		uint16	_index=index+child_index;
 		Atom	head;
@@ -290,15 +297,16 @@ dereference:
 		case	Atom::R_PTR:
 			overlay->values[write_index]=head;
 			return;
-		case	Atom::C_PTR:{
+		case	Atom::C_PTR:
+			if(dereference_cptr){
 
-			uint16	saved_index=index;
-			index=_index;
-			Context	cptr=**this;
-			overlay->values[write_index]=cptr[0];
-			index=saved_index;
-			return;
-		}
+				uint16	saved_index=index;
+				index=_index;
+				Context	cptr=**this;
+				overlay->values[write_index]=cptr[0];
+				index=saved_index;
+				return;
+			}
 		}
 
 		if(head.isStructural()){
@@ -308,9 +316,9 @@ dereference:
 			if(prefix){
 
 				overlay->values[write_index]=Atom::IPointer(extent_index);
-				copy_structure_to_value_array(true,extent_index,extent_index);
+				copy_structure_to_value_array(true,extent_index,extent_index,dereference_cptr);
 			}else
-				copy_structure_to_value_array(true,write_index,extent_index);
+				copy_structure_to_value_array(true,write_index,extent_index,dereference_cptr);
 			index=saved_index;
 		}else
 			overlay->values[write_index]=head;

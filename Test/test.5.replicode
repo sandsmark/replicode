@@ -1,0 +1,56 @@
+mk.val1:(mk.val
+self
+position
+(vec3 0 0 0)
+0
+)
+
+[]
+   [now 0.2 forever root nil]
+
+mk.tag1:(mk.tag
+self
+"tag on self"
+1
+)
+
+[]
+   [now 0.1 forever root nil]
+
+P1:(pgm
+[]; tpl
+   (ptn tgv:(tagged_v vec: :) |[])
+[]; input
+   []
+      (ptn in:(ent ::) []
+         (> in.vw.res 2)
+         (< in.psln_thr 1)
+      )
+      (ptn pos:(ent psln:) [(= psln 1)])
+   |[]
+   []
+      v#view:(fvw in root)
+      (= v.res pos.vw.res)
+(red in.mks []
+   (ptn m: [mkv#view:(fvw m root) (> mkv.sln 0)])
+   []
+      (inj [m [now mkv.sln forever stdout nil]])
+      (mod [mkv.sln -0.7])
+|[]
+)
+4000000us; tsc
+1; nfr
+0; psln_thr
+)
+
+|[]
+
+iP1:(ipgm
+P1; code
+[]; args
+   (tagged_v (vec3 1 2 3) "vector 123")
+0; psln_thr
+)
+
+[]
+   [now 0 forever root nil 1]
