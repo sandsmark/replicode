@@ -452,20 +452,12 @@ namespace	r_exec{
 
 	IOverlay::IOverlay(Controller	*c):Overlay(c){
 
-		//	init the list of pattern indices.
-		uint16	pattern_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+1].asIndex();
-		uint16	pattern_count=pgm_code[pattern_set_index].getAtomCount();
-		for(uint16	i=1;i<=pattern_count;++i)
-			input_pattern_indices.push_back(pgm_code[pattern_set_index+i].asIndex());
+		init();
 	}
 
 	IOverlay::IOverlay(PGMController	*c):Overlay(c){
 
-		//	init the list of pattern indices.
-		uint16	pattern_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+1].asIndex();
-		uint16	pattern_count=pgm_code[pattern_set_index].getAtomCount();
-		for(uint16	i=1;i<=pattern_count;++i)
-			input_pattern_indices.push_back(pgm_code[pattern_set_index+i].asIndex());
+		init();
 	}
 
 	IOverlay::IOverlay(IOverlay	*original,uint16	last_input_index,uint16	value_commit_index):Overlay(){
@@ -491,6 +483,19 @@ namespace	r_exec{
 	}
 
 	inline	IOverlay::~IOverlay(){
+
+		delete	reduction_sem;
+	}
+
+	inline	void	IOverlay::init(){
+
+		//	init the list of pattern indices.
+		uint16	pattern_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+1].asIndex();
+		uint16	pattern_count=pgm_code[pattern_set_index].getAtomCount();
+		for(uint16	i=1;i<=pattern_count;++i)
+			input_pattern_indices.push_back(pgm_code[pattern_set_index+i].asIndex());
+
+		reduction_sem=new	FastSemaphore(1,1);
 	}
 
 	inline	void	IOverlay::reset(){
@@ -529,6 +534,8 @@ namespace	r_exec{
 
 	void	IOverlay::reduce(r_exec::View	*input,_Mem	*mem){
 
+		reduction_sem->acquire();
+
 		uint16	input_index;
 		switch(match(input,input_index)){
 		case	SUCCESS:
@@ -549,6 +556,8 @@ namespace	r_exec{
 		case	FAILURE:	//	just rollback: let the overlay match other inputs.
 			rollback();
 		}
+
+		reduction_sem->release();
 	}
 
 	IOverlay::MatchResult	IOverlay::match(r_exec::View	*input,uint16	&input_index){
@@ -669,6 +678,8 @@ namespace	r_exec{
 
 	void	AntiOverlay::reduce(r_exec::View	*input,_Mem	*mem){
 
+		reduction_sem->acquire();
+
 		uint16	input_index;
 		switch(match(input,input_index)){
 		case	SUCCESS:
@@ -689,6 +700,8 @@ namespace	r_exec{
 		case	FAILURE:	//	just rollback: let the overlay match other inputs.
 			rollback();
 		}
+
+		reduction_sem->release();
 	}
 
 	Code	*AntiOverlay::get_mk_rdx(uint16	&extent_index)	const{
@@ -805,7 +818,9 @@ namespace	r_exec{
 				o=overlays.erase(o);
 			}
 
-			(*first)->reset();
+			((IOverlay	*)(*first))->reduction_sem->release();
+			((IOverlay	*)(*first))->reset();
+			((IOverlay	*)(*first))->reduction_sem->release();
 			start_time=elapsed%tsc;
 		}
 
@@ -856,9 +871,11 @@ namespace	r_exec{
 		overlay_sem->acquire();
 
 		AntiOverlay	*overlay=(AntiOverlay	*)*overlays.begin();
+		overlay->reduction_sem->acquire();
 		if(!successful_match)
 			overlay->inject_productions(mem,this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlay_sem.
 		overlay->reset();
+		overlay->reduction_sem->release();
 		
 		push_new_signaling_job();
 

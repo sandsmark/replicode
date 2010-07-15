@@ -66,7 +66,11 @@ int32	main(int	argc,char	**argv){
 		std::cout<<"\nsleeping 1000\n";
 		Thread::Sleep(1000);
 		mem->suspend();
+		//TimeProbe	probe;
+		//probe.set();
 		r_comp::Image	*image=mem->getImage();
+		//probe.check();
+		//std::cout<<"getImage(): "<<probe.us()<<std::endl;
 		mem->resume();
 		Thread::Sleep(500);
 		std::cout<<"\nstopping rMem\n";

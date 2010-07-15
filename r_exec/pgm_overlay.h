@@ -110,11 +110,14 @@ namespace	r_exec{
 	};
 
 	//	Overlay with inputs.
+	//	Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
 	class	r_exec_dll	IOverlay:
 	public	Overlay{
 	friend	class	PGMController;
 	friend	class	Context;
 	protected:
+		FastSemaphore	*reduction_sem;
+
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
 
@@ -135,6 +138,8 @@ namespace	r_exec{
 
 		virtual	Code	*get_mk_rdx(uint16	&extent_index)	const;
 
+		void	init();
+
 		IOverlay(Controller	*c);
 		IOverlay(PGMController	*c);
 		IOverlay(IOverlay	*original,uint16	last_input_index,uint16	value_commit_index);	//	copy from the original and rollback.
@@ -149,6 +154,8 @@ namespace	r_exec{
 		r_code::View	*getInputView(uint16	i)	const;
 	};
 
+	//	Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
+	//	In addition, ReductionCores and signalling jobs can attempt to inject productions concurrently.
 	class	r_exec_dll	AntiOverlay:
 	public	IOverlay{
 	friend	class	AntiPGMController;
