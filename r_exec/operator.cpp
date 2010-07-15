@@ -634,8 +634,10 @@ namespace	r_exec{
 		if(pattern[0].asOpcode()==Opcodes::AntiPTN){
 			
 			skeleton=*pattern.getChild(1);
+			if(skeleton.match(input))
+				return	false;
 			last_patch_index=pattern.get_last_patch_index();
-			if(match(input,pattern))	//	no need to match the skeleton of an |ptn.
+			if(match(input,pattern))
 				return	false;
 
 			goto	build_productions;

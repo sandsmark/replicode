@@ -68,7 +68,7 @@ namespace	r_exec{
 	public:
 		static	uint16	ViewOpcode;
 
-		P<IPGMController>	controller;	//	built upon injection of the view (if the object is an ipgm).
+		P<Controller>	controller;	//	built upon injection of the view (if the object is an ipgm).
 
 		static	float32	MorphValue(float32	value,float32	source_thr,float32	destination_thr);
 		static	float32	MorphChange(float32	change,float32	source_thr,float32	destination_thr);

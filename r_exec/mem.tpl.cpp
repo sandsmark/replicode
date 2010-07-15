@@ -152,7 +152,7 @@ namespace	r_exec{
 					host->ipgm_views[view->getOID()]=view;
 					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
 
-						IPGMController	*o=new	IPGMController(this,view);	//	now will be added to the deadline at start time.
+						PGMController	*o=new	PGMController(this,view);	//	now will be added to the deadline at start time.
 						view->controller=o;	//	init the view's overlay.
 					}
 					break;
@@ -160,7 +160,7 @@ namespace	r_exec{
 					host->input_less_ipgm_views[view->getOID()]=view;
 					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
 
-						IPGMController	*o=new	IPGMController(this,view);	//	now will be added to the deadline at start time.
+						InputLessPGMController	*o=new	InputLessPGMController(this,view);	//	now will be added to the deadline at start time.
 						view->controller=o;	//	init the view's overlay.
 					}
 					break;
@@ -168,7 +168,7 @@ namespace	r_exec{
 					host->anti_ipgm_views[view->getOID()]=view;
 					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
 
-						IPGMController	*o=new	IPGMController(this,view);	//	now will be added to the deadline at start time.
+						AntiPGMController	*o=new	AntiPGMController(this,view);	//	now will be added to the deadline at start time.
 						view->controller=o;	//	init the view's overlay.
 					}
 					break;
@@ -293,7 +293,7 @@ namespace	r_exec{
 		case	ObjectType::IPGM:{
 
 			host->ipgm_views[view->getOID()]=view;
-			IPGMController	*o=new	IPGMController(this,view);
+			PGMController	*o=new	PGMController(this,view);
 			view->controller=o;
 			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
@@ -303,7 +303,7 @@ namespace	r_exec{
 			break;
 		}case	ObjectType::ANTI_IPGM:{
 			host->anti_ipgm_views[view->getOID()]=view;
-			IPGMController	*o=new	IPGMController(this,view);
+			AntiPGMController	*o=new	AntiPGMController(this,view);
 			view->controller=o;
 			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
@@ -317,7 +317,7 @@ namespace	r_exec{
 			break;
 		}case	ObjectType::INPUT_LESS_IPGM:{
 			host->input_less_ipgm_views[view->getOID()]=view;
-			IPGMController	*o=new	IPGMController(this,view);
+			InputLessPGMController	*o=new	InputLessPGMController(this,view);
 			view->controller=o;
 			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
@@ -387,8 +387,8 @@ namespace	r_exec{
 		host->release();
 	}
 
-	template<class	O>	void	Mem<O>::injectNotificationNow(View	*view,bool	lock){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
-																						//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
+	template<class	O>	void	Mem<O>::injectNotificationNow(View	*view,bool	lock,_PGMController	*origin){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
+																													//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
 		Group	*host=view->get_host();
 		LObject	*object=(LObject	*)view->object;
 
@@ -406,7 +406,7 @@ namespace	r_exec{
 		object->views.insert(view);
 		
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.
-			_inject_reduction_jobs(view,host);
+			_inject_reduction_jobs(view,host,origin);
 
 		if(lock)
 			host->release();

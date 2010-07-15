@@ -114,7 +114,7 @@ namespace	r_exec{
 		std::vector<View	*>			newly_salient_views;
 
 		//	Populated upon ipgm injection; used at update time; cleared afterward.
-		std::vector<IPGMController	*>	new_controllers;
+		std::vector<Controller	*>	new_controllers;
 
 		class	Operation{
 		protected:

@@ -91,19 +91,32 @@ namespace	r_exec{
 	Overlay::Overlay():alive(true){
 	}
 
-	Overlay::Overlay(IPGMController	*c):_Object(),controller(c),alive(true),value_commit_index(0),_now(0){
+	Overlay::Overlay(Controller	*c):_Object(),controller(c),alive(true),value_commit_index(0),_now(0){
 
 		//	copy the original pgm code.
 		pgm_code_size=getIPGM()->get_reference(0)->code_size();
 		pgm_code=new	r_code::Atom[pgm_code_size];
 		memcpy(pgm_code,&getIPGM()->get_reference(0)->code(0),pgm_code_size*sizeof(r_code::Atom));
-
 		patch_tpl_args();
+
+		alive_sem=new	FastSemaphore(1,1);
 	}
 
 	Overlay::~Overlay(){
 
 		delete[]	pgm_code;
+		delete		alive_sem;
+	}
+
+	inline	void	Overlay::reset(){
+
+		memcpy(pgm_code,&getIPGM()->get_reference(0)->code(0),pgm_code_size*sizeof(r_code::Atom));	//	restore code to prisitne copy.
+		patch_tpl_args();
+
+		patch_indices.clear();
+		value_commit_index=0;
+		values.as_std()->clear();
+		productions.clear();
 	}
 
 	r_code::Code	*Overlay::buildObject(Atom	head)	const{
@@ -175,7 +188,7 @@ namespace	r_exec{
 	void	Overlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){
 	}
 
-	bool	Overlay::inject_productions(_Mem	*mem){
+	bool	Overlay::inject_productions(_Mem	*mem,_PGMController	*origin){
 
 		_now=Now();
 
@@ -280,7 +293,7 @@ namespace	r_exec{
 					_view.copy(view,0);
 					view->set_object(object);
 
-					Code	*existing_object=mem->inject(view);
+					Code	*existing_object=NULL;//mem->inject(view);
 					if(existing_object)
 						productions[prod_index]=existing_object;	//	so that the mk.rdx will reference the existing object instead of object, which has been discarded.
 
@@ -401,7 +414,7 @@ namespace	r_exec{
 		if(notify_rdx){
 
 			NotificationView	*v=new	NotificationView(getIPGMView()->get_host(),getIPGMView()->get_host()->get_ntf_grp(),mk_rdx);
-			mem->injectNotificationNow(v,true);
+			mem->injectNotificationNow(v,true,origin);
 		}
 
 		rollback();
@@ -437,7 +450,16 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	IOverlay::IOverlay(IPGMController	*c):Overlay(c){
+	IOverlay::IOverlay(Controller	*c):Overlay(c){
+
+		//	init the list of pattern indices.
+		uint16	pattern_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+1].asIndex();
+		uint16	pattern_count=pgm_code[pattern_set_index].getAtomCount();
+		for(uint16	i=1;i<=pattern_count;++i)
+			input_pattern_indices.push_back(pgm_code[pattern_set_index+i].asIndex());
+	}
+
+	IOverlay::IOverlay(PGMController	*c):Overlay(c){
 
 		//	init the list of pattern indices.
 		uint16	pattern_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+1].asIndex();
@@ -473,15 +495,9 @@ namespace	r_exec{
 
 	inline	void	IOverlay::reset(){
 
-		memcpy(pgm_code,&getIPGM()->get_reference(0)->code(0),pgm_code_size*sizeof(r_code::Atom));	//	restore code to prisitne copy.
-		patch_tpl_args();
-
+		Overlay::reset();
 		patch_indices.clear();
 		input_views.clear();
-		input_pattern_indices.clear();
-		value_commit_index=0;
-		values.as_std()->clear();
-		productions.clear();
 	}
 
 	void	IOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){	//	patch recursively : in pgm_code[index] with IN_OBJ_PTRs until ::.
@@ -518,15 +534,15 @@ namespace	r_exec{
 		case	SUCCESS:
 			if(input_pattern_indices.size()==0){	//	all patterns matched.
 
-				if(check_timings()	&&	check_guards()	&&	inject_productions(mem)){
+				if(check_timings()	&&	check_guards()	&&	inject_productions(mem,NULL)){
 
-					controller->remove(this);
+					((PGMController	*)controller)->remove(this);
 					return;
 				}
 			}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
 
 				IOverlay	*offspring=new	IOverlay(this,input_index,value_commit_index);
-				controller->add(offspring);
+				((PGMController	*)controller)->add(offspring);
 				commit();
 				return;
 			}
@@ -562,6 +578,10 @@ namespace	r_exec{
 
 		if(pgm_code[pattern_index].asOpcode()==Opcodes::AntiPTN){
 
+			Context	input_object=Context::GetContextFromInput(input,this);
+			Context	pattern_skeleton(getIPGM()->get_reference(0),getIPGMView(),pgm_code,pgm_code[pattern_index+1].asIndex(),this);	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
+			if(!pattern_skeleton.match(input_object))
+				return	SUCCESS;
 			MatchResult	r=__match(input,pattern_index);
 			switch(r){
 			case	IMPOSSIBLE:
@@ -570,20 +590,22 @@ namespace	r_exec{
 			case	SUCCESS:
 				return	FAILURE;
 			}
-		}else	if(pgm_code[pattern_index].asOpcode()==Opcodes::PTN)
+		}else	if(pgm_code[pattern_index].asOpcode()==Opcodes::PTN){
+
+			Context	input_object=Context::GetContextFromInput(input,this);
+			Context	pattern_skeleton(getIPGM()->get_reference(0),getIPGMView(),pgm_code,pgm_code[pattern_index+1].asIndex(),this);	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
+			if(!pattern_skeleton.match(input_object))
+				return	IMPOSSIBLE;
 			return	__match(input,pattern_index);
+		}
 		return	IMPOSSIBLE;
 	}
 
 	inline	IOverlay::MatchResult	IOverlay::__match(r_exec::View	*input,uint16	pattern_index){
 
-		Context	input_object=Context::GetContextFromInput(input,this);
-		Context	pattern_skeleton(getIPGM()->get_reference(0),getIPGMView(),pgm_code,pgm_code[pattern_index+1].asIndex(),this);	//	pgm_code[pattern_index] is the first atom of the pattern; pgm_code[pattern_index+1] is an iptr to the skeleton.
-		if(!pattern_skeleton.match(input_object))
-			return	IMPOSSIBLE;
-
 		patch_input_code(pattern_index,input_views.size()-1,0);	//	the input has just been pushed on input_views (see match).
 //Atom::Trace(pgm_code,getIPGM()->get_reference(0)->code_size());
+//input->object->trace();
 		//	match: evaluate the set of guards.
 		uint16	guard_set_index=pgm_code[pattern_index+2].asIndex();
 		if(!evaluate(guard_set_index))
@@ -636,7 +658,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	inline	AntiOverlay::AntiOverlay(IPGMController	*c):IOverlay(c){
+	inline	AntiOverlay::AntiOverlay(AntiPGMController	*c):IOverlay(c){
 	}
 
 	inline	AntiOverlay::AntiOverlay(AntiOverlay	*original,uint16	last_input_index,uint16	value_limit):IOverlay(original,last_input_index,value_limit){
@@ -645,7 +667,7 @@ namespace	r_exec{
 	inline	AntiOverlay::~AntiOverlay(){
 	}
 
-	void	AntiOverlay::reduce(r_exec::View	*input){
+	void	AntiOverlay::reduce(r_exec::View	*input,_Mem	*mem){
 
 		uint16	input_index;
 		switch(match(input,input_index)){
@@ -654,13 +676,13 @@ namespace	r_exec{
 
 				if(check_timings()	&&	check_guards()){
 
-					controller->restart(this,true);
+					((AntiPGMController	*)controller)->restart(this);
 					return;
 				}
 			}else{
 
 				AntiOverlay	*offspring=new	AntiOverlay(this,input_index,value_commit_index);
-				controller->add(offspring);
+				((AntiPGMController	*)controller)->add(offspring);
 				commit();
 				return;
 			}
@@ -687,72 +709,46 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	IPGMController::IPGMController(_Mem	*m,r_code::View	*ipgm_view):_Object(),mem(m),ipgm_view(ipgm_view),alive(true),successful_match(false),start_time(Now()){
+	Controller::Controller(_Mem	*m,r_code::View	*ipgm_view):_Object(),mem(m),ipgm_view(ipgm_view),alive(true){
+
+		alive_sem=new	FastSemaphore(1,1);
+		overlay_sem=new	FastSemaphore(1,1);
 	}
 	
-	IPGMController::~IPGMController(){
+	Controller::~Controller(){
+
+		delete	alive_sem;
+		delete	overlay_sem;
 	}
 
-	void	IPGMController::kill(){
+	void	Controller::kill(){
 		
+		alive_sem->acquire();
 		alive=false;
+		alive_sem->release();
+
 		std::list<P<Overlay> >::const_iterator	o;
+		overlay_sem->acquire();
 		for(o=overlays.begin();o!=overlays.end();++o)
 			(*o)->kill();
 		overlays.clear();
+		overlay_sem->release();
 	}
 
-	void	IPGMController::take_input(r_exec::View	*input){	//	will never be called on an input-less controller.
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		uint64	now=Now();
-		uint64	tsc=Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
-		if(now-start_time>tsc){
+	InputLessPGMController::InputLessPGMController(_Mem	*m,r_code::View	*ipgm_view):Controller(m,ipgm_view){
 
-			std::list<P<Overlay> >::const_iterator	o;
-			for(o=overlays.begin();o!=overlays.end();++o)
-				(*o)->kill();
-			overlays.clear();
-
-			start_time=now;
-		}
-
-		if(overlays.size()==0)
-			overlays.push_back(getIPGM()->get_reference(0)->code(0).asOpcode()==Opcodes::AntiPGM?new	AntiOverlay(this):new	IOverlay(this));
-
-		std::list<P<Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o){
-
-			ReductionJob	j(new	View(input),*o);
-			mem->pushReductionJob(j);
-		}
+		overlays.push_back(new	Overlay(this));
+	}
+	
+	InputLessPGMController::~InputLessPGMController(){
 	}
 
-	void	IPGMController::signal_anti_pgm(){	//	next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
+	void	InputLessPGMController::signal_input_less_pgm(){	//	next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
 
-		AntiOverlay	*o;
-		if(overlays.size()==0){
-
-			o=new	AntiOverlay(this);
-			overlays.push_back(o);
-		}else
-			o=(AntiOverlay	*)*overlays.begin();
-
-		if(!successful_match)
-			o->inject_productions(mem);
-		restart(o,false);
-	}
-
-	void	IPGMController::signal_input_less_pgm(){	//	next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
-
-		Overlay	*o;
-		if(overlays.size()==0){
-
-			o=new	Overlay(this);
-			overlays.push_back(o);
-		}else
-			o=*overlays.begin();
-		
-		o->inject_productions(mem);
+		Overlay	*o=*overlays.begin();
+		o->inject_productions(mem,NULL);
 
 		Group	*host=getIPGMView()->get_host();
 		host->acquire();
@@ -766,40 +762,155 @@ namespace	r_exec{
 		host->release();
 	}
 
-	inline	void	IPGMController::remove(IOverlay	*overlay){
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		if(overlays.size()==1)
-			overlay->reset();
-		else
-			overlays.remove(overlay);
+	_PGMController::_PGMController(_Mem	*m,r_code::View	*ipgm_view):Controller(m,ipgm_view){
+	}
+	
+	_PGMController::~_PGMController(){
 	}
 
-	inline	void	IPGMController::add(IOverlay	*overlay){	//	o has just matched an input; builds a copy of o.
+	inline	void	_PGMController::add(Overlay	*overlay){	//	o has just matched an input; builds a copy of o.
 
+		overlay_sem->acquire();
 		overlays.push_back(overlay);
+		overlay_sem->release();
 	}
 
-	void	IPGMController::restart(AntiOverlay	*overlay,bool	match){	//	one overlay matched all its inputs, timings and guards: push a new signaling job, 
-																		//	keep the overlay alive (it has been reset and shall take new inputs) and kill all others.
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	PGMController::PGMController(_Mem	*m,r_code::View	*ipgm_view):_PGMController(m,ipgm_view),start_time(Now()){
+
+		overlays.push_back(new	IOverlay(this));
+	}
+	
+	PGMController::~PGMController(){
+	}
+
+	void	PGMController::take_input(r_exec::View	*input,_PGMController	*origin){	//	origin unused since there is no recursion here.
+
+		uint64	now=Now();
+		uint64	tsc=Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
+		uint64	elapsed=now-start_time;
+
+		overlay_sem->acquire();
+
+		if(elapsed>tsc){
+
+			std::list<P<Overlay> >::const_iterator	first=overlays.begin();
+			std::list<P<Overlay> >::const_iterator	o;
+			for(o=++first;o!=overlays.end();){
+
+				(*o)->kill();
+				o=overlays.erase(o);
+			}
+
+			(*first)->reset();
+			start_time=elapsed%tsc;
+		}
+
+		std::list<P<Overlay> >::const_iterator	o;
+		for(o=overlays.begin();o!=overlays.end();++o){
+
+			ReductionJob	j(new	View(input),*o);
+			mem->pushReductionJob(j);
+		}
+
+		overlay_sem->release();
+	}
+
+	inline	void	PGMController::remove(Overlay	*overlay){
+
+		overlay->kill();
+		overlays.remove(overlay);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	AntiPGMController::AntiPGMController(_Mem	*m,r_code::View	*ipgm_view):_PGMController(m,ipgm_view),successful_match(false){
+
+		overlays.push_back(new	AntiOverlay(this));
+	}
+	
+	AntiPGMController::~AntiPGMController(){
+	}
+
+	void	AntiPGMController::take_input(r_exec::View	*input,_PGMController	*origin){
+
+		if(this!=origin)
+			overlay_sem->acquire();
+
+		std::list<P<Overlay> >::const_iterator	o;
+		for(o=overlays.begin();o!=overlays.end();++o){
+
+			ReductionJob	j(new	View(input),*o);
+			mem->pushReductionJob(j);
+		}
+
+		if(this!=origin)
+			overlay_sem->release();
+	}
+
+	void	AntiPGMController::signal_anti_pgm(){
+
+		overlay_sem->acquire();
+
+		AntiOverlay	*overlay=(AntiOverlay	*)*overlays.begin();
+		if(!successful_match)
+			overlay->inject_productions(mem,this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlay_sem.
 		overlay->reset();
 		
+		push_new_signaling_job();
+
+		std::list<P<Overlay> >::const_iterator	first=overlays.begin();
+		std::list<P<Overlay> >::const_iterator	o;
+		for(o=++first;o!=overlays.end();){	//	reset the first overlay and kill all others.
+
+			(*o)->kill();
+			o=overlays.erase(o);
+		}
+
+		successful_match=false;
+
+		overlay_sem->release();
+	}
+
+	void	AntiPGMController::restart(AntiOverlay	*overlay){	//	one anti overlay matched all its inputs, timings and guards: push a new signaling job, 
+																//	reset the overlay and kill all others.
+		overlay_sem->acquire();
+
+		overlay->reset();
+		
+		push_new_signaling_job();
+
+		std::list<P<Overlay> >::const_iterator	o;
+		for(o=overlays.begin();o!=overlays.end();){
+
+			if(overlay!=*o){
+
+				((AntiOverlay	*)*o)->kill();
+				o=overlays.erase(o);
+			}else
+				++o;
+		}
+
+		successful_match=true;
+
+		overlay_sem->release();
+	}
+
+	void	AntiPGMController::push_new_signaling_job(){
+
 		Group	*host=getIPGMView()->get_host();
 		host->acquire();
 		if(getIPGMView()->get_act_vis()>host->get_act_thr()	&&	//	active ipgm.
 			host->get_c_act()>host->get_c_act_thr()	&&			//	c-active group.
 			host->get_c_sln()>host->get_c_sln_thr()){			//	c-salient group.
 
+				host->release();
 			TimeJob	next_job(new	AntiPGMSignalingJob(this),Now()+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
 			mem->pushTimeJob(next_job);
-		}
-		host->release();
-
-		std::list<P<Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o)
-			if(overlay!=*o)
-				((AntiOverlay	*)*o)->kill();
-		overlays.clear();
-
-		successful_match=match;
+		}else
+			host->release();
 	}
 }

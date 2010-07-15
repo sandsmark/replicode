@@ -89,7 +89,7 @@ namespace	r_comp{
 			decompile_object(i,stream);
 	}
 
-	void	Decompiler::decompile_references(r_comp::Image	*image){
+	uint32	Decompiler::decompile_references(r_comp::Image	*image){
 
 		uint32		last_object_ID=0;
 		char		buffer[255];
@@ -117,6 +117,8 @@ namespace	r_comp{
 		}
 
 		closing_set=false;
+
+		return	image->code_segment.objects.size();
 	}
 	
 	void	Decompiler::decompile_object(uint16	object_index,std::ostringstream	*stream){
@@ -349,9 +351,13 @@ namespace	r_comp{
 				else{
 
 					uint64	ts=((uint64)(current_object->code[index+1].atom))<<32	|	((uint64)(current_object->code[index+2].atom));
+					uint64	us=ts%1000;
+					uint64	ms=ts/1000;
+					uint64	s=ms/1000;
+					ms=ms%1000;
 					*out_stream<<std::dec;
-					out_stream->push(ts,read_index);
-					*out_stream<<"us";
+					out_stream->push(s,read_index);
+					*out_stream<<":"<<ms<<":"<<us<<"us";
 				}
 				break;
 			case	Atom::C_PTR:{

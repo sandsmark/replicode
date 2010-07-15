@@ -42,6 +42,8 @@ namespace	r_exec{
 	//	Opcodes are initialized by Init().
 	class	r_exec_dll	Opcodes{
 	public:
+		static	uint16	Entity;
+
 		static	uint16	Group;
 
 		static	uint16	PTN;

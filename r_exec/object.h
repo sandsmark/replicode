@@ -101,6 +101,7 @@ namespace	r_exec{
 		class	Hash{
 		public:
 			size_t	operator	()(U	*o)	const{
+				
 				if(o->hash_value==0)
 					o->compute_hash_value();
 				return	o->hash_value;
@@ -110,6 +111,10 @@ namespace	r_exec{
 		class	Equal{
 		public:
 			bool	operator	()(const	U	*lhs,const	U	*rhs)	const{	//	lhs and rhs have the same hash value, i.e. same opcode, same code size and same reference size.
+				
+				if(lhs->code(0).asOpcode()==Opcodes::Entity)
+					return	lhs==rhs;
+
 				uint16	i;
 				for(i=0;i<lhs->references_size();++i)
 					if(lhs->get_reference(i)!=rhs->get_reference(i))

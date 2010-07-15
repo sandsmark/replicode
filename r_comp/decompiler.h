@@ -70,7 +70,7 @@ namespace	r_comp{
 
 		void	init(r_comp::Metadata	*metadata);
 		void	decompile(r_comp::Image	*image,std::ostringstream	*stream);					//	decompiles the whole image.
-		void	decompile_references(r_comp::Image	*image);									//	initialize a reference table so that objects can be decompiled individually.
+		uint32	decompile_references(r_comp::Image	*image);									//	initialize a reference table so that objects can be decompiled individually; returns the number of objects.
 		void	decompile_object(uint16	object_index,std::ostringstream	*stream);				//	decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
 		void	decompile_object(const	std::string	object_name,std::ostringstream	*stream);	//	decompiles a single object given its name: use this function to follow references.
 	};

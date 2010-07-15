@@ -121,6 +121,7 @@ namespace	r_code{
 			for(uint16	i=0;i<source->code.size();++i)
 				_code[i]=source->code[i];
 			references[0]=references[1]=NULL;
+			this->object=object;
 		}
 
 		virtual	~View(){}

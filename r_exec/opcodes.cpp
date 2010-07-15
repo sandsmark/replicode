@@ -33,6 +33,8 @@
 
 namespace	r_exec{
 
+	uint16	Opcodes::Entity;
+
 	uint16	Opcodes::Group;
 
 	uint16	Opcodes::PTN;

@@ -61,14 +61,14 @@ namespace	r_exec{
 			delete	time_cores[i];
 		delete[]	time_cores;
 
+		delete	reduction_job_queue;
+		delete	time_job_queue;
+
 		delete	object_register_sem;
 		delete	objects_sem;
 		delete	state_sem;
 		delete	suspension_lock;
 		delete	stop_sem;
-
-		delete	reduction_job_queue;
-		delete	time_job_queue;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -221,8 +221,9 @@ namespace	r_exec{
 		for(i=0;i<time_core_count;++i)
 			Thread::TerminateAndWait(time_cores[i]);
 		state_sem->release();
-
-		stop_sem->acquire();
+		std::cout<<"Waiting for "<<delegate_count<<" delegates to terminate.\n";
+		Thread::Sleep(200);
+		stop_sem->acquire();	//	wait for the delegates to terminate.
 
 		reset();
 	}
@@ -286,14 +287,14 @@ namespace	r_exec{
 	void	_Mem::update(AntiPGMSignalingJob	*j){
 
 		if(j->controller->is_alive())
-			j->controller->signal_anti_pgm();
+			((AntiPGMController	*)j->controller)->signal_anti_pgm();
 		j->controller=NULL;
 	}
 
 	void	_Mem::update(InputLessPGMSignalingJob	*j){
 
 		if(j->controller->is_alive())
-			j->controller->signal_input_less_pgm();
+			((InputLessPGMController	*)j->controller)->signal_input_less_pgm();
 		j->controller=NULL;
 	}
 
@@ -574,12 +575,12 @@ namespace	r_exec{
 				switch(GetType(group->new_controllers[i]->getIPGM())){
 				case	ObjectType::ANTI_IPGM:{	//	inject signaling jobs for |ipgm (tsc).
 
-					TimeJob	j(new	AntiPGMSignalingJob(group->new_controllers[i]),now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
+					TimeJob	j(new	AntiPGMSignalingJob((AntiPGMController	*)group->new_controllers[i]),now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
 					time_job_queue->push(j);
 					break;
 				}case	ObjectType::INPUT_LESS_IPGM:{	//	inject a signaling job for an input-less pgm (sfr).
 
-					TimeJob	j(new	InputLessPGMSignalingJob(group->new_controllers[i]),now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
+					TimeJob	j(new	InputLessPGMSignalingJob((InputLessPGMController	*)group->new_controllers[i]),now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
 					time_job_queue->push(j);
 					break;
 				}
@@ -598,7 +599,7 @@ namespace	r_exec{
 		group->release();
 	}
 
-	void	_Mem::_inject_reduction_jobs(View	*view,Group	*host){	//	host is assumed to be c-salient; host already protected.
+	void	_Mem::_inject_reduction_jobs(View	*view,Group	*host,_PGMController	*origin){	//	host is assumed to be c-salient; host already protected.
 
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
 
@@ -606,7 +607,7 @@ namespace	r_exec{
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(host,v)
 
 				if(v->second->get_act_vis()>host->get_sln_thr())	//	active ipgm view.
-					v->second->controller->take_input(view);		//	view will be copied.
+					((_PGMController	*)v->second->controller)->take_input(view,origin);		//	view will be copied.
 
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
 		}
@@ -623,7 +624,7 @@ namespace	r_exec{
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
 
 				if(v->second->get_act_vis()>vg->first->get_sln_thr())	//	active ipgm view.
-					v->second->controller->take_input(view);			//	view will be copied.
+					((_PGMController	*)v->second->controller)->take_input(view,origin);			//	view will be copied.
 			
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
 		}
@@ -700,6 +701,9 @@ namespace	r_exec{
 	}
 
 	void	_Mem::_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path){
+
+		if(object==root)
+			return;
 
 		//	prevent loops.
 		for(uint32	i=0;i<path.size();++i)

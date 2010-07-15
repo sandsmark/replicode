@@ -64,7 +64,7 @@ namespace	r_comp{
 	
 	bool	Class::is_pattern(Metadata	*metadata)	const{
 		
-		return	metadata->classes.find("ptn")->second.atom==atom;
+		return	(metadata->classes.find("ptn")->second.atom==atom)	||	(metadata->classes.find("|ptn")->second.atom==atom);
 	}
 		
 	bool	Class::get_member_index(Metadata	*metadata,std::string	&name,uint16	&index,Class	*&p)	const{

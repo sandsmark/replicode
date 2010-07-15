@@ -195,7 +195,7 @@ namespace	r_exec{
 		bool	evaluate(uint16	&result_index)					const;	//	index is set to the index of the result, undefined in case of failure.
 		bool	evaluate_no_dereference(uint16	&result_index)	const;
 
-		Context	&operator	=(Context	&c){
+		Context	&operator	=(const	Context	&c){
 			
 			object=c.object;
 			view=c.view;

@@ -32,12 +32,17 @@ namespace	r_exec{
 
 	inline	void	Overlay::kill(){
 		
+		alive_sem->acquire();
 		alive=false;
+		alive_sem->release();
 	}
 
 	inline	bool	Overlay::is_alive()	const{
 		
-		return	alive;
+		alive_sem->acquire();
+		bool	_alive=alive;
+		alive_sem->release();
+		return	_alive;
 	}
 
 	inline	void	Overlay::patch_code(uint16	index,Atom	value){
@@ -83,17 +88,25 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	inline	bool	IPGMController::is_alive()	const{
+	inline	bool	Controller::is_alive()	const{
 		
-		return	alive;
+		alive_sem->acquire();
+		bool	_alive=alive;
+		alive_sem->release();
+		return	_alive;
 	}
 
-	inline	r_exec::View	*IPGMController::getIPGMView()	const{
+	inline	_Mem	*Controller::get_mem()		const{
+		
+		return	mem;
+	}
+
+	inline	r_exec::View	*Controller::getIPGMView()	const{
 		
 		return	(r_exec::View	*)ipgm_view;
 	}
 	
-	inline	r_code::Code	*IPGMController::getIPGM()	const{
+	inline	r_code::Code	*Controller::getIPGM()	const{
 		
 		return	ipgm_view->object;
 	}

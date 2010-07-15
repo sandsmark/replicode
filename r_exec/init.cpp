@@ -119,6 +119,8 @@ namespace	r_exec{
 		//	load class Opcodes.
 		View::ViewOpcode=_Opcodes.find("view")->second;
 
+		Opcodes::Entity=_Opcodes.find("ent")->second;
+
 		Opcodes::Group=_Opcodes.find("grp")->second;
 
 		Opcodes::PTN=_Opcodes.find("ptn")->second;
@@ -188,6 +190,9 @@ namespace	r_exec{
 		Operator::Register(operator_opcode++,mrg);
 		Operator::Register(operator_opcode++,ptc);
 		Operator::Register(operator_opcode++,fvw);
+
+		if(!user_operator_library_path)	//	when no rMem is used.
+			return	true;
 
 		//	load usr operators.
 		if(!(userOperatorLibrary.load(user_operator_library_path)))

@@ -29,11 +29,12 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"decompiler.h"
-
 #include	"mem.h"
 #include	"init.h"
-
 #include	"image_impl.h"
+
+
+//#define	DECOMPILE_ONE_BY_ONE
 
 
 using	namespace	r_comp;
@@ -58,7 +59,7 @@ int32	main(int	argc,char	**argv){
 		r_code::vector<r_code::Code	*>	ram_objects;
 		r_exec::Seed.getObjects(mem,ram_objects);
 
-		mem->init(100000,1,1);
+		mem->init(100000,4,4);
 		mem->load(ram_objects.as_std());
 		mem->start();
 		//uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
@@ -75,18 +76,34 @@ int32	main(int	argc,char	**argv){
 
 		delete	mem;
 
-		Decompiler			decompiler;
-		std::ostringstream	decompiled_code;
+		Decompiler	decompiler;
 		decompiler.init(&r_exec::Metadata);
+#ifdef	DECOMPILE_ONE_BY_ONE
+		uint32	object_count=decompiler.decompile_references(image);
+		std::cout<<object_count<<" objects in the image\n";
+		while(1){
+
+			std::cout<<"Which object (-1 to exit)?\n";
+			int32	index;std::cin>>index;
+			if(index==-1)
+				break;
+			if(index>=object_count){
+
+				std::cout<<"there is only "<<object_count<<" objects\n";
+				continue;
+			}
+			std::ostringstream	decompiled_code;
+			decompiler.decompile_object(index,&decompiled_code);
+			std::cout<<"... done\n";
+			std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
+		}
+#else
 		std::cout<<"\ndecompiling ...\n";
+		std::ostringstream	decompiled_code;
 		decompiler.decompile(image,&decompiled_code);
-		/*decompiler.decompile_references(image);
-		std::cout<<"Which object?\n";
-		uint16	index;std::cin>>index;
-		decompiler.decompile_object(index,&decompiled_code);*/
 		std::cout<<"... done\n";
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
-
+#endif
 		delete	image;
 	}
 

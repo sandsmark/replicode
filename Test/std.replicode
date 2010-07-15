@@ -9,8 +9,8 @@
 !class (|ptn skel:xpr guards:[::xpr])
 !class (_in_sec[] :~ timings:[::xpr] guards:[::xpr])
 !class (_react_obj (_obj {tpl:[::ptn] :~ prods: tsc:us nfr:nb :~}))
-!class (pgm (_react_obj input:(_in_sec inputs:[::ptn]) nil))
-!class (|pgm (_react_obj input:(_in_sec inputs:[::ptn]) nil))
+!class (pgm (_react_obj input:(_in_sec inputs:[]) nil))
+!class (|pgm (_react_obj input:(_in_sec inputs:[]) nil))
 !class (grp (_obj {upr:nb sln_thr:nb act_thr:nb vis_thr:nb c_sln:nb c_sln_thr:nb c_act:nb c_act_thr:nb dcy_per:nb dcy_tgt:nb dcy_prd:nb sln_chg_thr:nb sln_chg_prd:nb act_chg_thr:nb act_chg_prd:nb avg_sln:nb high_sln:nb low_sln:nb avg_act:nb high_act:nb low_act:nb high_sln_thr:nb low_sln_thr:nb sln_ntf_prd:nb high_act_thr:nb low_act_thr:nb act_ntf_prd:nb ntf_new:nb low_res_thr:nb ntf_grp:grp}))
 !class (gol (_obj {tpl:[::ptn] target_state:(_in_sec inputs:[::ptn])}))
 !class (|gol (_obj {tpl:[::ptn] target_state:(_in_sec inputs:[::ptn])}))
@@ -69,7 +69,7 @@
 !def > gtr
 !def < lsr
 !def <= gte
-!def => lse
+!def >= lse
 !def + add
 !def - sub
 !def * mul

@@ -32,6 +32,7 @@
 #define	pgm_overlay_h
 
 #include	"base.h"
+#include	"../CoreLibrary/utils.h"
 #include	"../r_code/object.h"
 #include	"dll.h"
 
@@ -43,15 +44,21 @@ namespace	r_exec{
 	class	View;
 
 	class	InstantiatedProgram;
-	class	IPGMController;
+	class	Controller;
+	class	_PGMController;
+	class	InputLessPGMController;
 	class	Context;
 
+	//	Shared resources:
+	//	- alive: read by ReductionCore (via reductionJob::update()), written by TimeCore (via the controller).
 	class	r_exec_dll	Overlay:
 	public	_Object{
-	friend	class	IPGMController;
+	friend	class	Controller;
+	friend	class	InputLessPGMController;
 	friend	class	Context;
 	private:
-		bool	alive;
+		bool			alive;
+		FastSemaphore	*alive_sem;
 	protected:
 		//	Copy of the pgm code. Will be patched during matching and evaluation:
 		//	any area indexed by a vl_ptr will be overwritten with:
@@ -64,8 +71,8 @@ namespace	r_exec{
 		r_code::vector<Atom>	values;			//	value array.
 		std::vector<P<Code> >	productions;	//	receives the results of ins, inj and eje; views are retrieved (fvw) or built (reduction) in the value array.
 
-		bool	evaluate(uint16	index);			//	evaluates the pgm_code at the specified index.
-		bool	inject_productions(_Mem	*mem);	//	return true upon successful evaluation.
+		bool	evaluate(uint16	index);									//	evaluates the pgm_code at the specified index.
+		bool	inject_productions(_Mem	*mem,_PGMController	*origin);	//	return true upon successful evaluation.
 
 		virtual	Code	*get_mk_rdx(uint16	&extent_index)	const;
 
@@ -81,17 +88,19 @@ namespace	r_exec{
 		void	rollback();	//	reset the overlay to the last commited state: unpatch code and values.
 		void	commit();	//	empty the patch_indices and set value_commit_index to values.size().
 
-		IPGMController	*controller;
+		Controller	*controller;
 
 		uint64	_now;
 
 		Overlay();
-		Overlay(IPGMController	*c);
+		Overlay(Controller	*c);
 	public:
 		virtual	~Overlay();
 
 		void	kill();
 		bool	is_alive()	const;
+
+		virtual	void	reset();	//	reset to original state (pristine copy of the pgm code and empty value set).
 
 		r_code::Code	*getIPGM()		const;
 		r_exec::View	*getIPGMView()	const;
@@ -103,7 +112,7 @@ namespace	r_exec{
 	//	Overlay with inputs.
 	class	r_exec_dll	IOverlay:
 	public	Overlay{
-	friend	class	IPGMController;
+	friend	class	PGMController;
 	friend	class	Context;
 	protected:
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
@@ -122,16 +131,17 @@ namespace	r_exec{
 		MatchResult	_match(r_exec::View	*input,uint16	pattern_index);		//	delegates to __match.
 		MatchResult	__match(r_exec::View	*input,uint16	pattern_index);	//	return SUCCESS upon a successful match, IMPOSSIBLE if the input is not of the right class, FAILURE otherwise.
 
-		void		reset();	//	reset to original state (pristine copy of the pgm code and empty value set).
-
 		void	patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index);
 
 		virtual	Code	*get_mk_rdx(uint16	&extent_index)	const;
 
-		IOverlay(IPGMController	*c);
+		IOverlay(Controller	*c);
+		IOverlay(PGMController	*c);
 		IOverlay(IOverlay	*original,uint16	last_input_index,uint16	value_commit_index);	//	copy from the original and rollback.
 	public:
 		virtual	~IOverlay();
+
+		void	reset();
 
 		virtual	void	reduce(r_exec::View	*input,_Mem	*mem);	//	called upon the processing of a reduction job.
 
@@ -141,45 +151,100 @@ namespace	r_exec{
 
 	class	r_exec_dll	AntiOverlay:
 	public	IOverlay{
-	friend	class	IPGMController;
+	friend	class	AntiPGMController;
 	private:
-		AntiOverlay(IPGMController	*c);
+		AntiOverlay(AntiPGMController	*c);
 		AntiOverlay(AntiOverlay	*original,uint16	last_input_index,uint16	value_limit);
 	protected:
 		Code	*get_mk_rdx(uint16	&extent_index)	const;
 	public:
 		~AntiOverlay();
 
-		void	reduce(r_exec::View	*input);	//	called upon the processing of a reduction job.
+		void	reduce(r_exec::View	*input,_Mem	*mem);	//	called upon the processing of a reduction job.
 	};
 
-	class	r_exec_dll	IPGMController:
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//	Shared resources:
+	//	- alive: written by TimeCores (via UpdateJob::update() and _Mem::update()), read by TimeCores (via SignalingJob::update()).
+	//	- overlays: modified by take_input, executed by TimeCores (via UpdateJob::update() and _Mem::update()) and ReductionCore::Run() (via ReductionJob::update(), IOverlay::reduce(), _Mem::inject() and add()/remove()/restart()).
+	class	r_exec_dll	Controller:
 	public	_Object{
-	private:
+	protected:
 		_Mem					*mem;
 		r_code::View			*ipgm_view;
-		bool					alive;
-		std::list<P<Overlay> >	overlays;
-		bool					successful_match;
-		uint64					start_time;	//	when now-start_time>tsc, kill all overlays; not used for anti-overlays (handled by time jobs).
-	public:
-		IPGMController(_Mem	*m,r_code::View	*ipgm_view);
-		~IPGMController();
 
-		_Mem			*get_mem()		const{	return	mem;	}
+		bool					alive;
+		FastSemaphore			*alive_sem;
+
+		std::list<P<Overlay> >	overlays;
+		FastSemaphore			*overlay_sem;
+
+		Controller(_Mem	*m,r_code::View	*ipgm_view);
+	public:
+		virtual	~Controller();
+
+		_Mem			*get_mem()		const;
 		r_code::Code	*getIPGM()		const;
 		r_exec::View	*getIPGMView()	const;
 
 		void	kill();
 		bool	is_alive()	const;
+	};
 
-		void	take_input(r_exec::View	*input);	//	push one job for each overlay; called by the rMem at update time and at injection time.
-		void	signal_anti_pgm();
+	//	TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
+	//	No contention on overlays.
+	class	r_exec_dll	InputLessPGMController:
+	public	Controller{
+	public:
+		InputLessPGMController(_Mem	*m,r_code::View	*ipgm_view);
+		~InputLessPGMController();
+
 		void	signal_input_less_pgm();
+	};
 
-		void	remove(IOverlay	*overlay);
-		void	add(IOverlay	*overlay);
-		void	restart(AntiOverlay	*overlay,bool	match);
+	class	r_exec_dll	_PGMController:
+	public	Controller{
+	protected:
+		_PGMController(_Mem	*m,r_code::View	*ipgm_view);
+	public:
+		virtual	~_PGMController();
+
+		virtual	void	take_input(r_exec::View	*input,_PGMController	*origin)=0;	//	push one job for each overlay; called by the rMem at update time and at injection time.
+
+		void	add(Overlay	*overlay);
+	};
+
+	//	No need for signaling jobs:
+	//	upon invocation of take_input(), when (elapsed=now-start_time)>tsc, reset the first overlay, kill the rest and reset start_time to now-elapsed%tsc.
+	class	r_exec_dll	PGMController:
+	public	_PGMController{
+	private:
+		uint64	start_time;
+	public:
+		PGMController(_Mem	*m,r_code::View	*ipgm_view);
+		~PGMController();
+
+		void	take_input(r_exec::View	*input,_PGMController	*origin=NULL);
+		void	remove(Overlay	*overlay);
+	};
+
+	//	Signaled by TimeCores (holding AntiPGMSignalingJob).
+	//	Possible recursive locks: signal_anti_pgm()->overlay->inject_productions()->mem->inject()->injectNow()->inject_reduction_jobs()->overlay->take_input().
+	class	r_exec_dll	AntiPGMController:
+	public	_PGMController{
+	private:
+		bool	successful_match;
+
+		void	push_new_signaling_job();
+	public:
+		AntiPGMController(_Mem	*m,r_code::View	*ipgm_view);
+		~AntiPGMController();
+
+		void	take_input(r_exec::View	*input,_PGMController	*origin=NULL);
+		void	signal_anti_pgm();
+
+		void	restart(AntiOverlay	*overlay);
 	};
 }
 
