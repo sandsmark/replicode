@@ -165,15 +165,21 @@ namespace	r_exec{
 				//	build signaling jobs for active input-less overlays.
 				for(v=g->input_less_ipgm_views.begin();v!=g->input_less_ipgm_views.end();++v){
 
-					TimeJob	j(new	InputLessPGMSignalingJob(v->second->controller),now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
-					time_job_queue->push(j);
+					if(v->second->controller!=NULL){
+
+						TimeJob	j(new	InputLessPGMSignalingJob(v->second->controller),now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
+						time_job_queue->push(j);
+					}
 				}
 
 				//	build signaling jobs for active anti-pgm overlays.
 				for(v=g->anti_ipgm_views.begin();v!=g->anti_ipgm_views.end();++v){
 
-					TimeJob	j(new	AntiPGMSignalingJob(v->second->controller),now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
-					time_job_queue->push(j);
+					if(v->second->controller!=NULL){
+
+						TimeJob	j(new	AntiPGMSignalingJob(v->second->controller),now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
+						time_job_queue->push(j);
+					}
 				}
 
 				if(c_salient){

@@ -15,7 +15,7 @@
 root:(grp
 1; upr
 0.5; sln_thr
-0; act_thr
+0.4; act_thr
 0; vis_thr
 1; c_sln
 0; c_sln_thr

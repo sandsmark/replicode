@@ -353,6 +353,8 @@ namespace	r_exec{
 							((Group	*)object)->release();
 							break;
 						default:
+							rollback();
+							productions.clear();
 							_now=0;
 							return	false;
 						}
@@ -403,6 +405,7 @@ namespace	r_exec{
 					mem->stop();
 				}else{	//	unknown function.
 
+					rollback();
 					productions.clear();
 					_now=0;
 					return	false;
@@ -422,8 +425,6 @@ namespace	r_exec{
 			mem->injectNotificationNow(v,true,origin);
 		}
 
-		rollback();
-		productions.clear();
 		_now=0;
 		return	true;
 	}
@@ -547,23 +548,22 @@ namespace	r_exec{
 		switch(match(input,input_index)){
 		case	SUCCESS:
 			if(input_pattern_indices.size()==0){	//	all patterns matched.
-//				Atom::Trace(pgm_code,pgm_code_size);
+
 				if(check_timings()	&&	check_guards()	&&	inject_productions(mem,NULL)){
 
 					((PGMController	*)controller)->remove(this);
-					reduction_sem->release();
-					return;
+					break;
 				}
 			}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
 
 				IOverlay	*offspring=new	IOverlay(this,input_index,value_commit_index);
 				((PGMController	*)controller)->add(offspring);
 				commit();
-				reduction_sem->release();
-				return;
+				break;
 			}
 		case	FAILURE:	//	just rollback: let the overlay match other inputs.
 			rollback();
+			break;
 		}
 
 		reduction_sem->release();
@@ -697,19 +697,18 @@ namespace	r_exec{
 				if(check_timings()	&&	check_guards()){
 
 					((AntiPGMController	*)controller)->restart(this);
-					reduction_sem->release();
-					return;
+					break;
 				}
 			}else{
 
 				AntiOverlay	*offspring=new	AntiOverlay(this,input_index,value_commit_index);
 				((AntiPGMController	*)controller)->add(offspring);
 				commit();
-				reduction_sem->release();
-				return;
+				break;
 			}
 		case	FAILURE:	//	just rollback: let the overlay match other inputs.
 			rollback();
+			break;
 		}
 
 		reduction_sem->release();
@@ -830,7 +829,9 @@ namespace	r_exec{
 			}
 
 			first=overlays.begin();
+			((IOverlay	*)*first)->reduction_sem->acquire();
 			(*first)->reset();
+			((IOverlay	*)*first)->reduction_sem->release();
 			start_time=elapsed%tsc;
 		}
 
@@ -853,7 +854,6 @@ namespace	r_exec{
 			overlays.remove(overlay);
 		}else
 			overlay->reset();
-
 		overlay_sem->release();
 	}
 
