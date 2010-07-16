@@ -36,8 +36,37 @@
 
 //#define	DECOMPILE_ONE_BY_ONE
 
-
 using	namespace	r_comp;
+
+void	decompile(Decompiler	&decompiler,r_comp::Image	*image){
+
+#ifdef	DECOMPILE_ONE_BY_ONE
+	uint32	object_count=decompiler.decompile_references(image);
+	std::cout<<object_count<<" objects in the image\n";
+	while(1){
+
+		std::cout<<"Which object (-1 to exit)?\n";
+		int32	index;std::cin>>index;
+		if(index==-1)
+			break;
+		if(index>=object_count){
+
+			std::cout<<"there is only "<<object_count<<" objects\n";
+			continue;
+		}
+		std::ostringstream	decompiled_code;
+		decompiler.decompile_object(index,&decompiled_code);
+		std::cout<<"... done\n";
+		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
+	}
+#else
+	std::cout<<"\ndecompiling ...\n";
+	std::ostringstream	decompiled_code;
+	decompiler.decompile(image,&decompiled_code);
+	std::cout<<"... done\n";
+	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
+#endif
+}
 
 int32	main(int	argc,char	**argv){
 
@@ -54,61 +83,44 @@ int32	main(int	argc,char	**argv){
 		return	1;
 	}else{
 
+		Decompiler	decompiler;
+		decompiler.init(&r_exec::Metadata);
+
+		r_comp::Image	*image;
+
 		r_exec::Mem<r_exec::LObject>	*mem=new	r_exec::Mem<r_exec::LObject>();
 
 		r_code::vector<r_code::Code	*>	ram_objects;
 		r_exec::Seed.getObjects(mem,ram_objects);
 
-		mem->init(100000,4,4);
+		mem->init(100000,4,4,20);
 		mem->load(ram_objects.as_std());
 		mem->start();
 		//uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
 		std::cout<<"\nSleeping 1000\n";
 		Thread::Sleep(1000);
 		mem->suspend();
+		image=mem->getImage();
+		decompile(decompiler,image);
+		delete	image;
+		mem->resume();
+		/*
+		Thread::Sleep(400);
+		mem->suspend();
 		//TimeProbe	probe;
 		//probe.set();
-		r_comp::Image	*image=mem->getImage();
+		image=mem->getImage();
 		//probe.check();
+		decompile(decompiler,image);
+		delete	image;
 		//std::cout<<"getImage(): "<<probe.us()<<std::endl;
 		mem->resume();
+		*/
 		Thread::Sleep(500);
+
 		std::cout<<"\nstopping rMem\n";
 		mem->stop();
-
-		//r_comp::Image	*image=mem->getImage();
-
 		delete	mem;
-
-		Decompiler	decompiler;
-		decompiler.init(&r_exec::Metadata);
-#ifdef	DECOMPILE_ONE_BY_ONE
-		uint32	object_count=decompiler.decompile_references(image);
-		std::cout<<object_count<<" objects in the image\n";
-		while(1){
-
-			std::cout<<"Which object (-1 to exit)?\n";
-			int32	index;std::cin>>index;
-			if(index==-1)
-				break;
-			if(index>=object_count){
-
-				std::cout<<"there is only "<<object_count<<" objects\n";
-				continue;
-			}
-			std::ostringstream	decompiled_code;
-			decompiler.decompile_object(index,&decompiled_code);
-			std::cout<<"... done\n";
-			std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
-		}
-#else
-		std::cout<<"\ndecompiling ...\n";
-		std::ostringstream	decompiled_code;
-		decompiler.decompile(image,&decompiled_code);
-		std::cout<<"... done\n";
-		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
-#endif
-		delete	image;
 	}
 
 	return	0;

@@ -44,11 +44,14 @@ namespace	r_exec{
 
 	void	_Mem::init(uint32	base_period,	//	in us; same for upr, spr and res.
 						uint32	reduction_core_count,
-						uint32	time_core_count){
+						uint32	time_core_count,
+						uint32	ntf_mk_res){
 
 		this->base_period=base_period;
 		this->reduction_core_count=reduction_core_count;
 		this->time_core_count=time_core_count;
+
+		this->ntf_mk_res=ntf_mk_res;
 	}
 
 	void	_Mem::reset(){

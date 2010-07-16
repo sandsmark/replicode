@@ -60,6 +60,7 @@ namespace	r_exec{
 	public	r_code::Mem{
 	protected:
 		uint32	base_period;
+		uint32	ntf_mk_res;
 
 		PipeNN<ReductionJob,1024>	*reduction_job_queue;
 		PipeNN<TimeJob,1024>		*time_job_queue;
@@ -114,7 +115,8 @@ namespace	r_exec{
 
 		void	init(uint32	base_period,	//	in us; same for upr, spr and res.
 					uint32	reduction_core_count,
-					uint32	time_core_count);
+					uint32	time_core_count,
+					uint32	ntf_mk_res=1);	//	resilience for notifications markers; for debugging purposes, use a long resilience.
 
 		uint64	get_base_period()	const{	return	base_period;	}
 

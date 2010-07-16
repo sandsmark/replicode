@@ -388,7 +388,9 @@ namespace	r_exec{
 	}
 
 	template<class	O>	void	Mem<O>::injectNotificationNow(View	*view,bool	lock,_PGMController	*origin){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
-																													//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
+																												//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
+		view->code(VIEW_RES)=Atom::Float(ntf_mk_res);
+
 		Group	*host=view->get_host();
 		LObject	*object=(LObject	*)view->object;
 

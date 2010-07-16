@@ -217,7 +217,7 @@ namespace	r_exec{
 		code(write_index++)=r_code::Atom::SSet(ViewOpcode,5);	//	Structured Set.
 		code(write_index++)=r_code::Atom::IPointer(6);			//	iptr to ijt.
 		code(write_index++)=r_code::Atom::Float(1);				//	sln.
-		code(write_index++)=r_code::Atom::Float(20);				//	res.
+		code(write_index++)=r_code::Atom::Float(1);				//	res.
 		code(write_index++)=r_code::Atom::RPointer(0);			//	destination.
 		code(write_index++)=r_code::Atom::RPointer(1);			//	origin.
 		code(6)=r_code::Atom::Timestamp();						//	ijt will be set at injection time.
