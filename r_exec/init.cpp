@@ -119,6 +119,10 @@ namespace	r_exec{
 		//	load class Opcodes.
 		View::ViewOpcode=_Opcodes.find("view")->second;
 
+		Opcodes::View=_Opcodes.find("view")->second;
+		Opcodes::ReactView=_Opcodes.find("react_view")->second;
+		Opcodes::GroupView=_Opcodes.find("grp_view")->second;
+
 		Opcodes::Entity=_Opcodes.find("ent")->second;
 
 		Opcodes::Group=_Opcodes.find("grp")->second;

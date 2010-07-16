@@ -33,6 +33,10 @@
 
 namespace	r_exec{
 
+	uint16	Opcodes::View;
+	uint16	Opcodes::ReactView;
+	uint16	Opcodes::GroupView;
+
 	uint16	Opcodes::Entity;
 
 	uint16	Opcodes::Group;
