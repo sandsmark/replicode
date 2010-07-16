@@ -135,7 +135,10 @@ namespace	r_exec{
 
 		if(value_commit_index!=values.size()){	//	shrink the values down to the last commit index.
 
-			values.as_std()->resize(value_commit_index);
+			if(value_commit_index>0)
+				values.as_std()->resize(value_commit_index);
+			else
+				values.as_std()->clear();
 			value_commit_index=values.size();
 		}
 	}
