@@ -86,7 +86,7 @@ public:
 
 		r_comp::Image	*image=new	r_comp::Image();
 		image->load<ImageMessage>(p);
-		load(image);	//	stop the mem, reload and restart.
+		load(image);	//	load code, start the mem, sleep, suspend the mem, get image, resume the mem, sleep, stop the mem, decompile the result image.
 		delete	image;
 	}
 	void	react(CodePayload	*p){

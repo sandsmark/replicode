@@ -55,7 +55,7 @@ void	Loader::compile(const	std::string	&filename){
 	}
 
 	//	TMP: generate an image for Tamas.
-	
+	/*
 	ofstream	output("c:/work/replicode/test/test.3.replicode.image",ios::binary|ios::out);
 	ImageMessage::Write(image,output);
 	output.close();
@@ -81,5 +81,5 @@ void	Loader::compile(const	std::string	&filename){
 	//i->getObjects<LObject>(objects);
 	delete	i;
 
-	delete	img;
+	delete	img;*/
 }

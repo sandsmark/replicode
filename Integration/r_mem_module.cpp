@@ -39,10 +39,6 @@ LOAD_MODULE(RMem)
 void	RMem::initialize(){
 
 	r_exec::Mem<RObject>::init(100000,2,2);
-
-	r_code::vector<r_code::Code	*>	objects;
-	r_exec::Seed.getObjects(this,objects);
-	r_exec::Mem<RObject>::load(objects.as_std());
 }
 
 void	RMem::finalize(){
@@ -59,15 +55,24 @@ void	RMem::decompile(r_comp::Image	*image){
 
 void	RMem::load(r_comp::Image	*image){
 
-	//r_exec::Mem<RObject>::stop();
-
-	decompile(image);	//	for debugging.
-
 	r_code::vector<r_code::Code	*>	objects;
 	image->getObjects(this,objects);
 
-	//r_exec::Mem<RObject>::load(objects.as_std());
-	//r_exec::Mem<RObject>::start();
+	r_exec::Mem<RObject>::load(objects.as_std());
+	r_exec::Mem<RObject>::start();
+
+	std::cout<<"\nSleeping 1000\n";
+	Thread::Sleep(1000);
+
+	r_exec::Mem<RObject>::suspend();
+	r_comp::Image	*result_image=r_exec::Mem<RObject>::getImage();
+	r_exec::Mem<RObject>::suspend();
+
+	Thread::Sleep(500);
+	std::cout<<"\nstopping rMem\n";
+	r_exec::Mem<RObject>::stop();
+
+	decompile(result_image);
 }
 
 void	RMem::inject(RObject	*object,uint16	nodeID,STDGroupID	destination){

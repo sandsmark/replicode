@@ -127,8 +127,8 @@ public:
 	Atom	&code(uint16	i){	return	_code[i];	}
 	Atom	&code(uint16	i)	const{	return	_code[i];	}
 	uint16	code_size()	const{	return	_code_size;	}
-	Code	*get_reference(uint16	i)	const{	return	(Code	*)(&_code[_code_size+i]);	}
-	void	set_reference(uint16	i,Code	*object){	(*(P<Code>	*)(&_code[_code_size+i]))=object;	}
+	Code	*get_reference(uint16	i)	const{	return	((P<Code>	*)(&_code[_code_size+i].atom))->operator ->();	}
+	void	set_reference(uint16	i,Code	*object){	(*(P<Code>	*)(&_code[_code_size+i].atom))=object;	}
 	uint16	references_size()	const{	return	payload->getCapacity()-_code_size;	}
 
 	virtual	~RCode(){}

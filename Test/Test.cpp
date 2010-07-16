@@ -63,7 +63,7 @@ int32	main(int	argc,char	**argv){
 		mem->load(ram_objects.as_std());
 		mem->start();
 		//uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
-		std::cout<<"\nsleeping 1000\n";
+		std::cout<<"\nSleeping 1000\n";
 		Thread::Sleep(1000);
 		mem->suspend();
 		//TimeProbe	probe;
