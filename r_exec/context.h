@@ -264,7 +264,7 @@ namespace	r_exec{
 					}
 				}
 				object->rel_views();
-				return	Context(object,(r_exec::View*)*v,code,this->index+index,NULL,VIEW);
+				return	Context(object,(r_exec::View*)*v,&(*v)->code(0),this->index+index,NULL,VIEW);
 			}case	VALUE_ARRAY:
 				return	Context(object,view,code,this->index+index,overlay,VALUE_ARRAY);
 			default:	//	undefined context.

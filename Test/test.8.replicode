@@ -10,8 +10,8 @@ P1:(|pgm
    |[]
    |[]
 []
-   (inj [(ent 1) [now 1 forever stdout nil]])
-100000us; tsc
+   (inj [(ent 1) [now 1 forever root nil]])
+500000us; tsc
 1; nfr
 1; psln_thr
 )
@@ -33,11 +33,12 @@ P2:(pgm
 []
    []
       (ptn in:(ent ::) |[])
+      (ptn mk_rdx:(mk.|rdx ::) |[])
    |[]
    |[]
 []
-   (inj [(mk.val in position (vec3 1 2 3) 1) [now 1 forever stdout nil]])
-200000us; tsc
+   (inj [(mk.val mk_rdx position (vec3 1 2 3) 1) [now 1 forever stdout nil]])
+0us; tsc
 1; nfr
 1; psln_thr
 )
@@ -47,4 +48,4 @@ P2:(pgm
 iP2:(ipgm P2 |[] 1)
 
 []
-   [now 0 forever stdout nil 1]
+   [now 0 forever root nil 1]

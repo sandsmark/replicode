@@ -88,7 +88,9 @@
 
 namespace	r_exec{
 
-	Overlay::Overlay():alive(true){
+	Overlay::Overlay():alive(true){	//	used for constructing IOverlay offsprings.
+
+		alive_sem=new	FastSemaphore(1,1);
 	}
 
 	Overlay::Overlay(Controller	*c):_Object(),controller(c),alive(true),value_commit_index(0),_now(0){
@@ -480,6 +482,8 @@ namespace	r_exec{
 		this->value_commit_index=value_commit_index;
 		for(uint16	i=0;i<value_commit_index;++i)	//	copy values up to the last commit index.
 			values.push_back(original->values[i]);
+
+		reduction_sem=new	FastSemaphore(1,1);
 	}
 
 	inline	IOverlay::~IOverlay(){
@@ -540,7 +544,7 @@ namespace	r_exec{
 		switch(match(input,input_index)){
 		case	SUCCESS:
 			if(input_pattern_indices.size()==0){	//	all patterns matched.
-
+//				Atom::Trace(pgm_code,pgm_code_size);
 				if(check_timings()	&&	check_guards()	&&	inject_productions(mem,NULL)){
 
 					((PGMController	*)controller)->remove(this);
@@ -808,7 +812,7 @@ namespace	r_exec{
 
 		overlay_sem->acquire();
 
-		if(elapsed>tsc){
+		if(tsc>0	&&	elapsed>tsc){
 
 			std::list<P<Overlay> >::const_iterator	first=overlays.begin();
 			std::list<P<Overlay> >::const_iterator	o;
@@ -842,8 +846,12 @@ namespace	r_exec{
 
 			overlay->kill();
 			overlays.remove(overlay);
-		}else
-			overlay->reset();
+		}else{
+
+			((IOverlay	*)overlay)->reduction_sem->release();
+			((IOverlay	*)overlay)->reset();
+			((IOverlay	*)overlay)->reduction_sem->release();
+		}
 
 		overlay_sem->release();
 	}

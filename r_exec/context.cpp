@@ -114,9 +114,13 @@ namespace	r_exec{
 
 	Context	Context::operator	*()	const{
 
+		if(data==REFERENCE	||	data==VALUE_ARRAY)
+			return	*this;
+
 		switch((*this)[0].getDescriptor()){
 		case	Atom::VL_PTR:{	//	evaluate the code if necessary.
-			
+			//	TODO. if not in a cptr and if this eventually points to an r-ptr or in-obj-ptr,
+			//	patch the code at this->index, i.e. replace the vl ptr by the in-obj-ptr or rptr.
 			Atom	a=code[(*this)[0].asIndex()];
 			uint16	structure_index;
 			if(a.getDescriptor()==Atom::I_PTR)	//	dereference once.
@@ -139,7 +143,7 @@ namespace	r_exec{
 			return	Context(o,NULL,&o->code(0),0,NULL,REFERENCE);
 		}case	Atom::C_PTR:{
 			
-			Context	c=*getChild(1);
+			Context	c=getChild(1);
 			for(uint16	i=2;i<=getChildrenCount();++i){
 
 				switch((*this)[i].getDescriptor()){
@@ -174,11 +178,11 @@ namespace	r_exec{
 		case	Atom::VALUE_PTR:
 			return	Context(object,view,&overlay->values[0],(*this)[0].asIndex(),overlay,VALUE_ARRAY);
 		case	Atom::IPGM_PTR:
-			return	*Context(overlay->getIPGM(),(*this)[0].asIndex());
+			return	Context(overlay->getIPGM(),(*this)[0].asIndex());
 		case	Atom::IN_OBJ_PTR:{
 			Code	*input_object=((IOverlay	*)overlay)->getInputObject((*this)[0].asInputIndex());
 			View	*input_view=(r_exec::View*)((IOverlay	*)overlay)->getInputView((*this)[0].asInputIndex());
-			return	*Context(input_object,input_view,&input_object->code(0),(*this)[0].asIndex(),NULL,REFERENCE);
+			return	Context(input_object,input_view,&input_object->code(0),(*this)[0].asIndex(),NULL,REFERENCE);
 		}case	Atom::PROD_PTR:
 			return	Context(overlay->productions[(*this)[0].asIndex()],0);
 		default:

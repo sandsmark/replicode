@@ -154,7 +154,7 @@ stdout:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-root; ntf_grp
+nil; ntf_grp
 1; psln_thr
 )
 
