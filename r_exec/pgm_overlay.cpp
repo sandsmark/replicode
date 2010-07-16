@@ -551,6 +551,7 @@ namespace	r_exec{
 				if(check_timings()	&&	check_guards()	&&	inject_productions(mem,NULL)){
 
 					((PGMController	*)controller)->remove(this);
+					reduction_sem->release();
 					return;
 				}
 			}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
@@ -558,6 +559,7 @@ namespace	r_exec{
 				IOverlay	*offspring=new	IOverlay(this,input_index,value_commit_index);
 				((PGMController	*)controller)->add(offspring);
 				commit();
+				reduction_sem->release();
 				return;
 			}
 		case	FAILURE:	//	just rollback: let the overlay match other inputs.
@@ -695,6 +697,7 @@ namespace	r_exec{
 				if(check_timings()	&&	check_guards()){
 
 					((AntiPGMController	*)controller)->restart(this);
+					reduction_sem->release();
 					return;
 				}
 			}else{
@@ -702,6 +705,7 @@ namespace	r_exec{
 				AntiOverlay	*offspring=new	AntiOverlay(this,input_index,value_commit_index);
 				((AntiPGMController	*)controller)->add(offspring);
 				commit();
+				reduction_sem->release();
 				return;
 			}
 		case	FAILURE:	//	just rollback: let the overlay match other inputs.
@@ -826,9 +830,7 @@ namespace	r_exec{
 			}
 
 			first=overlays.begin();
-			((IOverlay	*)(*first))->reduction_sem->release();
-			((IOverlay	*)(*first))->reset();
-			((IOverlay	*)(*first))->reduction_sem->release();
+			(*first)->reset();
 			start_time=elapsed%tsc;
 		}
 
@@ -849,12 +851,8 @@ namespace	r_exec{
 
 			overlay->kill();
 			overlays.remove(overlay);
-		}else{
-
-			((IOverlay	*)overlay)->reduction_sem->release();
-			((IOverlay	*)overlay)->reset();
-			((IOverlay	*)overlay)->reduction_sem->release();
-		}
+		}else
+			overlay->reset();
 
 		overlay_sem->release();
 	}
@@ -914,7 +912,7 @@ namespace	r_exec{
 	void	AntiPGMController::restart(AntiOverlay	*overlay){	//	one anti overlay matched all its inputs, timings and guards: push a new signaling job, 
 																//	reset the overlay and kill all others.
 		overlay_sem->acquire();
-
+		
 		overlay->reset();
 		
 		push_new_signaling_job();
