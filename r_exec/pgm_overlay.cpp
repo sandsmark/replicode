@@ -812,27 +812,29 @@ namespace	r_exec{
 
 	void	PGMController::take_input(r_exec::View	*input,_PGMController	*origin){	//	origin unused since there is no recursion here.
 
-		uint64	now=Now();
-		uint64	tsc=Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
-		uint64	elapsed=now-start_time;
-
 		overlay_sem->acquire();
 
-		if(tsc>0	&&	elapsed>tsc){
+		uint64	tsc=Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
+		if(tsc>0){
+			
+			uint64	now=Now();
+			uint64	elapsed=now-start_time;
+			if(elapsed>tsc){
 
-			std::list<P<Overlay> >::const_iterator	first=overlays.begin();
-			std::list<P<Overlay> >::const_iterator	o;
-			for(o=++first;o!=overlays.end();){
+				std::list<P<Overlay> >::const_iterator	first=overlays.begin();
+				std::list<P<Overlay> >::const_iterator	o;
+				for(o=++first;o!=overlays.end();){
 
-				(*o)->kill();
-				o=overlays.erase(o);
+					(*o)->kill();
+					o=overlays.erase(o);
+				}
+
+				first=overlays.begin();
+				((IOverlay	*)*first)->reduction_sem->acquire();
+				(*first)->reset();
+				((IOverlay	*)*first)->reduction_sem->release();
+				start_time=elapsed%tsc;
 			}
-
-			first=overlays.begin();
-			((IOverlay	*)*first)->reduction_sem->acquire();
-			(*first)->reset();
-			((IOverlay	*)*first)->reduction_sem->release();
-			start_time=elapsed%tsc;
 		}
 
 		std::list<P<Overlay> >::const_iterator	o;
