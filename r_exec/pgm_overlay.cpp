@@ -293,7 +293,7 @@ namespace	r_exec{
 					_view.copy(view,0);
 					view->set_object(object);
 
-					Code	*existing_object=NULL;//mem->inject(view);
+					Code	*existing_object=mem->inject(view);
 					if(existing_object)
 						productions[prod_index]=existing_object;	//	so that the mk.rdx will reference the existing object instead of object, which has been discarded.
 
@@ -818,6 +818,7 @@ namespace	r_exec{
 				o=overlays.erase(o);
 			}
 
+			first=overlays.begin();
 			((IOverlay	*)(*first))->reduction_sem->release();
 			((IOverlay	*)(*first))->reset();
 			((IOverlay	*)(*first))->reduction_sem->release();
@@ -836,8 +837,15 @@ namespace	r_exec{
 
 	inline	void	PGMController::remove(Overlay	*overlay){
 
-		overlay->kill();
-		overlays.remove(overlay);
+		overlay_sem->acquire();
+		if(overlays.size()>1){
+
+			overlay->kill();
+			overlays.remove(overlay);
+		}else
+			overlay->reset();
+
+		overlay_sem->release();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

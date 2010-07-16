@@ -12,7 +12,7 @@ P1:(|pgm
 []
    (inj [(ent 1) [now 1 forever stdout nil]])
 100000us; tsc
-0; nfr
+1; nfr
 1; psln_thr
 )
 
@@ -27,3 +27,24 @@ P1; code
 
 []
    [now 0 forever root nil 1]
+
+P2:(pgm
+|[]
+[]
+   []
+      (ptn in:(ent ::) |[])
+   |[]
+   |[]
+[]
+   (inj [(mk.val in position (vec3 1 2 3) 1) [now 1 forever stdout nil]])
+200000us; tsc
+1; nfr
+1; psln_thr
+)
+
+|[]
+
+iP2:(ipgm P2 |[] 1)
+
+[]
+   [now 0 forever stdout nil 1]
