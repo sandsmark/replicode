@@ -37,7 +37,7 @@ namespace	r_exec{
 		alive_sem->release();
 	}
 
-	inline	bool	Overlay::is_alive()	const{
+	inline	bool	Overlay::is_alive(){
 		
 		alive_sem->acquire();
 		bool	_alive=alive;

@@ -11,7 +11,7 @@ P1:(|pgm
    |[]
 []
    (inj [(ent 1) [now 1 forever root nil]])
-400000us; tsc
+200000us; tsc
 1; nfr
 1; psln_thr
 )
@@ -45,7 +45,7 @@ P2:(pgm
 
 |[]
 
-iP2:(ipgm P2 |[] 0)
+iP2:(ipgm P2 |[] 1)
 
 []
    [now 0 forever root nil 1]

@@ -349,7 +349,7 @@ namespace	r_exec{
 			_inject_reduction_jobs(view,host);
 
 		if(host->get_ntf_new()==1)	//	the view cannot be a ntf view (would use injectNotificationNow instead).
-			injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),false);	//	the object appears for the first time in the group: notify.
+			injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),host->get_ntf_grp()!=host);	//	the object appears for the first time in the group: notify.
 
 		host->release();
 	}

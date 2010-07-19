@@ -98,7 +98,7 @@ namespace	r_exec{
 		virtual	~Overlay();
 
 		void	kill();
-		bool	is_alive()	const;
+		bool	is_alive();
 
 		virtual	void	reset();	//	reset to original state (pristine copy of the pgm code and empty value set).
 
@@ -116,7 +116,7 @@ namespace	r_exec{
 	friend	class	PGMController;
 	friend	class	Context;
 	protected:
-		FastSemaphore	*reduction_sem;
+		CriticalSection	reductionCS;
 
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.

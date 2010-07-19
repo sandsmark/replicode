@@ -486,13 +486,9 @@ namespace	r_exec{
 		this->value_commit_index=value_commit_index;
 		for(uint16	i=0;i<value_commit_index;++i)	//	copy values up to the last commit index.
 			values.push_back(original->values[i]);
-
-		reduction_sem=new	FastSemaphore(1,1);
 	}
 
 	inline	IOverlay::~IOverlay(){
-
-		delete	reduction_sem;
 	}
 
 	inline	void	IOverlay::init(){
@@ -503,7 +499,6 @@ namespace	r_exec{
 		for(uint16	i=1;i<=pattern_count;++i)
 			input_pattern_indices.push_back(pgm_code[pattern_set_index+i].asIndex());
 
-		reduction_sem=new	FastSemaphore(1,1);
 	}
 
 	inline	void	IOverlay::reset(){
@@ -542,7 +537,7 @@ namespace	r_exec{
 
 	void	IOverlay::reduce(r_exec::View	*input,_Mem	*mem){
 
-		reduction_sem->acquire();
+		reductionCS.enter();
 
 		uint16	input_index;
 		switch(match(input,input_index)){
@@ -566,7 +561,7 @@ namespace	r_exec{
 			break;
 		}
 
-		reduction_sem->release();
+		reductionCS.leave();
 	}
 
 	IOverlay::MatchResult	IOverlay::match(r_exec::View	*input,uint16	&input_index){
@@ -585,6 +580,7 @@ namespace	r_exec{
 			case	FAILURE:
 				failed=true;
 				rollback();	//	to try another pattern on a clean basis.
+			case	IMPOSSIBLE:
 				break;
 			}
 		}
@@ -687,7 +683,7 @@ namespace	r_exec{
 
 	void	AntiOverlay::reduce(r_exec::View	*input,_Mem	*mem){
 
-		reduction_sem->acquire();
+		reductionCS.enter();
 
 		uint16	input_index;
 		switch(match(input,input_index)){
@@ -711,7 +707,7 @@ namespace	r_exec{
 			break;
 		}
 
-		reduction_sem->release();
+		reductionCS.leave();
 	}
 
 	Code	*AntiOverlay::get_mk_rdx(uint16	&extent_index)	const{
@@ -830,9 +826,9 @@ namespace	r_exec{
 				}
 
 				first=overlays.begin();
-				((IOverlay	*)*first)->reduction_sem->acquire();
+				((IOverlay	*)*first)->reductionCS.enter();
 				(*first)->reset();
-				((IOverlay	*)*first)->reduction_sem->release();
+				((IOverlay	*)*first)->reductionCS.leave();
 				start_time=elapsed%tsc;
 			}
 		}
@@ -890,11 +886,11 @@ namespace	r_exec{
 		overlay_sem->acquire();
 
 		AntiOverlay	*overlay=(AntiOverlay	*)*overlays.begin();
-		overlay->reduction_sem->acquire();
+		overlay->reductionCS.enter();
 		if(!successful_match)
 			overlay->inject_productions(mem,this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlay_sem.
 		overlay->reset();
-		overlay->reduction_sem->release();
+		overlay->reductionCS.leave();
 		
 		push_new_signaling_job();
 
