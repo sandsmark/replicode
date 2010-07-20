@@ -58,7 +58,7 @@ namespace	r_exec{
 	friend	class	Context;
 	private:
 		bool			alive;
-		FastSemaphore	*alive_sem;
+		CriticalSection	aliveCS;
 	protected:
 		//	Copy of the pgm code. Will be patched during matching and evaluation:
 		//	any area indexed by a vl_ptr will be overwritten with:
@@ -182,7 +182,7 @@ namespace	r_exec{
 		r_code::View			*ipgm_view;
 
 		bool					alive;
-		FastSemaphore			*alive_sem;
+		CriticalSection			aliveCS;
 
 		std::list<P<Overlay> >	overlays;
 		CriticalSection			overlayCS;
@@ -196,7 +196,7 @@ namespace	r_exec{
 		r_exec::View	*getIPGMView()	const;
 
 		void	kill();
-		bool	is_alive()	const;
+		bool	is_alive();
 	};
 
 	//	TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.

@@ -64,9 +64,9 @@ namespace	r_exec{
 
 		bool	invalidated;
 
-		FastSemaphore	*psln_thr_sem;
-		FastSemaphore	*views_sem;
-		FastSemaphore	*markers_sem;
+		CriticalSection	psln_thr_sem;
+		CriticalSection	views_sem;
+		CriticalSection	markers_sem;
 	protected:
 		r_code::Mem	*mem;
 		
@@ -88,10 +88,10 @@ namespace	r_exec{
 
 		float32	get_psln_thr();
 
-		void	acq_views()		const{	views_sem->acquire();	}
-		void	rel_views()		const{	views_sem->release();	}
-		void	acq_markers()	const{	markers_sem->acquire();	}
-		void	rel_markers()	const{	markers_sem->release();	}
+		void	acq_views(){	views_sem.enter();	}
+		void	rel_views(){	views_sem.leave();	}
+		void	acq_markers(){	markers_sem.enter();	}
+		void	rel_markers(){	markers_sem.leave();	}
 
 		//	Target psln_thr only.
 		void	set(uint16	member_index,float32	value);

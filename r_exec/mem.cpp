@@ -67,9 +67,6 @@ namespace	r_exec{
 		delete	reduction_job_queue;
 		delete	time_job_queue;
 
-		delete	object_register_sem;
-		delete	objects_sem;
-		delete	state_sem;
 		delete	suspension_lock;
 		delete	stop_sem;
 	}
@@ -78,7 +75,7 @@ namespace	r_exec{
 
 	bool	_Mem::check_state(bool	is_delegate){
 
-		state_sem->acquire();
+		stateCS.enter();
 		switch(state){
 		case	STOPPED:
 			if(is_delegate){
@@ -86,32 +83,32 @@ namespace	r_exec{
 				if(--delegate_count==0)
 					stop_sem->release();
 			}
-			state_sem->release();
+			stateCS.leave();
 			return	false;
 		case	SUSPENDED:
-			state_sem->release();
+			stateCS.leave();
 			suspension_lock->wait();
 			if(state==STOPPED){
 				
-				state_sem->acquire();
+				stateCS.enter();
 				if(is_delegate){
 
 					if(--delegate_count==0)
 						stop_sem->release();
 				}
-				state_sem->release();
+				stateCS.leave();
 				return	false;
 			}
 			return	true;
 		case	RUNNING:
-			state_sem->release();
+			stateCS.leave();
 			return	true;
 		}
 	}
 
 	void	_Mem::add_delegate(uint64	dealine,_TimeJob	*j){
 		
-		state_sem->acquire();
+		stateCS.enter();
 		if(state==RUNNING){
 
 			DelegatedCore	*d=new	DelegatedCore(this,dealine,j);
@@ -119,15 +116,15 @@ namespace	r_exec{
 				stop_sem->acquire();
 			d->start(DelegatedCore::Wait);
 		}
-		state_sem->release();
+		stateCS.leave();
 	}
 
 	void	_Mem::remove_delegate(DelegatedCore	*core){
 
-		state_sem->acquire();
+		stateCS.enter();
 		delete	core;
 		--delegate_count;
-		state_sem->release();
+		stateCS.leave();
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -137,9 +134,6 @@ namespace	r_exec{
 		if(state!=STOPPED	&&	state!=NOT_STARTED)
 			return;
 
-		object_register_sem=new	FastSemaphore(1,1);
-		objects_sem=new	FastSemaphore(1,1);
-		state_sem=new	FastSemaphore(1,1);
 		suspension_lock=new	Event();
 		stop_sem=new	Semaphore(1,1);
 
@@ -214,10 +208,10 @@ namespace	r_exec{
 
 	void	_Mem::stop(){
 
-		state_sem->acquire();
+		stateCS.enter();
 		if(state!=RUNNING	&&	state!=SUSPENDED){
 
-			state_sem->release();
+			stateCS.leave();
 			return;
 		}
 		if(state==SUSPENDED)
@@ -229,7 +223,8 @@ namespace	r_exec{
 			Thread::TerminateAndWait(reduction_cores[i]);
 		for(i=0;i<time_core_count;++i)
 			Thread::TerminateAndWait(time_cores[i]);
-		state_sem->release();
+		stateCS.leave();
+
 		std::cout<<"Waiting for "<<delegate_count<<" delegates to terminate.\n";
 		Thread::Sleep(200);
 		stop_sem->acquire();	//	wait for the delegates to terminate.
@@ -239,28 +234,28 @@ namespace	r_exec{
 
 	void	_Mem::suspend(){
 
-		state_sem->acquire();
+		stateCS.enter();
 		if(state!=RUNNING){
 
-			state_sem->release();
+			stateCS.leave();
 			return;
 		}
 		suspension_lock->reset();
 		state=SUSPENDED;
-		state_sem->release();
+		stateCS.leave();
 	}
 
 	void	_Mem::resume(){
 
-		state_sem->acquire();
+		stateCS.enter();
 		if(state!=SUSPENDED){
 
-			state_sem->release();
+			stateCS.leave();
 			return;
 		}
 		suspension_lock->fire();
 		state=RUNNING;
-		state_sem->release();
+		stateCS.leave();
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -353,7 +348,7 @@ namespace	r_exec{
 		view->set_object(object);	//	the object already exists (content-wise): have the view point to the existing one.
 
 		if(lock)
-			host->acquire();
+			host->enter();
 
 		object->acq_views();
 		View	*existing_view=(View	*)object->find_view(host,false);
@@ -393,19 +388,19 @@ namespace	r_exec{
 		}
 
 		if(lock)
-			host->release();
+			host->leave();
 	}
 
 	void	_Mem::update(Group	*group){		
 			
 		uint64	now=Now();
 
-		group->acquire();
+		group->enter();
 
 		if(group!=root	&&	group->views.size()==0){
 
 			group->invalidate();
-			group->release();
+			group->leave();
 			return;
 		}
 
@@ -605,7 +600,7 @@ namespace	r_exec{
 		TimeJob	j(new	UpdateJob(group),now+group->get_upr()*base_period);
 		time_job_queue->push(j);
 
-		group->release();
+		group->leave();
 	}
 
 	void	_Mem::_inject_reduction_jobs(View	*view,Group	*host,_PGMController	*origin){	//	host is assumed to be c-salient; host already protected.

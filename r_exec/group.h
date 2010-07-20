@@ -46,7 +46,7 @@ namespace	r_exec{
 	//		viewing_groups: accessed by Mem::injectNow and Mem::update.
 	class	r_exec_dll	Group:
 	public	LObject,
-	public	FastSemaphore{
+	public	CriticalSection{
 	private:
 		//	Ctrl values.
 		uint32	sln_thr_changes;

@@ -89,8 +89,6 @@
 namespace	r_exec{
 
 	Overlay::Overlay():alive(true){	//	used for constructing IOverlay offsprings.
-
-		alive_sem=new	FastSemaphore(1,1);
 	}
 
 	Overlay::Overlay(Controller	*c):_Object(),controller(c),alive(true),value_commit_index(0),_now(0){
@@ -100,14 +98,11 @@ namespace	r_exec{
 		pgm_code=new	r_code::Atom[pgm_code_size];
 		memcpy(pgm_code,&getIPGM()->get_reference(0)->code(0),pgm_code_size*sizeof(r_code::Atom));
 		patch_tpl_args();
-
-		alive_sem=new	FastSemaphore(1,1);
 	}
 
 	Overlay::~Overlay(){
 
 		delete[]	pgm_code;
-		delete		alive_sem;
 	}
 
 	inline	void	Overlay::reset(){
@@ -340,17 +335,17 @@ namespace	r_exec{
 						case	Context::TYPE_VIEW:{	//	add the target and value to the group's pending operations.
 
 							Group	*g=(Group	*)object;
-							g->acquire();
+							g->enter();
 							g->pending_operations.push_back(new	Group::Mod(view_oid,member_index,value));
-							g->release();
+							g->leave();
 							break;
 						}case	Context::TYPE_OBJECT:
 							((Code	*)object)->mod(member_index,value);	//	protected internally.
 							break;
 						case	Context::TYPE_GROUP:
-							((Group	*)object)->acquire();
+							((Group	*)object)->enter();
 							((Group	*)object)->mod(member_index,value);
-							((Group	*)object)->release();
+							((Group	*)object)->leave();
 							break;
 						default:
 							rollback();
@@ -374,17 +369,17 @@ namespace	r_exec{
 						case	Context::TYPE_VIEW:{	//	add the target and value to the group's pending operations.
 
 							Group	*g=(Group	*)object;
-							g->acquire();
+							g->enter();
 							g->pending_operations.push_back(new	Group::Set(view_oid,member_index,value));
-							g->release();
+							g->leave();
 							break;
 						}case	Context::TYPE_OBJECT:
 							((Code	*)object)->set(member_index,value);	//	protected internally.
 							break;
 						case	Context::TYPE_GROUP:
-							((Group	*)object)->acquire();
+							((Group	*)object)->enter();
 							((Group	*)object)->set(member_index,value);
-							((Group	*)object)->release();
+							((Group	*)object)->leave();
 							break;
 						}
 					}
@@ -729,22 +724,16 @@ namespace	r_exec{
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	Controller::Controller(_Mem	*m,r_code::View	*ipgm_view):_Object(),mem(m),ipgm_view(ipgm_view),alive(true){
-
-		alive_sem=new	FastSemaphore(1,1);
-		//overlayCS=new	FastSemaphore(1,1);
 	}
 	
 	Controller::~Controller(){
-
-		delete	alive_sem;
-		//delete	overlayCS;
 	}
 
 	void	Controller::kill(){
 		
-		alive_sem->acquire();
+		aliveCS.enter();
 		alive=false;
-		alive_sem->release();
+		aliveCS.leave();
 
 		std::list<P<Overlay> >::const_iterator	o;
 		overlayCS.enter();
@@ -770,7 +759,7 @@ namespace	r_exec{
 		o->inject_productions(mem,NULL);
 
 		Group	*host=getIPGMView()->get_host();
-		host->acquire();
+		host->enter();
 		if(getIPGMView()->get_act_vis()>host->get_act_thr()	&&	//	active ipgm.
 			host->get_c_act()>host->get_c_act_thr()			&&	//	c-active group.
 			host->get_c_sln()>host->get_c_sln_thr()){			//	c-salient group.
@@ -778,7 +767,7 @@ namespace	r_exec{
 			TimeJob	next_job(new	InputLessPGMSignalingJob(this),Now()+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
 			mem->pushTimeJob(next_job);
 		}
-		host->release();
+		host->leave();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -934,15 +923,15 @@ namespace	r_exec{
 	void	AntiPGMController::push_new_signaling_job(){
 
 		Group	*host=getIPGMView()->get_host();
-		host->acquire();
+		host->enter();
 		if(getIPGMView()->get_act_vis()>host->get_act_thr()	&&	//	active ipgm.
 			host->get_c_act()>host->get_c_act_thr()	&&			//	c-active group.
 			host->get_c_sln()>host->get_c_sln_thr()){			//	c-salient group.
 
-				host->release();
+				host->leave();
 			TimeJob	next_job(new	AntiPGMSignalingJob(this),Now()+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
 			mem->pushTimeJob(next_job);
 		}else
-			host->release();
+			host->leave();
 	}
 }

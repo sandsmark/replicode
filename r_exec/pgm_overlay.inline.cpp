@@ -32,16 +32,16 @@ namespace	r_exec{
 
 	inline	void	Overlay::kill(){
 		
-		alive_sem->acquire();
+		aliveCS.enter();
 		alive=false;
-		alive_sem->release();
+		aliveCS.leave();
 	}
 
 	inline	bool	Overlay::is_alive(){
 		
-		alive_sem->acquire();
+		aliveCS.enter();
 		bool	_alive=alive;
-		alive_sem->release();
+		aliveCS.leave();
 		return	_alive;
 	}
 
@@ -88,11 +88,11 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	inline	bool	Controller::is_alive()	const{
+	inline	bool	Controller::is_alive(){
 		
-		alive_sem->acquire();
+		aliveCS.enter();
 		bool	_alive=alive;
-		alive_sem->release();
+		aliveCS.leave();
 		return	_alive;
 	}
 

@@ -31,19 +31,11 @@
 namespace	r_exec{
 
 	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),mem(mem),hash_value(0),invalidated(false){
-
-		psln_thr_sem=new	FastSemaphore(1,1);
-		views_sem=new	FastSemaphore(1,1);
-		markers_sem=new	FastSemaphore(1,1);
 	}
 
 	template<class	C,class	U>	Object<C,U>::~Object(){
 
 		invalidate();
-
-		delete	psln_thr_sem;
-		delete	views_sem;
-		delete	markers_sem;
 	}
 
 	template<class	C,class	U>	bool	Object<C,U>::is_invalidated()	const{
@@ -80,9 +72,9 @@ namespace	r_exec{
 
 	template<class	C,class	U>	float32	Object<C,U>::get_psln_thr(){
 
-		psln_thr_sem->acquire();
+		psln_thr_sem.enter();
 		float32	r=code(code_size()-1).asFloat();	//	psln is always the lat atom in code.
-		psln_thr_sem->release();
+		psln_thr_sem.leave();
 		return	r;
 	}
 
@@ -96,9 +88,9 @@ namespace	r_exec{
 		else	if(v>1)
 			v=1;
 
-		psln_thr_sem->acquire();
+		psln_thr_sem.enter();
 		code(member_index)=Atom::Float(v);
-		psln_thr_sem->release();
+		psln_thr_sem.leave();
 	}
 
 	template<class	C,class	U>	void	Object<C,U>::set(uint16	member_index,float32	value){
@@ -106,9 +98,9 @@ namespace	r_exec{
 		if(member_index!=code_size()-1)
 			return;
 
-		psln_thr_sem->acquire();
+		psln_thr_sem.enter();
 		code(member_index)=Atom::Float(value);
-		psln_thr_sem->release();
+		psln_thr_sem.leave();
 	}
 
 	template<class	C,class	U>	View	*Object<C,U>::find_view(Code	*group,bool	lock){

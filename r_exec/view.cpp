@@ -35,15 +35,15 @@
 
 namespace	r_exec{
 
-	FastSemaphore	OID_sem(1,1);
+	CriticalSection	OIDCS;
 
 	uint32	View::LastOID=0;
 
 	uint32	View::GetOID(){
 
-		OID_sem.acquire();
+		OIDCS.enter();
 		uint32	oid=LastOID++;
-		OID_sem.release();
+		OIDCS.leave();
 		return	oid;
 	}
 

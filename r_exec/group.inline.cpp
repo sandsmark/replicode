@@ -30,14 +30,14 @@
 
 namespace	r_exec{
 
-	inline	Group::Group(r_code::Mem	*m):LObject(m),FastSemaphore(1,1){
+	inline	Group::Group(r_code::Mem	*m):LObject(m),CriticalSection(){
 
 		reset_ctrl_values();
 		reset_stats();
 		reset_decay_values();
 	}
 
-	inline	Group::Group(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),FastSemaphore(1,1){
+	inline	Group::Group(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),CriticalSection(){
 
 		reset_ctrl_values();
 		reset_stats();
@@ -58,9 +58,9 @@ namespace	r_exec{
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	gv;
 		for(gv=group_views.begin();gv!=group_views.end();++gv){
 
-			((Group	*)gv->second->object)->acquire();
+			((Group	*)gv->second->object)->enter();
 			((Group	*)gv->second->object)->viewing_groups.erase(this);
-			((Group	*)gv->second->object)->release();
+			((Group	*)gv->second->object)->leave();
 		}
 
 		//	remove all views that are hosted by this group.

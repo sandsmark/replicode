@@ -78,7 +78,7 @@ namespace	r_exec{
 			STOPPED=3
 		}State;
 		State			state;
-		FastSemaphore	*state_sem;
+		CriticalSection	stateCS;
 		Event			*suspension_lock;
 		Semaphore		*stop_sem;
 
@@ -86,8 +86,8 @@ namespace	r_exec{
 
 		void	reset();	//	clear the content of the mem.
 
-		FastSemaphore	*object_register_sem;
-		FastSemaphore	*objects_sem;
+		CriticalSection	object_registerCS;
+		CriticalSection	objectsCS;
 
 		virtual	void	injectNow(View	*view)=0;
 		virtual	void	injectGroupNow(View	*view,Group	*object,Group	*host)=0;

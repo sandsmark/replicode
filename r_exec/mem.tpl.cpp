@@ -76,14 +76,14 @@ namespace	r_exec{
 
 		if(!IsNotification(object)	&&	GetType(object)!=GROUP){
 
-			object_register_sem->acquire();
+			object_registerCS.enter();
 			object_register.erase(((O	*)object)->position_in_object_register);
-			object_register_sem->release();
+			object_registerCS.leave();
 		}
 
-		objects_sem->acquire();
+		objectsCS.enter();
 		objects.erase(object->position_in_objects);
-		objects_sem->release();
+		objectsCS.leave();
 	}
 
 	template<class	O>	Group	*Mem<O>::get_stdin()	const{
@@ -212,13 +212,13 @@ namespace	r_exec{
 
 		Group	*host=view->get_host();
 
-		host->acquire();
+		host->enter();
 		if(host->is_invalidated()){
 
-			host->release();
+			host->leave();
 			return	NULL;
 		}
-		host->release();
+		host->leave();
 
 		uint64	now=Now();
 		uint64	ijt=view->get_ijt();
@@ -230,11 +230,11 @@ namespace	r_exec{
 				view->object=O::Pack(view->object,this);	//	non compact form will be deleted (P<> in view) if not an instance of O; compact forms are left unchanged.
 			object=(O	*)view->object;
 
-			object_register_sem->acquire();
+			object_registerCS.enter();
 			UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>::const_iterator	it=object_register.find(object);
 			if(it!=object_register.end()){
 
-				object_register_sem->release();
+				object_registerCS.leave();
 				if(ijt<=now)
 					injectExistingObjectNow(view,*it,host,true);
 				else{
@@ -244,7 +244,7 @@ namespace	r_exec{
 				}
 				return	*it;
 			}
-			object_register_sem->release();
+			object_registerCS.leave();
 			if(ijt<=now)
 				injectNow(view);
 			else{
@@ -278,16 +278,16 @@ namespace	r_exec{
 		uint64	now=Now();
 		r_code::Timestamp::Set<View>(view,VIEW_IJT,now);
 
-		object_register_sem->acquire();
+		object_registerCS.enter();
 		object->position_in_object_register=object_register.insert(object).first;
-		object_register_sem->release();
+		object_registerCS.leave();
 
 		object->bind(this);
-		objects_sem->acquire();
+		objectsCS.enter();
 		object->position_in_objects=objects.insert(objects.end(),object);
-		objects_sem->release();
+		objectsCS.leave();
 
-		host->acquire();
+		host->enter();
 
 		switch(GetType(object)){
 		case	ObjectType::IPGM:{
@@ -351,17 +351,17 @@ namespace	r_exec{
 		if(host->get_ntf_new()==1)	//	the view cannot be a ntf view (would use injectNotificationNow instead).
 			injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),host->get_ntf_grp()!=host);	//	the object appears for the first time in the group: notify.
 
-		host->release();
+		host->leave();
 	}
 
 	template<class	O>	void	Mem<O>::injectGroupNow(View	*view,Group	*object,Group	*host){	//	groups are always new; no cov for groups; no need to protect object.
 
 		object->bind(this);
-		objects_sem->acquire();
+		objectsCS.enter();
 		object->position_in_objects=objects.insert(objects.end(),object);
-		objects_sem->release();
+		objectsCS.leave();
 
-		host->acquire();
+		host->enter();
 
 		host->group_views[view->getOID()]=view;
 
@@ -384,7 +384,7 @@ namespace	r_exec{
 		if(host->get_ntf_new()==1)
 			injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),false);	//	the group appears for the first time in the group: notify.
 
-		host->release();
+		host->leave();
 	}
 
 	template<class	O>	void	Mem<O>::injectNotificationNow(View	*view,bool	lock,_PGMController	*origin){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
@@ -395,12 +395,12 @@ namespace	r_exec{
 		LObject	*object=(LObject	*)view->object;
 
 		object->bind(this);
-		objects_sem->acquire();
+		objectsCS.enter();
 		object->position_in_objects=objects.insert(objects.end(),object);
-		objects_sem->release();
+		objectsCS.leave();
 		
 		if(lock)
-			host->acquire();
+			host->enter();
 
 		r_code::Timestamp::Set<View>(view,VIEW_IJT,Now());
 		host->notification_views[view->getOID()]=view;
@@ -411,6 +411,6 @@ namespace	r_exec{
 			_inject_reduction_jobs(view,host,origin);
 
 		if(lock)
-			host->release();
+			host->leave();
 	}
 }
