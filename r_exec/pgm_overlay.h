@@ -185,7 +185,7 @@ namespace	r_exec{
 		FastSemaphore			*alive_sem;
 
 		std::list<P<Overlay> >	overlays;
-		FastSemaphore			*overlay_sem;
+		CriticalSection			overlayCS;
 
 		Controller(_Mem	*m,r_code::View	*ipgm_view);
 	public:

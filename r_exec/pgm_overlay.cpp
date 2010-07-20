@@ -731,13 +731,13 @@ namespace	r_exec{
 	Controller::Controller(_Mem	*m,r_code::View	*ipgm_view):_Object(),mem(m),ipgm_view(ipgm_view),alive(true){
 
 		alive_sem=new	FastSemaphore(1,1);
-		overlay_sem=new	FastSemaphore(1,1);
+		//overlayCS=new	FastSemaphore(1,1);
 	}
 	
 	Controller::~Controller(){
 
 		delete	alive_sem;
-		delete	overlay_sem;
+		//delete	overlayCS;
 	}
 
 	void	Controller::kill(){
@@ -747,11 +747,11 @@ namespace	r_exec{
 		alive_sem->release();
 
 		std::list<P<Overlay> >::const_iterator	o;
-		overlay_sem->acquire();
+		overlayCS.enter();
 		for(o=overlays.begin();o!=overlays.end();++o)
 			(*o)->kill();
 		overlays.clear();
-		overlay_sem->release();
+		overlayCS.leave();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -791,9 +791,9 @@ namespace	r_exec{
 
 	inline	void	_PGMController::add(Overlay	*overlay){	//	o has just matched an input; builds a copy of o.
 
-		overlay_sem->acquire();
+		overlayCS.enter();
 		overlays.push_back(overlay);
-		overlay_sem->release();
+		overlayCS.leave();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -808,7 +808,7 @@ namespace	r_exec{
 
 	void	PGMController::take_input(r_exec::View	*input,_PGMController	*origin){	//	origin unused since there is no recursion here.
 
-		overlay_sem->acquire();
+		overlayCS.enter();
 
 		uint64	tsc=Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
 		if(tsc>0){
@@ -840,19 +840,19 @@ namespace	r_exec{
 			mem->pushReductionJob(j);
 		}
 
-		overlay_sem->release();
+		overlayCS.leave();
 	}
 
 	inline	void	PGMController::remove(Overlay	*overlay){
 
-		overlay_sem->acquire();
+		overlayCS.enter();
 		if(overlays.size()>1){
 
 			overlay->kill();
 			overlays.remove(overlay);
 		}else
 			overlay->reset();
-		overlay_sem->release();
+		overlayCS.leave();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -868,7 +868,7 @@ namespace	r_exec{
 	void	AntiPGMController::take_input(r_exec::View	*input,_PGMController	*origin){
 
 		if(this!=origin)
-			overlay_sem->acquire();
+			overlayCS.enter();
 
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
@@ -878,17 +878,17 @@ namespace	r_exec{
 		}
 
 		if(this!=origin)
-			overlay_sem->release();
+			overlayCS.leave();
 	}
 
 	void	AntiPGMController::signal_anti_pgm(){
 
-		overlay_sem->acquire();
+		overlayCS.enter();
 
 		AntiOverlay	*overlay=(AntiOverlay	*)*overlays.begin();
 		overlay->reductionCS.enter();
 		if(!successful_match)
-			overlay->inject_productions(mem,this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlay_sem.
+			overlay->inject_productions(mem,this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlayCS.
 		overlay->reset();
 		overlay->reductionCS.leave();
 		
@@ -904,12 +904,12 @@ namespace	r_exec{
 
 		successful_match=false;
 
-		overlay_sem->release();
+		overlayCS.leave();
 	}
 
 	void	AntiPGMController::restart(AntiOverlay	*overlay){	//	one anti overlay matched all its inputs, timings and guards: push a new signaling job, 
 																//	reset the overlay and kill all others.
-		overlay_sem->acquire();
+		overlayCS.enter();
 		
 		overlay->reset();
 		
@@ -928,7 +928,7 @@ namespace	r_exec{
 
 		successful_match=true;
 
-		overlay_sem->release();
+		overlayCS.leave();
 	}
 
 	void	AntiPGMController::push_new_signaling_job(){
