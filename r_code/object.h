@@ -200,9 +200,11 @@ namespace	r_code{
 			std::list<Code	*>::const_iterator	_m;
 			for(_m=markers.begin();_m!=markers.end();){
 
-				if(*_m==m)
-					_m=markers.erase(_m);
-				else
+				if(*_m==m){
+
+					markers.erase(_m);
+					break;
+				}else
 					++m;
 			}
 			rel_markers();
