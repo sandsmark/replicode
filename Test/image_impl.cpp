@@ -41,7 +41,7 @@ void	ImageImpl::operator delete(void	*o){
 	::operator	delete(o);
 }
 
-ImageImpl::ImageImpl(uint32	map_size,uint32	code_size,uint32	reloc_size):_map_size(map_size),_code_size(code_size),_reloc_size(reloc_size){
+ImageImpl::ImageImpl(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	reloc_size):_timestamp(timestamp),_map_size(map_size),_code_size(code_size),_reloc_size(reloc_size){
 
 	_data=new	word32[_map_size+_code_size+_reloc_size];
 }
@@ -49,6 +49,11 @@ ImageImpl::ImageImpl(uint32	map_size,uint32	code_size,uint32	reloc_size):_map_si
 ImageImpl::~ImageImpl(){
 
 	delete[]	_data;
+}
+
+uint64	ImageImpl::get_timestamp()	const{
+
+	return	_timestamp;
 }
 
 uint32	ImageImpl::map_size()	const{

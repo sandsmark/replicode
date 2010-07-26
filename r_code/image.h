@@ -95,6 +95,7 @@ namespace	r_code{
 	//	I is the implementation class; prototype:
 	//	class	ImageImpl{
 	//	protected:
+	//		uin64	get_timestamp()	const;
 	//		uint32	map_size()		const;
 	//		uint32	code_size()		const;
 	//		uint32	reloc_size()	const;
@@ -109,7 +110,7 @@ namespace	r_code{
 	public	I{
 	friend	class r_comp::Image;
 	public:
-		static	Image<I>	*Build(uint32	map_size,uint32	code_size,uint32	reloc_size);
+		static	Image<I>	*Build(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	reloc_size);
 		//	file IO
 		static	Image<I>	*Read(ifstream &stream);
 		static	void		Write(Image<I>	*image,ofstream &stream);

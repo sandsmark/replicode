@@ -47,11 +47,11 @@ namespace	r_exec{
 		_Mem		*mem;
 		Timer		timer;
 		uint64		deadline;
-		P<_TimeJob>	job;
+		P<TimeJob>	job;
 	public:
 		static	thread_ret thread_function_call	Wait(void	*args);
 
-		DelegatedCore(_Mem	*m,uint64	deadline,_TimeJob	*j);
+		DelegatedCore(_Mem	*m,uint64	deadline,TimeJob	*j);
 		~DelegatedCore();
 	};
 

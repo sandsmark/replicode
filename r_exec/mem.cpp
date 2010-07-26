@@ -69,62 +69,68 @@ namespace	r_exec{
 
 		delete	suspension_lock;
 		delete	stop_sem;
+		delete	suspend_sem;
 	}
 
 	////////////////////////////////////////////////////////////////
 
-	bool	_Mem::check_state(bool	is_delegate){
+	void	_Mem::wait_for_delegate(){
 
+		suspend_sem->acquire(0);
+	}
+
+	void	_Mem::delegate_done(){
+
+		suspend_sem->release();
+	}
+
+	_Mem::DState	_Mem::check_state(){
+
+		State	s;
 		stateCS.enter();
+		s=state;
+		stateCS.leave();
+
 		switch(state){
 		case	STOPPED:
-			if(is_delegate){
-				
-				if(--delegate_count==0)
-					stop_sem->release();
+			return	D_STOPPED;
+		case	SUSPENDED:
+			suspension_lock->wait();
+			stateCS.enter();
+			if(state==STOPPED){
+					
+				stateCS.leave();
+				return	D_STOPPED_AFTER_SUSPENSION;
 			}
+			stateCS.leave();
+			return	D_RUNNING_AFTER_SUSPENSION;
+		case	RUNNING:
+			return	D_RUNNING;
+		}
+	}
+
+	void	_Mem::start_core(){
+
+		stop_sem->acquire(0);
+	}
+
+	void	_Mem::shutdown_core(){
+
+		stop_sem->release();
+	}
+
+	bool	_Mem::suspend_core(){
+
+		suspend_sem->release();
+		suspension_lock->wait();
+		stateCS.enter();
+		if(state==STOPPED){
+				
 			stateCS.leave();
 			return	false;
-		case	SUSPENDED:
-			stateCS.leave();
-			suspension_lock->wait();
-			if(state==STOPPED){
-				
-				stateCS.enter();
-				if(is_delegate){
-
-					if(--delegate_count==0)
-						stop_sem->release();
-				}
-				stateCS.leave();
-				return	false;
-			}
-			return	true;
-		case	RUNNING:
-			stateCS.leave();
-			return	true;
-		}
-	}
-
-	void	_Mem::add_delegate(uint64	dealine,_TimeJob	*j){
-		
-		stateCS.enter();
-		if(state==RUNNING){
-
-			DelegatedCore	*d=new	DelegatedCore(this,dealine,j);
-			if(++delegate_count==1)
-				stop_sem->acquire();
-			d->start(DelegatedCore::Wait);
 		}
 		stateCS.leave();
-	}
-
-	void	_Mem::remove_delegate(DelegatedCore	*core){
-
-		stateCS.enter();
-		delete	core;
-		--delegate_count;
-		stateCS.leave();
+		return	true;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -136,9 +142,10 @@ namespace	r_exec{
 
 		suspension_lock=new	Event();
 		stop_sem=new	Semaphore(1,1);
+		suspend_sem=new	Semaphore(1,1);
 
-		time_job_queue=new	PipeNN<TimeJob,1024>();
-		reduction_job_queue=new	PipeNN<ReductionJob,1024>();
+		time_job_queue=new	PipeNN<P<TimeJob>,1024>();
+		reduction_job_queue=new	PipeNN<P<_ReductionJob>,1024>();
 
 		uint32	i;
 		uint64	now=Now();
@@ -161,7 +168,7 @@ namespace	r_exec{
 
 					if(v->second->controller!=NULL){
 
-						TimeJob	j(new	InputLessPGMSignalingJob(v->second->controller),now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
+						P<TimeJob>	j=new	InputLessPGMSignalingJob(v->second->controller,now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
 						time_job_queue->push(j);
 					}
 				}
@@ -171,7 +178,7 @@ namespace	r_exec{
 
 					if(v->second->controller!=NULL){
 
-						TimeJob	j(new	AntiPGMSignalingJob(v->second->controller),now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
+						P<TimeJob>	j=new	AntiPGMSignalingJob(v->second->controller,now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
 						time_job_queue->push(j);
 					}
 				}
@@ -191,19 +198,24 @@ namespace	r_exec{
 			}
 
 			//	inject the next update job for the group.
-			TimeJob	j(new	UpdateJob(g),now+g->get_upr()*base_period);
+			P<TimeJob>	j=new	UpdateJob(g,now+g->get_upr()*base_period);
 			time_job_queue->push(j);
 		}
 
 		initial_groups.clear();
 
-		delegate_count=0;
 		state=RUNNING;
 
-		for(i=0;i<reduction_core_count;++i)
+		for(i=0;i<reduction_core_count;++i){
+
+			stop_sem->acquire(0);
 			reduction_cores[i]->start(ReductionCore::Run);
-		for(i=0;i<time_core_count;++i)
+		}
+		for(i=0;i<time_core_count;++i){
+
+			stop_sem->acquire(0);
 			time_cores[i]->start(TimeCore::Run);
+		}
 	}
 
 	void	_Mem::stop(){
@@ -220,14 +232,13 @@ namespace	r_exec{
 		
 		uint32	i;
 		for(i=0;i<reduction_core_count;++i)
-			Thread::TerminateAndWait(reduction_cores[i]);
+			pushReductionJob(new	ShutdownReductionCore());
 		for(i=0;i<time_core_count;++i)
-			Thread::TerminateAndWait(time_cores[i]);
+			pushTimeJob(new	ShutdownTimeCore());
 		stateCS.leave();
 
-		std::cout<<"Waiting for "<<delegate_count<<" delegates to terminate.\n";
 		Thread::Sleep(200);
-		stop_sem->acquire();	//	wait for the delegates to terminate.
+		stop_sem->acquire();	//	wait for the cores and delegates to terminate.
 
 		reset();
 	}
@@ -240,7 +251,20 @@ namespace	r_exec{
 			stateCS.leave();
 			return;
 		}
-		suspension_lock->reset();
+		suspension_lock->reset();	//	both cores will lock upon receiving suspension jobs.
+
+		uint32	i;
+		for(i=0;i<reduction_core_count;++i){
+
+			suspend_sem->acquire(0);
+			pushReductionJob(new	SuspendReductionCore());
+		}
+		for(i=0;i<time_core_count;++i){
+
+			suspend_sem->acquire(0);
+			pushTimeJob(new	SuspendTimeCore());
+		}
+		suspend_sem->acquire();	//	wait for all cores to be suspended.
 		state=SUSPENDED;
 		stateCS.leave();
 	}
@@ -260,70 +284,26 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	ReductionJob	_Mem::popReductionJob(){
+	_ReductionJob	*_Mem::popReductionJob(){
 
 		return	reduction_job_queue->pop();
 	}
 
-	void	_Mem::pushReductionJob(ReductionJob	j){
+	void	_Mem::pushReductionJob(_ReductionJob	*j){
 
-		reduction_job_queue->push(j);
+		P<_ReductionJob>	_j=j;
+		reduction_job_queue->push(_j);
 	}
 
-	TimeJob	_Mem::popTimeJob(){
+	TimeJob	*_Mem::popTimeJob(){
 
 		return	time_job_queue->pop();
 	}
 
-	void	_Mem::pushTimeJob(TimeJob	j){
+	void	_Mem::pushTimeJob(TimeJob	*j){
 
-		time_job_queue->push(j);
-	}
-
-	////////////////////////////////////////////////////////////////
-
-	void	_Mem::update(UpdateJob	*j){
-
-		update((Group	*)j->group);
-		j->group=NULL;
-	}
-
-	void	_Mem::update(AntiPGMSignalingJob	*j){
-
-		if(j->controller->is_alive())
-			((AntiPGMController	*)j->controller)->signal_anti_pgm();
-		j->controller=NULL;
-	}
-
-	void	_Mem::update(InputLessPGMSignalingJob	*j){
-
-		if(j->controller->is_alive())
-			((InputLessPGMController	*)j->controller)->signal_input_less_pgm();
-		j->controller=NULL;
-	}
-
-	void	_Mem::update(InjectionJob	*j){
-
-		injectNow(j->view);
-		j->view=NULL;
-	}
-
-	void	_Mem::update(EInjectionJob	*j){
-
-		injectExistingObjectNow(j->view,j->view->object,j->view->get_host(),true);
-		j->view=NULL;
-	}
-
-	void	_Mem::update(GInjectionJob	*j){
-
-		injectGroupNow(j->view,j->group,j->host);
-		j->view=NULL;
-	}
-
-	void	_Mem::update(SaliencyPropagationJob	*j){
-		
-		propagate_sln(j->object,j->sln_change,j->source_sln_thr);
-		j->object=NULL;
+		P<TimeJob>	_j=j;
+		time_job_queue->push(_j);
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -522,9 +502,8 @@ namespace	r_exec{
 					v->second->controller->kill();
 
 				v->second->object->acq_views();
-				if(v->second->object->views.size()>1)
-					v->second->object->views.erase(v->second);	//	delete view from object's views.
-				else
+				v->second->object->views.erase(v->second);	//	delete view from object's views.
+				if(v->second->object->views.size()==0)
 					v->second->object->invalidate();
 				v->second->object->rel_views();
 
@@ -579,12 +558,12 @@ namespace	r_exec{
 				switch(GetType(group->new_controllers[i]->getIPGM())){
 				case	ObjectType::ANTI_IPGM:{	//	inject signaling jobs for |ipgm (tsc).
 
-					TimeJob	j(new	AntiPGMSignalingJob((AntiPGMController	*)group->new_controllers[i]),now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
+					P<TimeJob>	j=new	AntiPGMSignalingJob((AntiPGMController	*)group->new_controllers[i],now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
 					time_job_queue->push(j);
 					break;
 				}case	ObjectType::INPUT_LESS_IPGM:{	//	inject a signaling job for an input-less pgm (sfr).
 
-					TimeJob	j(new	InputLessPGMSignalingJob((InputLessPGMController	*)group->new_controllers[i]),now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
+					P<TimeJob>	j=new	InputLessPGMSignalingJob((InputLessPGMController	*)group->new_controllers[i],now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
 					time_job_queue->push(j);
 					break;
 				}
@@ -597,7 +576,7 @@ namespace	r_exec{
 		group->update_stats(this);	//	triggers notifications.
 
 		//	inject the next update job for the group.
-		TimeJob	j(new	UpdateJob(group),now+group->get_upr()*base_period);
+		P<TimeJob>	j=new	UpdateJob(group,now+group->get_upr()*base_period);
 		time_job_queue->push(j);
 
 		group->leave();
@@ -715,7 +694,7 @@ namespace	r_exec{
 				return;
 		path.push_back(object);
 
-		TimeJob	j(new	SaliencyPropagationJob(object,change,source_sln_thr),0);
+		P<TimeJob>	j=new	SaliencyPropagationJob(object,change,source_sln_thr,0);
 		time_job_queue->push(j);
 		
 		_initiate_sln_propagation(object,change,source_sln_thr,path);

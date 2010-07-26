@@ -38,7 +38,7 @@ LOAD_MODULE(RMem)
 
 void	RMem::initialize(){
 
-	r_exec::Mem<RObject>::init(100000,2,2);
+	r_exec::Mem<RObject>::init(100000,1,1,10);
 }
 
 void	RMem::finalize(){
@@ -61,7 +61,7 @@ void	RMem::load(r_comp::Image	*image){
 	r_exec::Mem<RObject>::load(objects.as_std());
 	r_exec::Mem<RObject>::start();
 
-	std::cout<<"\nSleeping 1000\n";
+	std::cout<<"\nSleeping 1000 ms\n";
 	Thread::Sleep(1000);
 
 	r_exec::Mem<RObject>::suspend();
@@ -69,7 +69,7 @@ void	RMem::load(r_comp::Image	*image){
 	r_exec::Mem<RObject>::suspend();
 
 	Thread::Sleep(500);
-	std::cout<<"\nstopping rMem\n";
+	std::cout<<"\nStopping rMem\n";
 	r_exec::Mem<RObject>::stop();
 
 	decompile(result_image);

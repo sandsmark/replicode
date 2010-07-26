@@ -41,27 +41,38 @@ namespace	r_exec{
 
 		std::cout<<"Time Core created.\n";
 
-		while(_this->mem->check_state(false)){	//	enter a wait state when the rMem is suspended.
+		bool	run=true;
+		while(run){	//	enter a wait state when the rMem is suspended.
 
-			TimeJob	j=_this->mem->popTimeJob();
-			if(!j.is_alive())
+			P<TimeJob>	j=_this->mem->popTimeJob();
+			if(!j->is_alive()){
+
+				j=NULL;
 				continue;
+			}
 
-			uint64	target=j.target_time;
-			if(target==0)	//	0 means ASAP.
-				j.job->update(_this->mem);
+			uint64	target=j->target_time;
+			if(target==0)	//	0 means ASAP. Control jobs (shutdown and suspend) are caught here.
+				run=j->update(_this->mem);
 			else{
 
 				uint64	now=Now();
 				int64	deadline=target-now;
-				if(deadline>=0)	//	on time: spawn a delegate to wait for the due time; delegate will die when done.
-					_this->mem->add_delegate(deadline,j.job);
-				else{	//	we are late: do the job and report.
+				if(deadline==0)	//	right on time: do the job.
+					run=j->update(_this->mem);
+				else	if(deadline>0){	//	on time: spawn a delegate to wait for the due time; delegate will die when done.
 
-					j.job->update(_this->mem);
+					DelegatedCore	*d=new	DelegatedCore(_this->mem,deadline,j);
+					_this->mem->start_core();
+					d->start(DelegatedCore::Wait);
+				}else{	//	we are late: do the job and report.
+
+					run=j->update(_this->mem);
 					std::cout<<"Time Core report: late on target: "<<-deadline/1000<<" ms behind."<<std::endl;
 				}
 			}
+
+			j=NULL;
 		}
 
 		thread_ret_val(0);
@@ -77,38 +88,38 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	//	The rMem has to wait for delegates to be actually suspended before doing anything else (ex: getImage()) when they are executing update(_this->mem).
+	//	When suspending the rMem, we do not want to have to wait for delegates caught in timer.wait().
 	thread_ret thread_function_call	DelegatedCore::Wait(void	*args){
 
 		DelegatedCore	*_this=((DelegatedCore	*)args);
 
-		uint64	init_time=Now();
-		if(_this->mem->check_state(true)){	//	enter a wait state when the rMem is suspended.
+		_this->timer.start(_this->deadline);
+		_this->timer.wait();
 
-			uint64	now=Now();
-			_this->deadline-=(now-init_time);
-			if(_this->deadline>0){
-
-				_this->timer.start(_this->deadline);
-				_this->timer.wait();
-
-				if(!_this->mem->check_state(true)){
-
-					delete	_this;
-					thread_ret_val(0);
-				}
-			}
-			
+		_Mem::DState	s=_this->mem->check_state();	//	checks for shutdown or suspension that could have happened during the wait on timer.
+		switch(s){
+		case	_Mem::D_RUNNING_AFTER_SUSPENSION:
 			_this->job->update(_this->mem);
-			_this->mem->remove_delegate(_this);
-		}else
-			delete	_this;
+			break;
+		case	_Mem::D_RUNNING:	//	suspension might occur now or during update(): the rMem has to wait for completion.
+			_this->mem->wait_for_delegate();
+			_this->job->update(_this->mem);
+			_this->mem->delegate_done();
+			break;
+		case	_Mem::D_STOPPED:
+		case	_Mem::D_STOPPED_AFTER_SUSPENSION:
+			break;
+		}
 
+		_this->mem->shutdown_core();
+		delete	_this;
 		thread_ret_val(0);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	DelegatedCore::DelegatedCore(_Mem	*m,uint64	deadline,_TimeJob	*j):Thread(),mem(m),deadline(deadline),job(j){
+	DelegatedCore::DelegatedCore(_Mem	*m,uint64	deadline,TimeJob	*j):Thread(),mem(m),deadline(deadline),job(j){
 	}
 
 	DelegatedCore::~DelegatedCore(){

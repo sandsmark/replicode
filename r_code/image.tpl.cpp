@@ -34,30 +34,34 @@
 
 namespace	r_code{
 
-	template<class	I>	Image<I>	*Image<I>::Build(uint32	map_size,uint32	code_size,uint32	reloc_size){
+	template<class	I>	Image<I>	*Image<I>::Build(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	reloc_size){
 
-		I	*image=new(map_size+code_size+reloc_size)	I(map_size,code_size,reloc_size);
+		I	*image=new(map_size+code_size+reloc_size)	I(timestamp,map_size,code_size,reloc_size);
 		return	(Image<I>	*)image;
 	}
 
 	template<class	I>	Image<I>	*Image<I>::Read(ifstream &stream){
 
+		uint64	timestamp;
 		uint32	map_size;
 		uint32	code_size;
 		uint32	reloc_size;
+		stream.read((char	*)&timestamp,sizeof(uint64));
 		stream.read((char	*)&map_size,sizeof(uint32));
 		stream.read((char	*)&code_size,sizeof(uint32));
 		stream.read((char	*)&reloc_size,sizeof(uint32));
-		Image	*image=Build(map_size,code_size,reloc_size);
+		Image	*image=Build(timestamp,map_size,code_size,reloc_size);
 		stream.read((char	*)image->data(),image->getSize()*sizeof(word32));
 		return	image;
 	}
 
 	template<class	I>	void	Image<I>::Write(Image<I>	*image,ofstream &stream){
 
+		uint64	timestamp=image->get_timestamp();
 		uint32	map_size=image->map_size();
 		uint32	code_size=image->code_size();
 		uint32	reloc_size=image->reloc_size();
+		stream.write((char	*)&timestamp,sizeof(uint64));
 		stream.write((char	*)&map_size,sizeof(uint32));
 		stream.write((char	*)&code_size,sizeof(uint32));
 		stream.write((char	*)&reloc_size,sizeof(uint32));

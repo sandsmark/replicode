@@ -43,6 +43,10 @@ namespace	r_code{
 
 		for(uint32	i=0;i<VIEW_CODE_MAX_SIZE;++i)
 			code[i]=source->code(i);
+
+		for(uint32	i=0;i<2;++i)	//	to get the right size in Image::addObject().
+			if(source->references[i])
+				references.push_back(0);
 	}
 
 	void	SysView::write(word32	*data){
@@ -104,6 +108,9 @@ namespace	r_code{
 			views[i]=new	SysView(*v);
 
 		axiom=source->get_axiom();
+
+		for(i=0;i<source->references_size();++i)	//	to get the right size in Image::addObject().
+			references.push_back(0);
 	}
 
 	SysObject::~SysObject(){

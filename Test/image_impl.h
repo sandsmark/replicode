@@ -39,10 +39,12 @@ using	namespace	core;
 class	ImageImpl{
 private:
 	word32	*_data;	//	[object map|code segment|reloc segment]
+	uint64	_timestamp;
 	uint32	_map_size;
 	uint32	_code_size;
 	uint32	_reloc_size;
 protected:
+	uint64	get_timestamp()	const;
 	uint32	map_size()		const;
 	uint32	code_size()		const;
 	uint32	reloc_size()	const;
@@ -52,7 +54,7 @@ protected:
 public:
 	void	*operator	new(size_t,uint32	data_size);
 	void	operator delete(void	*o);
-	ImageImpl(uint32	map_size,uint32	code_size,uint32	reloc_size);
+	ImageImpl(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	reloc_size);
 	~ImageImpl();
 };
 

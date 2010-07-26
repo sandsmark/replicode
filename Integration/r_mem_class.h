@@ -45,11 +45,13 @@ using	namespace	mBrane::sdk::payloads;
 template<class	U>	class	ImageCore:
 public	Message<U,Memory>{
 protected:
+	uint64	_timestamp;
 	uint32	_map_size;
 	uint32	_code_size;
 	uint32	_reloc_size;
 public:
 	ImageCore():_map_size(0),_code_size(0),_reloc_size(0){}
+	uint64	get_timestamp()	const{	return	_timestamp;	}
 	uint32	map_size()		const{	return	_map_size;	}
 	uint32	code_size()		const{	return	_code_size;	}
 	uint32	reloc_size()	const{	return	_reloc_size;}
@@ -59,8 +61,9 @@ template<class	U>	class	_Image:
 public	CStorage<ImageCore<U>,word32>{
 public:
 	_Image():CStorage<ImageCore<U>,word32>(){}
-	_Image(uint32	map_size,uint32	code_size,uint32	reloc_size){
+	_Image(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	reloc_size){
 
+		_timestamp=timestamp;
 		_map_size=map_size;
 		_code_size=code_size;
 		_reloc_size=reloc_size;

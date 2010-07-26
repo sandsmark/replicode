@@ -293,6 +293,9 @@ namespace	r_exec{
 					_view.copy(view,0);
 					view->set_object(object);
 
+					view->references[1]=getIPGMView()->get_host();
+					view->code(VIEW_ORG)=Atom::RPointer(1);
+
 					Code	*existing_object=mem->inject(view);
 					if(existing_object)
 						productions[prod_index]=existing_object;	//	so that the mk.rdx will reference the existing object instead of object, which has been discarded.
@@ -429,7 +432,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_RDX_ARITY+1;
 
-		Code	*mk_rdx=controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
+		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());//controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -647,7 +650,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_RDX_ARITY+1;
 
-		Code	*mk_rdx=controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
+		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());//controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -710,7 +713,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_ANTI_RDX_ARITY+1;
 
-		Code	*mk_rdx=controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY));
+		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());//controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY));
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -764,7 +767,7 @@ namespace	r_exec{
 			host->get_c_act()>host->get_c_act_thr()			&&	//	c-active group.
 			host->get_c_sln()>host->get_c_sln_thr()){			//	c-salient group.
 
-			TimeJob	next_job(new	InputLessPGMSignalingJob(this),Now()+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
+			TimeJob	*next_job=new	InputLessPGMSignalingJob(this,Now()+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
 			mem->pushTimeJob(next_job);
 		}
 		host->leave();
@@ -825,7 +828,7 @@ namespace	r_exec{
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
 
-			ReductionJob	j(new	View(input),*o);
+			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
 			mem->pushReductionJob(j);
 		}
 
@@ -862,7 +865,7 @@ namespace	r_exec{
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
 
-			ReductionJob	j(new	View(input),*o);
+			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
 			mem->pushReductionJob(j);
 		}
 
@@ -929,7 +932,7 @@ namespace	r_exec{
 			host->get_c_sln()>host->get_c_sln_thr()){			//	c-salient group.
 
 				host->leave();
-			TimeJob	next_job(new	AntiPGMSignalingJob(this),Now()+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
+			TimeJob	*next_job=new	AntiPGMSignalingJob(this,Now()+Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC));
 			mem->pushTimeJob(next_job);
 		}else
 			host->leave();

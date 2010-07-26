@@ -412,7 +412,7 @@ namespace	r_comp{
 
 	////////////////////////////////////////////////////////////////
 
-	Image::Image():map_offset(0){
+	Image::Image():map_offset(0),timestamp(0){
 	}
 
 	Image::~Image(){
@@ -458,6 +458,11 @@ namespace	r_comp{
 		std::list<Code	*>::const_iterator	m;
 		for(m=object->markers.begin();m!=object->markers.end();++m)	//	follow marker pointers and recurse.
 			*this<<*m;
+
+		sys_object->references.as_std()->clear();
+		std::vector<SysView	*>::const_iterator	_v;
+		for(_v=sys_object->views.as_std()->begin();_v!=sys_object->views.as_std()->end();++_v)
+			(*_v)->references.as_std()->clear();
 
 		buildReferences(sys_object,object,object_index);
 		return	*this;

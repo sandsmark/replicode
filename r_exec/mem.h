@@ -58,18 +58,24 @@ namespace	r_exec{
 	//	Main processing in _Mem::update().
 	class	r_exec_dll	_Mem:
 	public	r_code::Mem{
+	public:
+		typedef	enum{
+			D_RUNNING=0,
+			D_RUNNING_AFTER_SUSPENSION=1,
+			D_STOPPED=2,
+			D_STOPPED_AFTER_SUSPENSION=3
+		}DState;	//	status for delegates.
 	protected:
 		uint32	base_period;
 		uint32	ntf_mk_res;
 
-		PipeNN<ReductionJob,1024>	*reduction_job_queue;
-		PipeNN<TimeJob,1024>		*time_job_queue;
+		PipeNN<P<_ReductionJob>,1024>	*reduction_job_queue;
+		PipeNN<P<TimeJob>,1024>			*time_job_queue;
 		
 		uint32			reduction_core_count;
 		ReductionCore	**reduction_cores;
 		uint32			time_core_count;
 		TimeCore		**time_cores;
-		uint32			delegate_count;
 
 		typedef	enum{
 			NOT_STARTED=0,
@@ -79,8 +85,9 @@ namespace	r_exec{
 		}State;
 		State			state;
 		CriticalSection	stateCS;
-		Event			*suspension_lock;
-		Semaphore		*stop_sem;
+		Event			*suspension_lock;	//	blocks cores upon suspend().
+		Semaphore		*stop_sem;			//	blocks the rMem until all cores terminate.
+		Semaphore		*suspend_sem;		//	blocks the rMem until all cores are suspended.
 
 		P<Group>	root;	//	holds everything.
 
@@ -89,14 +96,9 @@ namespace	r_exec{
 		CriticalSection	object_registerCS;
 		CriticalSection	objectsCS;
 
-		virtual	void	injectNow(View	*view)=0;
-		virtual	void	injectGroupNow(View	*view,Group	*object,Group	*host)=0;
-		void	injectExistingObjectNow(View	*view,Code	*object,Group	*host,bool	lock);
 		void	injectCopyNow(View	*view,Group	*destination,uint64	now);	//	for cov; NB: no cov for groups, pgm or notifications.
-		void	update(Group	*group);									//	checks for exiting objects and injects.
 
 		//	Utilities.
-		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);	//	calls mod_sln on the object's view with morphed sln changes.
 		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr);
 		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
 		void	_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
@@ -120,9 +122,12 @@ namespace	r_exec{
 
 		uint64	get_base_period()	const{	return	base_period;	}
 
-		void	add_delegate(uint64	dealine,_TimeJob	*j);	//	called by time cores when they are ahead of their deadlines.
-		void	remove_delegate(DelegatedCore	*core);			//	called by delegate cores when they are done.
-		bool	check_state(bool	is_delegate);
+		void	wait_for_delegate();//	called by delegates just before performing their task.
+		void	delegate_done();	//	called by delegates just after completion of their task.
+		DState	check_state();		//	called by delegates after waiting in case stop() or suspend() are called in the meantime.
+		void	start_core();		//	called upon creation of a delegate.
+		void	shutdown_core();	//	called upon completion of a delegate's task.
+		bool	suspend_core();		//	called by cores upon receiving a suspend job.
 
 		void	start();
 		void	stop();	//	after stop() the content is cleared and one has to call load() and start() again.
@@ -136,10 +141,10 @@ namespace	r_exec{
 
 		//	Internal core processing	////////////////////////////////////////////////////////////////
 
-		ReductionJob	popReductionJob();
-		void			pushReductionJob(ReductionJob	j);
-		TimeJob			popTimeJob();
-		void			pushTimeJob(TimeJob	j);
+		_ReductionJob	*popReductionJob();
+		void			pushReductionJob(_ReductionJob	*j);
+		TimeJob			*popTimeJob();
+		void			pushTimeJob(TimeJob	*j);
 
 		//	Called at each update period.
 		//	- set the final resilience value, if 0, delete.
@@ -150,21 +155,16 @@ namespace	r_exec{
 		//	- inject next update job for the group.
 		//	- inject new signaling jobs if act pgm with no input or act |pgm.
 		//	- notify high and low values.
-		void	update(UpdateJob	*j);
+		void	update(Group	*group);
 
-		//	Called each time an anti-ipgm reaches its time scope (tsc).
-		void	update(AntiPGMSignalingJob	*j);
+		//	Called upon successful reduction.
+		virtual	void	injectNow(View	*view)=0;
+		virtual	void	injectGroupNow(View	*view,Group	*object,Group	*host)=0;
+		void	injectExistingObjectNow(View	*view,Code	*object,Group	*host,bool	lock);
 
-		//	Called at each signaling period for each active overlay with no inputs.
-		void	update(InputLessPGMSignalingJob	*j);
-
-		//	Called each time a view is to be injected in the future.
-		void	update(InjectionJob		*j);	//	new object.
-		void	update(EInjectionJob	*j);	//	existing object.
-		void	update(GInjectionJob	*j);	//	group.
-
-		//	Called each time an object propagates saliency changes.
-		void	update(SaliencyPropagationJob	*j);
+		//	Called as a result of a group update (sln change).
+		//	Calls mod_sln on the object's view with morphed sln changes.
+		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);
 
 		//	Interface for overlays and I/O devices	////////////////////////////////////////////////////////////////
 		virtual	Code	*inject(View	*view)=0;	//	returns the existing object if any.

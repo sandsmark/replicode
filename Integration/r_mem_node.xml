@@ -33,5 +33,5 @@
 	<Nodes><!--SystemReady will be sent when all the nodes listed here are up and running; no need to list the local node (implicit)-->
 		<!--ex: <Node hostname=""/>-->
 	</Nodes>
-	<Threads thread_count="16"/><!--in [1,512]-->
+	<Threads thread_count="2"/><!--in [1,512]-->
 </NodeConfiguration>

@@ -57,7 +57,8 @@ namespace	r_exec{
 					get_reference(i)->remove_marker(this);
 			}
 		
-			mem->deleteObject(this);
+			if(is_registered)
+				mem->deleteObject(this);
 		}
 
 		return	false;

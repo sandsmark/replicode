@@ -187,7 +187,7 @@ namespace	r_code{
 
 		virtual	float32	get_psln_thr(){	return	1;	}
 
-		Code():axiom(SysObject::NON_STD){}
+		Code():axiom(SysObject::NON_STD),is_registered(false){}
 		virtual	~Code(){}
 
 		virtual	void	mod(uint16	member_index,float32	value){};
@@ -197,7 +197,7 @@ namespace	r_code{
 		void	remove_marker(Code	*m){
 			
 			acq_markers();
-			std::list<Code	*>::const_iterator	_m;
+			/*std::list<Code	*>::const_iterator	_m;
 			for(_m=markers.begin();_m!=markers.end();){
 
 				if(*_m==m){
@@ -206,10 +206,12 @@ namespace	r_code{
 					break;
 				}else
 					++m;
-			}
+			}*/
+			markers.remove(m);
 			rel_markers();
 		}
 
+		bool								is_registered;
 		std::list<Code	*>::const_iterator	position_in_objects;
 
 		void	trace()	const{

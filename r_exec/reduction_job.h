@@ -37,12 +37,33 @@
 
 namespace	r_exec{
 
-	class	r_exec_dll	ReductionJob{
+	class	r_exec_dll	_ReductionJob:
+	public	_Object{
+	protected:
+		_ReductionJob();
+	public:
+		virtual	bool	update(_Mem	*m)=0;	//	return false to shutdown the reduction core.
+	};
+
+	class	r_exec_dll	ReductionJob:
+	public	_ReductionJob{
 	public:
 		P<View>		input;
 		P<IOverlay>	overlay;
-		ReductionJob();
 		ReductionJob(View	*input,IOverlay	*overlay);
+		bool	update(_Mem	*m);
+	};
+
+	class	r_exec_dll	ShutdownReductionCore:
+	public	_ReductionJob{
+	public:
+		bool	update(_Mem	*m);
+	};
+
+	class	r_exec_dll	SuspendReductionCore:
+	public	_ReductionJob{
+	public:
+		bool	update(_Mem	*m);
 	};
 }
 

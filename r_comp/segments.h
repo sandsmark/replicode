@@ -147,6 +147,8 @@ namespace	r_comp{
 		CodeSegment			code_segment;
 		RelocationSegment	relocation_segment;
 
+		uint64	timestamp;
+
 		Image();
 		~Image();
 
@@ -168,7 +170,7 @@ namespace	r_comp{
 
 		template<class	I>	I	*serialize(){
 
-			I	*image=(I	*)I::Build(object_map.getSize(),code_segment.getSize(),relocation_segment.getSize());
+			I	*image=(I	*)I::Build(timestamp,object_map.getSize(),code_segment.getSize(),relocation_segment.getSize());
 
 			object_map.shift(image->map_size());
 			object_map.write(image->data());
@@ -180,6 +182,7 @@ namespace	r_comp{
 
 		template<class	I>	void	load(I	*image){
 
+			timestamp=image->get_timestamp();
 			object_map.read(image->data(),image->map_size());
 			code_segment.read(image->data()+image->map_size(),image->map_size());
 			relocation_segment.read(image->data()+image->map_size()+image->code_size());

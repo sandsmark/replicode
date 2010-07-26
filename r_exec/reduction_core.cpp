@@ -41,13 +41,12 @@ namespace	r_exec{
 
 		std::cout<<"Reduction Core created.\n";
 
-		while(_this->mem->check_state(false)){	//	enter a wait state when the rMem is suspended.
+		bool	run=true;
+		while(run){
 
-			ReductionJob	j=_this->mem->popReductionJob();
-			if(j.overlay->is_alive())
-				j.overlay->reduce(j.input,_this->mem);
-			else
-				j.overlay=NULL;
+			P<_ReductionJob>	j=_this->mem->popReductionJob();
+			run=j->update(_this->mem);
+			j=NULL;
 		}
 
 		thread_ret_val(0);

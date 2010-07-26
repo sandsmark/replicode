@@ -182,6 +182,7 @@ namespace	r_exec{
 			}
 
 			object->position_in_objects=this->objects.insert(this->objects.end(),object);
+			object->is_registered=true;
 			if(GetType(object)!=ObjectType::GROUP)	//	load non-group object in regsister.
 				((O	*)object)->position_in_object_register=object_register.insert((O	*)object).first;
 			else
@@ -194,6 +195,7 @@ namespace	r_exec{
 	template<class	O>	r_comp::Image	*Mem<O>::getImage(){
 
 		r_comp::Image	*image=new	r_comp::Image();
+		image->timestamp=Now();
 		std::list<Code	*>::const_iterator	i;
 		for(i=objects.begin();i!=objects.end();++i)
 			image->operator	<<(*i);
@@ -239,7 +241,7 @@ namespace	r_exec{
 					injectExistingObjectNow(view,*it,host,true);
 				else{
 					
-					TimeJob	j(new	EInjectionJob(view),ijt);
+					P<TimeJob>	j=new	EInjectionJob(view,ijt);
 					time_job_queue->push(j);
 				}
 				return	*it;
@@ -249,7 +251,7 @@ namespace	r_exec{
 				injectNow(view);
 			else{
 				
-				TimeJob	j(new	InjectionJob(view),ijt);
+				P<TimeJob>	j=new	InjectionJob(view,ijt);
 				time_job_queue->push(j);
 			}
 			return	NULL;
@@ -259,7 +261,7 @@ namespace	r_exec{
 				injectGroupNow(view,(Group	*)view->object,host);
 			else{
 				
-				TimeJob	j(new	GInjectionJob(view,(Group	*)view->object,host),ijt);
+				P<TimeJob>	j=new	GInjectionJob(view,(Group	*)view->object,host,ijt);
 				time_job_queue->push(j);
 			}
 
@@ -286,6 +288,7 @@ namespace	r_exec{
 		objectsCS.enter();
 		object->position_in_objects=objects.insert(objects.end(),object);
 		objectsCS.leave();
+		object->is_registered=true;
 
 		host->enter();
 
@@ -310,7 +313,7 @@ namespace	r_exec{
 				for(uint32	i=0;i<host->newly_salient_views.size();++i)
 					o->take_input(host->newly_salient_views[i]);	//	view will be copied.
 
-				TimeJob	j(new	AntiPGMSignalingJob(o),now+Timestamp::Get<Code>(o->getIPGM()->get_reference(0),PGM_TSC));
+				P<TimeJob>	j=new	AntiPGMSignalingJob(o,now+Timestamp::Get<Code>(o->getIPGM()->get_reference(0),PGM_TSC));
 				time_job_queue->push(j);
 
 			}
@@ -321,7 +324,7 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
-				TimeJob	j(new	InputLessPGMSignalingJob(o),now+Timestamp::Get<Code>(view->object->get_reference(0),PGM_TSC));
+				P<TimeJob>	j=new	InputLessPGMSignalingJob(o,now+Timestamp::Get<Code>(view->object->get_reference(0),PGM_TSC));
 				time_job_queue->push(j);
 			}
 			break;
@@ -360,6 +363,7 @@ namespace	r_exec{
 		objectsCS.enter();
 		object->position_in_objects=objects.insert(objects.end(),object);
 		objectsCS.leave();
+		object->is_registered=true;
 
 		host->enter();
 
@@ -378,7 +382,7 @@ namespace	r_exec{
 		}
 
 		//	inject the next update job for the group.
-		TimeJob	j(new	UpdateJob((Group	*)object),now+((Group	*)object)->get_upr()*base_period);
+		P<TimeJob>	j=new	UpdateJob((Group	*)object,now+((Group	*)object)->get_upr()*base_period);
 		time_job_queue->push(j);
 
 		if(host->get_ntf_new()==1)
@@ -398,6 +402,7 @@ namespace	r_exec{
 		objectsCS.enter();
 		object->position_in_objects=objects.insert(objects.end(),object);
 		objectsCS.leave();
+		object->is_registered=true;
 		
 		if(lock)
 			host->enter();
@@ -406,7 +411,7 @@ namespace	r_exec{
 		host->notification_views[view->getOID()]=view;
 
 		object->views.insert(view);
-		
+				
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.
 			_inject_reduction_jobs(view,host,origin);
 

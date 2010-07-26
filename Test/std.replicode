@@ -33,7 +33,7 @@
 !class (mk.sln_chg (_obj {obj: chg:nb}))
 !class (mk.act_chg (_obj {obj: chg:nb}))
 !class (mk.new (_obj obj:))
-!class (mk.pre (_obj {data: cer:nb}))
+!class (mk.pre (_obj {data: time:us cer:nb}))
 !class (mk.isa (_obj {inst: class: cer:nb}))
 
 ;mapping operator opcodes -> r-atoms

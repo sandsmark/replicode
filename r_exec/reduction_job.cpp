@@ -27,14 +27,40 @@
 //	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 #include	"reduction_job.h"
+#include	"mem.h"
 
 
 namespace	r_exec{
 
-	ReductionJob::ReductionJob():input(NULL),overlay(NULL){
+	_ReductionJob::_ReductionJob():_Object(){
 	}
 
-	ReductionJob::ReductionJob(View	*input,IOverlay	*overlay):input(input),overlay(overlay){
+	////////////////////////////////////////////////////////////
+
+	ReductionJob::ReductionJob(View	*input,IOverlay	*overlay):_ReductionJob(),input(input),overlay(overlay){
+	}
+
+	bool	ReductionJob::update(_Mem	*m){
+
+		if(overlay->is_alive())
+			overlay->reduce(input,m);
+		return	true;
+	}
+
+	////////////////////////////////////////////////////////////
+
+	bool	ShutdownReductionCore::update(_Mem	*m){
+
+		m->shutdown_core();
+		return	false;
+	}
+
+	////////////////////////////////////////////////////////////
+
+	bool	SuspendReductionCore::update(_Mem	*m){
+
+		return	m->suspend_core();
 	}
 }

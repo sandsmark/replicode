@@ -34,6 +34,7 @@
 #include	"image_impl.h"
 
 
+//#define	WRITE_IMAGE_TO_FILE
 //#define	DECOMPILE_ONE_BY_ONE
 
 using	namespace	r_comp;
@@ -68,6 +69,38 @@ void	decompile(Decompiler	&decompiler,r_comp::Image	*image){
 #endif
 }
 
+void	write_to_file(r_comp::Image	*image){
+
+	ofstream	output("c:/work/replicode/test/test.8.replicode.image",ios::binary|ios::out);
+	r_code::Image<ImageImpl>	*i=image->serialize<r_code::Image<ImageImpl> >();
+	r_code::Image<ImageImpl>::Write(i,output);
+	output.close();
+	//i->trace();
+	delete	i;
+/*
+	ifstream	input("c:/work/replicode/test/test.8.replicode.image",ios::binary|ios::in);
+	if(!input.good())
+		return;
+
+	r_code::Image<ImageImpl>	*img=(r_code::Image<ImageImpl>	*)r_code::Image<ImageImpl>::Read(input);
+	input.close();
+
+	//img->trace();
+
+	r_code::vector<Code	*>	objects;
+	r_comp::Image			*_i=new	r_comp::Image();
+	_i->load(img);
+
+	std::ostringstream	decompiled_code;
+	r_comp::Decompiler	decompiler;
+	decompiler.init(&r_exec::Metadata);
+	decompiler.decompile(_i,&decompiled_code);
+	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
+	delete	_i;
+
+	delete	img;*/
+}
+
 int32	main(int	argc,char	**argv){
 
 	core::Time::Init(1000);
@@ -93,32 +126,32 @@ int32	main(int	argc,char	**argv){
 		r_code::vector<r_code::Code	*>	ram_objects;
 		r_exec::Seed.getObjects(mem,ram_objects);
 
-		mem->init(100000,1,1,20);
+		mem->init(100000,1,1,10);
 		mem->load(ram_objects.as_std());
 		mem->start();
-		//uint32	in;std::cout<<"Enter a number to stop the rMem:\n";std::cin>>in;
-		std::cout<<"\nSleeping 1000\n";
-		Thread::Sleep(1000);
-		mem->suspend();
-		image=mem->getImage();
-		decompile(decompiler,image);
-		delete	image;
-		mem->resume();
-		/*
-		Thread::Sleep(400);
-		mem->suspend();
+		
+		uint32	sleep_duration=1000;
+		std::cout<<"\nSleeping "<<sleep_duration<<" ms"<<std::endl;
+		Thread::Sleep(sleep_duration);
+
 		//TimeProbe	probe;
 		//probe.set();
+
+		mem->suspend();
 		image=mem->getImage();
+		mem->resume();
+
 		//probe.check();
+		
+#ifdef	WRITE_IMAGE_TO_FILE
+		write_to_file(image);
+#endif
 		decompile(decompiler,image);
 		delete	image;
-		//std::cout<<"getImage(): "<<probe.us()<<std::endl;
-		mem->resume();
-		*/
-		Thread::Sleep(500);
 
-		std::cout<<"\nstopping rMem\n";
+		//std::cout<<"getImage(): "<<probe.us()<<"us"<<std::endl;
+
+		std::cout<<"\nShutting rMem down...\n";
 		mem->stop();
 		delete	mem;
 	}
