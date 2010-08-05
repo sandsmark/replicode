@@ -49,7 +49,7 @@ void	RMem::decompile(r_comp::Image	*image){
 	r_comp::Decompiler	decompiler;
 	std::ostringstream	decompiled_code;
 	decompiler.init(&r_exec::Metadata);
-	decompiler.decompile(image,&decompiled_code);
+	decompiler.decompile(image,&decompiled_code,0);
 	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 }
 

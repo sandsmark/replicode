@@ -1,0 +1,78 @@
+;heart beat.
+;inject the same object ("beep") regularly with vw.sln=1.
+;have the target group apply a decay on the sln of its members
+;so that the new view on "beep" will gain saliency.
+;to check: a pgm that catches the "beep".
+
+target_grp:(grp
+1; upr
+0.9; sln_thr
+0.4; act_thr
+0; vis_thr
+1; c_sln
+0; c_sln_thr
+1; c_act
+0; c_act_thr
+-0.5; dcy_per (decay percentage)
+0; dcy_tgt (decay target): 0=member's sln, 1=group's sln_thr
+1; dcy_prd (decay period) as a multiple of upr
+1; sln_chg_thr
+1; sln_chg_prd
+1; act_chg_thr
+1; act_chg_prd
+0; avg_sln
+0; high_sln
+0; low_sln
+0; avg_act
+0; high_act
+0; low_act
+1; high_sln_thr
+0; low_sln_thr
+1; sln_ntf_prd
+1; high_act_thr
+0; low_act_thr
+1; act_ntf_prd
+0; ntf_new
+0; low_res_thr
+nil; ntf_grp
+1; psln_thr
+)
+[]
+   [now 0 forever root nil 0 0]
+
+hb:(pgm
+|[]
+|[]
+[]
+   (inj []
+      (str "beep" 1)
+      [now 1 forever target_grp nil]
+   )
+200000us; time scope
+0; notify reduction flag
+1; propagation saliency threshold
+)
+|[]
+
+ihb:(ipgm hb |[] 1)
+[]
+   [now 1 forever target_grp nil 1]
+
+monitor:(pgm
+|[]
+[]
+   []
+      (ptn (str ::) |[])
+   |[]
+   |[]
+[]
+   (inj [(str "caught beep" 1) [now 1 forever target_grp nil]])
+0us
+1
+1
+)
+|[]
+
+imonitor:(ipgm monitor |[] 1)
+[]
+   [now 1 forever target_grp nil 1]

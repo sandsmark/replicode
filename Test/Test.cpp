@@ -32,6 +32,7 @@
 #include	"mem.h"
 #include	"init.h"
 #include	"image_impl.h"
+#include	"settings.h"
 
 
 //#define	WRITE_IMAGE_TO_FILE
@@ -39,7 +40,7 @@
 
 using	namespace	r_comp;
 
-void	decompile(Decompiler	&decompiler,r_comp::Image	*image){
+void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
 
 #ifdef	DECOMPILE_ONE_BY_ONE
 	uint32	object_count=decompiler.decompile_references(image);
@@ -63,9 +64,11 @@ void	decompile(Decompiler	&decompiler,r_comp::Image	*image){
 #else
 	std::cout<<"\ndecompiling ...\n";
 	std::ostringstream	decompiled_code;
-	decompiler.decompile(image,&decompiled_code);
+	uint32	object_count=decompiler.decompile(image,&decompiled_code,time_offset);
 	std::cout<<"... done\n";
 	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
+	std::cout<<"Image taken at: "<<Time::ToString_year(image->timestamp)<<std::endl<<std::endl;
+	std::cout<<object_count<<" objects\n";
 #endif
 }
 
@@ -105,18 +108,21 @@ int32	main(int	argc,char	**argv){
 
 	core::Time::Init(1000);
 
+	Settings	settings;
+	if(!settings.load(argv[1]))
+		return	1;
+
 	std::cout<<"compiling ...\n";
-	r_exec::Init("C:/Work/Replicode/Debug/usr_operators.dll",Time::Get,"C:/Work/Replicode/Test/user.classes.replicode");
+	r_exec::Init(settings.usr_operator_path.c_str(),Time::Get,settings.usr_class_path.c_str());
 	std::cout<<"... done\n";
 
 	std::string	error;
-	if(!r_exec::Compile(argv[1],error)){
+	if(!r_exec::Compile(settings.source_file_name.c_str(),error)){
 
 		std::cerr<<" <- "<<error<<std::endl;
-		return	1;
+		return	2;
 	}else{
-
-		Decompiler	decompiler;
+		Decompiler		decompiler;
 		decompiler.init(&r_exec::Metadata);
 
 		r_comp::Image	*image;
@@ -126,13 +132,12 @@ int32	main(int	argc,char	**argv){
 		r_code::vector<r_code::Code	*>	ram_objects;
 		r_exec::Seed.getObjects(mem,ram_objects);
 
-		mem->init(100000,1,1,10);
+		mem->init(settings.base_period,settings.reduction_core_count,settings.time_core_count,settings.notification_resilience);
 		mem->load(ram_objects.as_std());
-		mem->start();
+		uint64	starting_time=mem->start();
 		
-		uint32	sleep_duration=1000;
-		std::cout<<"\nSleeping "<<sleep_duration<<" ms"<<std::endl;
-		Thread::Sleep(sleep_duration);
+		std::cout<<"\nRunning for "<<settings.run_time<<" ms"<<std::endl;
+		Thread::Sleep(settings.run_time);
 
 		//TimeProbe	probe;
 		//probe.set();
@@ -146,7 +151,10 @@ int32	main(int	argc,char	**argv){
 #ifdef	WRITE_IMAGE_TO_FILE
 		write_to_file(image);
 #endif
-		decompile(decompiler,image);
+		if(settings.decompile_timestamps==Settings::TS_RELATIVE)	
+			decompile(decompiler,image,starting_time);
+		else
+			decompile(decompiler,image,0);
 		delete	image;
 
 		//std::cout<<"getImage(): "<<probe.us()<<"us"<<std::endl;

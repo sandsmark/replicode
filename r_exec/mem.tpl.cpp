@@ -198,7 +198,8 @@ namespace	r_exec{
 		image->timestamp=Now();
 		std::list<Code	*>::const_iterator	i;
 		for(i=objects.begin();i!=objects.end();++i)
-			image->operator	<<(*i);
+			if(!(*i)->is_invalidated())
+				image->operator	<<(*i);
 		return	image;
 	}
 

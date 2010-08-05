@@ -51,6 +51,8 @@ namespace	r_comp{
 		r_comp::Metadata	*metadata;
 		r_comp::Image		*image;
 
+		uint64	time_offset;
+
 		UNORDERED_MAP<uint16,std::string>	variable_names;				//	in the form vxxx where xxx is an integer representing the order of referencing of the variable/label in the code
 		std::string	get_variable_name(uint16	index,bool	postfix);	//	associates iptr/vptr indexes to names; inserts them in out_stream if necessary; when postfix==true, a trailing ':' is added
 
@@ -63,16 +65,16 @@ namespace	r_comp{
 		void	write_expression_tail(uint16	read_index,bool	vertical=false);	//	decodes the elements of an expression following the head
 		void	write_expression(uint16	read_index);
 		void	write_set(uint16	read_index);
-		void	write_any(uint16	read_index,bool	&after_tail_wildcard);	//	decodes any element in an expression or a set
+		void	write_any(uint16	read_index,bool	&after_tail_wildcard,bool	apply_time_offset=false);	//	decodes any element in an expression or a set
 	public:
 		Decompiler();
 		~Decompiler();
 
 		void	init(r_comp::Metadata	*metadata);
-		void	decompile(r_comp::Image	*image,std::ostringstream	*stream);					//	decompiles the whole image.
-		uint32	decompile_references(r_comp::Image	*image);									//	initialize a reference table so that objects can be decompiled individually; returns the number of objects.
-		void	decompile_object(uint16	object_index,std::ostringstream	*stream);				//	decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
-		void	decompile_object(const	std::string	object_name,std::ostringstream	*stream);	//	decompiles a single object given its name: use this function to follow references.
+		uint32	decompile(r_comp::Image	*image,std::ostringstream	*stream,uint64	time_offset);	//	decompiles the whole image; returns the number of objects.
+		uint32	decompile_references(r_comp::Image	*image);										//	initialize a reference table so that objects can be decompiled individually; returns the number of objects.
+		void	decompile_object(uint16	object_index,std::ostringstream	*stream);					//	decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
+		void	decompile_object(const	std::string	object_name,std::ostringstream	*stream);		//	decompiles a single object given its name: use this function to follow references.
 	};
 }
 

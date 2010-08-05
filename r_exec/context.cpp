@@ -39,7 +39,8 @@ using	namespace	r_code;
 namespace	r_exec{
 
 	bool	Context::operator	==(const	Context	&c)	const{
-
+//c.trace();
+//this->trace();
 		Context	lhs=**this;
 		Context	rhs=*c;
 
@@ -63,7 +64,8 @@ namespace	r_exec{
 	}
 
 	bool	Context::match(const	Context	&input)	const{
-
+//input.trace();
+//this->trace();
 		if(data==REFERENCE	&&	index==0	&&
 			input.data==REFERENCE	&&	input.index==0)	//	both point to an object's head, not one of its members.
 			return	object==input.object;
@@ -114,12 +116,9 @@ namespace	r_exec{
 
 	Context	Context::operator	*()	const{
 
-		if(data==REFERENCE	||	data==VALUE_ARRAY)
-			return	*this;
-
 		switch((*this)[0].getDescriptor()){
 		case	Atom::VL_PTR:{	//	evaluate the code if necessary.
-			//	TODO. if not in a cptr and if this eventually points to an r-ptr or in-obj-ptr,
+			//	TODO: OPTIMIZATION: if not in a cptr and if this eventually points to an r-ptr or in-obj-ptr,
 			//	patch the code at this->index, i.e. replace the vl ptr by the in-obj-ptr or rptr.
 			Atom	a=code[(*this)[0].asIndex()];
 			uint16	structure_index;
@@ -143,7 +142,7 @@ namespace	r_exec{
 			return	Context(o,NULL,&o->code(0),0,NULL,REFERENCE);
 		}case	Atom::C_PTR:{
 			
-			Context	c=getChild(1);
+			Context	c=*getChild(1);
 			for(uint16	i=2;i<=getChildrenCount();++i){
 
 				switch((*this)[i].getDescriptor()){
@@ -178,7 +177,7 @@ namespace	r_exec{
 		case	Atom::VALUE_PTR:
 			return	Context(object,view,&overlay->values[0],(*this)[0].asIndex(),overlay,VALUE_ARRAY);
 		case	Atom::IPGM_PTR:
-			return	Context(overlay->getIPGM(),(*this)[0].asIndex());
+			return	*Context(overlay->getIPGM(),(*this)[0].asIndex());
 		case	Atom::IN_OBJ_PTR:{
 			Code	*input_object=((IOverlay	*)overlay)->getInputObject((*this)[0].asInputIndex());
 			View	*input_view=(r_exec::View*)((IOverlay	*)overlay)->getInputView((*this)[0].asInputIndex());
@@ -191,6 +190,9 @@ namespace	r_exec{
 	}
 
 	bool	Context::evaluate_no_dereference(uint16	&result_index)	const{
+
+		if(data==REFERENCE	||	data==VALUE_ARRAY)
+			return	true;
 
 		switch(data){
 		case	UNDEFINED:
@@ -245,6 +247,9 @@ namespace	r_exec{
 
 	inline	bool	Context::evaluate(uint16	&result_index)	const{
 
+		if(data==REFERENCE	||	data==VALUE_ARRAY)
+			return	true;
+
 		Context	c=**this;
 		return	c.evaluate_no_dereference(result_index);
 	}
@@ -269,6 +274,15 @@ namespace	r_exec{
 			for(uint16	i=1;i<=atom_count;++i)
 				overlay->values[write_index++]=code[index+i];
 			break;
+		case	Atom::C_PTR:
+			if(!dereference_cptr){
+
+				copy_member_to_value_array(1,prefix,write_index++,extent_index,false);
+				for(uint16	i=2;i<=atom_count;++i)
+					overlay->values[write_index++]=code[index+i];
+				//Atom::Trace(&overlay->values[0],overlay->values.size());
+				break;
+			}	//	else, dereference the c_ptr.
 		default:
 			if(is_mod_or_set()){
 
@@ -347,7 +361,7 @@ dereference:
 			member_index=0;
 			return;
 		}
-//cptr.trace();
+
 		Context	c=*cptr.getChild(1);	//	this, vl_ptr, value_ptr or rptr.
 		uint16	atom_count=cptr.getChildrenCount();
 		for(uint16	i=2;i<atom_count;++i){	//	stop before the last iptr.

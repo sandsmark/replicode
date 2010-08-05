@@ -139,7 +139,7 @@ namespace	r_exec{
 
 	float32	View::update_res(){
 
-		if(res_changes){
+		if(res_changes>0	&&	acc_res!=0){
 
 			float32	new_res=get_res()+(float32)acc_res/(float32)res_changes;
 			if(new_res<0)
@@ -153,7 +153,7 @@ namespace	r_exec{
 
 	float32	View::update_sln(float32	low,float32	high){
 
-		if(sln_changes){
+		if(sln_changes>0	&&	acc_sln!=0){
 
 			float32	new_sln=get_sln()+acc_sln/sln_changes;
 			if(new_sln<0)
@@ -195,7 +195,7 @@ namespace	r_exec{
 
 	float32	View::update_vis(){
 
-		if(act_vis_changes){
+		if(act_vis_changes>0	&&	acc_act_vis!=0){
 
 			float32	new_act_vis=get_act_vis()+acc_act_vis/act_vis_changes;
 			if(new_act_vis<0)

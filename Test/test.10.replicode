@@ -1,0 +1,26 @@
+;hello world.
+;pgm with no input will fire each time the tsc expires.
+
+hw:(pgm
+|[]
+|[]
+[]
+   (inj []
+      (str "Hello World" 1)
+      [now 1 forever root nil]
+   )
+   (set [this.vw.act 0]); deactivate the ipgm so that the pgm runs only once.
+100000us
+1
+1
+)
+|[]
+
+
+ihw:(ipgm
+hw; code
+|[]; args
+1
+)
+[]
+   [now 1 forever root nil 1]

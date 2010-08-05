@@ -277,6 +277,7 @@ namespace	r_exec{
 
 		Context	operator	*()	const;
 		void	dereference_once();
+		
 		bool	is_reference()	const{	return	data==REFERENCE;	}
 		bool	is_undefined()	const{	return	data==UNDEFINED;	}
 

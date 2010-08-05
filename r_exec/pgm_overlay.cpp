@@ -432,7 +432,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_RDX_ARITY+1;
 
-		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());//controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
+		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -504,6 +504,7 @@ namespace	r_exec{
 		Overlay::reset();
 		patch_indices.clear();
 		input_views.clear();
+		init();
 	}
 
 	void	IOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){	//	patch recursively : in pgm_code[index] with IN_OBJ_PTRs until ::.
@@ -523,10 +524,10 @@ namespace	r_exec{
 				break;
 			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
 				return;
-			case	Atom::I_PTR:
+			/*case	Atom::I_PTR:
 				patch_input_code(pgm_code[skel_index+j].asIndex(),input_index,getInputObject(input_index)->code(skel_index+j).asIndex());
 				patch_indices.push_back(skel_index+j);
-				break;
+				break;*/
 			default:	//	leave as is.
 				break;
 			}
@@ -614,7 +615,8 @@ namespace	r_exec{
 	}
 
 	inline	IOverlay::MatchResult	IOverlay::__match(r_exec::View	*input,uint16	pattern_index){
-
+//Atom::Trace(pgm_code,getIPGM()->get_reference(0)->code_size());
+//input->object->trace();
 		patch_input_code(pattern_index,input_views.size()-1,0);	//	the input has just been pushed on input_views (see match).
 //Atom::Trace(pgm_code,getIPGM()->get_reference(0)->code_size());
 //input->object->trace();
@@ -650,7 +652,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_RDX_ARITY+1;
 
-		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());//controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
+		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -713,7 +715,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_ANTI_RDX_ARITY+1;
 
-		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());//controller->get_mem()->buildObject(Atom::Marker(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY));
+		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -760,6 +762,7 @@ namespace	r_exec{
 
 		Overlay	*o=*overlays.begin();
 		o->inject_productions(mem,NULL);
+		o->reset();
 
 		Group	*host=getIPGMView()->get_host();
 		host->enter();

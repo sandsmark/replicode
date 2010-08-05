@@ -29,6 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"decompiler.h"
+#include	"../CoreLibrary/utils.h"
 
 
 namespace	r_comp{
@@ -79,25 +80,36 @@ namespace	r_comp{
 	void	Decompiler::init(r_comp::Metadata	*metadata){
 
 		this->metadata=metadata;
+		this->time_offset=0;
 	}
 
-	void	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream){
+	uint32	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream,uint64	time_offset){
 
-		decompile_references(image);
+		this->time_offset=time_offset;
+
+		uint32	object_count=decompile_references(image);
 
 		for(uint16	i=0;i<image->code_segment.objects.size();++i)
 			decompile_object(i,stream);
+
+		return	object_count;
 	}
 
 	uint32	Decompiler::decompile_references(r_comp::Image	*image){
 
-		uint32		last_object_ID=0;
+		UNORDERED_MAP<const	Class	*,uint16>	object_ID_per_class;
+		UNORDERED_MAP<std::string,Class>::const_iterator	it;
+		for(it=metadata->sys_classes.begin();it!=metadata->sys_classes.end();++it)
+			object_ID_per_class[&(it->second)]=0;
+
 		char		buffer[255];
 		std::string	s;
 
 		this->image=image;
 
 		//	populate object names first so they can be referenced in any order.
+		Class	*c;
+		uint16	last_object_ID;
 		for(uint16	i=0;i<image->code_segment.objects.size();++i){
 
 			SysObject	*sys_object=(SysObject	*)image->code_segment.objects[i];
@@ -107,8 +119,11 @@ namespace	r_comp{
 			case	SysObject::STDOUT_GRP:	s="stdout";break;
 			case	SysObject::SELF_ENT:	s="self";break;
 			default:
-				sprintf(buffer,"%d",last_object_ID++);
-				s=metadata->getClass(sys_object->code[0].asOpcode())->str_opcode;
+				c=metadata->getClass(sys_object->code[0].asOpcode());
+				last_object_ID=object_ID_per_class[c];
+				object_ID_per_class[c]=last_object_ID+1;
+				sprintf(buffer,"%d",last_object_ID);
+				s=c->str_opcode;
 				s+=buffer;
 				break;
 			}
@@ -164,7 +179,7 @@ namespace	r_comp{
 				uint16	arity=current_object->code[0].getAtomCount();
 				for(uint16	j=1;j<=arity;++j){
 
-					write_any(read_index+j,after_tail_wildcard);
+					write_any(read_index+j,after_tail_wildcard,true);
 					if(j<arity)
 						*out_stream<<" ";
 				}
@@ -280,7 +295,7 @@ namespace	r_comp{
 		}
 	}
 
-	void	Decompiler::write_any(uint16	read_index,bool	&after_tail_wildcard){	//	after_tail_wildcard meant to avoid printing ':' after "::".
+	void	Decompiler::write_any(uint16	read_index,bool	&after_tail_wildcard,bool	apply_time_offset){	//	after_tail_wildcard meant to avoid printing ':' after "::".
 
 		Atom	a=current_object->code[read_index];
 
@@ -351,13 +366,9 @@ namespace	r_comp{
 				else{
 
 					uint64	ts=((uint64)(current_object->code[index+1].atom))<<32	|	((uint64)(current_object->code[index+2].atom));
-					uint64	us=ts%1000;
-					uint64	ms=ts/1000;
-					uint64	s=ms/1000;
-					ms=ms%1000;
-					*out_stream<<std::dec;
-					out_stream->push(s,read_index);
-					*out_stream<<":"<<ms<<":"<<us<<"us";
+					if(apply_time_offset)
+						ts-=time_offset;
+					out_stream->push(Time::ToString_seconds(ts),read_index);
 				}
 				break;
 			case	Atom::C_PTR:{

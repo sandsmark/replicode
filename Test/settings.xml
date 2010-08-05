@@ -1,0 +1,34 @@
+<TestConfiguration>
+
+  <Parameters
+    base_period="100000"
+	  reduction_core_count="1"
+	  time_core_count="1"
+  	notification_resilience="1000"
+    
+	  run_time="1000"
+    
+    decompile_timestamps="relative"
+    
+    usr_operator_path="C:/Work/Replicode/Debug/usr_operators.dll"
+    usr_class_path="C:/Work/Replicode/Test/user.classes.replicode"
+    source_file_name="C:/Work/Replicode/Test/test.9.replicode"
+  />
+  
+</TestConfiguration>
+
+<!--Usage
+
+base_period: in us.
+
+reduction_core_count: number of threads processing reduction jobs.
+
+time_core_count: number of thread processing update jobs.
+
+notification_resilience: in upr (i.e. relative to the ntf group). For debugging only - otherwise shall be 1.
+
+run_time: in ms.
+
+decompile_timestamps: either "relative" or "absolute". When "relative", views' ijt are displayed as offsets from mem->start().
+
+-->

@@ -25,6 +25,7 @@ P1:(pgm
       (ptn in:(ent ::) []
          (> in.vw.res 2)
          (< in.psln_thr 1)
+         v#view:(fvw in root)
          (red in.mks []
             (ptn m: [mkv#view:(fvw m root) (> mkv.sln 0)])
             [m]
@@ -34,7 +35,6 @@ P1:(pgm
       (ptn pos:(ent psln:) [(= psln 1)])
    |[]
    []
-      v#view:(fvw in root)
       (= v.res pos.vw.res)
 []; productions
    (inj [(mk.val in pos vec 0) [now v.sln forever stdout nil]])
@@ -57,4 +57,4 @@ P1; code
 )
 
 []
-   [now 0 forever root nil 1]
+   [now 0.5 forever root nil 1]

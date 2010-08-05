@@ -1,9 +1,26 @@
-pos1:(mk.val
-self
-position
-(vec3 0 0 0)
-1; psln_thr
-)
+;using tpl args for matching and production
 
+s1:(str "qwerty" 1)
 []
-   [now 0.9 forever stdin nil]
+   [now 1 forever root nil]
+
+P1:(pgm
+[]
+   (ptn tgv:(tagged_v vec: s:) |[])
+[]
+   []
+      (ptn (str tgv.string ::) |[])
+   |[]
+   |[]
+[]
+   (inj [(mk.val self position tgv.vector 1) [now 1 forever root nil]])
+   (inj [(mk.val self position (vec3 tgv.vector.x vec.y 256) 1) [now 1 forever root nil]])
+0us
+1
+1
+)
+|[]
+
+iP1:(ipgm P1 [(tagged_v (vec3 1 2 3) "qwerty")] 1)
+[]
+   [now 1 forever root nil 1]

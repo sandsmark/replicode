@@ -12,7 +12,7 @@ P1:(|pgm
 []
    (inj [(ent 1) [now 1 forever stdout nil]])
 100000us; tsc
-0; nfr
+1; nfr
 1; psln_thr
 )
 

@@ -74,7 +74,7 @@ namespace	r_exec{
 	template<class	C,class	U>	float32	Object<C,U>::get_psln_thr(){
 
 		psln_thr_sem.enter();
-		float32	r=code(code_size()-1).asFloat();	//	psln is always the lat atom in code.
+		float32	r=code(code(0).getAtomCount()).asFloat();	//	psln is always the last member of an object.
 		psln_thr_sem.leave();
 		return	r;
 	}

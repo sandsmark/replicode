@@ -62,7 +62,10 @@ namespace	r_exec{
 
 	bool	equ(const	Context	&context,uint16	&index){
 
-		bool	r=*context.getChild(1)==*context.getChild(2);
+		Context	lhs=*context.getChild(1);
+		Context	rhs=*context.getChild(2);
+
+		bool	r=(lhs==rhs);
 		index=context.setAtomicResult(Atom::Boolean(r));
 		return	r;
 	}
@@ -653,6 +656,7 @@ build_productions:
 		for(uint16	i=1;i<=production_count;++i){
 
 			Context	prod=productions.getChild(i);
+//prod.trace();
 			prod.evaluate(unused_index);
 			prod.copy_to_value_array(production_index);
 			production_indices.push_back(production_index);

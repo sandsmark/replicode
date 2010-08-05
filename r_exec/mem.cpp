@@ -110,12 +110,12 @@ namespace	r_exec{
 	}
 
 	void	_Mem::start_core(){
-
+++CoreCount;
 		stop_sem->acquire(0);
 	}
 
 	void	_Mem::shutdown_core(){
-
+--CoreCount;
 		stop_sem->release();
 	}
 
@@ -135,11 +135,11 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	void	_Mem::start(){
+	uint64	_Mem::start(){
 
 		if(state!=STOPPED	&&	state!=NOT_STARTED)
-			return;
-
+			return	0;
+CoreCount=0;
 		suspension_lock=new	Event();
 		stop_sem=new	Semaphore(1,1);
 		suspend_sem=new	Semaphore(1,1);
@@ -207,15 +207,17 @@ namespace	r_exec{
 		state=RUNNING;
 
 		for(i=0;i<reduction_core_count;++i){
-
+++CoreCount;
 			stop_sem->acquire(0);
 			reduction_cores[i]->start(ReductionCore::Run);
 		}
 		for(i=0;i<time_core_count;++i){
-
+++CoreCount;
 			stop_sem->acquire(0);
 			time_cores[i]->start(TimeCore::Run);
 		}
+
+		return	now;
 	}
 
 	void	_Mem::stop(){
@@ -239,6 +241,13 @@ namespace	r_exec{
 
 		Thread::Sleep(200);
 		stop_sem->acquire();	//	wait for the cores and delegates to terminate.
+		
+		if(CoreCount){	//	HACK: at this point, CoreCount shall be 0. BUG: sometimes it's not: a delegate is still waiting on timer.
+
+			for(uint32	i=0;i<CoreCount;++i)
+				stop_sem->acquire(0);
+			stop_sem->acquire();
+		}
 
 		reset();
 	}
@@ -561,7 +570,7 @@ namespace	r_exec{
 					P<TimeJob>	j=new	AntiPGMSignalingJob((AntiPGMController	*)group->new_controllers[i],now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
 					time_job_queue->push(j);
 					break;
-				}case	ObjectType::INPUT_LESS_IPGM:{	//	inject a signaling job for an input-less pgm (sfr).
+				}case	ObjectType::INPUT_LESS_IPGM:{	//	inject a signaling job for an input-less pgm.
 
 					P<TimeJob>	j=new	InputLessPGMSignalingJob((InputLessPGMController	*)group->new_controllers[i],now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
 					time_job_queue->push(j);
@@ -590,7 +599,7 @@ namespace	r_exec{
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(host,v)
 
 				if(v->second->get_act_vis()>host->get_sln_thr())	//	active ipgm view.
-					((_PGMController	*)v->second->controller)->take_input(view,origin);		//	view will be copied.
+					((_PGMController	*)v->second->controller)->take_input(view,origin);	//	view will be copied.
 
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
 		}
@@ -607,7 +616,7 @@ namespace	r_exec{
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
 
 				if(v->second->get_act_vis()>vg->first->get_sln_thr())	//	active ipgm view.
-					((_PGMController	*)v->second->controller)->take_input(view,origin);			//	view will be copied.
+					((_PGMController	*)v->second->controller)->take_input(view,origin);	//	view will be copied.
 			
 			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
 		}
@@ -617,7 +626,7 @@ namespace	r_exec{
 
 		//	apply morphed change to views.
 		//	loops are prevented within one call, but not accross several upr:
-		//		- feedback can happen, i.e. m:(mk o1 o2); o1.vw.g propag -> o1 propag ->m propag -> o2 propag o2.vw.g, next upr in g, o2 propag -> m propag -> o1 propag -> o1,vw.g: loop spreding accross several upr.
+		//		- feedback can happen, i.e. m:(mk o1 o2); o1.vw.g propag -> o1 propag ->m propag -> o2 propag o2.vw.g, next upr in g, o2 propag -> m propag -> o1 propag -> o1,vw.g: loop spreading accross several upr.
 		//		- to avoid this, have the psln_thr set to 1 in o2: this is applicaton-dependent.
 		object->acq_views();
 

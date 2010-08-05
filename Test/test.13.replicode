@@ -1,0 +1,62 @@
+;matching on strings
+
+s1:(str "qwerty" 1)
+[]
+   [now 1 forever root nil]
+
+P1:(pgm
+|[]
+[]
+   []
+      (ptn s:(str "qwerty" ::) |[])
+   |[]
+   |[]
+[]
+   (inj [(mk.val self position (vec3 1 2 3) 1) [now 1 forever root nil]])
+0us
+1
+1
+)
+|[]
+
+iP1:(ipgm P1 |[] 1)
+[]
+   [now 1 forever root nil 1]
+
+P2:(pgm
+|[]
+[]
+   []
+      (ptn s:(str ::) [(= s.s "qwerty")])
+   |[]
+   |[]
+[]
+   (inj [(mk.val self position (vec3 4 5 6) 1) [now 1 forever root nil]])
+0us
+1
+1
+)
+|[]
+
+iP2:(ipgm P2 |[] 1)
+[]
+   [now 1 forever root nil 1]
+
+P3:(pgm
+|[]
+[]
+   []
+      (ptn s:(str x: ::) [(= x "qwerty")])
+   |[]
+   |[]
+[]
+   (inj [(mk.val self position (vec3 7 8 9) 1) [now 1 forever root nil]])
+0us
+1
+1
+)
+|[]
+
+iP3:(ipgm P3 |[] 1)
+[]
+   [now 1 forever root nil 1]

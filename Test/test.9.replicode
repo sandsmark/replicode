@@ -28,8 +28,8 @@ P1:(|pgm
    |[]
 []
    (inj [(ent 1) [now 1 10 root nil]])
-   (inj [(ins P0 |[]) [now 0 40 root nil 1])
-   (set [this.act 0])
+   (inj [(ins P0 |[]) [now 0 40 root nil 1]])
+   (set [this.vw.act 0])
 200000us; tsc
 1; nfr
 1; psln_thr

@@ -76,7 +76,7 @@ namespace	r_exec{
 		ReductionCore	**reduction_cores;
 		uint32			time_core_count;
 		TimeCore		**time_cores;
-
+uint32	CoreCount;
 		typedef	enum{
 			NOT_STARTED=0,
 			RUNNING=1,
@@ -129,8 +129,8 @@ namespace	r_exec{
 		void	shutdown_core();	//	called upon completion of a delegate's task.
 		bool	suspend_core();		//	called by cores upon receiving a suspend job.
 
-		void	start();
-		void	stop();	//	after stop() the content is cleared and one has to call load() and start() again.
+		uint64	start();	//	return the starting time.
+		void	stop();		//	after stop() the content is cleared and one has to call load() and start() again.
 		void	suspend();
 		void	resume();
 

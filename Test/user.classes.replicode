@@ -9,6 +9,10 @@
 
 !class (tagged_v vector:vec3 string:st)
 
+!class (string (_obj {s:st id:us}))
+!class (str (_obj s:st))
+!class (counter (_obj value:nb))
+
 !dfn (sample_io_start :nb)
 !dfn (sample_io_stop)
 
@@ -47,7 +51,7 @@ nil; ntf_grp
 )
 
 []
-   [now 1 forever nil nil 0 0]
+   [now 0 forever nil nil 0 0]
 
 g1:(grp
 1; upr
@@ -166,11 +170,11 @@ self:(ent
 )
 
 []
-   [now 0.84 forever root nil]
+   [now 0.01 forever root nil]
 
 position:(ent
 1; psln_thr
 )
 
 []
-   [now 1 forever root nil]
+   [now 0 forever root nil]
