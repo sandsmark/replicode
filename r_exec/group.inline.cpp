@@ -463,6 +463,7 @@ namespace	r_exec{
 			return;
 		case	GRP_NTF_NEW:
 		case	GRP_DCY_TGT:
+		case	GRP_DCY_AUTO:
 			_set_0_1(member_index,value);
 			return;
 		}

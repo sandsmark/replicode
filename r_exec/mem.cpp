@@ -339,6 +339,8 @@ CoreCount=0;
 		if(lock)
 			host->enter();
 
+		bool	reduce_view=false;
+
 		object->acq_views();
 		View	*existing_view=(View	*)object->find_view(host,false);
 		if(!existing_view){	//	no existing view: add the view to the group and to the object's view_map.
@@ -361,6 +363,8 @@ CoreCount=0;
 
 			object->views.insert(view);
 			object->rel_views();
+
+			reduce_view=view->get_sln()>host->get_sln_thr();
 		}else{	//	call set on the ctrl values of the existing view with the new view's ctrl values. NB: org left unchanged.
 
 			object->rel_views();
@@ -374,7 +378,17 @@ CoreCount=0;
 				host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),IPGM_VIEW_ACT,view->get_act_vis()));
 				break;
 			}
+
+			bool	wiew_was_salient=existing_view->get_sln()>host->get_sln_thr();
+			bool	wiew_is_salient=view->get_sln()>host->get_sln_thr();
+			reduce_view=(!wiew_was_salient	&&	wiew_is_salient);
 		}
+
+		//	give a chance to ipgms to reduce the new view.
+		bool	group_is_c_active=host->update_c_act()>host->get_c_act_thr();
+		bool	group_is_c_salient=host->update_c_sln()>host->get_c_sln_thr();
+		if(group_is_c_active	&&	group_is_c_salient	&&	reduce_view)
+			_inject_reduction_jobs(view,host);
 
 		if(lock)
 			host->leave();

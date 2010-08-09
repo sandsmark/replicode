@@ -37,6 +37,7 @@ P1:(pgm
       0; dcy_per
       0; dcy_tgt
       1; dcy_prd
+      0; dcy_auto
       1; sln_chg_thr
       1; sln_chg_prd
       1; act_chg_thr

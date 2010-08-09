@@ -28,6 +28,7 @@ root:(grp
 0; dcy_per
 0; dcy_tgt
 1; dcy_prd
+0; dcy_auto
 1; sln_chg_thr
 1; sln_chg_prd
 1; act_chg_thr
@@ -65,6 +66,7 @@ g1:(grp
 -0.2; dcy_per
 0; dcy_tgt
 0; dcy_prd
+0; dcy_auto
 1; sln_chg_thr
 2; sln_chg_prd
 1; act_chg_thr
@@ -99,9 +101,10 @@ stdin:(grp
 0; c_sln_thr
 1; c_act
 0; c_act_thr
--0.2; dcy_per
+0; dcy_per
 1; dcy_tgt
-2; dcy_prd
+0; dcy_prd
+0; dcy_auto
 1; sln_chg_thr
 1; sln_chg_prd
 1; act_chg_thr
@@ -140,6 +143,7 @@ stdout:(grp
 0; dcy_per
 0; dcy_tgt
 1; dcy_prd
+0; dcy_auto
 1; sln_chg_thr
 1; sln_chg_prd
 1; act_chg_thr

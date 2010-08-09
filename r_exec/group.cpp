@@ -112,6 +112,14 @@ namespace	r_exec{
 
 		if(decay_periods_to_go>0)
 			--decay_periods_to_go;
+		
+		//	auto restart: iff dcy_auto==1.
+		if(code(GRP_DCY_AUTO).asFloat()){
+
+			float32	period=code(GRP_DCY_PRD).asFloat();
+			if(decay_periods_to_go<=0	&&	period>0)
+				decay_periods_to_go=period;
+		}
 
 		if(sln_updates)
 			avg_sln=avg_sln/(float32)sln_updates;
