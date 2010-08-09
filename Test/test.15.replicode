@@ -3,6 +3,7 @@
 ;have the target group apply a decay on the sln of its members
 ;so that the new view on "beep" will gain saliency.
 ;to check: a pgm that catches the "beep".
+;warning: decay is not restarted after decy_prd, so "beep" will be caught only 2 times in this example.
 
 target_grp:(grp
 1; upr
@@ -13,7 +14,7 @@ target_grp:(grp
 0; c_sln_thr
 1; c_act
 0; c_act_thr
--0.5; dcy_per (decay percentage)
+-1; dcy_per (decay percentage)
 0; dcy_tgt (decay target): 0=member's sln, 1=group's sln_thr
 1; dcy_prd (decay period) as a multiple of upr
 1; sln_chg_thr
