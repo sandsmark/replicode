@@ -179,7 +179,7 @@ namespace	r_comp{
 				uint16	arity=current_object->code[0].getAtomCount();
 				for(uint16	j=1;j<=arity;++j){
 
-					write_any(read_index+j,after_tail_wildcard,true);
+					write_any(read_index+j,after_tail_wildcard);
 					if(j<arity)
 						*out_stream<<" ";
 				}
@@ -295,7 +295,7 @@ namespace	r_comp{
 		}
 	}
 
-	void	Decompiler::write_any(uint16	read_index,bool	&after_tail_wildcard,bool	apply_time_offset){	//	after_tail_wildcard meant to avoid printing ':' after "::".
+	void	Decompiler::write_any(uint16	read_index,bool	&after_tail_wildcard){	//	after_tail_wildcard meant to avoid printing ':' after "::".
 
 		Atom	a=current_object->code[read_index];
 
@@ -366,8 +366,7 @@ namespace	r_comp{
 				else{
 
 					uint64	ts=((uint64)(current_object->code[index+1].atom))<<32	|	((uint64)(current_object->code[index+2].atom));
-					if(apply_time_offset)
-						ts-=time_offset;
+					ts-=time_offset;
 					out_stream->push(Time::ToString_seconds(ts),read_index);
 				}
 				break;

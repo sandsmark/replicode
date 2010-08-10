@@ -1,10 +1,13 @@
+;demonstrates the matching on 2 objects.
+;demonstrates the use of the red operator.
+;deonstrates the mod function.
+
 mk.val1:(mk.val
 self
 position
 (vec3 0 0 0)
 0
 )
-
 []
    [now 0.1 forever root nil]
 
@@ -13,7 +16,6 @@ self
 "tag on self"
 1
 )
-
 []
    [now 0.1 forever root nil]
 
@@ -46,7 +48,6 @@ P1:(pgm
 1; nfr
 0; psln_thr
 )
-
 |[]
 
 iP1:(ipgm
@@ -55,6 +56,5 @@ P1; code
    (tagged_v (vec3 1 2 3) "vector 123")
 0; psln_thr
 )
-
 []
    [now 0.5 forever root nil 1]

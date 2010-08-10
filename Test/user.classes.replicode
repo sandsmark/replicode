@@ -174,11 +174,11 @@ self:(ent
 )
 
 []
-   [now 0.01 forever root nil]
+   [now 0.6 forever root nil]
 
 position:(ent
 1; psln_thr
 )
 
 []
-   [now 0 forever root nil]
+   [now 1 forever root nil]
