@@ -12,7 +12,7 @@
     
     usr_operator_path="C:/Work/Replicode/Debug/usr_operators.dll"
     usr_class_path="C:/Work/Replicode/Test/user.classes.replicode"
-    source_file_name="C:/Work/Replicode/Test/test.9.replicode"
+    source_file_name="C:/Work/Replicode/Test/test.2.replicode"
   />
   
 </TestConfiguration>
@@ -29,6 +29,6 @@ notification_resilience: in upr (i.e. relative to the ntf group). For debugging 
 
 run_time: in ms.
 
-decompile_timestamps: either "relative" or "absolute". When "relative", views' ijt are displayed as offsets from mem->start().
+decompile_timestamps: either "relative" or "absolute". When "relative", timestamps are displayed as offsets from mem->start().
 
 -->

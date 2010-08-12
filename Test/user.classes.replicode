@@ -12,6 +12,8 @@
 !class (string (_obj {s:st id:us}))
 !class (str (_obj s:st))
 !class (counter (_obj value:nb))
+!class (Ping (_obj {object:}))
+!class (Pong (_obj {object:}))
 
 !dfn (sample_io_start :nb)
 !dfn (sample_io_stop)
@@ -94,7 +96,7 @@ nil; ntf_grp
 
 stdin:(grp
 1; upr
-1; sln_thr
+0; sln_thr
 0; act_thr
 0; vis_thr
 1; c_sln

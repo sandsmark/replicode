@@ -441,4 +441,39 @@ dereference:
 			std::cout<<std::endl;
 		}
 	}
+
+	uint16	Context::setAtomicResult(Atom	a)		const{	//	patch code with 32 bits data.
+			
+			overlay->patch_code(index,a);
+			return	index;
+		}
+
+	uint16	Context::setTimestampResult(uint64	t)	const{	//	patch code with a VALUE_PTR
+			
+		overlay->patch_code(index,Atom::ValuePointer(overlay->values.size()));
+		overlay->values.as_std()->resize(overlay->values.size()+3);
+		uint16	value_index=overlay->values.size()-3;
+		Timestamp::Set(&overlay->values[value_index],t);
+		return	value_index;
+	}
+
+	uint16	Context::setCompoundResultHead(Atom	a)	const{	//	patch code with a VALUE_PTR.
+		
+		uint16	value_index=overlay->values.size();
+		overlay->patch_code(index,Atom::ValuePointer(value_index));
+		addCompoundResultPart(a);
+		return	value_index;
+	}
+
+	uint16	Context::addCompoundResultPart(Atom	a)	const{	//	store result in the value array.
+		
+		overlay->values.push_back(a);
+		return	overlay->values.size()-1;
+	}
+
+	uint16	Context::addProduction(Code	*object)	const{
+		
+		overlay->productions.push_back(object);
+		return	overlay->productions.size()-1;
+	}
 }

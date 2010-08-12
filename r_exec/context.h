@@ -289,40 +289,12 @@ namespace	r_exec{
 		uint16	get_last_patch_index()	const{	return	overlay->get_last_patch_index();	}
 		void	unpatch_code(uint16	patch_index)	const{	overlay->unpatch_code(patch_index);	}
 
-		uint16	setAtomicResult(Atom	a)		const{	//	patch code with 32 bits data.
-			
-			overlay->patch_code(index,a);
-			return	index;
-		}
+		uint16	setAtomicResult(Atom	a)		const;
+		uint16	setTimestampResult(uint64	t)	const;
+		uint16	setCompoundResultHead(Atom	a)	const;
+		uint16	addCompoundResultPart(Atom	a)	const;
 
-		uint16	setTimestampResult(uint64	t)	const{	//	patch code with a VALUE_PTR
-			
-			overlay->patch_code(index,Atom::ValuePointer(overlay->values.size()));
-			overlay->values.as_std()->resize(overlay->values.size()+3);
-			uint16	value_index=overlay->values.size()-3;
-			Timestamp::Set(&overlay->values[value_index],t);
-			return	value_index;
-		}
-
-		uint16	setCompoundResultHead(Atom	a)	const{	//	patch code with a VALUE_PTR.
-			
-			uint16	value_index=overlay->values.size();
-			overlay->patch_code(index,Atom::ValuePointer(value_index));
-			addCompoundResultPart(a);
-			return	value_index;
-		}
-
-		uint16	addCompoundResultPart(Atom	a)	const{	//	store result in the value array.
-			
-			overlay->values.push_back(a);
-			return	overlay->values.size()-1;
-		}
-
-		uint16	addProduction(Code	*object)	const{
-			
-			overlay->productions.push_back(object);
-			return	overlay->productions.size()-1;
-		}
+		uint16	addProduction(Code	*object)	const;
 
 		template<class	C>	void	copy(C	*destination,uint16	write_index)	const{
 			

@@ -108,7 +108,12 @@ namespace	r_exec{
 		r_code::Code	*buildObject(Atom	head)	const;
 		uint64			now()	const;
 	};
-
+/*
+	r_exec_tpl	template	class	r_exec_dll	std::vector<Atom>;
+	r_exec_tpl	template	class	r_exec_dll	r_code::vector<Atom>;
+	r_exec_tpl	template	class	r_exec_dll	std::vector<P<Code> >;
+	r_exec_tpl	template	class	r_exec_dll	std::vector<uint16>;
+*/
 	//	Overlay with inputs.
 	//	Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
 	class	r_exec_dll	IOverlay:
