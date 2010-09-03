@@ -1,3 +1,5 @@
+;anti-program used in conjunction with regular programs and notifications
+
 P1:(|pgm
 []; tpl
    (ptn tgv:(tagged_v vec: :) |[])

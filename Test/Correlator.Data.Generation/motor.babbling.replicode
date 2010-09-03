@@ -1,0 +1,104 @@
+;motor babbling episode generation.
+;cup is grabbed (attached) and this is notified out-of-sync.
+;hand moves to several new positions every 100ms.
+;cup moves to the same positions at the same frequency with a
+;slight random delay (in [0,10ms[).
+;noise is injected randomly (using a pseudo random number generator).
+;N.B.: inputs are set with an infinite resilience to retain them
+;in memory for processing by the Correlator.
+
+_start:(pgm
+|[]
+|[]
+[]
+   (inj []
+      (mk.val self_hand position (vec3 0 0 0) 1)
+      [now 1 forever stdin nil]
+   )
+   (inj []
+      (noise (rnd 1000) 1)
+      [(+ now (rnd 10000)) 1 forever stdin nil]
+   )
+   (inj []
+      (mk.val self_hand attachment cup 1)
+      [(+ now (rnd 10000)) 1 forever stdin nil]
+   )
+90000us
+0
+1
+)
+|[]
+
+i_start:(ipgm _start |[] 1)
+[]
+   [now 1 1 root nil 1]
+
+pos_updater:(pgm
+|[]
+[]
+   []
+      (ptn (mk.val self_hand position pos: ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      (mk.val self_hand position p:(+ pos (vec3 0 0 0.1)) 1)
+      [t:(+ now 100000us) 1 forever stdin nil]
+   )
+   (inj []
+      (mk.val cup position p 1)
+      [(+ t (rnd 10000)) 1 forever stdin nil]
+   )
+0us
+0
+1
+)
+|[]
+
+i_pos_updater:(ipgm pos_updater |[] 1)
+[]
+   [now 1 forever stdin nil 1]
+
+noise_updater:(pgm
+|[]
+[]
+   []
+      (ptn (noise ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      (noise (rnd 1000) 1)
+      [(+ now (rnd 40000)) 1 forever stdin nil]
+   )
+0us
+0
+1
+)
+|[]
+
+i_noise_updater.(ipgm noise_updater |[] 1)
+[]
+   [now 1 forever stdin nil 1]
+
+grab_updater:(pgm
+|[]
+[]
+   []
+      (ptn m:(mk.val : attachment ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      m
+      [(+ now (rnd 50000)) 1 forever stdin nil]
+   )
+0us
+0
+1
+)
+|[]
+
+i_grab_updater:(ipgm grab_updater |[] 1)
+[]
+   [now 1 forever stdin nil 1]

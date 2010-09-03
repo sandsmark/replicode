@@ -1,3 +1,5 @@
+;demonstrates the use of red as productions
+
 mk.val1:(mk.val
 self
 position

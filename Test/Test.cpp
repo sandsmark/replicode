@@ -35,7 +35,6 @@
 #include	"settings.h"
 
 
-//#define	WRITE_IMAGE_TO_FILE
 //#define	DECOMPILE_ONE_BY_ONE
 
 using	namespace	r_comp;
@@ -57,7 +56,7 @@ void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
 			continue;
 		}
 		std::ostringstream	decompiled_code;
-		decompiler.decompile_object(index,&decompiled_code);
+		decompiler.decompile_object(index,&decompiled_code,time_offset);
 		std::cout<<"... done\n";
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 	}
@@ -72,36 +71,32 @@ void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
 #endif
 }
 
-void	write_to_file(r_comp::Image	*image){
+void	write_to_file(r_comp::Image	*image,std::string	&image_path,Decompiler	*decompiler,uint64	time_offset){
 
-	ofstream	output("c:/work/replicode/test/test.8.replicode.image",ios::binary|ios::out);
+	ofstream	output(image_path.c_str(),ios::binary|ios::out);
 	r_code::Image<ImageImpl>	*i=image->serialize<r_code::Image<ImageImpl> >();
 	r_code::Image<ImageImpl>::Write(i,output);
 	output.close();
-	//i->trace();
 	delete	i;
-/*
-	ifstream	input("c:/work/replicode/test/test.8.replicode.image",ios::binary|ios::in);
-	if(!input.good())
-		return;
 
-	r_code::Image<ImageImpl>	*img=(r_code::Image<ImageImpl>	*)r_code::Image<ImageImpl>::Read(input);
-	input.close();
+	if(decompiler){
 
-	//img->trace();
+		ifstream	input(image_path.c_str(),ios::binary|ios::in);
+		if(!input.good())
+			return;
 
-	r_code::vector<Code	*>	objects;
-	r_comp::Image			*_i=new	r_comp::Image();
-	_i->load(img);
+		r_code::Image<ImageImpl>	*img=(r_code::Image<ImageImpl>	*)r_code::Image<ImageImpl>::Read(input);
+		input.close();
 
-	std::ostringstream	decompiled_code;
-	r_comp::Decompiler	decompiler;
-	decompiler.init(&r_exec::Metadata);
-	decompiler.decompile(_i,&decompiled_code);
-	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
-	delete	_i;
+		r_code::vector<Code	*>	objects;
+		r_comp::Image			*_i=new	r_comp::Image();
+		_i->load(img);
 
-	delete	img;*/
+		decompile(*decompiler,_i,time_offset);
+		delete	_i;
+
+		delete	img;
+	}
 }
 
 int32	main(int	argc,char	**argv){
@@ -116,13 +111,16 @@ int32	main(int	argc,char	**argv){
 	r_exec::Init(settings.usr_operator_path.c_str(),Time::Get,settings.usr_class_path.c_str());
 	std::cout<<"... done\n";
 
+	srand(r_exec::Now());
+
 	std::string	error;
 	if(!r_exec::Compile(settings.source_file_name.c_str(),error)){
 
 		std::cerr<<" <- "<<error<<std::endl;
 		return	2;
 	}else{
-		Decompiler		decompiler;
+
+		Decompiler	decompiler;
 		decompiler.init(&r_exec::Metadata);
 
 		r_comp::Image	*image;
@@ -148,13 +146,12 @@ int32	main(int	argc,char	**argv){
 
 		//probe.check();
 		
-#ifdef	WRITE_IMAGE_TO_FILE
-		write_to_file(image);
-#endif
-		if(settings.decompile_timestamps==Settings::TS_RELATIVE)	
-			decompile(decompiler,image,starting_time);
-		else
-			decompile(decompiler,image,0);
+		if(settings.write_image)
+			write_to_file(image,settings.image_path,settings.test_image?&decompiler:NULL,settings.decompile_timestamps==Settings::TS_RELATIVE?starting_time:0);
+
+		if(!settings.write_image	||	!settings.test_image)
+			decompile(decompiler,image,settings.decompile_timestamps==Settings::TS_RELATIVE?starting_time:0);
+
 		delete	image;
 
 		//std::cout<<"getImage(): "<<probe.us()<<"us"<<std::endl;

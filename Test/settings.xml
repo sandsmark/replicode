@@ -11,8 +11,12 @@
     decompile_timestamps="relative"
     
     usr_operator_path="C:/Work/Replicode/Debug/usr_operators.dll"
-    usr_class_path="C:/Work/Replicode/Test/user.classes.replicode"
-    source_file_name="C:/Work/Replicode/Test/test.2.replicode"
+    usr_class_path="C:/Work/Replicode/Test/Correlator.Data.Generation/user.classes.replicode"
+    source_file_name="C:/Work/Replicode/Test/Correlator.Data.Generation/motor.babbling.replicode"
+    
+    write_image="yes"
+    image_path="C:/Work/Replicode/Test/Correlator.Data.Generation/motor.babbling.0.replicode.image"
+    test_image="yes"
   />
   
 </TestConfiguration>
@@ -30,5 +34,9 @@ notification_resilience: in upr (i.e. relative to the ntf group). For debugging 
 run_time: in ms.
 
 decompile_timestamps: either "relative" or "absolute". When "relative", timestamps are displayed as offsets from mem->start().
+
+write_image: yes or no.
+
+test_image: yes or no (yes: reads back and decompiles).
 
 -->

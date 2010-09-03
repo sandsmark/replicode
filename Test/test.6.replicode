@@ -1,3 +1,6 @@
+;demonstrates the use of red as productions
+;demonstrates the use of type resolution ("cast")
+
 mk.val1:(mk.val
 self
 position

@@ -38,6 +38,7 @@
 
 ;mapping operator opcodes -> r-atoms
 !op (_now):us
+!op (rnd :nb):nb
 !op (equ : :):
 !op (neq : :):
 !op (gtr : :):

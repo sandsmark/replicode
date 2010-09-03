@@ -68,6 +68,8 @@ namespace	r_exec{
 
 	bool	now(const	Context	&context,uint16	&index);
 
+	bool	rnd(const	Context	&context,uint16	&index);
+
 	bool	equ(const	Context	&context,uint16	&index);
 	bool	neq(const	Context	&context,uint16	&index);
 	bool	gtr(const	Context	&context,uint16	&index);

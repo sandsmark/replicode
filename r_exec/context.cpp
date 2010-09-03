@@ -181,7 +181,7 @@ namespace	r_exec{
 		case	Atom::IN_OBJ_PTR:{
 			Code	*input_object=((IOverlay	*)overlay)->getInputObject((*this)[0].asInputIndex());
 			View	*input_view=(r_exec::View*)((IOverlay	*)overlay)->getInputView((*this)[0].asInputIndex());
-			return	Context(input_object,input_view,&input_object->code(0),(*this)[0].asIndex(),NULL,REFERENCE);
+			return	*Context(input_object,input_view,&input_object->code(0),(*this)[0].asIndex(),NULL,REFERENCE);
 		}case	Atom::PROD_PTR:
 			return	Context(overlay->productions[(*this)[0].asIndex()],0);
 		default:

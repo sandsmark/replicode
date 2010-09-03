@@ -60,6 +60,23 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////
 
+	bool	rnd(const	Context	&context,uint16	&index){
+
+		Context	range=*context.getChild(1);
+
+		if(!range[0].isFloat()){
+
+			index=context.setAtomicResult(Atom::Nil());
+			return	false;
+		}
+
+		float32	result=(((float32)(rand()%100))/100)*range[0].asFloat();
+		index=context.setAtomicResult(Atom::Float(result));
+		return	true;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////
+
 	bool	equ(const	Context	&context,uint16	&index){
 
 		Context	lhs=*context.getChild(1);
@@ -220,6 +237,13 @@ namespace	r_exec{
 
 				index=context.setAtomicResult(Atom::Float(lhs[0].asFloat()+rhs[0].asFloat()));
 				return	true;
+			}else	if(rhs[0].getDescriptor()==Atom::TIMESTAMP){
+
+				if(lhs[0]!=Atom::PlusInfinity()){
+
+					index=context.setTimestampResult(Timestamp::Get(&rhs[0])+lhs[0].asFloat());
+					return	true;
+				}
 			}
 		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
 
@@ -227,6 +251,13 @@ namespace	r_exec{
 
 				index=context.setTimestampResult(Timestamp::Get(&lhs[0])+Timestamp::Get(&rhs[0]));
 				return	true;
+			}else	if(rhs[0].isFloat()){
+
+				if(rhs[0]!=Atom::PlusInfinity()){
+
+					index=context.setTimestampResult(Timestamp::Get(&lhs[0])+rhs[0].asFloat());
+					return	true;
+				}
 			}
 		}
 
@@ -266,6 +297,13 @@ namespace	r_exec{
 
 				index=context.setTimestampResult(Timestamp::Get(&lhs[0])-Timestamp::Get(&rhs[0]));
 				return	true;
+			}else	if(rhs[0].isFloat()){
+
+				if(rhs[0]!=Atom::PlusInfinity()){
+
+					index=context.setTimestampResult(Timestamp::Get(&lhs[0])-rhs[0].asFloat());
+					return	true;
+				}
 			}
 		}
 

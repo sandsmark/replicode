@@ -171,6 +171,7 @@ namespace	r_exec{
 		//	load std operators.
 		uint16	operator_opcode=0;
 		Operator::Register(operator_opcode++,now);
+		Operator::Register(operator_opcode++,rnd);
 		Operator::Register(operator_opcode++,equ);
 		Operator::Register(operator_opcode++,neq);
 		Operator::Register(operator_opcode++,gtr);

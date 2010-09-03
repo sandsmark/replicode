@@ -85,12 +85,10 @@ namespace	r_comp{
 
 	uint32	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream,uint64	time_offset){
 
-		this->time_offset=time_offset;
-
 		uint32	object_count=decompile_references(image);
 
 		for(uint16	i=0;i<image->code_segment.objects.size();++i)
-			decompile_object(i,stream);
+			decompile_object(i,stream,time_offset);
 
 		return	object_count;
 	}
@@ -136,7 +134,7 @@ namespace	r_comp{
 		return	image->code_segment.objects.size();
 	}
 	
-	void	Decompiler::decompile_object(uint16	object_index,std::ostringstream	*stream){
+	void	Decompiler::decompile_object(uint16	object_index,std::ostringstream	*stream,uint64	time_offset){
 
 		if(!out_stream)
 			out_stream=new	OutStream(stream);
@@ -145,6 +143,10 @@ namespace	r_comp{
 			delete	out_stream;
 			out_stream=new	OutStream(stream);
 		}
+
+		this->time_offset=time_offset;
+		uint64	_time_offset=time_offset;
+		time_offset=0;	//	use absolute timestamps for anything other than ijt in views.
 
 		current_object=image->code_segment.objects[object_index];
 		SysObject	*sys_object=(SysObject	*)current_object;
@@ -164,6 +166,8 @@ namespace	r_comp{
 		
 		write_indent(0);
 		write_indent(0);
+
+		time_offset=_time_offset;
 
 		uint16	view_count=sys_object->views.size();
 		if(view_count){	//	write the set of views
@@ -191,9 +195,9 @@ namespace	r_comp{
 		write_indent(0);
 	}
 
-	void	Decompiler::decompile_object(const	std::string	object_name,std::ostringstream	*stream){
+	void	Decompiler::decompile_object(const	std::string	object_name,std::ostringstream	*stream,uint64	time_offset){
 
-		decompile_object(object_indices[object_name],stream);
+		decompile_object(object_indices[object_name],stream,time_offset);
 	}
 
 	void	Decompiler::write_indent(uint16	i){
