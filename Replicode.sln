@@ -24,6 +24,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "r_exec", "r_exec\r_exec.vcp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usr_operators", "usr_operators\usr_operators.vcproj", "{3DE12B3F-D45E-46E1-B501-E294009AD4B9}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CorrelatorTest", "CorrelatorTest\CorrelatorTest.vcproj", "{E8899166-D31E-47A5-9E45-FFC99999CB7D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -62,6 +64,10 @@ Global
 		{3DE12B3F-D45E-46E1-B501-E294009AD4B9}.Debug|Win32.Build.0 = Debug|Win32
 		{3DE12B3F-D45E-46E1-B501-E294009AD4B9}.Release|Win32.ActiveCfg = Release|Win32
 		{3DE12B3F-D45E-46E1-B501-E294009AD4B9}.Release|Win32.Build.0 = Release|Win32
+		{E8899166-D31E-47A5-9E45-FFC99999CB7D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E8899166-D31E-47A5-9E45-FFC99999CB7D}.Debug|Win32.Build.0 = Debug|Win32
+		{E8899166-D31E-47A5-9E45-FFC99999CB7D}.Release|Win32.ActiveCfg = Release|Win32
+		{E8899166-D31E-47A5-9E45-FFC99999CB7D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

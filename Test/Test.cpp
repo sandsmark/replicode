@@ -31,7 +31,7 @@
 #include	"decompiler.h"
 #include	"mem.h"
 #include	"init.h"
-#include	"image_impl.h"
+#include	"../r_code/image_impl.h"
 #include	"settings.h"
 
 

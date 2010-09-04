@@ -230,6 +230,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\image_impl.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\object.cpp"
 				>
 			</File>
@@ -257,6 +261,10 @@
 			</File>
 			<File
 				RelativePath=".\image.h"
+				>
+			</File>
+			<File
+				RelativePath=".\image_impl.h"
 				>
 			</File>
 			<File
