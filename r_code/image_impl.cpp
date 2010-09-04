@@ -31,57 +31,60 @@
 #include	"image_impl.h"
 
 
-void	*ImageImpl::operator	new(size_t	s,uint32	data_size){
+namespace	r_code{
 
-	return	::operator	new(s);
-}
+	void	*ImageImpl::operator	new(size_t	s,uint32	data_size){
 
-void	ImageImpl::operator delete(void	*o){
+		return	::operator	new(s);
+	}
 
-	::operator	delete(o);
-}
+	void	ImageImpl::operator delete(void	*o){
 
-ImageImpl::ImageImpl(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	reloc_size):_timestamp(timestamp),_map_size(map_size),_code_size(code_size),_reloc_size(reloc_size){
+		::operator	delete(o);
+	}
 
-	_data=new	word32[_map_size+_code_size+_reloc_size];
-}
+	ImageImpl::ImageImpl(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	reloc_size):_timestamp(timestamp),_map_size(map_size),_code_size(code_size),_reloc_size(reloc_size){
 
-ImageImpl::~ImageImpl(){
+		_data=new	word32[_map_size+_code_size+_reloc_size];
+	}
 
-	delete[]	_data;
-}
+	ImageImpl::~ImageImpl(){
 
-uint64	ImageImpl::get_timestamp()	const{
+		delete[]	_data;
+	}
 
-	return	_timestamp;
-}
+	uint64	ImageImpl::get_timestamp()	const{
 
-uint32	ImageImpl::map_size()	const{
+		return	_timestamp;
+	}
 
-	return	_map_size;
-}
+	uint32	ImageImpl::map_size()	const{
 
-uint32	ImageImpl::code_size()	const{
+		return	_map_size;
+	}
 
-	return	_code_size;
-}
+	uint32	ImageImpl::code_size()	const{
 
-uint32	ImageImpl::reloc_size()	const{
+		return	_code_size;
+	}
 
-	return	_reloc_size;
-}
+	uint32	ImageImpl::reloc_size()	const{
 
-word32	*ImageImpl::data()	const{
+		return	_reloc_size;
+	}
 
-	return	_data;
-}
+	word32	*ImageImpl::data()	const{
 
-word32	&ImageImpl::data(uint32	i){
+		return	_data;
+	}
 
-	return	_data[i];
-}
+	word32	&ImageImpl::data(uint32	i){
 
-word32	&ImageImpl::data(uint32	i)	const{
+		return	_data[i];
+	}
 
-	return	_data[i];
+	word32	&ImageImpl::data(uint32	i)	const{
+
+		return	_data[i];
+	}
 }
