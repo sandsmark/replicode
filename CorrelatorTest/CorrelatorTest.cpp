@@ -1,4 +1,4 @@
-//	test.cpp
+//	CorrelatorTest.cpp
 //
 //	Author: Eric Nivel
 //
@@ -28,18 +28,18 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include	<set>
+
 #include	"decompiler.h"
-#include	"mem.h"
 #include	"init.h"
-#include	"image_impl.h"
+#include	"opcodes.h"
+#include	"../r_code/image_impl.h"
+
 #include	"settings.h"
+#include	"correlator.h"
 
 
-//#define	DECOMPILE_ONE_BY_ONE
-
-using	namespace	r_comp;
-
-void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
+void	decompile(r_comp::Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
 
 #ifdef	DECOMPILE_ONE_BY_ONE
 	uint32	object_count=decompiler.decompile_references(image);
@@ -71,39 +71,11 @@ void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
 #endif
 }
 
-void	write_to_file(r_comp::Image	*image,std::string	&image_path,Decompiler	*decompiler,uint64	time_offset){
-
-	ofstream	output(image_path.c_str(),ios::binary|ios::out);
-	r_code::Image<r_code::ImageImpl>	*i=image->serialize<r_code::Image<r_code::ImageImpl> >();
-	r_code::Image<r_code::ImageImpl>::Write(i,output);
-	output.close();
-	delete	i;
-
-	if(decompiler){
-
-		ifstream	input(image_path.c_str(),ios::binary|ios::in);
-		if(!input.good())
-			return;
-
-		r_code::Image<r_code::ImageImpl>	*img=(r_code::Image<r_code::ImageImpl>	*)r_code::Image<r_code::ImageImpl>::Read(input);
-		input.close();
-
-		r_code::vector<Code	*>	objects;
-		r_comp::Image			*_i=new	r_comp::Image();
-		_i->load(img);
-
-		decompile(*decompiler,_i,time_offset);
-		delete	_i;
-
-		delete	img;
-	}
-}
-
 int32	main(int	argc,char	**argv){
 
 	core::Time::Init(1000);
 
-	Settings	settings;
+	CorrelatorTestSettings	settings;
 	if(!settings.load(argv[1]))
 		return	1;
 
@@ -111,54 +83,66 @@ int32	main(int	argc,char	**argv){
 	r_exec::Init(settings.usr_operator_path.c_str(),Time::Get,settings.usr_class_path.c_str());
 	std::cout<<"... done\n";
 
-	srand(r_exec::Now());
+	r_comp::Decompiler	decompiler;
+	decompiler.init(&r_exec::Metadata);
 
-	std::string	error;
-	if(!r_exec::Compile(settings.source_file_name.c_str(),error)){
+	Correlator	correlator;
 
-		std::cerr<<" <- "<<error<<std::endl;
-		return	2;
-	}else{
+	for(uint32	i=0;i<settings.episode_count;++i){
 
-		Decompiler	decompiler;
-		decompiler.init(&r_exec::Metadata);
+		std::string	image_path=settings.use_case_path;
+		image_path+="/";
+		image_path+=settings.use_case_name;
+		image_path+=".";
+		image_path+=core::String::Int2String(i);
+		image_path+=".replicode.image";
 
-		r_comp::Image	*image;
+		ifstream	input(image_path.c_str(),ios::binary|ios::in);
+		if(!input.good())
+			return	1;
 
-		r_exec::Mem<r_exec::LObject>	*mem=new	r_exec::Mem<r_exec::LObject>();
+		r_code::Image<ImageImpl>	*img=(r_code::Image<ImageImpl>	*)r_code::Image<ImageImpl>::Read(input);
+		input.close();
 
-		r_code::vector<r_code::Code	*>	ram_objects;
-		r_exec::Seed.getObjects(mem,ram_objects);
+		r_code::vector<Code	*>	objects;
+		r_comp::Image			*_i=new	r_comp::Image();
+		_i->load(img);
+		_i->getObjects<r_code::LObject>(objects);
 
-		mem->init(settings.base_period,settings.reduction_core_count,settings.time_core_count,settings.notification_resilience);
-		mem->load(ram_objects.as_std());
-		uint64	starting_time=mem->start();
-		
-		std::cout<<"\nRunning for "<<settings.run_time<<" ms"<<std::endl;
-		Thread::Sleep(settings.run_time);
+		decompile(decompiler,_i,0);
+		delete	_i;
 
-		//TimeProbe	probe;
-		//probe.set();
+		delete	img;
 
-		mem->suspend();
-		image=mem->getImage();
-		mem->resume();
+		//	Filter objects: retain only those which are actual inputs in stdin and store them in a time-ordered list.
+		std::set<r_code::View	*,r_code::View::Less>	correlator_inputs;
+		for(uint32	i=0;i<objects.size();++i){
 
-		//probe.check();
-		
-		if(settings.write_image)
-			write_to_file(image,settings.image_path,settings.test_image?&decompiler:NULL,settings.decompile_timestamps==Settings::TS_RELATIVE?starting_time:0);
+			Code	*object=objects[i];
+			if(object->code(0).asOpcode()==r_exec::Opcodes::IPGM)
+				continue;
 
-		if(!settings.write_image	||	!settings.test_image)
-			decompile(decompiler,image,settings.decompile_timestamps==Settings::TS_RELATIVE?starting_time:0);
+			UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
+			for(v=object->views.begin();v!=object->views.end();++v){
 
-		delete	image;
+				if((*v)->references[0]->get_axiom()==r_code::SysObject::STDIN_GRP){
 
-		//std::cout<<"getImage(): "<<probe.us()<<"us"<<std::endl;
+					correlator_inputs.insert(*v);
+					break;
+				}
+			}
+		}
 
-		std::cout<<"\nShutting rMem down...\n";
-		mem->stop();
-		delete	mem;
+		//	Feed the Correlator with one episode.
+		std::set<r_code::View	*,r_code::View::Less>::const_iterator	v;
+		for(v=correlator_inputs.begin();v!=correlator_inputs.end();++v)
+			correlator.take_input(*v);
+
+		//	Get the result.
+		float32	error;
+		CorrelatorOutput	*output=correlator.get_output(error);
+		output->trace();
+		delete	output;
 	}
 
 	return	0;

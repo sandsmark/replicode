@@ -35,6 +35,7 @@
 #include	"vector.h"
 #include	"base.h"
 #include	"replicode_defs.h"
+#include	"utils.h"
 
 #include	<list>
 
@@ -140,6 +141,13 @@ namespace	r_code{
 		public:
 			bool	operator	()(const	View	*lhs,const	View	*rhs)	const{
 				return	lhs->references[0]==rhs->references[0];
+			}
+		};
+
+		class	Less{
+		public:
+			bool	operator	()(const	View	*lhs,const	View	*rhs)	const{
+				return	Timestamp::Get(lhs->_code+lhs->_code[VIEW_IJT].asIndex())<Timestamp::Get(rhs->_code+rhs->_code[VIEW_IJT].asIndex());
 			}
 		};
 	};

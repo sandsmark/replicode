@@ -1,4 +1,4 @@
-//	image_impl.h
+//	settings.h
 //
 //	Author: Eric Nivel
 //
@@ -28,38 +28,61 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	image_impl_h
-#define	image_impl_h
+#ifndef	test_correlator_settings_h
+#define	test_correlator_settings_h
 
-#include	"types.h"
+#include	<../CoreLibrary/xml_parser.h>
 
 
-using	namespace	core;
+class	CorrelatorTestSettings{
+public:
+	typedef	enum{
+		TS_RELATIVE=0,
+		TS_ABSOLUTE=1
+	}TSMode;
+	TSMode		decompile_timestamps;
+	std::string	usr_operator_path;
+	std::string	usr_class_path;
+	std::string	use_case_path;
+	std::string	use_case_name;
+	uint32		episode_count;
 
-namespace	r_code{
+	bool	load(const	char	*file_name){
 
-	class	dll_export	ImageImpl{
-	private:
-		word32	*_data;	//	[object map|code segment|reloc segment]
-		uint64	_timestamp;
-		uint32	_map_size;
-		uint32	_code_size;
-		uint32	_reloc_size;
-	protected:
-		uint64	get_timestamp()	const;
-		uint32	map_size()		const;
-		uint32	code_size()		const;
-		uint32	reloc_size()	const;
-		word32	*data()			const;
-		word32	&data(uint32	i);
-		word32	&data(uint32	i)	const;
-	public:
-		void	*operator	new(size_t,uint32	data_size);
-		void	operator delete(void	*o);
-		ImageImpl(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	reloc_size);
-		~ImageImpl();
-	};
-}
+		XMLNode	mainNode=XMLNode::openFileHelper(file_name,"TestConfiguration");
+		if(!mainNode){
+
+			std::cerr<<"> Error: TestConfiguration is unreadable"<<std::endl;
+			return	false;
+		}
+		
+		XMLNode	parameters=mainNode.getChildNode("Parameters");
+		if(!!parameters){
+
+			const	char	*_decompile_timestamps=parameters.getAttribute("decompile_timestamps");
+			const	char	*_episode_count=parameters.getAttribute("episode_count");
+
+			usr_operator_path=parameters.getAttribute("usr_operator_path");
+			usr_class_path=parameters.getAttribute("usr_class_path");
+
+			use_case_path=parameters.getAttribute("use_case_path");
+			use_case_name=parameters.getAttribute("use_case_name");
+
+			if(strcmp(_decompile_timestamps,"relative")==0)
+				decompile_timestamps=TS_RELATIVE;
+			else
+				decompile_timestamps=TS_ABSOLUTE;
+
+			episode_count=atoi(_episode_count);
+		}else{
+
+			std::cerr<<"> Error: Parameter section is unreadable"<<std::endl;
+			return	false;
+		}
+
+		return	true;
+	}
+};
 
 
 #endif
