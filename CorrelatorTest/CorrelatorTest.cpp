@@ -88,8 +88,10 @@ int32	main(int	argc,char	**argv){
 
 	Correlator	correlator;
 
+	//	Feed the Correlator incrementally with episodes related to the pursuit of one goal.
 	for(uint32	i=0;i<settings.episode_count;++i){
 
+		//	First, get an image containing one episode.
 		std::string	image_path=settings.use_case_path;
 		image_path+="/";
 		image_path+=settings.use_case_name;
@@ -114,7 +116,7 @@ int32	main(int	argc,char	**argv){
 
 		delete	img;
 
-		//	Filter objects: retain only those which are actual inputs in stdin and store them in a time-ordered list.
+		//	Second, filter objects: retain only those which are actual inputs in stdin and store them in a time-ordered list.
 		std::set<r_code::View	*,r_code::View::Less>	correlator_inputs;
 		for(uint32	i=0;i<objects.size();++i){
 
@@ -125,6 +127,9 @@ int32	main(int	argc,char	**argv){
 			UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
 			for(v=object->views.begin();v!=object->views.end();++v){
 
+				if(!(*v)->references[0])
+					continue;
+
 				if((*v)->references[0]->get_axiom()==r_code::SysObject::STDIN_GRP){
 
 					correlator_inputs.insert(*v);
@@ -133,7 +138,7 @@ int32	main(int	argc,char	**argv){
 			}
 		}
 
-		//	Feed the Correlator with one episode.
+		//	Third, feed the Correlator with one episode.
 		std::set<r_code::View	*,r_code::View::Less>::const_iterator	v;
 		for(v=correlator_inputs.begin();v!=correlator_inputs.end();++v)
 			correlator.take_input(*v);

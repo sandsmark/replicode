@@ -74,9 +74,9 @@ namespace	r_exec{
 	public:
 		virtual	~Object();	//	un-registers from the rMem's object_register.
 
-		void	build_view(SysView	*source,uint16	reference_index,Code	*referenced_object){
+		r_code::View	*build_view(SysView	*source){
 
-			return	Code::build_view<r_exec::View>(source,reference_index,referenced_object);
+			return	Code::build_view<r_exec::View>(source);
 		}
 
 		void	bind(r_code::Mem	*mem){	this->mem=mem;	}

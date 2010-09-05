@@ -43,9 +43,9 @@ namespace	r_code{
 		::operator	delete(o);
 	}
 
-	ImageImpl::ImageImpl(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	reloc_size):_timestamp(timestamp),_map_size(map_size),_code_size(code_size),_reloc_size(reloc_size){
+	ImageImpl::ImageImpl(uint64	timestamp,uint32	map_size,uint32	code_size):_timestamp(timestamp),_map_size(map_size),_code_size(code_size){
 
-		_data=new	word32[_map_size+_code_size+_reloc_size];
+		_data=new	word32[_map_size+_code_size];
 	}
 
 	ImageImpl::~ImageImpl(){
@@ -66,11 +66,6 @@ namespace	r_code{
 	uint32	ImageImpl::code_size()	const{
 
 		return	_code_size;
-	}
-
-	uint32	ImageImpl::reloc_size()	const{
-
-		return	_reloc_size;
 	}
 
 	word32	*ImageImpl::data()	const{

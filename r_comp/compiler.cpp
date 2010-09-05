@@ -2309,14 +2309,8 @@ return_false:
 		}
 		if(global_reference(index,t)){	//	index is the index held by a reference pointer
 
-			if(write){
-
-				if(current_view_index==-1)
-					_image->relocation_segment.addObjectReference(current_object->references[index],current_object_index,index);
-				else
-					_image->relocation_segment.addViewReference(current_object->references[index],current_object_index,current_view_index,index);
+			if(write)
 				current_object->code[write_index]=Atom::RPointer(index);
-			}
 			return	true;
 		}
 		std::vector<int16>	v;
@@ -2379,10 +2373,6 @@ return_false:
 
 			if(write){
 
-				if(current_view_index==-1)
-					_image->relocation_segment.addObjectReference(current_object->references[v[0]],current_object_index,v[0]);
-				else
-					_image->relocation_segment.addViewReference(current_object->references[v[0]],current_object_index,current_view_index,v[0]);
 				current_object->code[write_index]=Atom::IPointer(extent_index);
 				current_object->code[extent_index++]=Atom::CPointer(v.size());
 				current_object->code[extent_index++]=Atom::RPointer(v[0]);

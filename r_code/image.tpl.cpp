@@ -34,9 +34,9 @@
 
 namespace	r_code{
 
-	template<class	I>	Image<I>	*Image<I>::Build(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	reloc_size){
+	template<class	I>	Image<I>	*Image<I>::Build(uint64	timestamp,uint32	map_size,uint32	code_size){
 
-		I	*image=new(map_size+code_size+reloc_size)	I(timestamp,map_size,code_size,reloc_size);
+		I	*image=new(map_size+code_size)	I(timestamp,map_size,code_size);
 		return	(Image<I>	*)image;
 	}
 
@@ -45,12 +45,10 @@ namespace	r_code{
 		uint64	timestamp;
 		uint32	map_size;
 		uint32	code_size;
-		uint32	reloc_size;
 		stream.read((char	*)&timestamp,sizeof(uint64));
 		stream.read((char	*)&map_size,sizeof(uint32));
 		stream.read((char	*)&code_size,sizeof(uint32));
-		stream.read((char	*)&reloc_size,sizeof(uint32));
-		Image	*image=Build(timestamp,map_size,code_size,reloc_size);
+		Image	*image=Build(timestamp,map_size,code_size);
 		stream.read((char	*)image->data(),image->getSize()*sizeof(word32));
 		return	image;
 	}
@@ -60,11 +58,9 @@ namespace	r_code{
 		uint64	timestamp=image->get_timestamp();
 		uint32	map_size=image->map_size();
 		uint32	code_size=image->code_size();
-		uint32	reloc_size=image->reloc_size();
 		stream.write((char	*)&timestamp,sizeof(uint64));
 		stream.write((char	*)&map_size,sizeof(uint32));
 		stream.write((char	*)&code_size,sizeof(uint32));
-		stream.write((char	*)&reloc_size,sizeof(uint32));
 		stream.write((char	*)image->data(),image->getSize()*sizeof(word32));
 	}
 
@@ -76,7 +72,7 @@ namespace	r_code{
 
 	template<class	I>	uint32	Image<I>::getSize()	const{
 
-		return	map_size()+code_size()+reloc_size();
+		return	map_size()+code_size();
 	}
 
 	template<class	I>	uint32	Image<I>::getObjectCount()	const{
@@ -99,37 +95,13 @@ namespace	r_code{
 		return	code_size();
 	}
 
-	template<class	I>	word32	*Image<I>::getRelocSegment(){
-
-		return	data()+map_size()+code_size();
-	}
-
-	template<class	I>	uint32	Image<I>::getRelocSegmentSize()	const{
-
-		return	reloc_size();
-	}
-
-	template<class	I>	word32	*Image<I>::getRelocEntry(uint32	index){
-
-		word32	*reloc_segment=getRelocSegment();
-		for(uint32	i=0;i<getRelocSegmentSize();++i){
-
-			if(i==index)
-				return	reloc_segment+i;	//	points to the first word of the entry, i.e. the index of the object/command in the code segment
-			i+=1+reloc_segment[i];			//	points to the next entry
-		}
-
-		return	NULL;
-	}
-
 	template<class	I>	void	Image<I>::trace()	const{
 
 		std::cout<<"---Image---\n";
 		std::cout<<"Size: "<<getSize()<<std::endl;
 		std::cout<<"Object Map Size: "<<map_size()<<std::endl;
 		std::cout<<"Code Segment Size: "<<code_size()<<std::endl;
-		std::cout<<"Relocation Segment Size: "<<reloc_size()<<std::endl;
-
+		
 		uint32	i=0;
 
 		std::cout<<"===Object Map==="<<std::endl;
@@ -198,22 +170,6 @@ namespace	r_code{
 				std::cout<<"---reference set---\n";
 				for(l=0;l<view_reference_set_size;++i,++l)
 					std::cout<<i<<" "<<data(i)<<std::endl;
-			}
-		}
-
-		std::cout<<"===Relocation Segment==="<<std::endl;
-		uint32	entry_count=data(i);
-		std::cout<<i++<<" entries count: "<<entry_count<<std::endl;
-		for(uint32	j=0;j<entry_count;++j){
-
-			std::cout<<"entry["<<j<<"]\n";
-			uint32	reference_count=data(i++);
-			std::cout<<i<<" count: "<<reference_count<<std::endl;
-			for(uint32	k=0;k<reference_count;++k){
-
-				std::cout<<i<<" object: "<<data(i++)<<std::endl;
-				std::cout<<i<<" view: "<<data(i++)<<std::endl;
-				std::cout<<i<<" pointer: "<<data(i++)<<std::endl;
 			}
 		}
 	}

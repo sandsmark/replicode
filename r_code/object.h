@@ -163,11 +163,9 @@ namespace	r_code{
 				code(i)=source->code[i];
 			axiom=source->axiom;
 		}
-		template<class	V>	void	build_view(SysView	*source,uint16	reference_index,Code	*referenced_object){
+		template<class	V>	View	*build_view(SysView	*source){
 
-			V	*view=new	V(source,this);
-			view->references[reference_index]=referenced_object;
-			views.insert(view);
+			return	new	V(source,this);
 		}
 	public:
 		SysObject::Axiom	get_axiom()	const{	return	axiom;	}
@@ -186,7 +184,7 @@ namespace	r_code{
 		std::list<Code	*>								markers;
 		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	//	indexed by groups.
 
-		virtual	void	build_view(SysView	*source,uint16	reference_index,Code	*referenced_object)=0;
+		virtual	View	*build_view(SysView	*source)=0;
 
 		virtual	void	acq_views()		const{}
 		virtual	void	rel_views()		const{}
@@ -248,9 +246,9 @@ namespace	r_code{
 		}
 		virtual	~LObject(){}
 
-		void	build_view(SysView	*source,uint16	reference_index,Code	*referenced_object){
+		View	*build_view(SysView	*source){
 
-			return	Code::build_view<View>(source,reference_index,referenced_object);
+			return	Code::build_view<View>(source);
 		}
 
 		Atom	&code(uint16	i){	return	_code[i];	}

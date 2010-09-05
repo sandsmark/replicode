@@ -101,41 +101,6 @@ namespace	r_comp{
 		uint32	getSize();
 	};
 
-	class	dll_export	RelocationSegment{
-	public:
-		class	dll_export	PointerIndex{
-		public:
-			uint16	object_index;	//	index of a referencing object in CodeSegment::objects.
-			int16	view_index;		//	index of a view in the object's view set.
-			uint16	pointer_index;	//	index of a pointer in CodeSegment::objects[object_index].
-			PointerIndex();
-			PointerIndex(uint16	object_index,int16	view_index,uint16	pointer_index);
-		};
-		class	dll_export	Entry{
-		public:
-			r_code::vector<PointerIndex>	pointer_indexes;	//	indexes of the pointers referencing the object.
-			void	write(word32	*data);
-			void	read(word32		*data);
-			uint32	getSize()	const;
-		};
-
-		r_code::vector<Entry>	entries;
-
-		void	addObjectReference(uint16	referenced_object_index,
-									uint16	referencing_object_index,
-									uint16	reference_pointer_index);
-		void	addViewReference(uint16	referenced_object_index,
-									uint16	referencing_object_index,
-									int16	referencing_view_index,
-									uint16	reference_pointer_index);
-		void	addMarkerReference(uint16	referenced_object_index,
-									uint16	referencing_object_index);
-
-		void	write(word32	*data);
-		void	read(word32		*data);
-		uint32	getSize();
-	};
-
 	class	dll_export	Image{
 	private:
 		uint32	map_offset;
@@ -143,9 +108,8 @@ namespace	r_comp{
 		void	buildReferences(SysObject	*sys_object,r_code::Code	*object,uint16	object_index);
 		void	unpackObjects(r_code::vector<Code	*>	&ram_objects);
 	public:
-		ObjectMap			object_map;
-		CodeSegment			code_segment;
-		RelocationSegment	relocation_segment;
+		ObjectMap	object_map;
+		CodeSegment	code_segment;
 
 		uint64	timestamp;
 
@@ -170,12 +134,11 @@ namespace	r_comp{
 
 		template<class	I>	I	*serialize(){
 
-			I	*image=(I	*)I::Build(timestamp,object_map.getSize(),code_segment.getSize(),relocation_segment.getSize());
+			I	*image=(I	*)I::Build(timestamp,object_map.getSize(),code_segment.getSize());
 
 			object_map.shift(image->map_size());
 			object_map.write(image->data());
 			code_segment.write(image->data()+image->map_size());
-			relocation_segment.write(image->data()+image->map_size()+image->code_size());
 
 			return	image;
 		}
@@ -185,7 +148,6 @@ namespace	r_comp{
 			timestamp=image->get_timestamp();
 			object_map.read(image->data(),image->map_size());
 			code_segment.read(image->data()+image->map_size(),image->map_size());
-			relocation_segment.read(image->data()+image->map_size()+image->code_size());
 		}
 	};
 }

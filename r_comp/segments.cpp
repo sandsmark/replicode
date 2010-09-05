@@ -335,83 +335,6 @@ namespace	r_comp{
 
 	////////////////////////////////////////////////////////////////
 
-	RelocationSegment::PointerIndex::PointerIndex():object_index(0),pointer_index(0){
-	}
-
-	RelocationSegment::PointerIndex::PointerIndex(uint16	object_index,int16	view_index,uint16	pointer_index):object_index(object_index),view_index(view_index),pointer_index(pointer_index){
-	}
-
-	void	RelocationSegment::Entry::write(word32	*data){
-
-		data[0]=pointer_indexes.size();
-		for(uint16	i=0;i<pointer_indexes.size();++i){
-
-			data[1+i*3]=pointer_indexes[i].object_index;
-			data[2+i*3]=pointer_indexes[i].view_index;
-			data[3+i*3]=pointer_indexes[i].pointer_index;
-		}
-	}
-
-	void	RelocationSegment::Entry::read(word32	*data){
-
-		for(uint16	i=0;i<(uint32)data[0];++i)
-			pointer_indexes.push_back(PointerIndex(data[1+i*3],data[2+i*3],data[3+i*3]));
-	}
-
-	uint32	RelocationSegment::Entry::getSize()	const{
-
-		return	1+pointer_indexes.size()*3;
-	}
-
-	void	RelocationSegment::addObjectReference(uint16	referenced_object_index,uint16	referencing_object_index,uint16	reference_pointer_index){
-
-		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,-1,reference_pointer_index));
-	}
-
-	void	RelocationSegment::addViewReference(uint16	referenced_object_index,uint16	referencing_object_index,int16	referencing_view_index,uint16	reference_pointer_index){
-
-		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,referencing_view_index,reference_pointer_index));
-	}
-
-	void	RelocationSegment::addMarkerReference(uint16	referenced_object_index,uint16	referencing_object_index){
-
-		entries[referenced_object_index].pointer_indexes.push_back(PointerIndex(referencing_object_index,-2,0/*reference_pointer_index*/));
-	}
-	
-	void	RelocationSegment::write(word32	*data){
-
-		data[0]=entries.size();
-		uint16	offset=1;
-		for(uint16	i=0;i<entries.size();++i){
-
-			entries[i].write(data+offset);
-			offset+=entries[i].getSize();
-		}
-	}
-
-	void	RelocationSegment::read(word32	*data){
-
-		uint16	entry_count=data[0];
-		uint16	offset=1;
-		for(uint16	i=0;i<entry_count;++i){
-
-			Entry	e;
-			e.read(data+offset);
-			entries.push_back(e);
-			offset+=e.getSize();
-		}
-	}
-
-	uint32	RelocationSegment::getSize(){
-
-		uint16	size=1;
-		for(uint16	i=0;i<entries.size();++i)
-			size+=entries[i].getSize();
-		return	size;
-	}
-
-	////////////////////////////////////////////////////////////////
-
 	Image::Image():map_offset(0),timestamp(0){
 	}
 
@@ -435,14 +358,12 @@ namespace	r_comp{
 
 	Image	&Image::operator	<<(Code	*object){
 
-		static	uint16	Last_index=0;
-
 		UNORDERED_MAP<Code	*,uint16>::iterator	it=ptrs_to_indices.find(object);
 		if(it!=ptrs_to_indices.end())	//	object already there.
 			return	*this;
 
 		uint16	object_index;
-		ptrs_to_indices[object]=object_index=Last_index++;
+		ptrs_to_indices[object]=object_index=code_segment.objects.as_std()->size();
 		SysObject	*sys_object=new	SysObject(object);
 		addObject(sys_object);
 
@@ -470,15 +391,15 @@ namespace	r_comp{
 
 	void	Image::buildReferences(SysObject	*sys_object,Code	*object,uint16	object_index){
 
-		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references and markers.
+		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references.
 		uint16	i;
 		uint16	referenced_object_index;
 		for(i=0;i<object->references_size();++i){
 
 			referenced_object_index=ptrs_to_indices.find(object->get_reference(i))->second;
 			sys_object->references.push_back(referenced_object_index);
-			relocation_segment.addObjectReference(referenced_object_index,object_index,i);
 		}
+
 		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
 		for(i=0,v=object->views.begin();v!=object->views.end();++i,++v)
 			for(uint8	j=0;j<2;++j){	//	2 refs maximum; may be NULL.
@@ -487,17 +408,8 @@ namespace	r_comp{
 
 					referenced_object_index=ptrs_to_indices.find((*v)->references[j])->second;
 					sys_object->views[i]->references.push_back(referenced_object_index);
-					relocation_segment.addViewReference(referenced_object_index,object_index,i,j);
 				}
 			}
-		/* DEPRECATED
-		std::list<Code	*>::const_iterator	m;
-		for(m=object->markers.begin();m!=object->markers.end();++m){
-
-			referenced_object_index=ptrs_to_indices.find(*m)->second;
-			sys_object->markers.push_back(referenced_object_index);
-			relocation_segment.addMarkerReference(referenced_object_index,object_index);
-		}*/
 	}
 
 	void	Image::getObjects(Mem	*mem,r_code::vector<Code	*>	&ram_objects){
@@ -509,28 +421,24 @@ namespace	r_comp{
 
 	void	Image::unpackObjects(r_code::vector<Code	*>	&ram_objects){
 
-		//	Translate indices into pointers.
-		for(uint16	i=0;i<relocation_segment.entries.size();++i){	//	for each allocated object, write its address in the reference set of the objects or views that reference it.
+		//	For each object, translate its reference indices into pointers; build its views; for each view translate its reference indices into pointers.
+		for(uint16	i=0;i<code_segment.objects.size();++i){
 
-			r_code::Code				*referenced_object=ram_objects[i];
-			RelocationSegment::Entry	e=relocation_segment.entries[i];
-			for(uint16	j=0;j<e.pointer_indexes.size();++j){
+			SysObject	*sys_object=code_segment.objects[i];
+			Code		*ram_object=ram_objects[i];
 
-				RelocationSegment::PointerIndex	p=e.pointer_indexes[j];
-				r_code::Code	*referencing_object=ram_objects[p.object_index];
-				switch(p.view_index){
-				case	-1:
-					referencing_object->set_reference(p.pointer_index,referenced_object);
-					break;
-				case	-2:
-					//	DEPRECATED
-					//referenced_object->markers.push_back(referencing_object);
-					break;
-				default:	//	build a view, assign the referenced to the selected reference and insert in the referencing object.
-					referencing_object->build_view(code_segment.objects[p.object_index]->views[p.view_index],p.pointer_index,referenced_object);
-					break;
-				}
+			for(uint16	j=0;j<sys_object->views.as_std()->size();++j){
+
+				SysView	*sys_v=sys_object->views[j];
+				View	*v=ram_object->build_view(sys_v);
+				for(uint16	k=0;k<sys_v->references.as_std()->size();++k)
+					v->references[k]=ram_objects[sys_v->references[k]];
+
+				ram_object->views.insert(v);
 			}
+
+			for(uint16	j=0;j<sys_object->references.as_std()->size();++j)
+				ram_object->set_reference(j,ram_objects[sys_object->references[j]]);
 		}
 	}
 }
