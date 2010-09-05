@@ -38,6 +38,7 @@
 #include	"settings.h"
 #include	"correlator.h"
 
+//#define	DECOMPILE_ONE_BY_ONE
 
 void	decompile(r_comp::Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
 
