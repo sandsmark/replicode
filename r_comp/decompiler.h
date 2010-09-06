@@ -51,7 +51,8 @@ namespace	r_comp{
 		r_comp::Metadata	*metadata;
 		r_comp::Image		*image;
 
-		uint64	time_offset;	//	0 means no offset.
+		uint64	time_offset;		//	0 means no offset.
+		bool	decompiling_view;	//	when true, apply time_offset.
 
 		UNORDERED_MAP<uint16,std::string>	variable_names;				//	in the form vxxx where xxx is an integer representing the order of referencing of the variable/label in the code
 		std::string	get_variable_name(uint16	index,bool	postfix);	//	associates iptr/vptr indexes to names; inserts them in out_stream if necessary; when postfix==true, a trailing ':' is added
@@ -64,8 +65,8 @@ namespace	r_comp{
 		void	write_expression_head(uint16	read_index);						//	decodes the leading atom of an expression
 		void	write_expression_tail(uint16	read_index,bool	vertical=false);	//	decodes the elements of an expression following the head
 		void	write_expression(uint16	read_index);
-		void	write_set(uint16	read_index);
-		void	write_any(uint16	read_index,bool	&after_tail_wildcard);	//	decodes any element in an expression or a set
+		void	write_set(uint16	read_index,bool	in_inj_args);
+		void	write_any(uint16	read_index,bool	&after_tail_wildcard,bool	in_inj_args);	//	decodes any element in an expression or a set
 	public:
 		Decompiler();
 		~Decompiler();

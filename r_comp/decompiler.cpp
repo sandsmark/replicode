@@ -145,8 +145,6 @@ namespace	r_comp{
 		}
 
 		this->time_offset=time_offset;
-		uint64	_time_offset=time_offset;
-		time_offset=0;	//	use absolute timestamps for anything other than ijt in views.
 
 		current_object=image->code_segment.objects[object_index];
 		SysObject	*sys_object=(SysObject	*)current_object;
@@ -167,8 +165,6 @@ namespace	r_comp{
 		write_indent(0);
 		write_indent(0);
 
-		time_offset=_time_offset;
-
 		uint16	view_count=sys_object->views.size();
 		if(view_count){	//	write the set of views
 
@@ -179,15 +175,18 @@ namespace	r_comp{
 				current_object=sys_object->views[i];
 				read_index=0;
 				after_tail_wildcard=false;
+
+				decompiling_view=true;
 				*out_stream<<"[";
 				uint16	arity=current_object->code[0].getAtomCount();
 				for(uint16	j=1;j<=arity;++j){
 
-					write_any(read_index+j,after_tail_wildcard);
+					write_any(read_index+j,after_tail_wildcard,false);
 					if(j<arity)
 						*out_stream<<" ";
 				}
 				*out_stream<<"]";
+				decompiling_view=false;
 			}
 		}else
 			*out_stream<<"|[]; view set";
@@ -234,10 +233,15 @@ namespace	r_comp{
 
 		uint16	arity=current_object->code[read_index].getAtomCount();
 		bool	after_tail_wildcard=false;
+
+		bool	in_inj=(current_object->code[read_index].asOpcode()==metadata->classes.find("cmd")->second.atom.asOpcode()	&&
+						current_object->code[read_index+1].asOpcode()==metadata->classes.find("_inj")->second.atom.asOpcode()
+						);
+
 		for(uint16	i=0;i<arity;++i){
 
 			if(after_tail_wildcard)
-				write_any(++read_index,after_tail_wildcard);
+				write_any(++read_index,after_tail_wildcard,false);
 			else{
 
 				if(closing_set){
@@ -246,7 +250,9 @@ namespace	r_comp{
 					write_indent(indents);
 				}else	if(!vertical)
 					*out_stream<<' ';
-				write_any(++read_index,after_tail_wildcard);
+
+				write_any(++read_index,after_tail_wildcard,(in_inj	&&	i==2));
+
 				if(!closing_set	&&	vertical)
 					*out_stream<<NEWLINE;
 			}
@@ -271,14 +277,15 @@ namespace	r_comp{
 		*out_stream<<')';
 	}
 
-	void	Decompiler::write_set(uint16	read_index){	//	read_index points initially to set atom.
+	void	Decompiler::write_set(uint16	read_index,bool	in_inj_args){	//	read_index points initially to set atom.
 
 		uint16	arity=current_object->code[read_index].getAtomCount();
 		bool	after_tail_wildcard=false;
+		
 		if(arity==1){	//	write [element]
 
 			out_stream->push('[',read_index);
-			write_any(++read_index,after_tail_wildcard);
+			write_any(++read_index,after_tail_wildcard,false);
 			*out_stream<<']';
 		}else{		//	write []+indented elements.
 
@@ -287,11 +294,14 @@ namespace	r_comp{
 			for(uint16	i=0;i<arity;++i){
 
 				if(after_tail_wildcard)
-					write_any(++read_index,after_tail_wildcard);
+					write_any(++read_index,after_tail_wildcard,false);
 				else{
 
 					write_indent(indents);
-					write_any(++read_index,after_tail_wildcard);
+					if(in_inj_args	&&	i==1)
+						decompiling_view=true;
+					write_any(++read_index,after_tail_wildcard,false);
+					decompiling_view=false;
 				}
 			}
 			closing_set=true;
@@ -299,7 +309,7 @@ namespace	r_comp{
 		}
 	}
 
-	void	Decompiler::write_any(uint16	read_index,bool	&after_tail_wildcard){	//	after_tail_wildcard meant to avoid printing ':' after "::".
+	void	Decompiler::write_any(uint16	read_index,bool	&after_tail_wildcard,bool	in_inj_args){	//	after_tail_wildcard meant to avoid printing ':' after "::".
 
 		Atom	a=current_object->code[read_index];
 
@@ -348,7 +358,7 @@ namespace	r_comp{
 				if(atom.readsAsNil())
 					out_stream->push("|[]",read_index);
 				else
-					write_set(index);
+					write_set(index,in_inj_args);
 				break;
 			case	Atom::STRING:
 				if(atom.readsAsNil())
@@ -370,7 +380,8 @@ namespace	r_comp{
 				else{
 
 					uint64	ts=((uint64)(current_object->code[index+1].atom))<<32	|	((uint64)(current_object->code[index+2].atom));
-					ts-=time_offset;
+					if(decompiling_view)
+						ts-=time_offset;
 					out_stream->push(Time::ToString_seconds(ts),read_index);
 				}
 				break;
