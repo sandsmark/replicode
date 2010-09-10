@@ -248,7 +248,10 @@ namespace	r_exec{
 					else{
 
 						object=controller->get_mem()->buildObject(arg1[0]);
+						//arg1.trace();
 						arg1.copy(object,0);
+						//arg1.trace();
+						//object->trace();
 						productions.push_back(object);
 					}
 					patch_code(index,Atom::ProductionPointer(productions.size()-1));
@@ -283,11 +286,11 @@ namespace	r_exec{
 
 					Context	arg1=args.getChild(1);
 					arg1.dereference_once();
-
+//arg1.trace();
 					uint16	prod_index=arg1[0].asIndex();	//	args[1] is a prod_ptr.
 
 					Code	*object=(*args.getChild(1)).getObject();
-					
+//object->trace();
 					Context	_view=*args.getChild(2);
 					View	*view=new	View();
 					_view.copy(view,0);
@@ -538,26 +541,29 @@ namespace	r_exec{
 
 		reductionCS.enter();
 
-		uint16	input_index;
-		switch(match(input,input_index)){
-		case	SUCCESS:
-			if(input_pattern_indices.size()==0){	//	all patterns matched.
+		if(alive){
 
-				if(check_timings()	&&	check_guards()	&&	inject_productions(mem,NULL)){
+			uint16	input_index;
+			switch(match(input,input_index)){
+			case	SUCCESS:
+				if(input_pattern_indices.size()==0){	//	all patterns matched.
 
-					((PGMController	*)controller)->remove(this);
+					if(check_timings()	&&	check_guards()	&&	inject_productions(mem,NULL)){
+
+						((PGMController	*)controller)->remove(this);
+						break;
+					}
+				}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
+
+					IOverlay	*offspring=new	IOverlay(this,input_index,value_commit_index);
+					((PGMController	*)controller)->add(offspring);
+					commit();
 					break;
 				}
-			}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
-
-				IOverlay	*offspring=new	IOverlay(this,input_index,value_commit_index);
-				((PGMController	*)controller)->add(offspring);
-				commit();
+			case	FAILURE:	//	just rollback: let the overlay match other inputs.
+				rollback();
 				break;
 			}
-		case	FAILURE:	//	just rollback: let the overlay match other inputs.
-			rollback();
-			break;
 		}
 
 		reductionCS.leave();

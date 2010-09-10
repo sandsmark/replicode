@@ -38,6 +38,8 @@ namespace	r_exec{
 
 	bool	red(const	Context	&context,uint16	&index);
 
+	bool	syn(const	Context	&context,uint16	&index);
+
 	class	Operator{
 	private:
 		static	r_code::vector<Operator>	Operators;	//	indexed by opcodes.
@@ -62,6 +64,7 @@ namespace	r_exec{
 		}
 
 		bool	is_red()	const{	return	_operator==red;	}
+		bool	is_syn()	const{	return	_operator==syn;	}
 	};
 
 	//	std operators	////////////////////////////////////////
@@ -88,8 +91,6 @@ namespace	r_exec{
 	bool	exp(const	Context	&context,uint16	&index);
 	bool	log(const	Context	&context,uint16	&index);
 	bool	e10(const	Context	&context,uint16	&index);
-
-	bool	syn(const	Context	&context,uint16	&index);	//	TODO.
 
 	bool	ins(const	Context	&context,uint16	&index);
 	

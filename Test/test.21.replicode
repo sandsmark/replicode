@@ -1,0 +1,52 @@
+;dynamic generation of a program
+;case 6
+;the generated program has one input and
+;tpl args that depend on some value
+;from the generating program.
+;like test.20.replicode except that p now gets tpl args.
+
+(mk.val self position (vec3 1 1 1) 1)
+[]
+   [now 1 forever root nil]
+
+_start:(pgm
+|[]
+[]
+   []
+      (ptn m:(mk.val self position v1: ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      p:(pgm
+      []
+         (ptn v2:(vec3 ::) |[])
+      []
+         []
+            (ptn m:(mk.val self position v3: ::) |[])
+         |[]
+         |[]
+      []
+         (inj []
+            (mk.val self position (\ (+ v2 v3)) 1)
+            [(\ now) 1 forever root nil]
+         )
+      50000us
+      0
+      1
+      )
+      [now 1 forever root nil]
+   )
+   (inj []
+      (ins p [v1])
+      [now 1 forever root nil 1]
+   )
+0us
+1
+1
+)
+|[]
+
+i_start:(ipgm _start |[] 1)
+[]
+   [now 1 1 root nil 1]

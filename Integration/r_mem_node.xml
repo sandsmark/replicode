@@ -9,11 +9,11 @@
 			<RM	shared_library="mBrane_rm"/><!--Reliable Multicast-->
 			<IB shared_library="mBrane_mpi_o_ib"/><!--MPI over infiniband, Linux only-->
 		</Interfaces>
-    <Discovery interface="UDP" nic="10.0.2.11" port="10000"/>
+    <Discovery interface="UDP" nic="10.0.2.2" port="10000"/>
     <Primary>
-      <Control interface="TCP" nic="10.0.2.11" port="10001"/>
-      <Data interface="TCP" nic="10.0.2.11" port="10002"/>
-      <Stream interface="TCP" nic="10.0.2.11" port="10003"/>
+      <Control interface="TCP" nic="10.0.2.2" port="10001"/>
+      <Data interface="TCP" nic="10.0.2.2" port="10002"/>
+      <Stream interface="TCP" nic="10.0.2.2" port="10003"/>
     </Primary>
     <Secondary>
 			<!--same form as primary's-->

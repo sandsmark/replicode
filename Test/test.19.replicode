@@ -1,0 +1,46 @@
+;dynamic generation of a program
+;case 4
+;the generated program is input-less and
+;depends on some value from the generating program.
+
+(mk.val self position (vec3 4 5 6) 1)
+[]
+   [now 1 forever root nil]
+
+_start:(pgm
+[]
+   (ptn v1:(vec3 ::) |[])
+[]
+   []
+      (ptn m:(mk.val self position v2: ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      p:(pgm
+      |[]
+      |[]
+      []
+         (inj []
+            (mk.val self position (+ v1 v2) 1)
+            [(\ now) 1 forever root nil]
+         )
+      50000us
+      0
+      1
+      )
+      [now 1 forever root nil]
+   )
+   (inj []
+      (ins p |[])
+      [now 1 forever root nil 1]
+   )
+0us
+1
+1
+)
+|[]
+
+i_start:(ipgm _start [(vec3 1 2 3)] 1)
+[]
+   [now 1 1 root nil 1]

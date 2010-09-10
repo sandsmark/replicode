@@ -53,6 +53,7 @@ namespace	r_code{
 		case	R_PTR:					std::cout<<"rptr: "<<std::dec<<asIndex();return;
 		case	IPGM_PTR:				std::cout<<"ipgm_ptr: "<<std::dec<<asIndex();return;
 		case	IN_OBJ_PTR:				std::cout<<"in_obj_ptr: "<<std::dec<<(uint32)asInputIndex()<<" "<<asIndex();return;
+		case	OUT_OBJ_PTR:			std::cout<<"out_obj_ptr: "<<std::dec<<asIndex();return;
 		case	VALUE_PTR:				std::cout<<"value_ptr: "<<std::dec<<asIndex();return;
 		case	PROD_PTR:				std::cout<<"prod_ptr: "<<std::dec<<asIndex();return;
 		case	THIS:					std::cout<<"this";return;

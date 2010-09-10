@@ -52,7 +52,6 @@ root:(grp
 nil; ntf_grp
 1; psln_thr
 )
-
 []
    [now 0 forever nil nil 0 0]
 
@@ -90,7 +89,6 @@ g1:(grp
 nil; ntf_grp
 1; psln_thr
 )
-
 []
    [now 0 forever root nil 0 0]
 
@@ -128,7 +126,6 @@ stdin:(grp
 root; ntf_grp
 1; psln_thr
 )
-
 []
    [now 0 forever root nil 0 0]
    [now 0 forever g1 nil 1 1]; last 2 members: vis and cov
@@ -167,20 +164,17 @@ stdout:(grp
 nil; ntf_grp
 1; psln_thr
 )
-
 []
    [now 0 forever root nil 0 0]
 
 self:(ent
 0.95; psln_thr
 )
-
 []
    [now 0.6 forever root nil]
 
 position:(ent
 1; psln_thr
 )
-
 []
    [now 1 forever root nil]

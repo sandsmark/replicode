@@ -11,11 +11,11 @@
     decompile_timestamps="relative"
     
     usr_operator_path="C:/Work/Replicode/Debug/usr_operators.dll"
-    usr_class_path="C:/Work/Replicode/Test/Correlator.Data.Generation/user.classes.replicode"
-    source_file_name="C:/Work/Replicode/Test/Correlator.Data.Generation/motor.babbling.replicode"
+    usr_class_path="C:/Work/Replicode/Test/user.classes.replicode"
+    source_file_name="C:/Work/Replicode/Test/test.21.replicode"
     
-    write_image="yes"
-    image_path="C:/Work/Replicode/Test/Correlator.Data.Generation/motor.babbling.0.replicode.image"
+    write_image="no"
+    image_path="C:/Work/Replicode/Test/Correlator.Data.Generation/motor.babbling.7.replicode.image"
     test_image="yes"
   />
   

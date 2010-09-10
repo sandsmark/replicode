@@ -62,6 +62,7 @@ namespace	r_code{
 			IN_OBJ_PTR=0x88,	// r_exec internal: index of data held by the object held by an input view.
 			VALUE_PTR=0x89,		// r_exec internal: index of data held by the overlay's value array.
 			PROD_PTR=0x8A,		// r_exec internal: index of data held by the overlay's production array.
+			OUT_OBJ_PTR=0x8B,	// r_exec internal: index of data held by a newly produced object.
 			THIS=0x90,			// this pointer.
 			VIEW=0x91,
 			MKS=0x92,
@@ -95,6 +96,7 @@ namespace	r_code{
 		static	Atom	VLPointer(uint16 index,uint16	cast_opcode=0x0FFF);
 		static	Atom	IPGMPointer(uint16 index);
 		static	Atom	InObjPointer(uint8	inputIndex,uint16 index);
+		static	Atom	OutObjPointer(uint16 index);
 		static	Atom	ValuePointer(uint16 index);
 		static	Atom	ProductionPointer(uint16 index);
 		static	Atom	This();

@@ -56,10 +56,10 @@ namespace	r_exec{
 	friend	class	Controller;
 	friend	class	InputLessPGMController;
 	friend	class	Context;
-	private:
-		bool			alive;
-		CriticalSection	aliveCS;
 	protected:
+		bool			alive;
+		CriticalSection	reductionCS;
+
 		//	Copy of the pgm code. Will be patched during matching and evaluation:
 		//	any area indexed by a vl_ptr will be overwritten with:
 		//		the evaluation result if it fits in a single atom,
@@ -98,7 +98,6 @@ namespace	r_exec{
 		virtual	~Overlay();
 
 		void	kill();
-		bool	is_alive();
 
 		virtual	void	reset();	//	reset to original state (pristine copy of the pgm code and empty value set).
 
@@ -108,12 +107,7 @@ namespace	r_exec{
 		r_code::Code	*buildObject(Atom	head)	const;
 		uint64			now()	const;
 	};
-/*
-	r_exec_tpl	template	class	r_exec_dll	std::vector<Atom>;
-	r_exec_tpl	template	class	r_exec_dll	r_code::vector<Atom>;
-	r_exec_tpl	template	class	r_exec_dll	std::vector<P<Code> >;
-	r_exec_tpl	template	class	r_exec_dll	std::vector<uint16>;
-*/
+
 	//	Overlay with inputs.
 	//	Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
 	class	r_exec_dll	IOverlay:
@@ -121,8 +115,6 @@ namespace	r_exec{
 	friend	class	PGMController;
 	friend	class	Context;
 	protected:
-		CriticalSection	reductionCS;
-
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
 

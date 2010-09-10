@@ -76,6 +76,11 @@ namespace	r_code{
 		return	Atom((IN_OBJ_PTR<<24)+(inputIndex<<12)+(index	&	0x0FFF));
 	}
 
+	inline	Atom	Atom::OutObjPointer(uint16	index){
+		
+		return	Atom((OUT_OBJ_PTR<<24)+(index	&	0x0FFF));
+	}
+
 	inline	Atom	Atom::ValuePointer(uint16	index){
 		
 		return	Atom((VALUE_PTR<<24)+(index	&	0x0FFF));
@@ -304,6 +309,7 @@ namespace	r_code{
 		case	C_PTR:
 		case	IPGM_PTR:
 		case	IN_OBJ_PTR:
+		case	OUT_OBJ_PTR:
 		case	VALUE_PTR:
 		case	PROD_PTR:
 			return true;

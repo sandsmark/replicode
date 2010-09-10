@@ -241,14 +241,14 @@ CoreCount=0;
 
 		Thread::Sleep(200);
 		stop_sem->acquire();	//	wait for the cores and delegates to terminate.
-		
+		/*
 		if(CoreCount){	//	HACK: at this point, CoreCount shall be 0. BUG: sometimes it's not: a delegate is still waiting on timer.
 
 			for(uint32	i=0;i<CoreCount;++i)
 				stop_sem->acquire(0);
 			stop_sem->acquire();
 		}
-
+*/
 		reset();
 	}
 

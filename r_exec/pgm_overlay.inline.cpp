@@ -32,17 +32,9 @@ namespace	r_exec{
 
 	inline	void	Overlay::kill(){
 		
-		aliveCS.enter();
+		reductionCS.enter();
 		alive=false;
-		aliveCS.leave();
-	}
-
-	inline	bool	Overlay::is_alive(){
-		
-		aliveCS.enter();
-		bool	_alive=alive;
-		aliveCS.leave();
-		return	_alive;
+		reductionCS.leave();
 	}
 
 	inline	void	Overlay::patch_code(uint16	index,Atom	value){

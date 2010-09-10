@@ -1,0 +1,60 @@
+;dynamic generation of a program
+;case 5
+;the generated program has one input and
+;depends on some value from the generating program.
+;highly recursive: _start generates instances of p that
+;in turn generate inputs for _start, thus
+;generating more instances of p.
+
+dummy:(ent 1)
+[]
+   [now 1 forever root nil]
+
+(mk.val self position (vec3 1 1 1) 1)
+[]
+   [now 1 forever root nil]
+
+(mk.val dummy position (vec3 2 2 2) 1)
+[]
+   [now 1 forever root nil]
+
+_start:(pgm
+|[]
+[]
+   []
+      (ptn (mk.val self position v1: ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      p:(pgm
+      |[]
+      []
+         []
+            (ptn (mk.val self position v2: ::) |[])
+         |[]
+         |[]
+      []
+         (inj []
+            (mk.val self position (\ (+ v2 v1)) 1)
+            [(\ now) 1 forever root nil]
+         )
+      0us
+      1
+      1
+      )
+      [now 1 forever root nil]
+   )
+   (inj []
+      (ins p |[])
+      [now 1 1 root nil 1]
+   )
+0us
+1
+1
+)
+|[]
+
+i_start:(ipgm _start |[] 1)
+[]
+   [now 1 1 root nil 1]

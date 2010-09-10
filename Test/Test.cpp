@@ -144,6 +144,10 @@ int32	main(int	argc,char	**argv){
 		image=mem->getImage();
 		mem->resume();
 
+		std::cout<<"\nShutting rMem down...\n";
+		mem->stop();
+		delete	mem;
+
 		//probe.check();
 		
 		if(settings.write_image)
@@ -155,10 +159,6 @@ int32	main(int	argc,char	**argv){
 		delete	image;
 
 		//std::cout<<"getImage(): "<<probe.us()<<"us"<<std::endl;
-
-		std::cout<<"\nShutting rMem down...\n";
-		mem->stop();
-		delete	mem;
 	}
 
 	return	0;

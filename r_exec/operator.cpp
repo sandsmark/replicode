@@ -572,7 +572,7 @@ namespace	r_exec{
 
 	bool	syn(const	Context	&context,uint16	&index){
 
-		return	false;	//	TODO.
+		return	true;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////

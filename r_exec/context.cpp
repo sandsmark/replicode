@@ -207,6 +207,8 @@ namespace	r_exec{
 		case	Atom::OPERATOR:{
 
 			Operator	op=Operator::Get((*this)[0].asOpcode());
+			if(op.is_syn())
+				return	true;
 			if(!op.is_red()){	//	red will prevent the evaluation of its productions before reducting its input.
 
 				uint16	atom_count=getChildrenCount();
@@ -266,32 +268,37 @@ namespace	r_exec{
 
 	void	Context::copy_structure_to_value_array(bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr){	//	prefix: by itpr or not.
 
-		uint16	atom_count=getChildrenCount();
-		overlay->values[write_index++]=code[index];
-		extent_index=write_index+atom_count;
-		switch(code[index].getDescriptor()){
-		case	Atom::TIMESTAMP:
-			for(uint16	i=1;i<=atom_count;++i)
-				overlay->values[write_index++]=code[index+i];
-			break;
-		case	Atom::C_PTR:
-			if(!dereference_cptr){
+		if(code[index].getDescriptor()==Atom::OPERATOR	&&	Operator::Get(code[index].asOpcode()).is_syn())
+			copy_member_to_value_array(1,prefix,write_index,extent_index,dereference_cptr);
+		else{
 
-				copy_member_to_value_array(1,prefix,write_index++,extent_index,false);
-				for(uint16	i=2;i<=atom_count;++i)
+			uint16	atom_count=getChildrenCount();
+			overlay->values[write_index++]=code[index];
+			extent_index=write_index+atom_count;
+			switch(code[index].getDescriptor()){
+			case	Atom::TIMESTAMP:
+				for(uint16	i=1;i<=atom_count;++i)
 					overlay->values[write_index++]=code[index+i];
-				//Atom::Trace(&overlay->values[0],overlay->values.size());
 				break;
-			}	//	else, dereference the c_ptr.
-		default:
-			if(is_mod_or_set()){
+			case	Atom::C_PTR:
+				if(!dereference_cptr){
 
-				for(uint16	i=1;i<=atom_count;++i)
-					copy_member_to_value_array(i,prefix,write_index++,extent_index,i!=3);
-			}else{
+					copy_member_to_value_array(1,prefix,write_index++,extent_index,false);
+					for(uint16	i=2;i<=atom_count;++i)
+						overlay->values[write_index++]=code[index+i];
+					//Atom::Trace(&overlay->values[0],overlay->values.size());
+					break;
+				}	//	else, dereference the c_ptr.
+			default:
+				if(is_mod_or_set()){
 
-				for(uint16	i=1;i<=atom_count;++i)
-					copy_member_to_value_array(i,prefix,write_index++,extent_index,!(!dereference_cptr	&&	i==1));
+					for(uint16	i=1;i<=atom_count;++i)
+						copy_member_to_value_array(i,prefix,write_index++,extent_index,i!=3);
+				}else{
+
+					for(uint16	i=1;i<=atom_count;++i)
+						copy_member_to_value_array(i,prefix,write_index++,extent_index,!(!dereference_cptr	&&	i==1));
+				}
 			}
 		}
 	}

@@ -44,8 +44,7 @@ namespace	r_exec{
 
 	bool	ReductionJob::update(_Mem	*m){
 
-		if(overlay->is_alive())
-			overlay->reduce(input,m);
+		overlay->reduce(input,m);
 		return	true;
 	}
 
