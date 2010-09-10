@@ -31,12 +31,12 @@ _start:(pgm
       |[]
       []
          []
-            (ptn (mk.val self position v2: ::) |[])
+            (ptn (mk.val self position v2:(vec3 x: y: z:) ::) |[])
          |[]
          |[]
       []
          (inj []
-            (mk.val self position (\ (+ v2 v1)) 1)
+            (mk.val self position (vec3 x 0 z) 1)
             [(\ now) 1 forever root nil]
          )
       0us

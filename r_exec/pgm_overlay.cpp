@@ -510,27 +510,30 @@ namespace	r_exec{
 		init();
 	}
 
-	void	IOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){	//	patch recursively : in pgm_code[index] with IN_OBJ_PTRs until ::.
+	void	IOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){	//	patch recursively : in pgm_code[pgm_code_index] with IN_OBJ_PTRs until ::.
 
-		uint16	skel_index=pgm_code[pgm_code_index+1].asIndex();
-		uint16	atom_count=pgm_code[skel_index].getAtomCount();
+		uint16	patch_index=pgm_code_index;
+		uint16	atom_count;
+		if(pgm_code[pgm_code_index].getDescriptor()==Atom::I_PTR)
+			patch_index=pgm_code[pgm_code_index].asIndex();	
+		atom_count=pgm_code[patch_index].getAtomCount();
 
-		pgm_code[skel_index]=Atom::InObjPointer(input_index,0);	//	replace the skeleton atom by a ptr to the input object.
-		patch_indices.push_back(skel_index);
+		pgm_code[pgm_code_index]=Atom::InObjPointer(input_index,input_code_index);	//	replace the skeleton atom by a ptr to the input object.
+		patch_indices.push_back(pgm_code_index);
 
 		for(uint16	j=1;j<=atom_count;++j){
 
-			switch(pgm_code[skel_index+j].getDescriptor()){
+			switch(pgm_code[patch_index+j].getDescriptor()){
 			case	Atom::WILDCARD:
-				pgm_code[skel_index+j]=Atom::InObjPointer(input_index,input_code_index+j);
-				patch_indices.push_back(skel_index+j);
+				pgm_code[patch_index+j]=Atom::InObjPointer(input_index,input_code_index+j);
+				patch_indices.push_back(patch_index+j);
 				break;
 			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
 				return;
-			/*case	Atom::I_PTR:
-				patch_input_code(pgm_code[skel_index+j].asIndex(),input_index,getInputObject(input_index)->code(skel_index+j).asIndex());
-				patch_indices.push_back(skel_index+j);
-				break;*/
+			case	Atom::I_PTR:	//	go one level deper in the pattern: recurse.
+				patch_input_code(patch_index+j,input_index,getInputObject(input_index)->code(j).asIndex());
+				patch_indices.push_back(patch_index+j);
+				break;
 			default:	//	leave as is.
 				break;
 			}
@@ -623,7 +626,7 @@ namespace	r_exec{
 	inline	IOverlay::MatchResult	IOverlay::__match(r_exec::View	*input,uint16	pattern_index){
 //Atom::Trace(pgm_code,getIPGM()->get_reference(0)->code_size());
 //input->object->trace();
-		patch_input_code(pattern_index,input_views.size()-1,0);	//	the input has just been pushed on input_views (see match).
+		patch_input_code(pgm_code[pattern_index+1].asIndex(),input_views.size()-1,0);	//	the input has just been pushed on input_views (see match); pgm_code[pattern_index+1].asIndex() is the structure pointed by the pattern's skeleton.
 //Atom::Trace(pgm_code,getIPGM()->get_reference(0)->code_size());
 //input->object->trace();
 		//	match: evaluate the set of guards.
