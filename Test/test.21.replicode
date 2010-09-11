@@ -3,7 +3,7 @@
 ;the generated program has one input and
 ;tpl args that depend on some value
 ;from the generating program.
-;like test.20.replicode except that p now gets tpl args.
+;similar to test.20.replicode except that p now gets tpl args.
 
 (mk.val self position (vec3 1 1 1) 1)
 []

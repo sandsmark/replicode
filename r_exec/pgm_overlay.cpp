@@ -195,7 +195,7 @@ namespace	r_exec{
 		uint16	unused_index;
 		bool	in_red=false;	//	if prods are computed by red, we have to evaluate the expression; otherwise, we have to evaluate the prods in the set one by one to be able to reference new objects in this->productions.
 		Context	prods(getIPGM()->get_reference(0),getIPGMView(),pgm_code,pgm_code[PGM_PRODS].asIndex(),this);
-		if(prods[0].getDescriptor()!=Atom::SET){	//	p points to an expression lead by red.
+		if(prods[0].getDescriptor()!=Atom::SET){	//	prods[0] is not a set: it is assumed to be an expression lead by red.
 
 			in_red=true;
 			if(!prods.evaluate(unused_index)){
@@ -247,12 +247,14 @@ namespace	r_exec{
 						productions.push_back(arg1.getObject());
 					else{
 
-						object=controller->get_mem()->buildObject(arg1[0]);
-						//arg1.trace();
+						object=mem->buildObject(arg1[0]);
+	//					if(production_count==2)
+	//						arg1.trace();
 						arg1.copy(object,0);
 						//arg1.trace();
-						//object->trace();
-						productions.push_back(object);
+		//				if(production_count==1)
+		//					object->trace();
+						productions.push_back(mem->check_existence(object));
 					}
 					patch_code(index,Atom::ProductionPointer(productions.size()-1));
 
@@ -264,7 +266,7 @@ namespace	r_exec{
 		Code	*mk_rdx;
 		uint16	write_index;
 		uint16	extent_index;
-		bool	notify_rdx=(getIPGM()->get_reference(0)->code(PGM_NFR).asFloat()==1)	&&	inj_eje_count;
+		bool	notify_rdx=inj_eje_count	&&	(getIPGM()->get_reference(0)->code(PGM_NFR).asFloat()==1);
 		if(notify_rdx){	//	the productions are command objects (cmd); only injections/ejections are notified.
 
 			mk_rdx=get_mk_rdx(write_index);
@@ -299,9 +301,7 @@ namespace	r_exec{
 					view->references[1]=getIPGMView()->get_host();
 					view->code(VIEW_ORG)=Atom::RPointer(1);
 
-					Code	*existing_object=mem->inject(view);
-					if(existing_object)
-						productions[prod_index]=existing_object;	//	so that the mk.rdx will reference the existing object instead of object, which has been discarded.
+					mem->inject(view);
 
 					if(notify_rdx){
 
@@ -453,6 +453,11 @@ namespace	r_exec{
 		if(_now>0)
 			return	_now;
 		return	Now();
+	}
+
+	_Mem	*Overlay::get_mem()	const{
+
+		return	controller->get_mem();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

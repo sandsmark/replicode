@@ -205,58 +205,47 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
+	template<class	O>	Code	*Mem<O>::check_existence(Code	*object){
+
+		if(object->code(0).getDescriptor()==Atom::GROUP)	//	groups are always new.
+			return	object;
+
+		O	*_object;
+		if(O::RequiresPacking())			//	false if LObject, true for network-aware objects.
+			_object=O::Pack(object,this);	//	non compact form will be deleted (P<> in view) if not an instance of O; compact forms are left unchanged.
+		else
+			_object=(O	*)object;
+
+		object_registerCS.enter();
+		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>::const_iterator	it=object_register.find(_object);
+		if(it!=object_register.end()){
+
+			object_registerCS.leave();
+			return	*it;
+		}
+		object_registerCS.leave();
+		return	_object;
+	}
+
 	template<class	O>	void	Mem<O>::inject(O	*object,View	*view){
 
 		view->set_object(object);
 		injectNow(view);
 	}
 
-	template<class	O>	Code	*Mem<O>::inject(View	*view){
+	template<class	O>	void	Mem<O>::inject(View	*view){
 
 		Group	*host=view->get_host();
 
 		host->enter();
-		if(host->is_invalidated()){
-
+		if(host->is_invalidated())
 			host->leave();
-			return	NULL;
-		}
 		host->leave();
 
 		uint64	now=Now();
 		uint64	ijt=view->get_ijt();
 
-		if(view->object->code(0).getDescriptor()!=Atom::GROUP){
-
-			O	*object;
-			if(O::RequiresPacking())						//	false if LObject, true for network-aware objects.
-				view->object=O::Pack(view->object,this);	//	non compact form will be deleted (P<> in view) if not an instance of O; compact forms are left unchanged.
-			object=(O	*)view->object;
-
-			object_registerCS.enter();
-			UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>::const_iterator	it=object_register.find(object);
-			if(it!=object_register.end()){
-
-				object_registerCS.leave();
-				if(ijt<=now)
-					injectExistingObjectNow(view,*it,host,true);
-				else{
-					
-					P<TimeJob>	j=new	EInjectionJob(view,ijt);
-					time_job_queue->push(j);
-				}
-				return	*it;
-			}
-			object_registerCS.leave();
-			if(ijt<=now)
-				injectNow(view);
-			else{
-				
-				P<TimeJob>	j=new	InjectionJob(view,ijt);
-				time_job_queue->push(j);
-			}
-			return	NULL;
-		}else{
+		if(view->object->code(0).getDescriptor()==Atom::GROUP){	//	group.
 
 			if(ijt<=now)
 				injectGroupNow(view,(Group	*)view->object,host);
@@ -265,8 +254,24 @@ namespace	r_exec{
 				P<TimeJob>	j=new	GInjectionJob(view,(Group	*)view->object,host,ijt);
 				time_job_queue->push(j);
 			}
+		}else	if(view->object->is_registered){	//	existing object.
 
-			return	NULL;
+			if(ijt<=now)
+				injectExistingObjectNow(view,view->object,host,true);
+			else{
+				
+				P<TimeJob>	j=new	EInjectionJob(view,ijt);
+				time_job_queue->push(j);
+			}
+		}else{	//	new object.
+
+			if(ijt<=now)
+				injectNow(view);
+			else{
+				
+				P<TimeJob>	j=new	InjectionJob(view,ijt);
+				time_job_queue->push(j);
+			}
 		}
 	}
 

@@ -190,10 +190,6 @@ namespace	r_exec{
 		Operator::Register(operator_opcode++,syn);
 		Operator::Register(operator_opcode++,ins);
 		Operator::Register(operator_opcode++,red);
-		Operator::Register(operator_opcode++,com);
-		Operator::Register(operator_opcode++,spl);
-		Operator::Register(operator_opcode++,mrg);
-		Operator::Register(operator_opcode++,ptc);
 		Operator::Register(operator_opcode++,fvw);
 
 		if(!user_operator_library_path)	//	when no rMem is used.

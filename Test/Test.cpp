@@ -155,7 +155,7 @@ int32	main(int	argc,char	**argv){
 
 		if(!settings.write_image	||	!settings.test_image)
 			decompile(decompiler,image,settings.decompile_timestamps==Settings::TS_RELATIVE?starting_time:0);
-
+		//uint32	w;std::cin>>w;
 		delete	image;
 
 		//std::cout<<"getImage(): "<<probe.us()<<"us"<<std::endl;

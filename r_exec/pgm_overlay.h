@@ -106,6 +106,8 @@ namespace	r_exec{
 
 		r_code::Code	*buildObject(Atom	head)	const;
 		uint64			now()	const;
+
+		_Mem	*get_mem()	const;
 	};
 
 	//	Overlay with inputs.

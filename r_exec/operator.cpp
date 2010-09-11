@@ -625,7 +625,7 @@ namespace	r_exec{
 			instantiated_object->code(write_index++)=Atom::Float(1);	//	psln_thr.
 			args.copy(instantiated_object,write_index);					//	writes after psln_thr.
 			instantiated_object->set_reference(0,_object);
-			context.setAtomicResult(Atom::ProductionPointer(context.addProduction(instantiated_object)));
+			context.setAtomicResult(Atom::ProductionPointer(context.addProduction(instantiated_object,true)));	// object may be new: we don't know at this point.
 			return	true;
 		}
 		
@@ -640,7 +640,7 @@ namespace	r_exec{
 		//	patch the pattern with a ptr to the input.
 		if(input.is_reference()){
 
-			uint16	ptr=pattern.addProduction(input.getObject());
+			uint16	ptr=pattern.addProduction(input.getObject(),false);	//	the object obviously is not new.
 			pattern.patch_code(pattern.getIndex()+1,Atom::ProductionPointer(ptr));
 		}else
 			pattern.patch_code(pattern.getIndex()+1,Atom::IPointer(input.getIndex()));
@@ -788,34 +788,6 @@ build_productions:
 failure:
 		index=context.setCompoundResultHead(Atom::Set(0));
 		return	false;
-	}
-
-	////////////////////////////////////////////////////////////////////////////////
-	
-	bool	com(const	Context	&context,uint16	&index){
-
-		return	false;	//	TODO.
-	}
-
-	////////////////////////////////////////////////////////////////////////////////
-
-	bool	spl(const	Context	&context,uint16	&index){
-
-		return	false;	//	TODO.
-	}
-
-	////////////////////////////////////////////////////////////////////////////////
-
-	bool	mrg(const	Context	&context,uint16	&index){
-
-		return	false;	//	TODO.
-	}
-
-	////////////////////////////////////////////////////////////////////////////////
-
-	bool	ptc(const	Context	&context,uint16	&index){
-
-		return	false;	//	TODO.
 	}
 
 	////////////////////////////////////////////////////////////////////////////////

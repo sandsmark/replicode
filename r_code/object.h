@@ -203,16 +203,6 @@ namespace	r_code{
 		void	remove_marker(Code	*m){
 			
 			acq_markers();
-			/*std::list<Code	*>::const_iterator	_m;
-			for(_m=markers.begin();_m!=markers.end();){
-
-				if(*_m==m){
-
-					markers.erase(_m);
-					break;
-				}else
-					++m;
-			}*/
 			markers.remove(m);
 			rel_markers();
 		}

@@ -94,13 +94,6 @@ namespace	r_exec{
 
 	bool	ins(const	Context	&context,uint16	&index);
 	
-	bool	com(const	Context	&context,uint16	&index);	//	TODO.
-
-	bool	spl(const	Context	&context,uint16	&index);	//	TODO.
-	bool	mrg(const	Context	&context,uint16	&index);	//	TODO.
-
-	bool	ptc(const	Context	&context,uint16	&index);	//	TODO.
-
 	bool	fvw(const	Context	&context,uint16	&index);
 }
 

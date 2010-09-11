@@ -32,6 +32,7 @@
 #include	"pgm_overlay.h"
 #include	"operator.h"
 #include	"opcodes.h"
+#include	"mem.h"
 
 
 using	namespace	r_code;
@@ -478,9 +479,9 @@ dereference:
 		return	overlay->values.size()-1;
 	}
 
-	uint16	Context::addProduction(Code	*object)	const{
+	uint16	Context::addProduction(Code	*object,bool	check_for_existence)	const{	//	called by operators (ins and red).
 		
-		overlay->productions.push_back(object);
+		overlay->productions.push_back(overlay->get_mem()->check_existence(object));
 		return	overlay->productions.size()-1;
 	}
 }

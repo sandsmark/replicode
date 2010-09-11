@@ -1,0 +1,48 @@
+;dynamic generation of a program
+;case 7
+;similar to test.20.repliocde.
+;here the generated program controls its instantiated program and
+;controls its own input.
+
+(mk.val self position (vec3 1 1 1) 1)
+[]
+   [now 1 forever root nil]
+
+_start:(pgm
+|[]
+[]
+   []
+      (ptn (mk.val self position v1#vec3: ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      p:(pgm
+      |[]
+      []
+         []
+            (ptn m:(mk.val self position : ::) |[])
+         |[]
+         |[]
+      []
+         (mod [this.vw.act -1]); this points to p.
+         (mod [m.vw.sln -1])
+      0us
+      0
+      1
+      )
+      [now 1 forever root nil]
+   )
+   (inj []
+      (ins p |[])
+      [now 1 forever root nil 1]
+   )
+0us
+1
+1
+)
+|[]
+
+i_start:(ipgm _start |[] 1)
+[]
+   [now 1 forever root nil 1]

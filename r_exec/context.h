@@ -89,12 +89,12 @@ namespace	r_exec{
 													uint16	write_index,
 													uint16	&extent_index,
 													bool	dereference_cptr,
-													bool	patch_code)	const{	//	assumes the context is a structure; C: Object or View.
+													int32	pgm_index)	const{	//	assumes the context is a structure; C: Object or View.
 			
 			if((*this)[0].getDescriptor()==Atom::OPERATOR	&&	Operator::Get((*this)[0].asOpcode()).is_syn()){	// (\ (expression ...)).
 				
 				Context	c=getChild(1);
-				c.copy_member(destination,write_index,extent_index,dereference_cptr,patch_code);
+				c.copy_member(destination,write_index,extent_index,dereference_cptr,pgm_index);
 			}else{
 
 				destination->code(write_index++)=(*this)[0];
@@ -123,16 +123,22 @@ namespace	r_exec{
 						for(uint16	i=1;i<=atom_count;++i){
 
 							Context	c=getChild(i);
-							c.copy_member(destination,write_index++,extent_index,i!=3,patch_code);
+							c.copy_member(destination,write_index++,extent_index,i!=3,pgm_index);
 						}
-					}else{
+					}else{	// if a pgm is being copied, indicate the starting index of the pgm so that we can turn on code patching and know if a cptr if referencing code inside the pgm (in that case it will not be dereferenced).
 
-						bool	in_pgm=((*this)[0].getDescriptor()==Atom::OBJECT	&&	((*this)[0].asOpcode()==Opcodes::PGM	||	(*this)[0].asOpcode()==Opcodes::AntiPGM));
+						int32	_pgm_index;
+						if(pgm_index>=0)
+							_pgm_index=pgm_index;
+						else	if((*this)[0].getDescriptor()==Atom::OBJECT	&&	((*this)[0].asOpcode()==Opcodes::PGM	||	(*this)[0].asOpcode()==Opcodes::AntiPGM))
+							_pgm_index=index;
+						else
+							_pgm_index=-1;
 
 						for(uint16	i=1;i<=atom_count;++i){
 
 							Context	c=getChild(i);
-							c.copy_member(destination,write_index++,extent_index,!(!dereference_cptr	&&	i==1),in_pgm	||	patch_code);
+							c.copy_member(destination,write_index++,extent_index,!(!dereference_cptr	&&	i==1),_pgm_index);
 						}
 					}
 					break;
@@ -144,35 +150,39 @@ namespace	r_exec{
 												uint16	write_index,
 												uint16	&extent_index,
 												bool	dereference_cptr,
-												bool	patch_code)	const{
+												int32	pgm_index)	const{
 
 			switch((*this)[0].getDescriptor()){
 			case	Atom::I_PTR:
 			case	Atom::VALUE_PTR:
 			case	Atom::IPGM_PTR:{
 
-				if(data==REFERENCE	&&	index==0)	//	points to an object, not to one of its members.
-					addReference(destination,write_index,object);
-				else{
+				if(data==REFERENCE	&&	index==0){	//	points to an object, not to one of its members.
 
-					if(!dereference_cptr	&&	code[(*this)[0].asIndex()].getDescriptor()==Atom::C_PTR){
+					addReference(destination,write_index,object);
+					break;
+				}
+				
+				if(code[(*this)[0].asIndex()].getDescriptor()==Atom::C_PTR){
+
+					if(!dereference_cptr	||	(pgm_index>0	&&	code[(*this)[0].asIndex()+1].asIndex()>pgm_index)){	// the latter case occurs when a cptr references code inside a pgm being copied.
 
 						Context	c=Context(object,view,code,(*this)[0].asIndex(),overlay,data);
 						destination->code(write_index)=Atom::IPointer(extent_index);
-						c.copy_structure(destination,extent_index,extent_index,dereference_cptr,patch_code);
-					}else{
-
-						Context	c=**this;
-						if(c[0].isStructural()){
-
-							destination->code(write_index)=Atom::IPointer(extent_index);
-							if(patch_code	&&	data==ORIGINAL_PGM)
-								this->patch_code(index,Atom::OutObjPointer(write_index));
-							c.copy_structure(destination,extent_index,extent_index,dereference_cptr,patch_code);
-						}else
-							destination->code(write_index)=c[0];
+						c.copy_structure(destination,extent_index,extent_index,dereference_cptr,pgm_index);
+						break;
 					}
 				}
+
+				Context	c=**this;
+				if(c[0].isStructural()){
+
+					destination->code(write_index)=Atom::IPointer(extent_index);
+					if(pgm_index>0	&&	index>pgm_index	&&	data==ORIGINAL_PGM)
+						this->patch_code(index,Atom::OutObjPointer(write_index));
+					c.copy_structure(destination,extent_index,extent_index,dereference_cptr,pgm_index);
+				}else
+					destination->code(write_index)=c[0];
 				break;
 			}
 			case	Atom::VL_PTR:
@@ -184,13 +194,13 @@ namespace	r_exec{
 					if(code[code[(*this)[0].asIndex()].asIndex()].getDescriptor()==Atom::IN_OBJ_PTR)
 						addReference(destination,write_index,((IOverlay	*)overlay)->getInputObject(code[code[(*this)[0].asIndex()].asIndex()].asInputIndex()));
 					else
-						(**this).copy_member(destination,write_index,extent_index,dereference_cptr,patch_code);
+						(**this).copy_member(destination,write_index,extent_index,dereference_cptr,pgm_index);
 					break;
 				case	Atom::OUT_OBJ_PTR:
 					destination->code(write_index)=Atom::VLPointer(code[(*this)[0].asIndex()].asIndex());
 					break;
 				default:
-					(**this).copy_member(destination,write_index,extent_index,dereference_cptr,patch_code);
+					(**this).copy_member(destination,write_index,extent_index,dereference_cptr,pgm_index);
 					break;
 				}
 				break;
@@ -212,16 +222,16 @@ namespace	r_exec{
 			case	Atom::S_SET:
 			case	Atom::STRING:
 				destination->code(write_index)=Atom::IPointer(extent_index);
-				if(patch_code	&&	data==ORIGINAL_PGM)
+				if(pgm_index>0	&&	index>pgm_index	&&	data==ORIGINAL_PGM)
 					this->patch_code(index,Atom::OutObjPointer(write_index));
-				copy_structure(destination,extent_index,extent_index,dereference_cptr,patch_code);
+				copy_structure(destination,extent_index,extent_index,dereference_cptr,pgm_index);
 				break;
 			case	Atom::T_WILDCARD:
 				destination->code(write_index)=(*this)[0];
 				break;
 			default:
 				destination->code(write_index)=(*this)[0];
-				if(patch_code	&&	data==ORIGINAL_PGM)
+				if(pgm_index>0	&&	index>pgm_index	&&	data==ORIGINAL_PGM)
 					this->patch_code(index,Atom::OutObjPointer(write_index));
 				break;
 			}
@@ -339,17 +349,17 @@ namespace	r_exec{
 		uint16	setCompoundResultHead(Atom	a)	const;
 		uint16	addCompoundResultPart(Atom	a)	const;
 
-		uint16	addProduction(Code	*object)	const;
+		uint16	addProduction(Code	*object,bool	check_for_existence)	const;	//	if check_for_existence==false, the object is assumed not to be new.
 
 		template<class	C>	void	copy(C	*destination,uint16	write_index)	const{
 			
 			uint16	extent_index=0;
-			copy_structure(destination,write_index,extent_index,true,false);
+			copy_structure(destination,write_index,extent_index,true,-1);
 		}
 
 		template<class	C>	void	copy(C	*destination,uint16	write_index,uint16	&extent_index)	const{
 			
-			copy_structure(destination,write_index,extent_index,true,false);
+			copy_structure(destination,write_index,extent_index,true,-1);
 		}
 
 		void	copy_to_value_array(uint16	&position);

@@ -167,7 +167,8 @@ uint32	CoreCount;
 		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);
 
 		//	Interface for overlays and I/O devices	////////////////////////////////////////////////////////////////
-		virtual	Code	*inject(View	*view)=0;	//	returns the existing object if any.
+		virtual	void	inject(View	*view)=0;
+		virtual	Code	*check_existence(Code	*object)=0;	//	returns the existing object if any, or object otherwise: in the latter case, packing may occur.
 
 		//	rMem to rMem.
 		//	The view must contain the destintion group (either stdin or stdout) as its grp member.
@@ -225,7 +226,8 @@ uint32	CoreCount;
 		//	Executive device functions	////////////////////////////////////////////////////////
 		
 		//	Called by the reduction core.
-		Code	*inject(View	*view);
+		void	inject(View	*view);
+		Code	*check_existence(Code	*object);
 
 		//	Called by the communication device (I/O).
 		void	inject(O	*object,View	*view);
