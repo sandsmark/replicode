@@ -43,7 +43,7 @@ namespace	r_exec{
 	}
 
 	bool	ReductionJob::update(_Mem	*m){
-
+		
 		overlay->reduce(input,m);
 		return	true;
 	}

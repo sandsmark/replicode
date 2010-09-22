@@ -78,11 +78,6 @@ namespace	r_exec{
 		return	(Group	*)references[host_reference];
 	}
 
-	inline	uint64	View::get_ijt()	const{
-
-		return	Timestamp::Get(_code+_code[VIEW_IJT].asIndex());
-	}
-
 	inline	float32	View::get_res(){
 
 		return	code(VIEW_RES).asFloat();

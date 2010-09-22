@@ -139,13 +139,12 @@ namespace	r_exec{
 
 	float32	View::update_res(){
 
-		if(res_changes>0	&&	acc_res!=0){
-
-			float32	new_res=get_res()+(float32)acc_res/(float32)res_changes;
-			if(new_res<0)
-				new_res=0;
-			code(VIEW_RES)=r_code::Atom::Float(new_res);
-		}
+		float32	new_res=get_res();
+		if(res_changes>0	&&	acc_res!=0)
+			new_res=get_res()+(float32)acc_res/(float32)res_changes;
+		if(--new_res<0)	//	decremented by one on behalf of the group (at upr).
+			new_res=0;
+		code(VIEW_RES)=r_code::Atom::Float(new_res);
 		acc_res=0;
 		res_changes=0;
 		return	get_res();

@@ -31,6 +31,8 @@
 #ifndef	group_h
 #define	group_h
 
+#include	<set>
+
 #include	"../CoreLibrary/utils.h"
 #include	"object.h"
 #include	"view.h"
@@ -108,10 +110,10 @@ namespace	r_exec{
 		//	Empty when the viewed group is invisible (this means that visible groups can be non c-active or non c-salient).
 		//	Maintained by the viewing groups (at update time).
 		//	Viewing groups are c-active and c-salient. the bool is the cov.
-		UNORDERED_MAP<Group	*,bool>		viewing_groups;
+		UNORDERED_MAP<Group	*,bool>				viewing_groups;
 
-		//	Populated within update; cleared at the beginning of update.
-		std::vector<View	*>			newly_salient_views;
+		//	Populated within update; ordered by increasing ijt; cleared at the beginning of update.
+		std::set<View	*,r_code::View::Less>	newly_salient_views;
 
 		//	Populated upon ipgm injection; used at update time; cleared afterward.
 		std::vector<Controller	*>	new_controllers;

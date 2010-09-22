@@ -252,8 +252,8 @@ namespace	r_exec{
 	//						arg1.trace();
 						arg1.copy(object,0);
 						//arg1.trace();
-		//				if(production_count==1)
-		//					object->trace();
+	//					if(production_count==2)
+	//						object->trace();
 						productions.push_back(mem->check_existence(object));
 					}
 					patch_code(index,Atom::ProductionPointer(productions.size()-1));
@@ -492,6 +492,8 @@ namespace	r_exec{
 		this->value_commit_index=value_commit_index;
 		for(uint16	i=0;i<value_commit_index;++i)	//	copy values up to the last commit index.
 			values.push_back(original->values[i]);
+
+		birth_time=Now();
 	}
 
 	inline	IOverlay::~IOverlay(){
@@ -505,6 +507,7 @@ namespace	r_exec{
 		for(uint16	i=1;i<=pattern_count;++i)
 			input_pattern_indices.push_back(pgm_code[pattern_set_index+i].asIndex());
 
+		birth_time=Now();
 	}
 
 	inline	void	IOverlay::reset(){
@@ -550,7 +553,7 @@ namespace	r_exec{
 		reductionCS.enter();
 
 		if(alive){
-
+			
 			uint16	input_index;
 			switch(match(input,input_index)){
 			case	SUCCESS:
@@ -699,26 +702,29 @@ namespace	r_exec{
 
 		reductionCS.enter();
 
-		uint16	input_index;
-		switch(match(input,input_index)){
-		case	SUCCESS:
-			if(input_pattern_indices.size()==0){	//	all patterns matched.
+		if(alive){
 
-				if(check_timings()	&&	check_guards()){
+			uint16	input_index;
+			switch(match(input,input_index)){
+			case	SUCCESS:
+				if(input_pattern_indices.size()==0){	//	all patterns matched.
 
-					((AntiPGMController	*)controller)->restart(this);
+					if(check_timings()	&&	check_guards()){
+
+						((AntiPGMController	*)controller)->restart(this);
+						break;
+					}
+				}else{
+
+					AntiOverlay	*offspring=new	AntiOverlay(this,input_index,value_commit_index);
+					((AntiPGMController	*)controller)->add(offspring);
+					commit();
 					break;
 				}
-			}else{
-
-				AntiOverlay	*offspring=new	AntiOverlay(this,input_index,value_commit_index);
-				((AntiPGMController	*)controller)->add(offspring);
-				commit();
+			case	FAILURE:	//	just rollback: let the overlay match other inputs.
+				rollback();
 				break;
 			}
-		case	FAILURE:	//	just rollback: let the overlay match other inputs.
-			rollback();
-			break;
 		}
 
 		reductionCS.leave();
@@ -807,7 +813,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	PGMController::PGMController(_Mem	*m,r_code::View	*ipgm_view):_PGMController(m,ipgm_view),start_time(Now()){
+	PGMController::PGMController(_Mem	*m,r_code::View	*ipgm_view):_PGMController(m,ipgm_view){
 
 		overlays.push_back(new	IOverlay(this));
 	}
@@ -820,25 +826,23 @@ namespace	r_exec{
 		overlayCS.enter();
 
 		uint64	tsc=Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
-		if(tsc>0){
+		if(tsc>0){	// 1st overlay is the master (no match yet); other overlays are pushed back in order of their matching time. 
 			
+			// start from the last overlay, and erase all of them that are older than tsc.
 			uint64	now=Now();
-			uint64	elapsed=now-start_time;
-			if(elapsed>tsc){
+			std::list<P<Overlay> >::iterator	master=overlays.begin();
+			std::list<P<Overlay> >::iterator	o;
+			std::list<P<Overlay> >::iterator	previous;
+			for(o=overlays.end();o!=master;){
 
-				std::list<P<Overlay> >::const_iterator	first=overlays.begin();
-				std::list<P<Overlay> >::const_iterator	o;
-				for(o=++first;o!=overlays.end();){
-
+				if(now-((IOverlay	*)(*o))->birth_time>tsc){
+					
+					previous=--o;
 					(*o)->kill();
-					o=overlays.erase(o);
-				}
-
-				first=overlays.begin();
-				((IOverlay	*)*first)->reductionCS.enter();
-				(*first)->reset();
-				((IOverlay	*)*first)->reductionCS.leave();
-				start_time=elapsed%tsc;
+					overlays.erase(o);
+					o=previous;
+				}else
+					break;
 			}
 		}
 

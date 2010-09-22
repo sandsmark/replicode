@@ -32,7 +32,7 @@ _start:(pgm
             [(\ now) 1 forever root nil]
          )
       50000us
-      0
+      1
       1
       )
       [now 1 forever root nil]

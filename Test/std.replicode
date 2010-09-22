@@ -22,7 +22,6 @@
 !class (igol (_obj {code: args:[]}))
 
 ;mapping markers -> r-code
-!class (mk.xet (_obj {proc: prod:[] start:us dur:us}))
 !class (mk.rdx (_obj {code: inputs:[] prods:[]}))
 !class (mk.|rdx (_obj {code: prods:[]}))
 !class (mk.low_sln (_obj obj:))
@@ -33,8 +32,6 @@
 !class (mk.sln_chg (_obj {obj: chg:nb}))
 !class (mk.act_chg (_obj {obj: chg:nb}))
 !class (mk.new (_obj obj:))
-!class (mk.pre (_obj {data: time:us cer:nb}))
-!class (mk.isa (_obj {inst: class: cer:nb}))
 
 ;mapping operator opcodes -> r-atoms
 !op (_now):us
@@ -57,10 +54,6 @@
 !op (syn :):
 !op (ins : :[]):
 !op (red :[] :[] :[]):[]
-!op (com :[] :[]):[]
-!op (spl :[] :[]):[]
-!op (mrg :[] :[]):[]
-!op (ptc : :[] :[]):
 !op (fvw : :):
 
 ;operator aliases
@@ -105,7 +98,6 @@
 !def (swp args) (cmd _swp exe args)
 !def (new_dev args) (cmd _new_dev exe args)
 !def (del_dev args) (cmd _del_dev exe args)
-!def (start args) (cmd _start exe args)
 !def (stop args) (cmd _stop exe args)
 !def (suspend args) (cmd _suspend exe args)
 !def (resume args) (cmd _resume exe args)

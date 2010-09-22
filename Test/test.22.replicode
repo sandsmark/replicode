@@ -38,7 +38,7 @@ _start:(pgm
       [now 1 forever root nil 1]
    )
 0us
-1
+0
 1
 )
 |[]

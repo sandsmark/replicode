@@ -47,7 +47,7 @@ serve:(pgm
       (string "ping" now 1)
       [now 1 1 table nil]
    )
-   (mod [this.vw.res (+ 1 (* -2 this.vw.res))]);at each upr, res is decremented by 1 by the rMem.
+   (mod [this.vw.res -1])
 80000us
 1
 1
@@ -73,7 +73,7 @@ player1:(pgm
 []
    (inj []
       (string "pong" now 1)
-      [now 1 10 table nil]
+      [now 1 1 table nil]
    )
 0us; time scope
 0; notify reduction flag
@@ -100,7 +100,7 @@ player2:(pgm
 []
    (inj []
       (string "ping" now 1)
-      [now 1 10 table nil]
+      [now 1 1 table nil]
    )
 0us; time scope
 0; notify reduction flag

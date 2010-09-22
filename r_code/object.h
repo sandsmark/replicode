@@ -130,6 +130,8 @@ namespace	r_code{
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	code(uint16	i)	const{	return	_code[i];	}
 
+		uint64	get_ijt()	const{	return	Timestamp::Get(_code+_code[VIEW_IJT].asIndex());	}
+
 		class	Hash{
 		public:
 			size_t	operator	()(View	*v)	const{
@@ -147,7 +149,7 @@ namespace	r_code{
 		class	Less{
 		public:
 			bool	operator	()(const	View	*lhs,const	View	*rhs)	const{
-				return	Timestamp::Get(lhs->_code+lhs->_code[VIEW_IJT].asIndex())<Timestamp::Get(rhs->_code+rhs->_code[VIEW_IJT].asIndex());
+				return	lhs->get_ijt()<rhs->get_ijt();
 			}
 		};
 	};

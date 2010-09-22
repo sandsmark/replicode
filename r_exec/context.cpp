@@ -94,8 +94,10 @@ namespace	r_exec{
 		case	Atom::WILDCARD:
 		case	Atom::T_WILDCARD:
 			return	true;
+		case	Atom::IPGM_PTR:
+			return	(**this).match(input);
 		default:
-			return	(*this)[0].atom==input[0].atom;
+			return	(*this)[0]==input[0];
 		}
 	}
 

@@ -116,6 +116,8 @@ namespace	r_exec{
 	public	Overlay{
 	friend	class	PGMController;
 	friend	class	Context;
+	private:
+		uint64	birth_time;	// used for ipgms: overlays older than ipgm->pgm->tsc are killed.
 	protected:
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
@@ -221,12 +223,9 @@ namespace	r_exec{
 		void	add(Overlay	*overlay);
 	};
 
-	//	No need for signaling jobs:
-	//	upon invocation of take_input(), when (elapsed=now-start_time)>tsc, reset the first overlay, kill the rest and reset start_time to now-elapsed%tsc.
+	//	No need for signaling jobs: upon invocation of take_input() the overlays older than tsc are killed, assuming stc>0; otherwise, overlays live unitl the ipgm dies.
 	class	r_exec_dll	PGMController:
 	public	_PGMController{
-	private:
-		uint64	start_time;
 	public:
 		PGMController(_Mem	*m,r_code::View	*ipgm_view);
 		~PGMController();

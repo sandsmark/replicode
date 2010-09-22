@@ -15,9 +15,10 @@ _start:(pgm
    (ptn v1:(vec3 : y: ::) |[])
 []
    []
-      (ptn (mk.val self position v2:(vec3 x: ::) ::) |[])
+      (ptn (mk.val self position v2:(vec3 x: y2: ::) ::) |[])
    |[]
-   |[]
+   []
+      (= (- y 1) y2)
 []
    (inj []
       (mk.val dummy position (vec3 (+ v1.x x) y v2.z) 1)

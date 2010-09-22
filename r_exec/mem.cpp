@@ -190,7 +190,7 @@ CoreCount=0;
 						
 						if(v->second->get_sln()>g->get_sln_thr()){	//	salient view.
 
-							g->newly_salient_views.push_back(v->second);
+							g->newly_salient_views.insert(v->second);
 							_inject_reduction_jobs(v->second,g);
 						}
 					FOR_ALL_VIEWS_END
@@ -434,8 +434,7 @@ CoreCount=0;
 		FOR_ALL_VIEWS_BEGIN_NO_INC(group,v)
 
 			//	update resilience.
-			v->second->mod_res(-1);
-			float32	res=group->update_res(v->second,this);
+			float32	res=group->update_res(v->second,this);	//	will decrement res by 1 in addition to the accumulated changes.
 			if(res>0){
 
 				//	update saliency (apply decay).
@@ -447,7 +446,7 @@ CoreCount=0;
 				if(group_is_c_salient){
 					
 					if(!wiew_was_salient	&&	wiew_is_salient)	//	record as a newly salient view.
-						group->newly_salient_views.push_back(v->second);
+						group->newly_salient_views.insert(v->second);
 
 					//	inject sln propagation jobs.
 					//	the idea is to propagate sln changes when a view "occurs to the mind", i.e. becomes more salient in a group and is eligible for reduction in that group.
@@ -561,17 +560,21 @@ CoreCount=0;
 			UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
 			for(vg=group->viewing_groups.begin();vg!=group->viewing_groups.end();++vg){
 
-				if(vg->second)	//	cov==true.
-					for(uint32	i=0;i<group->newly_salient_views.size();++i)
-						if(group->newly_salient_views[i]->object->code(0).getDescriptor()!=Atom::INSTANTIATED_PROGRAM	&&	//	no cov for pgm, groups or notifications.
-							group->newly_salient_views[i]->object->code(0).getDescriptor()!=Atom::GROUP					&&
-							!group->newly_salient_views[i]->isNotification())
-								injectCopyNow(group->newly_salient_views[i],vg->first,now);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.
+				if(vg->second){	//	cov==true.
+
+					std::set<View	*,r_code::View::Less>::const_iterator	v;
+					for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
+						if((*v)->object->code(0).getDescriptor()!=Atom::INSTANTIATED_PROGRAM	&&	//	no cov for pgm, groups or notifications.
+							(*v)->object->code(0).getDescriptor()!=Atom::GROUP					&&
+							!(*v)->isNotification())
+								injectCopyNow(*v,vg->first,now);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.
+				}
 			}
 
 			//	build reduction jobs.
-			for(uint32	i=0;i<group->newly_salient_views.size();++i)
-				_inject_reduction_jobs(group->newly_salient_views[i],group);
+			std::set<View	*,r_code::View::Less>::const_iterator	v;
+			for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
+				_inject_reduction_jobs(*v,group);
 		}
 
 		if(group_is_c_active	&&	group_is_c_salient){	//	build signaling jobs for new ipgms.

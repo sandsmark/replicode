@@ -23,23 +23,23 @@ _start:(pgm
       |[]
       []
          []
-            (ptn (mk.val self position v2:(vec3 x: y: z:) ::) |[])
+            (ptn (mk.val e: position v2:(vec3 x: y: z:) ::) [(\ (= e self))])
          |[]
          |[]
       []
          (inj []
-            (mk.val self position (vec3 v1.x 10 z) 1)
+            (mk.val self position (vec3 v1.y 10 (\ (+ z 1))) 1)
             [(\ now) 1 forever root nil]
          )
       0us
-      0
+      1
       1
       )
-      [now 1 forever root nil]
+      [now 0 forever root nil]
    )
    (inj []
       (ins p |[])
-      [now 1 1 root nil 1]
+      [now 0 forever root nil 1]
    )
 0us
 1
@@ -49,4 +49,4 @@ _start:(pgm
 
 i_start:(ipgm _start |[] 1)
 []
-   [now 1 1 root nil 1]
+   [now 0 forever root nil 1]

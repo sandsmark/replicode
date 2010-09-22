@@ -306,8 +306,9 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
-				for(uint32	i=0;i<host->newly_salient_views.size();++i)
-					o->take_input(host->newly_salient_views[i]);	//	view will be copied.
+				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
+					o->take_input(*v);	//	view will be copied.
 			}
 			break;
 		}case	ObjectType::ANTI_IPGM:{
@@ -316,8 +317,9 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
-				for(uint32	i=0;i<host->newly_salient_views.size();++i)
-					o->take_input(host->newly_salient_views[i]);	//	view will be copied.
+				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
+					o->take_input(*v);	//	view will be copied.
 
 				P<TimeJob>	j=new	AntiPGMSignalingJob(o,now+Timestamp::Get<Code>(o->getIPGM()->get_reference(0),PGM_TSC));
 				time_job_queue->push(j);

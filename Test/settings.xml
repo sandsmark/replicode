@@ -12,7 +12,7 @@
     
     usr_operator_path="C:/Work/Replicode/Debug/usr_operators.dll"
     usr_class_path="C:/Work/Replicode/Test/user.classes.replicode"
-    source_file_name="C:/Work/Replicode/Test/test.22.replicode"
+    source_file_name="C:/Work/Replicode/Test/test.25.replicode"
     
     write_image="no"
     image_path="C:/Work/Replicode/Test/Correlator.Data.Generation/motor.babbling.7.replicode.image"
