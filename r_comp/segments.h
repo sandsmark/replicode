@@ -31,7 +31,7 @@
 #ifndef	segments_h
 #define	segments_h
 
-#include	"object.h"
+#include	"../r_code/object.h"
 #include	"class.h"
 
 

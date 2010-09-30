@@ -285,7 +285,7 @@ namespace	r_comp{
 	}
 
 	void	ObjectMap::read(word32	*data,uint32	size){
-
+		
 		for(uint16	i=0;i<size;++i)
 			objects.push_back(data[i]);
 	}

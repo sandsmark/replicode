@@ -33,7 +33,7 @@
 
 #include	<iostream>
 
-#include	"vector.h"
+#include	"../r_code/vector.h"
 
 
 using	namespace	r_code;

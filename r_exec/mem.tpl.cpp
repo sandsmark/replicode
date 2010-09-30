@@ -29,7 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"init.h"
-#include	"replicode_defs.h"
+#include	"../r_code/replicode_defs.h"
 #include	"operator.h"
 #include	"group.h"
 #include	"factory.h"

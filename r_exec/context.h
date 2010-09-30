@@ -31,7 +31,7 @@
 #ifndef	context_h
 #define	context_h
 
-#include	"atom.h"
+#include	"../r_code/atom.h"
 #include	"../r_code/utils.h"
 #include	"object.h"
 

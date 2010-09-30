@@ -31,7 +31,7 @@
 #ifndef	time_core_h
 #define	time_core_h
 
-#include	"utils.h"
+#include	"../CoreLibrary/utils.h"
 #include	"time_job.h"
 
 

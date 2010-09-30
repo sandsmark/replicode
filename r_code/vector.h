@@ -31,7 +31,7 @@
 #ifndef	r_code_vector_h
 #define	r_code_vector_h
 
-#include	"types.h"
+#include	"../CoreLibrary/types.h"
 
 
 using	namespace	core;

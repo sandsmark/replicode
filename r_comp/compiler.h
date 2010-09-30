@@ -126,6 +126,10 @@ namespace	r_comp{
 		bool	match_symbol(const	char	*symbol,bool	pushback);				//	matches a symbol regardless of what follows.
 		bool	member(std::string	&s);											//	finds a string possibly followed by ., blanks, newline, ) and ].
 
+//	Some 3rd party libraries do define these macros.
+#undef nil
+#undef forever
+
 		//	Lexical units.
 		bool	nil();
 		bool	nil_nb();

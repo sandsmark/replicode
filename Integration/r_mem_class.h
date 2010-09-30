@@ -31,10 +31,10 @@
 #ifndef	r_mem_class_h
 #define	r_mem_class_h
 
-#include	"mbrane.h"
-#include	"image.h"
-#include	"object.h"
-#include	"mem.h"
+#include	"../Core/mbrane.h"
+#include	"../r_code/image.h"
+#include	"../r_code/object.h"
+#include	"../r_exec/mem.h"
 
 
 using	namespace	mBrane::sdk;

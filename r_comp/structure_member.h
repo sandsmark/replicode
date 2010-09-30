@@ -33,8 +33,8 @@
 
 #include	<string>
 
-#include	"image.h"
-#include	"atom.h"
+#include	"../r_code/image.h"
+#include	"../r_code/atom.h"
 
 
 using	namespace	r_code;

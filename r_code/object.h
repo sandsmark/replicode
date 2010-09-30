@@ -33,9 +33,9 @@
 
 #include	"atom.h"
 #include	"vector.h"
-#include	"base.h"
+#include	"../CoreLibrary/base.h"
 #include	"replicode_defs.h"
-#include	"utils.h"
+#include	"../r_code/utils.h"
 
 #include	<list>
 

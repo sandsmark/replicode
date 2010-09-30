@@ -39,7 +39,7 @@
 
 #include	"../r_comp/segments.h"
 
-#include	"pipe.h"
+#include	"../CoreLibrary/pipe.h"
 
 #include	"pgm_overlay.h"
 
