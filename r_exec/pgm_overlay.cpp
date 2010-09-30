@@ -749,6 +749,8 @@ namespace	r_exec{
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	Controller::Controller(_Mem	*m,r_code::View	*ipgm_view):_Object(),mem(m),ipgm_view(ipgm_view),alive(true){
+
+		tsc=Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
 	}
 	
 	Controller::~Controller(){
@@ -825,7 +827,6 @@ namespace	r_exec{
 
 		overlayCS.enter();
 
-		uint64	tsc=Timestamp::Get<Code>(getIPGM()->get_reference(0),PGM_TSC);
 		if(tsc>0){	// 1st overlay is the master (no match yet); other overlays are pushed back in order of their matching time. 
 			
 			// start from the last overlay, and erase all of them that are older than tsc.

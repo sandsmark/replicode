@@ -188,6 +188,8 @@ namespace	r_exec{
 		std::list<P<Overlay> >	overlays;
 		CriticalSection			overlayCS;
 
+		uint64					tsc;
+
 		Controller(_Mem	*m,r_code::View	*ipgm_view);
 	public:
 		virtual	~Controller();
