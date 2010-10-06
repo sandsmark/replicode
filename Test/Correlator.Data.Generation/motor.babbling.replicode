@@ -6,13 +6,20 @@
 ;noise is injected randomly (using a pseudo random number generator).
 ;N.B.: inputs are set with an infinite resilience to retain them
 ;in memory for processing by the Correlator.
+;we use value holders like vec3_holder so that the Correlator can work
+;on views'oid instead of having to examine the content of objects
+;as would be the case using (mk.val self_hand position an_embedded_vec3 1)
 
 _start:(pgm
 |[]
 |[]
 []
    (inj []
-      (mk.val self_hand position (vec3 0 0 0) 1)
+      init_pos:(vec3_holder (vec3 0 0 0) 1)
+      [now 1 forever stdin nil]
+   )
+   (inj []
+      (mk.val self_hand position init_pos 1)
       [now 1 forever stdin nil]
    )
    (inj []
@@ -37,16 +44,20 @@ pos_updater:(pgm
 |[]
 []
    []
-      (ptn (mk.val self_hand position pos: ::) |[])
+      (ptn (mk.val self_hand position pos#vec3_holder: ::) |[])
    |[]
    |[]
 []
    (inj []
-      (mk.val self_hand position p:(+ pos (vec3 0 0 0.1)) 1)
+      new_pos:(vec3_holder (+ pos.value (vec3 0 0 0.1)) 1)
+      [now 1 forever stdin nil] 
+   )
+   (inj []
+      (mk.val self_hand position new_pos 1)
       [t:(+ now 100000us) 1 forever stdin nil]
    )
    (inj []
-      (mk.val cup position p 1)
+      (mk.val cup position new_pos 1)
       [(+ t (rnd 10000)) 1 forever stdin nil]
    )
 0us
@@ -77,7 +88,7 @@ noise_updater:(pgm
 )
 |[]
 
-i_noise_updater.(ipgm noise_updater |[] 1)
+i_noise_updater:(ipgm noise_updater |[] 1)
 []
    [now 1 forever stdin nil 1]
 
@@ -100,5 +111,23 @@ grab_updater:(pgm
 |[]
 
 i_grab_updater:(ipgm grab_updater |[] 1)
+[]
+   [now 1 forever stdin nil 1]
+
+episode_notifier:(pgm
+|[]
+|[]
+[]
+   (inj []
+      (episode_end now 1)
+      [now 1 forever stdin nil]
+   )
+1000000us
+0
+1
+)
+|[]
+
+i_episode_notifier.(ipgm episode_notifier |[] 1)
 []
    [now 1 forever stdin nil 1]

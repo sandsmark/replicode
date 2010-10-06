@@ -64,13 +64,15 @@ public:
 };
 
 class	Correlator{
+private:
+	std::vector<uint32>	episode;
 public:
 	void	take_input(r_code::View	*input){
 
-		//	TODO: process one input.
+		episode.push_back(input->code(VIEW_OID).atom);
 	}
 
-	CorrelatorOutput	*get_output(float32	&error){
+	CorrelatorOutput	*get_output(){
 
 		CorrelatorOutput	*c=new	CorrelatorOutput();
 

@@ -90,66 +90,73 @@ int32	main(int	argc,char	**argv){
 	Correlator	correlator;
 
 	//	Feed the Correlator incrementally with episodes related to the pursuit of one goal.
-	for(uint32	i=0;i<settings.episode_count;++i){
 
-		//	First, get an image containing one episode.
-		std::string	image_path=settings.use_case_path;
-		image_path+="/";
-		image_path+=settings.use_case_name;
-		image_path+=".";
-		image_path+=core::String::Int2String(i);
-		image_path+=".replicode.image";
+	//	First, get an image containing all the episodes.
+	std::string	image_path=settings.use_case_path;
+	image_path+="/";
+	image_path+=settings.image_name;
 
-		ifstream	input(image_path.c_str(),ios::binary|ios::in);
-		if(!input.good())
-			return	1;
+	ifstream	input(image_path.c_str(),ios::binary|ios::in);
+	if(!input.good())
+		return	1;
 
-		r_code::Image<ImageImpl>	*img=(r_code::Image<ImageImpl>	*)r_code::Image<ImageImpl>::Read(input);
-		input.close();
+	r_code::Image<ImageImpl>	*img=(r_code::Image<ImageImpl>	*)r_code::Image<ImageImpl>::Read(input);
+	input.close();
 
-		r_code::vector<Code	*>	objects;
-		r_comp::Image			*_i=new	r_comp::Image();
-		_i->load(img);
-		_i->getObjects<r_code::LObject>(objects);
+	r_code::vector<Code	*>	objects;
+	r_comp::Image			*_i=new	r_comp::Image();
+	_i->load(img);
+	_i->getObjects<r_code::LObject>(objects);
 
-		decompile(decompiler,_i,0);
-		delete	_i;
+	decompile(decompiler,_i,0);
+	delete	_i;
 
-		delete	img;
+	delete	img;
 
-		//	Second, filter objects: retain only those which are actual inputs in stdin and store them in a time-ordered list.
-		std::set<r_code::View	*,r_code::View::Less>	correlator_inputs;
-		for(uint32	i=0;i<objects.size();++i){
+	//	Second, filter objects: retain only those which are actual inputs in stdin and store them in a time-ordered list.
+	std::set<r_code::View	*,r_code::View::Less>	correlator_inputs;
+	for(uint32	i=0;i<objects.size();++i){
 
-			Code	*object=objects[i];
-			if(object->code(0).asOpcode()==r_exec::Opcodes::IPGM)
+		Code	*object=objects[i];
+		if(object->code(0).asOpcode()==r_exec::Opcodes::IPGM)
+			continue;
+
+		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
+		for(v=object->views.begin();v!=object->views.end();++v){
+
+			if(!(*v)->references[0])
 				continue;
 
-			UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
-			for(v=object->views.begin();v!=object->views.end();++v){
+			if((*v)->references[0]->get_axiom()==r_code::SysObject::STDIN_GRP){
 
-				if(!(*v)->references[0])
-					continue;
-
-				if((*v)->references[0]->get_axiom()==r_code::SysObject::STDIN_GRP){
-
-					correlator_inputs.insert(*v);
-					break;
-				}
+				correlator_inputs.insert(*v);
+				break;
 			}
 		}
-
-		//	Third, feed the Correlator with one episode.
-		std::set<r_code::View	*,r_code::View::Less>::const_iterator	v;
-		for(v=correlator_inputs.begin();v!=correlator_inputs.end();++v)
-			correlator.take_input(*v);
-
-		//	Get the result.
-		float32	error;
-		CorrelatorOutput	*output=correlator.get_output(error);
-		output->trace();
-		delete	output;
 	}
+
+	//	Third, feed the Correlator with the episodes, one by one.
+	//	Episodes are delimited with an object of the class episode_end (See user.classes.replicode).
+	std::string	episode_end_class_name="episode_end";
+	uint16		episode_end_opcode=r_exec::Metadata.getClass(episode_end_class_name)->atom.asOpcode();
+	uint16		episode_count=0;
+
+	std::set<r_code::View	*,r_code::View::Less>::const_iterator	v;
+	for(v=correlator_inputs.begin();v!=correlator_inputs.end();++v){
+
+		if((*v)->object->code(0).asOpcode()==episode_end_opcode){
+
+			//	Get the result.
+			CorrelatorOutput	*output=correlator.get_output();
+			output->trace();
+			delete	output;
+
+			++episode_count;
+		}else
+			correlator.take_input(*v);
+	}
+
+	std::cout<<episode_count<<" episodes\n";
 
 	return	0;
 }

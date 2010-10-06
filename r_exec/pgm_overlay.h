@@ -90,8 +90,6 @@ namespace	r_exec{
 
 		Controller	*controller;
 
-		uint64	_now;
-
 		Overlay();
 		Overlay(Controller	*c);
 	public:
@@ -105,7 +103,6 @@ namespace	r_exec{
 		r_exec::View	*getIPGMView()	const;
 
 		r_code::Code	*buildObject(Atom	head)	const;
-		uint64			now()	const;
 
 		_Mem	*get_mem()	const;
 	};

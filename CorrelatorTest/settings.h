@@ -44,8 +44,7 @@ public:
 	std::string	usr_operator_path;
 	std::string	usr_class_path;
 	std::string	use_case_path;
-	std::string	use_case_name;
-	uint32		episode_count;
+	std::string	image_name;
 
 	bool	load(const	char	*file_name){
 
@@ -60,20 +59,17 @@ public:
 		if(!!parameters){
 
 			const	char	*_decompile_timestamps=parameters.getAttribute("decompile_timestamps");
-			const	char	*_episode_count=parameters.getAttribute("episode_count");
-
+			
 			usr_operator_path=parameters.getAttribute("usr_operator_path");
 			usr_class_path=parameters.getAttribute("usr_class_path");
 
 			use_case_path=parameters.getAttribute("use_case_path");
-			use_case_name=parameters.getAttribute("use_case_name");
+			image_name=parameters.getAttribute("image_name");
 
 			if(strcmp(_decompile_timestamps,"relative")==0)
 				decompile_timestamps=TS_RELATIVE;
 			else
 				decompile_timestamps=TS_ABSOLUTE;
-
-			episode_count=atoi(_episode_count);
 		}else{
 
 			std::cerr<<"> Error: Parameter section is unreadable"<<std::endl;

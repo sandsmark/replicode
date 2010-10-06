@@ -1,8 +1,8 @@
 <ApplicationConfiguration user_library="integration">
 
   <Parameters>
-    <Parameter value="C:/Work/Replicode/Debug/usr_operators.dll" type="string"/>
-    <Parameter value="C:/Work/Replicode/Test/user.classes.replicode" type="string"/>
+    <Parameter value="./usr_operators.dll" type="string"/>
+    <Parameter value="../Test/user.classes.replicode" type="string"/>
   </Parameters>
   
 	<Space name="space1" activation_threshold="0.5"/><!--name is mandatory-->

@@ -379,7 +379,6 @@ namespace	r_exec{
 
 		//	called by operators.
 		r_code::Code	*buildObject(Atom	head)	const{	return	overlay->buildObject(head);	}
-		uint64			now()	const{	return	overlay->now();	}
 
 		void	trace()	const;
 	};

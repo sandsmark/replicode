@@ -91,7 +91,7 @@ namespace	r_exec{
 	Overlay::Overlay():alive(true){	//	used for constructing IOverlay offsprings.
 	}
 
-	Overlay::Overlay(Controller	*c):_Object(),controller(c),alive(true),value_commit_index(0),_now(0){
+	Overlay::Overlay(Controller	*c):_Object(),controller(c),alive(true),value_commit_index(0){
 
 		//	copy the original pgm code.
 		pgm_code_size=getIPGM()->get_reference(0)->code_size();
@@ -190,7 +190,7 @@ namespace	r_exec{
 
 	bool	Overlay::inject_productions(_Mem	*mem,_PGMController	*origin){
 
-		_now=Now();
+		uint64	now=Now();
 
 		uint16	unused_index;
 		bool	in_red=false;	//	if prods are computed by red, we have to evaluate the expression; otherwise, we have to evaluate the prods in the set one by one to be able to reference new objects in this->productions.
@@ -202,7 +202,6 @@ namespace	r_exec{
 
 				rollback();
 				productions.clear();
-				_now=0;
 				return	false;
 			}
 			prods=*prods;//prods.trace();
@@ -217,7 +216,6 @@ namespace	r_exec{
 
 				rollback();
 				productions.clear();
-				_now=0;
 				return	false;
 			}//cmd.trace();
 			Context	function=*cmd.getChild(1);
@@ -356,7 +354,6 @@ namespace	r_exec{
 						default:
 							rollback();
 							productions.clear();
-							_now=0;
 							return	false;
 						}
 					}
@@ -408,7 +405,6 @@ namespace	r_exec{
 
 					rollback();
 					productions.clear();
-					_now=0;
 					return	false;
 				}
 			}else{	//	in case of an external device, create a cmd object and send it.
@@ -426,7 +422,6 @@ namespace	r_exec{
 			mem->injectNotificationNow(v,true,origin);
 		}
 
-		_now=0;
 		return	true;
 	}
 
@@ -446,13 +441,6 @@ namespace	r_exec{
 		mk_rdx->code(write_index++)=Atom::Float(1);					//	psln_thr.
 
 		return	mk_rdx;
-	}
-
-	uint64	Overlay::now()	const{
-
-		if(_now>0)
-			return	_now;
-		return	Now();
 	}
 
 	_Mem	*Overlay::get_mem()	const{

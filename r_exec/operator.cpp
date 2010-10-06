@@ -54,7 +54,7 @@ namespace	r_exec{
 
 	bool	now(const	Context	&context,uint16	&index){
 
-		index=context.setTimestampResult(context.now());	//	all evaluations of now while computing productions must give the same result.
+		index=context.setTimestampResult(Now());
 		return	true;
 	}
 

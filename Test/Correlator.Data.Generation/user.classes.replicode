@@ -1,8 +1,10 @@
-!load C:/Work/Replicode/test/std.replicode
+!load ../Test/std.replicode
 
 !class (vec3 x:nb y:nb z:nb)
+!class (vec3_holder (_obj value:))
 !class (mk.val (_obj {object: attribute: value:}))
 !class (noise (_obj :))
+!class (episode_end (_obj time:us))
 
 root:(grp
 1; upr

@@ -3,12 +3,11 @@
   <Parameters
     decompile_timestamps="relative"
     
-    usr_operator_path="C:/Work/Replicode/Debug/usr_operators.dll"
-    usr_class_path="C:/Work/Replicode/Test/Correlator.Data.Generation/user.classes.replicode"
+    usr_operator_path="./usr_operators.dll"
+    usr_class_path="../Test/Correlator.Data.Generation/user.classes.replicode"
     
-    use_case_path="C:/Work/Replicode/Test/Correlator.Data.Generation"
-    use_case_name="motor.babbling"
-    episode_count="8"
+    use_case_path="../Test/Correlator.Data.Generation"
+    image_name="motor.babbling.episodes.replicode.image"
   />
 
 </TestConfiguration>

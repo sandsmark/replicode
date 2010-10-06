@@ -1,4 +1,4 @@
-!load C:/Work/Replicode/test/std.replicode
+!load ../Test/std.replicode
 
 !class (vec3 x:nb y:nb z:nb)
 !class (mk.last_known (_obj event:))
@@ -177,4 +177,4 @@ position:(ent
 1; psln_thr
 )
 []
-   [now 1 forever root nil]
+   [now 0 forever root nil]

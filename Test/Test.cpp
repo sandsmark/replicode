@@ -64,6 +64,7 @@ void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
 	std::cout<<"\ndecompiling ...\n";
 	std::ostringstream	decompiled_code;
 	uint32	object_count=decompiler.decompile(image,&decompiled_code,time_offset);
+	//uint32	object_count=image->code_segment.objects.size();
 	std::cout<<"... done\n";
 	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 	std::cout<<"Image taken at: "<<Time::ToString_year(image->timestamp)<<std::endl<<std::endl;
@@ -108,7 +109,8 @@ int32	main(int	argc,char	**argv){
 		return	1;
 
 	std::cout<<"compiling ...\n";
-	r_exec::Init(settings.usr_operator_path.c_str(),Time::Get,settings.usr_class_path.c_str());
+	if(!r_exec::Init(settings.usr_operator_path.c_str(),Time::Get,settings.usr_class_path.c_str()))
+		return	2;
 	std::cout<<"... done\n";
 
 	srand(r_exec::Now());
@@ -117,7 +119,7 @@ int32	main(int	argc,char	**argv){
 	if(!r_exec::Compile(settings.source_file_name.c_str(),error)){
 
 		std::cerr<<" <- "<<error<<std::endl;
-		return	2;
+		return	3;
 	}else{
 
 		Decompiler	decompiler;
