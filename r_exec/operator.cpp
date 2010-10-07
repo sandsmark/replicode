@@ -583,8 +583,7 @@ namespace	r_exec{
 		Context	args=*context.getChild(2);
 
 		Code	*_object=object.getObject();
-		if(_object->code(0).asOpcode()!=Opcodes::PGM	&&	_object->code(0).asOpcode()!=Opcodes::AntiPGM	&&		
-			_object->code(0).asOpcode()!=Opcodes::Goal	&&	_object->code(0).asOpcode()!=Opcodes::AntiGoal){
+		if(_object->code(0).asOpcode()!=Opcodes::PGM	&&	_object->code(0).asOpcode()!=Opcodes::AntiPGM){
 
 			context.setAtomicResult(Atom::Nil());
 			return	false;
@@ -613,15 +612,12 @@ namespace	r_exec{
 				}
 			}
 
-			//	create an ipgm or an igol in the production array.
+			//	create an ipgm in the production array.
 			Code	*instantiated_object=context.buildObject(_object->code(0));
 			uint16	write_index=0;
-			if(_object->code(0).asOpcode()==Opcodes::PGM	||	_object->code(0).asOpcode()==Opcodes::AntiPGM)			
-				instantiated_object->code(write_index++)=Atom::InstantiatedProgram(Opcodes::IPGM,IPGM_IGOL_ARITY);
-			else	if(_object->code(0).asOpcode()==Opcodes::Goal	||	_object->code(0).asOpcode()==Opcodes::AntiGoal)
-				instantiated_object->code(write_index++)=Atom::Object(Opcodes::IGoal,IPGM_IGOL_ARITY);
-			instantiated_object->code(write_index++)=Atom::RPointer(0);	//	points to the pgm/gol object.
-			instantiated_object->code(write_index++)=Atom::IPointer(IPGM_IGOL_ARITY+1);
+			instantiated_object->code(write_index++)=Atom::InstantiatedProgram(Opcodes::IPGM,IPGM_ARITY);
+			instantiated_object->code(write_index++)=Atom::RPointer(0);	//	points to the pgm object.
+			instantiated_object->code(write_index++)=Atom::IPointer(IPGM_ARITY+1);
 			instantiated_object->code(write_index++)=Atom::Float(1);	//	psln_thr.
 			args.copy(instantiated_object,write_index);					//	writes after psln_thr.
 			instantiated_object->set_reference(0,_object);

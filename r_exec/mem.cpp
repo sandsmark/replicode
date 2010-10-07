@@ -185,7 +185,7 @@ CoreCount=0;
 
 				if(c_salient){
 
-					//	build reduction jobs for each salient view and each active overlay.
+					//	build reduction jobs for each salient view and each active overlay - regardless of the view's sync mode.
 					FOR_ALL_VIEWS_BEGIN(g,v)
 						
 						if(v->second->get_sln()>g->get_sln_thr()){	//	salient view.
@@ -241,14 +241,14 @@ CoreCount=0;
 
 		Thread::Sleep(200);
 		stop_sem->acquire();	//	wait for the cores and delegates to terminate.
-		/*
+		
 		if(CoreCount){	//	HACK: at this point, CoreCount shall be 0. BUG: sometimes it's not: a delegate is still waiting on timer.
 
 			for(uint32	i=0;i<CoreCount;++i)
 				stop_sem->acquire(0);
 			stop_sem->acquire();
 		}
-*/
+
 		reset();
 	}
 
@@ -365,7 +365,7 @@ CoreCount=0;
 			object->rel_views();
 
 			reduce_view=view->get_sln()>host->get_sln_thr();
-		}else{	//	call set on the ctrl values of the existing view with the new view's ctrl values. NB: org left unchanged.
+		}else{	//	call set on the ctrl values of the existing view with the new view's ctrl values, including sync. NB: org left unchanged.
 
 			object->rel_views();
 
@@ -379,9 +379,15 @@ CoreCount=0;
 				break;
 			}
 
-			bool	wiew_was_salient=existing_view->get_sln()>host->get_sln_thr();
+			existing_view->code(VIEW_SYNC)=view->code(VIEW_SYNC);
 			bool	wiew_is_salient=view->get_sln()>host->get_sln_thr();
-			reduce_view=(!wiew_was_salient	&&	wiew_is_salient);
+			if(existing_view->synced_on_front()){	// sync on front.
+
+				bool	wiew_was_salient=existing_view->get_sln()>host->get_sln_thr();
+			
+				reduce_view=(!wiew_was_salient	&&	wiew_is_salient);
+			}else	// sync on state.
+				reduce_view=wiew_is_salient;
 		}
 
 		//	give a chance to ipgms to reduce the new view.
@@ -445,8 +451,15 @@ CoreCount=0;
 
 				if(group_is_c_salient){
 					
-					if(!wiew_was_salient	&&	wiew_is_salient)	//	record as a newly salient view.
-						group->newly_salient_views.insert(v->second);
+					if(wiew_is_salient){
+
+						if(v->second->synced_on_front()){
+							
+							if(!wiew_was_salient)	// sync on front: crosses the threshold upward: record as a newly salient view.
+								group->newly_salient_views.insert(v->second);
+						}else													// sync on state.
+							group->newly_salient_views.insert(v->second);
+					}
 
 					//	inject sln propagation jobs.
 					//	the idea is to propagate sln changes when a view "occurs to the mind", i.e. becomes more salient in a group and is eligible for reduction in that group.

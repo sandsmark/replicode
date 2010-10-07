@@ -2,7 +2,7 @@
 
 s1:(str "qwerty" 1)
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]
 
 P1:(pgm
 []
@@ -13,8 +13,8 @@ P1:(pgm
    |[]
    |[]
 []
-   (inj [(mk.val self position tgv.vector 1) [now 1 forever root nil]])
-   (inj [(mk.val self position (vec3 tgv.vector.x vec.y 256) 1) [now 1 forever root nil]])
+   (inj [(mk.val self position tgv.vector 1) [SYNC_FRONT now 1 forever root nil]])
+   (inj [(mk.val self position (vec3 tgv.vector.x vec.y 256) 1) [SYNC_FRONT now 1 forever root nil]])
 0us
 1
 1
@@ -23,4 +23,4 @@ P1:(pgm
 
 iP1:(ipgm P1 [(tagged_v (vec3 1 2 3) "qwerty")] 1)
 []
-   [now 1 forever root nil 1]
+   [SYNC_FRONT now 1 forever root nil 1]

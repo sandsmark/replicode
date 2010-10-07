@@ -418,8 +418,12 @@ namespace	r_exec{
 
 		if(notify_rdx){
 
-			NotificationView	*v=new	NotificationView(getIPGMView()->get_host(),getIPGMView()->get_host()->get_ntf_grp(),mk_rdx);
-			mem->injectNotificationNow(v,true,origin);
+			uint16	ntf_grp_count=getIPGMView()->get_host()->get_ntf_grp_count();
+			for(uint16	i=1;i<=ntf_grp_count;++i){
+
+				NotificationView	*v=new	NotificationView(getIPGMView()->get_host(),getIPGMView()->get_host()->get_ntf_grp(i),mk_rdx);
+				mem->injectNotificationNow(v,true,origin);
+			}
 		}
 
 		return	true;

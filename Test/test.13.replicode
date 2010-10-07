@@ -2,7 +2,7 @@
 
 s1:(str "qwerty" 1)
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]
 
 P1:(pgm
 |[]
@@ -12,7 +12,7 @@ P1:(pgm
    |[]
    |[]
 []
-   (inj [(mk.val self position (vec3 1 2 3) 1) [now 1 forever root nil]])
+   (inj [(mk.val self position (vec3 1 2 3) 1) [SYNC_FRONT now 1 forever root nil]])
 0us
 1
 1
@@ -21,7 +21,7 @@ P1:(pgm
 
 iP1:(ipgm P1 |[] 1)
 []
-   [now 1 forever root nil 1]
+   [SYNC_FRONT now 1 forever root nil 1]
 
 P2:(pgm
 |[]
@@ -31,7 +31,7 @@ P2:(pgm
    |[]
    |[]
 []
-   (inj [(mk.val self position (vec3 4 5 6) 1) [now 1 forever root nil]])
+   (inj [(mk.val self position (vec3 4 5 6) 1) [SYNC_FRONT now 1 forever root nil]])
 0us
 1
 1
@@ -40,7 +40,7 @@ P2:(pgm
 
 iP2:(ipgm P2 |[] 1)
 []
-   [now 1 forever root nil 1]
+   [SYNC_FRONT now 1 forever root nil 1]
 
 P3:(pgm
 |[]
@@ -50,7 +50,7 @@ P3:(pgm
    |[]
    |[]
 []
-   (inj [(mk.val self position (vec3 7 8 9) 1) [now 1 forever root nil]])
+   (inj [(mk.val self position (vec3 7 8 9) 1) [SYNC_FRONT now 1 forever root nil]])
 0us
 1
 1
@@ -59,4 +59,4 @@ P3:(pgm
 
 iP3:(ipgm P3 |[] 1)
 []
-   [now 1 forever root nil 1]
+   [SYNC_FRONT now 1 forever root nil 1]

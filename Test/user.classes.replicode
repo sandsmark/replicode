@@ -49,11 +49,11 @@ root:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-nil; ntf_grp
+[nil]; ntf_grps
 1; psln_thr
 )
 []
-   [now 0 forever nil nil 0 0]
+   [SYNC_FRONT now 0 forever nil nil 0 0]
 
 g1:(grp
 1; upr
@@ -86,11 +86,11 @@ g1:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-nil; ntf_grp
+[nil]; ntf_grps
 1; psln_thr
 )
 []
-   [now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever root nil 0 0]
 
 stdin:(grp
 1; upr
@@ -123,12 +123,12 @@ stdin:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-root; ntf_grp
+[root]; ntf_grps
 1; psln_thr
 )
 []
-   [now 0 forever root nil 0 0]
-   [now 0 forever g1 nil 1 1]; last 2 members: vis and cov
+   [SYNC_FRONT now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever g1 nil 1 1]; last 2 members: vis and cov
 
 stdout:(grp
 1; upr
@@ -161,20 +161,20 @@ stdout:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-nil; ntf_grp
+[nil]; ntf_grps
 1; psln_thr
 )
 []
-   [now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever root nil 0 0]
 
 self:(ent
 0.95; psln_thr
 )
 []
-   [now 0.6 forever root nil]
+   [SYNC_FRONT now 0.6 forever root nil]
 
 position:(ent
 1; psln_thr
 )
 []
-   [now 0 forever root nil]
+   [SYNC_FRONT now 0 forever root nil]

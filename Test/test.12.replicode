@@ -1,6 +1,6 @@
 ;ping pong
 
-;view = [ijt:us sln:nb res:us grp:grp org:]
+;view = [sync:bl ijt:us sln:nb res:us grp:grp org:]
 
 table:(grp
 1; upr
@@ -37,7 +37,7 @@ nil; ntf_grp
 1; psln_thr
 )
 []
-   [now 1 forever root nil 0 0]
+   [SYNC_FRONT now 1 forever root nil 0 0]
 
 serve:(pgm
 |[]
@@ -45,7 +45,7 @@ serve:(pgm
 []
    (inj []
       (string "ping" now 1)
-      [now 1 1 table nil]
+      [SYNC_FRONT now 1 1 table nil]
    )
    (mod [this.vw.res -1])
 80000us
@@ -60,7 +60,7 @@ serve; code
 1; propagation saliency threshold
 )
 []
-   [now 1 10 table nil 1]
+   [SYNC_FRONT now 1 10 table nil 1]
 
 
 player1:(pgm
@@ -73,7 +73,7 @@ player1:(pgm
 []
    (inj []
       (string "pong" now 1)
-      [now 1 1 table nil]
+      [SYNC_FRONT now 1 1 table nil]
    )
 0us; time scope
 0; notify reduction flag
@@ -87,7 +87,7 @@ player1; code
 1; propagation saliency threshold
 )
 []
-   [now 1 forever table nil 1]
+   [SYNC_FRONT now 1 forever table nil 1]
 
 
 player2:(pgm
@@ -100,7 +100,7 @@ player2:(pgm
 []
    (inj []
       (string "ping" now 1)
-      [now 1 1 table nil]
+      [SYNC_FRONT now 1 1 table nil]
    )
 0us; time scope
 0; notify reduction flag
@@ -114,6 +114,6 @@ player2; code
 1; propagation saliency threshold
 )
 []
-   [now 1 forever table nil 1]
+   [SYNC_FRONT now 1 forever table nil 1]
 
 

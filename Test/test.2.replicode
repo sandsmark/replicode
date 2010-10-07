@@ -1,21 +1,6 @@
-;instantiating a goal
 ;creating a group
 ;injecting an object in that group
 ;setting the sln and act of the ipgm
-
-G1:(gol
-[]; tpl
-   (ptn tgv1:(tagged_v v: s:) |[])
-[]; input
-   []
-      (ptn (mk.tag object: s ::) |[])
-   |[]
-   |[]
-1; psln_thr
-)
-
-[]
-   [now 1 forever root nil]
 
 P1:(pgm
 []; tpl
@@ -23,7 +8,6 @@ P1:(pgm
    (ptn tgv2:(tagged_v ::) |[])
 |[]; input
 []; productions
-   (inj [(ins G1 [(tagged_v (vec3 5 6 7) "vector 567")]) [(+ now 1000us) 1 forever root nil]])
    (inj []
       g:(grp
       1; upr
@@ -56,12 +40,12 @@ P1:(pgm
       1; act_ntf_prd
       0; ntf_new
       0; low_res_thr
-      nil; ntf_grp
+      [nil]; ntf_grps
       1; psln_thr
       )
-      [now 1 forever root nil]
+      [SYNC_FRONT now 1 forever root nil]
    )
-   (inj [(mk.val self position (- (vec3 v.x v.y v.z) tgv2.vector) 0) [now 1 forever g nil]])
+   (inj [(mk.val self position (- (vec3 v.x v.y v.z) tgv2.vector) 0) [SYNC_FRONT now 1 forever g nil]])
    (mod [this.vw.sln (+ g.sln_thr 0.1)])
    (set [this.vw.act (- g.act_thr 0.1)])
 50000us; tsc
@@ -80,4 +64,4 @@ P1; code
 )
 
 []
-   [now 0.2 forever root nil 1]
+   [SYNC_FRONT now 0.2 forever root nil 1]

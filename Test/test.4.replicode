@@ -4,11 +4,11 @@
 
 dummy:(ent 1)
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]
 
 (mk.val self position (vec3 1 1 1) 1)
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]
 
 _start:(pgm
 []
@@ -22,7 +22,7 @@ _start:(pgm
 []
    (inj []
       (mk.val dummy position (vec3 (+ v1.x x) y v2.z) 1)
-      [now 1 forever root nil]
+      [SYNC_FRONT now 1 forever root nil]
    )
 0us
 1
@@ -32,4 +32,4 @@ _start:(pgm
 
 i_start:(ipgm _start [(vec3 2 2 2)] 1)
 []
-   [now 1 1 root nil 1]
+   [SYNC_FRONT now 1 1 root nil 1]

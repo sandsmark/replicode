@@ -299,12 +299,17 @@ namespace	r_exec{
 		return	code(GRP_NTF_NEW).asFloat();
 	}
 
-	inline	Group	*Group::get_ntf_grp(){
+	inline	uint16	Group::get_ntf_grp_count(){
 
-		if(code(GRP_NTF_GRP).readsAsNil())
+		return	code(code(GRP_NTF_GRPS).asIndex()).getAtomCount();
+	}
+
+	inline	Group	*Group::get_ntf_grp(uint16	i){
+
+		if(code(code(GRP_NTF_GRPS).asIndex()+i).readsAsNil())
 			return	this;
 
-		uint16	index=code(GRP_NTF_GRP).asIndex();
+		uint16	index=code(code(GRP_NTF_GRPS).asIndex()+i).asIndex();
 		return	(Group	*)get_reference(index);
 	}
 

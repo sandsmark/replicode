@@ -134,10 +134,6 @@ namespace	r_exec{
 		Opcodes::PGM=_Opcodes.find("pgm")->second;
 		Opcodes::AntiPGM=_Opcodes.find("|pgm")->second;
 
-		Opcodes::IGoal=_Opcodes.find("igol")->second;
-		Opcodes::Goal=_Opcodes.find("gol")->second;
-		Opcodes::AntiGoal=_Opcodes.find("|gol")->second;
-
 		Opcodes::Cmd=_Opcodes.find("cmd")->second;
 
 		Opcodes::MkRdx=_Opcodes.find("mk.rdx")->second;

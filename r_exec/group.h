@@ -332,14 +332,15 @@ namespace	r_exec{
 
 		float32	get_ntf_new();
 
-		Group	*get_ntf_grp();
+		uint16	get_ntf_grp_count();
+		Group	*get_ntf_grp(uint16	i);	// i starts at 1.
 
 		//	Delegate to views; update stats and notifies.
 		float32	update_res(View	*v,_Mem	*mem);
 		float32	update_sln(View	*v,_Mem	*mem);	//	applies decay if any.
 		float32	update_act(View	*v,_Mem	*mem);
 
-		//	Target upr, spr, c_sln, c_act, sln_thr, act_thr, vis_thr, c_sln_thr, c-act_thr, sln_chg_thr,
+		//	Target upr, spr, c_sln, c_act, sln_thr, act_thr, vis_thr, c_sln_thr, c_act_thr, sln_chg_thr,
 		//	sln_chg_prd, act_chg_thr, act_chg_prd, high_sln_thr, low_sln_thr, sln_ntf_prd, high_act_thr, low_act_thr, act_ntf_prd, low_res_thr, res_ntf_prd, ntf_new,
 		//	dcy_per, dcy-tgt, dcy_prd.
 		void	mod(uint16	member_index,float32	value);

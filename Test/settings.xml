@@ -14,7 +14,7 @@
     usr_class_path="../Test/Correlator.Data.Generation/user.classes.replicode"
     source_file_name="../Test/Correlator.Data.Generation/motor.babbling.replicode"
     
-    write_image="yes"
+    write_image="no"
     image_path="../Test/Correlator.Data.Generation/motor.babbling.episodes.replicode.image"
     test_image="yes"
   />

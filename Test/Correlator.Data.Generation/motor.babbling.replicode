@@ -16,19 +16,19 @@ _start:(pgm
 []
    (inj []
       init_pos:(vec3_holder (vec3 0 0 0) 1)
-      [now 1 forever stdin nil]
+      [SYNC_FRONT now 1 forever stdin nil]
    )
    (inj []
       (mk.val self_hand position init_pos 1)
-      [now 1 forever stdin nil]
+      [SYNC_FRONT now 1 forever stdin nil]
    )
    (inj []
       (noise (rnd 1000) 1)
-      [(+ now (rnd 10000)) 1 forever stdin nil]
+      [SYNC_FRONT (+ now (rnd 10000)) 1 forever stdin nil]
    )
    (inj []
       (mk.val self_hand attachment cup 1)
-      [(+ now (rnd 10000)) 1 forever stdin nil]
+      [SYNC_FRONT (+ now (rnd 10000)) 1 forever stdin nil]
    )
 90000us
 0
@@ -38,7 +38,7 @@ _start:(pgm
 
 i_start:(ipgm _start |[] 1)
 []
-   [now 1 1 root nil 1]
+   [SYNC_FRONT now 1 1 root nil 1]
 
 pos_updater:(pgm
 |[]
@@ -50,15 +50,15 @@ pos_updater:(pgm
 []
    (inj []
       new_pos:(vec3_holder (+ pos.value (vec3 0 0 0.1)) 1)
-      [now 1 forever stdin nil] 
+      [SYNC_FRONT now 1 forever stdin nil] 
    )
    (inj []
       (mk.val self_hand position new_pos 1)
-      [t:(+ now 100000us) 1 forever stdin nil]
+      [SYNC_FRONT t:(+ now 100000us) 1 forever stdin nil]
    )
    (inj []
       (mk.val cup position new_pos 1)
-      [(+ t (rnd 10000)) 1 forever stdin nil]
+      [SYNC_FRONT (+ t (rnd 10000)) 1 forever stdin nil]
    )
 0us
 0
@@ -68,7 +68,7 @@ pos_updater:(pgm
 
 i_pos_updater:(ipgm pos_updater |[] 1)
 []
-   [now 1 forever stdin nil 1]
+   [SYNC_FRONT now 1 forever stdin nil 1]
 
 noise_updater:(pgm
 |[]
@@ -80,7 +80,7 @@ noise_updater:(pgm
 []
    (inj []
       (noise (rnd 1000) 1)
-      [(+ now (rnd 40000)) 1 forever stdin nil]
+      [SYNC_FRONT (+ now (rnd 40000)) 1 forever stdin nil]
    )
 0us
 0
@@ -90,7 +90,7 @@ noise_updater:(pgm
 
 i_noise_updater:(ipgm noise_updater |[] 1)
 []
-   [now 1 forever stdin nil 1]
+   [SYNC_FRONT now 1 forever stdin nil 1]
 
 grab_updater:(pgm
 |[]
@@ -102,7 +102,7 @@ grab_updater:(pgm
 []
    (inj []
       m
-      [(+ now (rnd 50000)) 1 forever stdin nil]
+      [SYNC_FRONT (+ now (rnd 50000)) 1 forever stdin nil]
    )
 0us
 0
@@ -112,7 +112,7 @@ grab_updater:(pgm
 
 i_grab_updater:(ipgm grab_updater |[] 1)
 []
-   [now 1 forever stdin nil 1]
+   [SYNC_FRONT now 1 forever stdin nil 1]
 
 episode_notifier:(pgm
 |[]
@@ -120,7 +120,7 @@ episode_notifier:(pgm
 []
    (inj []
       (episode_end now 1)
-      [now 1 forever stdin nil]
+      [SYNC_FRONT now 1 forever stdin nil]
    )
 1000000us
 0
@@ -130,4 +130,4 @@ episode_notifier:(pgm
 
 i_episode_notifier.(ipgm episode_notifier |[] 1)
 []
-   [now 1 forever stdin nil 1]
+   [SYNC_FRONT now 1 forever stdin nil 1]

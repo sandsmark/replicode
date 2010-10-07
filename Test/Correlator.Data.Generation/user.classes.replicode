@@ -37,11 +37,11 @@ root:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-nil; ntf_grp
+[nil]; ntf_grps
 1; psln_thr
 )
 []
-   [now 0 forever nil nil 0 0]
+   [SYNC_FRONT now 0 forever nil nil 0 0]
 
 stdin:(grp
 1; upr
@@ -74,11 +74,11 @@ stdin:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-root; ntf_grp
+[root]; ntf_grps
 1; psln_thr
 )
 []
-   [now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever root nil 0 0]
 
 stdout:(grp
 1; upr
@@ -111,34 +111,34 @@ stdout:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-nil; ntf_grp
+[nil]; ntf_grps
 1; psln_thr
 )
 []
-   [now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever root nil 0 0]
 
 position:(ent 1)
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]
    
 attachment:(ent 1)
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]
 
 self:(ent
 1; psln_thr
 )
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]
 
 human:(ent 1)
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]
 
 self_hand:(ent 1)
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]
 
 cup:(ent 1)
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]

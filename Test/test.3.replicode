@@ -9,7 +9,7 @@ position
 0
 )
 []
-   [now 0.1 forever root nil]
+   [SYNC_FRONT now 0.1 forever root nil]
 
 mk.tag1:(mk.tag
 self
@@ -17,7 +17,7 @@ self
 1
 )
 []
-   [now 0.1 forever root nil]
+   [SYNC_FRONT now 0.1 forever root nil]
 
 P1:(pgm
 []; tpl
@@ -39,9 +39,9 @@ P1:(pgm
    []
       (= v.res pos.vw.res)
 []; productions
-   (inj [(mk.val in pos vec 0) [now v.sln forever stdout nil]])
-   (inj [(mk.val in pos (vec3 6 7 8) 0) [now in.vw.sln forever stdout nil]])
-   (inj [in [now 0.25 forever stdout nil]])
+   (inj [(mk.val in pos vec 0) [SYNC_FRONT now v.sln forever stdout nil]])
+   (inj [(mk.val in pos (vec3 6 7 8) 0) [SYNC_FRONT now in.vw.sln forever stdout nil]])
+   (inj [in [SYNC_FRONT now 0.25 forever stdout nil]])
    (mod [in.vw.sln -0.2])
    (mod [this.vw.sln -0.4])
 4000000us; tsc
@@ -57,4 +57,4 @@ P1; code
 0; psln_thr
 )
 []
-   [now 0.5 forever root nil 1]
+   [SYNC_FRONT now 0.5 forever root nil 1]

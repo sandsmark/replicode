@@ -7,7 +7,7 @@ hw:(pgm
 []
    (inj []
       (str "Hello World" 1)
-      [now 1 forever root nil]
+      [SYNC_FRONT now 1 forever root nil]
    )
    (set [this.vw.act 0]); deactivate the ipgm so that the pgm runs only once.
 100000us
@@ -23,4 +23,4 @@ hw; code
 1
 )
 []
-   [now 1 forever root nil 1]
+   [SYNC_FRONT now 1 forever root nil 1]

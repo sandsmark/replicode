@@ -359,8 +359,12 @@ namespace	r_exec{
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.
 			_inject_reduction_jobs(view,host);
 
-		if(host->get_ntf_new()==1)	//	the view cannot be a ntf view (would use injectNotificationNow instead).
-			injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),host->get_ntf_grp()!=host);	//	the object appears for the first time in the group: notify.
+		if(host->get_ntf_new()==1){	//	the view cannot be a ntf view (would use injectNotificationNow instead).
+
+			uint16	ntf_grp_count=host->get_ntf_grp_count();
+			for(uint16	i=1;i<=ntf_grp_count;++i)
+				injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(i),new	factory::MkNew(this,object)),host->get_ntf_grp(i)!=host);	//	the object appears for the first time in the group: notify.
+		}
 
 		host->leave();
 	}
@@ -393,8 +397,12 @@ namespace	r_exec{
 		P<TimeJob>	j=new	UpdateJob((Group	*)object,now+((Group	*)object)->get_upr()*base_period);
 		time_job_queue->push(j);
 
-		if(host->get_ntf_new()==1)
-			injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(),new	factory::MkNew(this,object)),false);	//	the group appears for the first time in the group: notify.
+		if(host->get_ntf_new()==1){
+
+			uint16	ntf_grp_count=host->get_ntf_grp_count();
+			for(uint16	i=1;i<=ntf_grp_count;++i)
+				injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(i),new	factory::MkNew(this,object)),false);	//	the group appears for the first time in the group: notify.
+		}
 
 		host->leave();
 	}

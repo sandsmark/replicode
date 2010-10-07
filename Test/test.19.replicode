@@ -5,7 +5,7 @@
 
 (mk.val self position (vec3 4 5 6) 1)
 []
-   [now 1 forever root nil]
+   [SYNC_FRONT now 1 forever root nil]
 
 _start:(pgm
 []
@@ -23,17 +23,17 @@ _start:(pgm
       []
          (inj []
             (mk.val self position (+ v1 v2) 1)
-            [(\ now) 1 forever root nil]
+            [SYNC_FRONT (\ now) 1 forever root nil]
          )
       50000us
       0
       1
       )
-      [now 1 forever root nil]
+      [SYNC_FRONT now 1 forever root nil]
    )
    (inj []
       (ins p |[])
-      [now 1 forever root nil 1]
+      [SYNC_FRONT now 1 forever root nil 1]
    )
 0us
 1
@@ -43,4 +43,4 @@ _start:(pgm
 
 i_start:(ipgm _start [(vec3 1 2 3)] 1)
 []
-   [now 1 1 root nil 1]
+   [SYNC_FRONT now 1 1 root nil 1]

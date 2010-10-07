@@ -14,18 +14,18 @@ _start:(pgm
       []
          (inj []
             (mk.val self position (vec3 1 2 3) 1)
-            [(\ (+ now 10000)) 1 forever root nil]
+            [SYNC_FRONT (\ (+ now 10000)) 1 forever root nil]
          )
          (mod [this.vw.act -1])
       50000us
       1
       1
       )
-      [now 1 forever root nil]
+      [SYNC_FRONT now 1 forever root nil]
    )
    (inj []
       (ins p |[])
-      [now 1 forever root nil 1]
+      [SYNC_FRONT now 1 forever root nil 1]
    )
 90000us
 1
@@ -35,4 +35,4 @@ _start:(pgm
 
 i_start:(ipgm _start |[] 1)
 []
-   [now 1 1 root nil 1]
+   [SYNC_FRONT now 1 1 root nil 1]

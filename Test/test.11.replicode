@@ -8,13 +8,12 @@ hb:(pgm
 []
    (inj []
       (string "beep" now 1)
-      [now 1 forever root nil]
+      [SYNC_FRONT now 1 forever root nil]
    )
 200000us; time scope
 1; notify reduction flag
 1; propagation saliency threshold
 )
-
 |[]
 
 
@@ -23,6 +22,5 @@ hb; code
 |[]; args
 1; propagation saliency threshold
 )
-
 []
-   [now 1 forever root nil 1]
+   [SYNC_FRONT now 1 forever root nil 1]

@@ -10,12 +10,11 @@ P1:(|pgm
    |[]
    |[]
 []
-   (inj [(ent 1) [now 1 forever stdout nil]])
+   (inj [(ent 1) [SYNC_FRONT now 1 forever stdout nil]])
 100000us; tsc
 1; nfr
 1; psln_thr
 )
-
 |[]
 
 iP1:(ipgm
@@ -24,6 +23,5 @@ P1; code
    (tagged_v (vec3 1 2 3) "vector 123")
 1; psln_thr
 )
-
 []
-   [now 0 forever root nil 1]
+   [SYNC_FRONT now 0 forever root nil 1]

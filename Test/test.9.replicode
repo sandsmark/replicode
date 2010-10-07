@@ -7,12 +7,11 @@ P0:(pgm
    |[]
    |[]
 []
-   (inj [(mk.val mk_rdx position (vec3 1 2 3) 1) [now 1 5 stdout nil]])
+   (inj [(mk.val mk_rdx position (vec3 1 2 3) 1) [SYNC_FRONT now 1 5 stdout nil]])
 0us; tsc
 1; nfr
 1; psln_thr
 )
-
 |[]
 
 P1:(|pgm
@@ -27,14 +26,13 @@ P1:(|pgm
    |[]
    |[]
 []
-   (inj [(ent 1) [now 1 10 root nil]])
-   (inj [(ins P0 |[]) [now 0 40 root nil 1]])
+   (inj [(ent 1) [SYNC_FRONT now 1 10 root nil]])
+   (inj [(ins P0 |[]) [SYNC_FRONT now 0 40 root nil 1]])
    (set [this.vw.act 0])
 200000us; tsc
 1; nfr
 1; psln_thr
 )
-
 |[]
 
 iP1:(ipgm
@@ -43,6 +41,5 @@ P1; code
    (tagged_v (vec3 1 2 3) "vector 123")
 1; psln_thr
 )
-
 []
-   [now 0 forever root nil 1]
+   [SYNC_FRONT now 0 forever root nil 1]

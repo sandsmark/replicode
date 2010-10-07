@@ -31,18 +31,19 @@
 #ifndef	replicode_defs_h
 #define	replicode_defs_h
 
-#define	VIEW_CODE_MAX_SIZE	12	//	size of the code of the largest view (grp view) + 1 (oid used by rMems).
+#define	VIEW_CODE_MAX_SIZE	13	//	size of the code of the largest view (grp view) + 1 (oid used by rMems); view set opcode's index is 0.
 
-#define	VIEW_IJT		1
-#define	VIEW_SLN		2
-#define	VIEW_RES		3
-#define	VIEW_HOST		4
-#define	VIEW_ORG		5
-#define	VIEW_ACT_VIS	6
-#define	IPGM_VIEW_ACT	6
-#define	GRP_VIEW_VIS	6
-#define	GRP_VIEW_COV	7
-#define	VIEW_OID		11
+#define	VIEW_SYNC		1
+#define	VIEW_IJT		2	//	iptr to timestamp (+3 atoms)
+#define	VIEW_SLN		3
+#define	VIEW_RES		4
+#define	VIEW_HOST		5
+#define	VIEW_ORG		6
+#define	VIEW_ACT_VIS	7
+#define	IPGM_VIEW_ACT	7
+#define	GRP_VIEW_VIS	7
+#define	GRP_VIEW_COV	8
+#define	VIEW_OID		12
 
 #define	OBJECT_CLASS	0
 
@@ -76,7 +77,7 @@
 #define	GRP_ACT_NTF_PRD		28
 #define	GRP_NTF_NEW			29
 #define	GRP_LOW_RES_THR		30
-#define	GRP_NTF_GRP			31
+#define	GRP_NTF_GRPS		31
 
 #define	IPGM_PGM	1
 #define	IPGM_ARGS	2
@@ -87,7 +88,7 @@
 #define	PGM_TSC			4
 #define	PGM_NFR			5
 
-#define	IPGM_IGOL_ARITY	3
+#define	IPGM_ARITY	3
 
 #define	MK_RDX_ARITY		4
 #define	MK_ANTI_RDX_ARITY	3

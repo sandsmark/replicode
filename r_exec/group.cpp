@@ -138,9 +138,13 @@ namespace	r_exec{
 			FOR_ALL_NON_NTF_VIEWS_BEGIN(this,v)
 
 				float32	change=v->second->update_sln_delta();
-				if(fabs(change)>get_sln_chg_thr())
-					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkSlnChg(mem,v->second->object,change)),false);
-			
+				if(fabs(change)>get_sln_chg_thr()){
+
+					uint16	ntf_grp_count=get_ntf_grp_count();
+					for(uint16	i=1;i<=ntf_grp_count;++i)
+						mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkSlnChg(mem,v->second->object,change)),false);
+				}
+
 			FOR_ALL_NON_NTF_VIEWS_END
 		}
 
@@ -149,9 +153,13 @@ namespace	r_exec{
 			FOR_ALL_NON_NTF_VIEWS_BEGIN(this,v)
 
 				float32	change=v->second->update_act_delta();
-				if(fabs(change)>get_act_chg_thr())
-					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkActChg(mem,v->second->object,change)),false);
-			
+				if(fabs(change)>get_act_chg_thr()){
+
+					uint16	ntf_grp_count=get_ntf_grp_count();
+					for(uint16	i=1;i<=ntf_grp_count;++i)
+						mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkActChg(mem,v->second->object,change)),false);
+				}
+
 			FOR_ALL_NON_NTF_VIEWS_END
 		}
 	}
@@ -311,8 +319,12 @@ namespace	r_exec{
 	float32	Group::update_res(View	*v,_Mem	*mem){
 
 		float	res=v->update_res();
-		if(!v->isNotification()	&&	res>0	&&	res<get_low_res_thr())
-			mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkLowRes(mem,v->object)),false);
+		if(!v->isNotification()	&&	res>0	&&	res<get_low_res_thr()){
+
+			uint16	ntf_grp_count=get_ntf_grp_count();
+			for(uint16	i=1;i<=ntf_grp_count;++i)
+				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowRes(mem,v->object)),false);
+		}
 		return	res;
 	}
 
@@ -333,11 +345,15 @@ namespace	r_exec{
 			if(v->periods_at_high_sln==get_sln_ntf_prd()){
 
 				v->periods_at_high_sln=0;
-				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkHighSln(mem,v->object)),false);
+				uint16	ntf_grp_count=get_ntf_grp_count();
+				for(uint16	i=1;i<=ntf_grp_count;++i)
+					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkHighSln(mem,v->object)),false);
 			}else	if(v->periods_at_low_sln==get_sln_ntf_prd()){
 
 				v->periods_at_low_sln=0;
-				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkLowSln(mem,v->object)),false);
+				uint16	ntf_grp_count=get_ntf_grp_count();
+				for(uint16	i=1;i<=ntf_grp_count;++i)
+					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowSln(mem,v->object)),false);
 			}
 		}
 		return	sln;
@@ -357,11 +373,15 @@ namespace	r_exec{
 			if(v->periods_at_high_act==get_act_ntf_prd()){
 
 				v->periods_at_high_act=0;
-				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkHighAct(mem,v->object)),false);
+				uint16	ntf_grp_count=get_ntf_grp_count();
+				for(uint16	i=1;i<=ntf_grp_count;++i)
+					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkHighAct(mem,v->object)),false);
 			}else	if(v->periods_at_low_act==get_act_ntf_prd()){
 
 				v->periods_at_low_act=0;
-				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(),new	factory::MkLowAct(mem,v->object)),false);
+				uint16	ntf_grp_count=get_ntf_grp_count();
+				for(uint16	i=1;i<=ntf_grp_count;++i)
+					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowAct(mem,v->object)),false);
 			}
 		}
 		return	act;

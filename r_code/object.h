@@ -130,7 +130,8 @@ namespace	r_code{
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	code(uint16	i)	const{	return	_code[i];	}
 
-		uint64	get_ijt()	const{	return	Timestamp::Get(_code+_code[VIEW_IJT].asIndex());	}
+		bool	synced_on_front()	const{	return	_code[VIEW_SYNC].asBoolean();	}
+		uint64	get_ijt()			const{	return	Timestamp::Get(_code+_code[VIEW_IJT].asIndex());	}
 
 		class	Hash{
 		public:

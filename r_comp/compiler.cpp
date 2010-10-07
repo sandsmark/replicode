@@ -1778,6 +1778,10 @@ return_false:
 			return	true;
 		if(err)
 			return	false;
+		if(read_boolean(indented,false,NULL,write_index,extent_index,write))
+			return	true;
+		if(err)
+			return	false;
 		if(read_function(indented,false,NULL,write_index,extent_index,write))
 			return	true;
 		if(err)
