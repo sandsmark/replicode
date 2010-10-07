@@ -29,7 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"decompiler.h"
-#include	"../CoreLibrary/utils.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 
 
 namespace	r_comp{

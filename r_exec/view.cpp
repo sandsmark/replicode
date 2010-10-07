@@ -29,7 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"view.h"
-#include	"../CoreLibrary/utils.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 #include	"group.h"
 
 

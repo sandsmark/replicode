@@ -31,7 +31,7 @@
 #ifndef	test_correlator_settings_h
 #define	test_correlator_settings_h
 
-#include	<../CoreLibrary/xml_parser.h>
+#include	<../../CoreLibrary/trunk/CoreLibrary/xml_parser.h>
 
 
 class	CorrelatorTestSettings{

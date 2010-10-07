@@ -33,7 +33,7 @@
 
 #include	<set>
 
-#include	"../CoreLibrary/utils.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 #include	"object.h"
 #include	"view.h"
 

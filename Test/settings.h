@@ -31,7 +31,7 @@
 #ifndef	settings_h
 #define	settings_h
 
-#include	<../CoreLibrary/xml_parser.h>
+#include	<../../CoreLibrary/trunk/CoreLibrary/xml_parser.h>
 
 
 class	Settings{

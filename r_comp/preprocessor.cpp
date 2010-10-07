@@ -30,7 +30,7 @@
 
 #include	"preprocessor.h"
 #include	"compiler.h"
-#include	"utils.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 
 
 namespace	r_comp{

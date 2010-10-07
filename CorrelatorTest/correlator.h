@@ -1,7 +1,7 @@
 #ifndef	correlator_h
 #define	correlator_h
 
-#include	<../CoreLibrary/base.h>
+#include	<../../CoreLibrary/trunk/CoreLibrary/base.h>
 #include	<../r_code/object.h>
 
 

@@ -31,7 +31,7 @@
 #ifndef	init_h
 #define	init_h
 
-#include	"../CoreLibrary/utils.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 
 #include	"../r_comp/segments.h"
 #include	"../r_comp/compiler.h"

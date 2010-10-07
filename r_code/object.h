@@ -33,7 +33,7 @@
 
 #include	"atom.h"
 #include	"vector.h"
-#include	"../CoreLibrary/base.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/base.h"
 #include	"replicode_defs.h"
 #include	"../r_code/utils.h"
 

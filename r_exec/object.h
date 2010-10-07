@@ -31,7 +31,7 @@
 #ifndef	r_exec_object_h
 #define	r_exec_object_h
 
-#include	"../CoreLibrary/utils.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 #include	"../r_code/object.h"
 #include	"view.h"
 #include	"opcodes.h"

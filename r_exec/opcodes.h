@@ -31,7 +31,7 @@
 #ifndef	opcodes_h
 #define	opcodes_h
 
-#include	"../CoreLibrary/types.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/types.h"
 #include	"dll.h"
 
 

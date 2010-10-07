@@ -31,7 +31,7 @@
 #ifndef	reduction_core_h
 #define	reduction_core_h
 
-#include	"../CoreLibrary/utils.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 #include	"reduction_job.h"
 
 

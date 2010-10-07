@@ -31,8 +31,8 @@
 #ifndef	pgm_overlay_h
 #define	pgm_overlay_h
 
-#include	"../CoreLibrary/base.h"
-#include	"../CoreLibrary/utils.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/base.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 #include	"../r_code/object.h"
 #include	"dll.h"
 
