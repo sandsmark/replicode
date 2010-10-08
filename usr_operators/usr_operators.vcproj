@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="usr_operators"
 	ProjectGUID="{3DE12B3F-D45E-46E1-B501-E294009AD4B9}"
 	RootNamespace="usr_operators"
@@ -200,7 +200,7 @@
 				Optimization="0"
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="..\CoreLibrary;..\r_code;..\r_exec"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;USR_OPERATORS_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;USR_OPERATORS_EXPORTS;DEBUG_VISUALIZER"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
@@ -223,7 +223,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="CoreLibrary.lib r_exec.lib r_code.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(OutDir)"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\CoreLibrary\trunk\DebugVisualizer&quot;;&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"

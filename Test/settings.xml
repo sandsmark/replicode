@@ -6,7 +6,7 @@
 	  time_core_count="1"
   	notification_resilience="1000"
     
-	  run_time="900000"
+	  run_time="9000"
     
     decompile_timestamps="relative"
     

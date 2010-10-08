@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="Test"
 	ProjectGUID="{689F2DDD-1858-499D-BA79-72BA02D00D45}"
 	RootNamespace="Test"
@@ -198,7 +198,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\CoreLibrary;..\r_code;..\r_exec;..\r_comp"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;DEBUG_VISUALIZER"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
@@ -221,7 +221,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="r_comp.lib r_code.lib CoreLibrary.lib r_exec.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(OutDir)"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\CoreLibrary\trunk\DebugVisualizer&quot;;&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
