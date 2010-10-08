@@ -198,8 +198,11 @@ CoreCount=0;
 			}
 
 			//	inject the next update job for the group.
-			P<TimeJob>	j=new	UpdateJob(g,now+g->get_upr()*base_period);
-			time_job_queue->push(j);
+			if(g->get_upr()>0){
+
+				P<TimeJob>	j=new	UpdateJob(g,now+g->get_upr()*base_period);
+				time_job_queue->push(j);
+			}
 		}
 
 		initial_groups.clear();
@@ -615,8 +618,11 @@ CoreCount=0;
 		group->update_stats(this);	//	triggers notifications.
 
 		//	inject the next update job for the group.
-		P<TimeJob>	j=new	UpdateJob(group,now+group->get_upr()*base_period);
-		time_job_queue->push(j);
+		if(group->get_upr()>0){
+
+			P<TimeJob>	j=new	UpdateJob(group,now+group->get_upr()*base_period);
+			time_job_queue->push(j);
+		}
 
 		group->leave();
 	}

@@ -206,7 +206,7 @@ namespace	r_comp{
 			if(current_class.str_opcode=="grp")
 				current_class=_metadata->classes.find("grp_view")->second;
 			else	if(current_class.str_opcode=="ipgm")
-				current_class=_metadata->classes.find("react_view")->second;
+				current_class=_metadata->classes.find("pgm_view")->second;
 			else
 				current_class=_metadata->classes.find("view")->second;
 			current_class.use_as=StructureMember::I_CLASS;
@@ -876,7 +876,7 @@ return_false:
 
 				if(m=="vw"){
 
-					_p=&_metadata->classes.find("react_view")->second;
+					_p=&_metadata->classes.find("pgm_view")->second;
 					type=ANY;
 					v.push_back(-1);
 				}else	if(m=="mks"){
@@ -953,7 +953,7 @@ return_false:
 
 					if(m=="vw"){
 
-						_p=&_metadata->classes.find("react_view")->second;
+						_p=&_metadata->classes.find("pgm_view")->second;
 						type=ANY;
 						v.push_back(-1);
 					}else	if(m=="mks"){

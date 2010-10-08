@@ -386,18 +386,21 @@ namespace	r_exec{
 							break;
 						}
 					}
-				}else	if(function[0].asOpcode()==Opcodes::NewClass){
+				}else	if(function[0].asOpcode()==Opcodes::NewClass){	// TODO
 
-				}else	if(function[0].asOpcode()==Opcodes::DelClass){
+				}else	if(function[0].asOpcode()==Opcodes::DelClass){	// TODO
 
-				}else	if(function[0].asOpcode()==Opcodes::LDC){
+				}else	if(function[0].asOpcode()==Opcodes::LDC){		// TODO
 
-				}else	if(function[0].asOpcode()==Opcodes::Swap){
+				}else	if(function[0].asOpcode()==Opcodes::Swap){		// TODO
 
-				}else	if(function[0].asOpcode()==Opcodes::NewDev){
+				}else	if(function[0].asOpcode()==Opcodes::NewDev){	// TODO
 
-				}else	if(function[0].asOpcode()==Opcodes::DelDev){
+				}else	if(function[0].asOpcode()==Opcodes::DelDev){	// TODO
 
+				}else	if(function[0].asOpcode()==Opcodes::Suspend){	//	no args.
+
+					mem->suspend();
 				}else	if(function[0].asOpcode()==Opcodes::Stop){		//	no args.
 
 					mem->stop();

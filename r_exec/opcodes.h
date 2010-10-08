@@ -43,7 +43,7 @@ namespace	r_exec{
 	class	r_exec_dll	Opcodes{
 	public:
 		static	uint16	View;
-		static	uint16	ReactView;
+		static	uint16	PgmView;
 		static	uint16	GroupView;
 
 		static	uint16	Entity;
@@ -83,7 +83,6 @@ namespace	r_exec{
 		static	uint16	NewDev;
 		static	uint16	DelDev;
 		static	uint16	Suspend;
-		static	uint16	Resume;
 		static	uint16	Stop;
 	};
 }

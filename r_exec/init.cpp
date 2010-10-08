@@ -120,7 +120,7 @@ namespace	r_exec{
 		View::ViewOpcode=_Opcodes.find("view")->second;
 
 		Opcodes::View=_Opcodes.find("view")->second;
-		Opcodes::ReactView=_Opcodes.find("react_view")->second;
+		Opcodes::PgmView=_Opcodes.find("pgm_view")->second;
 		Opcodes::GroupView=_Opcodes.find("grp_view")->second;
 
 		Opcodes::Entity=_Opcodes.find("ent")->second;
@@ -161,7 +161,6 @@ namespace	r_exec{
 		Opcodes::NewDev=_Opcodes.find("_new_dev")->second;
 		Opcodes::DelDev=_Opcodes.find("_del_dev")->second;
 		Opcodes::Suspend=_Opcodes.find("_suspend")->second;
-		Opcodes::Resume=_Opcodes.find("_resume")->second;
 		Opcodes::Stop=_Opcodes.find("_stop")->second;
 
 		//	load std operators.

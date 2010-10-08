@@ -34,7 +34,7 @@
 namespace	r_exec{
 
 	uint16	Opcodes::View;
-	uint16	Opcodes::ReactView;
+	uint16	Opcodes::PgmView;
 	uint16	Opcodes::GroupView;
 
 	uint16	Opcodes::Entity;
@@ -74,6 +74,5 @@ namespace	r_exec{
 	uint16	Opcodes::NewDev;
 	uint16	Opcodes::DelDev;
 	uint16	Opcodes::Suspend;
-	uint16	Opcodes::Resume;
 	uint16	Opcodes::Stop;
 }

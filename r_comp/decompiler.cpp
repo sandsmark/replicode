@@ -450,7 +450,7 @@ namespace	r_comp{
 						if(embedding_class.str_opcode=="grp")
 							view_class=metadata->classes.find("grp_view")->second;
 						else	if(embedding_class.str_opcode=="ipgm")
-							view_class=metadata->classes.find("react_view")->second;
+							view_class=metadata->classes.find("pgm_view")->second;
 						else
 							view_class=metadata->classes.find("view")->second;
 						member_name=view_class.get_member_name(atom.asIndex());

@@ -3,21 +3,19 @@
 ;mapping objects -> r-code
 !class (view[] sync:bl ijt:us sln:nb res:nb grp:grp org:)
 !class (grp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: vis:nb cov:nb)
-!class (react_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: act:nb)
+!class (pgm_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: act:nb)
 !class (_obj :~ psln_thr:nb)
 !class (ptn skel:xpr guards:[::xpr])
 !class (|ptn skel:xpr guards:[::xpr])
-!class (_in_sec[] :~ timings:[::xpr] guards:[::xpr])
-!class (_react_obj (_obj {tpl:[::ptn] :~ prods: tsc:us nfr:nb :~}))
-!class (pgm (_react_obj input:(_in_sec inputs:[]) nil))
-!class (|pgm (_react_obj input:(_in_sec inputs:[]) nil))
+!class (_in_sec[] inputs:[] timings:[::xpr] guards:[::xpr] :~)
+!class (pgm (_obj {tpl:[::ptn] input:(_in_sec nil) prods: tsc:us nfr:nb}))
+!class (|pgm (_obj {tpl:[::ptn] input:(_in_sec nil) prods: tsc:us nfr:nb}))
 !class (grp (_obj {upr:nb sln_thr:nb act_thr:nb vis_thr:nb c_sln:nb c_sln_thr:nb c_act:nb c_act_thr:nb dcy_per:nb dcy_tgt:nb dcy_prd:nb dcy_auto:nb sln_chg_thr:nb sln_chg_prd:nb act_chg_thr:nb act_chg_prd:nb avg_sln:nb high_sln:nb low_sln:nb avg_act:nb high_act:nb low_act:nb high_sln_thr:nb low_sln_thr:nb sln_ntf_prd:nb high_act_thr:nb low_act_thr:nb act_ntf_prd:nb ntf_new:nb low_res_thr:nb ntf_grps:[::grp]}))
 !class (cmd function:fid device:did args:[])
 !class (ent (_obj nil))
 !class (dev (_obj nil))
 !class (nod (_obj id:nid))
 !class (ipgm (_obj {code: args:[]}))
-!class (igol (_obj {code: args:[]}))
 
 ;mapping markers -> r-code
 !class (mk.rdx (_obj {code: inputs:[] prods:[]}))
@@ -82,7 +80,6 @@
 !dfn (_new_dev :st :nb)
 !dfn (_del_dev :did)
 !dfn (_suspend)
-!dfn (_resume)
 !dfn (_stop)
 
 ;device functions aliases
@@ -98,7 +95,6 @@
 !def (del_dev args) (cmd _del_dev exe args)
 !def (stop args) (cmd _stop exe args)
 !def (suspend args) (cmd _suspend exe args)
-!def (resume args) (cmd _resume exe args)
 
 ;various constants
 !counter __constant 0

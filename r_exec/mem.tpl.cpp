@@ -394,8 +394,11 @@ namespace	r_exec{
 		}
 
 		//	inject the next update job for the group.
-		P<TimeJob>	j=new	UpdateJob((Group	*)object,now+((Group	*)object)->get_upr()*base_period);
-		time_job_queue->push(j);
+		if(((Group	*)object)->get_upr()>0){
+
+			P<TimeJob>	j=new	UpdateJob((Group	*)object,now+((Group	*)object)->get_upr()*base_period);
+			time_job_queue->push(j);
+		}
 
 		if(host->get_ntf_new()==1){
 
