@@ -1222,6 +1222,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				Atom	atom;
 				if(class_name=="grp")
 					atom=Atom::Group(class_opcode,members.size());
+				else	if(class_name=="rgrp")
+					atom=Atom::ReductionGroup(class_opcode,members.size());
 				else	if(class_name=="ipgm")
 					atom=Atom::InstantiatedProgram(class_opcode,members.size());
 				else	if(class_name.find("mk.")!=string::npos)
@@ -1229,10 +1231,10 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				else
 					atom=Atom::Object(class_opcode,members.size());
 
-				if(class_type==T_CLASS){	//	find out if the class is a sys class, i.e. is an instantiation of _obj or of _react_obj.
+				if(class_type==T_CLASS){	//	find out if the class is a sys class, i.e. is an instantiation of _obj or of _grp.
 
 					std::string	base_class=s->args.front()->cmd;
-					if(base_class=="_obj"	||	base_class=="_react_obj")
+					if(base_class=="_obj"	||	base_class=="_grp")
 						class_type=T_SYS_CLASS;
 				}
 

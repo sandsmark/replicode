@@ -73,6 +73,7 @@ namespace	r_code{
 		case	TIMESTAMP:				std::cout<<"us";Members_to_go=Timestamp_data=2;return;
 		case	INSTANTIATED_PROGRAM:	std::cout<<"ipgm: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		case	GROUP:					std::cout<<"grp: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	REDUCTION_GROUP:		std::cout<<"rgrp: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		default:
 			if(Timestamp_data){
 				

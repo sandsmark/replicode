@@ -72,6 +72,12 @@ namespace	r_exec{
 			return	MARKER;
 		case	Atom::GROUP:
 			return	GROUP;
+		case	Atom::REDUCTION_GROUP:
+			return	RGROUP;
 		}
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	uint32	LObject::LastOID=0;
 }

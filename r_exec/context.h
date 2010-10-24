@@ -218,6 +218,7 @@ namespace	r_exec{
 			case	Atom::MARKER:
 			case	Atom::INSTANTIATED_PROGRAM:
 			case	Atom::GROUP:
+			case	Atom::REDUCTION_GROUP:
 			case	Atom::SET:
 			case	Atom::S_SET:
 			case	Atom::STRING:

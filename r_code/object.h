@@ -49,8 +49,8 @@ namespace	r_code{
 	class	dll_export	ImageObject{
 	public:
 		r_code::vector<Atom>	code;
-		r_code::vector<uint16>	references;	//	for views: 0, 1 or 2 elements; these are indexes in the relocation segment for grp (exception: not for root) and possibly org
-											//	for sys-objects: any number
+		r_code::vector<uint16>	references;
+
 		virtual	void	write(word32	*data)=0;
 		virtual	void	read(word32		*data)=0;
 		virtual	void	trace()=0;
@@ -87,6 +87,7 @@ namespace	r_code{
 		r_code::vector<SysView	*>	views;
 
 		Axiom	axiom;
+		uint32	oid;
 
 		SysObject(Axiom	a);
 		SysObject(Code	*source);
@@ -107,7 +108,7 @@ namespace	r_code{
 	private:
 		uint16	index;						//	for unpacking: index is the index of the view in the SysObject.
 	protected:
-		Atom	_code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, oid, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp.
+		Atom	_code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp; oid is the last word32 (not an atom).
 	public:
 		Code	*references[2];				//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group in references[0]).
 		P<Code>	object;						//	viewed object.
@@ -165,6 +166,7 @@ namespace	r_code{
 			for(uint16	i=0;i<source->code.size();++i)
 				code(i)=source->code[i];
 			axiom=source->axiom;
+			setOID(source->oid);
 		}
 		template<class	V>	View	*build_view(SysView	*source){
 
@@ -172,6 +174,9 @@ namespace	r_code{
 		}
 	public:
 		SysObject::Axiom	get_axiom()	const{	return	axiom;	}
+
+		virtual	uint32	getOID()	const=0;
+		virtual	void	setOID(uint32	oid)=0;
 
 		virtual	Atom	&code(uint16	i)=0;
 		virtual	Atom	&code(uint16	i)	const=0;
@@ -229,6 +234,7 @@ namespace	r_code{
 	class	dll_export	LObject:
 	public	Code{
 	protected:
+		uint32						_oid;
 		r_code::vector<Atom>		_code;
 		r_code::vector<P<Code> >	_references;
 	public:
@@ -243,6 +249,9 @@ namespace	r_code{
 
 			return	Code::build_view<View>(source);
 		}
+
+		uint32	getOID()	const{	return	_oid;	}
+		void	setOID(uint32	oid)	{	_oid=oid;	}
 
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	&code(uint16	i)	const{	return	(*_code.as_std())[i];	}

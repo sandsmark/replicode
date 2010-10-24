@@ -223,6 +223,9 @@ namespace	r_comp{
 		case	Atom::GROUP:
 			*out_stream<<"grp";
 			break;
+		case	Atom::REDUCTION_GROUP:
+			*out_stream<<"rgrp";
+			break;
 		default:
 			*out_stream<<"undefined-class";
 			break;
@@ -349,6 +352,7 @@ namespace	r_comp{
 			case	Atom::OBJECT:
 			case	Atom::MARKER:
 			case	Atom::GROUP:
+			case	Atom::REDUCTION_GROUP:
 			case	Atom::INSTANTIATED_PROGRAM:
 			case	Atom::OPERATOR:
 				write_expression(index);

@@ -226,6 +226,7 @@ namespace	r_exec{
 		}case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::GROUP:
+		case	Atom::REDUCTION_GROUP:
 		case	Atom::OBJECT:	//	incl. cmd.
 			if((*this)[0].asOpcode()==Opcodes::PTN	||	(*this)[0].asOpcode()==Opcodes::AntiPTN){	//	skip patterns.
 
@@ -392,6 +393,7 @@ dereference:
 			object=c.getObject();
 			break;
 		case	Atom::GROUP:
+		case	Atom::REDUCTION_GROUP:
 			object_type=TYPE_GROUP;
 			object=c.getObject();
 			break;

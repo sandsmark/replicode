@@ -47,7 +47,8 @@ namespace	r_exec{
 		ANTI_IPGM=2,
 		OBJECT=4,
 		MARKER=5,
-		GROUP=6
+		GROUP=6,
+		RGROUP=7
 	}ObjectType;
 
 	r_exec_dll	bool		IsNotification(Code	*object);
@@ -79,7 +80,7 @@ namespace	r_exec{
 			return	Code::build_view<r_exec::View>(source);
 		}
 
-		void	bind(r_code::Mem	*mem){	this->mem=mem;	}
+		virtual	void	bind(r_code::Mem	*mem){	this->mem=mem;	}
 
 		bool	is_invalidated()	const;
 		virtual	bool	invalidate();	//	return false when was not invalidated, true otherwise.
@@ -137,14 +138,22 @@ namespace	r_exec{
 	class	r_exec_dll	LObject:
 	public	Object<r_code::LObject,LObject>{
 	public:
+		static	uint32	LastOID;
+	public:
 		static	bool	RequiresPacking(){	return	false;	}
 		static	LObject	*Pack(Code	*object,r_code::Mem	*m){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
-		LObject(r_code::Mem	*m=NULL):Object<r_code::LObject,LObject>(m){}
+		LObject():Object<r_code::LObject,LObject>(NULL){}
+		LObject(r_code::Mem	*m):Object<r_code::LObject,LObject>(m){	setOID(LastOID++);	}
 		LObject(r_code::SysObject	*source,r_code::Mem	*m=NULL):Object<r_code::LObject,LObject>(m){
 		
 			load(source);
 		}
 		virtual	~LObject(){}
+		void	bind(r_code::Mem	*mem){
+			
+			this->mem=mem;
+			setOID(LastOID++);
+		}
 	};
 }
 

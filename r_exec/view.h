@@ -55,6 +55,8 @@ namespace	r_exec{
 		float32	acc_sln;
 		uint32	act_vis_changes;
 		float32	acc_act_vis;
+		uint32	rgrp_act_changes;
+		float32	acc_rgrp_act;
 		uint32	res_changes;
 		float32	acc_res;
 		void	reset_ctrl_values();
@@ -95,6 +97,7 @@ namespace	r_exec{
 		float32	get_res();
 		float32	get_sln();
 		float32	get_act_vis();
+		float32	get_rgrp_act();
 		bool	get_cov();
 
 		void	mod_res(float32	value);
@@ -103,10 +106,13 @@ namespace	r_exec{
 		void	set_sln(float32	value);
 		void	mod_act_vis(float32	value);
 		void	set_act_vis(float32	value);
+		void	mod_rgrp_act(float32	value);
+		void	set_rgrp_act(float32	value);
 
 		float32	update_res();
 		float32	update_sln(float32	low,float32	high);
 		float32	update_act(float32	low,float32	high);
+		float32	update_rgrp_act();
 		float32	update_vis();
 
 		float32	update_sln_delta();

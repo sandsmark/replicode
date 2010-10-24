@@ -81,6 +81,7 @@ namespace	r_exec{
 		input_less_ipgm_views.clear();
 		other_views.clear();
 		group_views.clear();
+		rgroup_views.clear();
 
 		return	false;
 	}

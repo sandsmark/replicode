@@ -473,12 +473,12 @@ CoreCount=0;
 						_initiate_sln_propagation(v->second->object,view_new_sln-view_old_sln,group->get_sln_thr());
 				}
 
-				if(v->second->object->code(0).getDescriptor()==Atom::GROUP){
+				if(v->second->object->code(0).getDescriptor()==Atom::GROUP	||	v->second->object->code(0).getDescriptor()==Atom::REDUCTION_GROUP){
 
 					//	update visibility.
 					bool	view_was_visible=v->second->get_act_vis()>group->get_vis_thr();
 					bool	view_is_visible=v->second->update_vis()>group->get_vis_thr();
-					bool	cov=v->second->get_cov()==0?false:true;
+					bool	cov=v->second->get_cov();
 
 					//	update viewing groups.
 					if(group_was_c_active	&&	group_was_c_salient){
@@ -565,6 +565,9 @@ CoreCount=0;
 				case	ObjectType::GROUP:
 					v=group->group_views.erase(v);
 					break;
+				case	ObjectType::RGROUP:
+					v=group->rgroup_views.erase(v);
+					break;
 				}
 			}
 		FOR_ALL_VIEWS_END
@@ -582,6 +585,7 @@ CoreCount=0;
 					for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
 						if((*v)->object->code(0).getDescriptor()!=Atom::INSTANTIATED_PROGRAM	&&	//	no cov for pgm, groups or notifications.
 							(*v)->object->code(0).getDescriptor()!=Atom::GROUP					&&
+							(*v)->object->code(0).getDescriptor()!=Atom::REDUCTION_GROUP		&&
 							!(*v)->isNotification())
 								injectCopyNow(*v,vg->first,now);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.
 				}
@@ -632,12 +636,12 @@ CoreCount=0;
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
 
 			//	build reduction jobs from host's own inputs and own overlays.
-			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(host,v)
+			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(host,v)
 
-				if(v->second->get_act_vis()>host->get_sln_thr())	//	active ipgm view.
+				if(v->second->get_act_vis()>host->get_act_thr())	//	active ipgm/rgrp view.
 					((_PGMController	*)v->second->controller)->take_input(view,origin);	//	view will be copied.
 
-			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
+			FOR_ALL_VIEWS_WITH_INPUTS_END
 		}
 
 		//	build reduction jobs from host's own inputs and overlays from viewing groups, if no cov and view is not a notification.
@@ -649,12 +653,12 @@ CoreCount=0;
 			if(vg->second	||	view->isNotification())	//	cov==true or notification.
 				continue;
 
-			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
+			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
 
-				if(v->second->get_act_vis()>vg->first->get_sln_thr())	//	active ipgm view.
+				if(v->second->get_act_vis()>vg->first->get_act_thr())	//	active ipgm/rgrp view.
 					((_PGMController	*)v->second->controller)->take_input(view,origin);	//	view will be copied.
 			
-			FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END
+			FOR_ALL_VIEWS_WITH_INPUTS_END
 		}
 	}
 

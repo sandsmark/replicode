@@ -204,6 +204,11 @@ namespace	r_code{
 		return	Atom((GROUP<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
+	inline	Atom	Atom::ReductionGroup(uint16 opcode,uint8 arity){
+
+		return	Atom((REDUCTION_GROUP<<24)+((opcode	&	0x0FFF)<<8)+arity);
+	}
+
 	inline	Atom::Atom(uint32	a):atom(a){
 	}
 

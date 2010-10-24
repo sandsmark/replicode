@@ -51,6 +51,7 @@ namespace	r_exec{
 
 		switch(source->code[0].getDescriptor()){
 		case	Atom::GROUP:
+		case	Atom::REDUCTION_GROUP:
 			return	new	Group(source,this);
 		default:
 			return	new	O(source,this);
@@ -61,6 +62,7 @@ namespace	r_exec{
 
 		switch(head.getDescriptor()){
 		case	Atom::GROUP:
+		case	Atom::REDUCTION_GROUP:
 			return	new	Group();
 		default:
 			if(O::RequiresPacking())
@@ -112,6 +114,7 @@ namespace	r_exec{
 		root=(Group	*)(*objects)[0];
 		this->objects.push_back(root);
 		initial_groups.push_back(root);
+		root->setOID(r_exec::LObject::LastOID++);
 
 		for(uint32	i=1;i<objects->size();++i){	//	skip root as it has no initial views.
 
@@ -127,6 +130,8 @@ namespace	r_exec{
 				_self=(O	*)(*objects)[i];
 				break;
 			}
+
+			object->setOID(r_exec::LObject::LastOID++);
 
 			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	it;
 			for(it=object->views.begin();it!=object->views.end();++it){
@@ -146,7 +151,18 @@ namespace	r_exec{
 					bool	viewing_c_salient=host->get_c_sln()>host->get_c_sln_thr();
 					bool	viewed_visible=view->get_act_vis()>host->get_vis_thr();
 					if(viewing_c_active	&&	viewing_c_salient	&&	viewed_visible)	//	visible group in a c-salient, c-active group.
-						((Group	*)object)->viewing_groups[host]=view->get_cov()==0?false:true;	//	init the group's viewing groups.
+						((Group	*)object)->viewing_groups[host]=view->get_cov();	//	init the group's viewing groups.
+					break;
+				}case	ObjectType::RGROUP:{
+
+					host->rgroup_views[view->getOID()]=view;
+
+					//	init viewing_group.
+					bool	viewing_c_active=host->get_c_act()>host->get_c_act_thr();
+					bool	viewing_c_salient=host->get_c_sln()>host->get_c_sln_thr();
+					bool	viewed_visible=view->get_act_vis()>host->get_vis_thr();
+					if(viewing_c_active	&&	viewing_c_salient	&&	viewed_visible)	//	visible group in a c-salient, c-active group.
+						((Group	*)object)->viewing_groups[host]=view->get_cov();	//	init the group's viewing groups.
 					break;
 				}case	ObjectType::IPGM:
 					host->ipgm_views[view->getOID()]=view;
@@ -183,7 +199,7 @@ namespace	r_exec{
 
 			object->position_in_objects=this->objects.insert(this->objects.end(),object);
 			object->is_registered=true;
-			if(GetType(object)!=ObjectType::GROUP)	//	load non-group object in regsister.
+			if(GetType(object)!=ObjectType::GROUP	&&	GetType(object)!=ObjectType::RGROUP)	//	load non-group object in register.
 				((O	*)object)->position_in_object_register=object_register.insert((O	*)object).first;
 			else
 				initial_groups.push_back((Group	*)object);	//	convenience to create initial update jobs - see start().
@@ -207,8 +223,11 @@ namespace	r_exec{
 
 	template<class	O>	Code	*Mem<O>::check_existence(Code	*object){
 
-		if(object->code(0).getDescriptor()==Atom::GROUP)	//	groups are always new.
+		switch(object->code(0).getDescriptor()){
+		case	Atom::GROUP:
+		case	Atom::REDUCTION_GROUP:	//	groups are always new.
 			return	object;
+		}
 
 		O	*_object;
 		if(O::RequiresPacking())			//	false if LObject, true for network-aware objects.
@@ -245,7 +264,7 @@ namespace	r_exec{
 		uint64	now=Now();
 		uint64	ijt=view->get_ijt();
 
-		if(view->object->code(0).getDescriptor()==Atom::GROUP){	//	group.
+		if(view->object->code(0).getDescriptor()==Atom::GROUP	||	view->object->code(0).getDescriptor()==Atom::REDUCTION_GROUP){	//	group.
 
 			if(ijt<=now)
 				injectGroupNow(view,(Group	*)view->object,host);
@@ -379,7 +398,14 @@ namespace	r_exec{
 
 		host->enter();
 
-		host->group_views[view->getOID()]=view;
+		switch(object->code(0).getDescriptor()){
+		case	Atom::GROUP:
+			host->group_views[view->getOID()]=view;
+			break;
+		case	Atom::REDUCTION_GROUP:
+			host->rgroup_views[view->getOID()]=view;
+			break;
+		}
 
 		uint64	now=Now();
 		r_code::Timestamp::Set<View>(view,VIEW_IJT,now);
@@ -388,7 +414,7 @@ namespace	r_exec{
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr()){	//	host is c-salient and view is salient.
 
 			if(view->get_act_vis()>host->get_vis_thr())	//	new visible group in a c-active and c-salient host.
-				host->viewing_groups[object]=view->get_cov()==0?false:true;
+				object->viewing_groups[host]=view->get_cov();
 
 			_inject_reduction_jobs(view,host);
 		}

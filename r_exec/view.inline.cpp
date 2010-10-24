@@ -93,9 +93,16 @@ namespace	r_exec{
 		return	code(VIEW_ACT_VIS).asFloat();
 	}
 
+	inline	float32	View::get_rgrp_act(){
+
+		return	code(RGRP_VIEW_ACT).asFloat();
+	}
+
 	inline	bool	View::get_cov(){
 
-		return	code(GRP_VIEW_COV).asFloat()==1;
+		if(object->code(0).getDescriptor()==Atom::GROUP)
+			return	code(GRP_VIEW_COV).asFloat()==1;
+		return	false;
 	}
 
 	inline	void	View::mod_res(float32	value){
@@ -138,6 +145,18 @@ namespace	r_exec{
 		++act_vis_changes;
 	}
 
+	inline	void	View::mod_rgrp_act(float32	value){
+
+		acc_rgrp_act+=value;
+		++rgrp_act_changes;
+	}
+
+	inline	void	View::set_rgrp_act(float32	value){
+
+		acc_rgrp_act+=value-get_rgrp_act();
+		++rgrp_act_changes;
+	}
+
 	inline	float32	View::update_sln_delta(){
 
 		float32	delta=get_sln()-initial_sln;
@@ -147,8 +166,18 @@ namespace	r_exec{
 
 	inline	float32	View::update_act_delta(){
 
-		float32	delta=get_act_vis()-initial_act;
-		initial_act=get_act_vis();
+		float32	act;
+		switch(object->code(0).getDescriptor()){
+		case	Atom::INSTANTIATED_PROGRAM:
+			act=get_act_vis();
+			break;
+		case	Atom::REDUCTION_GROUP:
+			act=get_rgrp_act();
+			break;
+		}
+
+		float32	delta=act-initial_act;
+		initial_act=act;
 		return	delta;
 	}
 
@@ -164,6 +193,9 @@ namespace	r_exec{
 		case	VIEW_ACT_VIS:
 			mod_act_vis(value);
 			break;
+		case	RGRP_VIEW_ACT:
+			mod_rgrp_act(value);
+			break;
 		}
 	}
 
@@ -178,6 +210,9 @@ namespace	r_exec{
 			break;
 		case	VIEW_ACT_VIS:
 			set_act_vis(value);
+			break;
+		case	RGRP_VIEW_ACT:
+			set_rgrp_act(value);
 			break;
 		}
 	}

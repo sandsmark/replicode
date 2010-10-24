@@ -44,6 +44,9 @@ namespace	r_exec{
 		it=group_views.find(OID);
 		if(it!=group_views.end())
 			return	it->second;
+		it=rgroup_views.find(OID);
+		if(it!=rgroup_views.end())
+			return	it->second;
 		it=ipgm_views.find(OID);
 		if(it!=ipgm_views.end())
 			return	it->second;

@@ -94,7 +94,7 @@ namespace	r_code{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	SysObject::SysObject(Axiom	a):axiom(a){
+	SysObject::SysObject(Axiom	a):axiom(a){	// oid to be initialized by the rMem.
 	}
 
 	SysObject::SysObject(Code	*source){
@@ -108,6 +108,7 @@ namespace	r_code{
 			views[i]=new	SysView(*v);
 
 		axiom=source->get_axiom();
+		oid=source->getOID();
 
 		for(i=0;i<source->references_size();++i)	//	to get the right size in Image::addObject().
 			references.push_back(0);
@@ -121,51 +122,53 @@ namespace	r_code{
 
 	void	SysObject::write(word32	*data){
 
-		data[0]=axiom;
-		data[1]=code.size();
-		data[2]=references.size();
-		data[3]=markers.size();
-		data[4]=views.size();
+		data[0]=oid;
+		data[1]=axiom;
+		data[2]=code.size();
+		data[3]=references.size();
+		data[4]=markers.size();
+		data[5]=views.size();
 		uint32	i;
 		uint32	j;
 		uint32	k;
 		uint32	l;
 		for(i=0;i<code.size();++i)
-			data[5+i]=code[i].atom;
+			data[6+i]=code[i].atom;
 		for(j=0;j<references.size();++j)
-			data[5+i+j]=references[j];
+			data[6+i+j]=references[j];
 		for(k=0;k<markers.size();++k)
-			data[5+i+j+k]=markers[k];
+			data[6+i+j+k]=markers[k];
 		uint32	offset=0;
 		for(l=0;l<views.size();++l){
 
-			views[l]->write(data+5+i+j+k+offset);
+			views[l]->write(data+6+i+j+k+offset);
 			offset+=views[l]->getSize();
 		}
 	}
 
 	void	SysObject::read(word32	*data){
 
-		axiom=(Axiom)data[0];
-		uint32	code_size=data[1];
-		uint32	reference_set_size=data[2];
-		uint32	marker_set_size=data[3];
-		uint32	view_set_size=data[4];
+		oid=data[0];
+		axiom=(Axiom)data[1];
+		uint32	code_size=data[2];
+		uint32	reference_set_size=data[3];
+		uint32	marker_set_size=data[4];
+		uint32	view_set_size=data[5];
 		uint32	i;
 		uint32	j;
 		uint32	k;
 		uint32	l;
 		for(i=0;i<code_size;++i)
-			code.push_back(Atom(data[5+i]));
+			code.push_back(Atom(data[6+i]));
 		for(j=0;j<reference_set_size;++j)
-			references.push_back(data[5+i+j]);
+			references.push_back(data[6+i+j]);
 		for(k=0;k<marker_set_size;++k)
-			markers.push_back(data[5+i+j+k]);
+			markers.push_back(data[6+i+j+k]);
 		uint32	offset=0;
 		for(l=0;l<view_set_size;++l){
 
 			SysView	*v=new	SysView();
-			v->read(data+5+i+j+k+offset);
+			v->read(data+6+i+j+k+offset);
 			views.push_back(v);
 			offset+=v->getSize();
 		}
@@ -176,12 +179,13 @@ namespace	r_code{
 		uint32	view_set_size=0;
 		for(uint32	i=0;i<views.size();++i)
 			view_set_size+=views[i]->getSize();
-		return	5+code.size()+references.size()+markers.size()+view_set_size;
+		return	6+code.size()+references.size()+markers.size()+view_set_size;
 	}
 
 	void	SysObject::trace(){
 
 		std::cout<<"\n---object---\n";
+		std::cout<<oid<<std::endl;
 		switch(axiom){
 		case	ROOT_GRP:	std::cout<<"root\n";	break;
 		case	STDIN_GRP:	std::cout<<"stdin\n";	break;

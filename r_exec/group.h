@@ -98,19 +98,20 @@ namespace	r_exec{
 		void	_set_0_1(uint16	member_index,float32	value);
 	public:
 		//	xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
-		//	Active overlays are to be found in xxx_ipgm_views.
+		//	Active overlays are to be found in xxx_ipgm_views and rgroup_views.
 		UNORDERED_MAP<uint32,P<View> >	ipgm_views;
 		UNORDERED_MAP<uint32,P<View> >	anti_ipgm_views;
 		UNORDERED_MAP<uint32,P<View> >	input_less_ipgm_views;
 		UNORDERED_MAP<uint32,P<View> >	notification_views;
 		UNORDERED_MAP<uint32,P<View> >	group_views;
+		UNORDERED_MAP<uint32,P<View> >	rgroup_views;
 		UNORDERED_MAP<uint32,P<View> >	other_views;
 
 		//	Defined to create reduction jobs in the viewing groups from the viewed group.
 		//	Empty when the viewed group is invisible (this means that visible groups can be non c-active or non c-salient).
 		//	Maintained by the viewing groups (at update time).
 		//	Viewing groups are c-active and c-salient. the bool is the cov.
-		UNORDERED_MAP<Group	*,bool>				viewing_groups;
+		UNORDERED_MAP<Group	*,bool>		viewing_groups;
 
 		//	Populated within update; ordered by increasing ijt; cleared at the beginning of update.
 		std::set<View	*,r_code::View::Less>	newly_salient_views;
@@ -187,10 +188,14 @@ namespace	r_exec{
 					end=group_views.end();
 					break;
 				case	4:
+					it=rgroup_views.begin();
+					end=rgroup_views.end();
+					break;
+				case	5:
 					it=other_views.begin();
 					end=other_views.end();
 					break;
-				case	5:
+				case	6:
 					selector=0;
 					return	false;
 				}
@@ -213,7 +218,7 @@ namespace	r_exec{
 #define	FOR_ALL_VIEWS_END	}	\
 		}
 
-		bool	ipgm_views_with_inputs_cond(uint8	&selector,UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
+		bool	views_with_inputs_cond(uint8	&selector,UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
 			while(it==end){
 				switch(selector++){
 				case	0:
@@ -221,6 +226,10 @@ namespace	r_exec{
 					end=anti_ipgm_views.end();
 					break;
 				case	1:
+					it=rgroup_views.begin();
+					end=rgroup_views.end();
+					break;
+				case	2:
 					selector=0;
 					return	false;
 				}
@@ -228,13 +237,13 @@ namespace	r_exec{
 			return	true;
 		}
 
-#define	FOR_ALL_IPGM_VIEWS_WITH_INPUTS_BEGIN(g,it)	{	\
+#define	FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(g,it)	{	\
 		uint8	selector;								\
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	it=g->ipgm_views.begin();	\
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	end=g->ipgm_views.end();	\
-		for(selector=0;g->ipgm_views_with_inputs_cond(selector,it,end);++it){
+		for(selector=0;g->views_with_inputs_cond(selector,it,end);++it){
 
-#define	FOR_ALL_IPGM_VIEWS_WITH_INPUTS_END	}	\
+#define	FOR_ALL_VIEWS_WITH_INPUTS_END	}	\
 		}	
 
 		bool	non_ntf_views_cond(uint8	&selector,UNORDERED_MAP<uint32,P<View> >::const_iterator	&it,UNORDERED_MAP<uint32,P<View> >::const_iterator	&end){
@@ -253,10 +262,14 @@ namespace	r_exec{
 					end=group_views.end();
 					break;
 				case	3:
+					it=rgroup_views.begin();
+					end=rgroup_views.end();
+					break;
+				case	4:
 					it=other_views.begin();
 					end=other_views.end();
 					break;
-				case	4:
+				case	5:
 					selector=0;
 					return	false;
 				}

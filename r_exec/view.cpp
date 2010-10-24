@@ -94,8 +94,14 @@ namespace	r_exec{
 		switch(object->code(0).getDescriptor()){
 		case	Atom::GROUP:
 			code(VIEW_ACT_VIS)=Atom::Float(MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_vis_thr(),group->get_vis_thr()));
+			break;
 		case	Atom::INSTANTIATED_PROGRAM:
 			code(VIEW_ACT_VIS)=Atom::Float(MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_act_thr(),group->get_act_thr()));
+			break;
+		case	Atom::REDUCTION_GROUP:
+			code(VIEW_ACT_VIS)=Atom::Float(MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_vis_thr(),group->get_vis_thr()));
+			code(RGRP_VIEW_ACT)=Atom::Float(MorphValue(view->code(RGRP_VIEW_ACT).asFloat(),source->get_act_thr(),group->get_act_thr()));
+			break;
 		}
 
 		reset_ctrl_values();
@@ -115,6 +121,8 @@ namespace	r_exec{
 		acc_sln=0;
 		act_vis_changes=0;
 		acc_act_vis=0;
+		rgrp_act_changes=0;
+		acc_rgrp_act=0;
 		res_changes=0;
 		acc_res=0;
 
@@ -131,9 +139,17 @@ namespace	r_exec{
 
 	void	View::reset_init_act(){
 
-		if(object!=NULL	&&	object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM)
-			initial_act=get_act_vis();
-		else
+		if(object!=NULL){
+			
+			switch(object->code(0).getDescriptor()){
+			case	Atom::INSTANTIATED_PROGRAM:
+				initial_act=get_act_vis();
+				break;
+			case	Atom::REDUCTION_GROUP:
+				initial_act=get_rgrp_act();
+				break;
+			}
+		}else
 			initial_act=0;
 	}
 
@@ -178,18 +194,29 @@ namespace	r_exec{
 
 	float32	View::update_act(float32	low,float32	high){
 
-		update_vis();
-		if(get_act_vis()<low)
+		float32	act;
+		switch(object->code(0).getDescriptor()){
+		case	Atom::INSTANTIATED_PROGRAM:
+			update_vis();
+			act=get_act_vis();
+			break;
+		case	Atom::REDUCTION_GROUP:
+			update_rgrp_act();
+			act=get_rgrp_act();
+			break;
+		}
+
+		if(act<low)
 			++periods_at_low_act;
 		else{
 			
 			periods_at_low_act=0;
-			if(get_act_vis()>high)
+			if(act>high)
 				++periods_at_high_act;
 			else
 				periods_at_high_act=0;
 		}
-		return	get_act_vis();
+		return	act;
 	}
 
 	float32	View::update_vis(){
@@ -206,6 +233,22 @@ namespace	r_exec{
 		acc_act_vis=0;
 		act_vis_changes=0;
 		return	get_act_vis();
+	}
+
+	float32	View::update_rgrp_act(){
+
+		if(rgrp_act_changes>0	&&	acc_rgrp_act!=0){
+
+			float32	new_rgrp_act=get_rgrp_act()+acc_rgrp_act/rgrp_act_changes;
+			if(new_rgrp_act<0)
+				new_rgrp_act=0;
+			else	if(new_rgrp_act>1)
+				new_rgrp_act=1;
+			code(RGRP_VIEW_ACT)=r_code::Atom::Float(new_rgrp_act);
+		}
+		acc_rgrp_act=0;
+		rgrp_act_changes=0;
+		return	get_rgrp_act();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

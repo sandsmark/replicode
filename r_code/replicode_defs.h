@@ -43,6 +43,7 @@
 #define	IPGM_VIEW_ACT	7
 #define	GRP_VIEW_VIS	7
 #define	GRP_VIEW_COV	8
+#define	RGRP_VIEW_ACT	8
 #define	VIEW_OID		12
 
 #define	OBJECT_CLASS	0

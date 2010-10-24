@@ -79,7 +79,8 @@ namespace	r_code{
 			STRING=0xC6,
 			TIMESTAMP=0xC7,
 			INSTANTIATED_PROGRAM=0xC8,
-			GROUP=0xC9
+			GROUP=0xC9,
+			REDUCTION_GROUP=0xCA
 		}Type;
 		// encoders
 		static	Atom	Float(float32 f);	//	IEEE 754 32 bits encoding; shifted by 1 to the right (loss of precison).
@@ -121,6 +122,7 @@ namespace	r_code{
 		static	Atom	UndefinedTimestamp();
 		static	Atom	InstantiatedProgram(uint16 opcode,uint8 arity);
 		static	Atom	Group(uint16 opcode,uint8 arity);
+		static	Atom	ReductionGroup(uint16 opcode,uint8 arity);
 
 		Atom(uint32	a=0xFFFFFFFF);
 		~Atom();
