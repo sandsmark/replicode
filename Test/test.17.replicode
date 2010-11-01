@@ -21,22 +21,18 @@ _start:(pgm
             [SYNC_FRONT (\ now) 1 forever root nil]
          )
          (mod [e.vw.sln -1])
-      0us
-      1
       1
       )
       [SYNC_FRONT now 1 forever root nil]
    )
    (inj []
-      (ins p |[])
+      (ins p |[] 0us 1)
       [SYNC_FRONT now 1 forever root nil 1]
    )
-90000us
-1
 1
 )
 |[]
 
-i_start:(ipgm _start |[] 1)
+i_start:(ipgm _start |[] 90000us 1 1)
 []
    [SYNC_FRONT now 1 1 root nil 1]

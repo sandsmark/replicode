@@ -133,7 +133,8 @@ int32	main(int	argc,char	**argv){
 		r_exec::Seed.getObjects(mem,ram_objects);
 
 		mem->init(settings.base_period,settings.reduction_core_count,settings.time_core_count,settings.notification_resilience);
-		mem->load(ram_objects.as_std());
+		if(!mem->load(ram_objects.as_std()))
+			return	4;
 		uint64	starting_time=mem->start();
 		
 		std::cout<<"\nRunning for "<<settings.run_time<<" ms"<<std::endl;

@@ -38,7 +38,7 @@
 
 namespace	r_exec{
 
-	class	Overlay;
+	class	InputLessPGMOverlay;
 
 	//	Evaluation context.
 	class	dll_export	Context{
@@ -47,7 +47,9 @@ namespace	r_exec{
 		View	*view;				//	the object's view, can be NULL when the context is dereferenced to a reference_set or a marker_set.
 		Atom	*code;				//	the object's code, or the code in value array, or the view's code when the context is dereferenced from Atom::VIEW.
 		uint16	index;				//	in the code;
-		Overlay	*const	overlay;	//	the overlay where the evaluation is performed; NULL when the context is dereferenced outside the original pgm or outside the value array.
+
+		InputLessPGMOverlay	*const	overlay;	//	the overlay where the evaluation is performed; NULL when the context is dereferenced outside the original pgm or outside the value array.
+		
 		typedef	enum{				//	indicates whether the context refers to:
 			ORIGINAL_PGM=0,			//		- the pgm being reducing inputs;
 			REFERENCE=1,			//		- a reference to another object;
@@ -125,7 +127,7 @@ namespace	r_exec{
 							Context	c=getChild(i);
 							c.copy_member(destination,write_index++,extent_index,i!=3,pgm_index);
 						}
-					}else{	// if a pgm is being copied, indicate the starting index of the pgm so that we can turn on code patching and know if a cptr if referencing code inside the pgm (in that case it will not be dereferenced).
+					}else{	// if a pgm is being copied, indicate the starting index of the pgm so that we can turn on code patching and know if a cptr is referencing code inside the pgm (in that case it will not be dereferenced).
 
 						int32	_pgm_index;
 						if(pgm_index>=0)
@@ -192,7 +194,7 @@ namespace	r_exec{
 					break;
 				case	Atom::I_PTR:
 					if(code[code[(*this)[0].asIndex()].asIndex()].getDescriptor()==Atom::IN_OBJ_PTR)
-						addReference(destination,write_index,((IOverlay	*)overlay)->getInputObject(code[code[(*this)[0].asIndex()].asIndex()].asInputIndex()));
+						addReference(destination,write_index,((PGMOverlay	*)overlay)->getInputObject(code[code[(*this)[0].asIndex()].asIndex()].asInputIndex()));
 					else
 						(**this).copy_member(destination,write_index,extent_index,dereference_cptr,pgm_index);
 					break;
@@ -211,12 +213,13 @@ namespace	r_exec{
 				addReference(destination,write_index,overlay->productions[(*this)[0].asIndex()]);
 				break;
 			case	Atom::IN_OBJ_PTR:
-				addReference(destination,write_index,((IOverlay	*)overlay)->getInputObject((*this)[0].asIndex()));
+				addReference(destination,write_index,((PGMOverlay	*)overlay)->getInputObject((*this)[0].asIndex()));
 				break;
 			case	Atom::OPERATOR:
 			case	Atom::OBJECT:
 			case	Atom::MARKER:
 			case	Atom::INSTANTIATED_PROGRAM:
+			case	Atom::INSTANTIATED_CPP_PROGRAM:
 			case	Atom::GROUP:
 			case	Atom::REDUCTION_GROUP:
 			case	Atom::SET:
@@ -241,10 +244,10 @@ namespace	r_exec{
 		void	Context::copy_structure_to_value_array(bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr);
 		void	Context::copy_member_to_value_array(uint16	child_index,bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr);
 	public:
-		static	Context	GetContextFromInput(View	*input,Overlay	*overlay){	return	Context(input->object,input,&input->object->code(0),0,overlay,REFERENCE);	}
+		static	Context	GetContextFromInput(View	*input,InputLessPGMOverlay	*overlay){	return	Context(input->object,input,&input->object->code(0),0,overlay,REFERENCE);	}
 
 		Context():object(NULL),view(NULL),code(NULL),index(0),overlay(NULL),data(UNDEFINED){}	//	undefined context (happens when accessing the view of an object when it has not been provided).
-		Context(Code	*object,View	*view,Atom	*code,uint16	index,Overlay	*const	overlay,Data	data=ORIGINAL_PGM):object(object),view(view),code(code),index(index),overlay(overlay),data(data){}
+		Context(Code	*object,View	*view,Atom	*code,uint16	index,InputLessPGMOverlay	*const	overlay,Data	data=ORIGINAL_PGM):object(object),view(view),code(code),index(index),overlay(overlay),data(data){}
 		Context(Code	*object,uint16	index):object(object),view(NULL),code(&object->code(0)),index(index),overlay(NULL),data(REFERENCE){}
 		Context(Code	*object,Data	data):object(object),view(NULL),code(&object->code(0)),index(0),overlay(NULL),data(data){}
 

@@ -1,0 +1,45 @@
+;performance test.
+
+(mk.val self position (vec3 1 1 1) 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+_start:(pgm
+|[]
+[]
+   []
+      (ptn (mk.val self position v2:(vec3 x: : z:) ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      (mk.val self position (vec3 1 1 (+ z 1)) 1)
+      [SYNC_FRONT now 1 forever root nil]
+   )
+1
+)
+|[]
+
+i_start:(ipgm _start |[] 0us 0 1)
+[]
+   [SYNC_FRONT now 1 forever root nil 1]
+
+_start2:(pgm
+|[]
+[]
+   []
+      (ptn (mk.val self position v2:(vec3 x: : z:) ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      (mk.val self position (vec3 (+ x 1) 1 1) 1)
+      [SYNC_FRONT now 1 forever root nil]
+   )
+1
+)
+|[]
+
+i_start2:(ipgm _start2 |[] 0us 0 1)
+[]
+   [SYNC_FRONT now 1 forever root nil 1]

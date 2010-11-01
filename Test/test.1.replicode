@@ -15,12 +15,10 @@ P1:(pgm
 []
    (inj [(mk.val self position tgv.vector 1) [SYNC_FRONT now 1 forever root nil]])
    (inj [(mk.val self position (vec3 tgv.vector.x vec.y 256) 1) [SYNC_FRONT now 1 forever root nil]])
-0us
-1
 1
 )
 |[]
 
-iP1:(ipgm P1 [(tagged_v (vec3 1 2 3) "qwerty")] 1)
+iP1:(ipgm P1 [(tagged_v (vec3 1 2 3) "qwerty")] 0us 1 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]

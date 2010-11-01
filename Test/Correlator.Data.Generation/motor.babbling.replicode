@@ -30,15 +30,13 @@ _start:(pgm
       (mk.val self_hand attachment cup 1)
       [SYNC_FRONT (+ now (rnd 10000)) 1 forever stdin nil]
    )
-90000us
-0
 1
 )
 |[]
 
-i_start:(ipgm _start |[] 1)
+i_start:(ipgm _start |[] 90000us 0 1)
 []
-   [SYNC_FRONT now 1 1 root nil 1]
+   [SYNC_FRONT now 0 1 root nil 1]
 
 pos_updater:(pgm
 |[]
@@ -60,15 +58,13 @@ pos_updater:(pgm
       (mk.val cup position new_pos 1)
       [SYNC_FRONT (+ t (rnd 10000)) 1 forever stdin nil]
    )
-0us
-0
 1
 )
 |[]
 
-i_pos_updater:(ipgm pos_updater |[] 1)
+i_pos_updater:(ipgm pos_updater |[] 0us 0 1)
 []
-   [SYNC_FRONT now 1 forever stdin nil 1]
+   [SYNC_FRONT now 0 forever stdin nil 1]
 
 noise_updater:(pgm
 |[]
@@ -82,15 +78,13 @@ noise_updater:(pgm
       (noise (rnd 1000) 1)
       [SYNC_FRONT (+ now (rnd 40000)) 1 forever stdin nil]
    )
-0us
-0
 1
 )
 |[]
 
-i_noise_updater:(ipgm noise_updater |[] 1)
+i_noise_updater:(ipgm noise_updater |[] 0us 0 1)
 []
-   [SYNC_FRONT now 1 forever stdin nil 1]
+   [SYNC_FRONT now 0 forever stdin nil 1]
 
 grab_updater:(pgm
 |[]
@@ -104,15 +98,13 @@ grab_updater:(pgm
       m
       [SYNC_FRONT (+ now (rnd 50000)) 1 forever stdin nil]
    )
-0us
-0
 1
 )
 |[]
 
-i_grab_updater:(ipgm grab_updater |[] 1)
+i_grab_updater:(ipgm grab_updater |[] 0us 0 1)
 []
-   [SYNC_FRONT now 1 forever stdin nil 1]
+   [SYNC_FRONT now 0 forever stdin nil 1]
 
 episode_notifier:(pgm
 |[]
@@ -122,12 +114,15 @@ episode_notifier:(pgm
       (episode_end now 1)
       [SYNC_FRONT now 1 forever stdin nil]
    )
-1000000us
-0
 1
 )
 |[]
 
-i_episode_notifier.(ipgm episode_notifier |[] 1)
+i_episode_notifier.(ipgm episode_notifier |[] 1000000us 0 1)
 []
-   [SYNC_FRONT now 1 forever stdin nil 1]
+   [SYNC_FRONT now 0 forever stdin nil 1]
+
+
+i_correlator:(icpp_pgm "correlator" |[] 0us 1 1)
+[]
+   [SYNC_FRONT now 0 forever stdin nil 1]

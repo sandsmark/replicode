@@ -168,9 +168,9 @@ namespace	r_exec{
 			return	c;
 		}
 		case	Atom::THIS:	//	refers to the ipgm; the pgm view is not available.
-			return	Context(overlay->getIPGM(),overlay->getIPGMView(),&overlay->getIPGM()->code(0),0,overlay,REFERENCE);
+			return	Context(overlay->getObject(),overlay->getView(),&overlay->getObject()->code(0),0,overlay,REFERENCE);
 		case	Atom::VIEW:	//	never a reference, always in a cptr.
-			if(overlay	&&	object==overlay->getIPGM())
+			if(overlay	&&	object==overlay->getObject())
 				return	Context(object,view,&view->code(0),0,NULL,VIEW);
 			return	*this;
 		case	Atom::MKS:
@@ -180,10 +180,10 @@ namespace	r_exec{
 		case	Atom::VALUE_PTR:
 			return	Context(object,view,&overlay->values[0],(*this)[0].asIndex(),overlay,VALUE_ARRAY);
 		case	Atom::IPGM_PTR:
-			return	*Context(overlay->getIPGM(),(*this)[0].asIndex());
+			return	*Context(overlay->getObject(),(*this)[0].asIndex());
 		case	Atom::IN_OBJ_PTR:{
-			Code	*input_object=((IOverlay	*)overlay)->getInputObject((*this)[0].asInputIndex());
-			View	*input_view=(r_exec::View*)((IOverlay	*)overlay)->getInputView((*this)[0].asInputIndex());
+			Code	*input_object=((PGMOverlay	*)overlay)->getInputObject((*this)[0].asInputIndex());
+			View	*input_view=(r_exec::View*)((PGMOverlay	*)overlay)->getInputView((*this)[0].asInputIndex());
 			return	*Context(input_object,input_view,&input_object->code(0),(*this)[0].asIndex(),NULL,REFERENCE);
 		}case	Atom::PROD_PTR:
 			return	Context(overlay->productions[(*this)[0].asIndex()],0);
@@ -225,6 +225,7 @@ namespace	r_exec{
 			return	op(*this,result_index);
 		}case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
+		case	Atom::INSTANTIATED_CPP_PROGRAM:
 		case	Atom::GROUP:
 		case	Atom::REDUCTION_GROUP:
 		case	Atom::OBJECT:	//	incl. cmd.
@@ -389,6 +390,7 @@ dereference:
 		case	Atom::OBJECT:
 		case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
+		case	Atom::INSTANTIATED_CPP_PROGRAM:
 			object_type=TYPE_OBJECT;
 			object=c.getObject();
 			break;
@@ -465,7 +467,7 @@ dereference:
 		overlay->patch_code(index,Atom::ValuePointer(overlay->values.size()));
 		overlay->values.as_std()->resize(overlay->values.size()+3);
 		uint16	value_index=overlay->values.size()-3;
-		Timestamp::Set(&overlay->values[value_index],t);
+		Utils::SetTimestamp(&overlay->values[value_index],t);
 		return	value_index;
 	}
 

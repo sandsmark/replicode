@@ -33,15 +33,20 @@
 
 #include	"context.h"
 
+namespace	r_exec{
+	class	_Mem;
+}
 
 typedef	bool	(*Operator)(const	r_exec::Context	&,uint16	&);
 
 typedef	uint16	(*OpcodeRetriever)(const	char	*);
 
 //	User-defined operators for vec3: add, sub, mul, dis.
+//	User-defined test program.
 
 extern	"C"{
-void	dll_export	Init(OpcodeRetriever	r);
+void	dll_export	Init(OpcodeRetriever	r);	//	OpcodeRetriever allows the dll to retrieve opcodes from the r_rxec dll without referencing the corresponding STL structures.
+
 uint16	dll_export	GetOperatorCount();
 void	dll_export	GetOperatorName(char	*op_name);
 
@@ -49,6 +54,14 @@ bool	dll_export	add(const	r_exec::Context	&context,uint16	&index);
 bool	dll_export	sub(const	r_exec::Context	&context,uint16	&index);
 bool	dll_export	mul(const	r_exec::Context	&context,uint16	&index);
 bool	dll_export	dis(const	r_exec::Context	&context,uint16	&index);
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint16	dll_export	GetProgramCount();
+void	dll_export	GetProgramName(char	*pgm_name);
+
+r_exec::Controller	dll_export	*test_program(r_exec::_Mem	*,r_code::View	*);
+r_exec::Controller	dll_export	*correlator(r_exec::_Mem	*,r_code::View	*);
 }
 
 

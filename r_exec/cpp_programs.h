@@ -1,4 +1,4 @@
-//	reduction_job.h
+//	cpp_programs.h
 //
 //	Author: Eric Nivel
 //
@@ -28,42 +28,23 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	reduction_job_h
-#define	reduction_job_h
+#ifndef	cpp_programs_h
+#define	cpp_programs_h
 
-#include	"pgm_overlay.h"
-#include	"object.h"
+#include	"overlay.h"
 
 
 namespace	r_exec{
 
-	class	r_exec_dll	_ReductionJob:
-	public	_Object{
-	protected:
-		_ReductionJob();
+	class	r_exec_dll	CPPPrograms{
 	public:
-		virtual	bool	update(_Mem	*m)=0;	//	return false to shutdown the reduction core.
-	};
-
-	class	r_exec_dll	ReductionJob:
-	public	_ReductionJob{
+		typedef	Controller	*(*Program)(_Mem	*,r_code::View	*);
+	private:
+		static	UNORDERED_MAP<std::string,Program>	Programs;
 	public:
-		P<View>			input;
-		P<PGMOverlay>	overlay;
-		ReductionJob(View	*input,PGMOverlay	*overlay);
-		bool	update(_Mem	*m);
-	};
-
-	class	r_exec_dll	ShutdownReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
-	};
-
-	class	r_exec_dll	SuspendReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
+		static	void	Register(std::string	&pgm_name,Program	pgm);
+		static	Program	Get(std::string	&pgm_name);
+		static	Controller	*New(std::string	&pgm_name,_Mem	*mem,r_code::View	*view);
 	};
 }
 

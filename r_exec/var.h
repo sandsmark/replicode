@@ -1,4 +1,4 @@
-//	reduction_job.h
+//	var.h
 //
 //	Author: Eric Nivel
 //
@@ -28,42 +28,27 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	reduction_job_h
-#define	reduction_job_h
+#ifndef	var_h
+#define	var_h
 
-#include	"pgm_overlay.h"
 #include	"object.h"
 
 
 namespace	r_exec{
 
-	class	r_exec_dll	_ReductionJob:
-	public	_Object{
-	protected:
-		_ReductionJob();
-	public:
-		virtual	bool	update(_Mem	*m)=0;	//	return false to shutdown the reduction core.
-	};
+	class	RGroupOverlay;
 
-	class	r_exec_dll	ReductionJob:
-	public	_ReductionJob{
+	//	Variable object.
+	class	r_exec_dll	Var:
+	public	LObject{
+	private:
+		UNORDERED_MAP<RGroupOverlay	*,Code	*>	bindings;	// left: group overlay, right: value (NULL if unbound).
 	public:
-		P<View>			input;
-		P<PGMOverlay>	overlay;
-		ReductionJob(View	*input,PGMOverlay	*overlay);
-		bool	update(_Mem	*m);
-	};
+		Var();
+		~Var();
 
-	class	r_exec_dll	ShutdownReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
-	};
-
-	class	r_exec_dll	SuspendReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
+		void	bind(RGroupOverlay	*overlay,Code	*value);
+		Code	*get_value(RGroupOverlay	*overlay);
 	};
 }
 

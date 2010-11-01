@@ -132,7 +132,7 @@ namespace	r_code{
 		Atom	code(uint16	i)	const{	return	_code[i];	}
 
 		bool	synced_on_front()	const{	return	_code[VIEW_SYNC].asBoolean();	}
-		uint64	get_ijt()			const{	return	Timestamp::Get(_code+_code[VIEW_IJT].asIndex());	}
+		uint64	get_ijt()			const{	return	Utils::GetTimestamp(_code+_code[VIEW_IJT].asIndex());	}
 
 		class	Hash{
 		public:

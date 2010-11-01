@@ -1,0 +1,25 @@
+;inject a marker M on object O (dummy) at now+dt.
+;at now+t, t<dt, O dies.
+;result: O has no view left, still referenced by M: O kept alive.
+;when M dies, O will also die.
+
+dummy:(ent 1)
+[]
+   [SYNC_FRONT now 1 1 root nil]
+
+_start:(pgm
+|[]
+|[]
+[]
+   (inj []
+      (mk.val dummy position (vec3 0 0 0) 1)
+      [SYNC_FRONT (+ now 150000) 1 forever root nil]
+   )
+   (mod [this.vw.res -1])
+1
+)
+|[]
+
+i_start:(ipgm _start |[] 90000us 1 1)
+[]
+   [SYNC_FRONT now 1 1 root nil 1]

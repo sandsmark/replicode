@@ -1,4 +1,4 @@
-//	reduction_job.h
+//	rgroup_overlay.h
 //
 //	Author: Eric Nivel
 //
@@ -28,44 +28,40 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	reduction_job_h
-#define	reduction_job_h
+#ifndef	r_group_overlay_h
+#define	r_group_overlay_h
 
-#include	"pgm_overlay.h"
-#include	"object.h"
+#include	"overlay.h"
+#include	"group.h"
 
 
 namespace	r_exec{
 
-	class	r_exec_dll	_ReductionJob:
-	public	_Object{
-	protected:
-		_ReductionJob();
+	class	r_exec_dll	RGroupOverlay:
+	public	_Overlay{
+	private:
+		uint64	birth_time;
 	public:
-		virtual	bool	update(_Mem	*m)=0;	//	return false to shutdown the reduction core.
+		void	reduce(r_exec::View	*input);
 	};
 
-	class	r_exec_dll	ReductionJob:
-	public	_ReductionJob{
+	class	r_exec_dll	RGroupController:
+	public	_Controller{
+	private:
+		r_code::View	*rgroup_view;
 	public:
-		P<View>			input;
-		P<PGMOverlay>	overlay;
-		ReductionJob(View	*input,PGMOverlay	*overlay);
-		bool	update(_Mem	*m);
-	};
+		RGroupController(r_code::View	*rgroup_view);
+		~RGroupController();
 
-	class	r_exec_dll	ShutdownReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
-	};
+		std::vector<P<Group> >	ntf_groups;
+		std::vector<P<Group> >	out_groups;
 
-	class	r_exec_dll	SuspendReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
+		void	take_input(r_exec::View	*input,_Controller	*origin=NULL);
 	};
 }
+
+
+#include	"rgroup_overlay.inline.cpp"
 
 
 #endif

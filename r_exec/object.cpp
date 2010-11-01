@@ -74,6 +74,8 @@ namespace	r_exec{
 			return	GROUP;
 		case	Atom::REDUCTION_GROUP:
 			return	RGROUP;
+		case	Atom::INSTANTIATED_CPP_PROGRAM:
+			return	ICPP_PGM;
 		}
 	}
 

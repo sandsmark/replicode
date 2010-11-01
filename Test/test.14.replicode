@@ -9,8 +9,6 @@ _start:(pgm
       [SYNC_FRONT now 1 1 root nil]
    )
    (mod [this.vw.res (+ 1 (* -2 this.vw.res))]); N.B.: at each upr, res is decremented by the group.
-80000us
-0
 1
 )
 |[]
@@ -18,6 +16,8 @@ _start:(pgm
 i_start:(ipgm
 _start; code
 |[]; args
+80000us
+0
 1; propagation saliency threshold
 )
 []
@@ -32,12 +32,10 @@ count:(pgm
    |[]
 []
    (inj [(counter (+ 1 c.value) 1) [SYNC_FRONT now 1 1 root nil]])
-0us
-0
 1
 )
 |[]
 
-icount:(ipgm count |[] 1)
+icount:(ipgm count |[] 0us 0 1)
 []
    [SYNC_FRONT now 0 forever root nil 1]

@@ -48,8 +48,6 @@ serve:(pgm
       [SYNC_FRONT now 1 1 table nil]
    )
    (mod [this.vw.res -1])
-80000us
-1
 1
 )
 |[]
@@ -57,6 +55,8 @@ serve:(pgm
 iserve:(ipgm
 serve; code
 |[]; args
+80000us
+1
 1; propagation saliency threshold
 )
 []
@@ -75,8 +75,6 @@ player1:(pgm
       (string "pong" now 1)
       [SYNC_FRONT now 1 1 table nil]
    )
-0us; time scope
-0; notify reduction flag
 1; propagation saliency threshold
 )
 |[]
@@ -84,6 +82,8 @@ player1:(pgm
 iplayer1:(ipgm
 player1; code
 |[]; args
+0us; time scope
+0; notify reduction flag
 1; propagation saliency threshold
 )
 []
@@ -102,8 +102,6 @@ player2:(pgm
       (string "ping" now 1)
       [SYNC_FRONT now 1 1 table nil]
    )
-0us; time scope
-0; notify reduction flag
 1; propagation saliency threshold
 )
 |[]
@@ -111,9 +109,9 @@ player2:(pgm
 iplayer2:(ipgm
 player2; code
 |[]; args
+0us; time scope
+0; notify reduction flag
 1; propagation saliency threshold
 )
 []
    [SYNC_FRONT now 1 forever table nil 1]
-
-

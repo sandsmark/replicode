@@ -31,7 +31,9 @@
 #include	"init.h"
 #include	"object.h"
 #include	"operator.h"
+#include	"cpp_programs.h"
 #include	"opcodes.h"
+#include	"overlay.h"
 
 #include	"../r_comp/preprocessor.h"
 
@@ -190,10 +192,11 @@ namespace	r_exec{
 		if(!user_operator_library_path)	//	when no rMem is used.
 			return	true;
 
-		//	load usr operators.
+		//	load usr operators and c++ programs.
 		if(!(userOperatorLibrary.load(user_operator_library_path)))
 			exit(-1);
 
+		//	Operators.
 		typedef	uint16	(*OpcodeRetriever)(const	char	*);
 		typedef	void	(*UserInit)(OpcodeRetriever);
 		UserInit	_Init=userOperatorLibrary.getFunction<UserInit>("Init");
@@ -217,7 +220,7 @@ namespace	r_exec{
 		uint16	operatorCount=GetOperatorCount();
 		for(uint16	i=0;i<operatorCount;++i){
 
-			char			op_name[256];
+			char	op_name[256];
 			memset(op_name,0,256);
 			GetOperatorName(op_name);
 
@@ -232,6 +235,35 @@ namespace	r_exec{
 				return	false;
 
 			Operator::Register(it->second,op);
+		}
+
+		//	C++ programs.
+		typedef	uint16	(*UserGetProgramCount)();
+		UserGetProgramCount	GetProgramCount=userOperatorLibrary.getFunction<UserGetProgramCount>("GetProgramCount");
+		if(!GetProgramCount)
+			return	false;
+
+		typedef	void	(*UserGetProgramName)(char	*);
+		UserGetProgramName	GetProgramName=userOperatorLibrary.getFunction<UserGetProgramName>("GetProgramName");
+		if(!GetProgramName)
+			return	false;
+		
+		typedef	Controller	*(*UserProgram)(_Mem	*,r_code::View	*);
+
+		uint16	programCount=GetProgramCount();
+		for(uint16	i=0;i<programCount;++i){
+
+			char	pgm_name[256];
+			memset(pgm_name,0,256);
+			GetProgramName(pgm_name);
+
+			std::string	_pgm_name=pgm_name;
+
+			UserProgram	pgm=userOperatorLibrary.getFunction<UserProgram>(pgm_name);
+			if(!pgm)
+				return	false;
+
+			CPPPrograms::Register(_pgm_name,pgm);
 		}
 
 		std::cout<<"> User-defined operator library "<<user_operator_library_path<<" loaded"<<std::endl;

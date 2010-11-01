@@ -1,4 +1,4 @@
-//	reduction_job.h
+//	overlay.cpp
 //
 //	Author: Eric Nivel
 //
@@ -28,44 +28,77 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	reduction_job_h
-#define	reduction_job_h
-
-#include	"pgm_overlay.h"
-#include	"object.h"
+#include	"overlay.h"
+#include	"mem.h"
 
 
 namespace	r_exec{
 
-	class	r_exec_dll	_ReductionJob:
-	public	_Object{
-	protected:
-		_ReductionJob();
-	public:
-		virtual	bool	update(_Mem	*m)=0;	//	return false to shutdown the reduction core.
-	};
+	Overlay::Overlay():alive(true){
+	}
 
-	class	r_exec_dll	ReductionJob:
-	public	_ReductionJob{
-	public:
-		P<View>			input;
-		P<PGMOverlay>	overlay;
-		ReductionJob(View	*input,PGMOverlay	*overlay);
-		bool	update(_Mem	*m);
-	};
+	Overlay::~Overlay(){
+	}
 
-	class	r_exec_dll	ShutdownReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
-	};
+	Overlay::Overlay(Controller	*c):controller(c),alive(true){
+	}
 
-	class	r_exec_dll	SuspendReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
-	};
+	_Mem	*Overlay::get_mem()	const{
+
+		return	controller->get_mem();
+	}
+
+	r_code::Code	*Overlay::buildObject(Atom	head)	const{
+		
+		return	controller->get_mem()->buildObject(head);
+	}
+
+	void	Overlay::reset(){
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Controller::Controller(_Mem	*m,r_code::View	*view):mem(m),view(view),alive(true){
+
+		tsc=Utils::GetTimestamp<Code>(getObject(),IPGM_TSC);
+	}
+
+	Controller::~Controller(){
+	}
+
+	void	Controller::kill(){
+		
+		aliveCS.enter();
+		alive=false;
+		aliveCS.leave();
+
+		std::list<P<Overlay> >::const_iterator	o;
+		overlayCS.enter();
+		for(o=overlays.begin();o!=overlays.end();++o)
+			(*o)->kill();
+		overlays.clear();
+		overlayCS.leave();
+	}
+
+	inline	void	Controller::add(Overlay	*overlay){	//	overlay has just matched an input; builds a copy of overlay.
+
+		overlayCS.enter();
+		overlays.push_back(overlay);
+		overlayCS.leave();
+	}
+
+	inline	void	Controller::remove(Overlay	*overlay){
+
+		overlayCS.enter();
+		if(overlays.size()>1){
+
+			overlay->kill();
+			overlays.remove(overlay);
+		}else
+			overlay->reset();
+		overlayCS.leave();
+	}
+
+	void	Controller::take_input(r_exec::View	*input,Controller	*origin){
+	}
 }
-
-
-#endif

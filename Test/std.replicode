@@ -11,14 +11,15 @@
 !class (pgm_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: act:nb)
 !class (ptn skel:xpr guards:[::xpr])
 !class (|ptn skel:xpr guards:[::xpr])
-!class (pgm (_obj {tpl:[::ptn] input:(_in_sec nil) prods: tsc:us nfr:nb}))
-!class (|pgm (_obj {tpl:[::ptn] input:(_in_sec nil) prods: tsc:us nfr:nb}))
+!class (pgm (_obj {tpl:[::ptn] input:(_in_sec nil) prods:}))
+!class (|pgm (_obj {tpl:[::ptn] input:(_in_sec nil) prods:}))
 !class (grp (_grp nil))
 !class (cmd function:fid device:did args:[])
 !class (ent (_obj nil))
 !class (dev (_obj nil))
 !class (nod (_obj id:nid))
-!class (ipgm (_obj {code: args:[]}))
+!class (ipgm (_obj {code: args:[] tsc:us nfr:nb}))
+!class (icpp_pgm (_obj {code:st args:[] tsc:us nfr:nb}))
 
 ;mapping high-level template objects -> r-code
 !class (_fact (_obj {obj: time:us cfd:nb :~}))
@@ -66,7 +67,7 @@
 !op (log :nb):nb
 !op (e10 :nb):nb
 !op (syn :):
-!op (ins : :[]):
+!op (ins : :[] :us :nb):
 !op (red :[] :[] :[]):[]
 !op (fvw : :):
 

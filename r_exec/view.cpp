@@ -96,6 +96,7 @@ namespace	r_exec{
 			code(VIEW_ACT_VIS)=Atom::Float(MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_vis_thr(),group->get_vis_thr()));
 			break;
 		case	Atom::INSTANTIATED_PROGRAM:
+		case	Atom::INSTANTIATED_CPP_PROGRAM:
 			code(VIEW_ACT_VIS)=Atom::Float(MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_act_thr(),group->get_act_thr()));
 			break;
 		case	Atom::REDUCTION_GROUP:
@@ -143,6 +144,7 @@ namespace	r_exec{
 			
 			switch(object->code(0).getDescriptor()){
 			case	Atom::INSTANTIATED_PROGRAM:
+			case	Atom::INSTANTIATED_CPP_PROGRAM:
 				initial_act=get_act_vis();
 				break;
 			case	Atom::REDUCTION_GROUP:
@@ -197,6 +199,7 @@ namespace	r_exec{
 		float32	act;
 		switch(object->code(0).getDescriptor()){
 		case	Atom::INSTANTIATED_PROGRAM:
+		case	Atom::INSTANTIATED_CPP_PROGRAM:
 			update_vis();
 			act=get_act_vis();
 			break;

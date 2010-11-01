@@ -13,13 +13,11 @@ P1:(pgm
    |[]
 []
    (inj [(mk.val self position (vec3 1 2 3) 1) [SYNC_FRONT now 1 forever root nil]])
-0us
-1
 1
 )
 |[]
 
-iP1:(ipgm P1 |[] 1)
+iP1:(ipgm P1 |[] 0us 1 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]
 
@@ -32,13 +30,11 @@ P2:(pgm
    |[]
 []
    (inj [(mk.val self position (vec3 4 5 6) 1) [SYNC_FRONT now 1 forever root nil]])
-0us
-1
 1
 )
 |[]
 
-iP2:(ipgm P2 |[] 1)
+iP2:(ipgm P2 |[] 0us 1 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]
 
@@ -51,12 +47,10 @@ P3:(pgm
    |[]
 []
    (inj [(mk.val self position (vec3 7 8 9) 1) [SYNC_FRONT now 1 forever root nil]])
-0us
-1
 1
 )
 |[]
 
-iP3:(ipgm P3 |[] 1)
+iP3:(ipgm P3 |[] 0us 1 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]

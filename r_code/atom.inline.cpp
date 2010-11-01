@@ -209,6 +209,11 @@ namespace	r_code{
 		return	Atom((REDUCTION_GROUP<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
+	inline	Atom	Atom::InstantiatedCPPProgram(uint16 opcode,uint8 arity){
+
+		return	Atom((INSTANTIATED_CPP_PROGRAM<<24)+((opcode	&	0x0FFF)<<8)+arity);
+	}
+
 	inline	Atom::Atom(uint32	a):atom(a){
 	}
 
@@ -332,6 +337,7 @@ namespace	r_code{
 		case	C_PTR:
 		case	OPERATOR:
 		case	INSTANTIATED_PROGRAM:
+		case	INSTANTIATED_CPP_PROGRAM:
 		case	GROUP:
 		case	S_SET:	return	atom	&	0x000000FF;
 		case	STRING:	return	(atom	&	0x0000FF00)>>8;

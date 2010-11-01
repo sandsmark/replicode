@@ -45,10 +45,11 @@ namespace	r_exec{
 		IPGM=0,
 		INPUT_LESS_IPGM=1,
 		ANTI_IPGM=2,
-		OBJECT=4,
-		MARKER=5,
-		GROUP=6,
-		RGROUP=7
+		OBJECT=3,
+		MARKER=4,
+		GROUP=5,
+		RGROUP=6,
+		ICPP_PGM=7
 	}ObjectType;
 
 	r_exec_dll	bool		IsNotification(Code	*object);

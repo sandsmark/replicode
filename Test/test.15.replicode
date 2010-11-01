@@ -50,13 +50,11 @@ hb:(pgm
       (str "beep" 1)
       [SYNC_FRONT now 1 forever target_grp nil]
    )
-200000us; time scope
-0; notify reduction flag
 1; propagation saliency threshold
 )
 |[]
 
-ihb:(ipgm hb |[] 1)
+ihb:(ipgm hb |[] 200000us 0 1)
 []
    [SYNC_FRONT now 1 forever target_grp nil 1]
 
@@ -69,12 +67,10 @@ monitor:(pgm
    |[]
 []
    (inj [(str "caught beep" 1) [SYNC_FRONT now 1 forever target_grp nil]])
-0us
-1
 1
 )
 |[]
 
-imonitor:(ipgm monitor |[] 1)
+imonitor:(ipgm monitor |[] 0us 1 1)
 []
    [SYNC_FRONT now 1 forever target_grp nil 1]

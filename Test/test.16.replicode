@@ -17,22 +17,18 @@ _start:(pgm
             [SYNC_FRONT (\ (+ now 10000)) 1 forever root nil]
          )
          (mod [this.vw.act -1])
-      50000us
-      1
       1
       )
       [SYNC_FRONT now 1 forever root nil]
    )
    (inj []
-      (ins p |[])
+      (ins p |[] 50000us 1)
       [SYNC_FRONT now 1 forever root nil 1]
    )
-90000us
-1
 1
 )
 |[]
 
-i_start:(ipgm _start |[] 1)
+i_start:(ipgm _start |[] 90000us 1 1)
 []
    [SYNC_FRONT now 1 1 root nil 1]

@@ -156,7 +156,7 @@ CoreCount=0;
 			bool	c_salient=g->get_c_sln()>g->get_c_sln_thr();
 
 			FOR_ALL_VIEWS_BEGIN(g,v)
-				r_code::Timestamp::Set<View>(v->second,VIEW_IJT,now);	//	init injection time for the view.
+				Utils::SetTimestamp<View>(v->second,VIEW_IJT,now);	//	init injection time for the view.
 			FOR_ALL_VIEWS_END
 
 			if(c_active){
@@ -168,7 +168,7 @@ CoreCount=0;
 
 					if(v->second->controller!=NULL){
 
-						P<TimeJob>	j=new	InputLessPGMSignalingJob(v->second->controller,now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
+						P<TimeJob>	j=new	InputLessPGMSignalingJob(v->second->controller,now+Utils::GetTimestamp<Code>(v->second->object,IPGM_TSC));
 						time_job_queue->push(j);
 					}
 				}
@@ -178,7 +178,7 @@ CoreCount=0;
 
 					if(v->second->controller!=NULL){
 
-						P<TimeJob>	j=new	AntiPGMSignalingJob(v->second->controller,now+Timestamp::Get<Code>(v->second->controller->getIPGM()->get_reference(0),PGM_TSC));
+						P<TimeJob>	j=new	AntiPGMSignalingJob(v->second->controller,now+Utils::GetTimestamp<Code>(v->second->object,IPGM_TSC));
 						time_job_queue->push(j);
 					}
 				}
@@ -331,7 +331,7 @@ CoreCount=0;
 	void	_Mem::injectCopyNow(View	*view,Group	*destination,uint64	now){
 
 		View	*copied_view=new	View(view,destination);	//	ctrl values are morphed.
-		r_code::Timestamp::Set<View>(copied_view,VIEW_IJT,now);
+		Utils::SetTimestamp<View>(copied_view,VIEW_IJT,now);
 		injectExistingObjectNow(copied_view,view->object,destination,true);
 	}
 
@@ -351,6 +351,9 @@ CoreCount=0;
 			switch(GetType(object)){
 			case	ObjectType::IPGM:
 				host->ipgm_views[view->getOID()]=view;
+				break;
+			case	ObjectType::ICPP_PGM:
+				host->icpp_pgm_views[view->getOID()]=view;
 				break;
 			case	ObjectType::ANTI_IPGM:
 				host->anti_ipgm_views[view->getOID()]=view;
@@ -376,6 +379,7 @@ CoreCount=0;
 			host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),VIEW_SLN,view->get_sln()));
 			switch(GetType(object)){
 			case	ObjectType::IPGM:
+			case	ObjectType::ICPP_PGM:
 			case	ObjectType::ANTI_IPGM:
 			case	ObjectType::INPUT_LESS_IPGM:
 				host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),IPGM_VIEW_ACT,view->get_act_vis()));
@@ -504,7 +508,8 @@ CoreCount=0;
 						if(view_is_visible)		//	update viewing groups for any visible group.
 							((Group	*)v->second->object)->viewing_groups[group]=cov;
 					}	
-				}else	if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM){
+				}else	if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM	||
+							v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_CPP_PROGRAM){
 
 					//	update activation
 					bool	view_was_active=v->second->get_act_vis()>group->get_act_thr();
@@ -536,7 +541,8 @@ CoreCount=0;
 				++v;
 			}else{	//	view has no resilience.
 
-				if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM)	//	if ipgm view, kill the overlay.
+				if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM	||
+					v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_CPP_PROGRAM)	//	if ipgm view, kill the overlay.
 					v->second->controller->kill();
 
 				v->second->object->acq_views();
@@ -583,9 +589,10 @@ CoreCount=0;
 
 					std::set<View	*,r_code::View::Less>::const_iterator	v;
 					for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
-						if((*v)->object->code(0).getDescriptor()!=Atom::INSTANTIATED_PROGRAM	&&	//	no cov for pgm, groups or notifications.
-							(*v)->object->code(0).getDescriptor()!=Atom::GROUP					&&
-							(*v)->object->code(0).getDescriptor()!=Atom::REDUCTION_GROUP		&&
+						if((*v)->object->code(0).getDescriptor()!=Atom::INSTANTIATED_PROGRAM		&&	//	no cov for pgm, groups or notifications.
+							(*v)->object->code(0).getDescriptor()!=Atom::INSTANTIATED_CPP_PROGRAM	&&
+							(*v)->object->code(0).getDescriptor()!=Atom::GROUP						&&
+							(*v)->object->code(0).getDescriptor()!=Atom::REDUCTION_GROUP			&&
 							!(*v)->isNotification())
 								injectCopyNow(*v,vg->first,now);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.
 				}
@@ -601,15 +608,15 @@ CoreCount=0;
 
 			for(uint32	i=0;i<group->new_controllers.size();++i){
 
-				switch(GetType(group->new_controllers[i]->getIPGM())){
+				switch(GetType(group->new_controllers[i]->getObject())){
 				case	ObjectType::ANTI_IPGM:{	//	inject signaling jobs for |ipgm (tsc).
 
-					P<TimeJob>	j=new	AntiPGMSignalingJob((AntiPGMController	*)group->new_controllers[i],now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
+					P<TimeJob>	j=new	AntiPGMSignalingJob((AntiPGMController	*)group->new_controllers[i],now+Utils::GetTimestamp<Code>(group->new_controllers[i]->getObject(),IPGM_TSC));
 					time_job_queue->push(j);
 					break;
 				}case	ObjectType::INPUT_LESS_IPGM:{	//	inject a signaling job for an input-less pgm.
 
-					P<TimeJob>	j=new	InputLessPGMSignalingJob((InputLessPGMController	*)group->new_controllers[i],now+Timestamp::Get<Code>(group->new_controllers[i]->getIPGM()->get_reference(0),PGM_TSC));
+					P<TimeJob>	j=new	InputLessPGMSignalingJob((InputLessPGMController	*)group->new_controllers[i],now+Utils::GetTimestamp<Code>(group->new_controllers[i]->getObject(),IPGM_TSC));
 					time_job_queue->push(j);
 					break;
 				}
@@ -631,7 +638,7 @@ CoreCount=0;
 		group->leave();
 	}
 
-	void	_Mem::_inject_reduction_jobs(View	*view,Group	*host,_PGMController	*origin){	//	host is assumed to be c-salient; host already protected.
+	void	_Mem::_inject_reduction_jobs(View	*view,Group	*host,Controller	*origin){	//	host is assumed to be c-salient; host already protected.
 
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
 
@@ -639,7 +646,7 @@ CoreCount=0;
 			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(host,v)
 
 				if(v->second->get_act_vis()>host->get_act_thr())	//	active ipgm/rgrp view.
-					((_PGMController	*)v->second->controller)->take_input(view,origin);	//	view will be copied.
+					v->second->controller->take_input(view,origin);	//	view will be copied.
 
 			FOR_ALL_VIEWS_WITH_INPUTS_END
 		}
@@ -656,7 +663,7 @@ CoreCount=0;
 			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
 
 				if(v->second->get_act_vis()>vg->first->get_act_thr())	//	active ipgm/rgrp view.
-					((_PGMController	*)v->second->controller)->take_input(view,origin);	//	view will be copied.
+					v->second->controller->take_input(view,origin);	//	view will be copied.
 			
 			FOR_ALL_VIEWS_WITH_INPUTS_END
 		}

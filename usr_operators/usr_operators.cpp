@@ -29,6 +29,9 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"usr_operators.h"
+#include	"correlator.h"
+
+#include	"../r_exec/init.h"
 
 #include	<iostream>
 #include	<cmath>
@@ -180,6 +183,118 @@ void	GetOperatorName(char	*op_name){
 		std::string	s="dis";
 		memcpy(op_name,s.c_str(),s.length());
 		++op_index;
+		return;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+//	Sample c++ user-defined program.
+class	TestController:
+public	r_exec::Controller{
+private:
+	float32	arg1;
+	bool	arg2;
+public:
+	TestController(r_exec::_Mem	*m,r_code::View	*icpp_pgm_view):r_exec::Controller(m,icpp_pgm_view){
+
+		//	Load arguments here: one float and one Boolean.
+		uint16	arg_set_index=getObject()->code(ICPP_PGM_ARGS).asIndex();
+		uint16	arg_count=getObject()->code(arg_set_index).getAtomCount();
+		if(arg_count!=2){
+
+			std::cerr<<"test_program error: expected 2 arguments, got "<<arg_count<<std::endl;
+			return;
+		}
+		arg1=getObject()->code(arg_set_index+1).asFloat();
+		arg2=getObject()->code(arg_set_index+2).asBoolean();
+	}
+	
+	~TestController(){
+	}
+
+	void	take_input(r_exec::View	*input,r_exec::Controller	*origin=NULL){
+
+		//	Inputs are all types of objects - salient or that have become salient depending on their view's sync member.
+		//	Manual filtering may be needed instead of pattern-matching.
+
+		//input->object->trace();
+	}
+};
+
+class	CorrelatorController:
+public	r_exec::Controller{
+private:
+	Correlator	*correlator;
+public:
+	CorrelatorController(r_exec::_Mem	*m,r_code::View	*icpp_pgm_view):r_exec::Controller(m,icpp_pgm_view){
+
+		//	Load arguments here.
+		uint16	arg_set_index=getObject()->code(ICPP_PGM_ARGS).asIndex();
+		uint16	arg_count=getObject()->code(arg_set_index).getAtomCount();
+
+		correlator=new	Correlator();
+	}
+	
+	~CorrelatorController(){
+
+		delete	correlator;
+	}
+
+	void	take_input(r_exec::View	*input,r_exec::Controller	*origin=NULL){
+
+		//	Inputs are all types of objects - salient or that have become salient depending on their view's sync member.
+		//	Manual filtering is needed instead of pattern-matching.
+		//	Here we take all inputs until we get an episode notification.
+		std::string	episode_end="episode_end";
+		if(input->object->code(0).asOpcode()==r_exec::Metadata.getClass(episode_end)->atom.asOpcode()){
+
+			correlator->get_output();
+			//	TODO (eric): exploit the output: build rgroups and inject data therein.
+
+			//	For now, we do not retrain the Correlator on more episodes: we build another correlator instead.
+			//	We could also implement a method (clear()) to reset the existing correlator.
+			delete	correlator;
+			correlator=new	Correlator();
+		}else
+			correlator->take_input(input);
+	}
+};
+
+r_exec::Controller	*test_program(r_exec::_Mem	*mem,r_code::View	*view){
+
+	return	new	TestController(mem,view);
+}
+
+r_exec::Controller	*correlator(r_exec::_Mem	*mem,r_code::View	*view){
+
+	return	new	CorrelatorController(mem,view);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint16	GetProgramCount(){
+
+	return	2;
+}
+
+void	GetProgramName(char	*pgm_name){
+
+	static	uint16	pgm_index=0;
+
+	if(pgm_index==0){
+
+		std::string	s="test_program";
+		memcpy(pgm_name,s.c_str(),s.length());
+		++pgm_index;
+		return;
+	}
+
+	if(pgm_index==1){
+
+		std::string	s="correlator";
+		memcpy(pgm_name,s.c_str(),s.length());
+		++pgm_index;
 		return;
 	}
 }

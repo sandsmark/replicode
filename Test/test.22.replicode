@@ -27,22 +27,18 @@ _start:(pgm
       []
          (mod [this.vw.act -1]); this points to p.
          (mod [m.vw.sln -1])
-      0us
-      0
       1
       )
       [SYNC_FRONT now 1 forever root nil]
    )
    (inj []
-      (ins p |[])
+      (ins p |[] 0us 0)
       [SYNC_FRONT now 1 forever root nil 1]
    )
-0us
-0
 1
 )
 |[]
 
-i_start:(ipgm _start |[] 1)
+i_start:(ipgm _start |[] 0us 0 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]

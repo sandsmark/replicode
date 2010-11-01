@@ -105,6 +105,7 @@ namespace	r_exec{
 		UNORDERED_MAP<uint32,P<View> >	notification_views;
 		UNORDERED_MAP<uint32,P<View> >	group_views;
 		UNORDERED_MAP<uint32,P<View> >	rgroup_views;
+		UNORDERED_MAP<uint32,P<View> >	icpp_pgm_views;
 		UNORDERED_MAP<uint32,P<View> >	other_views;
 
 		//	Defined to create reduction jobs in the viewing groups from the viewed group.
@@ -192,10 +193,14 @@ namespace	r_exec{
 					end=rgroup_views.end();
 					break;
 				case	5:
+					it=icpp_pgm_views.begin();
+					end=icpp_pgm_views.end();
+					break;
+				case	6:
 					it=other_views.begin();
 					end=other_views.end();
 					break;
-				case	6:
+				case	7:
 					selector=0;
 					return	false;
 				}
@@ -230,6 +235,10 @@ namespace	r_exec{
 					end=rgroup_views.end();
 					break;
 				case	2:
+					it=icpp_pgm_views.begin();
+					end=icpp_pgm_views.end();
+					break;
+				case	3:
 					selector=0;
 					return	false;
 				}
@@ -266,10 +275,14 @@ namespace	r_exec{
 					end=rgroup_views.end();
 					break;
 				case	4:
+					it=icpp_pgm_views.begin();
+					end=icpp_pgm_views.end();
+					break;
+				case	5:
 					it=other_views.begin();
 					end=other_views.end();
 					break;
-				case	5:
+				case	6:
 					selector=0;
 					return	false;
 				}

@@ -33,6 +33,7 @@
 #include	"operator.h"
 #include	"group.h"
 #include	"factory.h"
+#include	"cpp_programs.h"
 #include	"../r_code/utils.h"
 #include	<math.h>
 
@@ -100,7 +101,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O>	void	Mem<O>::load(std::vector<r_code::Code	*>	*objects){	//	NB: no cov at init time.
+	template<class	O>	bool	Mem<O>::load(std::vector<r_code::Code	*>	*objects){	//	NB: no cov at init time.
 
 		uint32	i;
 		reduction_cores=new	ReductionCore	*[reduction_core_count];
@@ -172,6 +173,16 @@ namespace	r_exec{
 						view->controller=o;	//	init the view's overlay.
 					}
 					break;
+				case	ObjectType::ICPP_PGM:
+					host->icpp_pgm_views[view->getOID()]=view;
+					if(view->get_act_vis()>host->get_act_thr()){	//	active icpp_pgm.
+
+						Controller	*o=CPPPrograms::New(Utils::GetString<O>(view->object,ICPP_PGM_NAME),this,view);	//	now will be added to the deadline at start time.
+						if(!o)
+							return	false;
+						view->controller=o;	//	init the view's overlay.
+					}
+					break;
 				case	ObjectType::INPUT_LESS_IPGM:
 					host->input_less_ipgm_views[view->getOID()]=view;
 					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
@@ -204,6 +215,8 @@ namespace	r_exec{
 			else
 				initial_groups.push_back((Group	*)object);	//	convenience to create initial update jobs - see start().
 		}
+
+		return	true;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -303,7 +316,7 @@ namespace	r_exec{
 		O	*object=(O	*)view->object;	//	has been packed if necessary in inject(view).
 		object->views.insert(view);	//	no need to protect object since it's new.
 		uint64	now=Now();
-		r_code::Timestamp::Set<View>(view,VIEW_IJT,now);
+		Utils::SetTimestamp<View>(view,VIEW_IJT,now);
 
 		object_registerCS.enter();
 		object->position_in_object_register=object_register.insert(object).first;
@@ -330,6 +343,20 @@ namespace	r_exec{
 					o->take_input(*v);	//	view will be copied.
 			}
 			break;
+		}case	ObjectType::ICPP_PGM:{
+
+			host->icpp_pgm_views[view->getOID()]=view;
+			Controller	*o=CPPPrograms::New(Utils::GetString<O>(view->object,ICPP_PGM_NAME),this,view);
+			if(!o)
+				break;
+			view->controller=o;
+			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active icpp_pgm in a c-salient and c-active group.
+
+				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
+					o->take_input(*v);	//	view will be copied.
+			}
+			break;
 		}case	ObjectType::ANTI_IPGM:{
 			host->anti_ipgm_views[view->getOID()]=view;
 			AntiPGMController	*o=new	AntiPGMController(this,view);
@@ -340,7 +367,7 @@ namespace	r_exec{
 				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
 					o->take_input(*v);	//	view will be copied.
 
-				P<TimeJob>	j=new	AntiPGMSignalingJob(o,now+Timestamp::Get<Code>(o->getIPGM()->get_reference(0),PGM_TSC));
+				P<TimeJob>	j=new	AntiPGMSignalingJob(o,now+Utils::GetTimestamp<Code>(o->getObject(),IPGM_TSC));
 				time_job_queue->push(j);
 
 			}
@@ -351,7 +378,7 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
-				P<TimeJob>	j=new	InputLessPGMSignalingJob(o,now+Timestamp::Get<Code>(view->object->get_reference(0),PGM_TSC));
+				P<TimeJob>	j=new	InputLessPGMSignalingJob(o,now+Utils::GetTimestamp<Code>(view->object,IPGM_TSC));
 				time_job_queue->push(j);
 			}
 			break;
@@ -408,7 +435,7 @@ namespace	r_exec{
 		}
 
 		uint64	now=Now();
-		r_code::Timestamp::Set<View>(view,VIEW_IJT,now);
+		Utils::SetTimestamp<View>(view,VIEW_IJT,now);
 		object->views.insert(view);
 
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr()){	//	host is c-salient and view is salient.
@@ -436,8 +463,8 @@ namespace	r_exec{
 		host->leave();
 	}
 
-	template<class	O>	void	Mem<O>::injectNotificationNow(View	*view,bool	lock,_PGMController	*origin){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
-																												//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
+	template<class	O>	void	Mem<O>::injectNotificationNow(View	*view,bool	lock,Controller	*origin){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
+																											//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
 		view->code(VIEW_RES)=Atom::Float(ntf_mk_res);
 
 		Group	*host=view->get_host();
@@ -452,7 +479,7 @@ namespace	r_exec{
 		if(lock)
 			host->enter();
 
-		r_code::Timestamp::Set<View>(view,VIEW_IJT,Now());
+		Utils::SetTimestamp<View>(view,VIEW_IJT,Now());
 		host->notification_views[view->getOID()]=view;
 
 		object->views.insert(view);

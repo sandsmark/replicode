@@ -11,8 +11,6 @@ P1:(|pgm
    |[]
 []
    (inj [(ent 1) [SYNC_FRONT now 1 forever stdout nil]])
-100000us; tsc
-1; nfr
 1; psln_thr
 )
 |[]
@@ -21,6 +19,8 @@ iP1:(ipgm
 P1; code
 []; args
    (tagged_v (vec3 1 2 3) "vector 123")
+100000us; tsc
+1; nfr
 1; psln_thr
 )
 []

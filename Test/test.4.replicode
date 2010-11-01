@@ -24,12 +24,10 @@ _start:(pgm
       (mk.val dummy position (vec3 (+ v1.x x) y v2.z) 1)
       [SYNC_FRONT now 1 forever root nil]
    )
-0us
-1
 1
 )
 |[]
 
-i_start:(ipgm _start [(vec3 2 2 2)] 1)
+i_start:(ipgm _start [(vec3 2 2 2)] 0us 1 1)
 []
    [SYNC_FRONT now 1 1 root nil 1]

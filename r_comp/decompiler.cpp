@@ -226,6 +226,9 @@ namespace	r_comp{
 		case	Atom::REDUCTION_GROUP:
 			*out_stream<<"rgrp";
 			break;
+		case	Atom::INSTANTIATED_CPP_PROGRAM:
+			*out_stream<<"icpp_pgm";
+			break;
 		default:
 			*out_stream<<"undefined-class";
 			break;
@@ -354,6 +357,7 @@ namespace	r_comp{
 			case	Atom::GROUP:
 			case	Atom::REDUCTION_GROUP:
 			case	Atom::INSTANTIATED_PROGRAM:
+			case	Atom::INSTANTIATED_CPP_PROGRAM:
 			case	Atom::OPERATOR:
 				write_expression(index);
 				break;
@@ -369,12 +373,7 @@ namespace	r_comp{
 					out_stream->push("|st",read_index);
 				else{
 
-					std::string	s;
-					char	buffer[255];
-					uint8	char_count=(current_object->code[index].atom	&	0x000000FF);
-					memcpy(buffer,&current_object->code[index+1].atom,char_count);
-					buffer[char_count]=0;
-					s+=buffer;
+					std::string	s=Utils::GetString(&atom);
 					*out_stream<<'\"'<<s<<'\"';
 				}
 				break;
@@ -383,7 +382,7 @@ namespace	r_comp{
 					out_stream->push("|us",read_index);
 				else{
 
-					uint64	ts=((uint64)(current_object->code[index+1].atom))<<32	|	((uint64)(current_object->code[index+2].atom));
+					uint64	ts=Utils::GetTimestamp(&atom);
 					if(decompiling_view)
 						ts-=time_offset;
 					out_stream->push(Time::ToString_seconds(ts),read_index);
@@ -453,7 +452,7 @@ namespace	r_comp{
 						Class	view_class;
 						if(embedding_class.str_opcode=="grp")
 							view_class=metadata->classes.find("grp_view")->second;
-						else	if(embedding_class.str_opcode=="ipgm")
+						else	if(embedding_class.str_opcode=="ipgm"	||	embedding_class.str_opcode=="icpp_pgm")
 							view_class=metadata->classes.find("pgm_view")->second;
 						else
 							view_class=metadata->classes.find("view")->second;

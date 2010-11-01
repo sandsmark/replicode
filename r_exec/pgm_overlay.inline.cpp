@@ -30,76 +30,34 @@
 
 namespace	r_exec{
 
-	inline	void	Overlay::kill(){
-		
-		reductionCS.enter();
-		alive=false;
-		reductionCS.leave();
-	}
-
-	inline	void	Overlay::patch_code(uint16	index,Atom	value){
+	inline	void	InputLessPGMOverlay::patch_code(uint16	index,Atom	value){
 
 		pgm_code[index]=value;
 		patch_indices.push_back(index);
 	}
 
-	inline	uint16	Overlay::get_last_patch_index(){
+	inline	uint16	InputLessPGMOverlay::get_last_patch_index(){
 
 		return	patch_indices.size();
 	}
 
-	inline	void	Overlay::unpatch_code(uint16	patch_index){
+	inline	void	InputLessPGMOverlay::unpatch_code(uint16	patch_index){
 
-		Atom	*original_code=&getIPGM()->get_reference(0)->code(0);
+		Atom	*original_code=&getObject()->get_reference(0)->code(0);
 		for(uint16	i=patch_index;i<patch_indices.size();++i)
 			pgm_code[patch_indices[i]]=original_code[patch_indices[i]];
 		patch_indices.resize(patch_index);
 	}
 
-	inline	r_code::Code	*Overlay::getIPGM()	const{	
-		
-		return	controller->getIPGM();
-	}
-	
-	inline	r_exec::View	*Overlay::getIPGMView()	const{	
-		
-		return	controller->getIPGMView();
-	}
-
 	////////////////////////////////////////////////////////////////
 	
-	inline	r_code::Code	*IOverlay::getInputObject(uint16	i)	const{	
+	inline	r_code::Code	*PGMOverlay::getInputObject(uint16	i)	const{	
 		
 		return	input_views[i]->object;
 	}
 	
-	inline	r_code::View	*IOverlay::getInputView(uint16	i)	const{	
+	inline	r_code::View	*PGMOverlay::getInputView(uint16	i)	const{	
 		
 		return	(r_code::View	*)input_views[i];
-	}
-
-	////////////////////////////////////////////////////////////////
-
-	inline	bool	Controller::is_alive(){
-		
-		aliveCS.enter();
-		bool	_alive=alive;
-		aliveCS.leave();
-		return	_alive;
-	}
-
-	inline	_Mem	*Controller::get_mem()		const{
-		
-		return	mem;
-	}
-
-	inline	r_exec::View	*Controller::getIPGMView()	const{
-		
-		return	(r_exec::View	*)ipgm_view;
-	}
-	
-	inline	r_code::Code	*Controller::getIPGM()	const{
-		
-		return	ipgm_view->object;
 	}
 }

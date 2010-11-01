@@ -11,8 +11,8 @@
     decompile_timestamps="relative"
     
     usr_operator_path="./usr_operators.dll"
-    usr_class_path="../Test/Correlator.Data.Generation/user.classes.replicode"
-    source_file_name="../Test/Correlator.Data.Generation/motor.babbling.replicode"
+    usr_class_path="../Test//Correlator.Data.Generation/user.classes.replicode"
+    source_file_name="../Test//Correlator.Data.Generation/motor.babbling.replicode"
     
     write_image="no"
     image_path="../Test/Correlator.Data.Generation/motor.babbling.episodes.replicode.image"

@@ -31,22 +31,18 @@ _start:(pgm
             (mk.val self position (\ (+ v2 v3)) 1)
             [SYNC_FRONT (\ now) 1 forever root nil]
          )
-      50000us
-      1
       1
       )
       [SYNC_FRONT now 1 forever root nil]
    )
    (inj []
-      (ins p [v1])
+      (ins p [v1] 50000us 1)
       [SYNC_FRONT now 1 forever root nil 1]
    )
-0us
-1
 1
 )
 |[]
 
-i_start:(ipgm _start |[] 1)
+i_start:(ipgm _start |[] 0us 1 1)
 []
    [SYNC_FRONT now 1 1 root nil 1]

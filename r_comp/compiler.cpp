@@ -160,7 +160,7 @@ namespace	r_comp{
 				current_object=new	SysObject(SysObject::NON_STD);
 
 			if(lbl)
-				global_references[l]=Reference(_image->code_segment.objects.size(),current_class,Class());
+				global_references[l]=Reference(_image->code_segment.objects.size(),current_class,Class());	
 		}
 
 		current_object->code[0]=current_class.atom;
@@ -205,7 +205,7 @@ namespace	r_comp{
 
 			if(current_class.str_opcode=="grp")
 				current_class=_metadata->classes.find("grp_view")->second;
-			else	if(current_class.str_opcode=="ipgm")
+			else	if(current_class.str_opcode=="ipgm"	||	current_class.str_opcode=="icpp_pgm")
 				current_class=_metadata->classes.find("pgm_view")->second;
 			else
 				current_class=_metadata->classes.find("view")->second;

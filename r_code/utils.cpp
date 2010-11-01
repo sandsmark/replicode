@@ -33,16 +33,27 @@
 
 namespace	r_code{
 
-	uint64	Timestamp::Get(const	Atom	*iptr){
+	uint64	Utils::GetTimestamp(const	Atom	*iptr){
 
 		uint64	high=iptr[1].atom;
 		return	high<<32	|	iptr[2].atom;
 	}
 
-	void	Timestamp::Set(Atom	*iptr,uint64	t){
+	void	Utils::SetTimestamp(Atom	*iptr,uint64	t){
 
 		iptr[0]=Atom::Timestamp();
 		iptr[1].atom=t>>32;
 		iptr[2].atom=t	&	0x00000000FFFFFFFF;
+	}
+
+	std::string	Utils::GetString(const	Atom	*iptr){
+
+		std::string	s;
+		char	buffer[255];
+		uint8	char_count=(iptr[0].atom	&	0x000000FF);
+		memcpy(buffer,iptr+1,char_count);
+		buffer[char_count]=0;
+		s+=buffer;
+		return	s;
 	}
 }

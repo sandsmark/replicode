@@ -1,0 +1,23 @@
+;pgm reacting to an existing object
+;becoming salient.
+
+p:(pgm
+[]
+   (ptn s:(ent ::) |[])
+[]
+   []
+      (ptn s |[])
+   |[]
+   |[]
+[]
+   (inj []
+      s
+      [SYNC_FRONT now 1 forever root nil]
+   )
+1
+)
+|[]
+
+ip:(ipgm p [self] 0us 1 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 1]

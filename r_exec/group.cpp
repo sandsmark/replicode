@@ -50,6 +50,9 @@ namespace	r_exec{
 		it=ipgm_views.find(OID);
 		if(it!=ipgm_views.end())
 			return	it->second;
+		it=icpp_pgm_views.find(OID);
+		if(it!=icpp_pgm_views.end())
+			return	it->second;
 		it=anti_ipgm_views.find(OID);
 		if(it!=anti_ipgm_views.end())
 			return	it->second;

@@ -48,8 +48,6 @@ P1:(pgm
    (inj [(mk.val self position (- (vec3 v.x v.y v.z) tgv2.vector) 0) [SYNC_FRONT now 1 forever g nil]])
    (mod [this.vw.sln (+ g.sln_thr 0.1)])
    (set [this.vw.act (- g.act_thr 0.1)])
-50000us; tsc
-1; nfr
 0; psln_thr
 )
 
@@ -60,6 +58,8 @@ P1; code
 []; args
    (tagged_v (vec3 1 2 3) "vector 123")
    (tagged_v (vec3 3 4 5) "vector 345")
+50000us; tsc
+1; nfr
 1; psln_thr
 )
 

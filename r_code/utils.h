@@ -36,24 +36,38 @@
 
 namespace	r_code{
 
-	class	dll_export	Timestamp{
+	class	dll_export	Utils{
 	public:
-		static	uint64	Get(const	Atom	*iptr);
-		static	void	Set(Atom	*iptr,uint64	t);
+		static	uint64	GetTimestamp(const	Atom	*iptr);
+		static	void	SetTimestamp(Atom	*iptr,uint64	t);
 
-		template<class	O>	static	uint64	Get(O	*object,uint16	index){
+		template<class	O>	static	uint64	GetTimestamp(O	*object,uint16	index){
 
 			uint16	t_index=object->code(index).asIndex();
 			uint64	high=object->code(t_index+1).atom;
 			return	high<<32	|	object->code(t_index+2).atom;
 		}
 
-		template<class	O>	static	void	Set(O	*object,uint16	index,uint64	t){
+		template<class	O>	static	void	SetTimestamp(O	*object,uint16	index,uint64	t){
 
 			uint16	t_index=object->code(index).asIndex();
 			object->code(t_index)=Atom::Timestamp();
 			object->code(t_index+1).atom=t>>32;
 			object->code(t_index+2).atom=t	&	0x00000000FFFFFFFF;
+		}
+
+		static	std::string	GetString(const	Atom	*iptr);
+
+		template<class	O>	static	std::string	GetString(O	*object,uint16	index){
+
+			uint16	s_index=object->code(index).asIndex();
+			std::string	s;
+			char	buffer[255];
+			uint8	char_count=(object->code(s_index).atom	&	0x000000FF);
+			memcpy(buffer,&object->code(s_index+1),char_count);
+			buffer[char_count]=0;
+			s+=buffer;
+			return	s;
 		}
 	};
 }

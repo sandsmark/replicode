@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="usr_operators"
 	ProjectGUID="{3DE12B3F-D45E-46E1-B501-E294009AD4B9}"
 	RootNamespace="usr_operators"
@@ -269,6 +269,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\correlator.h"
+				>
+			</File>
 			<File
 				RelativePath=".\usr_operators.h"
 				>

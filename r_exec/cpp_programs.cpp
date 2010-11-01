@@ -1,4 +1,4 @@
-//	reduction_job.h
+//	cpp_programs.cpp
 //
 //	Author: Eric Nivel
 //
@@ -28,44 +28,35 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	reduction_job_h
-#define	reduction_job_h
-
-#include	"pgm_overlay.h"
-#include	"object.h"
+#include	"cpp_programs.h"
 
 
 namespace	r_exec{
 
-	class	r_exec_dll	_ReductionJob:
-	public	_Object{
-	protected:
-		_ReductionJob();
-	public:
-		virtual	bool	update(_Mem	*m)=0;	//	return false to shutdown the reduction core.
-	};
+	UNORDERED_MAP<std::string,CPPPrograms::Program>	CPPPrograms::Programs;
 
-	class	r_exec_dll	ReductionJob:
-	public	_ReductionJob{
-	public:
-		P<View>			input;
-		P<PGMOverlay>	overlay;
-		ReductionJob(View	*input,PGMOverlay	*overlay);
-		bool	update(_Mem	*m);
-	};
+	void	CPPPrograms::Register(std::string	&pgm_name,Program	pgm){
 
-	class	r_exec_dll	ShutdownReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
-	};
+		Programs[pgm_name]=pgm;
+	}
 
-	class	r_exec_dll	SuspendReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
-	};
+	CPPPrograms::Program	CPPPrograms::Get(std::string	&pgm_name){
+		
+		UNORDERED_MAP<std::string,Program>::const_iterator	it=Programs.find(pgm_name);
+		if(it!=Programs.end())
+			return	it->second;
+		return	NULL;
+	}
+
+	Controller	*CPPPrograms::New(std::string	&pgm_name,_Mem	*mem,r_code::View	*view){
+		
+		CPPPrograms::Program	pgm=Get(pgm_name);
+		if(pgm!=NULL)
+			return	pgm(mem,view);
+		else{
+
+			std::cerr<<"cpp pgm "<<pgm_name<<" could not be found\n";
+			return	NULL;
+		}
+	}
 }
-
-
-#endif

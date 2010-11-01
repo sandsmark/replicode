@@ -82,14 +82,21 @@
 
 #define	IPGM_PGM	1
 #define	IPGM_ARGS	2
+#define	IPGM_TSC	3
+#define	IPGM_NFR	4
 
 #define	PGM_TPL_ARGS	1
 #define	PGM_INPUTS		2
 #define	PGM_PRODS		3
-#define	PGM_TSC			4
-#define	PGM_NFR			5
 
-#define	IPGM_ARITY	3
+#define	ICPP_PGM_NAME	1
+#define	ICPP_PGM_ARGS	2
+#define	ICPP_PGM_TSC	3
+#define	ICPP_PGM_NFR	4
+
+#define	IPGM_ARITY	5
+
+#define	ICPP_PGM_ARITY	5
 
 #define	MK_RDX_ARITY		4
 #define	MK_ANTI_RDX_ARITY	3

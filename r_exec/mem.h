@@ -102,7 +102,7 @@ uint32	CoreCount;
 		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr);
 		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
 		void	_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
-		void	_inject_reduction_jobs(View	*view,Group	*host,_PGMController	*origin=NULL);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
+		void	_inject_reduction_jobs(View	*view,Group	*host,Controller	*origin=NULL);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
 																								//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
 		std::vector<Group	*>	initial_groups;	//	convenience; cleared after start();
 
@@ -137,7 +137,7 @@ uint32	CoreCount;
 		//	Called by groups at update time.
 		//	Called by PGMOverlays at reduction time.
 		//	Called by AntiPGMOverlays at signaling time and reduction time.
-		virtual	void	injectNotificationNow(View	*view,bool	lock,_PGMController	*origin=NULL)=0;
+		virtual	void	injectNotificationNow(View	*view,bool	lock,Controller	*origin=NULL)=0;
 
 		//	Internal core processing	////////////////////////////////////////////////////////////////
 
@@ -212,8 +212,9 @@ uint32	CoreCount;
 		//	Called by operators and overlays.
 		r_code::Code	*buildObject(Atom	head);
 
-		void	load(std::vector<r_code::Code	*>	*objects);	//	call before start; no mod/set/eje will be executed (only inj);
+		bool	load(std::vector<r_code::Code	*>	*objects);	//	call before start; no mod/set/eje will be executed (only inj);
 																//	ijt will be set at now=Time::Get() whatever the source code.
+																//	return false on error.
 		void	deleteObject(Code	*object);	//	called by object destructors/Group::clear().
 
 		//	called upon reception of a remote object (for converting STDGroupID into actual objects).
@@ -233,7 +234,7 @@ uint32	CoreCount;
 		void	inject(O	*object,View	*view);
 
 		//	Variant of injectNow optimized for notifications.
-		void	injectNotificationNow(View	*view,bool	lock,_PGMController	*origin=NULL);
+		void	injectNotificationNow(View	*view,bool	lock,Controller	*origin=NULL);
 
 		//	Called by time cores.	////////////////////////////////////////////////////////////////
 		void	update(SaliencyPropagationJob	*j);

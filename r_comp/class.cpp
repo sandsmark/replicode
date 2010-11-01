@@ -44,6 +44,7 @@ namespace	r_comp{
 		case	Atom::GROUP:
 		case	Atom::REDUCTION_GROUP:
 		case	Atom::INSTANTIATED_PROGRAM:
+		case	Atom::INSTANTIATED_CPP_PROGRAM:
 		case	Atom::S_SET:
 		case	Atom::MARKER:	return	true;
 		default:				return	false;

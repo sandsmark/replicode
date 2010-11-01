@@ -39,8 +39,6 @@ P1:(pgm
       (mod [mkv.sln -0.7])
 |[]
 )
-4000000us; tsc
-1; nfr
 0; psln_thr
 )
 |[]
@@ -49,6 +47,8 @@ iP1:(ipgm
 P1; code
 []; args
    (tagged_v (vec3 1 2 3) "vector 123")
+4000000us; tsc
+1; nfr
 0; psln_thr
 )
 []

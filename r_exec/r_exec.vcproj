@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="r_exec"
 	ProjectGUID="{C36B96EC-EF72-4B21-87BE-2130E997BDA0}"
 	RootNamespace="r_exec"
@@ -262,6 +262,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cpp_programs.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\factory.cpp"
 				>
 			</File>
@@ -513,6 +517,10 @@
 			>
 			<File
 				RelativePath=".\context.h"
+				>
+			</File>
+			<File
+				RelativePath=".\cpp_programs.h"
 				>
 			</File>
 			<File

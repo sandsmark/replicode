@@ -169,6 +169,7 @@ namespace	r_exec{
 		float32	act;
 		switch(object->code(0).getDescriptor()){
 		case	Atom::INSTANTIATED_PROGRAM:
+		case	Atom::INSTANTIATED_CPP_PROGRAM:
 			act=get_act_vis();
 			break;
 		case	Atom::REDUCTION_GROUP:

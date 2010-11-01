@@ -1226,6 +1226,8 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 					atom=Atom::ReductionGroup(class_opcode,members.size());
 				else	if(class_name=="ipgm")
 					atom=Atom::InstantiatedProgram(class_opcode,members.size());
+				else	if(class_name=="icpp_pgm")
+					atom=Atom::InstantiatedCPPProgram(class_opcode,members.size());
 				else	if(class_name.find("mk.")!=string::npos)
 					atom=Atom::Marker(class_opcode,members.size());
 				else

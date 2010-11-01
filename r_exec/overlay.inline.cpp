@@ -1,4 +1,4 @@
-//	reduction_job.h
+//	overlay.inline.h
 //
 //	Author: Eric Nivel
 //
@@ -28,44 +28,47 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	reduction_job_h
-#define	reduction_job_h
-
-#include	"pgm_overlay.h"
-#include	"object.h"
-
-
 namespace	r_exec{
 
-	class	r_exec_dll	_ReductionJob:
-	public	_Object{
-	protected:
-		_ReductionJob();
-	public:
-		virtual	bool	update(_Mem	*m)=0;	//	return false to shutdown the reduction core.
-	};
+	inline	void	Overlay::kill(){
+		
+		reductionCS.enter();
+		alive=false;
+		reductionCS.leave();
+	}
 
-	class	r_exec_dll	ReductionJob:
-	public	_ReductionJob{
-	public:
-		P<View>			input;
-		P<PGMOverlay>	overlay;
-		ReductionJob(View	*input,PGMOverlay	*overlay);
-		bool	update(_Mem	*m);
-	};
+	inline	r_code::Code	*Overlay::getObject()	const{	
+		
+		return	controller->getObject();
+	}
+	
+	inline	r_exec::View	*Overlay::getView()	const{	
+		
+		return	controller->getView();
+	}
 
-	class	r_exec_dll	ShutdownReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
-	};
+	////////////////////////////////////////////////////////////////
 
-	class	r_exec_dll	SuspendReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(_Mem	*m);
-	};
+	inline	bool	Controller::is_alive(){
+		
+		aliveCS.enter();
+		bool	_alive=alive;
+		aliveCS.leave();
+		return	_alive;
+	}
+	
+	inline	r_code::Code	*Controller::getObject()	const{
+		
+		return	view->object;
+	}
+
+	inline	r_exec::View	*Controller::getView()	const{
+		
+		return	(r_exec::View	*)view;
+	}
+
+	inline	_Mem	*Controller::get_mem()		const{
+		
+		return	mem;
+	}
 }
-
-
-#endif

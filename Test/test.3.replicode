@@ -44,8 +44,6 @@ P1:(pgm
    (inj [in [SYNC_FRONT now 0.25 forever stdout nil]])
    (mod [in.vw.sln -0.2])
    (mod [this.vw.sln -0.4])
-4000000us; tsc
-1; nfr
 0; psln_thr
 )
 |[]
@@ -54,6 +52,8 @@ iP1:(ipgm
 P1; code
 []; args
    (tagged_v (vec3 1 2 3) "vector 123")
+4000000us; tsc
+1; nfr
 0; psln_thr
 )
 []
