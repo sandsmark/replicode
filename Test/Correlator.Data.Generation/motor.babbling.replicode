@@ -10,25 +10,37 @@
 ;on views'oid instead of having to examine the content of objects
 ;as would be the case using (mk.val self_hand position an_embedded_vec3 1)
 
+;we simulate the following behavior from the I/O devices:
+;send a position p, one mk referencing p, p again, another mk, etc.
+;this is meant ot give the correlator many instances of the same objects (contexts, or lhs of patterns).
+
 _start:(pgm
 |[]
 |[]
 []
    (inj []
       init_pos:(vec3_holder (vec3 0 0 0) 1)
-      [SYNC_FRONT now 1 forever stdin nil]
+      [SYNC_STATE now 1 forever stdin nil]
    )
    (inj []
       (mk.val self_hand position init_pos 1)
-      [SYNC_FRONT now 1 forever stdin nil]
+      [SYNC_STATE now 1 forever stdin nil]
    )
    (inj []
-      (noise (rnd 1000) 1)
-      [SYNC_FRONT (+ now (rnd 10000)) 1 forever stdin nil]
+      init_pos
+      [SYNC_STATE now 1 forever stdin nil]
+   )
+   (inj []
+      (mk.val cup position init_pos 1)
+      [SYNC_STATE now 1 forever stdin nil]
    )
    (inj []
       (mk.val self_hand attachment cup 1)
-      [SYNC_FRONT (+ now (rnd 10000)) 1 forever stdin nil]
+      [SYNC_STATE (+ now (rnd 10000)) 1 forever stdin nil]
+   )
+   (inj []
+      (noise (rnd 1000) 1)
+      [SYNC_STATE (+ now (rnd 10000)) 1 forever stdin nil]
    )
 1
 )
@@ -38,7 +50,7 @@ i_start:(ipgm _start |[] 90000us 0 1)
 []
    [SYNC_FRONT now 0 1 root nil 1]
 
-pos_updater:(pgm
+hand_pos_updater:(pgm
 |[]
 []
    []
@@ -48,21 +60,41 @@ pos_updater:(pgm
 []
    (inj []
       new_pos:(vec3_holder (+ pos.value (vec3 0 0 0.1)) 1)
-      [SYNC_FRONT now 1 forever stdin nil] 
+      [SYNC_STATE now 1 forever stdin nil] 
    )
    (inj []
       (mk.val self_hand position new_pos 1)
-      [SYNC_FRONT t:(+ now 100000us) 1 forever stdin nil]
-   )
-   (inj []
-      (mk.val cup position new_pos 1)
-      [SYNC_FRONT (+ t (rnd 10000)) 1 forever stdin nil]
+      [SYNC_STATE (+ now 10000us) 1 forever stdin nil]
    )
 1
 )
 |[]
 
-i_pos_updater:(ipgm pos_updater |[] 0us 0 1)
+i_hand_pos_updater:(ipgm hand_pos_updater |[] 0us 0 1)
+[]
+   [SYNC_FRONT now 0 forever stdin nil 1]
+
+cup_pos_updater:(pgm
+|[]
+[]
+   []
+      (ptn (mk.val cup position pos#vec3_holder: ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      new_pos:(vec3_holder (+ pos.value (vec3 0 0 0.1)) 1)
+      [SYNC_STATE now 1 forever stdin nil]
+   )
+   (inj []
+      (mk.val cup position new_pos 1)
+      [SYNC_STATE (+ now 10000us) 1 forever stdin nil]
+   )
+1
+)
+|[]
+
+i_cup_pos_updater:(ipgm cup_pos_updater |[] 0us 0 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
@@ -96,7 +128,7 @@ grab_updater:(pgm
 []
    (inj []
       m
-      [SYNC_FRONT (+ now (rnd 50000)) 1 forever stdin nil]
+      [SYNC_STATE (+ now (rnd 50000)) 1 forever stdin nil]
    )
 1
 )

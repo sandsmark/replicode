@@ -69,7 +69,7 @@ private:
 public:
 	void	take_input(r_code::View	*input){
 
-		episode.push_back(input->code(VIEW_OID).atom);
+		episode.push_back(input->object->getOID());
 	}
 
 	CorrelatorOutput	*get_output(){
