@@ -64,7 +64,7 @@ public:
 };
 
 class	Correlator{
-private:
+public:
 	std::vector<uint32>	episode;
 public:
 	void	take_input(r_code::View	*input){

@@ -49,6 +49,7 @@ public:
 	std::string	usr_operator_path;
 	std::string	usr_class_path;
 	std::string source_file_name;
+	bool		decompile_image;
 	bool		write_image;
 	std::string	image_path;
 	bool		test_image;
@@ -71,6 +72,7 @@ public:
 			const	char	*_notification_resilience=parameters.getAttribute("notification_resilience");
 			const	char	*_run_time=parameters.getAttribute("run_time");
 			const	char	*_decompile_timestamps=parameters.getAttribute("decompile_timestamps");
+			const	char	*_decompile_image=parameters.getAttribute("decompile_image");
 			const	char	*_write_image=parameters.getAttribute("write_image");
 			const	char	*_test_image=parameters.getAttribute("test_image");
 
@@ -87,6 +89,7 @@ public:
 				decompile_timestamps=TS_RELATIVE;
 			else
 				decompile_timestamps=TS_ABSOLUTE;
+			decompile_image=(strcmp(_decompile_image,"yes")==0);
 			write_image=(strcmp(_write_image,"yes")==0);
 			if(write_image){
 

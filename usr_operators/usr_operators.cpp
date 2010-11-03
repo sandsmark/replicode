@@ -32,6 +32,8 @@
 #include	"correlator.h"
 
 #include	"../r_exec/init.h"
+#include	"../r_exec/mem.h"
+#include	"../r_comp/decompiler.h"
 
 #include	<iostream>
 #include	<cmath>
@@ -226,6 +228,8 @@ class	CorrelatorController:
 public	r_exec::Controller{
 private:
 	Correlator	*correlator;
+
+	r_comp::Decompiler	decompiler;
 public:
 	CorrelatorController(r_exec::_Mem	*m,r_code::View	*icpp_pgm_view):r_exec::Controller(m,icpp_pgm_view){
 
@@ -234,6 +238,8 @@ public:
 		uint16	arg_count=getObject()->code(arg_set_index).getAtomCount();
 
 		correlator=new	Correlator();
+
+		decompiler.init(&r_exec::Metadata);
 	}
 	
 	~CorrelatorController(){
@@ -252,12 +258,38 @@ public:
 			correlator->get_output();
 			//	TODO (eric): exploit the output: build rgroups and inject data therein.
 
+			decompile(0);
+			
 			//	For now, we do not retrain the Correlator on more episodes: we build another correlator instead.
 			//	We could also implement a method (clear()) to reset the existing correlator.
 			delete	correlator;
 			correlator=new	Correlator();
 		}else
 			correlator->take_input(input);
+	}
+
+	void	decompile(uint64	time_offset){
+
+		mem->suspend();
+		r_comp::Image	*image=((r_exec::Mem<r_exec::LObject>	*)mem)->getImage();
+		mem->resume();
+
+		uint32	object_count=decompiler.decompile_references(image);
+		std::cout<<object_count<<" objects in the image\n";
+		for(uint16	i=0;i<correlator->episode.size();++i){	// episode is ordered by injection times.
+
+			for(uint16	j=0;j<object_count;++j){
+
+				if(((SysObject	*)image->code_segment.objects[j])->oid==correlator->episode[i]){
+
+					std::ostringstream	decompiled_code;
+					decompiler.decompile_object(j,&decompiled_code,time_offset);
+					std::cout<<"\n\nObject "<<correlator->episode[i]<<":\n"<<decompiled_code.str()<<std::endl;
+				}
+			}
+		}
+
+		delete	image;
 	}
 };
 

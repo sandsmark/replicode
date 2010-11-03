@@ -6,7 +6,7 @@
 	  time_core_count="1"
   	notification_resilience="1000"
     
-	  run_time="9000"
+	  run_time="90000"
     
     decompile_timestamps="relative"
     
@@ -14,9 +14,10 @@
     usr_class_path="../Test//Correlator.Data.Generation/user.classes.replicode"
     source_file_name="../Test//Correlator.Data.Generation/motor.babbling.replicode"
     
+    decompile_image="no"
     write_image="no"
     image_path="../Test/Correlator.Data.Generation/motor.babbling.episodes.replicode.image"
-    test_image="yes"
+    test_image="no"
   />
   
 </TestConfiguration>
@@ -34,6 +35,8 @@ notification_resilience: in upr (i.e. relative to the ntf group). For debugging 
 run_time: in ms.
 
 decompile_timestamps: either "relative" or "absolute". When "relative", timestamps are displayed as offsets from mem->start().
+
+decompile_image: yes or no.
 
 write_image: yes or no.
 
