@@ -100,7 +100,6 @@
 !dfn (_del_dev :did)
 !dfn (_suspend)
 !dfn (_stop)
-!dfn (speak :st); function "speak" of the sample_io_module.
 
 ;device functions aliases
 !def (inj args) (cmd _inj exe args)

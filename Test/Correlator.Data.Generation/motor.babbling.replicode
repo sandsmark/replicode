@@ -108,7 +108,7 @@ noise_updater:(pgm
 []
    (inj []
       (noise now 1)
-      [SYNC_FRONT (+ now (rnd 40000)) 1 forever stdin nil]
+      [SYNC_STATE (+ now (rnd 40000)) 1 forever stdin nil]
    )
 1
 )

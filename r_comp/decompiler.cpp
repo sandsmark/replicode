@@ -382,7 +382,7 @@ namespace	r_comp{
 					out_stream->push("|us",read_index);
 				else{
 
-					uint64	ts=Utils::GetTimestamp(&atom);
+					uint64	ts=Utils::GetTimestamp(&current_object->code[index]);
 					if(decompiling_view)
 						ts-=time_offset;
 					out_stream->push(Time::ToString_seconds(ts),read_index);
