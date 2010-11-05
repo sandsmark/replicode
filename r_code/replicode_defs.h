@@ -33,6 +33,7 @@
 
 #define	VIEW_CODE_MAX_SIZE	13	//	size of the code of the largest view (grp view) + 1 (oid used by rMems); view set opcode's index is 0.
 
+#define	VIEW_OPCODE		0
 #define	VIEW_SYNC		1
 #define	VIEW_IJT		2	//	iptr to timestamp (+3 atoms)
 #define	VIEW_SLN		3
@@ -45,6 +46,8 @@
 #define	GRP_VIEW_COV	8
 #define	RGRP_VIEW_ACT	8
 #define	VIEW_OID		12
+
+#define	VIEW_ARITY		6
 
 #define	OBJECT_CLASS	0
 
@@ -103,8 +106,8 @@
 
 #define	EXECUTIVE_DEVICE	0xA1000000
 
-#define	CMD_DEVICE		1
-#define	CMD_FUNCTION	2
+#define	CMD_FUNCTION	1
+#define	CMD_DEVICE		2
 #define	CMD_ARGS		3
 
 #endif

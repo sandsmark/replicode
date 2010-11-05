@@ -106,6 +106,8 @@ uint32	CoreCount;
 																								//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
 		std::vector<Group	*>	initial_groups;	//	convenience; cleared after start();
 
+		uint32	last_oid;
+
 		_Mem();
 	public:
 		typedef	enum{
@@ -133,6 +135,8 @@ uint32	CoreCount;
 		void	stop();		//	after stop() the content is cleared and one has to call load() and start() again.
 		void	suspend();
 		void	resume();
+
+		uint32	get_oid();
 
 		//	Called by groups at update time.
 		//	Called by PGMOverlays at reduction time.
@@ -171,7 +175,7 @@ uint32	CoreCount;
 		virtual	Code	*check_existence(Code	*object)=0;	//	returns the existing object if any, or object otherwise: in the latter case, packing may occur.
 
 		//	rMem to rMem.
-		//	The view must contain the destintion group (either stdin or stdout) as its grp member.
+		//	The view must contain the destination group (either stdin or stdout) as its grp member.
 		//	To be redefined by object transport aware subcalsses.
 		virtual	void	eject(View	*view,uint16	nodeID);
 

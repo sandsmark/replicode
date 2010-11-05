@@ -39,7 +39,7 @@ _start:(pgm
       [SYNC_STATE (+ now (rnd 10000)) 1 forever stdin nil]
    )
    (inj []
-      (noise (rnd 1000) 1)
+      (noise now 1)
       [SYNC_STATE (+ now (rnd 10000)) 1 forever stdin nil]
    )
 1
@@ -107,7 +107,7 @@ noise_updater:(pgm
    |[]
 []
    (inj []
-      (noise (rnd 1000) 1)
+      (noise now 1)
       [SYNC_FRONT (+ now (rnd 40000)) 1 forever stdin nil]
    )
 1

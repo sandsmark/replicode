@@ -280,7 +280,8 @@ public:
 
 			for(uint16	j=0;j<object_count;++j){
 
-				if(((SysObject	*)image->code_segment.objects[j])->oid==correlator->episode[i]){
+				if(((SysObject	*)image->code_segment.objects[j])->oid==correlator->episode[i]
+				&&	((SysObject	*)image->code_segment.objects[j])->code[0].asOpcode()==r_exec::GetOpcode("noise")){
 
 					std::ostringstream	decompiled_code;
 					decompiler.decompile_object(j,&decompiled_code,time_offset);

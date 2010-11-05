@@ -266,6 +266,7 @@ namespace	r_code{
 	public:
 		virtual	Code	*buildObject(SysObject	*source)=0;
 		virtual	void	deleteObject(Code	*object)=0;
+		virtual	uint32	get_oid()=0;
 	};
 }
 

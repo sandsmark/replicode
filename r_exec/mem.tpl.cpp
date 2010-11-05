@@ -111,11 +111,13 @@ namespace	r_exec{
 		for(i=0;i<time_core_count;++i)
 			time_cores[i]=new	TimeCore(this);
 
+		last_oid=0;
+
 		//	load root (always comes first).
 		root=(Group	*)(*objects)[0];
 		this->objects.push_back(root);
 		initial_groups.push_back(root);
-		root->setOID(r_exec::LObject::LastOID++);
+		root->setOID(get_oid());
 
 		for(uint32	i=1;i<objects->size();++i){	//	skip root as it has no initial views.
 
@@ -132,7 +134,7 @@ namespace	r_exec{
 				break;
 			}
 
-			object->setOID(r_exec::LObject::LastOID++);
+			object->setOID(get_oid());
 
 			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	it;
 			for(it=object->views.begin();it!=object->views.end();++it){
@@ -385,9 +387,10 @@ namespace	r_exec{
 		}case	ObjectType::MARKER:	//	the marker does not exist yet: add it to the mks of its references.
 			for(uint32	i=0;i<object->references_size();++i){
 
-				object->get_reference(i)->acq_markers();
-				object->get_reference(i)->markers.push_back(object);
-				object->get_reference(i)->rel_markers();
+				Code	*ref=object->get_reference(i);
+				ref->acq_markers();
+				ref->markers.push_back(object);
+				ref->rel_markers();
 			}
 		case	ObjectType::OBJECT:{
 			host->other_views[view->getOID()]=view;

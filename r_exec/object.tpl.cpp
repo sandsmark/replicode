@@ -31,6 +31,9 @@
 namespace	r_exec{
 
 	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),mem(mem),hash_value(0),invalidated(false){
+
+		if(mem)
+			setOID(mem->get_oid());
 	}
 
 	template<class	C,class	U>	Object<C,U>::~Object(){
