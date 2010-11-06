@@ -92,7 +92,7 @@ namespace	r_exec{
 	friend	class	PGMController;
 	friend	class	Context;
 	private:
-		uint64	birth_time;	// used for ipgms: overlays older than ipgm->pgm->tsc are killed.
+		uint64	birth_time;	// used for ipgms: overlays older than ipgm->tsc are killed.
 	protected:
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.

@@ -339,6 +339,7 @@ namespace	r_code{
 		case	INSTANTIATED_PROGRAM:
 		case	INSTANTIATED_CPP_PROGRAM:
 		case	GROUP:
+		case	REDUCTION_GROUP:
 		case	S_SET:	return	atom	&	0x000000FF;
 		case	STRING:	return	(atom	&	0x0000FF00)>>8;
 		case	TIMESTAMP: return 2;

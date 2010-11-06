@@ -26,7 +26,7 @@
 
 ;mapping high-level objects -> r-code
 !class (rgrp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: vis:nb act:nb)
-!class (rgrp (_grp {abst_grp:grp out_grps:[::grp] tsc:us nfr:nb}))
+!class (rgrp (_grp {out_grps:[::grp] tsc:us nfr:nb}))
 !class (var (_obj val:))
 !class (fact (_fact nil))
 !class (|fact (_fact nil))

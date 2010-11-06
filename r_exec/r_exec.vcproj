@@ -442,11 +442,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\rgroup_overlay.cpp"
+				RelativePath=".\rgrp_overlay.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\rgroup_overlay.inline.cpp"
+				RelativePath=".\rgrp_overlay.inline.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -572,7 +572,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\rgroup_overlay.h"
+				RelativePath=".\rgrp_overlay.h"
 				>
 			</File>
 			<File

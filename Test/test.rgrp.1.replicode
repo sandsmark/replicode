@@ -1,0 +1,50 @@
+;build an abstraction group (abst_grp: contains abstraction programs (abst_pgmx)).
+;build an r-group (r_grp) made visible from abst_grp.
+;inject objects in r_grp: they are abstracted.
+;hide r_grp from abst_grp: switches the abstraction off.
+
+abst_grp:(std_grp 0 0 0 0 |[])
+[]
+   [SYNC_FRONT now 0 forever root nil 0 0]
+
+abst_pgm1:(pgm
+|[]
+|[]
+|[]
+1
+)
+|[]
+
+i_abst_pgm1:(ipgm abst_pgm1 |[] 0us 1 1)
+[]
+   [SYNC_FRONT now 0 forever abst_grp nil 0]
+
+abst_pgm2:(pgm
+|[]
+|[]
+|[]
+1
+)
+|[]
+
+i_abst_pgm2:(ipgm abst_pgm2 |[] 0us 1 1)
+[]
+   [SYNC_FRONT now 0 forever abst_grp nil 0]
+
+r_grp:(std_rgrp 0 0 0 0 |[] |[] 0us 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever abst_grp nil 1 0];make r_grp visible from abst_grp..
+                                               to allow abstraction programs reducing the content of r_grp.
+
+start_pgm:(pgm
+|[]
+|[]
+|[]
+1
+)
+|[]
+
+i_start_pgm:(ipgm start_pgm |[] 90000us 0 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 0]

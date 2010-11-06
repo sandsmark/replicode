@@ -203,7 +203,8 @@ namespace	r_exec{
 		}
 
 		uint16	production_count=prods.getChildrenCount();
-		uint16	inj_eje_count=0;
+		uint16	inj_eje_count=0;	//	cmds to the executive (not incl. mod/set).
+		uint16	ext_cmd_count=0;	//	cmds to external devices.
 		for(uint16	i=1;i<=production_count;++i){
 
 			Context	cmd=*prods.getChild(i);
@@ -253,17 +254,18 @@ namespace	r_exec{
 
 					++inj_eje_count;
 				}
-			}
+			}else
+				++ext_cmd_count;
 		}
 
 		Code	*mk_rdx;
 		uint16	write_index;
 		uint16	extent_index;
-		bool	notify_rdx=inj_eje_count	&&	(getObject()->code(IPGM_NFR).asFloat()==1);
-		if(notify_rdx){	//	the productions are command objects (cmd); only injections/ejections are notified.
+		bool	notify_rdx=(inj_eje_count	||	ext_cmd_count)	&&	(getObject()->code(IPGM_NFR).asFloat()==1);
+		if(notify_rdx){	//	the productions are command objects (cmd); only injections/ejections and cmds to external devices are notified.
 
 			mk_rdx=get_mk_rdx(write_index);
-			mk_rdx->code(write_index++)=Atom::Set(inj_eje_count);
+			mk_rdx->code(write_index++)=Atom::Set(inj_eje_count+ext_cmd_count);
 			extent_index=write_index+inj_eje_count;
 		}
 		
@@ -411,6 +413,12 @@ namespace	r_exec{
 				cmd.copy(command,0);
 
 				mem->eject(command,command->code(CMD_DEVICE).getNodeID());
+
+				if(notify_rdx){
+
+					mk_rdx->code(write_index++)=Atom::IPointer(extent_index);
+					(*prods.getChild(i)).copy(mk_rdx,extent_index,extent_index);
+				}
 			}
 		}
 

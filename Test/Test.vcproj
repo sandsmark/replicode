@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="Test"
 	ProjectGUID="{689F2DDD-1858-499D-BA79-72BA02D00D45}"
 	RootNamespace="Test"
@@ -1077,6 +1077,50 @@
 					</FileConfiguration>
 					<FileConfiguration
 						Name="DebugVisualizer|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="r_group"
+				>
+				<File
+					RelativePath=".\rgrp.user.classes.replicode"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\test.rgrp.1.replicode"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool

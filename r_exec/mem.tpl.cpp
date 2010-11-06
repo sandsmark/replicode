@@ -166,6 +166,12 @@ namespace	r_exec{
 					bool	viewed_visible=view->get_act_vis()>host->get_vis_thr();
 					if(viewing_c_active	&&	viewing_c_salient	&&	viewed_visible)	//	visible group in a c-salient, c-active group.
 						((Group	*)object)->viewing_groups[host]=view->get_cov();	//	init the group's viewing groups.
+
+					if(view->get_rgrp_act()>host->get_act_thr()){	//	active rgrp.
+
+						RGRPController	*o=new	RGRPController(this,view);	//	now will be added to the deadline at start time.
+						view->controller=o;	//	init the view's overlay.
+					}
 					break;
 				}case	ObjectType::IPGM:
 					host->ipgm_views[view->getOID()]=view;
@@ -432,9 +438,19 @@ namespace	r_exec{
 		case	Atom::GROUP:
 			host->group_views[view->getOID()]=view;
 			break;
-		case	Atom::REDUCTION_GROUP:
+		case	Atom::REDUCTION_GROUP:{
 			host->rgroup_views[view->getOID()]=view;
+
+			RGRPController	*o=new	RGRPController(this,view);
+			view->controller=o;
+			if(view->get_rgrp_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active rgrp in a c-salient and c-active group.
+
+				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
+					o->take_input(*v);	//	view will be copied.
+			}
 			break;
+		}
 		}
 
 		uint64	now=Now();

@@ -874,10 +874,13 @@ RepliStruct	*RepliMacro::expandMacro(RepliStruct	*oldStruct){
 	if ((src->args.size() == 0) && (oldStruct->args.size() > 0) ) {
 		newStruct = oldStruct->clone();
 		newStruct->cmd = dest->cmd;
+		newStruct->label=oldStruct->label;
 		return newStruct;
-	}
-	else
+	}else{
+
 		newStruct = dest->clone();
+		newStruct->label=oldStruct->label;
+	}
 
 	RepliStruct *findStruct;
 

@@ -42,6 +42,7 @@
 #include	"../../CoreLibrary/trunk/CoreLibrary/pipe.h"
 
 #include	"pgm_overlay.h"
+#include	"rgrp_overlay.h"
 
 
 namespace	r_exec{

@@ -1,0 +1,43 @@
+!load ../Test/std.replicode
+
+!def (std_grp _upr _sln_thr _act_thr _vis_thr _ntf_grps) (grp _upr _sln_thr _act_thr _vis_thr 1 0 1 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 _ntf_grps 1)
+!def (std_rgrp _upr _sln_thr _act_thr _vis_thr _ntf_grps _out_grps _tsc _nfr) (rgrp _upr _sln_thr _act_thr _vis_thr 1 0 1 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 _ntf_grps _out_grps _tsc _nfr 1)
+
+!class (vec3 x:nb y:nb z:nb)
+!class (vec3_holder (_obj value:))
+!class (mk.val (_obj {object: attribute: value:}))
+
+root:(std_grp 0 0 0 0 |[])
+[]
+   [SYNC_FRONT now 0 forever nil nil 0 0]
+
+stdin:(std_grp 1 0 0 0 |[])
+[]
+   [SYNC_FRONT now 0 forever root nil 0 0]
+
+stdout:(std_grp 1 0 0 0 |[])
+[]
+   [SYNC_FRONT now 0 forever root nil 0 0]
+
+
+;ontology
+
+self:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+cup:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+hand:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+position:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+attachment:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
