@@ -69,6 +69,11 @@ namespace	r_exec{
 	void	Controller::kill(){
 		
 		aliveCS.enter();
+		if(!alive){
+
+			aliveCS.leave();
+			return;
+		}
 		alive=false;
 		aliveCS.leave();
 

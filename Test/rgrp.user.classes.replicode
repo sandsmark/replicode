@@ -9,15 +9,15 @@
 
 root:(std_grp 0 0 0 0 |[])
 []
-   [SYNC_FRONT now 0 forever nil nil 0 0]
+   [SYNC_FRONT now 0 forever nil nil COV_OFF 0]
 
 stdin:(std_grp 1 0 0 0 |[])
 []
-   [SYNC_FRONT now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever root nil COV_OFF 0]
 
 stdout:(std_grp 1 0 0 0 |[])
 []
-   [SYNC_FRONT now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever root nil COV_OFF 0]
 
 
 ;ontology
@@ -38,6 +38,6 @@ position:(ent 1)
 []
    [SYNC_FRONT now 1 forever root nil]
 
-attachment:(ent 1)
+hold:(ent 1)
 []
    [SYNC_FRONT now 1 forever root nil]

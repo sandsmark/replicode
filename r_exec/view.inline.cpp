@@ -33,14 +33,14 @@
 
 namespace	r_exec{
 
-	inline	View::View():r_code::View(){
+	inline	View::View():r_code::View(),controller(NULL){
 
 		_code[VIEW_OID].atom=GetOID();
 
 		reset_ctrl_values();
 	}
 
-	inline	View::View(r_code::SysView	*source,r_code::Code	*object):r_code::View(source,object){
+	inline	View::View(r_code::SysView	*source,r_code::Code	*object):r_code::View(source,object),controller(NULL){
 
 		_code[VIEW_OID].atom=GetOID();
 
@@ -49,7 +49,7 @@ namespace	r_exec{
 		reset_init_act();
 	}
 
-	inline	View::View(const	View	*view):r_code::View(){
+	inline	View::View(const	View	*view):r_code::View(),controller(NULL){
 
 		object=view->object;
 		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom)+2*sizeof(Object	*));	//	reference_set is contiguous to code; memcpy in one go.
@@ -60,6 +60,9 @@ namespace	r_exec{
 	}
 
 	inline	View::~View(){
+
+		if(controller!=NULL)
+			controller->kill();
 	}
 
 	inline	uint32	View::getOID()	const{
@@ -88,21 +91,19 @@ namespace	r_exec{
 		return	code(VIEW_SLN).asFloat();
 	}
 
-	inline	float32	View::get_act_vis(){
+	inline	float32	View::get_act(){
 
-		return	code(VIEW_ACT_VIS).asFloat();
+		return	code(VIEW_ACT).asFloat();
 	}
 
-	inline	float32	View::get_rgrp_act(){
+	inline	float32	View::get_vis(){
 
-		return	code(RGRP_VIEW_ACT).asFloat();
+		return	code(GRP_VIEW_VIS).asFloat();
 	}
 
 	inline	bool	View::get_cov(){
 
-		if(object->code(0).getDescriptor()==Atom::GROUP)
-			return	code(GRP_VIEW_COV).asFloat()==1;
-		return	false;
+		return	code(GRP_VIEW_COV).asBoolean();
 	}
 
 	inline	void	View::mod_res(float32	value){
@@ -133,28 +134,28 @@ namespace	r_exec{
 		++sln_changes;
 	}
 
-	inline	void	View::mod_act_vis(float32	value){
+	inline	void	View::mod_act(float32	value){
 
-		acc_act_vis+=value;
-		++act_vis_changes;
+		acc_act+=value;
+		++act_changes;
 	}
 
-	inline	void	View::set_act_vis(float32	value){
+	inline	void	View::set_act(float32	value){
 
-		acc_act_vis+=value-get_act_vis();
-		++act_vis_changes;
+		acc_act+=value-get_act();
+		++act_changes;
 	}
 
-	inline	void	View::mod_rgrp_act(float32	value){
+	inline	void	View::mod_vis(float32	value){
 
-		acc_rgrp_act+=value;
-		++rgrp_act_changes;
+		acc_vis+=value;
+		++vis_changes;
 	}
 
-	inline	void	View::set_rgrp_act(float32	value){
+	inline	void	View::set_vis(float32	value){
 
-		acc_rgrp_act+=value-get_rgrp_act();
-		++rgrp_act_changes;
+		acc_vis+=value-get_vis();
+		++vis_changes;
 	}
 
 	inline	float32	View::update_sln_delta(){
@@ -166,17 +167,7 @@ namespace	r_exec{
 
 	inline	float32	View::update_act_delta(){
 
-		float32	act;
-		switch(object->code(0).getDescriptor()){
-		case	Atom::INSTANTIATED_PROGRAM:
-		case	Atom::INSTANTIATED_CPP_PROGRAM:
-			act=get_act_vis();
-			break;
-		case	Atom::REDUCTION_GROUP:
-			act=get_rgrp_act();
-			break;
-		}
-
+		float32	act=get_act();
 		float32	delta=act-initial_act;
 		initial_act=act;
 		return	delta;
@@ -191,11 +182,11 @@ namespace	r_exec{
 		case	VIEW_RES:
 			mod_res(value);
 			break;
-		case	VIEW_ACT_VIS:
-			mod_act_vis(value);
+		case	VIEW_ACT:
+			mod_act(value);
 			break;
-		case	RGRP_VIEW_ACT:
-			mod_rgrp_act(value);
+		case	GRP_VIEW_VIS:
+			mod_vis(value);
 			break;
 		}
 	}
@@ -209,11 +200,11 @@ namespace	r_exec{
 		case	VIEW_RES:
 			set_res(value);
 			break;
-		case	VIEW_ACT_VIS:
-			set_act_vis(value);
+		case	VIEW_ACT:
+			set_act(value);
 			break;
-		case	RGRP_VIEW_ACT:
-			set_rgrp_act(value);
+		case	GRP_VIEW_VIS:
+			set_vis(value);
 			break;
 		}
 	}

@@ -41,7 +41,7 @@ root:(grp
 1; psln_thr
 )
 []
-   [SYNC_FRONT now 0 forever nil nil 0 0]
+   [SYNC_FRONT now 0 forever nil nil COV_OFF 0]
 
 stdin:(grp
 1; upr
@@ -78,7 +78,7 @@ stdin:(grp
 1; psln_thr
 )
 []
-   [SYNC_FRONT now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever root nil COV_OFF 0]
 
 stdout:(grp
 1; upr
@@ -115,7 +115,7 @@ stdout:(grp
 1; psln_thr
 )
 []
-   [SYNC_FRONT now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever root nil COV_OFF 0]
 
 position:(ent 1)
 []

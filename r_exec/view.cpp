@@ -80,7 +80,7 @@ namespace	r_exec{
 		return	destination_thr+change;
 	}
 
-	View::View(View	*view,Group	*group):r_code::View(){
+	View::View(View	*view,Group	*group):r_code::View(),controller(NULL){
 
 		Group	*source=view->get_host();
 		object=view->object;
@@ -93,15 +93,15 @@ namespace	r_exec{
 		code(VIEW_SLN)=Atom::Float(MorphValue(view->code(VIEW_SLN).asFloat(),source->get_sln_thr(),group->get_sln_thr()));
 		switch(object->code(0).getDescriptor()){
 		case	Atom::GROUP:
-			code(VIEW_ACT_VIS)=Atom::Float(MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_vis_thr(),group->get_vis_thr()));
+			code(GRP_VIEW_VIS)=Atom::Float(MorphValue(view->code(GRP_VIEW_VIS).asFloat(),source->get_vis_thr(),group->get_vis_thr()));
 			break;
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
-			code(VIEW_ACT_VIS)=Atom::Float(MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_act_thr(),group->get_act_thr()));
+			code(VIEW_ACT)=Atom::Float(MorphValue(view->code(VIEW_ACT).asFloat(),source->get_act_thr(),group->get_act_thr()));
 			break;
 		case	Atom::REDUCTION_GROUP:
-			code(VIEW_ACT_VIS)=Atom::Float(MorphValue(view->code(VIEW_ACT_VIS).asFloat(),source->get_vis_thr(),group->get_vis_thr()));
-			code(RGRP_VIEW_ACT)=Atom::Float(MorphValue(view->code(RGRP_VIEW_ACT).asFloat(),source->get_act_thr(),group->get_act_thr()));
+			code(VIEW_ACT)=Atom::Float(MorphValue(view->code(VIEW_ACT).asFloat(),source->get_vis_thr(),group->get_vis_thr()));
+			code(GRP_VIEW_VIS)=Atom::Float(MorphValue(view->code(GRP_VIEW_VIS).asFloat(),source->get_act_thr(),group->get_act_thr()));
 			break;
 		}
 
@@ -120,10 +120,10 @@ namespace	r_exec{
 
 		sln_changes=0;
 		acc_sln=0;
-		act_vis_changes=0;
-		acc_act_vis=0;
-		rgrp_act_changes=0;
-		acc_rgrp_act=0;
+		act_changes=0;
+		acc_act=0;
+		vis_changes=0;
+		acc_vis=0;
 		res_changes=0;
 		acc_res=0;
 
@@ -140,18 +140,9 @@ namespace	r_exec{
 
 	void	View::reset_init_act(){
 
-		if(object!=NULL){
-			
-			switch(object->code(0).getDescriptor()){
-			case	Atom::INSTANTIATED_PROGRAM:
-			case	Atom::INSTANTIATED_CPP_PROGRAM:
-				initial_act=get_act_vis();
-				break;
-			case	Atom::REDUCTION_GROUP:
-				initial_act=get_rgrp_act();
-				break;
-			}
-		}else
+		if(object!=NULL)	
+			initial_act=get_act();
+		else
 			initial_act=0;
 	}
 
@@ -181,34 +172,36 @@ namespace	r_exec{
 		}
 		acc_sln=0;
 		sln_changes=0;
-		if(get_sln()<low)
+
+		float32	sln=get_sln();
+		if(sln<low)
 			++periods_at_low_sln;
 		else{
 			
 			periods_at_low_sln=0;
-			if(get_sln()>high)
+			if(sln>high)
 				++periods_at_high_sln;
 			else
 				periods_at_high_sln=0;
 		}
-		return	get_sln();
+		return	sln;
 	}
 
 	float32	View::update_act(float32	low,float32	high){
 
-		float32	act;
-		switch(object->code(0).getDescriptor()){
-		case	Atom::INSTANTIATED_PROGRAM:
-		case	Atom::INSTANTIATED_CPP_PROGRAM:
-			update_vis();
-			act=get_act_vis();
-			break;
-		case	Atom::REDUCTION_GROUP:
-			update_rgrp_act();
-			act=get_rgrp_act();
-			break;
-		}
+		if(act_changes>0	&&	acc_act!=0){
 
+			float32	new_act=get_act()+acc_act/act_changes;
+			if(new_act<0)
+				new_act=0;
+			else	if(new_act>1)
+				new_act=1;
+			code(VIEW_ACT)=r_code::Atom::Float(new_act);
+		}
+		acc_act=0;
+		act_changes=0;
+
+		float32	act=get_act();
 		if(act<low)
 			++periods_at_low_act;
 		else{
@@ -224,34 +217,18 @@ namespace	r_exec{
 
 	float32	View::update_vis(){
 
-		if(act_vis_changes>0	&&	acc_act_vis!=0){
+		if(vis_changes>0	&&	acc_vis!=0){
 
-			float32	new_act_vis=get_act_vis()+acc_act_vis/act_vis_changes;
-			if(new_act_vis<0)
-				new_act_vis=0;
-			else	if(new_act_vis>1)
-				new_act_vis=1;
-			code(VIEW_ACT_VIS)=r_code::Atom::Float(new_act_vis);
+			float32	new_vis=get_vis()+acc_vis/vis_changes;
+			if(new_vis<0)
+				new_vis=0;
+			else	if(new_vis>1)
+				new_vis=1;
+			code(GRP_VIEW_VIS)=r_code::Atom::Float(new_vis);
 		}
-		acc_act_vis=0;
-		act_vis_changes=0;
-		return	get_act_vis();
-	}
-
-	float32	View::update_rgrp_act(){
-
-		if(rgrp_act_changes>0	&&	acc_rgrp_act!=0){
-
-			float32	new_rgrp_act=get_rgrp_act()+acc_rgrp_act/rgrp_act_changes;
-			if(new_rgrp_act<0)
-				new_rgrp_act=0;
-			else	if(new_rgrp_act>1)
-				new_rgrp_act=1;
-			code(RGRP_VIEW_ACT)=r_code::Atom::Float(new_rgrp_act);
-		}
-		acc_rgrp_act=0;
-		rgrp_act_changes=0;
-		return	get_rgrp_act();
+		acc_vis=0;
+		vis_changes=0;
+		return	get_vis();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -755,9 +755,9 @@ namespace	r_exec{
 
 			Group	*host=getView()->get_host();
 			host->enter();
-			if(getView()->get_act_vis()>host->get_act_thr()	&&	//	active ipgm.
-				host->get_c_act()>host->get_c_act_thr()			&&	//	c-active group.
-				host->get_c_sln()>host->get_c_sln_thr()){			//	c-salient group.
+			if(getView()->get_act()>host->get_act_thr()	&&	//	active ipgm.
+				host->get_c_act()>host->get_c_act_thr()	&&	//	c-active group.
+				host->get_c_sln()>host->get_c_sln_thr()){	//	c-salient group.
 
 				TimeJob	*next_job=new	InputLessPGMSignalingJob(this,Now()+tsc);
 				mem->pushTimeJob(next_job);
@@ -891,9 +891,9 @@ namespace	r_exec{
 
 		Group	*host=getView()->get_host();
 		host->enter();
-		if(getView()->get_act_vis()>host->get_act_thr()	&&	//	active ipgm.
-			host->get_c_act()>host->get_c_act_thr()	&&			//	c-active group.
-			host->get_c_sln()>host->get_c_sln_thr()){			//	c-salient group.
+		if(getView()->get_act()>host->get_act_thr()	&&	//	active ipgm.
+			host->get_c_act()>host->get_c_act_thr()	&&	//	c-active group.
+			host->get_c_sln()>host->get_c_sln_thr()){	//	c-salient group.
 
 				host->leave();
 			TimeJob	*next_job=new	AntiPGMSignalingJob(this,Now()+Utils::GetTimestamp<Code>(getObject(),IPGM_TSC));

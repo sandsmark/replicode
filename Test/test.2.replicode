@@ -43,7 +43,7 @@ P1:(pgm
       [nil]; ntf_grps
       1; psln_thr
       )
-      [SYNC_FRONT now 1 forever root nil]
+      [SYNC_FRONT now 1 forever root nil COV_OFF 0]
    )
    (inj [(mk.val self position (- (vec3 v.x v.y v.z) tgv2.vector) 0) [SYNC_FRONT now 1 forever g nil]])
    (mod [this.vw.sln (+ g.sln_thr 0.1)])

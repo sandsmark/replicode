@@ -152,7 +152,7 @@ namespace	r_exec{
 					//	init viewing_group.
 					bool	viewing_c_active=host->get_c_act()>host->get_c_act_thr();
 					bool	viewing_c_salient=host->get_c_sln()>host->get_c_sln_thr();
-					bool	viewed_visible=view->get_act_vis()>host->get_vis_thr();
+					bool	viewed_visible=view->get_vis()>host->get_vis_thr();
 					if(viewing_c_active	&&	viewing_c_salient	&&	viewed_visible)	//	visible group in a c-salient, c-active group.
 						((Group	*)object)->viewing_groups[host]=view->get_cov();	//	init the group's viewing groups.
 					break;
@@ -163,11 +163,11 @@ namespace	r_exec{
 					//	init viewing_group.
 					bool	viewing_c_active=host->get_c_act()>host->get_c_act_thr();
 					bool	viewing_c_salient=host->get_c_sln()>host->get_c_sln_thr();
-					bool	viewed_visible=view->get_act_vis()>host->get_vis_thr();
+					bool	viewed_visible=view->get_vis()>host->get_vis_thr();
 					if(viewing_c_active	&&	viewing_c_salient	&&	viewed_visible)	//	visible group in a c-salient, c-active group.
 						((Group	*)object)->viewing_groups[host]=view->get_cov();	//	init the group's viewing groups.
 
-					if(view->get_rgrp_act()>host->get_act_thr()){	//	active rgrp.
+					if(view->get_act()>host->get_act_thr()){	//	active rgrp.
 
 						RGRPController	*o=new	RGRPController(this,view);	//	now will be added to the deadline at start time.
 						view->controller=o;	//	init the view's overlay.
@@ -175,7 +175,7 @@ namespace	r_exec{
 					break;
 				}case	ObjectType::IPGM:
 					host->ipgm_views[view->getOID()]=view;
-					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
+					if(view->get_act()>host->get_act_thr()){	//	active ipgm.
 
 						PGMController	*o=new	PGMController(this,view);	//	now will be added to the deadline at start time.
 						view->controller=o;	//	init the view's overlay.
@@ -183,7 +183,7 @@ namespace	r_exec{
 					break;
 				case	ObjectType::ICPP_PGM:
 					host->icpp_pgm_views[view->getOID()]=view;
-					if(view->get_act_vis()>host->get_act_thr()){	//	active icpp_pgm.
+					if(view->get_act()>host->get_act_thr()){	//	active icpp_pgm.
 
 						Controller	*o=CPPPrograms::New(Utils::GetString<O>(view->object,ICPP_PGM_NAME),this,view);	//	now will be added to the deadline at start time.
 						if(!o)
@@ -193,7 +193,7 @@ namespace	r_exec{
 					break;
 				case	ObjectType::INPUT_LESS_IPGM:
 					host->input_less_ipgm_views[view->getOID()]=view;
-					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
+					if(view->get_act()>host->get_act_thr()){	//	active ipgm.
 
 						InputLessPGMController	*o=new	InputLessPGMController(this,view);	//	now will be added to the deadline at start time.
 						view->controller=o;	//	init the view's overlay.
@@ -201,7 +201,7 @@ namespace	r_exec{
 					break;
 				case	ObjectType::ANTI_IPGM:
 					host->anti_ipgm_views[view->getOID()]=view;
-					if(view->get_act_vis()>host->get_act_thr()){	//	active ipgm.
+					if(view->get_act()>host->get_act_thr()){	//	active ipgm.
 
 						AntiPGMController	*o=new	AntiPGMController(this,view);	//	now will be added to the deadline at start time.
 						view->controller=o;	//	init the view's overlay.
@@ -344,7 +344,7 @@ namespace	r_exec{
 			host->ipgm_views[view->getOID()]=view;
 			PGMController	*o=new	PGMController(this,view);
 			view->controller=o;
-			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
+			if(view->get_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
 				std::set<View	*,r_code::View::Less>::const_iterator	v;
 				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
@@ -358,7 +358,7 @@ namespace	r_exec{
 			if(!o)
 				break;
 			view->controller=o;
-			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active icpp_pgm in a c-salient and c-active group.
+			if(view->get_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active icpp_pgm in a c-salient and c-active group.
 
 				std::set<View	*,r_code::View::Less>::const_iterator	v;
 				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
@@ -369,7 +369,7 @@ namespace	r_exec{
 			host->anti_ipgm_views[view->getOID()]=view;
 			AntiPGMController	*o=new	AntiPGMController(this,view);
 			view->controller=o;
-			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
+			if(view->get_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
 				std::set<View	*,r_code::View::Less>::const_iterator	v;
 				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
@@ -384,7 +384,7 @@ namespace	r_exec{
 			host->input_less_ipgm_views[view->getOID()]=view;
 			InputLessPGMController	*o=new	InputLessPGMController(this,view);
 			view->controller=o;
-			if(view->get_act_vis()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
+			if(view->get_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
 				P<TimeJob>	j=new	InputLessPGMSignalingJob(o,now+Utils::GetTimestamp<Code>(view->object,IPGM_TSC));
 				time_job_queue->push(j);
@@ -443,7 +443,7 @@ namespace	r_exec{
 
 			RGRPController	*o=new	RGRPController(this,view);
 			view->controller=o;
-			if(view->get_rgrp_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active rgrp in a c-salient and c-active group.
+			if(view->get_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active rgrp in a c-salient and c-active group.
 
 				std::set<View	*,r_code::View::Less>::const_iterator	v;
 				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
@@ -459,7 +459,7 @@ namespace	r_exec{
 
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr()){	//	host is c-salient and view is salient.
 
-			if(view->get_act_vis()>host->get_vis_thr())	//	new visible group in a c-active and c-salient host.
+			if(view->get_vis()>host->get_vis_thr())	//	new visible group in a c-active and c-salient host.
 				object->viewing_groups[host]=view->get_cov();
 
 			_inject_reduction_jobs(view,host);

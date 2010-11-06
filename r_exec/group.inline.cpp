@@ -66,10 +66,6 @@ namespace	r_exec{
 		//	remove all views that are hosted by this group.
 		FOR_ALL_VIEWS_BEGIN(this,v)
 
-			if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM	||
-				v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_CPP_PROGRAM)	//	if ipgm view, kill the overlay.
-				v->second->controller->kill();
-
 			v->second->object->acq_views();
 			v->second->object->views.erase(v->second);	//	delete view from object's views.
 			v->second->object->rel_views();

@@ -40,11 +40,9 @@
 #define	VIEW_RES		4
 #define	VIEW_HOST		5
 #define	VIEW_ORG		6
-#define	VIEW_ACT_VIS	7
-#define	IPGM_VIEW_ACT	7
-#define	GRP_VIEW_VIS	7
-#define	GRP_VIEW_COV	8
-#define	RGRP_VIEW_ACT	8
+#define	VIEW_ACT		7
+#define	GRP_VIEW_COV	7
+#define	GRP_VIEW_VIS	8
 #define	VIEW_OID		12
 
 #define	VIEW_ARITY		6

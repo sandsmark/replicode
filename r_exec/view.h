@@ -53,10 +53,10 @@ namespace	r_exec{
 		//	Ctrl values.
 		uint32	sln_changes;
 		float32	acc_sln;
-		uint32	act_vis_changes;
-		float32	acc_act_vis;
-		uint32	rgrp_act_changes;
-		float32	acc_rgrp_act;
+		uint32	act_changes;
+		float32	acc_act;
+		uint32	vis_changes;
+		float32	acc_vis;
 		uint32	res_changes;
 		float32	acc_res;
 		void	reset_ctrl_values();
@@ -70,7 +70,7 @@ namespace	r_exec{
 	public:
 		static	uint16	ViewOpcode;
 
-		P<Controller>	controller;	//	built upon injection of the view (if the object is an ipgm).
+		P<Controller>	controller;	//	built upon injection of the view (if the object is an ipgm/icpp_pgm/rgrp).
 
 		static	float32	MorphValue(float32	value,float32	source_thr,float32	destination_thr);
 		static	float32	MorphChange(float32	change,float32	source_thr,float32	destination_thr);
@@ -96,23 +96,22 @@ namespace	r_exec{
 
 		float32	get_res();
 		float32	get_sln();
-		float32	get_act_vis();
-		float32	get_rgrp_act();
+		float32	get_act();
 		bool	get_cov();
+		float32	get_vis();
 
 		void	mod_res(float32	value);
 		void	set_res(float32	value);
 		void	mod_sln(float32	value);
 		void	set_sln(float32	value);
-		void	mod_act_vis(float32	value);
-		void	set_act_vis(float32	value);
-		void	mod_rgrp_act(float32	value);
-		void	set_rgrp_act(float32	value);
+		void	mod_act(float32	value);
+		void	set_act(float32	value);
+		void	mod_vis(float32	value);
+		void	set_vis(float32	value);
 
 		float32	update_res();
 		float32	update_sln(float32	low,float32	high);
 		float32	update_act(float32	low,float32	high);
-		float32	update_rgrp_act();
 		float32	update_vis();
 
 		float32	update_sln_delta();

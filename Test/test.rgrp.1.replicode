@@ -1,11 +1,15 @@
 ;build an abstraction group (abst_grp: contains abstraction programs (abst_pgmx)).
-;build an r-group (r_grp) made visible from abst_grp.
-;inject objects in r_grp: they are abstracted.
+;build three r-group (r_grpx) made visible from abst_grp.
+;inject objects in the r_grp: they are abstracted by the pgm in abst_grp.
 ;hide r_grp from abst_grp: switches the abstraction off.
+;the three rgrp constitute a model: "hand holds cup -> (hand at position p -> cup at position p)".
+
+
+;build the abstraction group and programs.
 
 abst_grp:(std_grp 0 0 0 0 |[])
 []
-   [SYNC_FRONT now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever root nil COV_OFF 0]
 
 abst_pgm1:(pgm
 |[]
@@ -15,9 +19,9 @@ abst_pgm1:(pgm
 )
 |[]
 
-i_abst_pgm1:(ipgm abst_pgm1 |[] 0us 1 1)
+i_abst_pgm1:(ipgm abst_pgm1 |[] 0us NOTIFY 1)
 []
-   [SYNC_FRONT now 0 forever abst_grp nil 0]
+   [SYNC_FRONT now 0 forever abst_grp nil 1]
 
 abst_pgm2:(pgm
 |[]
@@ -27,24 +31,44 @@ abst_pgm2:(pgm
 )
 |[]
 
-i_abst_pgm2:(ipgm abst_pgm2 |[] 0us 1 1)
+i_abst_pgm2:(ipgm abst_pgm2 |[] 0us NOTIFY 1)
 []
-   [SYNC_FRONT now 0 forever abst_grp nil 0]
+   [SYNC_FRONT now 0 forever abst_grp nil 1]
 
-r_grp:(std_rgrp 0 0 0 0 |[] |[] 0us 1)
+
+;build the model.
+
+r_grp1:(std_rgrp 0 0 0 0 |[] |[] 0us 1)
 []
    [SYNC_FRONT now 0 forever root nil 0 0]
-   [SYNC_FRONT now 0 forever abst_grp nil 1 0];make r_grp visible from abst_grp..
-                                               to allow abstraction programs reducing the content of r_grp.
+   [SYNC_FRONT now 0 forever abst_grp nil 0 1]; make r_grp1 visible from abst_grp..
+                                                to allow abstraction programs reducing the content of r_grp.
 
-start_pgm:(pgm
-|[]
-|[]
-|[]
-1
-)
-|[]
-
-i_start_pgm:(ipgm start_pgm |[] 90000us 0 1)
+r_grp2:(std_rgrp 0 0 0 0 |[] |[] 0us 1)
 []
-   [SYNC_FRONT now 0 forever root nil 0]
+   [SYNC_FRONT now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever abst_grp nil 0 1]
+   [SYNC_FRONT now 0 forever r_grp1 nil 0 0]; make r_grp2 a child of r_grp1.
+
+r_grp3:(std_rgrp 0 0 0 0 |[] |[] 0us 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 0 0]
+   [SYNC_FRONT now 0 forever abst_grp nil 0 1]
+   [SYNC_FRONT now 0 forever r_grp2 nil 0 0]; make r_grp3 a child of r_grp2.
+
+(mk.val hand hold cup 1)
+[]
+   [SYNC_STATE now 1 1 r_grp1 nil]
+
+pos:(vec3_holder (vec3 0 0 0) 1)
+[]
+   [SYNC_STATE now 1 1 r_grp2 nil]
+   [SYNC_STATE now 1 1 r_grp3 nil]
+
+(mk.val hand position pos 1)
+[]
+   [SYNC_STATE now 1 1 r_grp2 nil]
+
+(mk.val cup position pos 1)
+[]
+   [SYNC_STATE now 1 1 r_grp3 nil]

@@ -7,7 +7,7 @@
 
 ;mapping low-level objects -> r-code
 !class (view[] sync:bl ijt:us sln:nb res:nb grp:grp org:)
-!class (grp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: vis:nb cov:nb)
+!class (grp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: cov:bl vis:nb)
 !class (pgm_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: act:nb)
 !class (ptn skel:xpr guards:[::xpr])
 !class (|ptn skel:xpr guards:[::xpr])
@@ -25,7 +25,7 @@
 !class (_fact (_obj {obj: time:us cfd:nb :~}))
 
 ;mapping high-level objects -> r-code
-!class (rgrp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: vis:nb act:nb)
+!class (rgrp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: act:nb vis:nb)
 !class (rgrp (_grp {out_grps:[::grp] tsc:us nfr:nb}))
 !class (var (_obj val:))
 !class (fact (_fact nil))
@@ -128,8 +128,8 @@
 ;parameters for tuning the behavior of groups
 !def DCY_SLN 0
 !def DCY_SLN_THR 1
-!def COV_ON 1
-!def COV_OFF 0
+!def COV_ON true
+!def COV_OFF false
 
 !def SYNC_FRONT true
 !def SYNC_STATE false

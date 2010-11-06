@@ -389,7 +389,7 @@ CoreCount=0;
 			case	ObjectType::ICPP_PGM:
 			case	ObjectType::ANTI_IPGM:
 			case	ObjectType::INPUT_LESS_IPGM:
-				host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),IPGM_VIEW_ACT,view->get_act_vis()));
+				host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),VIEW_ACT,view->get_act()));
 				break;
 			}
 
@@ -487,7 +487,7 @@ CoreCount=0;
 				if(v->second->object->code(0).getDescriptor()==Atom::GROUP	||	v->second->object->code(0).getDescriptor()==Atom::REDUCTION_GROUP){
 
 					//	update visibility.
-					bool	view_was_visible=v->second->get_act_vis()>group->get_vis_thr();
+					bool	view_was_visible=v->second->get_vis()>group->get_vis_thr();
 					bool	view_is_visible=v->second->update_vis()>group->get_vis_thr();
 					bool	cov=v->second->get_cov();
 
@@ -515,11 +515,12 @@ CoreCount=0;
 						if(view_is_visible)		//	update viewing groups for any visible group.
 							((Group	*)v->second->object)->viewing_groups[group]=cov;
 					}	
-				}else	if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM	||
-							v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_CPP_PROGRAM){
+				}else	if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM		||
+							v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_CPP_PROGRAM	||
+							v->second->object->code(0).getDescriptor()==Atom::REDUCTION_GROUP){
 
-					//	update activation
-					bool	view_was_active=v->second->get_act_vis()>group->get_act_thr();
+					//	update activation.
+					bool	view_was_active=v->second->get_act()>group->get_act_thr();
 					bool	view_is_active=group->update_act(v->second,this)>group->get_act_thr();
 
 					//	kill newly inactive controllers, register newly active ones.
@@ -548,10 +549,6 @@ CoreCount=0;
 				++v;
 			}else{	//	view has no resilience.
 
-				if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM	||
-					v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_CPP_PROGRAM)	//	if ipgm view, kill the overlay.
-					v->second->controller->kill();
-
 				v->second->object->acq_views();
 				v->second->object->views.erase(v->second);	//	delete view from object's views.
 				if(v->second->object->views.size()==0)
@@ -571,6 +568,9 @@ CoreCount=0;
 				case	ObjectType::INPUT_LESS_IPGM:
 					v=group->input_less_ipgm_views.erase(v);
 					break;
+				case	ObjectType::ICPP_PGM:
+					v=group->icpp_pgm_views.erase(v);
+					break;
 				case	ObjectType::OBJECT:
 				case	ObjectType::MARKER:
 					v=group->other_views.erase(v);
@@ -585,9 +585,9 @@ CoreCount=0;
 			}
 		FOR_ALL_VIEWS_END
 
-		if(group_is_c_salient){
+			if(group_is_c_salient	&&	group->code(0).getDescriptor()!=Atom::REDUCTION_GROUP){	//	rgrp don't have a cov member.
 
-			//	cov, i.e. injecting now newly salient views in the viewing groups for which group is visible and has cov.
+			//	cov, i.e. injecting now newly salient views in the viewing groups from which the group is visible and has cov.
 			//	reduction jobs will be added at each of the eligible viewing groups' own update time.
 			UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
 			for(vg=group->viewing_groups.begin();vg!=group->viewing_groups.end();++vg){
@@ -595,13 +595,21 @@ CoreCount=0;
 				if(vg->second){	//	cov==true.
 
 					std::set<View	*,r_code::View::Less>::const_iterator	v;
-					for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
-						if((*v)->object->code(0).getDescriptor()!=Atom::INSTANTIATED_PROGRAM		&&	//	no cov for pgm, groups or notifications.
-							(*v)->object->code(0).getDescriptor()!=Atom::INSTANTIATED_CPP_PROGRAM	&&
-							(*v)->object->code(0).getDescriptor()!=Atom::GROUP						&&
-							(*v)->object->code(0).getDescriptor()!=Atom::REDUCTION_GROUP			&&
-							!(*v)->isNotification())
-								injectCopyNow(*v,vg->first,now);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.
+					for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v){	//	no cov for pgm, groups or notifications.
+
+						if((*v)->isNotification())
+							continue;
+						switch((*v)->object->code(0).getDescriptor()){
+						case	Atom::INSTANTIATED_PROGRAM:
+						case	Atom::INSTANTIATED_CPP_PROGRAM:
+						case	Atom::GROUP:
+						case	Atom::REDUCTION_GROUP:
+							break;
+						default:
+							injectCopyNow(*v,vg->first,now);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.
+							break;
+						}
+					}
 				}
 			}
 
@@ -652,7 +660,7 @@ CoreCount=0;
 			//	build reduction jobs from host's own inputs and own overlays.
 			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(host,v)
 
-				if(v->second->get_act_vis()>host->get_act_thr())	//	active ipgm/rgrp view.
+				if(v->second->get_act()>host->get_act_thr())		//	active ipgm/icpp_pgm/rgrp view.
 					v->second->controller->take_input(view,origin);	//	view will be copied.
 
 			FOR_ALL_VIEWS_WITH_INPUTS_END
@@ -664,12 +672,12 @@ CoreCount=0;
 		UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
 		for(vg=host->viewing_groups.begin();vg!=host->viewing_groups.end();++vg){
 
-			if(vg->second	||	view->isNotification())	//	cov==true or notification.
+			if(vg->second	||	view->isNotification())	//	no reduction jobs when cov==true or view is a notification.
 				continue;
 
 			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
 
-				if(v->second->get_act_vis()>vg->first->get_act_thr())	//	active ipgm/rgrp view.
+				if(v->second->get_act()>vg->first->get_act_thr())	//	active ipgm/icpp_pgm/rgrp view.
 					v->second->controller->take_input(view,origin);	//	view will be copied.
 			
 			FOR_ALL_VIEWS_WITH_INPUTS_END
