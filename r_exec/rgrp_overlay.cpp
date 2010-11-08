@@ -47,6 +47,8 @@ namespace	r_exec{
 
 		overlayCS.enter();
 
+		//	Pass the inputs to all ipgm views' controllers in the rgrp.
+
 		/*if(tsc>0){	// 1st overlay is the master (no match yet); other overlays are pushed back in order of their matching time. 
 			
 			// start from the last overlay, and erase all of them that are older than tsc.

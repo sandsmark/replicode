@@ -76,6 +76,7 @@ namespace	r_exec{
 		static	uint16	Eject;
 		static	uint16	Mod;
 		static	uint16	Set;
+		static	uint16	Subst;
 		static	uint16	NewClass;
 		static	uint16	DelClass;
 		static	uint16	LDC;

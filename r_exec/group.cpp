@@ -62,6 +62,9 @@ namespace	r_exec{
 		it=notification_views.find(OID);
 		if(it!=notification_views.end())
 			return	it->second;
+		it=variable_views.find(OID);
+		if(it!=variable_views.end())
+			return	it->second;
 		return	NULL;
 	}
 

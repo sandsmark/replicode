@@ -203,8 +203,7 @@ namespace	r_exec{
 		}
 
 		uint16	production_count=prods.getChildrenCount();
-		uint16	inj_eje_count=0;	//	cmds to the executive (not incl. mod/set).
-		uint16	ext_cmd_count=0;	//	cmds to external devices.
+		uint16	cmd_count=0;	//	cmds to the executive (excl. mod/set) and external devices.
 		for(uint16	i=1;i<=production_count;++i){
 
 			Context	cmd=*prods.getChild(i);
@@ -252,21 +251,23 @@ namespace	r_exec{
 					}
 					patch_code(index,Atom::ProductionPointer(productions.size()-1));
 
-					++inj_eje_count;
+					++cmd_count;
+				}else	if(function[0].asOpcode()!=Opcodes::Mod	&&	function[0].asOpcode()!=Opcodes::Set){
+
+					++cmd_count;
 				}
 			}else
-				++ext_cmd_count;
+				++cmd_count;
 		}
 
-		Code	*mk_rdx;
+		Code	*mk_rdx=NULL;
 		uint16	write_index;
 		uint16	extent_index;
-		bool	notify_rdx=(inj_eje_count	||	ext_cmd_count)	&&	(getObject()->code(IPGM_NFR).asFloat()==1);
-		if(notify_rdx){	//	the productions are command objects (cmd); only injections/ejections and cmds to external devices are notified.
+		if(cmd_count	&&	(getObject()->code(IPGM_NFR).asFloat()==1)){	//	the productions are command objects (cmd); only injections/ejections and cmds to external devices are notified.
 
 			mk_rdx=get_mk_rdx(write_index);
-			mk_rdx->code(write_index++)=Atom::Set(inj_eje_count+ext_cmd_count);
-			extent_index=write_index+inj_eje_count;
+			mk_rdx->code(write_index++)=Atom::Set(cmd_count);
+			extent_index=write_index+cmd_count;
 		}
 		
 		for(uint16	i=1;i<=production_count;++i){	//	all productions have evaluated correctly; now we can execute the commands.
@@ -298,7 +299,7 @@ namespace	r_exec{
 
 					mem->inject(view);
 
-					if(notify_rdx){
+					if(mk_rdx){
 
 						mk_rdx->code(write_index++)=Atom::IPointer(extent_index);
 						(*prods.getChild(i)).copy(mk_rdx,extent_index,extent_index);
@@ -316,7 +317,7 @@ namespace	r_exec{
 
 					mem->eject(view,node[0].getNodeID());
 
-					if(notify_rdx){
+					if(mk_rdx){
 
 						mk_rdx->code(write_index++)=Atom::IPointer(extent_index);
 						(*prods.getChild(i)).copy(mk_rdx,extent_index,extent_index);
@@ -383,6 +384,36 @@ namespace	r_exec{
 							break;
 						}
 					}
+				}else	if(function[0].asOpcode()==Opcodes::Subst){	//	args:[c-ptr r-ptr]: member, ref to var (or nil).
+
+					void				*object;		//	object to be replaced by a variable or variable to be bound to an object.
+					Context::ObjectType	object_type;
+					int16				member_index;	//	this is assumed to be a r-ptr.
+					uint32				view_oid;
+					args.getChild(1).getMember(object,view_oid,object_type,member_index);	//	args.getChild(1) is an iptr.
+					//args.trace();
+					Context	_var=*args.getChild(2);
+					//_var.trace();
+
+					if(_var[0].getDescriptor()==Atom::NIL){	//	substitution mode.
+
+						//	find a suitable variable; if none, build one.
+
+						//	build new holder where object is replaced by the variable in the original holder's reference set.
+
+						//	assign the new holder to the input view.
+
+						//	inject a binding ipgm, using the variable: PB: we must wait for all subst to be performed: need a tmp vector containing the variables we have used.
+					}else{	//	binding mode: _var is an existing variable.
+
+
+					}
+
+					if(mk_rdx){
+
+						mk_rdx->code(write_index++)=Atom::IPointer(extent_index);
+						(*prods.getChild(i)).copy(mk_rdx,extent_index,extent_index);
+					}
 				}else	if(function[0].asOpcode()==Opcodes::NewClass){	// TODO
 
 				}else	if(function[0].asOpcode()==Opcodes::DelClass){	// TODO
@@ -414,7 +445,7 @@ namespace	r_exec{
 
 				mem->eject(command,command->code(CMD_DEVICE).getNodeID());
 
-				if(notify_rdx){
+				if(mk_rdx){
 
 					mk_rdx->code(write_index++)=Atom::IPointer(extent_index);
 					(*prods.getChild(i)).copy(mk_rdx,extent_index,extent_index);
@@ -422,7 +453,7 @@ namespace	r_exec{
 			}
 		}
 
-		if(notify_rdx){
+		if(mk_rdx){
 
 			uint16	ntf_grp_count=getView()->get_host()->get_ntf_grp_count();
 			for(uint16	i=1;i<=ntf_grp_count;++i){

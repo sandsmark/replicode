@@ -1,56 +1,53 @@
 ;build an abstraction group (abst_grp: contains abstraction programs (abst_pgmx)).
 ;build three r-group (r_grpx) made visible from abst_grp.
 ;inject objects in the r_grp: they are abstracted by the pgm in abst_grp.
-;hide r_grp from abst_grp: switches the abstraction off.
+;when that is done, hide r_grp from abst_grp: switches the abstraction off.
+;at the same time, project the r_grp into stdin so it gets inputs from there (like any program).
 ;the three rgrp constitute a model: "hand holds cup -> (hand at position p -> cup at position p)".
 
 
 ;build the abstraction group and programs.
 
-abst_grp:(std_grp 0 0 0 0 |[])
+abst_grp:(std_grp 0 0 0 0 [root])
 []
    [SYNC_FRONT now 0 forever root nil COV_OFF 0]
 
 abst_pgm1:(pgm
-|[]
-|[]
-|[]
+[]
+   (ptn var1:(var ::) |[])
+   (ptn var2:(var ::) |[])
+[]
+   []
+      (ptn in:(mk.val ::) |[])
+   |[]
+   |[]
+[]
+   (subst [in.object var1])
+   (subst [in.value var2])
 1
 )
 |[]
 
-i_abst_pgm1:(ipgm abst_pgm1 |[] 0us NOTIFY 1)
-[]
-   [SYNC_FRONT now 0 forever abst_grp nil 1]
-
-abst_pgm2:(pgm
-|[]
-|[]
-|[]
-1
-)
-|[]
-
-i_abst_pgm2:(ipgm abst_pgm2 |[] 0us NOTIFY 1)
+i_abst_pgm1:(ipgm abst_pgm1 [nil nil] 0us NOTIFY 1)
 []
    [SYNC_FRONT now 0 forever abst_grp nil 1]
 
 
-;build the model.
+;build the model: rgrps are c-salient but not c-active: the latter is turned on when abstraction is done.
 
-r_grp1:(std_rgrp 0 0 0 0 |[] |[] 0us 1)
+r_grp1:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us 1)
 []
    [SYNC_FRONT now 0 forever root nil 0 0]
    [SYNC_FRONT now 0 forever abst_grp nil 0 1]; make r_grp1 visible from abst_grp..
                                                 to allow abstraction programs reducing the content of r_grp.
 
-r_grp2:(std_rgrp 0 0 0 0 |[] |[] 0us 1)
+r_grp2:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us 1)
 []
    [SYNC_FRONT now 0 forever root nil 0 0]
    [SYNC_FRONT now 0 forever abst_grp nil 0 1]
    [SYNC_FRONT now 0 forever r_grp1 nil 0 0]; make r_grp2 a child of r_grp1.
 
-r_grp3:(std_rgrp 0 0 0 0 |[] |[] 0us 1)
+r_grp3:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us 1)
 []
    [SYNC_FRONT now 0 forever root nil 0 0]
    [SYNC_FRONT now 0 forever abst_grp nil 0 1]
@@ -60,7 +57,7 @@ r_grp3:(std_rgrp 0 0 0 0 |[] |[] 0us 1)
 []
    [SYNC_STATE now 1 1 r_grp1 nil]
 
-pos:(vec3_holder (vec3 0 0 0) 1)
+pos:(val_holder (vec3 0 0 0) 1)
 []
    [SYNC_STATE now 1 1 r_grp2 nil]
    [SYNC_STATE now 1 1 r_grp3 nil]

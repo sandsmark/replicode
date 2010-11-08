@@ -229,6 +229,9 @@ namespace	r_comp{
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
 			*out_stream<<"icpp_pgm";
 			break;
+		case	Atom::VARIABLE:
+			*out_stream<<"var";
+			break;
 		default:
 			*out_stream<<"undefined-class";
 			break;
@@ -359,6 +362,7 @@ namespace	r_comp{
 			case	Atom::INSTANTIATED_PROGRAM:
 			case	Atom::INSTANTIATED_CPP_PROGRAM:
 			case	Atom::OPERATOR:
+			case	Atom::VARIABLE:
 				write_expression(index);
 				break;
 			case	Atom::SET:
@@ -452,6 +456,8 @@ namespace	r_comp{
 						Class	view_class;
 						if(embedding_class.str_opcode=="grp")
 							view_class=metadata->classes.find("grp_view")->second;
+						else	if(embedding_class.str_opcode=="rgrp")
+							view_class=metadata->classes.find("rgrp_view")->second;
 						else	if(embedding_class.str_opcode=="ipgm"	||	embedding_class.str_opcode=="icpp_pgm")
 							view_class=metadata->classes.find("pgm_view")->second;
 						else

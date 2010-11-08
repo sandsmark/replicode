@@ -81,7 +81,8 @@ namespace	r_code{
 			INSTANTIATED_PROGRAM=0xC8,
 			GROUP=0xC9,
 			REDUCTION_GROUP=0xCA,
-			INSTANTIATED_CPP_PROGRAM=0xCB
+			INSTANTIATED_CPP_PROGRAM=0xCB,
+			VARIABLE=0xCC
 		}Type;
 		// encoders
 		static	Atom	Float(float32 f);	//	IEEE 754 32 bits encoding; shifted by 1 to the right (loss of precison).
@@ -125,6 +126,7 @@ namespace	r_code{
 		static	Atom	Group(uint16 opcode,uint8 arity);
 		static	Atom	ReductionGroup(uint16 opcode,uint8 arity);
 		static	Atom	InstantiatedCPPProgram(uint16 opcode,uint8 arity);
+		static	Atom	Variable(uint16 opcode,uint8 arity);
 
 		Atom(uint32	a=0xFFFFFFFF);
 		~Atom();

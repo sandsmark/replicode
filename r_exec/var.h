@@ -31,24 +31,29 @@
 #ifndef	var_h
 #define	var_h
 
+#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
+
 #include	"object.h"
 
 
 namespace	r_exec{
 
-	class	RGroupOverlay;
+	class	RGRPOverlay;
 
 	//	Variable object.
 	class	r_exec_dll	Var:
 	public	LObject{
 	private:
-		UNORDERED_MAP<RGroupOverlay	*,Code	*>	bindings;	// left: group overlay, right: value (NULL if unbound).
+		CriticalSection	referentsCS;
 	public:
-		Var();
-		~Var();
+		std::list<Code	*>	referents;	// objects which hold the variavle object in their references.
 
-		void	bind(RGroupOverlay	*overlay,Code	*value);
-		Code	*get_value(RGroupOverlay	*overlay);
+		Var(r_code::Mem	*m=NULL):LObject(m){}
+		Var(r_code::SysObject	*source,r_code::Mem	*m=NULL):LObject(source,m){}
+		~Var(){}
+
+		void	acq_referents(){	referentsCS.enter();	}
+		void	leave_referents(){	referentsCS.leave();	}
 	};
 }
 

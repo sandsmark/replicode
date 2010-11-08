@@ -156,6 +156,7 @@ namespace	r_exec{
 		Opcodes::Eject=_Opcodes.find("_eje")->second;
 		Opcodes::Mod=_Opcodes.find("_mod")->second;
 		Opcodes::Set=_Opcodes.find("_set")->second;
+		Opcodes::Subst=_Opcodes.find("_subst")->second;
 		Opcodes::NewClass=_Opcodes.find("_new_class")->second;
 		Opcodes::DelClass=_Opcodes.find("_del_class")->second;
 		Opcodes::LDC=_Opcodes.find("_ldc")->second;

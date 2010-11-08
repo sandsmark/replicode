@@ -49,7 +49,8 @@ namespace	r_exec{
 		MARKER=4,
 		GROUP=5,
 		RGROUP=6,
-		ICPP_PGM=7
+		ICPP_PGM=7,
+		VARIABLE=8
 	}ObjectType;
 
 	r_exec_dll	bool		IsNotification(Code	*object);

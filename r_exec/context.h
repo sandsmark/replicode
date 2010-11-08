@@ -61,7 +61,7 @@ namespace	r_exec{
 		}Data;
 		Data	data;
 
-		bool	is_mod_or_set()	const;
+		bool	is_cmd_with_cptr()	const;
 
 		void	addReference(Code	*destination,uint16	write_index,Code	*referenced_object)	const{
 
@@ -108,8 +108,20 @@ namespace	r_exec{
 				case	Atom::C_PTR:	// copy members as is (no dereference).
 					if((*this)[1].getDescriptor()==Atom::VL_PTR){
 
-						if(code[(*this)[1].asIndex()].getDescriptor()==Atom::OUT_OBJ_PTR)
+						Atom	a=code[(*this)[1].asIndex()];
+						if(a.getDescriptor()==Atom::I_PTR)
+							a=code[a.asIndex()];
+						switch(a.getDescriptor()){
+						case	Atom::OUT_OBJ_PTR:
 							destination->code(write_index++)=Atom::VLPointer(code[(*this)[1].asIndex()].asIndex());
+							break;
+						case	Atom::IN_OBJ_PTR:	//	TMP: assumes destination is a mk.rdx.
+							destination->code(write_index++)=Atom::RPointer(1+a.asInputIndex());
+							break;
+						default:
+							destination->code(write_index++)=(*this)[1];
+							break;
+						}
 					}else
 						destination->code(write_index++)=(*this)[1];
 					for(uint16	i=2;i<=atom_count;++i)
@@ -120,7 +132,7 @@ namespace	r_exec{
 						destination->code(write_index++)=(*this)[i];
 					break;
 				default:
-					if(is_mod_or_set()){
+					if(is_cmd_with_cptr()){
 
 						for(uint16	i=1;i<=atom_count;++i){
 
@@ -217,6 +229,7 @@ namespace	r_exec{
 				break;
 			case	Atom::OPERATOR:
 			case	Atom::OBJECT:
+			case	Atom::VARIABLE:
 			case	Atom::MARKER:
 			case	Atom::INSTANTIATED_PROGRAM:
 			case	Atom::INSTANTIATED_CPP_PROGRAM:

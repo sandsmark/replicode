@@ -32,6 +32,7 @@
 #include	"../r_code/replicode_defs.h"
 #include	"operator.h"
 #include	"group.h"
+#include	"var.h"
 #include	"factory.h"
 #include	"cpp_programs.h"
 #include	"../r_code/utils.h"
@@ -54,6 +55,8 @@ namespace	r_exec{
 		case	Atom::GROUP:
 		case	Atom::REDUCTION_GROUP:
 			return	new	Group(source,this);
+		case	Atom::VARIABLE:
+			return	new	Var(source,this);
 		default:
 			return	new	O(source,this);
 		}
@@ -65,6 +68,8 @@ namespace	r_exec{
 		case	Atom::GROUP:
 		case	Atom::REDUCTION_GROUP:
 			return	new	Group();
+		case	Atom::VARIABLE:
+			return	new	Var();
 		default:
 			if(O::RequiresPacking())
 				return	new	r_code::LObject();	//	temporary sand box for assembling code; will be packed into an O at injection time.
@@ -212,6 +217,9 @@ namespace	r_exec{
 						object->get_reference(i)->markers.push_back(object);
 				case	ObjectType::OBJECT:
 					host->other_views[view->getOID()]=view;
+					break;
+				case	ObjectType::VARIABLE:
+					host->variable_views[view->getOID()]=view;
 					break;
 				}
 			}
@@ -408,7 +416,16 @@ namespace	r_exec{
 					injectCopyNow(view,vg->first,now);
 			}
 			break;
-		}
+		}case	ObjectType::VARIABLE:
+			host->variable_views[view->getOID()]=view;
+			//	cov, as for objects (see above).
+			UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
+			for(vg=host->viewing_groups.begin();vg!=host->viewing_groups.end();++vg){
+
+				if(vg->second)	//	cov==true, vieiwing group c-salient and c-active (otherwise it wouldn't be a viewing group).
+					injectCopyNow(view,vg->first,now);
+			}
+			break;
 		}
 
 		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.

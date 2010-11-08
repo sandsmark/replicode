@@ -189,20 +189,21 @@ CoreCount=0;
 						time_job_queue->push(j);
 					}
 				}
-
-				if(c_salient){
-
-					//	build reduction jobs for each salient view and each active overlay - regardless of the view's sync mode.
-					FOR_ALL_VIEWS_BEGIN(g,v)
-						
-						if(v->second->get_sln()>g->get_sln_thr()){	//	salient view.
-
-							g->newly_salient_views.insert(v->second);
-							_inject_reduction_jobs(v->second,g);
-						}
-					FOR_ALL_VIEWS_END
-				}
 			}
+
+			if(c_salient){
+
+				//	build reduction jobs for each salient view and each active overlay - regardless of the view's sync mode.
+				FOR_ALL_VIEWS_BEGIN(g,v)
+					
+					if(v->second->get_sln()>g->get_sln_thr()){	//	salient view.
+
+						g->newly_salient_views.insert(v->second);
+						_inject_reduction_jobs(v->second,g);
+					}
+				FOR_ALL_VIEWS_END
+			}
+			
 
 			//	inject the next update job for the group.
 			if(g->get_upr()>0){
@@ -371,6 +372,9 @@ CoreCount=0;
 			case	ObjectType::OBJECT:
 			case	ObjectType::MARKER:
 				host->other_views[view->getOID()]=view;
+				break;
+			case	ObjectType::VARIABLE:
+				host->variable_views[view->getOID()]=view;
 				break;
 			}
 
@@ -575,6 +579,10 @@ CoreCount=0;
 				case	ObjectType::MARKER:
 					v=group->other_views.erase(v);
 					break;
+				case	ObjectType::VARIABLE:
+					v=group->variable_views.erase(v);
+					break;
+				break;
 				case	ObjectType::GROUP:
 					v=group->group_views.erase(v);
 					break;

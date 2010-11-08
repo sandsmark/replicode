@@ -37,6 +37,8 @@
 
 namespace	r_exec{
 
+	//	Basically, an r-grp overlay just holds its birth time.
+	//	Overlays are used to index the value held by variable objects (bindings are per overlay).
 	class	r_exec_dll	RGRPOverlay:
 	public	Overlay{
 	private:
@@ -45,6 +47,10 @@ namespace	r_exec{
 		void	reduce(r_exec::View	*input);
 	};
 
+	//	R-groups behave like programs: they take inputs from visible/(newly) salient views depending on their sync mode.
+	//	Overlays are built unpon the binding of at least one variable object.
+	//	Building an overlay means adding bindings (binding: a value for a given overlay) to variable objects.
+	//	Binding is performed by the _subst function of the executive (see InputLessPGMOverlay::injectProductions()).
 	class	r_exec_dll	RGRPController:
 	public	Controller{
 	private:

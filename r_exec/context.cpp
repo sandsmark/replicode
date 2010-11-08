@@ -223,17 +223,18 @@ namespace	r_exec{
 				}
 			}
 			return	op(*this,result_index);
-		}case	Atom::MARKER:
-		case	Atom::INSTANTIATED_PROGRAM:
-		case	Atom::INSTANTIATED_CPP_PROGRAM:
-		case	Atom::GROUP:
-		case	Atom::REDUCTION_GROUP:
-		case	Atom::OBJECT:	//	incl. cmd.
+		}case	Atom::OBJECT:	//	incl. cmd.
 			if((*this)[0].asOpcode()==Opcodes::PTN	||	(*this)[0].asOpcode()==Opcodes::AntiPTN){	//	skip patterns.
 
 				result_index=index;
 				return	true;
 			}
+		case	Atom::VARIABLE:
+		case	Atom::MARKER:
+		case	Atom::INSTANTIATED_PROGRAM:
+		case	Atom::INSTANTIATED_CPP_PROGRAM:
+		case	Atom::GROUP:
+		case	Atom::REDUCTION_GROUP:
 		case	Atom::SET:
 		case	Atom::S_SET:{
 
@@ -295,7 +296,7 @@ namespace	r_exec{
 					break;
 				}	//	else, dereference the c_ptr.
 			default:
-				if(is_mod_or_set()){
+				if(is_cmd_with_cptr()){
 
 					for(uint16	i=1;i<=atom_count;++i)
 						copy_member_to_value_array(i,prefix,write_index++,extent_index,i!=3);
@@ -388,6 +389,7 @@ dereference:
 		//	c is pointing at the first atom of an object or a view.
 		switch(c[0].getDescriptor()){
 		case	Atom::OBJECT:
+		case	Atom::VARIABLE:
 		case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
@@ -418,7 +420,7 @@ dereference:
 		member_index=cptr[atom_count].asIndex();
 	}
 
-	bool	Context::is_mod_or_set()	const{
+	bool	Context::is_cmd_with_cptr()	const{
 
 		if((*this)[0].getDescriptor()!=Atom::OBJECT)
 			return	false;
@@ -426,9 +428,9 @@ dereference:
 			return	false;
 		if((*this)[2].atom!=EXECUTIVE_DEVICE)
 			return	false;
-		if((*this)[1].asOpcode()!=Opcodes::Mod	&&	(*this)[1].asOpcode()!=Opcodes::Set)
-			return	false;
-		return	true;
+		return	(*this)[1].asOpcode()==Opcodes::Mod	||
+				(*this)[1].asOpcode()==Opcodes::Set	||
+				(*this)[1].asOpcode()==Opcodes::Subst;
 	}
 
 	void	Context::trace()	const{

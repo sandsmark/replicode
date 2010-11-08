@@ -67,6 +67,7 @@ namespace	r_exec{
 	uint16	Opcodes::Eject;
 	uint16	Opcodes::Mod;
 	uint16	Opcodes::Set;
+	uint16	Opcodes::Subst;
 	uint16	Opcodes::NewClass;
 	uint16	Opcodes::DelClass;
 	uint16	Opcodes::LDC;

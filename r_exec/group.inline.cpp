@@ -78,6 +78,7 @@ namespace	r_exec{
 		anti_ipgm_views.clear();
 		input_less_ipgm_views.clear();
 		other_views.clear();
+		variable_views.clear();
 		group_views.clear();
 		rgroup_views.clear();
 
