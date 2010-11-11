@@ -97,14 +97,11 @@ uint32	CoreCount;
 		CriticalSection	object_registerCS;
 		CriticalSection	objectsCS;
 
-		void	injectCopyNow(View	*view,Group	*destination,uint64	now);	//	for cov; NB: no cov for groups, pgm or notifications.
-
 		//	Utilities.
 		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr);
 		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
 		void	_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
-		void	_inject_reduction_jobs(View	*view,Group	*host,Controller	*origin=NULL);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
-																								//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
+
 		std::vector<Group	*>	initial_groups;	//	convenience; cleared after start();
 
 		uint32	last_oid;
@@ -171,6 +168,11 @@ uint32	CoreCount;
 		//	Calls mod_sln on the object's view with morphed sln changes.
 		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);
 
+		//	Called by groups.
+		void	injectCopyNow(View	*view,Group	*destination,uint64	now);	//	for cov; NB: no cov for groups, r-groups, pgm or notifications.
+		void	inject_reduction_jobs(View	*view,Group	*host,Controller	*origin=NULL);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
+																							//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
+
 		//	Interface for overlays and I/O devices	////////////////////////////////////////////////////////////////
 		virtual	void	inject(View	*view)=0;
 		virtual	Code	*check_existence(Code	*object)=0;	//	returns the existing object if any, or object otherwise: in the latter case, packing may occur.
@@ -199,6 +201,18 @@ uint32	CoreCount;
 	private:
 		std::list<Code	*>											objects;			//	to insert in an image (getImage()); in order of injection.
 		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>	object_register;	//	to eliminate duplicates (content-wise); does not include groups.
+
+		template<class	_O>	void	bind(View	*view,uint64	t){
+
+			Utils::SetTimestamp<View>(view,VIEW_IJT,t);
+			_O	*object=(_O	*)view->object;
+			object->views.insert(view);
+			object->bind(this);
+			objectsCS.enter();
+			object->position_in_objects=objects.insert(objects.end(),object);
+			objectsCS.leave();
+			object->is_registered=true;
+		}
 
 		//	Functions called by internal processing of jobs (see internal processing section below).
 		void	injectNow(View	*view);	//	also called by inject() (see below).

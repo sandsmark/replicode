@@ -263,14 +263,19 @@ namespace	r_exec{
 		Code	*mk_rdx=NULL;
 		uint16	write_index;
 		uint16	extent_index;
-		if(cmd_count	&&	(getObject()->code(IPGM_NFR).asFloat()==1)){	//	the productions are command objects (cmd); only injections/ejections and cmds to external devices are notified.
+		if(cmd_count	&&	(getObject()->code(IPGM_NFR).asBoolean())){	//	the productions are command objects (cmd); only injections/ejections and cmds to external devices are notified.
 
 			mk_rdx=get_mk_rdx(write_index);
 			mk_rdx->code(write_index++)=Atom::Set(cmd_count);
 			extent_index=write_index+cmd_count;
 		}
 		
-		for(uint16	i=1;i<=production_count;++i){	//	all productions have evaluated correctly; now we can execute the commands.
+		//	all productions have evaluated correctly; now we can execute the commands one by one.
+		//	case of abstraction programs: further processing is performed after all substitutions have been executed.
+		r_exec::View					*input_view;
+		RGroup							*r_grp;
+		UNORDERED_MAP<uint16,Var	*>	substitutions;
+		for(uint16	i=1;i<=production_count;++i){
 
 			Context	cmd=*prods.getChild(i);
 			Context	function=*cmd.getChild(1);
@@ -386,7 +391,7 @@ namespace	r_exec{
 					}
 				}else	if(function[0].asOpcode()==Opcodes::Subst){	//	args:[c-ptr r-ptr]: member, ref to var (or nil).
 
-					void				*object;		//	object to be replaced by a variable or variable to be bound to an object.
+					void				*object;		//	object holding references to be substitued for, or variables to be bound.
 					Context::ObjectType	object_type;
 					int16				member_index;	//	this is assumed to be a r-ptr.
 					uint32				view_oid;
@@ -394,16 +399,19 @@ namespace	r_exec{
 					//args.trace();
 					Context	_var=*args.getChild(2);
 					//_var.trace();
+					Code	*target=(*args.getChild(1)).getObject();
 
-					if(_var[0].getDescriptor()==Atom::NIL){	//	substitution mode.
+					//	language constraints - no runtime check:
+					//		abstraction pgms must specify exactly one input: therefore subst cannot be found in input-less programs or anti-programs.
+					//		abstraction pgms must specify nil variable objects.
+					input_view=(r_exec::View*)((PGMOverlay	*)this)->getInputView(0);
+					r_grp=(RGroup	*)input_view->get_host();
 
-						//	find a suitable variable; if none, build one.
+					if(r_grp->get_c_act()<=r_grp->get_c_act_thr()){	//	substitution mode.
 
-						//	build new holder where object is replaced by the variable in the original holder's reference set.
-
-						//	assign the new holder to the input view.
-
-						//	inject a binding ipgm, using the variable: PB: we must wait for all subst to be performed: need a tmp vector containing the variables we have used.
+						//	find a variable that was abstracted from the same object; if none, a new one is returned: in this case, the var is injected into the r-grp.
+						Var	*var=r_grp->get_var(target);
+						substitutions[((Code	*)object)->code(member_index).asIndex()]=var;	//	store, for each reference index, the variable to use.
 					}else{	//	binding mode: _var is an existing variable.
 
 
@@ -451,6 +459,70 @@ namespace	r_exec{
 					(*prods.getChild(i)).copy(mk_rdx,extent_index,extent_index);
 				}
 			}
+		}
+
+		if(substitutions.size()){	//	abstract an object given a set of substitutions.
+
+			Code	*original=input_view->object;
+			Code	*abstracted_object=mem->buildObject(original->code(0));
+			uint16	i;
+			for(i=0;i<original->code_size();++i)		//	copy the code.
+				abstracted_object->code(i)=original->code(i);
+			for(i=0;i<original->references_size();++i)	//	copy the references.
+				abstracted_object->set_reference(i,original->get_reference(i));
+
+			UNORDERED_MAP<uint16,Var	*>::const_iterator	it;
+			for(it=substitutions.begin();it!=substitutions.end();++it)	//	perform the substitutions.
+				abstracted_object->set_reference(it->first,it->second);
+
+			original->acq_views();
+			original->views.erase(input_view);	//	delete the input view from the original's views.
+			if(original->views.size()==0)
+				original->invalidate();
+			original->rel_views();
+
+			input_view->code(VIEW_SLN)=Atom::Float(0);	//	this prevents the abstraction to reduce the abstracted object.
+			input_view->set_object(abstracted_object);
+			mem->inject(input_view);
+
+			//	inject a binding ipgm in the r-grp: an instance of the same pgm, passing as template arguments the variables used for substitution.
+			Code	*binder=mem->buildObject(Atom::InstantiatedProgram(Opcodes::IPGM,IPGM_ARITY));
+			uint16	write_index=0;
+			uint16	extent_index=IPGM_ARITY+1;
+			uint16	ref_index=0;
+
+			binder->code(IPGM_PGM)=Atom::RPointer(ref_index);				//	rptr to code.
+			binder->set_reference(ref_index,getObject()->get_reference(ref_index));
+
+			binder->code(IPGM_ARGS)=Atom::IPointer(extent_index);			//	iptr to arg set.
+			binder->code(extent_index++)=Atom::Set(substitutions.size());	//	arg set.
+			for(it=substitutions.begin();it!=substitutions.end();++it){		//	args.
+
+				binder->code(extent_index++)=Atom::RPointer(++ref_index);
+				binder->set_reference(ref_index,it->second);
+			}
+
+			binder->code(IPGM_TSC)=Atom::IPointer(extent_index);	//	iptr to tsc.
+			Utils::SetTimestamp<Code>(binder,IPGM_TSC,0);			//	tsc.
+
+			binder->code(IPGM_NFR)=Atom::Boolean(false);			//	nfr.
+			binder->code(IPGM_ARITY)=Atom::Float(1);				//	psln_thr.
+
+			View	*binder_view=new	View();
+			binder_view->code(VIEW_OPCODE)=Atom::SSet(Opcodes::PgmView,PGM_VIEW_ARITY);	//	Structured Set.
+			binder_view->code(VIEW_SYNC)=Atom::Boolean(true);				//	sync on front.
+			binder_view->code(VIEW_IJT)=Atom::IPointer(PGM_VIEW_ARITY+1);	//	iptr to ijt.
+			Utils::SetTimestamp(binder_view,VIEW_IJT,now);					//	ijt.
+			binder_view->code(VIEW_SLN)=Atom::Float(0);						//	sln.
+			binder_view->code(VIEW_RES)=Atom::Float(1);						//	res.
+			binder_view->code(VIEW_HOST)=Atom::RPointer(0);					//	destination.
+			binder_view->code(VIEW_ORG)=Atom::Nil();						//	host.
+			binder_view->code(VIEW_ACT)=Atom::Float(1);						//	act.
+
+			binder_view->references[0]=r_grp;
+
+			binder_view->set_object(binder);
+			mem->inject(binder_view);
 		}
 
 		if(mk_rdx){

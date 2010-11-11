@@ -33,21 +33,21 @@ i_abst_pgm1:(ipgm abst_pgm1 [nil nil] 0us NOTIFY 1)
    [SYNC_FRONT now 0 forever abst_grp nil 1]
 
 
-;build the model: rgrps are c-salient but not c-active: the latter is turned on when abstraction is done.
+;build the model: rgrps are c-salient but not c-active: the latter is turned on when abstraction is over.
 
-r_grp1:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us 1)
+r_grp1:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us NOTIFY)
 []
    [SYNC_FRONT now 0 forever root nil 0 0]
    [SYNC_FRONT now 0 forever abst_grp nil 0 1]; make r_grp1 visible from abst_grp..
                                                 to allow abstraction programs reducing the content of r_grp.
 
-r_grp2:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us 1)
+r_grp2:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us NOTIFY)
 []
    [SYNC_FRONT now 0 forever root nil 0 0]
    [SYNC_FRONT now 0 forever abst_grp nil 0 1]
    [SYNC_FRONT now 0 forever r_grp1 nil 0 0]; make r_grp2 a child of r_grp1.
 
-r_grp3:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us 1)
+r_grp3:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us NOTIFY)
 []
    [SYNC_FRONT now 0 forever root nil 0 0]
    [SYNC_FRONT now 0 forever abst_grp nil 0 1]

@@ -19,7 +19,7 @@ ihb:(ipgm
 hb; code
 |[]; args
 200000us; time scope
-1; notify reduction flag
+NOTIFY; notify reduction flag
 1; propagation saliency threshold
 )
 []

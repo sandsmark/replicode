@@ -199,7 +199,7 @@ CoreCount=0;
 					if(v->second->get_sln()>g->get_sln_thr()){	//	salient view.
 
 						g->newly_salient_views.insert(v->second);
-						_inject_reduction_jobs(v->second,g);
+						inject_reduction_jobs(v->second,g);
 					}
 				FOR_ALL_VIEWS_END
 			}
@@ -412,7 +412,7 @@ CoreCount=0;
 		bool	group_is_c_active=host->update_c_act()>host->get_c_act_thr();
 		bool	group_is_c_salient=host->update_c_sln()>host->get_c_sln_thr();
 		if(group_is_c_active	&&	group_is_c_salient	&&	reduce_view)
-			_inject_reduction_jobs(view,host);
+			inject_reduction_jobs(view,host);
 
 		if(lock)
 			host->leave();
@@ -475,7 +475,7 @@ CoreCount=0;
 							
 							if(!wiew_was_salient)	// sync on front: crosses the threshold upward: record as a newly salient view.
 								group->newly_salient_views.insert(v->second);
-						}else													// sync on state.
+						}else						// sync on state.
 							group->newly_salient_views.insert(v->second);
 					}
 
@@ -593,39 +593,13 @@ CoreCount=0;
 			}
 		FOR_ALL_VIEWS_END
 
-			if(group_is_c_salient	&&	group->code(0).getDescriptor()!=Atom::REDUCTION_GROUP){	//	rgrp don't have a cov member.
+		if(group_is_c_salient)	//	N.B.: rgrp don't have a cov member.
+			group->cov(now);
 
-			//	cov, i.e. injecting now newly salient views in the viewing groups from which the group is visible and has cov.
-			//	reduction jobs will be added at each of the eligible viewing groups' own update time.
-			UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
-			for(vg=group->viewing_groups.begin();vg!=group->viewing_groups.end();++vg){
-
-				if(vg->second){	//	cov==true.
-
-					std::set<View	*,r_code::View::Less>::const_iterator	v;
-					for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v){	//	no cov for pgm, groups or notifications.
-
-						if((*v)->isNotification())
-							continue;
-						switch((*v)->object->code(0).getDescriptor()){
-						case	Atom::INSTANTIATED_PROGRAM:
-						case	Atom::INSTANTIATED_CPP_PROGRAM:
-						case	Atom::GROUP:
-						case	Atom::REDUCTION_GROUP:
-							break;
-						default:
-							injectCopyNow(*v,vg->first,now);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.
-							break;
-						}
-					}
-				}
-			}
-
-			//	build reduction jobs.
-			std::set<View	*,r_code::View::Less>::const_iterator	v;
-			for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
-				_inject_reduction_jobs(*v,group);
-		}
+		//	build reduction jobs.
+		std::set<View	*,r_code::View::Less>::const_iterator	v;
+		for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
+			inject_reduction_jobs(*v,group);
 
 		if(group_is_c_active	&&	group_is_c_salient){	//	build signaling jobs for new ipgms.
 
@@ -661,7 +635,7 @@ CoreCount=0;
 		group->leave();
 	}
 
-	void	_Mem::_inject_reduction_jobs(View	*view,Group	*host,Controller	*origin){	//	host is assumed to be c-salient; host already protected.
+	void	_Mem::inject_reduction_jobs(View	*view,Group	*host,Controller	*origin){	//	host is assumed to be c-salient; host already protected.
 
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
 

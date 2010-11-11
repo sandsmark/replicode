@@ -31,7 +31,7 @@
 #include	"init.h"
 #include	"../r_code/replicode_defs.h"
 #include	"operator.h"
-#include	"group.h"
+#include	"r_group.h"
 #include	"var.h"
 #include	"factory.h"
 #include	"cpp_programs.h"
@@ -53,8 +53,9 @@ namespace	r_exec{
 
 		switch(source->code[0].getDescriptor()){
 		case	Atom::GROUP:
-		case	Atom::REDUCTION_GROUP:
 			return	new	Group(source,this);
+		case	Atom::REDUCTION_GROUP:
+			return	new	RGroup(source,this);
 		case	Atom::VARIABLE:
 			return	new	Var(source,this);
 		default:
@@ -64,18 +65,27 @@ namespace	r_exec{
 
 	template<class	O>	r_code::Code	*Mem<O>::buildObject(Atom	head){
 
+		r_code::Code	*object;
 		switch(head.getDescriptor()){
 		case	Atom::GROUP:
+			object=new	Group();
+			break;
 		case	Atom::REDUCTION_GROUP:
-			return	new	Group();
+			object=new	RGroup();
+			break;
 		case	Atom::VARIABLE:
-			return	new	Var();
+			object=new	Var();
+			break;
 		default:
 			if(O::RequiresPacking())
-				return	new	r_code::LObject();	//	temporary sand box for assembling code; will be packed into an O at injection time.
+				object=new	r_code::LObject();	//	temporary sand box for assembling code; will be packed into an O at injection time.
 			else
-				return	new	O();
+				object=new	O();
+			break;
 		}
+
+		object->code(0)=head;
+		return	object;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -149,79 +159,8 @@ namespace	r_exec{
 				view->set_object(object);
 				Group	*host=view->get_host();
 
-				switch(GetType(object)){
-				case	ObjectType::GROUP:{
-					
-					host->group_views[view->getOID()]=view;
-
-					//	init viewing_group.
-					bool	viewing_c_active=host->get_c_act()>host->get_c_act_thr();
-					bool	viewing_c_salient=host->get_c_sln()>host->get_c_sln_thr();
-					bool	viewed_visible=view->get_vis()>host->get_vis_thr();
-					if(viewing_c_active	&&	viewing_c_salient	&&	viewed_visible)	//	visible group in a c-salient, c-active group.
-						((Group	*)object)->viewing_groups[host]=view->get_cov();	//	init the group's viewing groups.
-					break;
-				}case	ObjectType::RGROUP:{
-
-					host->rgroup_views[view->getOID()]=view;
-
-					//	init viewing_group.
-					bool	viewing_c_active=host->get_c_act()>host->get_c_act_thr();
-					bool	viewing_c_salient=host->get_c_sln()>host->get_c_sln_thr();
-					bool	viewed_visible=view->get_vis()>host->get_vis_thr();
-					if(viewing_c_active	&&	viewing_c_salient	&&	viewed_visible)	//	visible group in a c-salient, c-active group.
-						((Group	*)object)->viewing_groups[host]=view->get_cov();	//	init the group's viewing groups.
-
-					if(view->get_act()>host->get_act_thr()){	//	active rgrp.
-
-						RGRPController	*o=new	RGRPController(this,view);	//	now will be added to the deadline at start time.
-						view->controller=o;	//	init the view's overlay.
-					}
-					break;
-				}case	ObjectType::IPGM:
-					host->ipgm_views[view->getOID()]=view;
-					if(view->get_act()>host->get_act_thr()){	//	active ipgm.
-
-						PGMController	*o=new	PGMController(this,view);	//	now will be added to the deadline at start time.
-						view->controller=o;	//	init the view's overlay.
-					}
-					break;
-				case	ObjectType::ICPP_PGM:
-					host->icpp_pgm_views[view->getOID()]=view;
-					if(view->get_act()>host->get_act_thr()){	//	active icpp_pgm.
-
-						Controller	*o=CPPPrograms::New(Utils::GetString<O>(view->object,ICPP_PGM_NAME),this,view);	//	now will be added to the deadline at start time.
-						if(!o)
-							return	false;
-						view->controller=o;	//	init the view's overlay.
-					}
-					break;
-				case	ObjectType::INPUT_LESS_IPGM:
-					host->input_less_ipgm_views[view->getOID()]=view;
-					if(view->get_act()>host->get_act_thr()){	//	active ipgm.
-
-						InputLessPGMController	*o=new	InputLessPGMController(this,view);	//	now will be added to the deadline at start time.
-						view->controller=o;	//	init the view's overlay.
-					}
-					break;
-				case	ObjectType::ANTI_IPGM:
-					host->anti_ipgm_views[view->getOID()]=view;
-					if(view->get_act()>host->get_act_thr()){	//	active ipgm.
-
-						AntiPGMController	*o=new	AntiPGMController(this,view);	//	now will be added to the deadline at start time.
-						view->controller=o;	//	init the view's overlay.
-					}
-					break;
-				case	ObjectType::MARKER:	//	populate the marker set of the referenced objects.
-					for(uint32	i=0;i<object->references_size();++i)
-						object->get_reference(i)->markers.push_back(object);
-				case	ObjectType::OBJECT:
-					host->other_views[view->getOID()]=view;
-					break;
-				case	ObjectType::VARIABLE:
-					host->variable_views[view->getOID()]=view;
-					break;
-				}
+				if(!host->load(view,object))
+					return	false;
 			}
 
 			object->position_in_objects=this->objects.insert(this->objects.end(),object);
@@ -328,201 +267,46 @@ namespace	r_exec{
 	template<class	O>	void	Mem<O>::injectNow(View	*view){
 
 		Group	*host=view->get_host();
-
 		O	*object=(O	*)view->object;	//	has been packed if necessary in inject(view).
-		object->views.insert(view);	//	no need to protect object since it's new.
+
 		uint64	now=Now();
-		Utils::SetTimestamp<View>(view,VIEW_IJT,now);
 
 		object_registerCS.enter();
 		object->position_in_object_register=object_register.insert(object).first;
 		object_registerCS.leave();
 
-		object->bind(this);
-		objectsCS.enter();
-		object->position_in_objects=objects.insert(objects.end(),object);
-		objectsCS.leave();
-		object->is_registered=true;
+		bind<O>(view,now);
 
 		host->enter();
-
-		switch(GetType(object)){
-		case	ObjectType::IPGM:{
-
-			host->ipgm_views[view->getOID()]=view;
-			PGMController	*o=new	PGMController(this,view);
-			view->controller=o;
-			if(view->get_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
-
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
-				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
-					o->take_input(*v);	//	view will be copied.
-			}
-			break;
-		}case	ObjectType::ICPP_PGM:{
-
-			host->icpp_pgm_views[view->getOID()]=view;
-			Controller	*o=CPPPrograms::New(Utils::GetString<O>(view->object,ICPP_PGM_NAME),this,view);
-			if(!o)
-				break;
-			view->controller=o;
-			if(view->get_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active icpp_pgm in a c-salient and c-active group.
-
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
-				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
-					o->take_input(*v);	//	view will be copied.
-			}
-			break;
-		}case	ObjectType::ANTI_IPGM:{
-			host->anti_ipgm_views[view->getOID()]=view;
-			AntiPGMController	*o=new	AntiPGMController(this,view);
-			view->controller=o;
-			if(view->get_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
-
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
-				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
-					o->take_input(*v);	//	view will be copied.
-
-				P<TimeJob>	j=new	AntiPGMSignalingJob(o,now+Utils::GetTimestamp<Code>(o->getObject(),IPGM_TSC));
-				time_job_queue->push(j);
-
-			}
-			break;
-		}case	ObjectType::INPUT_LESS_IPGM:{
-			host->input_less_ipgm_views[view->getOID()]=view;
-			InputLessPGMController	*o=new	InputLessPGMController(this,view);
-			view->controller=o;
-			if(view->get_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
-
-				P<TimeJob>	j=new	InputLessPGMSignalingJob(o,now+Utils::GetTimestamp<Code>(view->object,IPGM_TSC));
-				time_job_queue->push(j);
-			}
-			break;
-		}case	ObjectType::MARKER:	//	the marker does not exist yet: add it to the mks of its references.
-			for(uint32	i=0;i<object->references_size();++i){
-
-				Code	*ref=object->get_reference(i);
-				ref->acq_markers();
-				ref->markers.push_back(object);
-				ref->rel_markers();
-			}
-		case	ObjectType::OBJECT:{
-			host->other_views[view->getOID()]=view;
-			//	cov, i.e. injecting now newly salient views in the viewing groups for which group is visible and has cov.
-			UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
-			for(vg=host->viewing_groups.begin();vg!=host->viewing_groups.end();++vg){
-
-				if(vg->second)	//	cov==true, vieiwing group c-salient and c-active (otherwise it wouldn't be a viewing group).
-					injectCopyNow(view,vg->first,now);
-			}
-			break;
-		}case	ObjectType::VARIABLE:
-			host->variable_views[view->getOID()]=view;
-			//	cov, as for objects (see above).
-			UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
-			for(vg=host->viewing_groups.begin();vg!=host->viewing_groups.end();++vg){
-
-				if(vg->second)	//	cov==true, vieiwing group c-salient and c-active (otherwise it wouldn't be a viewing group).
-					injectCopyNow(view,vg->first,now);
-			}
-			break;
-		}
-
-		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.
-			_inject_reduction_jobs(view,host);
-
-		if(host->get_ntf_new()==1){	//	the view cannot be a ntf view (would use injectNotificationNow instead).
-
-			uint16	ntf_grp_count=host->get_ntf_grp_count();
-			for(uint16	i=1;i<=ntf_grp_count;++i)
-				injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(i),new	factory::MkNew(this,object)),host->get_ntf_grp(i)!=host);	//	the object appears for the first time in the group: notify.
-		}
-
+		host->inject(view,now);
 		host->leave();
 	}
 
 	template<class	O>	void	Mem<O>::injectGroupNow(View	*view,Group	*object,Group	*host){	//	groups are always new; no cov for groups; no need to protect object.
 
-		object->bind(this);
-		objectsCS.enter();
-		object->position_in_objects=objects.insert(objects.end(),object);
-		objectsCS.leave();
-		object->is_registered=true;
+		uint64	now=Now();
+		
+		bind<Group>(view,now);
 
 		host->enter();
-
-		switch(object->code(0).getDescriptor()){
-		case	Atom::GROUP:
-			host->group_views[view->getOID()]=view;
-			break;
-		case	Atom::REDUCTION_GROUP:{
-			host->rgroup_views[view->getOID()]=view;
-
-			RGRPController	*o=new	RGRPController(this,view);
-			view->controller=o;
-			if(view->get_act()>host->get_act_thr()	&&	host->get_c_sln()>host->get_c_sln_thr()	&&	host->get_c_act()>host->get_c_act_thr()){	//	active rgrp in a c-salient and c-active group.
-
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
-				for(v=host->newly_salient_views.begin();v!=host->newly_salient_views.end();++v)
-					o->take_input(*v);	//	view will be copied.
-			}
-			break;
-		}
-		}
-
-		uint64	now=Now();
-		Utils::SetTimestamp<View>(view,VIEW_IJT,now);
-		object->views.insert(view);
-
-		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr()){	//	host is c-salient and view is salient.
-
-			if(view->get_vis()>host->get_vis_thr())	//	new visible group in a c-active and c-salient host.
-				object->viewing_groups[host]=view->get_cov();
-
-			_inject_reduction_jobs(view,host);
-		}
-
-		//	inject the next update job for the group.
-		if(((Group	*)object)->get_upr()>0){
-
-			P<TimeJob>	j=new	UpdateJob((Group	*)object,now+((Group	*)object)->get_upr()*base_period);
-			time_job_queue->push(j);
-		}
-
-		if(host->get_ntf_new()==1){
-
-			uint16	ntf_grp_count=host->get_ntf_grp_count();
-			for(uint16	i=1;i<=ntf_grp_count;++i)
-				injectNotificationNow(new	NotificationView(host,host->get_ntf_grp(i),new	factory::MkNew(this,object)),false);	//	the group appears for the first time in the group: notify.
-		}
-
+		host->injectGroup(view,now);
 		host->leave();
 	}
 
 	template<class	O>	void	Mem<O>::injectNotificationNow(View	*view,bool	lock,Controller	*origin){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
 																											//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
-		view->code(VIEW_RES)=Atom::Float(ntf_mk_res);
-
 		Group	*host=view->get_host();
 		LObject	*object=(LObject	*)view->object;
 
-		object->bind(this);
-		objectsCS.enter();
-		object->position_in_objects=objects.insert(objects.end(),object);
-		objectsCS.leave();
-		object->is_registered=true;
+		uint64	now=Now();
+		
+		bind<LObject>(view,now);
+
+		view->code(VIEW_RES)=Atom::Float(ntf_mk_res);
 		
 		if(lock)
 			host->enter();
-
-		Utils::SetTimestamp<View>(view,VIEW_IJT,Now());
-		host->notification_views[view->getOID()]=view;
-
-		object->views.insert(view);
-				
-		if(host->get_c_sln()>host->get_c_sln_thr()	&&	view->get_sln()>host->get_sln_thr())	//	host is c-salient and view is salient.
-			_inject_reduction_jobs(view,host,origin);
-
+		host->injectNotification(view,origin);
 		if(lock)
 			host->leave();
 	}

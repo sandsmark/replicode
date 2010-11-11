@@ -19,7 +19,7 @@ ihw:(ipgm
 hw; code
 |[]; args
 100000us
-1
+NOTIFY
 1
 )
 []

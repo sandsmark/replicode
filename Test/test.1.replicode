@@ -19,6 +19,6 @@ P1:(pgm
 )
 |[]
 
-iP1:(ipgm P1 [(tagged_v (vec3 1 2 3) "qwerty")] 0us 1 1)
+iP1:(ipgm P1 [(tagged_v (vec3 1 2 3) "qwerty")] 0us NOTIFY 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]

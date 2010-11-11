@@ -44,9 +44,7 @@ namespace	r_exec{
 
 		_code[VIEW_OID].atom=GetOID();
 
-		reset_ctrl_values();
-		reset_init_sln();
-		reset_init_act();
+		reset();
 	}
 
 	inline	View::View(const	View	*view):r_code::View(),controller(NULL){
@@ -54,15 +52,20 @@ namespace	r_exec{
 		object=view->object;
 		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom)+2*sizeof(Object	*));	//	reference_set is contiguous to code; memcpy in one go.
 
-		reset_ctrl_values();
-		reset_init_sln();
-		reset_init_act();
+		reset();
 	}
 
 	inline	View::~View(){
 
 		if(controller!=NULL)
 			controller->kill();
+	}
+
+	inline	void	View::reset(){
+
+		reset_ctrl_values();
+		reset_init_sln();
+		reset_init_act();
 	}
 
 	inline	uint32	View::getOID()	const{
@@ -103,7 +106,9 @@ namespace	r_exec{
 
 	inline	bool	View::get_cov(){
 
-		return	code(GRP_VIEW_COV).asBoolean();
+		if(object->code(0).getDescriptor()==Atom::GROUP)
+			return	code(GRP_VIEW_COV).asBoolean();
+		return	false;
 	}
 
 	inline	void	View::mod_res(float32	value){

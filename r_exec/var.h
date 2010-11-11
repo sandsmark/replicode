@@ -38,22 +38,14 @@
 
 namespace	r_exec{
 
-	class	RGRPOverlay;
-
 	//	Variable object.
+	//	Values the variable is bound to are held by r-grp overlays.
 	class	r_exec_dll	Var:
 	public	LObject{
-	private:
-		CriticalSection	referentsCS;
 	public:
-		std::list<Code	*>	referents;	// objects which hold the variavle object in their references.
-
 		Var(r_code::Mem	*m=NULL):LObject(m){}
 		Var(r_code::SysObject	*source,r_code::Mem	*m=NULL):LObject(source,m){}
 		~Var(){}
-
-		void	acq_referents(){	referentsCS.enter();	}
-		void	leave_referents(){	referentsCS.leave();	}
 	};
 }
 

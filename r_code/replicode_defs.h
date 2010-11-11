@@ -46,6 +46,7 @@
 #define	VIEW_OID		12
 
 #define	VIEW_ARITY		6
+#define	PGM_VIEW_ARITY	7
 
 #define	OBJECT_CLASS	0
 
@@ -81,6 +82,10 @@
 #define	GRP_LOW_RES_THR		30
 #define	GRP_NTF_GRPS		31
 
+#define	RGRP_OUT_GRPS		32
+#define	RGRP_TSC			33
+#define	RGRP_NFR			34
+
 #define	IPGM_PGM	1
 #define	IPGM_ARGS	2
 #define	IPGM_TSC	3
@@ -96,7 +101,6 @@
 #define	ICPP_PGM_NFR	4
 
 #define	IPGM_ARITY	5
-
 #define	ICPP_PGM_ARITY	5
 
 #define	MK_RDX_ARITY		4
@@ -107,5 +111,10 @@
 #define	CMD_FUNCTION	1
 #define	CMD_DEVICE		2
 #define	CMD_ARGS		3
+
+#define	VAR_ORG			1
+
+#define	VAR_ARITY		2
+
 
 #endif

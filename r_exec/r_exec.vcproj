@@ -434,6 +434,30 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\r_group.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\r_group.inline.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\reduction_core.cpp"
 				>
 			</File>
@@ -561,6 +585,10 @@
 			</File>
 			<File
 				RelativePath=".\pgm_overlay.h"
+				>
+			</File>
+			<File
+				RelativePath=".\r_group.h"
 				>
 			</File>
 			<File

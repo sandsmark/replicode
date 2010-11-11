@@ -138,6 +138,8 @@ namespace	r_exec{
 
 		Opcodes::Cmd=_Opcodes.find("cmd")->second;
 
+		Opcodes::Var=_Opcodes.find("var")->second;
+
 		Opcodes::MkRdx=_Opcodes.find("mk.rdx")->second;
 		Opcodes::MkAntiRdx=_Opcodes.find("mk.|rdx")->second;
 

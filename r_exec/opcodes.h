@@ -59,6 +59,8 @@ namespace	r_exec{
 
 		static	uint16	Cmd;
 
+		static	uint16	Var;
+
 		static	uint16	MkRdx;
 		static	uint16	MkAntiRdx;
 

@@ -96,6 +96,10 @@ namespace	r_exec{
 		void	_set_0_plus1(uint16	member_index,float32	value);
 		void	_set_minus1_plus1(uint16	member_index,float32	value);
 		void	_set_0_1(uint16	member_index,float32	value);
+	protected:
+		void	notifyNew(View	*view);
+		virtual	void	injectRGroup(View	*view);
+		virtual	void	cov(View	*view,uint64	t);
 	public:
 		//	xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
 		//	Active overlays are to be found in xxx_ipgm_views and rgroup_views.
@@ -166,7 +170,7 @@ namespace	r_exec{
 
 		Group(r_code::Mem	*m=NULL);
 		Group(r_code::SysObject	*source,r_code::Mem	*m);
-		~Group();
+		virtual	~Group();
 
 		bool	invalidate();	//	removes all views of itself and of any other object.
 
@@ -381,8 +385,14 @@ namespace	r_exec{
 		void	mod(uint16	member_index,float32	value);
 		void	set(uint16	member_index,float32	value);
 
-		void	reset_stats();				//	called at the begining of an update.
-		void	update_stats(_Mem	*m);	//	at the end of an update; may produce notifcations.
+		//	These functions are called by the rMem.
+				void	reset_stats();				//	called at the begining of an update.
+				void	update_stats(_Mem	*m);	//	at the end of an update; may produce notifcations.
+				bool	load(View	*view,Code	*object);
+		virtual	void	inject(View	*view,uint64	t);
+		virtual	void	injectGroup(View	*view,uint64	t);
+				void	injectNotification(View	*view,Controller	*origin);
+		virtual	void	cov(uint64	t);
 
 		class	Hash{
 		public:

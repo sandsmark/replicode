@@ -25,7 +25,7 @@ P1:(|pgm
    |[]
 []
    (inj [(ent 1) [SYNC_FRONT now 1 10 root nil]])
-   (inj [(ins P0 |[] 0us 1) [SYNC_FRONT now 0 40 root nil 1]])
+   (inj [(ins P0 |[] 0us NOTIFY) [SYNC_FRONT now 0 40 root nil 1]])
    (set [this.vw.act 0])
 1; psln_thr
 )
@@ -36,7 +36,7 @@ P1; code
 []; args
    (tagged_v (vec3 1 2 3) "vector 123")
 200000us; tsc
-1; nfr
+NOTIFY; nfr
 1; psln_thr
 )
 []

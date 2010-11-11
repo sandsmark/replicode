@@ -17,7 +17,7 @@ i_start:(ipgm
 _start; code
 |[]; args
 80000us
-0
+SILENT
 1; propagation saliency threshold
 )
 []
@@ -36,6 +36,6 @@ count:(pgm
 )
 |[]
 
-icount:(ipgm count |[] 0us 0 1)
+icount:(ipgm count |[] 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever root nil 1]

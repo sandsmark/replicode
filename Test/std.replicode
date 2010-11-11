@@ -18,15 +18,15 @@
 !class (ent (_obj nil))
 !class (dev (_obj nil))
 !class (nod (_obj id:nid))
-!class (ipgm (_obj {code: args:[] tsc:us nfr:nb}))
-!class (icpp_pgm (_obj {code:st args:[] tsc:us nfr:nb}))
+!class (ipgm (_obj {code: args:[] tsc:us nfr:bl}))
+!class (icpp_pgm (_obj {code:st args:[] tsc:us nfr:bl}))
 
 ;mapping high-level template objects -> r-code
 !class (_fact (_obj {obj: time:us cfd:nb :~}))
 
 ;mapping high-level objects -> r-code
 !class (rgrp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: act:nb vis:nb)
-!class (rgrp (_grp {out_grps:[::grp] tsc:us nfr:nb}))
+!class (rgrp (_grp {out_grps:[::grp] tsc:us nfr:bl}))
 !class (var (_obj org:))
 !class (fact (_fact nil))
 !class (|fact (_fact nil))
@@ -124,8 +124,8 @@
 
 ;parameters for tuning the behavior of reactive objects
 ;member nfr
-!def SILENT 0; no notification upon production
-!def NOTIFY 1; notification upon productions
+!def SILENT false; no notification upon production
+!def NOTIFY true; notification upon productions
 
 ;parameters for tuning the behavior of groups
 !def DCY_SLN 0

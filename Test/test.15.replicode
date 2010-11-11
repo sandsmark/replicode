@@ -54,7 +54,7 @@ hb:(pgm
 )
 |[]
 
-ihb:(ipgm hb |[] 200000us 0 1)
+ihb:(ipgm hb |[] 200000us SILENT 1)
 []
    [SYNC_FRONT now 1 forever target_grp nil 1]
 
@@ -71,6 +71,6 @@ monitor:(pgm
 )
 |[]
 
-imonitor:(ipgm monitor |[] 0us 1 1)
+imonitor:(ipgm monitor |[] 0us NOTIFY 1)
 []
    [SYNC_FRONT now 1 forever target_grp nil 1]

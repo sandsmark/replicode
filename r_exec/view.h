@@ -86,6 +86,7 @@ namespace	r_exec{
 		View(const	View	*view);			//	simple copy.
 		~View();
 
+		void	reset();
 		void	set_object(r_code::Code	*object);
 
 		uint32	getOID()	const;

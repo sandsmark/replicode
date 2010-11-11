@@ -104,7 +104,7 @@ namespace	r_exec{
 
 		_Mem	*get_mem()	const;
 
-		r_code::Code	*getObject()	const;	// return the reduction object (e.g. ipgm, rgrp, iupgm). The object must have a tsc.
+		r_code::Code	*getObject()	const;	// return the reduction object (e.g. ipgm, r-grp, icpp_pgm). The object must have a tsc.
 		r_exec::View	*getView()		const;	// return the reduction object's view.
 
 		void	kill();

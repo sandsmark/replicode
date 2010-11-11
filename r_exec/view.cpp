@@ -105,15 +105,13 @@ namespace	r_exec{
 			break;
 		}
 
-		reset_ctrl_values();
-		reset_init_sln();
-		reset_init_act();
+		reset();
 	}
 
 	void	View::set_object(r_code::Code	*object){
 
 		this->object=object;
-		reset_init_act();
+		reset();
 	}
 
 	void	View::reset_ctrl_values(){
@@ -235,16 +233,17 @@ namespace	r_exec{
 
 	NotificationView::NotificationView(Group	*origin,Group	*destination,Code	*marker):View(){
 
-		uint16	write_index=0;
-		code(write_index++)=r_code::Atom::SSet(ViewOpcode,5);	//	Structured Set.
-		code(write_index++)=r_code::Atom::IPointer(6);			//	iptr to ijt.
-		code(write_index++)=r_code::Atom::Float(1);				//	sln.
-		code(write_index++)=r_code::Atom::Float(1);				//	res.
-		code(write_index++)=r_code::Atom::RPointer(0);			//	destination.
-		code(write_index++)=r_code::Atom::RPointer(1);			//	origin.
-		code(6)=r_code::Atom::Timestamp();						//	ijt will be set at injection time.
+		code(VIEW_OPCODE)=r_code::Atom::SSet(ViewOpcode,VIEW_ARITY);	//	Structured Set.
+		code(VIEW_SYNC)=r_code::Atom::Boolean(true);			//	sync on front.
+		code(VIEW_IJT)=r_code::Atom::IPointer(VIEW_ARITY+1);	//	iptr to ijt.
+		code(VIEW_SLN)=r_code::Atom::Float(1);				//	sln.
+		code(VIEW_RES)=r_code::Atom::Float(1);				//	res.
+		code(VIEW_HOST)=r_code::Atom::RPointer(0);			//	destination.
+		code(VIEW_ORG)=r_code::Atom::RPointer(1);			//	origin.
+		code(VIEW_ARITY+1)=r_code::Atom::Timestamp();		//	ijt will be set at injection time.
 		references[0]=destination;
 		references[1]=origin;
+
 		reset_init_sln();
 
 		object=marker;
