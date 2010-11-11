@@ -31,7 +31,7 @@
 #ifndef	reduction_job_h
 #define	reduction_job_h
 
-#include	"pgm_overlay.h"
+#include	"overlay.h"
 #include	"object.h"
 
 
@@ -48,9 +48,9 @@ namespace	r_exec{
 	class	r_exec_dll	ReductionJob:
 	public	_ReductionJob{
 	public:
-		P<View>			input;
-		P<PGMOverlay>	overlay;
-		ReductionJob(View	*input,PGMOverlay	*overlay);
+		P<View>		input;
+		P<Overlay>	overlay;
+		ReductionJob(View	*input,Overlay	*overlay);
 		bool	update(_Mem	*m);
 	};
 

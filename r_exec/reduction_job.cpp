@@ -39,12 +39,12 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////
 
-	ReductionJob::ReductionJob(View	*input,PGMOverlay	*overlay):_ReductionJob(),input(input),overlay(overlay){
+	ReductionJob::ReductionJob(View	*input,Overlay	*overlay):_ReductionJob(),input(input),overlay(overlay){
 	}
 
 	bool	ReductionJob::update(_Mem	*m){
 		
-		overlay->reduce(input,m);
+		overlay->reduce(input);
 		return	true;
 	}
 

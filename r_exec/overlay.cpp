@@ -56,6 +56,9 @@ namespace	r_exec{
 	void	Overlay::reset(){
 	}
 
+	void	Overlay::reduce(r_exec::View	*input){
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	Controller::Controller(_Mem	*m,r_code::View	*view):mem(m),view(view),alive(true){

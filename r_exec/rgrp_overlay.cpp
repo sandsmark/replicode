@@ -29,15 +29,32 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"rgrp_overlay.h"
+#include	"mem.h"
 
 
 namespace	r_exec{
+
+	RGRPOverlay::RGRPOverlay(RGRPController	*c):Overlay(c){
+
+		birth_time=Now();
+	}
+
+	RGRPOverlay::~RGRPOverlay(){
+	}
+
+	void	RGRPOverlay::reduce(r_exec::View	*input){
+	}
+	
+	bool	RGRPOverlay::inject_productions(Controller	*origin){
+
+		return	true;
+	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	RGRPController::RGRPController(_Mem	*m,r_code::View	*rgrp_view):Controller(m,rgrp_view){
 
-		//overlays.push_back(new	RGRPOverlay(this));
+		overlays.push_back(new	RGRPOverlay(this));
 	}
 	
 	RGRPController::~RGRPController(){
@@ -49,21 +66,19 @@ namespace	r_exec{
 
 		//	Pass the inputs to all ipgm views' controllers in the rgrp.
 
-		/*if(tsc>0){	// 1st overlay is the master (no match yet); other overlays are pushed back in order of their matching time. 
-			
+		if(tsc>0){	// 1st overlay is the master (no match yet); other overlays are pushed back in order of their matching time. 
+	
 			// start from the last overlay, and erase all of them that are older than tsc.
 			uint64	now=Now();
-			std::list<P<Overlay> >::iterator	master=overlays.begin();
-			std::list<P<Overlay> >::iterator	o;
-			std::list<P<Overlay> >::iterator	previous;
-			for(o=overlays.end();o!=master;){
+			Overlay	*master=*overlays.begin();
+			Overlay	*current=overlays.back();
+			while(current!=master){
 
-				if(now-((RGRPOverlay	*)(*o))->birth_time>tsc){
+				if(now-((RGRPOverlay	*)current)->birth_time>tsc){
 					
-					previous=--o;
-					(*o)->kill();
-					overlays.erase(o);
-					o=previous;
+					current->kill();
+					overlays.pop_back();
+					current=overlays.back();
 				}else
 					break;
 			}
@@ -75,7 +90,7 @@ namespace	r_exec{
 			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
 			mem->pushReductionJob(j);
 		}
-*/
+
 		overlayCS.leave();
 	}
 }

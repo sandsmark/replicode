@@ -82,7 +82,7 @@ namespace	r_exec{
 
 		virtual	void	reset();	//	reset to original state (pristine copy of the pgm code and empty value set).
 
-		bool	inject_productions(_Mem	*mem,Controller	*origin);	//	return true upon successful evaluation.
+		bool	inject_productions(Controller	*origin);	//	return true upon successful evaluation.
 	};
 
 	//	Overlay with inputs.
@@ -123,7 +123,7 @@ namespace	r_exec{
 
 		void	reset();
 
-		virtual	void	reduce(r_exec::View	*input,_Mem	*mem);	//	called upon the processing of a reduction job.
+		virtual	void	reduce(r_exec::View	*input);	//	called upon the processing of a reduction job.
 
 		r_code::Code	*getInputObject(uint16	i)	const;
 		r_code::View	*getInputView(uint16	i)	const;
@@ -142,7 +142,7 @@ namespace	r_exec{
 	public:
 		~AntiPGMOverlay();
 
-		void	reduce(r_exec::View	*input,_Mem	*mem);	//	called upon the processing of a reduction job.
+		void	reduce(r_exec::View	*input);	//	called upon the processing of a reduction job.
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

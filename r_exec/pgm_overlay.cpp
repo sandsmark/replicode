@@ -31,7 +31,6 @@
 #include	"pgm_overlay.h"
 #include	"mem.h"
 #include	"group.h"
-#include	"init.h"
 #include	"opcodes.h"
 #include	"context.h"
 
@@ -183,7 +182,9 @@ namespace	r_exec{
 	void	InputLessPGMOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){
 	}
 
-	bool	InputLessPGMOverlay::inject_productions(_Mem	*mem,Controller	*origin){
+	bool	InputLessPGMOverlay::inject_productions(Controller	*origin){
+
+		_Mem	*mem=get_mem();
 
 		uint64	now=Now();
 
@@ -639,7 +640,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	PGMOverlay::reduce(r_exec::View	*input,_Mem	*mem){
+	void	PGMOverlay::reduce(r_exec::View	*input){
 
 		reductionCS.enter();
 
@@ -650,7 +651,7 @@ namespace	r_exec{
 			case	SUCCESS:
 				if(input_pattern_indices.size()==0){	//	all patterns matched.
 
-					if(check_timings()	&&	check_guards()	&&	inject_productions(mem,NULL)){
+					if(check_timings()	&&	check_guards()	&&	inject_productions(NULL)){
 
 						((PGMController	*)controller)->remove(this);
 						break;
@@ -789,7 +790,7 @@ namespace	r_exec{
 	inline	AntiPGMOverlay::~AntiPGMOverlay(){
 	}
 
-	void	AntiPGMOverlay::reduce(r_exec::View	*input,_Mem	*mem){
+	void	AntiPGMOverlay::reduce(r_exec::View	*input){
 
 		reductionCS.enter();
 
@@ -853,7 +854,7 @@ namespace	r_exec{
 		if(overlays.size()){
 
 			Overlay	*o=*overlays.begin();
-			o->inject_productions(mem,NULL);
+			o->inject_productions(NULL);
 			o->reset();
 
 			Group	*host=getView()->get_host();
@@ -888,17 +889,15 @@ namespace	r_exec{
 			
 			// start from the last overlay, and erase all of them that are older than tsc.
 			uint64	now=Now();
-			std::list<P<Overlay> >::iterator	master=overlays.begin();
-			std::list<P<Overlay> >::iterator	o;
-			std::list<P<Overlay> >::iterator	previous;
-			for(o=overlays.end();o!=master;){
+			Overlay	*master=*overlays.begin();
+			Overlay	*current=overlays.back();
+			while(current!=master){
 
-				if(now-((PGMOverlay	*)(*o))->birth_time>tsc){
+				if(now-((PGMOverlay	*)current)->birth_time>tsc){
 					
-					previous=--o;
-					(*o)->kill();
-					overlays.erase(o);
-					o=previous;
+					current->kill();
+					overlays.pop_back();
+					current=overlays.back();
 				}else
 					break;
 			}
@@ -947,7 +946,7 @@ namespace	r_exec{
 		AntiPGMOverlay	*overlay=(AntiPGMOverlay	*)*overlays.begin();
 		overlay->reductionCS.enter();
 		if(!successful_match)
-			overlay->inject_productions(mem,this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlayCS.
+			overlay->inject_productions(this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlayCS.
 		overlay->reset();
 		overlay->reductionCS.leave();
 		

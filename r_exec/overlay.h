@@ -73,7 +73,8 @@ namespace	r_exec{
 
 		r_code::Code	*buildObject(Atom	head)	const;
 
-		virtual	bool	inject_productions(_Mem	*mem,Controller	*origin)=0;	//	return true upon successful evaluation.
+		virtual	void	reduce(r_exec::View	*input);
+		virtual	bool	inject_productions(Controller	*origin)=0;	//	return true upon successful evaluation.
 	};
 
 	//	Unified controller: derived in program controller and rgroup controller.
