@@ -63,7 +63,17 @@ namespace	r_exec{
 
 	Controller::Controller(_Mem	*m,r_code::View	*view):mem(m),view(view),alive(true){
 
-		tsc=Utils::GetTimestamp<Code>(getObject(),IPGM_TSC);
+		switch(getObject()->code(0).getDescriptor()){
+		case	Atom::INSTANTIATED_PROGRAM:
+			tsc=Utils::GetTimestamp<Code>(getObject(),IPGM_TSC);
+			break;
+		case	Atom::INSTANTIATED_CPP_PROGRAM:
+			tsc=Utils::GetTimestamp<Code>(getObject(),ICPP_PGM_TSC);
+			break;
+		case	Atom::REDUCTION_GROUP:
+			tsc=Utils::GetTimestamp<Code>(getObject(),RGRP_TSC);
+			break;
+		}
 	}
 
 	Controller::~Controller(){

@@ -413,7 +413,7 @@ namespace	r_exec{
 						//	find a variable that was abstracted from the same object; if none, a new one is returned: in this case, the var is injected into the r-grp.
 						Var	*var=r_grp->get_var(target);
 						substitutions[((Code	*)object)->code(member_index).asIndex()]=var;	//	store, for each reference index, the variable to use.
-					}else{	//	binding mode: _var is an existing variable.
+					}else	if(((PGMOverlay	*)this)->getSource()){	//	binding mode: _var is an existing variable.
 
 
 					}
@@ -505,7 +505,6 @@ namespace	r_exec{
 
 			binder->code(IPGM_TSC)=Atom::IPointer(extent_index);	//	iptr to tsc.
 			Utils::SetTimestamp<Code>(binder,IPGM_TSC,0);			//	tsc.
-
 			binder->code(IPGM_NFR)=Atom::Boolean(false);			//	nfr.
 			binder->code(IPGM_ARITY)=Atom::Float(1);				//	psln_thr.
 
@@ -640,9 +639,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	PGMOverlay::reduce(r_exec::View	*input){
-
-		reductionCS.enter();
+	void	PGMOverlay::_reduce(r_exec::View	*input){
 
 		if(alive){
 			
@@ -653,13 +650,13 @@ namespace	r_exec{
 
 					if(check_timings()	&&	check_guards()	&&	inject_productions(NULL)){
 
-						((PGMController	*)controller)->remove(this);
+						controller->remove(this);
 						break;
 					}
 				}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
 
 					PGMOverlay	*offspring=new	PGMOverlay(this,input_index,value_commit_index);
-					((PGMController	*)controller)->add(offspring);
+					controller->add(offspring);
 					commit();
 					break;
 				}
@@ -668,7 +665,22 @@ namespace	r_exec{
 				break;
 			}
 		}
+	}
 
+	void	PGMOverlay::reduce(r_exec::View	*input){
+
+		reductionCS.enter();
+		this->source=NULL;
+		_reduce(input);
+		reductionCS.leave();
+	}
+
+	void	PGMOverlay::reduce(r_exec::View	*input,Overlay	*source){
+
+		reductionCS.enter();
+		this->source=source;
+		_reduce(input);
+		this->source=NULL;
 		reductionCS.leave();
 	}
 
@@ -809,7 +821,7 @@ namespace	r_exec{
 				}else{
 
 					AntiPGMOverlay	*offspring=new	AntiPGMOverlay(this,input_index,value_commit_index);
-					((AntiPGMController	*)controller)->add(offspring);
+					controller->add(offspring);
 					commit();
 					break;
 				}
@@ -854,7 +866,7 @@ namespace	r_exec{
 		if(overlays.size()){
 
 			Overlay	*o=*overlays.begin();
-			o->inject_productions(NULL);
+			((InputLessPGMOverlay	*)o)->inject_productions(NULL);
 			o->reset();
 
 			Group	*host=getView()->get_host();
@@ -908,6 +920,19 @@ namespace	r_exec{
 
 			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
 			mem->pushReductionJob(j);
+		}
+
+		overlayCS.leave();
+	}
+
+	void	PGMController::take_input(r_exec::View	*input,Overlay	*source){	//	called from an r-grp overlay. Perform the reduction immediately (no reduction job pushed).
+																				//	no tsc check.
+		overlayCS.enter();
+
+		std::list<P<Overlay> >::const_iterator	o;
+		for(o=overlays.begin();o!=overlays.end();++o){
+
+			((PGMOverlay	*)(*o))->reduce(input,source);
 		}
 
 		overlayCS.leave();

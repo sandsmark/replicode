@@ -97,6 +97,8 @@ namespace	r_exec{
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
 
+		P<Overlay>	source;	//	points to an overlay from which the reduction was triggered.
+
 		typedef	enum{
 			SUCCESS=0,
 			FAILURE=1,
@@ -116,6 +118,8 @@ namespace	r_exec{
 
 		void	init();
 
+		void	_reduce(r_exec::View	*input);	//	convenience; called by the reduce() functions.
+
 		PGMOverlay(Controller	*c);
 		PGMOverlay(PGMOverlay	*original,uint16	last_input_index,uint16	value_commit_index);	//	copy from the original and rollback.
 	public:
@@ -123,10 +127,13 @@ namespace	r_exec{
 
 		void	reset();
 
-		virtual	void	reduce(r_exec::View	*input);	//	called upon the processing of a reduction job.
+		virtual	void	reduce(r_exec::View	*input);					//	called upon the processing of a reduction job.
+				void	reduce(r_exec::View	*input,Overlay	*source);	//	called from another overlay's reduce() call.
 
 		r_code::Code	*getInputObject(uint16	i)	const;
 		r_code::View	*getInputView(uint16	i)	const;
+
+		Overlay	*getSource()	const{	return	source;	}
 	};
 
 	//	Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
@@ -155,6 +162,7 @@ namespace	r_exec{
 		virtual	~PGMController();
 
 		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
+		void	take_input(r_exec::View	*input,Overlay	*source);
 	};
 
 	//	TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.

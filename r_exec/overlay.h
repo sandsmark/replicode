@@ -74,7 +74,6 @@ namespace	r_exec{
 		r_code::Code	*buildObject(Atom	head)	const;
 
 		virtual	void	reduce(r_exec::View	*input);
-		virtual	bool	inject_productions(Controller	*origin)=0;	//	return true upon successful evaluation.
 	};
 
 	//	Unified controller: derived in program controller and rgroup controller.
@@ -82,6 +81,7 @@ namespace	r_exec{
 	//	Shared resources:
 	//	- alive: written by TimeCores (via UpdateJob::update() and _Mem::update()), read by TimeCores (via SignalingJob::update()).
 	//	- overlays: modified by take_input, executed by TimeCores (via UpdateJob::update() and _Mem::update()) and ReductionCore::Run() (via ReductionJob::update(), PGMOverlay::reduce(), _Mem::inject() and add()/remove()/restart()).
+	//	Controllers are built at loading time and at the view's injection time.
 	class	r_exec_dll	Controller:
 	public	_Object{
 	protected:

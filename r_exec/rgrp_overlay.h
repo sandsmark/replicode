@@ -32,31 +32,34 @@
 #define	r_group_overlay_h
 
 #include	"overlay.h"
-#include	"group.h"
+#include	"r_group.h"
 
 
 namespace	r_exec{
 
 	class	RGRPController;
 
-	//	Basically, an r-grp overlay just holds its birth time.
-	//	Overlays are used to index the value held by variable objects (bindings are per overlay).
+	//	Overlays are used to index the value held by variable objects (bindings, stored per overlay) - bindings include nil values (i.e. yet unbound variables).
+	//	Like program overlays hold a list of patterns that have stil to be matched, r-group overlays hold a list of the binders that still have to match.
+	//	Binders are assumed to be the only ipgms held by r-groups.
 	class	r_exec_dll	RGRPOverlay:
 	public	Overlay{
 	friend	class	RGRPController;
 	private:
-		uint64	birth_time;
+		uint64	birth_time;	//	same purpose as for pgm overlays.
+
+		UNORDERED_MAP<Var	*,P<Code> >	bindings;
+		std::list<P<View> >				binders;
 
 		RGRPOverlay(RGRPController	*c);
 	public:
 		~RGRPOverlay();
 
 		void	reduce(r_exec::View	*input);
-		bool	inject_productions(Controller	*origin);
 	};
 
-	//	R-groups behave like programs: they take inputs from visible/(newly) salient views depending on their sync mode.
-	//	Overlays are built unpon the binding of at least one variable object.
+	//	R-groups behave like programs: they take inputs from visible/(newly) salient views (depending on their sync mode).
+	//	Overlays are built unpon the matching of at least one binder.
 	//	Building an overlay means adding bindings (binding: a value for a given overlay) to variable objects.
 	//	Binding is performed by the _subst function of the executive (see InputLessPGMOverlay::injectProductions()).
 	class	r_exec_dll	RGRPController:
@@ -66,9 +69,6 @@ namespace	r_exec{
 	public:
 		RGRPController(_Mem	*m,r_code::View	*rgrp_view);
 		~RGRPController();
-
-		std::vector<P<Group> >	ntf_groups;
-		std::vector<P<Group> >	out_groups;
 
 		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
 	};

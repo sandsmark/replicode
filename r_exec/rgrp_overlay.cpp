@@ -43,18 +43,42 @@ namespace	r_exec{
 	}
 
 	void	RGRPOverlay::reduce(r_exec::View	*input){
-	}
-	
-	bool	RGRPOverlay::inject_productions(Controller	*origin){
 
-		return	true;
+		//	for all remaining binders in this overlay:
+		//		binder_view->take_input(input,this); this is needed for (a) dereferencing variables and, (b) calling the overlay back from _subst.
+		//		_subst:
+		//			if an object of the r-grp becomes fully bound (how to know?), inject it in the out_grps.
+		//			callback:
+		//				store values for variables for this overlay.
+		//				remove the binder from this overlay.
+		//	if at least one binder matched:
+		//		create an overlay (state prior to the match, i.e. rollback).
+		//	if no more unbound values, kill the overlay.
+
+		std::list<P<View> >::const_iterator	it;
+		for(it=binders.begin();it!=binders.end();){
+
+			((PGMController	*)(*it)->object)->take_input(input,this);
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	RGRPController::RGRPController(_Mem	*m,r_code::View	*rgrp_view):Controller(m,rgrp_view){
 
-		overlays.push_back(new	RGRPOverlay(this));
+		RGroup		*rgrp=(RGroup	*)getObject();
+		RGRPOverlay	*o=new	RGRPOverlay(this);
+		
+		//	init binders.
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	it;
+		for(it=rgrp->ipgm_views.begin();it!=rgrp->ipgm_views.end();++it)
+			o->binders.push_back(it->second);
+
+		//	init bindings.
+		for(it=rgrp->variable_views.begin();it!=rgrp->variable_views.end();++it)
+			o->bindings[(Var	*)it->second->object]=NULL;
+
+		overlays.push_back(o);
 	}
 	
 	RGRPController::~RGRPController(){
