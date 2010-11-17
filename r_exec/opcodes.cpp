@@ -47,13 +47,18 @@ namespace	r_exec{
 	uint16	Opcodes::IPGM;
 	uint16	Opcodes::PGM;
 	uint16	Opcodes::AntiPGM;
+	uint16	Opcodes::FMD;
+	uint16	Opcodes::IMD;
 
 	uint16	Opcodes::Cmd;
 
 	uint16	Opcodes::Var;
 
+	uint16	Opcodes::Pred;
+
 	uint16	Opcodes::MkRdx;
 	uint16	Opcodes::MkAntiRdx;
+	uint16	Opcodes::MkGRdx;
 
 	uint16	Opcodes::MkNew;
 

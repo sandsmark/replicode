@@ -97,9 +97,9 @@ namespace	r_exec{
 		void	_set_minus1_plus1(uint16	member_index,float32	value);
 		void	_set_0_1(uint16	member_index,float32	value);
 	protected:
-		void	notifyNew(View	*view);
+				void	notifyNew(View	*view);
 		virtual	void	injectRGroup(View	*view);
-		virtual	void	cov(View	*view,uint64	t);
+				void	cov(View	*view,uint64	t);
 	public:
 		//	xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
 		//	Active overlays are to be found in xxx_ipgm_views and rgroup_views.
@@ -108,7 +108,7 @@ namespace	r_exec{
 		UNORDERED_MAP<uint32,P<View> >	input_less_ipgm_views;
 		UNORDERED_MAP<uint32,P<View> >	notification_views;
 		UNORDERED_MAP<uint32,P<View> >	group_views;
-		UNORDERED_MAP<uint32,P<View> >	rgroup_views;
+		UNORDERED_MAP<uint32,P<View> >	mdl_views;
 		UNORDERED_MAP<uint32,P<View> >	icpp_pgm_views;
 		UNORDERED_MAP<uint32,P<View> >	variable_views;
 		UNORDERED_MAP<uint32,P<View> >	other_views;
@@ -194,8 +194,8 @@ namespace	r_exec{
 					end=group_views.end();
 					break;
 				case	4:
-					it=rgroup_views.begin();
-					end=rgroup_views.end();
+					it=mdl_views.begin();
+					end=mdl_views.end();
 					break;
 				case	5:
 					it=icpp_pgm_views.begin();
@@ -240,8 +240,8 @@ namespace	r_exec{
 					end=anti_ipgm_views.end();
 					break;
 				case	1:
-					it=rgroup_views.begin();
-					end=rgroup_views.end();
+					it=mdl_views.begin();
+					end=mdl_views.end();
 					break;
 				case	2:
 					it=icpp_pgm_views.begin();
@@ -280,8 +280,8 @@ namespace	r_exec{
 					end=group_views.end();
 					break;
 				case	3:
-					it=rgroup_views.begin();
-					end=rgroup_views.end();
+					it=mdl_views.begin();
+					end=mdl_views.end();
 					break;
 				case	4:
 					it=icpp_pgm_views.begin();
@@ -392,7 +392,7 @@ namespace	r_exec{
 		virtual	void	inject(View	*view,uint64	t);
 		virtual	void	injectGroup(View	*view,uint64	t);
 				void	injectNotification(View	*view,Controller	*origin);
-		virtual	void	cov(uint64	t);
+				void	cov(uint64	t);
 
 		class	Hash{
 		public:

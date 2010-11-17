@@ -262,9 +262,11 @@ namespace	r_exec{
 		}
 
 		Code	*mk_rdx=NULL;
+		uint16	ntf_grp_count=getView()->get_host()->get_ntf_grp_count();
+
 		uint16	write_index;
 		uint16	extent_index;
-		if(cmd_count	&&	(getObject()->code(IPGM_NFR).asBoolean())){	//	the productions are command objects (cmd); only injections/ejections and cmds to external devices are notified.
+		if(ntf_grp_count	&&	cmd_count	&&	(getObject()->code(IPGM_NFR).asBoolean())){	//	the productions are command objects (cmd); only injections/ejections and cmds to external devices are notified.
 
 			mk_rdx=get_mk_rdx(write_index);
 			mk_rdx->code(write_index++)=Atom::Set(cmd_count);
@@ -275,7 +277,7 @@ namespace	r_exec{
 		//	case of abstraction programs: further processing is performed after all substitutions have been executed.
 		r_exec::View					*input_view;
 		RGroup							*r_grp;
-		UNORDERED_MAP<uint16,Var	*>	substitutions;
+		UNORDERED_MAP<uint16,Code	*>	substitutions;
 		for(uint16	i=1;i<=production_count;++i){
 
 			Context	cmd=*prods.getChild(i);
@@ -407,16 +409,15 @@ namespace	r_exec{
 					//		abstraction pgms must specify nil variable objects.
 					input_view=(r_exec::View*)((PGMOverlay	*)this)->getInputView(0);
 					r_grp=(RGroup	*)input_view->get_host();
+					RGRPOverlay	*source=(RGRPOverlay	*)((PGMOverlay	*)this)->getSource();
 
-					if(r_grp->get_c_act()<=r_grp->get_c_act_thr()){	//	substitution mode.
+					if(!source){	//	substitution mode, _var is nil.
 
-						//	find a variable that was abstracted from the same object; if none, a new one is returned: in this case, the var is injected into the r-grp.
-						Var	*var=r_grp->get_var(target);
+						//	find a variable that was abstracted from the same object; if none, a new one is returned: in any case, the var is injected into the r-grp if not already so.
+						Code	*var=r_grp->get_var(target);
 						substitutions[((Code	*)object)->code(member_index).asIndex()]=var;	//	store, for each reference index, the variable to use.
-					}else	if(((PGMOverlay	*)this)->getSource()){	//	binding mode: _var is an existing variable.
-
-
-					}
+					}else	//	binding mode: _var is an existing variable.
+						source->bind(target,_var.getObject());
 
 					if(mk_rdx){
 
@@ -449,7 +450,7 @@ namespace	r_exec{
 				}
 			}else{	//	in case of an external device, create a cmd object and send it.
 
-				Code	*command=controller->get_mem()->buildObject(cmd[0]);
+				Code	*command=get_mem()->buildObject(cmd[0]);
 				cmd.copy(command,0);
 
 				mem->eject(command,command->code(CMD_DEVICE).getNodeID());
@@ -472,7 +473,7 @@ namespace	r_exec{
 			for(i=0;i<original->references_size();++i)	//	copy the references.
 				abstracted_object->set_reference(i,original->get_reference(i));
 
-			UNORDERED_MAP<uint16,Var	*>::const_iterator	it;
+			UNORDERED_MAP<uint16,Code	*>::const_iterator	it;
 			for(it=substitutions.begin();it!=substitutions.end();++it)	//	perform the substitutions.
 				abstracted_object->set_reference(it->first,it->second);
 
@@ -512,9 +513,9 @@ namespace	r_exec{
 			binder_view->code(VIEW_OPCODE)=Atom::SSet(Opcodes::PgmView,PGM_VIEW_ARITY);	//	Structured Set.
 			binder_view->code(VIEW_SYNC)=Atom::Boolean(true);				//	sync on front.
 			binder_view->code(VIEW_IJT)=Atom::IPointer(PGM_VIEW_ARITY+1);	//	iptr to ijt.
-			Utils::SetTimestamp(binder_view,VIEW_IJT,now);					//	ijt.
+			Utils::SetTimestamp<View>(binder_view,VIEW_IJT,now);			//	ijt.
 			binder_view->code(VIEW_SLN)=Atom::Float(0);						//	sln.
-			binder_view->code(VIEW_RES)=Atom::Float(1);						//	res.
+			binder_view->code(VIEW_RES)=Atom::PlusInfinity();				//	res.
 			binder_view->code(VIEW_HOST)=Atom::RPointer(0);					//	destination.
 			binder_view->code(VIEW_ORG)=Atom::Nil();						//	host.
 			binder_view->code(VIEW_ACT)=Atom::Float(1);						//	act.
@@ -527,7 +528,6 @@ namespace	r_exec{
 
 		if(mk_rdx){
 
-			uint16	ntf_grp_count=getView()->get_host()->get_ntf_grp_count();
 			for(uint16	i=1;i<=ntf_grp_count;++i){
 
 				NotificationView	*v=new	NotificationView(getView()->get_host(),getView()->get_host()->get_ntf_grp(i),mk_rdx);
@@ -543,7 +543,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_RDX_ARITY+1;
 
-		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());
+		Code	*mk_rdx=new	r_exec::LObject(get_mem());
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -651,18 +651,18 @@ namespace	r_exec{
 					if(check_timings()	&&	check_guards()	&&	inject_productions(NULL)){
 
 						controller->remove(this);
-						break;
+						return;
 					}
 				}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
 
 					PGMOverlay	*offspring=new	PGMOverlay(this,input_index,value_commit_index);
 					controller->add(offspring);
 					commit();
-					break;
+					return;
 				}
 			case	FAILURE:	//	just rollback: let the overlay match other inputs.
 				rollback();
-				break;
+				return;
 			}
 		}
 	}
@@ -773,7 +773,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_RDX_ARITY+1;
 
-		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());
+		Code	*mk_rdx=new	r_exec::LObject(get_mem());
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -839,7 +839,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_ANTI_RDX_ARITY+1;
 
-		Code	*mk_rdx=new	r_exec::LObject(controller->get_mem());
+		Code	*mk_rdx=new	r_exec::LObject(get_mem());
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -893,15 +893,28 @@ namespace	r_exec{
 	PGMController::~PGMController(){
 	}
 
+	void	PGMController::add(Overlay	*overlay){	//	the first overlay is the master.
+													//	the last overlay is the oldest, the one after the master is the youngest.
+		overlayCS.enter();
+		if(overlays.size()==1)
+			overlays.push_back(overlay);
+		else{
+
+			std::list<P<_Overlay> >::iterator	master=overlays.begin();
+			overlays.insert(++master,overlay);
+		}
+		overlayCS.leave();
+	}
+
 	void	PGMController::take_input(r_exec::View	*input,Controller	*origin){	//	origin unused since there is no recursion here.
 
 		overlayCS.enter();
 
-		if(tsc>0){	// 1st overlay is the master (no match yet); other overlays are pushed back in order of their matching time. 
+		if(tsc>0){	// the first overlay is the master (no match yet); other overlays are pushed right after the master in order of their matching time.
 			
-			// start from the last overlay, and erase all of them that are older than tsc.
+			// start from the last overlay (the oldest), and erase all of them that are older than tsc.
 			uint64	now=Now();
-			Overlay	*master=*overlays.begin();
+			Overlay	*master=overlays.front();
 			Overlay	*current=overlays.back();
 			while(current!=master){
 
@@ -915,7 +928,7 @@ namespace	r_exec{
 			}
 		}
 
-		std::list<P<Overlay> >::const_iterator	o;
+		std::list<P<_Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
 
 			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
@@ -929,11 +942,9 @@ namespace	r_exec{
 																				//	no tsc check.
 		overlayCS.enter();
 
-		std::list<P<Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o){
-
+		std::list<P<_Overlay> >::const_iterator	o;
+		for(o=overlays.begin();o!=overlays.end();++o)
 			((PGMOverlay	*)(*o))->reduce(input,source);
-		}
 
 		overlayCS.leave();
 	}
@@ -953,7 +964,7 @@ namespace	r_exec{
 		if(this!=origin)
 			overlayCS.enter();
 
-		std::list<P<Overlay> >::const_iterator	o;
+		std::list<P<_Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
 
 			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
@@ -977,11 +988,11 @@ namespace	r_exec{
 		
 		push_new_signaling_job();
 
-		std::list<P<Overlay> >::const_iterator	first=overlays.begin();
-		std::list<P<Overlay> >::const_iterator	o;
+		std::list<P<_Overlay> >::const_iterator	first=overlays.begin();
+		std::list<P<_Overlay> >::const_iterator	o;
 		for(o=++first;o!=overlays.end();){	//	reset the first overlay and kill all others.
 
-			(*o)->kill();
+			((Overlay	*)(*o))->kill();
 			o=overlays.erase(o);
 		}
 
@@ -998,7 +1009,7 @@ namespace	r_exec{
 		
 		push_new_signaling_job();
 
-		std::list<P<Overlay> >::const_iterator	o;
+		std::list<P<_Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();){
 
 			if(overlay!=*o){

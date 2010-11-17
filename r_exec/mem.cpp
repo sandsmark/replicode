@@ -488,7 +488,8 @@ CoreCount=0;
 						_initiate_sln_propagation(v->second->object,view_new_sln-view_old_sln,group->get_sln_thr());
 				}
 
-				if(v->second->object->code(0).getDescriptor()==Atom::GROUP	||	v->second->object->code(0).getDescriptor()==Atom::REDUCTION_GROUP){
+				switch(GetType(v->second->object)){
+				case	ObjectType::GROUP:{
 
 					//	update visibility.
 					bool	view_was_visible=v->second->get_vis()>group->get_vis_thr();
@@ -519,9 +520,11 @@ CoreCount=0;
 						if(view_is_visible)		//	update viewing groups for any visible group.
 							((Group	*)v->second->object)->viewing_groups[group]=cov;
 					}	
-				}else	if(v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_PROGRAM		||
-							v->second->object->code(0).getDescriptor()==Atom::INSTANTIATED_CPP_PROGRAM	||
-							v->second->object->code(0).getDescriptor()==Atom::REDUCTION_GROUP){
+				}case	ObjectType::IPGM:
+				case	ObjectType::INPUT_LESS_IPGM:
+				case	ObjectType::ANTI_IPGM:
+				case	ObjectType::ICPP_PGM:
+				case	ObjectType::MODEL:{
 
 					//	update activation.
 					bool	view_was_active=v->second->get_act()>group->get_act_thr();
@@ -536,7 +539,7 @@ CoreCount=0;
 
 							if(!view_was_active){
 						
-								if(view_is_active)	//	register the overlay for the newly active ipgm view.
+								if(view_is_active)	//	register the controller for the newly active ipgm view.
 									group->new_controllers.push_back(v->second->controller);
 							}else{
 								
@@ -546,9 +549,10 @@ CoreCount=0;
 						}
 					}else	if(group_is_c_active	&&	group_is_c_salient){	//	group becomes c-active and c-salient.
 
-						if(view_is_active)	//	register the overlay for any active ipgm view.
+						if(view_is_active)	//	register the controller for any active ipgm view.
 							group->new_controllers.push_back(v->second->controller);
 					}
+				}
 				}
 				++v;
 			}else{	//	view has no resilience.
@@ -586,14 +590,14 @@ CoreCount=0;
 				case	ObjectType::GROUP:
 					v=group->group_views.erase(v);
 					break;
-				case	ObjectType::RGROUP:
-					v=group->rgroup_views.erase(v);
+				case	ObjectType::MODEL:
+					v=group->mdl_views.erase(v);
 					break;
 				}
 			}
 		FOR_ALL_VIEWS_END
 
-		if(group_is_c_salient)	//	N.B.: rgrp don't have a cov member.
+		if(group_is_c_salient)
 			group->cov(now);
 
 		//	build reduction jobs.

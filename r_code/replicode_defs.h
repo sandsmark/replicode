@@ -82,10 +82,6 @@
 #define	GRP_LOW_RES_THR		30
 #define	GRP_NTF_GRPS		31
 
-#define	RGRP_OUT_GRPS		32
-#define	RGRP_TSC			33
-#define	RGRP_NFR			34
-
 #define	IPGM_PGM	1
 #define	IPGM_ARGS	2
 #define	IPGM_TSC	3
@@ -100,8 +96,20 @@
 #define	ICPP_PGM_TSC	3
 #define	ICPP_PGM_NFR	4
 
-#define	IPGM_ARITY	5
+#define	MD_HEAD		1
+#define	MD_WHO		2
+#define	MD_OUT_GRPS	3
+#define	MD_NTF_GRPS	4
+
+#define	FMD_TSC		5
+#define	IMD_FMD		5
+
+#define	MD_NFR		6
+
+#define	IPGM_ARITY		5
 #define	ICPP_PGM_ARITY	5
+#define	FMD_ARITY		7
+#define	IMD_ARITY		7
 
 #define	MK_RDX_ARITY		4
 #define	MK_ANTI_RDX_ARITY	3
@@ -112,9 +120,18 @@
 #define	CMD_DEVICE		2
 #define	CMD_ARGS		3
 
-#define	VAR_ORG			1
+#define	VAR_ARITY		1
 
-#define	VAR_ARITY		2
+#define	PRED_OBJ		1
+#define	PRED_TIME		2
+#define	PRED_CFD		3
+#define	PRED_WHO		4
 
+#define	PRED_ARITY		5
+
+#define	MK_GRDX_MDL		1
+#define	MK_GRDX_PRODS	2
+
+#define	MK_GRDX_ARITY	3
 
 #endif

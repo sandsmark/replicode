@@ -34,34 +34,65 @@
 
 namespace	r_exec{
 
-	Overlay::Overlay():alive(true){
+	_Overlay::_Overlay(){
+	}
+
+	_Overlay::_Overlay(__Controller	*c):controller(c){
+	}
+
+	_Overlay::~_Overlay(){
+	}
+
+	void	_Overlay::reset(){
+	}
+
+	void	_Overlay::reduce(r_exec::View	*input){
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Overlay::Overlay():_Overlay(),alive(true){
+	}
+
+	Overlay::Overlay(__Controller	*c):_Overlay(c),alive(true){
 	}
 
 	Overlay::~Overlay(){
 	}
 
-	Overlay::Overlay(Controller	*c):controller(c),alive(true){
-	}
-
-	_Mem	*Overlay::get_mem()	const{
-
-		return	controller->get_mem();
-	}
-
 	r_code::Code	*Overlay::buildObject(Atom	head)	const{
 		
-		return	controller->get_mem()->buildObject(head);
-	}
-
-	void	Overlay::reset(){
-	}
-
-	void	Overlay::reduce(r_exec::View	*input){
+		return	get_mem()->buildObject(head);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Controller::Controller(_Mem	*m,r_code::View	*view):mem(m),view(view),alive(true){
+	__Controller::__Controller(_Mem	*mem):mem(mem){
+	}
+
+	__Controller::~__Controller(){
+	}
+
+	void	__Controller::add(_Overlay	*overlay){
+
+		overlayCS.enter();
+		overlays.push_back(overlay);
+		overlayCS.leave();
+	}
+
+	void	__Controller::remove(_Overlay	*overlay){
+
+		overlayCS.enter();
+		if(overlays.size()>1)
+			overlays.remove(overlay);
+		else
+			overlay->reset();
+		overlayCS.leave();
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Controller::Controller(_Mem	*mem,r_code::View	*view):_Controller<_Object>(mem),alive(true),view(view){
 
 		switch(getObject()->code(0).getDescriptor()){
 		case	Atom::INSTANTIATED_PROGRAM:
@@ -70,8 +101,9 @@ namespace	r_exec{
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
 			tsc=Utils::GetTimestamp<Code>(getObject(),ICPP_PGM_TSC);
 			break;
-		case	Atom::REDUCTION_GROUP:
-			tsc=Utils::GetTimestamp<Code>(getObject(),RGRP_TSC);
+		case	Atom::OBJECT:
+			if(getObject()->code(0)==Opcodes::FMD)
+				tsc=Utils::GetTimestamp<Code>(getObject(),FMD_TSC);
 			break;
 		}
 	}
@@ -90,30 +122,11 @@ namespace	r_exec{
 		alive=false;
 		aliveCS.leave();
 
-		std::list<P<Overlay> >::const_iterator	o;
+		std::list<P<_Overlay> >::const_iterator	o;
 		overlayCS.enter();
 		for(o=overlays.begin();o!=overlays.end();++o)
-			(*o)->kill();
+			((Overlay	*)(*o))->kill();
 		overlays.clear();
-		overlayCS.leave();
-	}
-
-	inline	void	Controller::add(Overlay	*overlay){	//	overlay has just matched an input; builds a copy of overlay.
-
-		overlayCS.enter();
-		overlays.push_back(overlay);
-		overlayCS.leave();
-	}
-
-	inline	void	Controller::remove(Overlay	*overlay){
-
-		overlayCS.enter();
-		if(overlays.size()>1){
-
-			overlay->kill();
-			overlays.remove(overlay);
-		}else
-			overlay->reset();
 		overlayCS.leave();
 	}
 

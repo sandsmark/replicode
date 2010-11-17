@@ -169,7 +169,7 @@ uint32	CoreCount;
 		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);
 
 		//	Called by groups.
-		void	injectCopyNow(View	*view,Group	*destination,uint64	now);	//	for cov; NB: no cov for groups, r-groups, pgm or notifications.
+		void	injectCopyNow(View	*view,Group	*destination,uint64	now);	//	for cov; NB: no cov for groups, r-groups, models, pgm or notifications.
 		void	inject_reduction_jobs(View	*view,Group	*host,Controller	*origin=NULL);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
 																							//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
 

@@ -32,35 +32,39 @@
 #define	r_group_h
 
 #include	"group.h"
-#include	"var.h"
 
 
 namespace	r_exec{
 
-	//	The content of r-groups is abstracted unitl the r-group becomes c-active.
-	//	The latter is the signal for switching abstractors to binders (see InputLessPGMOverlay::injectproductions(), case of _subst).
+	//	R-groups are the constituents of models. A model hold references to one r-group (the head), which in turn, holds references to its children.
+	//	R-groups do not hold views on regular groups.
+	//	Children shall be projected onto their parents first and then onto an abstraction group. Then, after abstraction is complete, a model can reference the head r-group.
+	//	Controllers are built as follows:
+	//		when the model is injected, the head's controller is built;
+	//		when an r-group fires, it builds the controllers for its children.
+	//	As the content of r-groups is being abstracted, binding programs (a.k. binders) are automatically generated and injected in the r-group.
+	//	R-groups shall be created non c-active so that the binders are prevented from catching the initial content (not abstracted yet).
 	class	r_exec_dll	RGroup:
 	public	Group{
 	private:
 		RGroup	*parent;
 
-		CriticalSection					substitutionsCS;
-		UNORDERED_MAP<Code	*,Var	*>	*substitutions;	// temporary structure used while performing abstractions: not written in images.
-														// all children share the same substitutions as their one common ancestor.
+		CriticalSection													*substitutionsCS;
+		UNORDERED_MAP<Code	*,std::pair<Code	*,std::list<RGroup	*> > >	*substitutions;	// temporary structure used while performing abstractions: not written in images.
+																							// all children share the same substitutions as their one common ancestor.
+		Code	*fwd_model;
+
 		void	injectRGroup(View	*view);
-		void	cov(View	*view,uint64	t);	//	does nothing since there is no cov for r-groups.
 	public:
 		RGroup(r_code::Mem	*m=NULL);
 		RGroup(r_code::SysObject	*source,r_code::Mem	*m);
 		~RGroup();
 
-		uint16	get_out_grp_count();
-		Group	*get_out_grp(uint16	i);	// i starts at 1.
+		Code	*get_var(Code	*value);	// returns a variable object from the existing substitutions holding the same value.
+											// if none, build a new variable object; in any case, inject the variable object in the group if not already there.
 
-		Var		*get_var(Code	*value);	// returns a variable object from the existing substitutions holding the same value; if none, build a new variable object.
-
-		//	These functions are called by the rMem.
-		void	cov(uint64	t);	//	does nothing since there is no cov for r-groups.
+		Code	*get_fwd_model()	const;
+		void	set_fwd_model(Code	*mdl);
 	};
 }
 

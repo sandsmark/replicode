@@ -75,7 +75,6 @@ namespace	r_code{
 		case	GROUP:					std::cout<<"grp: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		case	REDUCTION_GROUP:		std::cout<<"rgrp: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		case	INSTANTIATED_CPP_PROGRAM:	std::cout<<"icpp_pgm: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
-		case	VARIABLE:				std::cout<<"var: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		default:
 			if(Timestamp_data){
 				

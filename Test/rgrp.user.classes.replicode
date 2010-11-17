@@ -1,14 +1,14 @@
 !load ../Test/std.replicode
 
-!def (std_grp _upr _sln_thr _act_thr _vis_thr _ntf_grps) (grp _upr _sln_thr _act_thr _vis_thr 1 0 1 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 _ntf_grps 1)
-!def (std_rgrp _upr _sln_thr _act_thr _vis_thr _c_sln _c_sln_thr _c_act _c_act_thr _ntf_grps _out_grps _tsc _nfr) (rgrp _upr _sln_thr _act_thr _vis_thr _c_sln _c_sln_thr _c_act _c_act_thr 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 _ntf_grps _out_grps _tsc _nfr 1)
+!def (std_grp _upr _sln_thr _act_thr _vis_thr _ntf_grps) (grp _upr _sln_thr _act_thr _vis_thr 1 0 1 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 _ntf_grps 1); c-salient and c-active.
+!def (std_rgrp _upr _sln_thr _act_thr _vis_thr) (rgrp _upr _sln_thr _act_thr _vis_thr 1 0 0 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 |[] 1); c-salient, non c-active.
 
 !class (vec3 x:nb y:nb z:nb)
 !class (rgb r:nb g:nb b:nb)
 !class (val_holder (_obj value:))
 !class (mk.val (_obj {object: attribute: value:}))
 
-root:(std_grp 0 0 0 0 |[])
+root:(std_grp 1 0 0 0 [nil])
 []
    [SYNC_FRONT now 0 forever nil nil COV_OFF 0]
 

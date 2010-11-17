@@ -48,7 +48,7 @@ namespace	r_exec{
 		OBJECT=3,
 		MARKER=4,
 		GROUP=5,
-		RGROUP=6,
+		MODEL=6,
 		ICPP_PGM=7,
 		VARIABLE=8
 	}ObjectType;
@@ -119,7 +119,7 @@ namespace	r_exec{
 		public:
 			bool	operator	()(const	U	*lhs,const	U	*rhs)	const{	//	lhs and rhs have the same hash value, i.e. same opcode, same code size and same reference size.
 				
-				if(lhs->code(0).asOpcode()==Opcodes::Entity)
+				if(lhs->code(0).asOpcode()==Opcodes::Entity	||	lhs->code(0).asOpcode()==Opcodes::Var)
 					return	lhs==rhs;
 
 				uint16	i;

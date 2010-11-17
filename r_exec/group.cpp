@@ -44,8 +44,8 @@ namespace	r_exec{
 		it=group_views.find(OID);
 		if(it!=group_views.end())
 			return	it->second;
-		it=rgroup_views.find(OID);
-		if(it!=rgroup_views.end())
+		it=mdl_views.find(OID);
+		if(it!=mdl_views.end())
 			return	it->second;
 		it=ipgm_views.find(OID);
 		if(it!=ipgm_views.end())
@@ -402,8 +402,9 @@ namespace	r_exec{
 
 		switch(GetType(object)){
 		case	ObjectType::GROUP:{
-			
 			group_views[view->getOID()]=view;
+
+			injectRGroup(view);
 
 			//	init viewing_group.
 			bool	viewing_c_active=get_c_act()>get_c_act_thr();
@@ -412,31 +413,12 @@ namespace	r_exec{
 			if(viewing_c_active	&&	viewing_c_salient	&&	viewed_visible)	//	visible group in a c-salient, c-active group.
 				((Group	*)object)->viewing_groups[this]=view->get_cov();	//	init the group's viewing groups.
 			break;
-		}case	ObjectType::RGROUP:{
-
-			rgroup_views[view->getOID()]=view;
-
-			//	init viewing_group.
-			bool	viewing_c_active=get_c_act()>get_c_act_thr();
-			bool	viewing_c_salient=get_c_sln()>get_c_sln_thr();
-			bool	viewed_visible=view->get_vis()>get_vis_thr();
-			if(viewing_c_active	&&	viewing_c_salient	&&	viewed_visible)	//	visible r-group in a c-salient, c-active group.
-				((Group	*)object)->viewing_groups[this]=view->get_cov();	//	init the group's viewing groups.
-
-			injectRGroup(view);
-
-			if(view->get_act()>get_act_thr()){	//	active rgrp.
-
-				RGRPController	*o=new	RGRPController((r_exec::_Mem	*)mem,view);	//	now will be added to the deadline at start time.
-				view->controller=o;	//	init the view's controller.
-			}
-			break;
 		}case	ObjectType::IPGM:
 			ipgm_views[view->getOID()]=view;
 			if(view->get_act()>get_act_thr()){	//	active ipgm.
 
 				PGMController	*o=new	PGMController((r_exec::_Mem	*)mem,view);	//	now will be added to the deadline at start time.
-				view->controller=o;	//	init the view's controller.
+				view->controller=o;
 			}
 			break;
 		case	ObjectType::ICPP_PGM:
@@ -446,7 +428,7 @@ namespace	r_exec{
 				Controller	*o=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),(r_exec::_Mem	*)mem,view);	//	now will be added to the deadline at start time.
 				if(!o)
 					return	false;
-				view->controller=o;	//	init the view's controller.
+				view->controller=o;
 			}
 			break;
 		case	ObjectType::INPUT_LESS_IPGM:
@@ -454,7 +436,7 @@ namespace	r_exec{
 			if(view->get_act()>get_act_thr()){	//	active ipgm.
 
 				InputLessPGMController	*o=new	InputLessPGMController((r_exec::_Mem	*)mem,view);	//	now will be added to the deadline at start time.
-				view->controller=o;	//	init the view's controller.
+				view->controller=o;
 			}
 			break;
 		case	ObjectType::ANTI_IPGM:
@@ -462,7 +444,15 @@ namespace	r_exec{
 			if(view->get_act()>get_act_thr()){	//	active ipgm.
 
 				AntiPGMController	*o=new	AntiPGMController((r_exec::_Mem	*)mem,view);	//	now will be added to the deadline at start time.
-				view->controller=o;	//	init the view's controller.
+				view->controller=o;
+			}
+			break;
+		case	ObjectType::MODEL:	//	treated as an ipgm.
+			mdl_views[view->getOID()]=view;
+			if(view->get_act()>get_act_thr()){	//	active model.
+
+				RGRPController	*o=new	RGRPController((r_exec::_Mem	*)mem,view);
+				view->controller=o;
 			}
 			break;
 		case	ObjectType::MARKER:	//	populate the marker set of the referenced objects.
@@ -483,7 +473,6 @@ namespace	r_exec{
 
 		switch(GetType(view->object)){
 		case	ObjectType::IPGM:{
-
 			ipgm_views[view->getOID()]=view;
 			PGMController	*o=new	PGMController((r_exec::_Mem	*)mem,view);
 			view->controller=o;
@@ -495,7 +484,6 @@ namespace	r_exec{
 			}
 			break;
 		}case	ObjectType::ICPP_PGM:{
-
 			icpp_pgm_views[view->getOID()]=view;
 			Controller	*o=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),(r_exec::_Mem	*)mem,view);
 			if(!o)
@@ -528,6 +516,17 @@ namespace	r_exec{
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr())	//	active ipgm in a c-salient and c-active group.
 				((r_exec::_Mem	*)mem)->pushTimeJob(new	InputLessPGMSignalingJob(o,t+Utils::GetTimestamp<Code>(view->object,IPGM_TSC)));
 			break;
+		}case	ObjectType::MODEL:{	//	treated as an ipgm.
+			mdl_views[view->getOID()]=view;
+			RGRPController	*o=new	RGRPController((r_exec::_Mem	*)mem,view);
+			view->controller=o;
+			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active model in a c-salient and c-active group.
+
+				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
+					o->take_input(*v);	//	view will be copied.
+			}
+			break;
 		}case	ObjectType::MARKER:	//	the marker does not exist yet: add it to the mks of its references.
 			for(uint32	i=0;i<view->object->references_size();++i){
 
@@ -552,29 +551,11 @@ namespace	r_exec{
 		notifyNew(view);
 	}
 
-	void	Group::injectGroup(View	*view,uint64	t){	//	the view can hold groups or r-groups.
+	void	Group::injectGroup(View	*view,uint64	t){	//	the view can hold a group or an r-groups.
 
-		switch(view->object->code(0).getDescriptor()){
-		case	Atom::GROUP:
-			group_views[view->getOID()]=view;
-			break;
-		case	Atom::REDUCTION_GROUP:{	//	similar to the ipgm case (see Group::inject() above).
-			rgroup_views[view->getOID()]=view;
+		group_views[view->getOID()]=view;
 
-			RGRPController	*o=new	RGRPController((r_exec::_Mem	*)mem,view);
-			view->controller=o;
-
-			injectRGroup(view);
-
-			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active rgrp in a c-salient and c-active group.
-
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
-				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
-					o->take_input(*v);	//	view will be copied.
-			}
-			break;
-		}
-		}
+		injectRGroup(view);
 
 		if(get_c_sln()>get_c_sln_thr()	&&	view->get_sln()>get_sln_thr()){	//	group is c-salient and view is salient.
 
@@ -632,15 +613,17 @@ namespace	r_exec{
 			if(vg->second){	//	cov==true.
 
 				std::set<View	*,r_code::View::Less>::const_iterator	v;
-				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v){	//	no cov for pgm, groups or notifications.
+				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v){	//	no cov for pgm, groups, r-groups, models or notifications.
 
 					if((*v)->isNotification())
 						continue;
-					switch((*v)->object->code(0).getDescriptor()){
-					case	Atom::INSTANTIATED_PROGRAM:
-					case	Atom::INSTANTIATED_CPP_PROGRAM:
-					case	Atom::GROUP:
-					case	Atom::REDUCTION_GROUP:
+					switch(GetType((*v)->object)){
+					case	ObjectType::GROUP:
+					case	ObjectType::IPGM:
+					case	ObjectType::INPUT_LESS_IPGM:
+					case	ObjectType::ANTI_IPGM:
+					case	ObjectType::ICPP_PGM:
+					case	ObjectType::MODEL:
 						break;
 					default:
 						((r_exec::_Mem	*)mem)->injectCopyNow(*v,vg->first,t);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.

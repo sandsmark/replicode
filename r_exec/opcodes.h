@@ -56,13 +56,18 @@ namespace	r_exec{
 		static	uint16	IPGM;
 		static	uint16	PGM;
 		static	uint16	AntiPGM;
+		static	uint16	FMD;
+		static	uint16	IMD;
 
 		static	uint16	Cmd;
 
 		static	uint16	Var;
 
+		static	uint16	Pred;
+
 		static	uint16	MkRdx;
 		static	uint16	MkAntiRdx;
+		static	uint16	MkGRdx;
 
 		static	uint16	MkNew;
 

@@ -67,17 +67,18 @@ namespace	r_exec{
 			}else
 				return	ANTI_IPGM;
 		case	Atom::OBJECT:
+			if(object->code(0).asOpcode()==Opcodes::FMD	||	object->code(0).asOpcode()==Opcodes::IMD)
+				return	MODEL;
+			if(object->code(0).asOpcode()==Opcodes::Var)
+				return	VARIABLE;
 			return	OBJECT;
 		case	Atom::MARKER:
 			return	MARKER;
 		case	Atom::GROUP:
-			return	GROUP;
 		case	Atom::REDUCTION_GROUP:
-			return	RGROUP;
+			return	GROUP;
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
 			return	ICPP_PGM;
-		case	Atom::VARIABLE:
-			return	VARIABLE;
 		}
 	}
 }

@@ -25,9 +25,10 @@
 !class (_fact (_obj {obj: time:us cfd:nb :~}))
 
 ;mapping high-level objects -> r-code
-!class (rgrp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: act:nb vis:nb)
-!class (rgrp (_grp {out_grps:[::grp] tsc:us nfr:bl}))
-!class (var (_obj org:))
+!class (rgrp (_grp nil))
+!class (var (_obj nil))
+!class (fmd (_obj {head:rgrp who:ent out_grps:[::grp] ntf_grps:[::grp] tsc:us nfr:bl}))
+!class (imd (_obj {head:rgrp who:ent out_grps:[::grp] ntf_grps:[::grp] fmd:fmd nfr:bl}))
 !class (fact (_fact nil))
 !class (|fact (_fact nil))
 !class (pred (_fact who:ent))
@@ -47,6 +48,7 @@
 !class (mk.sln_chg (_obj {obj: chg:nb}))
 !class (mk.act_chg (_obj {obj: chg:nb}))
 !class (mk.new (_obj obj:))
+!class (mk.grdx (_obj {mdl: prods:[]}))
 
 ;mapping operator opcodes -> r-atoms
 !op (_now):us

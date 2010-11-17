@@ -62,7 +62,7 @@ namespace	r_exec{
 			((Group	*)gv->second->object)->viewing_groups.erase(this);
 			((Group	*)gv->second->object)->leave();
 		}
-
+/* We keep the group intact: the only thing is now the group will not be updated anymore.
 		//	remove all views that are hosted by this group.
 		FOR_ALL_VIEWS_BEGIN(this,v)
 
@@ -80,8 +80,8 @@ namespace	r_exec{
 		other_views.clear();
 		variable_views.clear();
 		group_views.clear();
-		rgroup_views.clear();
-
+		mdl_views.clear();
+*/
 		return	false;
 	}
 

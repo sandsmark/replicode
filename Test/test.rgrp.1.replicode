@@ -1,16 +1,16 @@
 ;test model: "hand holds cup -> (hand at position p -> cup at position p)"
-;composed of three r-groups.
 ;
 ;1 - construction:
 ;build an abstraction group (abst_grp: contains abstraction programs (abst_pgmx)).
 ;build three r-groups (r_grpx) made visible from abst_grp.
-;inject objects in the r-group: they are abstracted by the ipgm in abst_grp (i_abst_pgm1).
+;populate each r-group, i.e. inject objects in the r-groups: they are abstracted by the ipgm in abst_grp (see i_abst_pgm1).
+;after 90ms, the model is built and projected onto stdin (see assemble_model) so it gets inputs from there (like any program).
 ;after 100 ms (i.e. the upr of abst_grp), the r-groups are no longer projected in abst_grp, this switches abstraction off.
-;at the same time, the c-activation of the r-groups is turned on (see abst_off): this allows the r-groups to take inputs.
-;at the same time, the r-groups are scheduled for projection onto stdin (occurs at 110ms, see abst_off) so it gets inputs from there (like any program).
+;
 ;
 ;2 - exploitation:
-;after 110ms, inject samples in stdin: the r-groups will reduce them and produce predictions.
+;after 120ms, inject samples in stdin: the r-groups will reduce them and produce predictions.
+;N.B.: do not inject anything in r-groups after the construction phase.
 
 
 ;build the abstraction group and programs.
@@ -25,7 +25,7 @@ abst_pgm1:(pgm
    (ptn var2:(var ::) |[])
 []
    []
-      (ptn in:(mk.val ::) |[])
+      (ptn in:(mk.val : hold ::) |[])
    |[]
    |[]
 []
@@ -35,39 +35,52 @@ abst_pgm1:(pgm
 )
 |[]
 
-i_abst_pgm1:(ipgm abst_pgm1 [nil nil] 0us SILENT 1)
+i_abst_pgm1:(ipgm abst_pgm1 [nil nil] 0us NOTIFY 1)
 []
    [SYNC_FRONT now 0 forever abst_grp nil 1]
 
-
-;build the model: rgrps are c-salient but not c-active: the latter is turned on when abstraction is over.
-
-r_grp1:(std_rgrp 1 0 0 0 1 0 0 0 |[] |[] 0us NOTIFY)
+abst_pgm2:(pgm
 []
-   [SYNC_FRONT now 0 forever root nil 0 0]
-   [SYNC_FRONT now 1 1 abst_grp nil 0 1]; make r_grp1 visible from abst_grp..
-                                          to allow abstraction programs reducing the content of r_grp.
-
-r_grp2:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us NOTIFY)
+   (ptn var1:(var ::) |[])
+   (ptn var2:(var ::) |[])
 []
-   [SYNC_FRONT now 0 forever root nil 0 0]
-   [SYNC_FRONT now 0 1 abst_grp nil 0 1]
-   [SYNC_FRONT now 0 forever r_grp1 nil 0 0]; make r_grp2 a child of r_grp1.
-
-r_grp3:(std_rgrp 0 0 0 0 1 0 0 0 |[] |[] 0us NOTIFY)
+   []
+      (ptn in:(mk.val : position ::) |[])
+   |[]
+   |[]
 []
-   [SYNC_FRONT now 0 forever root nil 0 0]
-   [SYNC_FRONT now 0 1 abst_grp nil 0 1]
-   [SYNC_FRONT now 0 forever r_grp2 nil 0 0]; make r_grp3 a child of r_grp2.
+   (subst [in.object var1])
+   (subst [in.value var2])
+1
+)
+|[]
+
+i_abst_pgm2:(ipgm abst_pgm2 [nil nil] 0us NOTIFY 1)
+[]
+   [SYNC_FRONT now 0 forever abst_grp nil 1]
+
+;build the model: first the r-groups, then their population.
+
+r_grp1:(std_rgrp 0 0 0 0)
+[]
+   [SYNC_FRONT now 0 1 abst_grp nil COV_OFF 1]; make r_grp1 visible from abst_grp to allow abstraction programs..
+                                                reducing the content of r_grp; notice the resilience set to 1.
+r_grp2:(std_rgrp 0 0 0 0)
+[]
+   [SYNC_FRONT now 0 forever r_grp1 nil COV_OFF 0]; project the child on its parent before anywhere else.
+   [SYNC_FRONT now 0 1 abst_grp nil COV_OFF 1]
+
+r_grp3:(std_rgrp 0 0 0 0)
+[]
+   [SYNC_FRONT now 0 forever r_grp2 nil COV_OFF 0]; project the child on its parent before anywhere else.
+   [SYNC_FRONT now 0 1 abst_grp nil COV_OFF 1]
 
 (mk.val hand hold cup 1)
 []
    [SYNC_STATE now 1 1 r_grp1 nil]
 
 pos:(val_holder (vec3 0 0 0) 1)
-[]
-   [SYNC_STATE now 1 1 r_grp2 nil]
-   [SYNC_STATE now 1 1 r_grp3 nil]
+|[]
 
 (mk.val hand position pos 1)
 []
@@ -77,29 +90,20 @@ pos:(val_holder (vec3 0 0 0) 1)
 []
    [SYNC_STATE now 1 1 r_grp3 nil]
 
-
-;turn abstraction off.
-
-abst_off:(pgm
+build_model:(pgm
 |[]
-[]
-   []
-      (ptn r_grp:(rgrp ::) |[])
-   |[]
-   |[]
+|[]
 []
    (inj []
-      r_grp
-      [SYNC_FRONT (+ now 110000) 0 forever stdin nil 1 0]; non salient, active, invisible.
+      fmd:(fmd r_grp1 self [root] [root] 0us NOTIFY 1); fmd points to the head r-group.
+      [SYNC_FRONT now 0 forever stdin nil 1]; put the fmd in stdin, in an active state.
    )
-   (set [r_grp.c_act 1])
-1
-)
+1)
 |[]
 
-i_abst_off:(ipgm abst_off |[] 0us SILENT 1)
+i_build_model:(ipgm build_model |[] 90000us NOTIFY 1)
 []
-   [SYNC_FRONT now 0 1 abst_grp nil 1]
+   [SYNC_FRONT now 0 1 root nil 1]
 
 
 ;inject inputs in stdin to be matched by the model (will trigger the production of predictions).
@@ -112,9 +116,17 @@ inject_inputs:(pgm
       (mk.val hand hold cup 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
+   (inj []
+      new_pos:(val_holder (vec3 2 2 2) 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (mk.val hand position new_pos 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
 1)
 |[]
 
-i_inject_inputs:(ipgm inject_inputs |[] 150000us NOTIFY 1)
+i_inject_inputs:(ipgm inject_inputs |[] 120000us NOTIFY 1)
 []
-   [SYNC_FRONT now 0 2 abst_grp nil 1]
+   [SYNC_FRONT now 0 2 root nil 1]

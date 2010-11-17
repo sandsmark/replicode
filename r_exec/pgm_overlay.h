@@ -161,6 +161,8 @@ namespace	r_exec{
 		PGMController(_Mem	*m,r_code::View	*ipgm_view);
 		virtual	~PGMController();
 
+		void	add(Overlay	*overlay);
+
 		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
 		void	take_input(r_exec::View	*input,Overlay	*source);
 	};

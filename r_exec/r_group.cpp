@@ -36,38 +36,59 @@ namespace	r_exec{
 
 	void	RGroup::injectRGroup(View	*view){
 
-		if(!parent)	//	this assumes that no injection of r-groups occur after the r-group becomes c-active.
-			substitutions=new	UNORDERED_MAP<Code	*,Var	*>();
+		if(!parent	&&	!substitutions){	//	init the head; this assumes that children are injected from left to right.
+
+			substitutionsCS=new	CriticalSection();
+			substitutions=new	UNORDERED_MAP<Code	*,std::pair<Code	*,std::list<RGroup	*> > >();
+		}
 
 		((RGroup	*)view->object)->parent=this;
 		((RGroup	*)view->object)->substitutions=substitutions;
+		((RGroup	*)view->object)->substitutionsCS=substitutionsCS;
+
+		view->controller=new	RGRPController((r_exec::_Mem	*)mem,view);
 	}
 
-	void	RGroup::cov(View	*v,uint64	t){
-	}
+	Code	*RGroup::get_var(Code	*value){
 
-	void	RGroup::cov(uint64	t){
-	}
+		Code	*var;
+		bool	inject=false;
 
-	Var	*RGroup::get_var(Code	*value){
-
-		Var	*var;
-
-		substitutionsCS.enter();
+		substitutionsCS->enter();
 
 		// sharp matching on values. TODO: fuzzy matching.
-		UNORDERED_MAP<Code	*,Var	*>::const_iterator	it=substitutions->find(value);
-		if(it!=substitutions->end())
-			var=it->second;
-		else{
+		UNORDERED_MAP<Code	*,std::pair<Code	*,std::list<RGroup	*> > >::iterator	s=substitutions->find(value);
+		if(s!=substitutions->end()){	//	variable already exists for the value.
+
+			var=s->second.first;
+
+			std::list<RGroup	*>::const_iterator	g;
+			for(g=s->second.second.begin();g!=s->second.second.end();++g)
+				if((*g)==this)
+					break;
+
+			if(g==s->second.second.end()){	//	variable not injected (yet) in the group.
+
+				s->second.second.push_back(this);
+				inject=true;
+			}
+		}else{	//	no variable exists yet for the value.
 			
-			var=(Var	*)((r_exec::_Mem*)mem)->buildObject(Atom::Variable(Opcodes::Var,VAR_ARITY));
-			var->code(VAR_ORG)=Atom::Nil();
+			var=((r_exec::_Mem*)mem)->buildObject(Atom::Object(Opcodes::Var,VAR_ARITY));
 			var->code(VAR_ARITY)=Atom::Float(1);	//	psln_thr.
 
-			(*substitutions)[value]=var;
+			std::pair<Code	*,std::list<RGroup	*> >	entry;
+			entry.first=var;
+			entry.second.push_back(this);
+			(*substitutions)[value]=entry;
 
-			//	inject the variable in the r-grp.
+			inject=true;
+		}
+
+		substitutionsCS->leave();
+
+		if(inject){	//	inject the variable in the group.
+
 			View	*var_view=new	View();
 			var_view->code(VIEW_OPCODE)=Atom::SSet(Opcodes::View,VIEW_ARITY);	//	Structured Set.
 			var_view->code(VIEW_SYNC)=Atom::Boolean(true);			//	sync on front.
@@ -83,8 +104,6 @@ namespace	r_exec{
 			var_view->set_object(var);
 			((r_exec::_Mem*)mem)->inject(var_view);
 		}
-
-		substitutionsCS.leave();
 
 		return	var;
 	}

@@ -229,7 +229,6 @@ namespace	r_exec{
 				result_index=index;
 				return	true;
 			}
-		case	Atom::VARIABLE:
 		case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
@@ -389,7 +388,6 @@ dereference:
 		//	c is pointing at the first atom of an object or a view.
 		switch(c[0].getDescriptor()){
 		case	Atom::OBJECT:
-		case	Atom::VARIABLE:
 		case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:

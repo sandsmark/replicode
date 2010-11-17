@@ -229,7 +229,6 @@ namespace	r_exec{
 				break;
 			case	Atom::OPERATOR:
 			case	Atom::OBJECT:
-			case	Atom::VARIABLE:
 			case	Atom::MARKER:
 			case	Atom::INSTANTIATED_PROGRAM:
 			case	Atom::INSTANTIATED_CPP_PROGRAM:

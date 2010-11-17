@@ -32,7 +32,6 @@
 #include	"../r_code/replicode_defs.h"
 #include	"operator.h"
 #include	"r_group.h"
-#include	"var.h"
 #include	"factory.h"
 #include	"cpp_programs.h"
 #include	"../r_code/utils.h"
@@ -56,8 +55,6 @@ namespace	r_exec{
 			return	new	Group(source,this);
 		case	Atom::REDUCTION_GROUP:
 			return	new	RGroup(source,this);
-		case	Atom::VARIABLE:
-			return	new	Var(source,this);
 		default:
 			return	new	O(source,this);
 		}
@@ -72,9 +69,6 @@ namespace	r_exec{
 			break;
 		case	Atom::REDUCTION_GROUP:
 			object=new	RGroup();
-			break;
-		case	Atom::VARIABLE:
-			object=new	Var();
 			break;
 		default:
 			if(O::RequiresPacking())
@@ -165,7 +159,7 @@ namespace	r_exec{
 
 			object->position_in_objects=this->objects.insert(this->objects.end(),object);
 			object->is_registered=true;
-			if(GetType(object)!=ObjectType::GROUP	&&	GetType(object)!=ObjectType::RGROUP)	//	load non-group object in register.
+			if(GetType(object)!=ObjectType::GROUP)	//	load non-group object in register.
 				((O	*)object)->position_in_object_register=object_register.insert((O	*)object).first;
 			else
 				initial_groups.push_back((Group	*)object);	//	convenience to create initial update jobs - see start().

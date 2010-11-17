@@ -38,18 +38,23 @@ namespace	r_exec{
 
 	inline	RGroup::~RGroup(){
 
-		if(!parent	&&	substitutions)
+		if(!parent	&&	substitutions){
+
 			delete	substitutions;
+			delete	substitutionsCS;
+		}
 	}
 
-	inline	uint16	RGroup::get_out_grp_count(){
+	inline	Code	*RGroup::get_fwd_model()	const{
 
-		return	code(code(RGRP_OUT_GRPS).asIndex()).getAtomCount();
+		return	fwd_model;
 	}
 
-	inline	Group	*RGroup::get_out_grp(uint16	i){
+	inline	void	RGroup::set_fwd_model(Code	*mdl){
 
-		uint16	index=code(code(RGRP_OUT_GRPS).asIndex()+i).asIndex();
-		return	(Group	*)get_reference(index);
+		fwd_model=mdl;
+		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
+		for(v=group_views.begin();v!=group_views.end();++v)
+			((RGroup	*)v->second->object)->set_fwd_model(mdl);
 	}
 }

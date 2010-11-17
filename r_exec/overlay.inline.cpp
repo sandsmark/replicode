@@ -37,18 +37,38 @@ namespace	r_exec{
 		reductionCS.leave();
 	}
 
+	inline	_Mem	*Overlay::get_mem()	const{
+
+		return	controller->get_mem();
+	}
+
 	inline	r_code::Code	*Overlay::getObject()	const{	
 		
-		return	controller->getObject();
+		return	((Controller	*)controller)->getObject();
 	}
 	
 	inline	r_exec::View	*Overlay::getView()	const{	
 		
-		return	controller->getView();
+		return	((Controller	*)controller)->getView();
 	}
 
-	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	inline	_Mem	*__Controller::get_mem()		const{
+		
+		return	mem;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	template<class	S>	_Controller<S>::_Controller(_Mem	*mem):S(),__Controller(mem){
+	}
+
+	template<class	S>	_Controller<S>::~_Controller(){
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	inline	bool	Controller::is_alive(){
 		
 		aliveCS.enter();
@@ -56,7 +76,7 @@ namespace	r_exec{
 		aliveCS.leave();
 		return	_alive;
 	}
-	
+
 	inline	r_code::Code	*Controller::getObject()	const{
 		
 		return	view->object;
@@ -65,10 +85,5 @@ namespace	r_exec{
 	inline	r_exec::View	*Controller::getView()	const{
 		
 		return	(r_exec::View	*)view;
-	}
-
-	inline	_Mem	*Controller::get_mem()		const{
-		
-		return	mem;
 	}
 }
