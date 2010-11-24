@@ -40,6 +40,10 @@ public:
 	uint32	reduction_core_count;
 	uint32	time_core_count;
 	uint32	notification_resilience;
+	uint32	prediction_resilience;
+	uint32	goal_resilience;
+	uint32	assumption_resilience;
+	uint32	simulation_resilience;
 	uint32	run_time;
 	typedef	enum{
 		TS_RELATIVE=0,
@@ -70,6 +74,10 @@ public:
 			const	char	*_reduction_core_count=parameters.getAttribute("reduction_core_count");
 			const	char	*_time_core_count=parameters.getAttribute("time_core_count");
 			const	char	*_notification_resilience=parameters.getAttribute("notification_resilience");
+			const	char	*_prediction_resilience=parameters.getAttribute("prediction_resilience");
+			const	char	*_goal_resilience=parameters.getAttribute("goal_resilience");
+			const	char	*_assumption_resilience=parameters.getAttribute("assumption_resilience");
+			const	char	*_simulation_resilience=parameters.getAttribute("simulation_resilience");
 			const	char	*_run_time=parameters.getAttribute("run_time");
 			const	char	*_decompile_timestamps=parameters.getAttribute("decompile_timestamps");
 			const	char	*_decompile_image=parameters.getAttribute("decompile_image");
@@ -84,6 +92,10 @@ public:
 			reduction_core_count=atoi(_reduction_core_count);
 			time_core_count=atoi(_time_core_count);
 			notification_resilience=atoi(_notification_resilience);
+			prediction_resilience=atoi(_prediction_resilience);
+			goal_resilience=atoi(_goal_resilience);
+			assumption_resilience=atoi(_assumption_resilience);
+			simulation_resilience=atoi(_simulation_resilience);
 			run_time=atoi(_run_time);
 			if(strcmp(_decompile_timestamps,"relative")==0)
 				decompile_timestamps=TS_RELATIVE;

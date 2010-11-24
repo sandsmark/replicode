@@ -585,7 +585,7 @@ namespace	r_exec{
 		Context	nfr=*context.getChild(4);
 
 		Code	*_object=object.getObject();
-		if(_object->code(0).asOpcode()!=Opcodes::PGM	&&	_object->code(0).asOpcode()!=Opcodes::AntiPGM){
+		if(_object->code(0).asOpcode()!=Opcodes::Pgm	&&	_object->code(0).asOpcode()!=Opcodes::AntiPgm){
 
 			context.setAtomicResult(Atom::Nil());
 			return	false;
@@ -617,7 +617,7 @@ namespace	r_exec{
 			//	create an ipgm in the production array.
 			Code	*instantiated_object=context.buildObject(_object->code(0));
 			uint16	write_index=0;
-			instantiated_object->code(write_index++)=Atom::InstantiatedProgram(Opcodes::IPGM,IPGM_ARITY);
+			instantiated_object->code(write_index++)=Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY);
 			instantiated_object->code(write_index++)=Atom::RPointer(0);				//	points to the pgm object.
 
 			uint16	extent_index=0;
@@ -670,7 +670,7 @@ namespace	r_exec{
 
 		Context	&skeleton=Context();
 		uint16	last_patch_index;
-		if(pattern[0].asOpcode()==Opcodes::PTN){
+		if(pattern[0].asOpcode()==Opcodes::Ptn){
 			
 			skeleton=*pattern.getChild(1);
 			if(!skeleton.match(input))
@@ -682,7 +682,7 @@ namespace	r_exec{
 			goto	build_productions;
 		}
 
-		if(pattern[0].asOpcode()==Opcodes::AntiPTN){
+		if(pattern[0].asOpcode()==Opcodes::AntiPtn){
 			
 			skeleton=*pattern.getChild(1);
 			if(skeleton.match(input))
@@ -717,7 +717,7 @@ build_productions:
 	void	reduce(const	Context	&context,const	Context	&input_set,const	Context	&section,std::vector<uint16>	&input_indices,std::vector<uint16>	&production_indices){
 
 		Context	pattern=*section.getChild(1);
-		if(pattern[0].asOpcode()!=Opcodes::PTN	&&	pattern[0].asOpcode()!=Opcodes::AntiPTN)
+		if(pattern[0].asOpcode()!=Opcodes::Ptn	&&	pattern[0].asOpcode()!=Opcodes::AntiPtn)
 			return;
 
 		Context	productions=*section.getChild(2);

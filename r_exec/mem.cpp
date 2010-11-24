@@ -45,13 +45,21 @@ namespace	r_exec{
 	void	_Mem::init(uint32	base_period,	//	in us; same for upr, spr and res.
 						uint32	reduction_core_count,
 						uint32	time_core_count,
-						uint32	ntf_mk_res){
+						uint32	ntf_mk_res,
+						uint32	pred_res,
+						uint32	goal_res,
+						uint32	asmp_res,
+						uint32	sim_res){
 
 		this->base_period=base_period;
 		this->reduction_core_count=reduction_core_count;
 		this->time_core_count=time_core_count;
 
 		this->ntf_mk_res=ntf_mk_res;
+		this->pred_res=pred_res;
+		this->goal_res=goal_res;
+		this->asmp_res=asmp_res;
+		this->sim_res=sim_res;
 	}
 
 	void	_Mem::reset(){
@@ -524,7 +532,8 @@ CoreCount=0;
 				case	ObjectType::INPUT_LESS_IPGM:
 				case	ObjectType::ANTI_IPGM:
 				case	ObjectType::ICPP_PGM:
-				case	ObjectType::MODEL:{
+				case	ObjectType::FWD_MODEL:
+				case	ObjectType::INV_MODEL:{
 
 					//	update activation.
 					bool	view_was_active=v->second->get_act()>group->get_act_thr();
@@ -590,7 +599,8 @@ CoreCount=0;
 				case	ObjectType::GROUP:
 					v=group->group_views.erase(v);
 					break;
-				case	ObjectType::MODEL:
+				case	ObjectType::FWD_MODEL:
+				case	ObjectType::INV_MODEL:
 					v=group->mdl_views.erase(v);
 					break;
 				}

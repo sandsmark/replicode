@@ -46,7 +46,7 @@ namespace	r_exec{
 		((RGroup	*)view->object)->substitutions=substitutions;
 		((RGroup	*)view->object)->substitutionsCS=substitutionsCS;
 
-		view->controller=new	RGRPController((r_exec::_Mem	*)mem,view);
+		view->controller=new	FwdController((r_exec::_Mem	*)mem,view);
 	}
 
 	Code	*RGroup::get_var(Code	*value){
@@ -89,22 +89,16 @@ namespace	r_exec{
 
 		if(inject){	//	inject the variable in the group.
 
-			View	*var_view=new	View();
-			var_view->code(VIEW_OPCODE)=Atom::SSet(Opcodes::View,VIEW_ARITY);	//	Structured Set.
-			var_view->code(VIEW_SYNC)=Atom::Boolean(true);			//	sync on front.
-			var_view->code(VIEW_IJT)=Atom::IPointer(VIEW_ARITY+1);	//	iptr to ijt.
-			Utils::SetTimestamp<View>(var_view,VIEW_IJT,Now());		//	ijt.
-			var_view->code(VIEW_SLN)=Atom::Float(0);				//	sln.
-			var_view->code(VIEW_RES)=Atom::PlusInfinity();			//	res.
-			var_view->code(VIEW_HOST)=Atom::RPointer(0);			//	host.
-			var_view->code(VIEW_ORG)=Atom::Nil();					//	origin.
-
-			var_view->references[0]=this;
-
-			var_view->set_object(var);
+			View	*var_view=new	View(true,Now(),0,-1,this,NULL,var);
 			((r_exec::_Mem*)mem)->inject(var_view);
 		}
 
 		return	var;
+	}
+
+	void	RGroup::instantiate_goals(UNORDERED_MAP<Code	*,P<Code> >	*bindings){
+
+		if(parent)
+			parent->instantiate_goals(bindings);
 	}
 }

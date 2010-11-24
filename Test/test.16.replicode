@@ -22,13 +22,13 @@ _start:(pgm
       [SYNC_FRONT now 1 forever root nil]
    )
    (inj []
-      (ins p |[] 50000us NOTIFY)
+      (ins p |[] RUN_ALWAYS 50000us NOTIFY)
       [SYNC_FRONT now 1 forever root nil 1]
    )
 1
 )
 |[]
 
-i_start:(ipgm _start |[] 90000us NOTIFY 1)
+i_start:(ipgm _start |[] RUN_ONCE 90000us NOTIFY 1)
 []
    [SYNC_FRONT now 1 1 root nil 1]

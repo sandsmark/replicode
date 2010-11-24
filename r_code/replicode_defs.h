@@ -31,6 +31,9 @@
 #ifndef	replicode_defs_h
 #define	replicode_defs_h
 
+
+#define	EXECUTIVE_DEVICE	0xA1000000
+
 #define	VIEW_CODE_MAX_SIZE	13	//	size of the code of the largest view (grp view) + 1 (oid used by rMems); view set opcode's index is 0.
 
 #define	VIEW_OPCODE		0
@@ -81,40 +84,39 @@
 #define	GRP_NTF_NEW			29
 #define	GRP_LOW_RES_THR		30
 #define	GRP_NTF_GRPS		31
-
-#define	IPGM_PGM	1
-#define	IPGM_ARGS	2
-#define	IPGM_TSC	3
-#define	IPGM_NFR	4
+#define	GRP_ARITY			32
 
 #define	PGM_TPL_ARGS	1
 #define	PGM_INPUTS		2
 #define	PGM_PRODS		3
+#define	PGM_ARITY		4
+
+#define	IPGM_PGM	1
+#define	IPGM_ARGS	2
+#define	IPGM_RUN	3
+#define	IPGM_TSC	4
+#define	IPGM_NFR	5
+#define	IPGM_ARITY	6
 
 #define	ICPP_PGM_NAME	1
 #define	ICPP_PGM_ARGS	2
-#define	ICPP_PGM_TSC	3
-#define	ICPP_PGM_NFR	4
+#define	ICPP_PGM_RUN	3
+#define	ICPP_PGM_TSC	4
+#define	ICPP_PGM_NFR	5
+#define	ICPP_PGM_ARITY	6
 
 #define	MD_HEAD		1
-#define	MD_WHO		2
-#define	MD_OUT_GRPS	3
-#define	MD_NTF_GRPS	4
+#define	MD_OUT_GRPS	2
+#define	MD_NTF_GRPS	3
 
-#define	FMD_TSC		5
-#define	IMD_FMD		5
+#define	FMD_TSC		4
+#define	IMD_FMD		4
 
-#define	MD_NFR		6
-
-#define	IPGM_ARITY		5
-#define	ICPP_PGM_ARITY	5
-#define	FMD_ARITY		7
-#define	IMD_ARITY		7
+#define	FMD_ARITY	6
+#define	IMD_ARITY	6
 
 #define	MK_RDX_ARITY		4
 #define	MK_ANTI_RDX_ARITY	3
-
-#define	EXECUTIVE_DEVICE	0xA1000000
 
 #define	CMD_FUNCTION	1
 #define	CMD_DEVICE		2
@@ -122,16 +124,36 @@
 
 #define	VAR_ARITY		1
 
+#define	FACT_OBJ		1
+#define	FACT_TIME		2
+#define	FACT_CFD		3
+#define	FACT_ARITY		4
+
 #define	PRED_OBJ		1
 #define	PRED_TIME		2
 #define	PRED_CFD		3
-#define	PRED_WHO		4
-
+#define	PRED_FMD		4
 #define	PRED_ARITY		5
 
-#define	MK_GRDX_MDL		1
-#define	MK_GRDX_PRODS	2
+#define	ASMP_OBJ		1
+#define	ASMP_TIME		2
+#define	ASMP_CFD		3
+#define	ASMP_ARITY		4
 
-#define	MK_GRDX_ARITY	3
+#define	SIM_OBJ		1
+#define	SIM_TIME	2
+#define	SIM_CFD		3
+#define	SIM_ARITY	4
+
+#define	MK_SUCCESS_OBJ		1
+#define	MK_SUCCESS_RATE		2
+#define	MK_SUCCESS_ARITY	3
+
+#define	MK_FAILURE_OBJ		1
+#define	MK_FAILURE_RATE		2
+#define	MK_FAILURE_ARITY	3
+
+#define	VAL_VALUE	1
+
 
 #endif

@@ -214,6 +214,7 @@ namespace	r_comp{
 			*out_stream<<metadata->operator_names[current_object->code[read_index].asOpcode()];
 			break;
 		case	Atom::OBJECT:
+		case	Atom::MODEL:
 		case	Atom::MARKER:
 			*out_stream<<metadata->class_names[current_object->code[read_index].asOpcode()];
 			break;

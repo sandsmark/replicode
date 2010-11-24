@@ -35,6 +35,7 @@ iP1:(ipgm
 P1; code
 []; args
    (tagged_v (vec3 1 2 3) "vector 123")
+RUN_ALWAYS; run
 200000us; tsc
 NOTIFY; nfr
 1; psln_thr

@@ -5,7 +5,6 @@
 
 !class (vec3 x:nb y:nb z:nb)
 !class (rgb r:nb g:nb b:nb)
-!class (val_holder (_obj value:))
 !class (mk.val (_obj {object: attribute: value:}))
 
 root:(std_grp 1 0 0 0 [nil])

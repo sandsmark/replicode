@@ -144,7 +144,7 @@ namespace	r_exec{
 						int32	_pgm_index;
 						if(pgm_index>=0)
 							_pgm_index=pgm_index;
-						else	if((*this)[0].getDescriptor()==Atom::OBJECT	&&	((*this)[0].asOpcode()==Opcodes::PGM	||	(*this)[0].asOpcode()==Opcodes::AntiPGM))
+						else	if((*this)[0].getDescriptor()==Atom::OBJECT	&&	((*this)[0].asOpcode()==Opcodes::Pgm	||	(*this)[0].asOpcode()==Opcodes::AntiPgm))
 							_pgm_index=index;
 						else
 							_pgm_index=-1;
@@ -229,6 +229,7 @@ namespace	r_exec{
 				break;
 			case	Atom::OPERATOR:
 			case	Atom::OBJECT:
+			case	Atom::MODEL:
 			case	Atom::MARKER:
 			case	Atom::INSTANTIATED_PROGRAM:
 			case	Atom::INSTANTIATED_CPP_PROGRAM:

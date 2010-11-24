@@ -17,7 +17,7 @@ P1:(pgm
 )
 |[]
 
-iP1:(ipgm P1 |[] 0us NOTIFY 1)
+iP1:(ipgm P1 |[] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]
 
@@ -34,7 +34,7 @@ P2:(pgm
 )
 |[]
 
-iP2:(ipgm P2 |[] 0us NOTIFY 1)
+iP2:(ipgm P2 |[] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]
 
@@ -51,6 +51,6 @@ P3:(pgm
 )
 |[]
 
-iP3:(ipgm P3 |[] 0us NOTIFY 1)
+iP3:(ipgm P3 |[] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]

@@ -6,7 +6,10 @@
 ;populate each r-group, i.e. inject objects in the r-groups: they are abstracted by the ipgm in abst_grp (see i_abst_pgm1).
 ;after 90ms, the model is built and projected onto stdin (see assemble_model) so it gets inputs from there (like any program).
 ;after 100 ms (i.e. the upr of abst_grp), the r-groups are no longer projected in abst_grp, this switches abstraction off.
-;
+; WARNING
+; pertaining to abstraction programs:
+; a - we are currently limited to 2 levels of depth for chain pointers (ex: in.object; we cannot write things like in.x.y since in is already a member of f).
+; b - the notification of chain pointers is wrong (but the calculus is correct).
 ;
 ;2 - exploitation:
 ;after 120ms, inject samples in stdin: the r-groups will reduce them and produce predictions.
@@ -25,7 +28,7 @@ abst_pgm1:(pgm
    (ptn var2:(var ::) |[])
 []
    []
-      (ptn in:(mk.val : hold ::) |[])
+      (ptn (fact in:(mk.val : hold ::) ::) |[])
    |[]
    |[]
 []
@@ -35,7 +38,7 @@ abst_pgm1:(pgm
 )
 |[]
 
-i_abst_pgm1:(ipgm abst_pgm1 [nil nil] 0us NOTIFY 1)
+i_abst_pgm1:(ipgm abst_pgm1 [nil nil] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 0 forever abst_grp nil 1]
 
@@ -43,19 +46,21 @@ abst_pgm2:(pgm
 []
    (ptn var1:(var ::) |[])
    (ptn var2:(var ::) |[])
+   (ptn var3:(var ::) |[])
 []
    []
-      (ptn in:(mk.val : position ::) |[])
+      (ptn f:(fact in:(mk.val : position ::) ::) |[])
    |[]
    |[]
 []
    (subst [in.object var1])
    (subst [in.value var2])
+   (subst [f.time var3])
 1
 )
 |[]
 
-i_abst_pgm2:(ipgm abst_pgm2 [nil nil] 0us NOTIFY 1)
+i_abst_pgm2:(ipgm abst_pgm2 [nil nil nil] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 0 forever abst_grp nil 1]
 
@@ -75,18 +80,30 @@ r_grp3:(std_rgrp 0 0 0 0)
    [SYNC_FRONT now 0 forever r_grp2 nil COV_OFF 0]; project the child on its parent before anywhere else.
    [SYNC_FRONT now 0 1 abst_grp nil COV_OFF 1]
 
-(mk.val hand hold cup 1)
+hand_holds_cup:(mk.val hand hold cup 1)
+|[]
+
+(fact hand_holds_cup 0us 1 1)
 []
    [SYNC_STATE now 1 1 r_grp1 nil]
 
-pos:(val_holder (vec3 0 0 0) 1)
+pos:(val (vec3 0 0 0) 1)
 |[]
 
-(mk.val hand position pos 1)
+t:(val 0us 1)
+|[]
+
+hand_pos:(mk.val hand position pos 1)
+|[]
+
+(fact hand_pos t 1 1)
 []
    [SYNC_STATE now 1 1 r_grp2 nil]
 
-(mk.val cup position pos 1)
+cup_pos:(mk.val cup position pos 1)
+|[]
+
+(fact cup_pos t 1 1)
 []
    [SYNC_STATE now 1 1 r_grp3 nil]
 
@@ -95,38 +112,52 @@ build_model:(pgm
 |[]
 []
    (inj []
-      fmd:(fmd r_grp1 self [root] [root] 0us NOTIFY 1); fmd points to the head r-group.
+      fmd:(fmd r_grp1 [root] [root] 0us 1); fmd points to the head r-group.
       [SYNC_FRONT now 0 forever stdin nil 1]; put the fmd in stdin, in an active state.
+   )
+   (inj []
+      (imd r_grp3 [root] [root] fmd 1); imd points to the tail r-group.
+      [SYNC_FRONT now 0 forever stdin nil 1]; put the imd in stdin, in an active state.
    )
 1)
 |[]
 
-i_build_model:(ipgm build_model |[] 90000us NOTIFY 1)
+i_build_model:(ipgm build_model |[] RUN_ONCE 90000us SILENT 1)
 []
    [SYNC_FRONT now 0 1 root nil 1]
 
 
 ;inject inputs in stdin to be matched by the model (will trigger the production of predictions).
 
+new_pos:(val (vec3 2 2 2) 1)
+|[]
+
+new_hand_pos:(mk.val hand position new_pos 1)
+|[]
+
 inject_inputs:(pgm
 |[]
 |[]
 []
    (inj []
-      (mk.val hand hold cup 1)
+      (fact hand_holds_cup now 1 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
    (inj []
-      new_pos:(val_holder (vec3 2 2 2) 1)
+      new_t:(val now 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
    (inj []
-      (mk.val hand position new_pos 1)
+      (fact new_hand_pos new_t 1 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
 1)
 |[]
 
-i_inject_inputs:(ipgm inject_inputs |[] 120000us NOTIFY 1)
+i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us NOTIFY 1)
 []
    [SYNC_FRONT now 0 2 root nil 1]
+
+; an assumption is produced (asmp (fact (mk.val cup pos new_pos 1) new_t 1) now 1).
+; it is an assumption since the predicted time is <= the time the conclusion is built.
+; for now, no check on the validity of the assumption; this still has to be specified.

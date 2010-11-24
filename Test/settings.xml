@@ -2,19 +2,25 @@
 
   <Parameters
     base_period="100000"
-	  reduction_core_count="1"
+	  
+    reduction_core_count="1"
 	  time_core_count="1"
-  	notification_resilience="1000"
+  	
+    notification_resilience="1000"
+    prediction_resilience="1000"
+    goal_resilience="1000"
+    assumption_resilience="1000"
+    simulation_resilience="1000"
     
-	  run_time="9000"
+	  run_time="1000"
     
     decompile_timestamps="relative"
     
     usr_operator_path="./usr_operators.dll"
-    usr_class_path="../Test//Correlator.Data.Generation/user.classes.replicode"
-    source_file_name="../Test//Correlator.Data.Generation/motor.babbling.replicode"
+    usr_class_path="../Test/rgrp.user.classes.replicode"
+    source_file_name="../Test/test.rgrp.1.replicode"
     
-    decompile_image="no"
+    decompile_image="yes"
     write_image="no"
     image_path="../Test/Correlator.Data.Generation/motor.babbling.episodes.replicode.image"
     test_image="no"

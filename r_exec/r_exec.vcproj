@@ -338,6 +338,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\model.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\object.cpp"
 				>
 			</File>
@@ -565,6 +569,10 @@
 			</File>
 			<File
 				RelativePath=".\mem.h"
+				>
+			</File>
+			<File
+				RelativePath=".\model.h"
 				>
 			</File>
 			<File

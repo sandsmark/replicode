@@ -20,6 +20,6 @@ _start:(pgm
 )
 |[]
 
-i_start:(ipgm _start |[] 90000us NOTIFY 1)
+i_start:(ipgm _start |[] RUN_ONCE 90000us NOTIFY 1)
 []
    [SYNC_FRONT now 1 1 root nil 1]

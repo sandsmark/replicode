@@ -58,7 +58,7 @@ namespace	r_exec{
 
 		switch(object->code(0).getDescriptor()){
 		case	Atom::INSTANTIATED_PROGRAM:
-			if(object->get_reference(0)->code(0).asOpcode()==Opcodes::PGM){
+			if(object->get_reference(0)->code(0).asOpcode()==Opcodes::Pgm){
 
 				if(object->get_reference(0)->code(object->get_reference(0)->code(PGM_INPUTS).asIndex()).getAtomCount()>0)
 					return	IPGM;
@@ -67,11 +67,14 @@ namespace	r_exec{
 			}else
 				return	ANTI_IPGM;
 		case	Atom::OBJECT:
-			if(object->code(0).asOpcode()==Opcodes::FMD	||	object->code(0).asOpcode()==Opcodes::IMD)
-				return	MODEL;
 			if(object->code(0).asOpcode()==Opcodes::Var)
 				return	VARIABLE;
 			return	OBJECT;
+		case	Atom::MODEL:
+			if(object->code(0).asOpcode()==Opcodes::Fmd)
+				return	FWD_MODEL;
+			if(object->code(0).asOpcode()==Opcodes::Imd)
+				return	INV_MODEL;
 		case	Atom::MARKER:
 			return	MARKER;
 		case	Atom::GROUP:

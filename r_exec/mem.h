@@ -69,6 +69,10 @@ namespace	r_exec{
 	protected:
 		uint32	base_period;
 		uint32	ntf_mk_res;
+		uint32	pred_res;
+		uint32	goal_res;
+		uint32	asmp_res;
+		uint32	sim_res;
 
 		PipeNN<P<_ReductionJob>,1024>	*reduction_job_queue;
 		PipeNN<P<TimeJob>,1024>			*time_job_queue;
@@ -118,9 +122,18 @@ uint32	CoreCount;
 		void	init(uint32	base_period,	//	in us; same for upr, spr and res.
 					uint32	reduction_core_count,
 					uint32	time_core_count,
-					uint32	ntf_mk_res=1);	//	resilience for notifications markers; for debugging purposes, use a long resilience.
+					uint32	ntf_mk_res,	//	resilience for notifications markers.
+					uint32	pred_res,	//	resilience for predictions.
+					uint32	goal_res,	//	resilience for goals.
+					uint32	asmp_res,	//	resilience for assumptions.
+					uint32	sim_res);	//	resilience for simulations.
 
 		uint64	get_base_period()	const{	return	base_period;	}
+		uint32	get_ntf_mk_res()	const{	return	ntf_mk_res;	}
+		uint32	get_pred_res()		const{	return	pred_res;	}
+		uint32	get_goal_res()		const{	return	goal_res;	}
+		uint32	get_asmp_res()		const{	return	asmp_res;	}
+		uint32	get_sim_res()		const{	return	sim_res;	}
 
 		void	wait_for_delegate();//	called by delegates just before performing their task.
 		void	delegate_done();	//	called by delegates just after completion of their task.

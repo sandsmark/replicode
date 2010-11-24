@@ -101,8 +101,8 @@ namespace	r_exec{
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
 			tsc=Utils::GetTimestamp<Code>(getObject(),ICPP_PGM_TSC);
 			break;
-		case	Atom::OBJECT:
-			if(getObject()->code(0)==Opcodes::FMD)
+		case	Atom::MODEL:
+			if(getObject()->code(0)==Opcodes::Fmd)
 				tsc=Utils::GetTimestamp<Code>(getObject(),FMD_TSC);
 			break;
 		}

@@ -21,6 +21,7 @@ iP1:(ipgm
 P1; code
 []; args
    (tagged_v (vec3 1 2 3) "vector 123")
+RUN_ALWAYS; run
 200000us; tsc
 NOTIFY; nfr
 1; psln_thr
@@ -42,6 +43,6 @@ P2:(pgm
 )
 |[]
 
-iP2:(ipgm P2 |[] 0us NOTIFY 1)
+iP2:(ipgm P2 |[] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 0 40 root nil 1]

@@ -48,9 +48,10 @@ namespace	r_exec{
 		OBJECT=3,
 		MARKER=4,
 		GROUP=5,
-		MODEL=6,
-		ICPP_PGM=7,
-		VARIABLE=8
+		FWD_MODEL=6,
+		INV_MODEL=7,
+		ICPP_PGM=8,
+		VARIABLE=9
 	}ObjectType;
 
 	r_exec_dll	bool		IsNotification(Code	*object);
@@ -119,7 +120,7 @@ namespace	r_exec{
 		public:
 			bool	operator	()(const	U	*lhs,const	U	*rhs)	const{	//	lhs and rhs have the same hash value, i.e. same opcode, same code size and same reference size.
 				
-				if(lhs->code(0).asOpcode()==Opcodes::Entity	||	lhs->code(0).asOpcode()==Opcodes::Var)
+				if(lhs->code(0).asOpcode()==Opcodes::Ent	||	lhs->code(0).asOpcode()==Opcodes::Var)
 					return	lhs==rhs;
 
 				uint16	i;

@@ -20,7 +20,7 @@ _start:(pgm
 )
 |[]
 
-i_start:(ipgm _start |[] 0us SILENT 1)
+i_start:(ipgm _start |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]
 
@@ -40,6 +40,6 @@ _start2:(pgm
 )
 |[]
 
-i_start2:(ipgm _start2 |[] 0us SILENT 1)
+i_start2:(ipgm _start2 |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 1 forever root nil 1]

@@ -224,11 +224,12 @@ namespace	r_exec{
 			}
 			return	op(*this,result_index);
 		}case	Atom::OBJECT:	//	incl. cmd.
-			if((*this)[0].asOpcode()==Opcodes::PTN	||	(*this)[0].asOpcode()==Opcodes::AntiPTN){	//	skip patterns.
+			if((*this)[0].asOpcode()==Opcodes::Ptn	||	(*this)[0].asOpcode()==Opcodes::AntiPtn){	//	skip patterns.
 
 				result_index=index;
 				return	true;
 			}
+		case	Atom::MODEL:
 		case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
@@ -375,6 +376,7 @@ dereference:
 		}
 
 		Context	c=*cptr.getChild(1);	//	this, vl_ptr, value_ptr or rptr.
+
 		uint16	atom_count=cptr.getChildrenCount();
 		for(uint16	i=2;i<atom_count;++i){	//	stop before the last iptr.
 
@@ -388,6 +390,7 @@ dereference:
 		//	c is pointing at the first atom of an object or a view.
 		switch(c[0].getDescriptor()){
 		case	Atom::OBJECT:
+		case	Atom::MODEL:
 		case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:

@@ -65,6 +65,10 @@ namespace	r_exec{
 
 		Code	*get_fwd_model()	const;
 		void	set_fwd_model(Code	*mdl);
+
+		RGroup	*get_parent()	const;
+
+		void	instantiate_goals(UNORDERED_MAP<Code	*,P<Code> >	*bindings);
 	};
 }
 

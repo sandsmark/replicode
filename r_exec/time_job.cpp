@@ -166,4 +166,20 @@ namespace	r_exec{
 
 		return	m->suspend_core();
 	}
+
+	////////////////////////////////////////////////////////////
+
+	MonitoringJob::MonitoringJob(Monitor	*m,uint64	deadline):TimeJob(deadline),monitor(m){
+	}
+
+	bool	MonitoringJob::update(_Mem	*m){
+
+		monitor->update();
+		return	true;
+	}
+
+	bool	MonitoringJob::is_alive()	const{
+
+		return	monitor->is_alive();
+	}
 }

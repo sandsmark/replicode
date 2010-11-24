@@ -35,30 +35,36 @@ namespace	r_exec{
 
 	uint16	Opcodes::View;
 	uint16	Opcodes::PgmView;
-	uint16	Opcodes::GroupView;
+	uint16	Opcodes::GrpView;
 
-	uint16	Opcodes::Entity;
+	uint16	Opcodes::Ent;
 
-	uint16	Opcodes::Group;
+	uint16	Opcodes::Grp;
 
-	uint16	Opcodes::PTN;
-	uint16	Opcodes::AntiPTN;
+	uint16	Opcodes::Ptn;
+	uint16	Opcodes::AntiPtn;
 
-	uint16	Opcodes::IPGM;
-	uint16	Opcodes::PGM;
-	uint16	Opcodes::AntiPGM;
-	uint16	Opcodes::FMD;
-	uint16	Opcodes::IMD;
+	uint16	Opcodes::IPgm;
+	uint16	Opcodes::Pgm;
+	uint16	Opcodes::AntiPgm;
+	uint16	Opcodes::Fmd;
+	uint16	Opcodes::Imd;
 
 	uint16	Opcodes::Cmd;
 
 	uint16	Opcodes::Var;
 
 	uint16	Opcodes::Pred;
+	uint16	Opcodes::Goal;
+	uint16	Opcodes::Hyp;
+	uint16	Opcodes::Sim;
+	uint16	Opcodes::Asmp;
 
 	uint16	Opcodes::MkRdx;
 	uint16	Opcodes::MkAntiRdx;
-	uint16	Opcodes::MkGRdx;
+
+	uint16	Opcodes::MkSuccess;
+	uint16	Opcodes::MkFailure;
 
 	uint16	Opcodes::MkNew;
 

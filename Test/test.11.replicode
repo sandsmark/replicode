@@ -18,6 +18,7 @@ hb:(pgm
 ihb:(ipgm
 hb; code
 |[]; args
+RUN_ALWAYS; run
 200000us; time scope
 NOTIFY; notify reduction flag
 1; propagation saliency threshold

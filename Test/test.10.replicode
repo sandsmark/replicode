@@ -18,6 +18,7 @@ hw:(pgm
 ihw:(ipgm
 hw; code
 |[]; args
+RUN_ALWAYS; run
 100000us
 NOTIFY
 1

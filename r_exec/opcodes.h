@@ -44,30 +44,36 @@ namespace	r_exec{
 	public:
 		static	uint16	View;
 		static	uint16	PgmView;
-		static	uint16	GroupView;
+		static	uint16	GrpView;
 
-		static	uint16	Entity;
+		static	uint16	Ent;
 
-		static	uint16	Group;
+		static	uint16	Grp;
 
-		static	uint16	PTN;
-		static	uint16	AntiPTN;
+		static	uint16	Ptn;
+		static	uint16	AntiPtn;
 
-		static	uint16	IPGM;
-		static	uint16	PGM;
-		static	uint16	AntiPGM;
-		static	uint16	FMD;
-		static	uint16	IMD;
+		static	uint16	IPgm;
+		static	uint16	Pgm;
+		static	uint16	AntiPgm;
+		static	uint16	Fmd;
+		static	uint16	Imd;
 
 		static	uint16	Cmd;
 
 		static	uint16	Var;
 
 		static	uint16	Pred;
+		static	uint16	Goal;
+		static	uint16	Hyp;
+		static	uint16	Sim;
+		static	uint16	Asmp;
 
 		static	uint16	MkRdx;
 		static	uint16	MkAntiRdx;
-		static	uint16	MkGRdx;
+
+		static	uint16	MkSuccess;
+		static	uint16	MkFailure;
 
 		static	uint16	MkNew;
 

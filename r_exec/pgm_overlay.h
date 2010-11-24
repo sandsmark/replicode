@@ -75,6 +75,8 @@ namespace	r_exec{
 		void	rollback();	//	reset the overlay to the last commited state: unpatch code and values.
 		void	commit();	//	empty the patch_indices and set value_commit_index to values.size().
 
+		Code	*duplicate(Code	*original,const	std::vector<std::pair<uint16,Code	*> >	*substitutions)	const;
+
 		InputLessPGMOverlay();
 		InputLessPGMOverlay(Controller	*c);
 	public:
@@ -154,9 +156,18 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	class	r_exec_dll	_PGMController:
+	public	Controller{
+	protected:
+		bool	run_once;
+
+		_PGMController(_Mem	*m,r_code::View	*ipgm_view);
+		virtual	~_PGMController();
+	};
+
 	// Controller for programs with inputs.
 	class	r_exec_dll	PGMController:
-	public	Controller{
+	public	_PGMController{
 	public:
 		PGMController(_Mem	*m,r_code::View	*ipgm_view);
 		virtual	~PGMController();
@@ -165,12 +176,14 @@ namespace	r_exec{
 
 		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
 		void	take_input(r_exec::View	*input,Overlay	*source);
+
+		void	notify_reduction();
 	};
 
 	//	TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
 	//	No contention on overlays.
 	class	r_exec_dll	InputLessPGMController:
-	public	Controller{
+	public	_PGMController{
 	public:
 		InputLessPGMController(_Mem	*m,r_code::View	*ipgm_view);
 		~InputLessPGMController();
@@ -181,7 +194,7 @@ namespace	r_exec{
 	//	Signaled by TimeCores (holding AntiPGMSignalingJob).
 	//	Possible recursive locks: signal_anti_pgm()->overlay->inject_productions()->mem->inject()->injectNow()->inject_reduction_jobs()->overlay->take_input().
 	class	r_exec_dll	AntiPGMController:
-	public	Controller{
+	public	_PGMController{
 	private:
 		bool	successful_match;
 

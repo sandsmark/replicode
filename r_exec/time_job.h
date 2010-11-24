@@ -33,6 +33,7 @@
 
 #include	"group.h"
 #include	"pgm_overlay.h"
+#include	"rgrp_overlay.h"
 
 
 namespace	r_exec{
@@ -126,6 +127,15 @@ namespace	r_exec{
 	public:
 		SuspendTimeCore();
 		bool	update(_Mem	*m);
+	};
+
+	class	r_exec_dll	MonitoringJob:
+	public	TimeJob{
+	public:
+		P<Monitor>	monitor;
+		MonitoringJob(Monitor	*monitor,uint64	deadline);
+		bool	update(_Mem	*m);
+		bool	is_alive()	const;
 	};
 }
 

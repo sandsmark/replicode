@@ -1231,15 +1231,17 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 					atom=Atom::InstantiatedProgram(class_opcode,members.size());
 				else	if(class_name=="icpp_pgm")
 					atom=Atom::InstantiatedCPPProgram(class_opcode,members.size());
+				else	if(class_name=="fmd"	||	class_name=="imd")
+					atom=Atom::Model(class_opcode,members.size());
 				else	if(class_name.find("mk.")!=string::npos)
 					atom=Atom::Marker(class_opcode,members.size());
 				else
 					atom=Atom::Object(class_opcode,members.size());
 
-				if(class_type==T_CLASS){	//	find out if the class is a sys class, i.e. is an instantiation of _obj or of _grp.
+				if(class_type==T_CLASS){	//	find out if the class is a sys class, i.e. is an instantiation of _obj, _grp or _fact.
 
 					std::string	base_class=s->args.front()->cmd;
-					if(base_class=="_obj"	||	base_class=="_grp")
+					if(base_class=="_obj"	||	base_class=="_grp"	||	base_class=="_fact")
 						class_type=T_SYS_CLASS;
 				}
 

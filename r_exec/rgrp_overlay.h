@@ -37,8 +37,14 @@
 
 namespace	r_exec{
 
-	class	RGRPController;
+	class	FwdController;
 	class	RGRPMasterOverlay;
+
+	typedef	enum{
+		RAW=0,
+		SIM=1,
+		ASM=2
+	}Conclusion;
 
 	//	Overlays are used to index the value held by variable objects (bindings, stored per overlay) - bindings include nil values (i.e. yet unbound variables).
 	//	Like program overlays hold a list of patterns that have stil to be matched, r-group overlays hold a list of the binders that still have to match.
@@ -55,6 +61,8 @@ namespace	r_exec{
 		uint16							unbound_var_count;
 		bool							discard_bindings;
 
+		bool	simulation;	//	indicates if at least one input was a hypothesis or the resukt of a simulation.
+
 		RGRPOverlay(__Controller	*c,RGroup	*group,UNORDERED_MAP<Code	*,P<Code> >	*bindings=NULL);
 		RGRPOverlay(RGRPOverlay	*original);
 	public:
@@ -66,19 +74,34 @@ namespace	r_exec{
 
 	//	Master r-group overlays.
 	//	Acts as a sub-controller.
-	//	See RGRPController comments.
+	//	See FwdController comments.
 	class	r_exec_dll	RGRPMasterOverlay:
 	public	_Controller<Overlay>{
-	friend	class	RGRPController;
+	friend	class	FwdController;
 	private:
 		UNORDERED_MAP<Code	*,P<Code> >	bindings;	//	variable|value.
 
-		RGRPMasterOverlay(RGRPController	*c,Code	*mdl,RGroup	*rgrp,UNORDERED_MAP<Code	*,P<Code> >	*bindings=NULL);
+		RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,UNORDERED_MAP<Code	*,P<Code> >	*bindings=NULL);
 	public:
 		~RGRPMasterOverlay();
 
 		void	reduce(r_exec::View	*input);
-		void	fire(UNORDERED_MAP<Code	*,P<Code> >	*bindings);
+		void	fire(UNORDERED_MAP<Code	*,P<Code> >	*bindings,Conclusion	c);
+	};
+
+	//	Monitors the occurrence of a predicted object.
+	class	Monitor:
+	public	_Object{
+	private:
+		FwdController	*controller;
+	public:
+		P<Code>	prediction;
+
+		Monitor(FwdController	*c,Code	*prediction);
+
+		bool	is_alive()	const;
+		void	take_input(r_exec::View	*input);
+		void	update();	//	called by monitoring jobs.
 	};
 
 	//	R-groups behave like programs: they take inputs from visible/(newly) salient views (depending on their sync mode).
@@ -87,8 +110,9 @@ namespace	r_exec{
 	//	Binding is performed by the _subst function of the executive (see InputLessPGMOverlay::injectProductions()).
 	//	The overlays held by controllers are r-group master overlays; these in turn hold r-group overlays.
 	//	If the r-group has a parent, one master is built each time some parent overlay fires; otherwise there is only one master.
-	//	If the parent overlay that built a master is killed (being too old), said master is removed from the conctollers, along with all its overlays;
-	class	r_exec_dll	RGRPController:
+	//	If the parent overlay that built a master is killed (being too old), said master is removed from the controllers, along with all its overlays;
+	//	The views of forward models hold a forward controller that takes inputs from the group the view dwells in.
+	class	r_exec_dll	FwdController:
 	public	Controller{
 	public:
 		typedef	enum{
@@ -101,19 +125,47 @@ namespace	r_exec{
 		std::vector<P<View> >	pending_inputs;	//	stored before the controller becomes activated (i.e. before its parent fires).
 
 		void	reduce(r_exec::View	*input);	//	convenience.
-		void	injectProductions(UNORDERED_MAP<Code	*,P<Code> >	*bindings);
+		void	injectProductions(UNORDERED_MAP<Code	*,P<Code> >	*bindings,Conclusion	c);
 		Code	*bind_object(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings)	const;
-		Code	*get_mk_rdx(Code	*mdl,uint8	production_count,uint16	&extent_index)	const;
+		Code	*bind_reference(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings)	const;
+		bool	needs_binding(Code	*object)	const;
 
+		void	register_outcome(Monitor	*m,bool	outcome);	//	outcome:true means success, failure otherwise.
+
+		class	MonitorHash{
+		public:
+			size_t	operator	()(P<Monitor>	*p)	const{
+				
+				return	(size_t)(Monitor	*)*p;
+			}
+		};
+
+		UNORDERED_MAP<P<Monitor>,uint64,typename	MonitorHash>	monitors;	//	the u8int64 is the time at which an object matching the prediction has been received; 0 means no object.
+		CriticalSection												monitorsCS;
 	public:
-		RGRPController(_Mem	*mem,r_code::View	*view);	//	view is either a r-grp view (grp_view) or a mdl view (pgm_view).
-		~RGRPController();
+		FwdController(_Mem	*mem,r_code::View	*view);	//	view is either a r-grp view (grp_view) or a mdl view (pgm_view).
+		~FwdController();
 
 		Position	get_position()	const;
 
-		void	activate(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings);
 		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
-		void	fire(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings);
+		void	activate(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,Conclusion	c);
+		void	fire(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,Conclusion	c);
+
+		void	register_object(Monitor	*m,Code	*object);
+		void	check_prediction(Monitor	*m);
+	};
+
+	//	The views of inverse models hold an inverse controller that takes inputs from the group the view dwells in.
+	class	r_exec_dll	InvController:
+	public	Controller{
+	private:
+		RGroup	*rgrp;
+	public:
+		InvController(_Mem	*mem,r_code::View	*view);	//	view is a mdl view (pgm_view).
+		~InvController();
+
+		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
 	};
 }
 

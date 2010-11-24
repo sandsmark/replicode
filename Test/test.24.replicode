@@ -18,6 +18,6 @@ p:(pgm
 )
 |[]
 
-ip:(ipgm p [self] 0us NOTIFY 1)
+ip:(ipgm p [self] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 0 forever root nil 1]

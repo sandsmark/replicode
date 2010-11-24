@@ -447,11 +447,19 @@ namespace	r_exec{
 				view->controller=o;
 			}
 			break;
-		case	ObjectType::MODEL:	//	treated as an ipgm.
+		case	ObjectType::FWD_MODEL:	//	treated as an ipgm.
 			mdl_views[view->getOID()]=view;
 			if(view->get_act()>get_act_thr()){	//	active model.
 
-				RGRPController	*o=new	RGRPController((r_exec::_Mem	*)mem,view);
+				FwdController	*o=new	FwdController((r_exec::_Mem	*)mem,view);
+				view->controller=o;
+			}
+			break;
+		case	ObjectType::INV_MODEL:	//	treated as an ipgm.
+			mdl_views[view->getOID()]=view;
+			if(view->get_act()>get_act_thr()){	//	active model.
+
+				InvController	*o=new	InvController((r_exec::_Mem	*)mem,view);
 				view->controller=o;
 			}
 			break;
@@ -516,9 +524,20 @@ namespace	r_exec{
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr())	//	active ipgm in a c-salient and c-active group.
 				((r_exec::_Mem	*)mem)->pushTimeJob(new	InputLessPGMSignalingJob(o,t+Utils::GetTimestamp<Code>(view->object,IPGM_TSC)));
 			break;
-		}case	ObjectType::MODEL:{	//	treated as an ipgm.
+		}case	ObjectType::FWD_MODEL:{	//	treated as an ipgm.
 			mdl_views[view->getOID()]=view;
-			RGRPController	*o=new	RGRPController((r_exec::_Mem	*)mem,view);
+			FwdController	*o=new	FwdController((r_exec::_Mem	*)mem,view);
+			view->controller=o;
+			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active model in a c-salient and c-active group.
+
+				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
+					o->take_input(*v);	//	view will be copied.
+			}
+			break;
+		}case	ObjectType::INV_MODEL:{	//	treated as an ipgm.
+			mdl_views[view->getOID()]=view;
+			InvController	*o=new	InvController((r_exec::_Mem	*)mem,view);
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active model in a c-salient and c-active group.
 
@@ -623,7 +642,8 @@ namespace	r_exec{
 					case	ObjectType::INPUT_LESS_IPGM:
 					case	ObjectType::ANTI_IPGM:
 					case	ObjectType::ICPP_PGM:
-					case	ObjectType::MODEL:
+					case	ObjectType::FWD_MODEL:
+					case	ObjectType::INV_MODEL:
 						break;
 					default:
 						((r_exec::_Mem	*)mem)->injectCopyNow(*v,vg->first,t);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.

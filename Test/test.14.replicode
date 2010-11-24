@@ -16,6 +16,7 @@ _start:(pgm
 i_start:(ipgm
 _start; code
 |[]; args
+RUN_ONCE
 80000us
 SILENT
 1; propagation saliency threshold
@@ -36,6 +37,6 @@ count:(pgm
 )
 |[]
 
-icount:(ipgm count |[] 0us SILENT 1)
+icount:(ipgm count |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever root nil 1]

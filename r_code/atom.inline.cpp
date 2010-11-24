@@ -214,6 +214,11 @@ namespace	r_code{
 		return	Atom((INSTANTIATED_CPP_PROGRAM<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
+	inline	Atom	Atom::Model(uint16 opcode,uint8 arity){
+
+		return	Atom((MODEL<<24)+((opcode	&	0x0FFF)<<8)+arity);
+	}
+
 	inline	Atom::Atom(uint32	a):atom(a){
 	}
 
@@ -340,6 +345,7 @@ namespace	r_code{
 		case	INSTANTIATED_CPP_PROGRAM:
 		case	GROUP:
 		case	REDUCTION_GROUP:
+		case	MODEL:
 		case	S_SET:	return	atom	&	0x000000FF;
 		case	STRING:	return	(atom	&	0x0000FF00)>>8;
 		case	TIMESTAMP: return 2;

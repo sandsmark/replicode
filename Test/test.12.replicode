@@ -55,6 +55,7 @@ serve:(pgm
 iserve:(ipgm
 serve; code
 |[]; args
+RUN_ALWAYS
 80000us
 NOTIFY
 1; propagation saliency threshold
@@ -82,6 +83,7 @@ player1:(pgm
 iplayer1:(ipgm
 player1; code
 |[]; args
+RUN_ALWAYS
 0us; time scope
 SILENT; notify reduction flag
 1; propagation saliency threshold
@@ -109,6 +111,7 @@ player2:(pgm
 iplayer2:(ipgm
 player2; code
 |[]; args
+RUN_ALWAYS
 0us; time scope
 SILENT; notify reduction flag
 1; propagation saliency threshold

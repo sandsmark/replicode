@@ -30,22 +30,19 @@
 
 namespace	r_exec{
 
-	inline	RGRPController::Position	RGRPController::get_position()	const{
+	inline	FwdController::Position	FwdController::get_position()	const{
 
-		if(getObject()->code(0).asOpcode()==Opcodes::FMD)
+		if(getObject()->code(0).asOpcode()==Opcodes::Fmd)
 			return	HEAD;
 		if(((RGroup	*)getObject())->group_views.size())
 			return	MIDDLE;
 		return	TAIL;
 	}
 
-	inline	void	RGRPController::reduce(r_exec::View	*input){
+	inline	void	FwdController::reduce(r_exec::View	*input){
 
 		std::list<P<_Overlay> >::iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o)	//	pass the input to all master overlays.
 			(*o)->reduce(input);
 	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 }

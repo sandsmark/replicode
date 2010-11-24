@@ -29,6 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"../r_code/utils.h"
+#include	"opcodes.h"
 
 
 namespace	r_exec{
@@ -36,14 +37,12 @@ namespace	r_exec{
 	inline	View::View():r_code::View(),controller(NULL){
 
 		_code[VIEW_OID].atom=GetOID();
-
 		reset_ctrl_values();
 	}
 
 	inline	View::View(r_code::SysView	*source,r_code::Code	*object):r_code::View(source,object),controller(NULL){
 
 		_code[VIEW_OID].atom=GetOID();
-
 		reset();
 	}
 
@@ -51,8 +50,58 @@ namespace	r_exec{
 
 		object=view->object;
 		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom)+2*sizeof(Object	*));	//	reference_set is contiguous to code; memcpy in one go.
-
 		reset();
+	}
+
+	inline	View::View(bool		sync,
+						uint64	ijt,
+						float32	sln,
+						int16	res,
+						Code	*destination,
+						Code	*origin,
+						Code	*object):r_code::View(),controller(NULL){
+	
+		code(VIEW_OPCODE)=Atom::SSet(Opcodes::View,VIEW_ARITY);
+		init(sync,ijt,sln,res,destination,origin,object);
+	}
+
+	inline	View::View(bool		sync,
+						uint64	ijt,
+						float32	sln,
+						int16	res,
+						Code	*destination,
+						Code	*origin,
+						Code	*object,
+						float32	act):r_code::View(),controller(NULL){
+	
+		code(VIEW_OPCODE)=Atom::SSet(Opcodes::PgmView,PGM_VIEW_ARITY);
+		init(sync,ijt,sln,res,destination,origin,object);
+		code(VIEW_ACT)=Atom::Float(act);
+	}
+
+	inline	void	View::init(bool		sync,
+								uint64	ijt,
+								float32	sln,
+								int16	res,
+								Code	*destination,
+								Code	*origin,
+								Code	*object){
+
+		_code[VIEW_OID].atom=GetOID();
+		reset_ctrl_values();
+		
+		code(VIEW_SYNC)=Atom::Boolean(sync);
+		code(VIEW_IJT)=Atom::IPointer(code(VIEW_OPCODE).getAtomCount()+1);
+		Utils::SetTimestamp<View>(this,VIEW_IJT,ijt);
+		code(VIEW_SLN)=Atom::Float(sln);
+		code(VIEW_RES)=res<0?Atom::PlusInfinity():Atom::Float(res);
+		code(VIEW_HOST)=Atom::RPointer(0);
+		code(VIEW_ORG)=origin?Atom::RPointer(1):Atom::Nil();
+
+		references[0]=destination;
+		references[1]=origin;
+
+		set_object(object);
 	}
 
 	inline	View::~View(){

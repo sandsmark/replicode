@@ -18,26 +18,27 @@
 !class (ent (_obj nil))
 !class (dev (_obj nil))
 !class (nod (_obj id:nid))
-!class (ipgm (_obj {code: args:[] tsc:us nfr:bl}))
-!class (icpp_pgm (_obj {code:st args:[] tsc:us nfr:bl}))
+!class (ipgm (_obj {code: args:[] run:bl tsc:us nfr:bl}))
+!class (icpp_pgm (_obj {code:st args:[] run:bl tsc:us nfr:bl}))
 
 ;mapping high-level template objects -> r-code
-!class (_fact (_obj {obj: time:us cfd:nb :~}))
+!class (_fact (_obj {obj: time: cfd:nb :~}))
 
 ;mapping high-level objects -> r-code
 !class (rgrp (_grp nil))
 !class (var (_obj nil))
-!class (fmd (_obj {head:rgrp who:ent out_grps:[::grp] ntf_grps:[::grp] tsc:us nfr:bl}))
-!class (imd (_obj {head:rgrp who:ent out_grps:[::grp] ntf_grps:[::grp] fmd:fmd nfr:bl}))
+!class (val (_obj value:))
+!class (fmd (_obj {head:rgrp out_grps:[::grp] ntf_grps:[::grp] tsc:us}))
+!class (imd (_obj {head:rgrp out_grps:[::grp] ntf_grps:[::grp] fmd:fmd}))
 !class (fact (_fact nil))
 !class (|fact (_fact nil))
-!class (pred (_fact who:ent))
-!class (goal (_fact who:ent))
+!class (pred (_fact fmd:fmd))
+!class (goal (_fact nil))
 !class (sim (_fact nil))
 !class (hyp (_fact nil))
-!class (assm (_fact who:ent))
+!class (asmp (_fact nil))
 
-;mapping markers -> r-code
+;mapping low-level markers -> r-code
 !class (mk.rdx (_obj {code: inputs:[] prods:[]}))
 !class (mk.|rdx (_obj {code: prods:[]}))
 !class (mk.low_sln (_obj obj:))
@@ -48,7 +49,10 @@
 !class (mk.sln_chg (_obj {obj: chg:nb}))
 !class (mk.act_chg (_obj {obj: chg:nb}))
 !class (mk.new (_obj obj:))
-!class (mk.grdx (_obj {mdl: prods:[]}))
+
+;mapping high-level markers -> r-code
+!class (mk.success (_obj {obj: rate:nb}))
+!class (mk.failure (_obj {obj: rate:nb}))
 
 ;mapping operator opcodes -> r-atoms
 !op (_now):us
@@ -137,3 +141,6 @@
 
 !def SYNC_FRONT true
 !def SYNC_STATE false
+
+!def RUN_ALWAYS true
+!def RUN_ONCE false

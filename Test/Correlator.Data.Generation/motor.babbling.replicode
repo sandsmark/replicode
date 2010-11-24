@@ -46,7 +46,7 @@ _start:(pgm
 )
 |[]
 
-i_start:(ipgm _start |[] 90000us SILENT 1)
+i_start:(ipgm _start |[] RUN_ONCE 90000us SILENT 1)
 []
    [SYNC_FRONT now 0 1 root nil 1]
 
@@ -70,7 +70,7 @@ hand_pos_updater:(pgm
 )
 |[]
 
-i_hand_pos_updater:(ipgm hand_pos_updater |[] 0us SILENT 1)
+i_hand_pos_updater:(ipgm hand_pos_updater |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
@@ -94,7 +94,7 @@ cup_pos_updater:(pgm
 )
 |[]
 
-i_cup_pos_updater:(ipgm cup_pos_updater |[] 0us SILENT 1)
+i_cup_pos_updater:(ipgm cup_pos_updater |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
@@ -114,7 +114,7 @@ noise_updater:(pgm
 )
 |[]
 
-i_noise_updater:(ipgm noise_updater |[] 0us SILENT 1)
+i_noise_updater:(ipgm noise_updater |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
@@ -134,7 +134,7 @@ grab_updater:(pgm
 )
 |[]
 
-i_grab_updater:(ipgm grab_updater |[] 0us SILENT 1)
+i_grab_updater:(ipgm grab_updater |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
@@ -150,11 +150,11 @@ episode_notifier:(pgm
 )
 |[]
 
-i_episode_notifier.(ipgm episode_notifier |[] 1000000us SILENT 1)
+i_episode_notifier.(ipgm episode_notifier |[] RUN_ALWAYS 1000000us SILENT 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
 
-i_correlator:(icpp_pgm "correlator" |[] 0us NOTIFY 1)
+i_correlator:(icpp_pgm "correlator" |[] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]

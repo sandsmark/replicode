@@ -132,7 +132,15 @@ int32	main(int	argc,char	**argv){
 		r_code::vector<r_code::Code	*>	ram_objects;
 		r_exec::Seed.getObjects(mem,ram_objects);
 
-		mem->init(settings.base_period,settings.reduction_core_count,settings.time_core_count,settings.notification_resilience);
+		mem->init(	settings.base_period,
+					settings.reduction_core_count,
+					settings.time_core_count,
+					settings.notification_resilience,
+					settings.prediction_resilience,
+					settings.goal_resilience,
+					settings.assumption_resilience,
+					settings.simulation_resilience);
+
 		if(!mem->load(ram_objects.as_std()))
 			return	4;
 		uint64	starting_time=mem->start();

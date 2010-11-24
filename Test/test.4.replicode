@@ -28,6 +28,6 @@ _start:(pgm
 )
 |[]
 
-i_start:(ipgm _start [(vec3 2 2 2)] 0us NOTIFY 1)
+i_start:(ipgm _start [(vec3 2 2 2)] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 1 1 root nil 1]

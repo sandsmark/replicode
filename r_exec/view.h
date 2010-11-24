@@ -64,6 +64,14 @@ namespace	r_exec{
 		//	Monitoring
 		float32	initial_sln;
 		float32	initial_act;
+
+		void	init(bool		sync,
+					 uint64		ijt,
+					 float32	sln,
+					 int16		res,
+					 Code		*host,
+					 Code		*origin,
+					 Code		*object);
 	protected:
 		void	reset_init_sln();
 		void	reset_init_act();
@@ -84,6 +92,21 @@ namespace	r_exec{
 		View(r_code::SysView	*source,r_code::Code	*object);
 		View(View	*view,Group	*group);	//	copy the view and assigns it to the group (used for cov); morph ctrl values.
 		View(const	View	*view);			//	simple copy.
+		View(bool		sync,
+			 uint64		ijt,
+			 float32	sln,
+			 int16		res,
+			 Code		*host,
+			 Code		*origin,
+			 Code		*object);	//	regular view; res set to -1 means forever.
+		View(bool		sync,
+			 uint64		ijt,
+			 float32	sln,
+			 int16		res,
+			 Code		*host,
+			 Code		*origin,
+			 Code		*object,
+			 float32	act);	//	pgm/mdl view; res set to -1 means forever.
 		~View();
 
 		void	reset();

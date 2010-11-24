@@ -123,30 +123,36 @@ namespace	r_exec{
 
 		Opcodes::View=_Opcodes.find("view")->second;
 		Opcodes::PgmView=_Opcodes.find("pgm_view")->second;
-		Opcodes::GroupView=_Opcodes.find("grp_view")->second;
+		Opcodes::GrpView=_Opcodes.find("grp_view")->second;
 
-		Opcodes::Entity=_Opcodes.find("ent")->second;
+		Opcodes::Ent=_Opcodes.find("ent")->second;
 
-		Opcodes::Group=_Opcodes.find("grp")->second;
+		Opcodes::Grp=_Opcodes.find("grp")->second;
 
-		Opcodes::PTN=_Opcodes.find("ptn")->second;
-		Opcodes::AntiPTN=_Opcodes.find("|ptn")->second;
+		Opcodes::Ptn=_Opcodes.find("ptn")->second;
+		Opcodes::AntiPtn=_Opcodes.find("|ptn")->second;
 
-		Opcodes::IPGM=_Opcodes.find("ipgm")->second;
-		Opcodes::PGM=_Opcodes.find("pgm")->second;
-		Opcodes::AntiPGM=_Opcodes.find("|pgm")->second;
-		Opcodes::FMD=_Opcodes.find("fmd")->second;
-		Opcodes::IMD=_Opcodes.find("imd")->second;
+		Opcodes::IPgm=_Opcodes.find("ipgm")->second;
+		Opcodes::Pgm=_Opcodes.find("pgm")->second;
+		Opcodes::AntiPgm=_Opcodes.find("|pgm")->second;
+		Opcodes::Fmd=_Opcodes.find("fmd")->second;
+		Opcodes::Imd=_Opcodes.find("imd")->second;
 
 		Opcodes::Cmd=_Opcodes.find("cmd")->second;
 
 		Opcodes::Var=_Opcodes.find("var")->second;
 
 		Opcodes::Pred=_Opcodes.find("pred")->second;
+		Opcodes::Goal=_Opcodes.find("goal")->second;
+		Opcodes::Hyp=_Opcodes.find("hyp")->second;
+		Opcodes::Sim=_Opcodes.find("sim")->second;
+		Opcodes::Asmp=_Opcodes.find("asmp")->second;
 
 		Opcodes::MkRdx=_Opcodes.find("mk.rdx")->second;
 		Opcodes::MkAntiRdx=_Opcodes.find("mk.|rdx")->second;
-		Opcodes::MkGRdx=_Opcodes.find("mk.grdx")->second;
+		
+		Opcodes::MkSuccess=_Opcodes.find("mk.success")->second;
+		Opcodes::MkFailure=_Opcodes.find("mk.failure")->second;
 
 		Opcodes::MkNew=_Opcodes.find("mk.new")->second;
 

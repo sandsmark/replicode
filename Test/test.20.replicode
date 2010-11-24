@@ -36,13 +36,13 @@ _start:(pgm
       [SYNC_FRONT now 0 forever root nil]
    )
    (inj []
-      (ins p |[] 0us NOTIFY)
+      (ins p |[] RUN_ALWAYS 0us NOTIFY)
       [SYNC_FRONT now 0 forever root nil 1]
    )
 1
 )
 |[]
 
-i_start:(ipgm _start |[] 0us NOTIFY 1)
+i_start:(ipgm _start |[] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 0 forever root nil 1]

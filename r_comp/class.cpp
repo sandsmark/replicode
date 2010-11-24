@@ -41,6 +41,7 @@ namespace	r_comp{
 
 		switch(atom.getDescriptor()){
 		case	Atom::OBJECT:
+		case	Atom::MODEL:
 		case	Atom::GROUP:
 		case	Atom::REDUCTION_GROUP:
 		case	Atom::INSTANTIATED_PROGRAM:

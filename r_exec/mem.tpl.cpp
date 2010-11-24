@@ -32,6 +32,7 @@
 #include	"../r_code/replicode_defs.h"
 #include	"operator.h"
 #include	"r_group.h"
+#include	"model.h"
 #include	"factory.h"
 #include	"cpp_programs.h"
 #include	"../r_code/utils.h"
@@ -55,6 +56,8 @@ namespace	r_exec{
 			return	new	Group(source,this);
 		case	Atom::REDUCTION_GROUP:
 			return	new	RGroup(source,this);
+		case	Atom::MODEL:
+			return	new	Model(source,this);
 		default:
 			return	new	O(source,this);
 		}
@@ -69,6 +72,9 @@ namespace	r_exec{
 			break;
 		case	Atom::REDUCTION_GROUP:
 			object=new	RGroup();
+			break;
+		case	Atom::MODEL:
+			object=new	Model();
 			break;
 		default:
 			if(O::RequiresPacking())

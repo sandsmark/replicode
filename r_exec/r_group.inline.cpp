@@ -57,4 +57,9 @@ namespace	r_exec{
 		for(v=group_views.begin();v!=group_views.end();++v)
 			((RGroup	*)v->second->object)->set_fwd_model(mdl);
 	}
+
+	inline	RGroup	*RGroup::get_parent()	const{
+
+		return	parent;
+	}
 }

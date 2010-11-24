@@ -118,7 +118,7 @@ int32	main(int	argc,char	**argv){
 	for(uint32	i=0;i<objects.size();++i){
 
 		Code	*object=objects[i];
-		if(object->code(0).asOpcode()==r_exec::Opcodes::IPGM)
+		if(object->code(0).asOpcode()==r_exec::Opcodes::IPgm)
 			continue;
 
 		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
