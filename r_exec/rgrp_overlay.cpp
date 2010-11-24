@@ -246,6 +246,7 @@ namespace	r_exec{
 
 	void	FwdController::take_input(r_exec::View	*input,Controller	*origin){	//	origin unused since there is no recursion here.
 
+		bool	monitor_prediction=false;
 		View	*_input;
 		//	8 cases:
 		//	a - raw input.
@@ -256,9 +257,13 @@ namespace	r_exec{
 		//	f - simulated assumption.
 		//	g - assumed prediction.
 		//	h - assumption.
-		//	We have to process the content instead of the qualifier.
-		if(input->object->code(0).asOpcode()==Opcodes::Pred		||
-			input->object->code(0).asOpcode()==Opcodes::Hyp){	//	cases b and c.
+		//	We have to process the content instead of the qualifier (cases b to h).
+		if(input->object->code(0).asOpcode()==Opcodes::Pred){			//	case b.
+
+			_input=new	View(input);
+			_input->object=input->object->get_reference(0);
+			monitor_prediction=true;
+		}else	if(input->object->code(0).asOpcode()==Opcodes::Hyp){	//	case c.
 
 			_input=new	View(input);
 			_input->object=input->object->get_reference(0);
@@ -266,11 +271,11 @@ namespace	r_exec{
 
 			Code	*ref=input->object->get_reference(0);
 			if(ref->code(0).asOpcode()==Opcodes::Pred	||
-				ref->code(0).asOpcode()==Opcodes::Asmp){		//	cases e and f.
+				ref->code(0).asOpcode()==Opcodes::Asmp){				//	cases e and f.
 
 				_input=new	View(input);
 				_input->object=ref->get_reference(0);
-			}else{												//	case d.
+			}else{														//	case d.
 
 				_input=new	View(input);
 				_input->object=ref;
@@ -278,17 +283,20 @@ namespace	r_exec{
 		}else	if(input->object->code(0).asOpcode()==Opcodes::Asmp){
 
 			Code	*ref=input->object->get_reference(0);
-			if(ref->code(0).asOpcode()==Opcodes::Pred){			//	cases g.
+			if(ref->code(0).asOpcode()==Opcodes::Pred){					//	case g.
 
 				_input=new	View(input);
 				_input->object=ref->get_reference(0);
-			}else{												//	cases h.
+			}else{														//	case h.
 
 				_input=new	View(input);
 				_input->object=ref;
 			}
-		}else													//	case a.
+		}else{															//	case a.
+		
 			_input=input;
+			monitor_prediction=true;
+		}
 
 		overlayCS.enter();
 		if(overlays.size())
@@ -301,9 +309,7 @@ namespace	r_exec{
 		for(v=rgrp->group_views.begin();v!=rgrp->group_views.end();++v)	//	pass the input to children controllers;
 			v->second->controller->take_input(_input);
 
-		if(input->object->code(0).asOpcode()==Opcodes::Sim	||
-			input->object->code(0).asOpcode()==Opcodes::Hyp	||
-			input->object->code(0).asOpcode()==Opcodes::Asmp)	//	we don't monitor the outcome of hyoptheses, simulation results nor of assumptions.
+		if(!monitor_prediction)	//	we don't monitor the outcome of hypotheses, of simulation results nor of assumptions.
 			return;
 
 		monitorsCS.enter();
