@@ -247,11 +247,47 @@ namespace	r_exec{
 	void	FwdController::take_input(r_exec::View	*input,Controller	*origin){	//	origin unused since there is no recursion here.
 
 		View	*_input;
-		if(input->object->code(0).asOpcode()==Opcodes::Pred){	//	in case of a prediction, process the predicted object instead of the prediction object itself.
+		//	8 cases:
+		//	a - raw input.
+		//	b - prediction.
+		//	c - hypothesis.
+		//	d - simulation result.
+		//	e - simulated prediction.
+		//	f - simulated assumption.
+		//	g - assumed prediction.
+		//	h - assumption.
+		//	We have to process the content instead of the qualifier.
+		if(input->object->code(0).asOpcode()==Opcodes::Pred		||
+			input->object->code(0).asOpcode()==Opcodes::Hyp){	//	cases b and c.
 
 			_input=new	View(input);
 			_input->object=input->object->get_reference(0);
-		}else
+		}else	if(input->object->code(0).asOpcode()==Opcodes::Sim){
+
+			Code	*ref=input->object->get_reference(0);
+			if(ref->code(0).asOpcode()==Opcodes::Pred	||
+				ref->code(0).asOpcode()==Opcodes::Asmp){		//	cases e and f.
+
+				_input=new	View(input);
+				_input->object=ref->get_reference(0);
+			}else{												//	case d.
+
+				_input=new	View(input);
+				_input->object=ref;
+			}
+		}else	if(input->object->code(0).asOpcode()==Opcodes::Asmp){
+
+			Code	*ref=input->object->get_reference(0);
+			if(ref->code(0).asOpcode()==Opcodes::Pred){			//	cases g.
+
+				_input=new	View(input);
+				_input->object=ref->get_reference(0);
+			}else{												//	cases h.
+
+				_input=new	View(input);
+				_input->object=ref;
+			}
+		}else													//	case a.
 			_input=input;
 
 		overlayCS.enter();
@@ -387,7 +423,7 @@ namespace	r_exec{
 				prediction->set_reference(1,fwd_model);
 
 				switch(c){
-				case	RAW:{
+				case	RAW:{	//	inject the prediction.
 					object_to_inject=prediction;
 
 					resilience=mem->get_pred_res();
@@ -399,7 +435,7 @@ namespace	r_exec{
 					monitorsCS.leave();
 					mem->pushTimeJob(new	MonitoringJob(m,predicted_time));
 					break;
-				}case	SIM:
+				}case	SIM:	//	inject a simulated prediction.
 					object_to_inject=mem->buildObject(Atom::Object(Opcodes::Sim,SIM_ARITY));
 					object_to_inject->code(SIM_OBJ)=Atom::RPointer(0);
 					object_to_inject->code(SIM_TIME)=Atom::IPointer(SIM_ARITY+1);	//	iptr to time.
@@ -410,14 +446,14 @@ namespace	r_exec{
 
 					resilience=mem->get_sim_res();
 					break;
-				case	ASM:
+				case	ASM:	//	inject an assumed prediction.
 					object_to_inject=mem->buildObject(Atom::Object(Opcodes::Asmp,ASMP_ARITY));
 					object_to_inject->code(ASMP_OBJ)=Atom::RPointer(0);
 					object_to_inject->code(ASMP_TIME)=Atom::IPointer(ASMP_ARITY+1);	//	iptr to time.
 					Utils::SetTimestamp<Code>(object_to_inject,ASMP_TIME,now);
 					object_to_inject->code(ASMP_CFD)=Atom::Float(1);				//	TODO: put the right value (from where?) for the confidence member.
 					object_to_inject->code(ASMP_ARITY)=Atom::Float(1);				//	psln_thr.
-					object_to_inject->set_reference(0,bound_object);
+					object_to_inject->set_reference(0,prediction);
 
 					resilience=mem->get_asmp_res();
 					break;
@@ -434,19 +470,18 @@ namespace	r_exec{
 
 				switch(c){
 				case	RAW:
-				case	ASM:
+				case	ASM:	//	inject an assumption.
 					object_to_inject=assumption;
 
 					resilience=mem->get_asmp_res();
 					break;
-				case	SIM:
+				case	SIM:	//	inject a simulated assumption.
 					object_to_inject=mem->buildObject(Atom::Object(Opcodes::Sim,SIM_ARITY));
 					object_to_inject->code(SIM_OBJ)=Atom::RPointer(0);
 					object_to_inject->code(SIM_TIME)=Atom::IPointer(SIM_ARITY+1);	//	iptr to time.
 					Utils::SetTimestamp<Code>(object_to_inject,SIM_TIME,now);
 					object_to_inject->code(SIM_CFD)=Atom::Float(1);					//	TODO: put the right value (from where?) for the confidence member.
 					object_to_inject->code(SIM_ARITY)=Atom::Float(1);				//	psln_thr.
-
 					object_to_inject->set_reference(0,assumption);
 
 					resilience=mem->get_sim_res();
