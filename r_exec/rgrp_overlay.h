@@ -40,12 +40,6 @@ namespace	r_exec{
 	class	FwdController;
 	class	RGRPMasterOverlay;
 
-	typedef	enum{
-		RAW=0,
-		SIM=1,
-		ASM=2
-	}Conclusion;
-
 	//	Overlays are used to index the value held by variable objects (bindings, stored per overlay) - bindings include nil values (i.e. yet unbound variables).
 	//	Like program overlays hold a list of patterns that have stil to be matched, r-group overlays hold a list of the binders that still have to match.
 	//	Binders are assumed to be the only ipgms held by r-groups.
@@ -60,10 +54,9 @@ namespace	r_exec{
 		std::vector<Code	*>			last_bound;	//	variables.
 		uint16							unbound_var_count;
 		bool							discard_bindings;
+		uint8							reduction_mode;	//	initialized by a master overlay.
 
-		bool	simulation;	//	indicates if at least one input was a hypothesis or the resukt of a simulation.
-
-		RGRPOverlay(__Controller	*c,RGroup	*group,UNORDERED_MAP<Code	*,P<Code> >	*bindings=NULL);
+		RGRPOverlay(__Controller	*c,RGroup	*group,UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode);
 		RGRPOverlay(RGRPOverlay	*original);
 	public:
 		~RGRPOverlay();
@@ -81,12 +74,12 @@ namespace	r_exec{
 	private:
 		UNORDERED_MAP<Code	*,P<Code> >	bindings;	//	variable|value.
 
-		RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,UNORDERED_MAP<Code	*,P<Code> >	*bindings=NULL);
+		RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode);
 	public:
 		~RGRPMasterOverlay();
 
 		void	reduce(r_exec::View	*input);
-		void	fire(UNORDERED_MAP<Code	*,P<Code> >	*bindings,Conclusion	c);
+		void	fire(UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode);
 	};
 
 	//	Monitors the occurrence of a predicted object.
@@ -125,7 +118,7 @@ namespace	r_exec{
 		std::vector<P<View> >	pending_inputs;	//	stored before the controller becomes activated (i.e. before its parent fires).
 
 		void	reduce(r_exec::View	*input);	//	convenience.
-		void	injectProductions(UNORDERED_MAP<Code	*,P<Code> >	*bindings,Conclusion	c);
+		void	injectProductions(UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode);
 		Code	*bind_object(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings)	const;
 		Code	*bind_reference(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings)	const;
 		bool	needs_binding(Code	*object)	const;
@@ -149,8 +142,12 @@ namespace	r_exec{
 		Position	get_position()	const;
 
 		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
-		void	activate(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,Conclusion	c);
-		void	fire(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,Conclusion	c);
+		void	activate(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,
+						 UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,
+						 uint8							reduction_mode);
+		void	fire(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,
+					 UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,
+					 uint8							reduction_mode);
 
 		void	register_object(Monitor	*m,Code	*object);
 		void	check_prediction(Monitor	*m);

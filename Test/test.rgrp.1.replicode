@@ -83,7 +83,7 @@ r_grp3:(std_rgrp 0 0 0 0)
 hand_holds_cup:(mk.val hand hold cup 1)
 |[]
 
-(fact hand_holds_cup 0us 1 1)
+(fact hand_holds_cup 0us 1)
 []
    [SYNC_STATE now 1 1 r_grp1 nil]
 
@@ -96,14 +96,14 @@ t:(val 0us 1)
 hand_pos:(mk.val hand position pos 1)
 |[]
 
-(fact hand_pos t 1 1)
+(fact hand_pos t 1)
 []
    [SYNC_STATE now 1 1 r_grp2 nil]
 
 cup_pos:(mk.val cup position pos 1)
 |[]
 
-(fact cup_pos t 1 1)
+(fact cup_pos t 1)
 []
    [SYNC_STATE now 1 1 r_grp3 nil]
 
@@ -127,7 +127,7 @@ i_build_model:(ipgm build_model |[] RUN_ONCE 90000us SILENT 1)
    [SYNC_FRONT now 0 1 root nil 1]
 
 
-;inject inputs in stdin to be matched by the model (will trigger the production of predictions).
+;inject inputs in stdin to be matched by the model (will trigger the production of predictions/assumptions).
 
 new_pos:(val (vec3 2 2 2) 1)
 |[]
@@ -140,7 +140,7 @@ inject_inputs:(pgm
 |[]
 []
    (inj []
-      (fact hand_holds_cup now 1 1)
+      (fact hand_holds_cup now 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
    (inj []
@@ -148,7 +148,7 @@ inject_inputs:(pgm
       [SYNC_FRONT now 1 1 stdin nil]
    )
    (inj []
-      (fact new_hand_pos new_t 1 1)
+      (fact new_hand_pos new_t 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
 1)
@@ -158,6 +158,6 @@ i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us NOTIFY 1)
 []
    [SYNC_FRONT now 0 2 root nil 1]
 
-; an assumption is produced (asmp (fact (mk.val cup pos new_pos 1) new_t 1) now 1).
+; an assumption is produced (mk.asmp (fact (mk.val cup pos new_pos 1) new_t 1) fmd 1 1).
 ; it is an assumption since the predicted time is <= the time the conclusion is built.
 ; for now, no check on the validity of the assumption; this still has to be specified.

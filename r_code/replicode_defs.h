@@ -126,24 +126,27 @@
 
 #define	FACT_OBJ		1
 #define	FACT_TIME		2
-#define	FACT_CFD		3
-#define	FACT_ARITY		4
+#define	FACT_ARITY		3
 
-#define	PRED_OBJ		1
-#define	PRED_TIME		2
-#define	PRED_CFD		3
-#define	PRED_FMD		4
-#define	PRED_ARITY		5
+#define	MK_PRED_OBJ		1
+#define	MK_PRED_FMD		2
+#define	MK_PRED_CFD		3
+#define	MK_PRED_ARITY	4
 
-#define	ASMP_OBJ		1
-#define	ASMP_TIME		2
-#define	ASMP_CFD		3
-#define	ASMP_ARITY		4
+#define	MK_ASMP_OBJ		1
+#define	MK_ASMP_FMD		2
+#define	MK_ASMP_CFD		3
+#define	MK_ASMP_ARITY	4
 
-#define	SIM_OBJ		1
-#define	SIM_TIME	2
-#define	SIM_CFD		3
-#define	SIM_ARITY	4
+#define	MK_GOAL_OBJ		1
+#define	MK_GOAL_ARITY	2
+
+#define	MK_HYP_OBJ		1
+#define	MK_HYP_ARITY	2
+
+#define	MK_SIM_OBJ		1
+#define	MK_SIM_FMD		2
+#define	MK_SIM_ARITY	3
 
 #define	MK_SUCCESS_OBJ		1
 #define	MK_SUCCESS_RATE		2

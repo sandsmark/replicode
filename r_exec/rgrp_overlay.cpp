@@ -32,9 +32,13 @@
 #include	"mem.h"
 
 
+#define	RDX_MODE_REGULAR	0
+#define	RDX_MODE_SIMULATION	1
+#define	RDX_MODE_ASSUMPTION	2
+
 namespace	r_exec{
 
-	RGRPOverlay::RGRPOverlay(__Controller	*c,RGroup	*group,UNORDERED_MAP<Code	*,P<Code> >	*bindings):Overlay(c),simulation(false){
+	RGRPOverlay::RGRPOverlay(__Controller	*c,RGroup	*group,UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode):Overlay(c),reduction_mode(reduction_mode){
 
 		//	init bindings from r-group.
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
@@ -63,7 +67,7 @@ namespace	r_exec{
 		birth_time=Now();
 	}
 
-	RGRPOverlay::RGRPOverlay(RGRPOverlay	*original):Overlay(original->controller),simulation(false){
+	RGRPOverlay::RGRPOverlay(RGRPOverlay	*original):Overlay(original->controller),reduction_mode(original->reduction_mode){
 
 		//	copy binders from the original.
 		std::list<P<View> >::const_iterator	b;
@@ -106,21 +110,6 @@ namespace	r_exec{
 
 		reductionCS.enter();
 
-		View	*_input;
-		Conclusion	c=RAW;
-		if(input->object->code(0).asOpcode()==Opcodes::Sim	||
-			input->object->code(0).asOpcode()==Opcodes::Hyp)
-			c=SIM;
-		else	if(input->object->code(0).asOpcode()==Opcodes::Asmp)
-			c=ASM;
-
-		if(c!=RAW){
-
-			_input=new	View(input);
-			_input->object=input->object->get_reference(0);
-		}else
-			_input=input;
-
 		last_bound.clear();
 		discard_bindings=false;
 
@@ -128,7 +117,7 @@ namespace	r_exec{
 		for(b=binders.begin();b!=binders.end();++b){	//	binders called sequentially (at most one can bind an input).
 
 			PGMController	*c=(PGMController	*)(*b)->controller;
-			c->take_input(_input,this);
+			c->take_input(input,this);
 			if(discard_bindings)
 				break;
 			if(last_bound.size())
@@ -140,10 +129,15 @@ namespace	r_exec{
 			RGRPOverlay	*offspring=new	RGRPOverlay(this);
 			controller->add(offspring);
 
+			if((reduction_mode	&	RDX_MODE_SIMULATION)==0	&&	input->object->is_sim())
+				reduction_mode|=RDX_MODE_SIMULATION;
+			if((reduction_mode	&	RDX_MODE_ASSUMPTION)==0	&&	input->object->is_asmp())
+				reduction_mode|=RDX_MODE_ASSUMPTION;
+
 			if(!unbound_var_count){
 
 				controller->remove(this);
-				((RGRPMasterOverlay	*)controller)->fire(&bindings,c);
+				((RGRPMasterOverlay	*)controller)->fire(&bindings,reduction_mode);
 			}else
 				binders.erase(b);
 		}
@@ -168,7 +162,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	RGRPMasterOverlay::RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,UNORDERED_MAP<Code	*,P<Code> >	*bindings):_Controller<Overlay>(c->get_mem()){	//	when bindings==NULL, called by the controller of the head of the model.
+	RGRPMasterOverlay::RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode):_Controller<Overlay>(c->get_mem()){	//	when bindings==NULL, called by the controller of the head of the model.
 
 		controller=c;
 		alive=true;
@@ -178,7 +172,7 @@ namespace	r_exec{
 		if(bindings)
 			this->bindings=*bindings;
 
-		RGRPOverlay	*m=new	RGRPOverlay(this,rgrp,bindings);	//	master overlay.
+		RGRPOverlay	*m=new	RGRPOverlay(this,rgrp,bindings,reduction_mode);	//	master overlay.
 		overlays.push_back(m);
 	}
 	
@@ -214,9 +208,9 @@ namespace	r_exec{
 		overlayCS.leave();
 	}
 
-	void	RGRPMasterOverlay::fire(UNORDERED_MAP<Code	*,P<Code> >	*bindings,Conclusion	c){	//	add one master overlay to the group's children' controller.
+	void	RGRPMasterOverlay::fire(UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode){	//	add one master overlay to the group's children' controller.
 		
-		((FwdController	*)controller)->fire(bindings,&this->bindings,c);
+		((FwdController	*)controller)->fire(bindings,&this->bindings,reduction_mode);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +222,7 @@ namespace	r_exec{
 			rgrp=(RGroup	*)getObject()->get_reference(getObject()->code(MD_HEAD).asIndex());
 			rgrp->set_fwd_model(getObject());
 
-			RGRPMasterOverlay	*m=new	RGRPMasterOverlay(this,getObject(),rgrp);
+			RGRPMasterOverlay	*m=new	RGRPMasterOverlay(this,getObject(),rgrp,NULL,RDX_MODE_REGULAR);
 			overlays.push_back(m);
 		}else
 			rgrp=(RGroup	*)getObject();
@@ -237,79 +231,29 @@ namespace	r_exec{
 	FwdController::~FwdController(){
 	}
 
-	void	FwdController::fire(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,Conclusion	c){
+	void	FwdController::fire(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,
+								UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,
+								uint8							reduction_mode){
 
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 		for(v=rgrp->group_views.begin();v!=rgrp->group_views.end();++v)	//	fire.
-			((FwdController	*)v->second->controller)->activate(overlay_bindings,master_overlay_bindings,c);
+			((FwdController	*)v->second->controller)->activate(overlay_bindings,master_overlay_bindings,reduction_mode);
 	}
 
 	void	FwdController::take_input(r_exec::View	*input,Controller	*origin){	//	origin unused since there is no recursion here.
 
-		bool	monitor_prediction=false;
-		View	*_input;
-		//	8 cases:
-		//	a - raw input.
-		//	b - prediction.
-		//	c - hypothesis.
-		//	d - simulation result.
-		//	e - simulated prediction.
-		//	f - simulated assumption.
-		//	g - assumed prediction.
-		//	h - assumption.
-		//	We have to process the content instead of the qualifier (cases b to h).
-		if(input->object->code(0).asOpcode()==Opcodes::Pred){			//	case b.
-
-			_input=new	View(input);
-			_input->object=input->object->get_reference(0);
-			monitor_prediction=true;
-		}else	if(input->object->code(0).asOpcode()==Opcodes::Hyp){	//	case c.
-
-			_input=new	View(input);
-			_input->object=input->object->get_reference(0);
-		}else	if(input->object->code(0).asOpcode()==Opcodes::Sim){
-
-			Code	*ref=input->object->get_reference(0);
-			if(ref->code(0).asOpcode()==Opcodes::Pred	||
-				ref->code(0).asOpcode()==Opcodes::Asmp){				//	cases e and f.
-
-				_input=new	View(input);
-				_input->object=ref->get_reference(0);
-			}else{														//	case d.
-
-				_input=new	View(input);
-				_input->object=ref;
-			}
-		}else	if(input->object->code(0).asOpcode()==Opcodes::Asmp){
-
-			Code	*ref=input->object->get_reference(0);
-			if(ref->code(0).asOpcode()==Opcodes::Pred){					//	case g.
-
-				_input=new	View(input);
-				_input->object=ref->get_reference(0);
-			}else{														//	case h.
-
-				_input=new	View(input);
-				_input->object=ref;
-			}
-		}else{															//	case a.
-		
-			_input=input;
-			monitor_prediction=true;
-		}
-
 		overlayCS.enter();
 		if(overlays.size())
-			reduce(_input);
+			reduce(input);
 		else	//	not activated yet.
-			pending_inputs.push_back(_input);
+			pending_inputs.push_back(input);
 		overlayCS.leave();
 
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 		for(v=rgrp->group_views.begin();v!=rgrp->group_views.end();++v)	//	pass the input to children controllers;
-			v->second->controller->take_input(_input);
+			v->second->controller->take_input(input);
 
-		if(!monitor_prediction)	//	we don't monitor the outcome of hypotheses, of simulation results nor of assumptions.
+		if(input->object->is_hyp_sim_asmp())	//	filtering: we don't use hypotheses, simulation results or assumptions to monitor the outcome of predictions 
 			return;
 
 		monitorsCS.enter();
@@ -319,7 +263,9 @@ namespace	r_exec{
 		monitorsCS.leave();
 	}
 
-	void	FwdController::activate(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,Conclusion	c){	//	called when a parent fires.
+	void	FwdController::activate(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,
+									UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,
+									uint8							reduction_mode){	//	called when a parent fires.
 
 		//	fuse the bindings.
 		UNORDERED_MAP<Code	*,P<Code> >	bindings;
@@ -334,10 +280,10 @@ namespace	r_exec{
 		}
 
 		if(get_position()==TAIL)	//	all variables shall be bound, just inject productions.
-			injectProductions(&bindings,c);
+			injectProductions(&bindings,reduction_mode);
 		else{
 
-			RGRPMasterOverlay	*m=new	RGRPMasterOverlay(this,rgrp->get_fwd_model(),rgrp,&bindings);
+			RGRPMasterOverlay	*m=new	RGRPMasterOverlay(this,rgrp->get_fwd_model(),rgrp,&bindings,reduction_mode);
 
 			overlayCS.enter();
 			overlays.push_back(m);
@@ -390,7 +336,7 @@ namespace	r_exec{
 		return	false;
 	}
 
-	void	FwdController::injectProductions(UNORDERED_MAP<Code	*,P<Code> >	*bindings,Conclusion	c){
+	void	FwdController::injectProductions(UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode){
 
 		Code	*fwd_model=rgrp->get_fwd_model();
 
@@ -409,98 +355,99 @@ namespace	r_exec{
 			Code	*bound_object=bind_object(v->second->object,bindings);	//	that is the predicted object (class: fact).
 																			//	no need for existence check: the timings are always different, hence the facts never the same.
 			//	Production/monitoring rules:
-			//	1 - if !simulation and predicted time > now: regular prediction; monitor the outcome = catch occurrences of the predicted object at the predicted time.
-			//	2 - if simulation and predicted time > now: simulated prediction; simulation => no monitoring.
-			//	3 - if !simulation and predicted time <= now: assumption; for now, no monitoring. TODO: determine what to monitor (if anything).
-			//	4 - if simulation and predicted time <= now: simulated assumption; simulation => no monitoring.
+			//	1 - if predicted time > now: bound_object marked as a regular prediction; monitor the outcome = catch occurrences of bound_object at the predicted time.
+			//	2 - if predicted time <= now: bound_object marked as an assumption; no monitoring.
+			//	3 - if simulation: bound_object marked as a simulation result; no monitoring.
+			//	4 - if assumption: bound_object marked as an assumption; no monitoring.
 			uint64	predicted_time=Utils::GetTimestamp<Code>(bound_object->get_reference(1),VAL_VALUE);
-			Code	*object_to_inject;
-			uint32	resilience;
-			if(predicted_time>now){	//	cases 1 and 2.
+			Code	*primary_mk;	//	prediction or assumption.
+			bool	prediction;		//	false means assumption.
+			uint32	resilience;		//	of the primary marker.
+			Code	*mk_sim=NULL;	//	if needed.
+			Code	*mk_asmp=NULL;	//	if needed.
 
-				Code	*prediction=mem->buildObject(Atom::Object(Opcodes::Pred,PRED_ARITY));
-				prediction->code(PRED_OBJ)=Atom::RPointer(0);
-				prediction->code(PRED_TIME)=Atom::IPointer(PRED_ARITY+1);	//	iptr to time.
-				Utils::SetTimestamp<Code>(prediction,PRED_TIME,now);
-				prediction->code(PRED_CFD)=Atom::Float(1);					//	TODO: put the right value (from where?) for the confidence member.
-				prediction->code(PRED_FMD)=Atom::RPointer(1);
-				prediction->code(PRED_ARITY)=Atom::Float(1);				//	psln_thr.
-				prediction->set_reference(0,bound_object);
-				prediction->set_reference(1,fwd_model);
+			if(predicted_time>now){
 
-				switch(c){
-				case	RAW:{	//	inject the prediction.
-					object_to_inject=prediction;
+				primary_mk=mem->buildObject(Atom::Object(Opcodes::MkPred,MK_PRED_ARITY));
+				primary_mk->code(MK_PRED_OBJ)=Atom::RPointer(0);
+				primary_mk->code(MK_PRED_FMD)=Atom::RPointer(1);
+				primary_mk->code(MK_PRED_CFD)=Atom::Float(1);	//	TODO: put the right value (from where?) for the confidence member.
+				primary_mk->code(MK_PRED_ARITY)=Atom::Float(1);	//	psln_thr.
+				primary_mk->set_reference(0,bound_object);
+				primary_mk->set_reference(1,fwd_model);
 
-					resilience=mem->get_pred_res();
+				resilience=mem->get_pred_res();
+				prediction=true;
+			}else{
 
-					//	Monitor the prediction's outcome.
-					Monitor	*m=new	Monitor(this,prediction);
-					monitorsCS.enter();
-					monitors[m]=0;
-					monitorsCS.leave();
-					mem->pushTimeJob(new	MonitoringJob(m,predicted_time));
-					break;
-				}case	SIM:	//	inject a simulated prediction.
-					object_to_inject=mem->buildObject(Atom::Object(Opcodes::Sim,SIM_ARITY));
-					object_to_inject->code(SIM_OBJ)=Atom::RPointer(0);
-					object_to_inject->code(SIM_TIME)=Atom::IPointer(SIM_ARITY+1);	//	iptr to time.
-					Utils::SetTimestamp<Code>(object_to_inject,SIM_TIME,now);
-					object_to_inject->code(SIM_CFD)=Atom::Float(1);					//	TODO: put the right value (from where?) for the confidence member.
-					object_to_inject->code(SIM_ARITY)=Atom::Float(1);				//	psln_thr.
-					object_to_inject->set_reference(0,prediction);
+				primary_mk=mem->buildObject(Atom::Object(Opcodes::MkAsmp,MK_ASMP_ARITY));
+				primary_mk->code(MK_ASMP_OBJ)=Atom::RPointer(0);
+				primary_mk->code(MK_ASMP_FMD)=Atom::RPointer(1);
+				primary_mk->code(MK_ASMP_CFD)=Atom::Float(1);	//	TODO: put the right value (from where?) for the confidence member.
+				primary_mk->code(MK_ASMP_ARITY)=Atom::Float(1);	//	psln_thr.
+				primary_mk->set_reference(0,bound_object);
+				primary_mk->set_reference(1,fwd_model);
 
-					resilience=mem->get_sim_res();
-					break;
-				case	ASM:	//	inject an assumed prediction.
-					object_to_inject=mem->buildObject(Atom::Object(Opcodes::Asmp,ASMP_ARITY));
-					object_to_inject->code(ASMP_OBJ)=Atom::RPointer(0);
-					object_to_inject->code(ASMP_TIME)=Atom::IPointer(ASMP_ARITY+1);	//	iptr to time.
-					Utils::SetTimestamp<Code>(object_to_inject,ASMP_TIME,now);
-					object_to_inject->code(ASMP_CFD)=Atom::Float(1);				//	TODO: put the right value (from where?) for the confidence member.
-					object_to_inject->code(ASMP_ARITY)=Atom::Float(1);				//	psln_thr.
-					object_to_inject->set_reference(0,prediction);
-
-					resilience=mem->get_asmp_res();
-					break;
-				}
-			}else{					//	cases 3 and 4.
-
-				Code	*assumption=mem->buildObject(Atom::Object(Opcodes::Asmp,ASMP_ARITY));
-				assumption->code(ASMP_OBJ)=Atom::RPointer(0);
-				assumption->code(ASMP_TIME)=Atom::IPointer(ASMP_ARITY+1);	//	iptr to time.
-				Utils::SetTimestamp<Code>(assumption,ASMP_TIME,now);
-				assumption->code(ASMP_CFD)=Atom::Float(1);					//	TODO: put the right value (from where?) for the confidence member.
-				assumption->code(ASMP_ARITY)=Atom::Float(1);				//	psln_thr.
-				assumption->set_reference(0,bound_object);
-
-				switch(c){
-				case	RAW:
-				case	ASM:	//	inject an assumption.
-					object_to_inject=assumption;
-
-					resilience=mem->get_asmp_res();
-					break;
-				case	SIM:	//	inject a simulated assumption.
-					object_to_inject=mem->buildObject(Atom::Object(Opcodes::Sim,SIM_ARITY));
-					object_to_inject->code(SIM_OBJ)=Atom::RPointer(0);
-					object_to_inject->code(SIM_TIME)=Atom::IPointer(SIM_ARITY+1);	//	iptr to time.
-					Utils::SetTimestamp<Code>(object_to_inject,SIM_TIME,now);
-					object_to_inject->code(SIM_CFD)=Atom::Float(1);					//	TODO: put the right value (from where?) for the confidence member.
-					object_to_inject->code(SIM_ARITY)=Atom::Float(1);				//	psln_thr.
-					object_to_inject->set_reference(0,assumption);
-
-					resilience=mem->get_sim_res();
-					break;
-				}
+				resilience=mem->get_asmp_res();
+				prediction=false;
 			}
 
-			for(uint16	i=1;i<=out_group_count;++i){	//	inject in out groups.
+			if(reduction_mode==RDX_MODE_REGULAR	&&	prediction){	//	Monitor the prediction's outcome.
+					
+				Monitor	*m=new	Monitor(this,primary_mk);
+				monitorsCS.enter();
+				monitors[m]=0;
+				monitorsCS.leave();
+				mem->pushTimeJob(new	MonitoringJob(m,predicted_time));
+			}else	if(reduction_mode	&	RDX_MODE_SIMULATION){	//	inject a simulation marker on the bound object.
+
+				mk_sim=mem->buildObject(Atom::Object(Opcodes::MkSim,MK_SIM_ARITY));
+				mk_sim->code(MK_SIM_OBJ)=Atom::RPointer(0);
+				mk_sim->code(MK_SIM_FMD)=Atom::RPointer(1);
+				mk_sim->code(MK_SIM_ARITY)=Atom::Float(1);	//	psln_thr.
+				mk_sim->set_reference(0,bound_object);
+				mk_sim->set_reference(1,fwd_model);
+			}else	if(reduction_mode	&	RDX_MODE_ASSUMPTION	&&	prediction){	//	inject an assumption marker on the bound object.
+
+				mk_asmp=mem->buildObject(Atom::Object(Opcodes::MkAsmp,MK_ASMP_ARITY));
+				mk_asmp->code(MK_ASMP_OBJ)=Atom::RPointer(0);
+				mk_asmp->code(MK_ASMP_FMD)=Atom::RPointer(1);
+				mk_asmp->code(MK_ASMP_CFD)=Atom::Float(1);		//	TODO: put the right value (from where?) for the confidence member.
+				mk_asmp->code(MK_ASMP_ARITY)=Atom::Float(1);	//	psln_thr.
+				mk_asmp->set_reference(0,bound_object);
+				mk_asmp->set_reference(1,fwd_model);
+			}
+
+			for(uint16	i=1;i<=out_group_count;++i){	//	inject the bound object in the model's output groups.
 
 				Code	*out_group=fwd_model->get_reference(fwd_model->code(out_group_set_index+i).asIndex());
 
-				View	*view=new	View(true,now,1,resilience,out_group,rgrp,object_to_inject);
+				View	*view=new	View(true,now,1,1,out_group,rgrp,bound_object);
 				mem->inject(view);
+			}
+
+			for(uint16	i=1;i<=ntf_group_count;++i){	//	inject the markers in the model's notification groups.
+
+				Code	*ntf_group=fwd_model->get_reference(fwd_model->code(ntf_group_set_index+i).asIndex());
+				View	*view;
+
+				if(prediction)
+					view=new	View(true,now,1,mem->get_pred_res(),ntf_group,rgrp,primary_mk);
+				else
+					view=new	View(true,now,1,mem->get_asmp_res(),ntf_group,rgrp,primary_mk);
+				mem->inject(view);
+
+				if(mk_sim){
+
+					view=new	View(true,now,1,mem->get_sim_res(),ntf_group,rgrp,mk_sim);
+					mem->inject(view);
+				}
+
+				if(mk_asmp){
+
+					view=new	View(true,now,1,mem->get_asmp_res(),ntf_group,rgrp,mk_asmp);
+					mem->inject(view);
+				}
 			}
 		}
 	}
@@ -602,7 +549,7 @@ namespace	r_exec{
 
 	void	InvController::take_input(r_exec::View	*input,Controller	*origin){	//	input points to a goal.
 
-		if(input->object->code(0).asOpcode()!=Opcodes::Goal)	//	discard everything but goals.
+		if(input->object->code(0).asOpcode()!=Opcodes::MkGoal)	//	discard everything but goals.
 			return;
 
 		View	*_input=new	View(input);	//	process the target object instead of the goal object itself.

@@ -142,11 +142,11 @@ namespace	r_exec{
 
 		Opcodes::Var=_Opcodes.find("var")->second;
 
-		Opcodes::Pred=_Opcodes.find("pred")->second;
-		Opcodes::Goal=_Opcodes.find("goal")->second;
-		Opcodes::Hyp=_Opcodes.find("hyp")->second;
-		Opcodes::Sim=_Opcodes.find("sim")->second;
-		Opcodes::Asmp=_Opcodes.find("asmp")->second;
+		Opcodes::MkPred=_Opcodes.find("mk.pred")->second;
+		Opcodes::MkGoal=_Opcodes.find("mk.goal")->second;
+		Opcodes::MkHyp=_Opcodes.find("mk.hyp")->second;
+		Opcodes::MkSim=_Opcodes.find("mk.sim")->second;
+		Opcodes::MkAsmp=_Opcodes.find("mk.asmp")->second;
 
 		Opcodes::MkRdx=_Opcodes.find("mk.rdx")->second;
 		Opcodes::MkAntiRdx=_Opcodes.find("mk.|rdx")->second;

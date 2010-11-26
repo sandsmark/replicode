@@ -54,11 +54,11 @@ namespace	r_exec{
 
 	uint16	Opcodes::Var;
 
-	uint16	Opcodes::Pred;
-	uint16	Opcodes::Goal;
-	uint16	Opcodes::Hyp;
-	uint16	Opcodes::Sim;
-	uint16	Opcodes::Asmp;
+	uint16	Opcodes::MkPred;
+	uint16	Opcodes::MkGoal;
+	uint16	Opcodes::MkHyp;
+	uint16	Opcodes::MkSim;
+	uint16	Opcodes::MkAsmp;
 
 	uint16	Opcodes::MkRdx;
 	uint16	Opcodes::MkAntiRdx;

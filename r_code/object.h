@@ -194,10 +194,10 @@ namespace	r_code{
 
 		virtual	View	*build_view(SysView	*source)=0;
 
-		virtual	void	acq_views()		const{}
-		virtual	void	rel_views()		const{}
-		virtual	void	acq_markers()	const{}
-		virtual	void	rel_markers()	const{}
+		virtual	void	acq_views(){}
+		virtual	void	rel_views(){}
+		virtual	void	acq_markers(){}
+		virtual	void	rel_markers(){}
 
 		virtual	float32	get_psln_thr(){	return	1;	}
 
@@ -214,6 +214,12 @@ namespace	r_code{
 			markers.remove(m);
 			rel_markers();
 		}
+		virtual	bool	is_pred(){	return	false;	}
+		virtual	bool	is_goal(){	return	false;	}
+		virtual	bool	is_hyp(){	return	false;	}
+		virtual	bool	is_sim(){	return	false;	}
+		virtual	bool	is_asmp(){	return	false;	}
+		virtual	bool	is_hyp_sim_asmp(){	return	false;	}
 
 		bool								is_registered;
 		std::list<Code	*>::const_iterator	position_in_objects;

@@ -22,7 +22,7 @@
 !class (icpp_pgm (_obj {code:st args:[] run:bl tsc:us nfr:bl}))
 
 ;mapping high-level template objects -> r-code
-!class (_fact (_obj {obj: time: cfd:nb :~}))
+!class (_fact (_obj {obj: time: :~}))
 
 ;mapping high-level objects -> r-code
 !class (rgrp (_grp nil))
@@ -32,11 +32,6 @@
 !class (imd (_obj {head:rgrp out_grps:[::grp] ntf_grps:[::grp] fmd:fmd}))
 !class (fact (_fact nil))
 !class (|fact (_fact nil))
-!class (pred (_fact fmd:fmd))
-!class (goal (_fact nil))
-!class (sim (_fact nil))
-!class (hyp (_fact nil))
-!class (asmp (_fact nil))
 
 ;mapping low-level markers -> r-code
 !class (mk.rdx (_obj {code: inputs:[] prods:[]}))
@@ -51,6 +46,11 @@
 !class (mk.new (_obj obj:))
 
 ;mapping high-level markers -> r-code
+!class (mk.pred (_obj {obj: fmd:fmd cfd:nb}))
+!class (mk.goal (_obj obj:))
+!class (mk.sim (_obj {obj: fmd:fmd}))
+!class (mk.hyp (_obj obj:))
+!class (mk.asmp (_obj {obj: fmd:fmd cfd:nb}))
 !class (mk.success (_obj {obj: rate:nb}))
 !class (mk.failure (_obj {obj: rate:nb}))
 

@@ -63,11 +63,11 @@ namespace	r_exec{
 
 		static	uint16	Var;
 
-		static	uint16	Pred;
-		static	uint16	Goal;
-		static	uint16	Hyp;
-		static	uint16	Sim;
-		static	uint16	Asmp;
+		static	uint16	MkPred;
+		static	uint16	MkGoal;
+		static	uint16	MkHyp;
+		static	uint16	MkSim;
+		static	uint16	MkAsmp;
 
 		static	uint16	MkRdx;
 		static	uint16	MkAntiRdx;

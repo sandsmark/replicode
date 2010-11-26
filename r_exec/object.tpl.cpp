@@ -127,4 +127,96 @@ namespace	r_exec{
 			rel_views();
 		return	NULL;
 	}
+
+	template<class	C,class	U>	bool	Object<C,U>::is_pred(){
+
+		bool	r=false;
+		acq_markers();
+		std::list<Code	*>::const_iterator	m;
+		for(m=markers.begin();m!=markers.end();++m)
+			if((*m)->code(0).asOpcode()==Opcodes::MkPred){
+
+				r=true;
+				break;
+			}
+		rel_markers();
+		return	r;
+	}
+	
+	template<class	C,class	U>	bool	Object<C,U>::is_goal(){
+
+		bool	r=false;
+		acq_markers();
+		std::list<Code	*>::const_iterator	m;
+		for(m=markers.begin();m!=markers.end();++m)
+			if((*m)->code(0).asOpcode()==Opcodes::MkGoal){
+
+				r=true;
+				break;
+			}
+		rel_markers();
+		return	r;
+	}
+	
+	template<class	C,class	U>	bool	Object<C,U>::is_hyp(){
+
+		bool	r=false;
+		acq_markers();
+		std::list<Code	*>::const_iterator	m;
+		for(m=markers.begin();m!=markers.end();++m)
+			if((*m)->code(0).asOpcode()==Opcodes::MkHyp){
+
+				r=true;
+				break;
+			}
+		rel_markers();
+		return	r;
+	}
+	
+	template<class	C,class	U>	bool	Object<C,U>::is_sim(){
+
+		bool	r=false;
+		acq_markers();
+		std::list<Code	*>::const_iterator	m;
+		for(m=markers.begin();m!=markers.end();++m)
+			if((*m)->code(0).asOpcode()==Opcodes::MkSim){
+
+				r=true;
+				break;
+			}
+		rel_markers();
+		return	r;
+	}
+		
+	template<class	C,class	U>	bool	Object<C,U>::is_asmp(){
+
+		bool	r=false;
+		acq_markers();
+		std::list<Code	*>::const_iterator	m;
+		for(m=markers.begin();m!=markers.end();++m)
+			if((*m)->code(0).asOpcode()==Opcodes::MkAsmp){
+
+				r=true;
+				break;
+			}
+		rel_markers();
+		return	r;
+	}
+		
+	template<class	C,class	U>	bool	Object<C,U>::is_hyp_sim_asmp(){
+
+		bool	r=false;
+		acq_markers();
+		std::list<Code	*>::const_iterator	m;
+		for(m=markers.begin();m!=markers.end();++m)
+			if((*m)->code(0).asOpcode()==Opcodes::MkHyp		||
+				(*m)->code(0).asOpcode()==Opcodes::MkSim	||
+				(*m)->code(0).asOpcode()==Opcodes::MkAsmp){
+
+				r=true;
+				break;
+			}
+		rel_markers();
+		return	r;
+	}
 }

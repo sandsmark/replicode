@@ -104,7 +104,15 @@ namespace	r_exec{
 		//	Target psln_thr only.
 		void	set(uint16	member_index,float32	value);
 		void	mod(uint16	member_index,float32	value);
+
 		View	*find_view(Code	*group,bool	lock);
+
+		bool	is_pred();
+		bool	is_goal();
+		bool	is_hyp();
+		bool	is_sim();
+		bool	is_asmp();
+		bool	is_hyp_sim_asmp();
 
 		class	Hash{
 		public:
