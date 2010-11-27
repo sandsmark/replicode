@@ -112,7 +112,7 @@ namespace	r_exec{
 		bool	is_hyp();
 		bool	is_sim();
 		bool	is_asmp();
-		bool	is_hyp_sim_asmp();
+		bool	is_actual();
 
 		class	Hash{
 		public:

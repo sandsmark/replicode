@@ -27,7 +27,8 @@
 ;mapping high-level objects -> r-code
 !class (rgrp (_grp nil))
 !class (var (_obj nil))
-!class (val (_obj value:))
+!class (val (_obj val:))
+!class (mk.val (_obj {obj: attr: val:}))
 !class (fmd (_obj {head:rgrp out_grps:[::grp] ntf_grps:[::grp] tsc:us}))
 !class (imd (_obj {head:rgrp out_grps:[::grp] ntf_grps:[::grp] fmd:fmd}))
 !class (fact (_fact nil))

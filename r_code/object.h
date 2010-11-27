@@ -219,7 +219,7 @@ namespace	r_code{
 		virtual	bool	is_hyp(){	return	false;	}
 		virtual	bool	is_sim(){	return	false;	}
 		virtual	bool	is_asmp(){	return	false;	}
-		virtual	bool	is_hyp_sim_asmp(){	return	false;	}
+		virtual	bool	is_actual(){	return	true;	}
 
 		bool								is_registered;
 		std::list<Code	*>::const_iterator	position_in_objects;

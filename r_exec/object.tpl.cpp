@@ -203,15 +203,16 @@ namespace	r_exec{
 		return	r;
 	}
 		
-	template<class	C,class	U>	bool	Object<C,U>::is_hyp_sim_asmp(){
+	template<class	C,class	U>	bool	Object<C,U>::is_actual(){
 
 		bool	r=false;
 		acq_markers();
 		std::list<Code	*>::const_iterator	m;
 		for(m=markers.begin();m!=markers.end();++m)
-			if((*m)->code(0).asOpcode()==Opcodes::MkHyp		||
-				(*m)->code(0).asOpcode()==Opcodes::MkSim	||
-				(*m)->code(0).asOpcode()==Opcodes::MkAsmp){
+			if((*m)->code(0).asOpcode()!=Opcodes::MkHyp		&&
+				(*m)->code(0).asOpcode()!=Opcodes::MkSim	&&
+				(*m)->code(0).asOpcode()!=Opcodes::MkAsmp	&&
+				(*m)->code(0).asOpcode()!=Opcodes::MkPred){
 
 				r=true;
 				break;

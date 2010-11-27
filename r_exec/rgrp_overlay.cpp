@@ -253,14 +253,14 @@ namespace	r_exec{
 		for(v=rgrp->group_views.begin();v!=rgrp->group_views.end();++v)	//	pass the input to children controllers;
 			v->second->controller->take_input(input);
 
-		if(input->object->is_hyp_sim_asmp())	//	filtering: we don't use hypotheses, simulation results or assumptions to monitor the outcome of predictions 
-			return;
+		if(input->object->is_actual()){	//	filtering: we don't use predictions, hypotheses, simulation results or assumptions to assess the outcome of predictions.
 
-		monitorsCS.enter();
-		UNORDERED_MAP<P<Monitor>,uint64,typename	MonitorHash>::const_iterator	m;
-		for(m=monitors.begin();m!=monitors.end();++m)
-			m->first->take_input(input);
-		monitorsCS.leave();
+			monitorsCS.enter();
+			UNORDERED_MAP<P<Monitor>,uint64,typename	MonitorHash>::const_iterator	m;
+			for(m=monitors.begin();m!=monitors.end();++m)
+				m->first->take_input(input);
+			monitorsCS.leave();
+		}
 	}
 
 	void	FwdController::activate(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,
@@ -515,7 +515,7 @@ namespace	r_exec{
 
 	void	Monitor::take_input(r_exec::View	*input){
 
-		if(input->object==prediction->get_reference(0))
+		if(input->object==prediction->get_reference(0))	//	TODO: use relaxed, content-based, comparison.
 			controller->register_object(this,input->object);
 	}
 
@@ -549,7 +549,7 @@ namespace	r_exec{
 
 	void	InvController::take_input(r_exec::View	*input,Controller	*origin){	//	input points to a goal.
 
-		if(input->object->code(0).asOpcode()!=Opcodes::MkGoal)	//	discard everything but goals.
+		if(!input->object->is_goal())	//	discard everything but goals.
 			return;
 
 		View	*_input=new	View(input);	//	process the target object instead of the goal object itself.

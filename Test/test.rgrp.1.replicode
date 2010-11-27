@@ -1,22 +1,22 @@
-;test model: "hand holds cup -> (hand at position p -> cup at position p)"
+; test model: "hand holds cup -> (hand at position p -> cup at position p)"
 ;
-;1 - construction:
-;build an abstraction group (abst_grp: contains abstraction programs (abst_pgmx)).
-;build three r-groups (r_grpx) made visible from abst_grp.
-;populate each r-group, i.e. inject objects in the r-groups: they are abstracted by the ipgm in abst_grp (see i_abst_pgm1).
-;after 90ms, the model is built and projected onto stdin (see assemble_model) so it gets inputs from there (like any program).
-;after 100 ms (i.e. the upr of abst_grp), the r-groups are no longer projected in abst_grp, this switches abstraction off.
+; 1 - construction:
+; build an abstraction group (abst_grp: contains abstraction programs (abst_pgmx)).
+; build three r-groups (r_grpx) made visible from abst_grp.
+; populate each r-group, i.e. inject objects in the r-groups: they are abstracted by the ipgm in abst_grp (see i_abst_pgm1).
+; after 90ms, the model is built and projected onto stdin (see assemble_model) so it gets inputs from there (like any program).
+; after 100 ms (i.e. the upr of abst_grp), the r-groups are no longer projected in abst_grp, this switches abstraction off.
 ; WARNING
 ; pertaining to abstraction programs:
 ; a - we are currently limited to 2 levels of depth for chain pointers (ex: in.object; we cannot write things like in.x.y since in is already a member of f).
 ; b - the notification of chain pointers is wrong (but the calculus is correct).
 ;
-;2 - exploitation:
-;after 120ms, inject samples in stdin: the r-groups will reduce them and produce predictions.
-;N.B.: do not inject anything in r-groups after the construction phase.
+; 2 - exploitation:
+; after 120ms, inject samples in stdin: the r-groups will reduce them and produce predictions.
+; N.B.: do not inject anything in r-groups after the construction phase.
 
 
-;build the abstraction group and programs.
+; build the abstraction group and programs.
 
 abst_grp:(std_grp 1 0 0 0 [root])
 []
@@ -32,8 +32,8 @@ abst_pgm1:(pgm
    |[]
    |[]
 []
-   (subst [in.object var1])
-   (subst [in.value var2])
+   (subst [in.obj var1])
+   (subst [in.val var2])
 1
 )
 |[]
@@ -53,8 +53,8 @@ abst_pgm2:(pgm
    |[]
    |[]
 []
-   (subst [in.object var1])
-   (subst [in.value var2])
+   (subst [in.obj var1])
+   (subst [in.val var2])
    (subst [f.time var3])
 1
 )
@@ -64,12 +64,12 @@ i_abst_pgm2:(ipgm abst_pgm2 [nil nil nil] RUN_ALWAYS 0us NOTIFY 1)
 []
    [SYNC_FRONT now 0 forever abst_grp nil 1]
 
-;build the model: first the r-groups, then their population.
+; build the model: first the r-groups, then their population.
 
 r_grp1:(std_rgrp 0 0 0 0)
 []
    [SYNC_FRONT now 0 1 abst_grp nil COV_OFF 1]; make r_grp1 visible from abst_grp to allow abstraction programs..
-                                                reducing the content of r_grp; notice the resilience set to 1.
+                                             ; reducing the content of r_grp; notice the resilience set to 1.
 r_grp2:(std_rgrp 0 0 0 0)
 []
    [SYNC_FRONT now 0 forever r_grp1 nil COV_OFF 0]; project the child on its parent before anywhere else.
@@ -127,7 +127,7 @@ i_build_model:(ipgm build_model |[] RUN_ONCE 90000us SILENT 1)
    [SYNC_FRONT now 0 1 root nil 1]
 
 
-;inject inputs in stdin to be matched by the model (will trigger the production of predictions/assumptions).
+; inject inputs in stdin to be matched by the model (will trigger the production of predictions/assumptions).
 
 new_pos:(val (vec3 2 2 2) 1)
 |[]
