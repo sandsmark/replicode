@@ -141,12 +141,15 @@ namespace	r_exec{
 		Opcodes::Cmd=_Opcodes.find("cmd")->second;
 
 		Opcodes::Var=_Opcodes.find("var")->second;
+		Opcodes::Fact=_Opcodes.find("fact")->second;
+		Opcodes::AntiFact=_Opcodes.find("|fact")->second;
 
 		Opcodes::MkPred=_Opcodes.find("mk.pred")->second;
 		Opcodes::MkGoal=_Opcodes.find("mk.goal")->second;
 		Opcodes::MkHyp=_Opcodes.find("mk.hyp")->second;
 		Opcodes::MkSim=_Opcodes.find("mk.sim")->second;
 		Opcodes::MkAsmp=_Opcodes.find("mk.asmp")->second;
+		Opcodes::MkSubGoal=_Opcodes.find("mk.sgoal")->second;
 
 		Opcodes::MkRdx=_Opcodes.find("mk.rdx")->second;
 		Opcodes::MkAntiRdx=_Opcodes.find("mk.|rdx")->second;
@@ -262,7 +265,7 @@ namespace	r_exec{
 		if(!GetProgramName)
 			return	false;
 		
-		typedef	Controller	*(*UserProgram)(_Mem	*,r_code::View	*);
+		typedef	Controller	*(*UserProgram)(r_code::View	*);
 
 		uint16	programCount=GetProgramCount();
 		for(uint16	i=0;i<programCount;++i){

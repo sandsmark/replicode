@@ -28,12 +28,17 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#define	UNDEFINED_OID	0xFFFFFFFF
+
+
 namespace	r_exec{
 
-	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),mem(mem),hash_value(0),invalidated(false){
+	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),hash_value(0),invalidated(false){
 
 		if(mem)
 			setOID(mem->get_oid());
+		else
+			setOID(UNDEFINED_OID);
 	}
 
 	template<class	C,class	U>	Object<C,U>::~Object(){
@@ -52,7 +57,7 @@ namespace	r_exec{
 			return	true;
 		invalidated=true;
 
-		if(mem){
+		if(_oid!=UNDEFINED_OID){
 
 			if(code(0).getDescriptor()==Atom::MARKER){
 
@@ -61,7 +66,7 @@ namespace	r_exec{
 			}
 		
 			if(is_registered)
-				mem->deleteObject(this);
+				r_code::Mem::Get()->deleteObject(this);
 		}
 
 		return	false;
@@ -128,96 +133,89 @@ namespace	r_exec{
 		return	NULL;
 	}
 
-	template<class	C,class	U>	bool	Object<C,U>::is_pred(){
+	template<class	C,class	U>	Code	*Object<C,U>::get_pred(){
 
-		bool	r=false;
+		Code	*mk=NULL;
 		acq_markers();
 		std::list<Code	*>::const_iterator	m;
 		for(m=markers.begin();m!=markers.end();++m)
 			if((*m)->code(0).asOpcode()==Opcodes::MkPred){
 
-				r=true;
+				mk=*m;
 				break;
 			}
 		rel_markers();
-		return	r;
+		return	mk;
 	}
 	
-	template<class	C,class	U>	bool	Object<C,U>::is_goal(){
+	template<class	C,class	U>	Code	*Object<C,U>::get_goal(){
 
-		bool	r=false;
+		Code	*mk=NULL;
 		acq_markers();
 		std::list<Code	*>::const_iterator	m;
 		for(m=markers.begin();m!=markers.end();++m)
 			if((*m)->code(0).asOpcode()==Opcodes::MkGoal){
 
-				r=true;
+				mk=*m;
 				break;
 			}
 		rel_markers();
-		return	r;
+		return	mk;
 	}
 	
-	template<class	C,class	U>	bool	Object<C,U>::is_hyp(){
+	template<class	C,class	U>	Code	*Object<C,U>::get_hyp(){
 
-		bool	r=false;
+		Code	*mk=NULL;
 		acq_markers();
 		std::list<Code	*>::const_iterator	m;
 		for(m=markers.begin();m!=markers.end();++m)
 			if((*m)->code(0).asOpcode()==Opcodes::MkHyp){
 
-				r=true;
+				mk=*m;
 				break;
 			}
 		rel_markers();
-		return	r;
+		return	mk;
 	}
 	
-	template<class	C,class	U>	bool	Object<C,U>::is_sim(){
+	template<class	C,class	U>	Code	*Object<C,U>::get_sim(){
 
-		bool	r=false;
+		Code	*mk=NULL;
 		acq_markers();
 		std::list<Code	*>::const_iterator	m;
 		for(m=markers.begin();m!=markers.end();++m)
 			if((*m)->code(0).asOpcode()==Opcodes::MkSim){
 
-				r=true;
+				mk=*m;
 				break;
 			}
 		rel_markers();
-		return	r;
+		return	mk;
 	}
 		
-	template<class	C,class	U>	bool	Object<C,U>::is_asmp(){
+	template<class	C,class	U>	Code	*Object<C,U>::get_asmp(){
 
-		bool	r=false;
+		Code	*mk=NULL;
 		acq_markers();
 		std::list<Code	*>::const_iterator	m;
 		for(m=markers.begin();m!=markers.end();++m)
 			if((*m)->code(0).asOpcode()==Opcodes::MkAsmp){
 
-				r=true;
+				mk=*m;
 				break;
 			}
 		rel_markers();
-		return	r;
+		return	mk;
 	}
-		
-	template<class	C,class	U>	bool	Object<C,U>::is_actual(){
 
-		bool	r=false;
-		acq_markers();
-		std::list<Code	*>::const_iterator	m;
-		for(m=markers.begin();m!=markers.end();++m)
-			if((*m)->code(0).asOpcode()!=Opcodes::MkHyp		&&
-				(*m)->code(0).asOpcode()!=Opcodes::MkSim	&&
-				(*m)->code(0).asOpcode()!=Opcodes::MkAsmp	&&
-				(*m)->code(0).asOpcode()!=Opcodes::MkPred){
+	template<class	C,class	U>	void	Object<C,U>::kill(){
 
-				r=true;
-				break;
-			}
-		rel_markers();
-		return	r;
+		acq_views();
+		UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v;
+		for(v=views.begin();v!=views.end();++v)
+			((r_exec::View	*)*v)->delete_from_group();
+		views.clear();
+		rel_views();
+		invalidate();
 	}
 }

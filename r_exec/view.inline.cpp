@@ -56,7 +56,7 @@ namespace	r_exec{
 	inline	View::View(bool		sync,
 						uint64	ijt,
 						float32	sln,
-						int16	res,
+						int32	res,
 						Code	*destination,
 						Code	*origin,
 						Code	*object):r_code::View(),controller(NULL){
@@ -68,7 +68,7 @@ namespace	r_exec{
 	inline	View::View(bool		sync,
 						uint64	ijt,
 						float32	sln,
-						int16	res,
+						int32	res,
 						Code	*destination,
 						Code	*origin,
 						Code	*object,
@@ -82,7 +82,7 @@ namespace	r_exec{
 	inline	void	View::init(bool		sync,
 								uint64	ijt,
 								float32	sln,
-								int16	res,
+								int32	res,
 								Code	*destination,
 								Code	*origin,
 								Code	*object){

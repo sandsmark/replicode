@@ -30,6 +30,7 @@
 
 #include	"rgrp_overlay.h"
 #include	"mem.h"
+#include	"fact.h"
 
 
 #define	RDX_MODE_REGULAR	0
@@ -116,8 +117,7 @@ namespace	r_exec{
 		std::list<P<View> >::const_iterator	b;
 		for(b=binders.begin();b!=binders.end();++b){	//	binders called sequentially (at most one can bind an input).
 
-			PGMController	*c=(PGMController	*)(*b)->controller;
-			c->take_input(input,this);
+			((PGMController	*)(*b)->controller)->take_input(input,this);
 			if(discard_bindings)
 				break;
 			if(last_bound.size())
@@ -129,9 +129,9 @@ namespace	r_exec{
 			RGRPOverlay	*offspring=new	RGRPOverlay(this);
 			controller->add(offspring);
 
-			if((reduction_mode	&	RDX_MODE_SIMULATION)==0	&&	input->object->is_sim())
+			if((reduction_mode	&	RDX_MODE_SIMULATION)==0	&&	input->object->get_sim())
 				reduction_mode|=RDX_MODE_SIMULATION;
-			if((reduction_mode	&	RDX_MODE_ASSUMPTION)==0	&&	input->object->is_asmp())
+			if((reduction_mode	&	RDX_MODE_ASSUMPTION)==0	&&	input->object->get_asmp())
 				reduction_mode|=RDX_MODE_ASSUMPTION;
 
 			if(!unbound_var_count){
@@ -162,7 +162,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	RGRPMasterOverlay::RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode):_Controller<Overlay>(c->get_mem()){	//	when bindings==NULL, called by the controller of the head of the model.
+	RGRPMasterOverlay::RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode):_Controller<Overlay>(){	//	when bindings==NULL, called by the controller of the head of the model.
 
 		controller=c;
 		alive=true;
@@ -202,7 +202,7 @@ namespace	r_exec{
 		for(o=overlays.begin();o!=overlays.end();++o){
 
 			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
-			mem->pushReductionJob(j);
+			_Mem::Get()->pushReductionJob(j);
 		}
 
 		overlayCS.leave();
@@ -215,12 +215,13 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	FwdController::FwdController(_Mem	*mem,r_code::View	*view):Controller(mem,view){
+	FwdController::FwdController(r_code::View	*view):Controller(view){
 
 		if(getObject()->code(0).asOpcode()==Opcodes::Fmd){	//	build the master overlay.
 
 			rgrp=(RGroup	*)getObject()->get_reference(getObject()->code(MD_HEAD).asIndex());
 			rgrp->set_fwd_model(getObject());
+			rgrp->set_controller(this);
 
 			RGRPMasterOverlay	*m=new	RGRPMasterOverlay(this,getObject(),rgrp,NULL,RDX_MODE_REGULAR);
 			overlays.push_back(m);
@@ -245,7 +246,7 @@ namespace	r_exec{
 		overlayCS.enter();
 		if(overlays.size())
 			reduce(input);
-		else	//	not activated yet.
+		else	//	not activated yet, or tail.
 			pending_inputs.push_back(input);
 		overlayCS.leave();
 
@@ -253,14 +254,16 @@ namespace	r_exec{
 		for(v=rgrp->group_views.begin();v!=rgrp->group_views.end();++v)	//	pass the input to children controllers;
 			v->second->controller->take_input(input);
 
-		if(input->object->is_actual()){	//	filtering: we don't use predictions, hypotheses, simulation results or assumptions to assess the outcome of predictions.
+		monitorsCS.enter();
+		std::list<P<Monitor> >::const_iterator	m;
+		for(m=monitors.begin();m!=monitors.end();){
 
-			monitorsCS.enter();
-			UNORDERED_MAP<P<Monitor>,uint64,typename	MonitorHash>::const_iterator	m;
-			for(m=monitors.begin();m!=monitors.end();++m)
-				m->first->take_input(input);
-			monitorsCS.leave();
+			if((*m)->take_input(input))
+				m=monitors.erase(m);
+			else
+				++m;
 		}
+		monitorsCS.leave();
 	}
 
 	void	FwdController::activate(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,
@@ -279,8 +282,8 @@ namespace	r_exec{
 				bindings[b->first]=b->second;
 		}
 
-		if(get_position()==TAIL)	//	all variables shall be bound, just inject productions.
-			injectProductions(&bindings,reduction_mode);
+		if(get_position()==TAIL)	//	all variables shall be bound: inject productions.
+			inject_productions(&bindings,reduction_mode);
 		else{
 
 			RGRPMasterOverlay	*m=new	RGRPMasterOverlay(this,rgrp->get_fwd_model(),rgrp,&bindings,reduction_mode);
@@ -289,54 +292,13 @@ namespace	r_exec{
 			overlays.push_back(m);
 			for(uint16	i=0;i<pending_inputs.size();++i)	//	pass the input to all master overlays.
 				m->reduce(pending_inputs[i]);
-			pending_inputs.clear();
 			overlayCS.leave();
 		}
+
+		pending_inputs.clear();
 	}
 
-	Code	*FwdController::bind_object(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings)	const{
-
-		Code	*bound_object=mem->buildObject(original->code(0));
-
-		uint16	i;
-		for(i=0;i<original->code_size();++i)		//	copy the code.
-			bound_object->code(i)=original->code(i);
-		for(i=0;i<original->references_size();++i)	//	bind references when needed.
-			bound_object->set_reference(i,bind_reference(original->get_reference(i),bindings));
-
-		return	bound_object;
-	}
-
-	Code	*FwdController::bind_reference(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings)	const{
-
-		if(original->code(0).asOpcode()==Opcodes::Var)
-			return	(*bindings)[original];
-
-		for(uint16	i=0;i<original->references_size();++i){
-
-			Code	*reference=original->get_reference(i);
-			if(needs_binding(reference))
-				return	bind_object(original,bindings);
-		}
-
-		return	original;
-	}
-
-	bool	FwdController::needs_binding(Code	*object)	const{
-
-		if(object->code(0).asOpcode()==Opcodes::Var)
-			return	true;
-
-		for(uint16	i=0;i<object->references_size();++i){
-
-			if(needs_binding(object->get_reference(i)))
-				return	true;
-		}
-
-		return	false;
-	}
-
-	void	FwdController::injectProductions(UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode){
+	void	FwdController::inject_productions(UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode){
 
 		Code	*fwd_model=rgrp->get_fwd_model();
 
@@ -352,23 +314,24 @@ namespace	r_exec{
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 		for(v=rgrp->other_views.begin();v!=rgrp->other_views.end();++v){	//	we are only interested in objects and markers.
 
-			Code	*bound_object=bind_object(v->second->object,bindings);	//	that is the predicted object (class: fact).
-																			//	no need for existence check: the timings are always different, hence the facts never the same.
+			Code	*bound_object=RGroup::BindObject(v->second->object,bindings);	//	that is the predicted object (class: fact or |fact).
+																					//	no need for existence check: the timings are always different, hence the facts never the same.
 			//	Production/monitoring rules:
 			//	1 - if predicted time > now: bound_object marked as a regular prediction; monitor the outcome = catch occurrences of bound_object at the predicted time.
-			//	2 - if predicted time <= now: bound_object marked as an assumption; no monitoring.
+			//	2 - if predicted time <= now: bound_object marked as an assumption; check among the pending inputs; no monitoring.
 			//	3 - if simulation: bound_object marked as a simulation result; no monitoring.
 			//	4 - if assumption: bound_object marked as an assumption; no monitoring.
-			uint64	predicted_time=Utils::GetTimestamp<Code>(bound_object->get_reference(1),VAL_VALUE);
+			uint64	predicted_time=Utils::GetTimestamp<Code>(bound_object->get_reference(1),VAL_VAL);
+			uint64	time_tolerance=abs((float32)((int64)(predicted_time-now)))*bound_object->get_reference(1)->code(VAL_TOL).asFloat();
 			Code	*primary_mk;	//	prediction or assumption.
 			bool	prediction;		//	false means assumption.
-			uint32	resilience;		//	of the primary marker.
+			int32	resilience;		//	of the primary marker.
 			Code	*mk_sim=NULL;	//	if needed.
 			Code	*mk_asmp=NULL;	//	if needed.
 
 			if(predicted_time>now){
 
-				primary_mk=mem->buildObject(Atom::Object(Opcodes::MkPred,MK_PRED_ARITY));
+				primary_mk=_Mem::Get()->buildObject(Atom::Object(Opcodes::MkPred,MK_PRED_ARITY));
 				primary_mk->code(MK_PRED_OBJ)=Atom::RPointer(0);
 				primary_mk->code(MK_PRED_FMD)=Atom::RPointer(1);
 				primary_mk->code(MK_PRED_CFD)=Atom::Float(1);	//	TODO: put the right value (from where?) for the confidence member.
@@ -376,42 +339,41 @@ namespace	r_exec{
 				primary_mk->set_reference(0,bound_object);
 				primary_mk->set_reference(1,fwd_model);
 
-				resilience=mem->get_pred_res();
+				resilience=-1;	//	forever; predictions are killed by their monitor.
 				prediction=true;
 			}else{
 
-				primary_mk=mem->buildObject(Atom::Object(Opcodes::MkAsmp,MK_ASMP_ARITY));
+				primary_mk=_Mem::Get()->buildObject(Atom::Object(Opcodes::MkAsmp,MK_ASMP_ARITY));
 				primary_mk->code(MK_ASMP_OBJ)=Atom::RPointer(0);
-				primary_mk->code(MK_ASMP_FMD)=Atom::RPointer(1);
+				primary_mk->code(MK_ASMP_MDL)=Atom::RPointer(1);
 				primary_mk->code(MK_ASMP_CFD)=Atom::Float(1);	//	TODO: put the right value (from where?) for the confidence member.
 				primary_mk->code(MK_ASMP_ARITY)=Atom::Float(1);	//	psln_thr.
 				primary_mk->set_reference(0,bound_object);
 				primary_mk->set_reference(1,fwd_model);
 
-				resilience=mem->get_asmp_res();
+				resilience=_Mem::Get()->get_asmp_res();
 				prediction=false;
 			}
 
-			if(reduction_mode==RDX_MODE_REGULAR	&&	prediction){	//	Monitor the prediction's outcome.
-					
-				Monitor	*m=new	Monitor(this,primary_mk);
-				monitorsCS.enter();
-				monitors[m]=0;
-				monitorsCS.leave();
-				mem->pushTimeJob(new	MonitoringJob(m,predicted_time));
+			PMonitor	*monitor=NULL;
+			if(reduction_mode==RDX_MODE_REGULAR){
+
+				monitor=new	PMonitor(this,primary_mk,predicted_time,time_tolerance);
+				if(prediction)	//	monitor the prediction's outcome.
+					add_monitor(monitor);
 			}else	if(reduction_mode	&	RDX_MODE_SIMULATION){	//	inject a simulation marker on the bound object.
 
-				mk_sim=mem->buildObject(Atom::Object(Opcodes::MkSim,MK_SIM_ARITY));
+				mk_sim=_Mem::Get()->buildObject(Atom::Object(Opcodes::MkSim,MK_SIM_ARITY));
 				mk_sim->code(MK_SIM_OBJ)=Atom::RPointer(0);
-				mk_sim->code(MK_SIM_FMD)=Atom::RPointer(1);
+				mk_sim->code(MK_SIM_MDL)=Atom::RPointer(1);
 				mk_sim->code(MK_SIM_ARITY)=Atom::Float(1);	//	psln_thr.
 				mk_sim->set_reference(0,bound_object);
 				mk_sim->set_reference(1,fwd_model);
-			}else	if(reduction_mode	&	RDX_MODE_ASSUMPTION	&&	prediction){	//	inject an assumption marker on the bound object.
+			}else	if((reduction_mode	&	RDX_MODE_ASSUMPTION)	&&	prediction){	//	inject an assumption marker on the bound object.
 
-				mk_asmp=mem->buildObject(Atom::Object(Opcodes::MkAsmp,MK_ASMP_ARITY));
+				mk_asmp=_Mem::Get()->buildObject(Atom::Object(Opcodes::MkAsmp,MK_ASMP_ARITY));
 				mk_asmp->code(MK_ASMP_OBJ)=Atom::RPointer(0);
-				mk_asmp->code(MK_ASMP_FMD)=Atom::RPointer(1);
+				mk_asmp->code(MK_ASMP_MDL)=Atom::RPointer(1);
 				mk_asmp->code(MK_ASMP_CFD)=Atom::Float(1);		//	TODO: put the right value (from where?) for the confidence member.
 				mk_asmp->code(MK_ASMP_ARITY)=Atom::Float(1);	//	psln_thr.
 				mk_asmp->set_reference(0,bound_object);
@@ -421,107 +383,345 @@ namespace	r_exec{
 			for(uint16	i=1;i<=out_group_count;++i){	//	inject the bound object in the model's output groups.
 
 				Code	*out_group=fwd_model->get_reference(fwd_model->code(out_group_set_index+i).asIndex());
-
 				View	*view=new	View(true,now,1,1,out_group,rgrp,bound_object);
-				mem->inject(view);
+				_Mem::Get()->inject(view);
 			}
 
 			for(uint16	i=1;i<=ntf_group_count;++i){	//	inject the markers in the model's notification groups.
 
 				Code	*ntf_group=fwd_model->get_reference(fwd_model->code(ntf_group_set_index+i).asIndex());
-				View	*view;
-
-				if(prediction)
-					view=new	View(true,now,1,mem->get_pred_res(),ntf_group,rgrp,primary_mk);
-				else
-					view=new	View(true,now,1,mem->get_asmp_res(),ntf_group,rgrp,primary_mk);
-				mem->inject(view);
+				View	*view=new	View(true,now,1,resilience,ntf_group,rgrp,primary_mk);
+				_Mem::Get()->inject(view);
 
 				if(mk_sim){
 
-					view=new	View(true,now,1,mem->get_sim_res(),ntf_group,rgrp,mk_sim);
-					mem->inject(view);
+					view=new	View(true,now,1,_Mem::Get()->get_sim_res(),ntf_group,rgrp,mk_sim);
+					_Mem::Get()->inject(view);
 				}
 
 				if(mk_asmp){
 
-					view=new	View(true,now,1,mem->get_asmp_res(),ntf_group,rgrp,mk_asmp);
-					mem->inject(view);
+					view=new	View(true,now,1,_Mem::Get()->get_asmp_res(),ntf_group,rgrp,mk_asmp);
+					_Mem::Get()->inject(view);
 				}
+			}
+
+			if(monitor){
+				
+				for(uint16	i=0;i<pending_inputs.size();++i)	//	check the prediction/assumption among the pending inputs.
+					if(monitor->take_input(pending_inputs[i])){
+
+						delete	monitor;
+						monitor=NULL;
+						break;
+					}
+
+				if(monitor)	//	predicted_time>now: wait for the predicted time.
+					_Mem::Get()->pushTimeJob(new	MonitoringJob(monitor,predicted_time+time_tolerance));
 			}
 		}
 	}
 
-	void	FwdController::register_outcome(Monitor	*m,bool	outcome){
+	void	FwdController::add_outcome(PMonitor	*m,bool	success){	//	success==false: executed in the thread of a time core; otherwise, executed in the same thread as for FwdController::take_input().
 
 		Model	*fwd_model=(Model	*)rgrp->get_fwd_model();
 
-		Code	*marker=mem->buildObject(Atom::Marker(Opcodes::MkFailure,MK_FAILURE_ARITY));	//	MK_SUCCESS_ARITY has the same value.
+		Code	*marker=_Mem::Get()->buildObject(Atom::Marker(success?Opcodes::MkSuccess:Opcodes::MkFailure,MK_SUCCESS_ARITY));	//	MK_FAILURE_ARITY has the same value.
 		marker->code(MK_SUCCESS_OBJ)=Atom::RPointer(0);
-		marker->code(MK_SUCCESS_RATE)=Atom::Float(fwd_model->update(outcome));
+		marker->code(MK_SUCCESS_RATE)=Atom::Float(fwd_model->update(success));
 		marker->code(MK_SUCCESS_ARITY)=Atom::Float(1);	//	psln_thr.
-
-		marker->set_reference(0,m->prediction);
+		marker->set_reference(0,m->target);
 
 		uint16	ntf_group_set_index=fwd_model->code(MD_NTF_GRPS).asIndex();
 		uint16	ntf_group_count=fwd_model->code(ntf_group_set_index).getAtomCount();
-		uint64	now=Now();
-
 		for(uint16	i=1;i<=ntf_group_count;++i){	//	inject notification in ntf groups.
 
 			Group				*ntf_group=(Group	*)fwd_model->get_reference(fwd_model->code(ntf_group_set_index+i).asIndex());
 			NotificationView	*v=new	NotificationView(rgrp,ntf_group,marker);
-			mem->injectNotificationNow(v,true);
+			_Mem::Get()->injectNotificationNow(v,true);
 		}
 
+		m->target->kill();
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Monitor::Monitor():_Object(){
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	PMonitor::PMonitor(FwdController	*c,Code	*target,uint64	expected_time,uint64	time_tolerance):Monitor(),controller(c),target(target),success(false){
+
+		expected_time_high=expected_time+time_tolerance;
+		expected_time_low=expected_time-time_tolerance;
+	}
+
+	bool	PMonitor::is_alive(){
+
+		return	controller->is_alive();
+	}
+
+	bool	PMonitor::take_input(r_exec::View	*input){	
+
+		if(Fact::Equal(input->object,target->get_reference(0))){	//	executed in the same thread as for FwdController::take_input().
+
+			int64	occurrence_time=Utils::GetTimestamp<Code>(input->object->get_reference(1),VAL_VAL);	//	input->object is either a fact or a |fact.
+			if(expected_time_low<=occurrence_time	&&	expected_time_high>=occurrence_time){
+
+				success=true;
+				controller->add_outcome(this,true);
+				return	true;	//	the caller will remove the monitor from its list.
+			}
+		}
+		return	false;
+	}
+
+	void	PMonitor::update(){
+
+		if(!success){
+
+			controller->add_outcome(this,false);
+			controller->remove_monitor(this);
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	GSMonitor::GSMonitor(Model			*inv_model,
+						 FwdController	*c,
+						 GSMonitor		*parent,
+						 bool			sim,
+						 bool			asmp):Monitor(),
+											inv_model(inv_model),
+											controller(c),
+											sim(sim),
+											asmp(asmp),
+											parent(parent),
+											alive(true){
+	}
+
+	bool	GSMonitor::is_alive(){
+
+		bool	_alive;
+		aliveCS.enter();
+		_alive=alive;
+		aliveCS.leave();
+		return	_alive;
+	}
+
+	void	GSMonitor::kill(){
+
+		aliveCS.enter();
+		alive=false;
+		aliveCS.leave();
+
+		monitorsCS.enter();
+		monitors.clear();
+		monitorsCS.leave();
+	}
+
+	bool	GSMonitor::take_input(r_exec::View	*input){	//	input->object is either a fact or a |fact.
+
+		if(!is_alive())
+			return	false;
+
+		monitorsCS.enter();
+		UNORDERED_MAP<P<Monitor>,uint64,typename	MonitorHash>::const_iterator	m;
+		for(m=monitors.begin();m!=monitors.end();++m)
+			m->first->take_input(input);
+		monitorsCS.leave();
+		return	true;
+	}
+
+	void	GSMonitor::register_outcome(GMonitor	*m,Code	*object){	//	executed in the same thread as GSMonitor::take_input().
+
+		int64	occurrence_time=Utils::GetTimestamp<Code>(object->get_reference(1),VAL_VAL);	//	object's class: fact or |fact.
+
+		monitors[m]=occurrence_time;
+	}
+
+	void	GSMonitor::update(){
+	}
+
+	void	GSMonitor::add_outcome(GMonitor	*m,bool	outcome){	//	executed in the thread of a time core (from GSMonitor::update()).
+
+		P<GMonitor>	monitor=m;
+
+		Code	*marker=_Mem::Get()->buildObject(Atom::Marker(outcome?Opcodes::MkSuccess:Opcodes::MkFailure,MK_SUCCESS_ARITY));	//	MK_FAILURE_ARITY has the same value.
+		marker->code(MK_SUCCESS_OBJ)=Atom::RPointer(0);
+		marker->code(MK_SUCCESS_RATE)=Atom::Float(inv_model->update(outcome));
+		marker->code(MK_SUCCESS_ARITY)=Atom::Float(1);	//	psln_thr.
+		marker->set_reference(0,monitor->target);
+
+		uint16	ntf_group_set_index=inv_model->code(MD_NTF_GRPS).asIndex();
+		uint16	ntf_group_count=inv_model->code(ntf_group_set_index).getAtomCount();
+		for(uint16	i=1;i<=ntf_group_count;++i){	//	inject notification in ntf groups.
+
+			Group				*ntf_group=(Group	*)inv_model->get_reference(inv_model->code(ntf_group_set_index+i).asIndex());
+			NotificationView	*v=new	NotificationView(controller->get_rgrp(),ntf_group,marker);
+			_Mem::Get()->injectNotificationNow(v,true);
+		}
+
+		uint32	monitor_count;
 		monitorsCS.enter();
 		monitors.erase(m);
+		monitor_count=monitors.size();
 		monitorsCS.leave();
+
+		if(outcome){
+
+			if(monitor_count==0){	//	no monitor left: all monitors succeeded.
+
+				kill();
+
+				uint16	out_group_set_index=inv_model->code(MD_OUT_GRPS).asIndex();
+				uint16	out_group_count=inv_model->code(out_group_set_index).getAtomCount();
+
+				uint64	now=Now();
+
+				monitor->target->acq_markers();
+				std::list<Code	*>::const_iterator	mk;
+				for(mk=monitor->target->markers.begin();mk!=monitor->target->markers.end();++mk){	//	the monitor's target is marked by sub-goal markers pointing to the super-goals.
+
+					if((*mk)->code(0).asOpcode()==Opcodes::MkSubGoal){	//	inject the super-goals and associated objects and associated sim/asmp if any.
+
+						Code	*super_goal=(*mk)->get_reference(0);
+						Code	*object=super_goal->get_reference(0);
+						Code	*mk_sim=get_mk_sim(object);
+						Code	*mk_asmp=get_mk_asmp(object);
+
+						for(uint16	i=1;i<=out_group_count;++i){	//	inject the bound object in the model's output groups.
+
+							Code	*out_group=inv_model->get_reference(inv_model->code(out_group_set_index+i).asIndex());
+							View	*view=new	View(true,now,1,1,out_group,controller->get_rgrp(),object);
+							_Mem::Get()->inject(view);
+						}
+
+						for(uint16	i=1;i<=ntf_group_count;++i){	//	inject notification in ntf groups.
+
+							Group	*ntf_group=(Group	*)inv_model->get_reference(inv_model->code(ntf_group_set_index+i).asIndex());
+							View	*view;
+
+							view=new	View(true,now,1,_Mem::Get()->get_goal_res(),ntf_group,controller->get_rgrp(),super_goal);
+							_Mem::Get()->inject(view);
+
+							if(mk_sim){
+
+								view=new	View(true,now,1,_Mem::Get()->get_sim_res(),ntf_group,controller->get_rgrp(),mk_sim);
+								_Mem::Get()->inject(view);
+							}
+
+							if(mk_asmp){
+
+								view=new	View(true,now,1,_Mem::Get()->get_asmp_res(),ntf_group,controller->get_rgrp(),mk_asmp);
+								_Mem::Get()->inject(view);
+							}
+						}
+
+						if(parent){	//	add a GMonitor to the parent GSMonitor.
+
+							GMonitor	*m=new	GMonitor(parent,super_goal);
+							uint64		expected_time=Utils::GetTimestamp<Code>(object->get_reference(1),VAL_VAL);
+
+							parent->add_monitor(m);
+							_Mem::Get()->pushTimeJob(new	MonitoringJob(m,expected_time));
+						}
+					}
+				}
+				monitor->target->rel_markers();
+			}
+		}else{	//	one monitor failed.
+
+			/*recursive_*/kill();	//	kill this and recursively its parent.
+
+			monitor->target->acq_markers();
+			std::list<Code	*>::const_iterator	mk;
+			for(mk=monitor->target->markers.begin();mk!=monitor->target->markers.end();++mk){	//	recursively kill the markers and the super-goals.
+
+				if((*mk)->code(0).asOpcode()==Opcodes::MkSubGoal){	//	TODO.
+
+				}
+			}
+			monitor->target->rel_markers();
+		}
+
+		//	TODO: when a super-goal dies, recursively kill all sub-goals and monitors.
+		//	TODO: when a super-goal succeeds, recursively kill all sub-goals and monitors.
+
+		//	TODO: when a super-goal changes saliency, use the sln propagation to replicate to sub-goals; but not the other way around.
+		//	N.B.: shall a goal become non salient, this has no effect on its monitors, if any.
+
+		if(!is_alive())
+			controller->remove_monitor(this);
 	}
 
-	void	FwdController::register_object(Monitor	*m,Code	*object){
+	void	GSMonitor::update(GMonitor	*m){	//	executed in the thread of a time core.
 
-		monitorsCS.enter();
-		monitors[m]=Now();
-		monitorsCS.leave();
-	}
-
-	void	FwdController::check_prediction(Monitor	*m){
-
-		uint64	predicted_time=Utils::GetTimestamp<Code>(m->prediction->get_reference(0),FACT_TIME);
+		uint64	expected_time=Utils::GetTimestamp<Code>(m->target->get_reference(0)->get_reference(1),VAL_VAL);
 		uint64	occurrence_time;
 		
 		monitorsCS.enter();
 		occurrence_time=monitors[m];
 		monitorsCS.leave();
 
-		if(occurrence_time==predicted_time)	//	TODO: define and use a tolerance on the time check.
-			register_outcome(m,true);
+		if(occurrence_time==expected_time)	//	TODO: define and use a tolerance on the time check.
+			add_outcome(m,true);
 		else
-			register_outcome(m,false);
+			add_outcome(m,false);
+	}
+
+	Code	*GSMonitor::get_mk_sim(Code	*object)	const{
+
+		if(sim){
+
+			Code	*mk_sim=_Mem::Get()->buildObject(Atom::Object(Opcodes::MkSim,MK_SIM_ARITY));
+			mk_sim->code(MK_SIM_OBJ)=Atom::RPointer(0);
+			mk_sim->code(MK_SIM_MDL)=Atom::RPointer(1);
+			mk_sim->code(MK_SIM_ARITY)=Atom::Float(1);	//	psln_thr.
+			mk_sim->set_reference(0,object);
+			mk_sim->set_reference(1,inv_model);
+			return	mk_sim;
+		}else
+			return	NULL;
+	}
+	
+	Code	*GSMonitor::get_mk_asmp(Code	*object)	const{
+
+		if(asmp){
+
+			Code	*mk_asmp=_Mem::Get()->buildObject(Atom::Object(Opcodes::MkAsmp,MK_ASMP_ARITY));
+			mk_asmp->code(MK_ASMP_OBJ)=Atom::RPointer(0);
+			mk_asmp->code(MK_ASMP_MDL)=Atom::RPointer(1);
+			mk_asmp->code(MK_ASMP_CFD)=Atom::Float(1);		//	TODO: put the right value (from where?) for the confidence member.
+			mk_asmp->code(MK_ASMP_ARITY)=Atom::Float(1);	//	psln_thr.
+			mk_asmp->set_reference(0,object);
+			mk_asmp->set_reference(1,inv_model);
+			return	mk_asmp;
+		}else
+			return	NULL;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Monitor::Monitor(FwdController	*c,Code	*prediction):_Object(),controller(c){
-
-		this->prediction=prediction;
+	GMonitor::GMonitor(GSMonitor	*p,Code	*target):Monitor(),parent(p),target(target){
 	}
 
-	bool	Monitor::is_alive()	const{
+	bool	GMonitor::is_alive(){
 
-		return	controller->is_alive();
+		return	parent->is_alive();
 	}
 
-	void	Monitor::take_input(r_exec::View	*input){
+	bool	GMonitor::take_input(r_exec::View	*input){	//	input->object is either a fact or a |fact.
 
-		if(input->object==prediction->get_reference(0))	//	TODO: use relaxed, content-based, comparison.
-			controller->register_object(this,input->object);
+		if(input->object==target->get_reference(0))	//	TODO: use relaxed, content-based, comparison. WARNING: the goal may contain variables: needs binding.
+			parent->register_outcome(this,input->object);
+		return	true;
 	}
 
-	void	Monitor::update(){
+	void	GMonitor::update(){
 
-		controller->check_prediction(this);
+		parent->update(this);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -533,13 +733,14 @@ namespace	r_exec{
 
 		InvOverlay(InvController	*c):Overlay(c){}
 
-		void	bind(Code	*value,Code	*var){
+		void	bind(Code	*value,Code	*var){	//	the goal object being bound may contain unbound variables.
 
-			bindings[var]=value;
+			if(!value->code(0).asOpcode()==Opcodes::Var)
+				bindings[var]=value;
 		}
 	};
 
-	InvController::InvController(_Mem	*mem,r_code::View	*view):Controller(mem,view){
+	InvController::InvController(r_code::View	*view):Controller(view){
 
 		rgrp=(RGroup	*)getObject()->get_reference(getObject()->code(MD_HEAD).asIndex());
 	}
@@ -547,27 +748,28 @@ namespace	r_exec{
 	InvController::~InvController(){
 	}
 
-	void	InvController::take_input(r_exec::View	*input,Controller	*origin){	//	input points to a goal.
+	void	InvController::take_input(r_exec::View	*input,Controller	*origin){	//	propagates the instantiation of goals in one single thread.
 
-		if(!input->object->is_goal())	//	discard everything but goals.
+		Code	*goal=input->object->get_goal();
+		if(!goal)	//	discard everything but goals: monitors take their inputs from the fwd controllers.
 			return;
 
-		View	*_input=new	View(input);	//	process the target object instead of the goal object itself.
-		_input->object=input->object->get_reference(0);
+		bool	asmp=input->object->get_asmp()!=NULL;
+		bool	sim=(input->object->get_hyp()!=NULL	||	input->object->get_sim()!=NULL);
 
 		InvOverlay	o(this);
 
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 		for(v=rgrp->ipgm_views.begin();v!=rgrp->ipgm_views.end();++v){	//	attempt to bind (one binder after the other).
 
-			PGMController	*c=(PGMController	*)v->second->controller;
-			c->take_input(input,&o);
-
+			((PGMController	*)v->second->controller)->take_input(input,&o);
 			if(o.bindings.size())	//	one binder matched.
 				break;
 		}
 
-		if(o.bindings.size())
-			rgrp->get_parent()->instantiate_goals(&o.bindings);
+		std::vector<Code	*>	initial_goals;
+		initial_goals.push_back(goal);
+		if(o.bindings.size())	//	propagate.
+			rgrp->get_parent()->instantiate_goals(&initial_goals,NULL,sim,asmp,getObject(),&o.bindings);	//	here, getObject() returns the inverse model.
 	}
 }

@@ -581,8 +581,9 @@ namespace	r_exec{
 
 		Context	object=*context.getChild(1);
 		Context	args=*context.getChild(2);
-		Context	tsc=*context.getChild(3);
-		Context	nfr=*context.getChild(4);
+		Context	run=*context.getChild(3);
+		Context	tsc=*context.getChild(4);
+		Context	nfr=*context.getChild(5);
 
 		Code	*_object=object.getObject();
 		if(_object->code(0).asOpcode()!=Opcodes::Pgm	&&	_object->code(0).asOpcode()!=Opcodes::AntiPgm){
@@ -615,27 +616,28 @@ namespace	r_exec{
 			}
 
 			//	create an ipgm in the production array.
-			Code	*instantiated_object=context.buildObject(_object->code(0));
-			uint16	write_index=0;
-			instantiated_object->code(write_index++)=Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY);
-			instantiated_object->code(write_index++)=Atom::RPointer(0);				//	points to the pgm object.
+			Code	*ipgm=context.buildObject(_object->code(0));
+
+			ipgm->code(0)=Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY);
+			ipgm->code(IPGM_PGM)=Atom::RPointer(0);				//	points to the pgm object.
 
 			uint16	extent_index=0;
-			instantiated_object->code(write_index++)=Atom::IPointer(IPGM_ARITY+1);	//	points to the arg set.
-			args.copy(instantiated_object,IPGM_ARITY+1,extent_index);				//	writes the args after psln_thr.
+			ipgm->code(IPGM_ARGS)=Atom::IPointer(IPGM_ARITY+1);	//	points to the arg set.
+			args.copy(ipgm,IPGM_ARITY+1,extent_index);			//	writes the args after psln_thr.
 			
-			instantiated_object->code(write_index++)=Atom::IPointer(extent_index);	//	points to the tsc.
+			ipgm->code(IPGM_RUN)=run[0];
+			ipgm->code(IPGM_TSC)=Atom::IPointer(extent_index);	//	points to the tsc.
 
-			instantiated_object->code(extent_index++)=tsc[0];						//	writes the tsc after the args.
-			instantiated_object->code(extent_index++)=tsc[1];
-			instantiated_object->code(extent_index++)=tsc[2];
+			ipgm->code(extent_index++)=tsc[0];					//	writes the tsc after the args.
+			ipgm->code(extent_index++)=tsc[1];
+			ipgm->code(extent_index++)=tsc[2];
 
-			instantiated_object->code(write_index++)=nfr[0];						//	nfr.
-			instantiated_object->code(write_index++)=Atom::Float(1);				//	psln_thr.
+			ipgm->code(IPGM_NFR)=nfr[0];						//	nfr.
+			ipgm->code(IPGM_ARITY)=Atom::Float(1);				//	psln_thr.
 
-			instantiated_object->set_reference(0,_object);
+			ipgm->set_reference(0,_object);
 			
-			context.setAtomicResult(Atom::ProductionPointer(context.addProduction(instantiated_object,true)));	// object may be new: we don't know at this point, therefore check=true.
+			context.setAtomicResult(Atom::ProductionPointer(context.addProduction(ipgm,true)));	// object may be new: we don't know at this point, therefore check=true.
 			return	true;
 		}
 		

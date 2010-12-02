@@ -36,6 +36,9 @@
 
 namespace	r_exec{
 
+	class	FwdController;
+	class	GSMonitor;
+
 	//	R-groups are the constituents of models. A model hold references to one r-group (the head), which in turn, holds references to its children.
 	//	R-groups do not hold views on regular groups.
 	//	Children shall be projected onto their parents first and then onto an abstraction group. Then, after abstraction is complete, a model can reference the head r-group.
@@ -47,15 +50,20 @@ namespace	r_exec{
 	class	r_exec_dll	RGroup:
 	public	Group{
 	private:
-		RGroup	*parent;
+		RGroup			*parent;
+		FwdController	*controller;
 
-		CriticalSection													*substitutionsCS;
+		CriticalSection														*substitutionsCS;
 		UNORDERED_MAP<Code	*,std::pair<Code	*,std::list<RGroup	*> > >	*substitutions;	// temporary structure used while performing abstractions: not written in images.
 																							// all children share the same substitutions as their one common ancestor.
 		Code	*fwd_model;
 
 		void	injectRGroup(View	*view);
 	public:
+		static	Code	*BindObject(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings);
+		static	Code	*BindReference(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings);
+		static	bool	NeedsBinding(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings);
+
 		RGroup(r_code::Mem	*m=NULL);
 		RGroup(r_code::SysObject	*source,r_code::Mem	*m);
 		~RGroup();
@@ -66,9 +74,16 @@ namespace	r_exec{
 		Code	*get_fwd_model()	const;
 		void	set_fwd_model(Code	*mdl);
 
-		RGroup	*get_parent()	const;
+		RGroup			*get_parent()	const;
+		FwdController	*get_controller()	const;
+		void			set_controller(FwdController	*c);
 
-		void	instantiate_goals(UNORDERED_MAP<Code	*,P<Code> >	*bindings);
+		void	instantiate_goals(std::vector<Code	*>				*initial_goals,
+								  GSMonitor							*initial_monitor,
+								  bool								sim,
+								  bool								asmp,
+								  Code								*inv_model,
+								  UNORDERED_MAP<Code	*,P<Code> >	*bindings);
 	};
 }
 

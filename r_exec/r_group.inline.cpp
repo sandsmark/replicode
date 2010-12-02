@@ -30,10 +30,10 @@
 
 namespace	r_exec{
 
-	inline	RGroup::RGroup(r_code::Mem	*m):Group(m),parent(NULL),substitutions(NULL){
+	inline	RGroup::RGroup(r_code::Mem	*m):Group(m),parent(NULL),controller(NULL),substitutions(NULL){
 	}
 
-	inline	RGroup::RGroup(r_code::SysObject	*source,r_code::Mem	*m):Group(source,m),parent(NULL),substitutions(NULL){
+	inline	RGroup::RGroup(r_code::SysObject	*source,r_code::Mem	*m):Group(source,m),parent(NULL),controller(NULL),substitutions(NULL){
 	}
 
 	inline	RGroup::~RGroup(){
@@ -61,5 +61,15 @@ namespace	r_exec{
 	inline	RGroup	*RGroup::get_parent()	const{
 
 		return	parent;
+	}
+
+	inline	FwdController	*RGroup::get_controller()	const{
+
+		return	controller;
+	}
+
+	inline	void	RGroup::set_controller(FwdController	*c){
+
+		controller=c;
 	}
 }

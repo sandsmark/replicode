@@ -229,6 +229,23 @@ namespace	r_exec{
 		return	get_vis();
 	}
 
+	void	View::delete_from_object(){
+
+		object->acq_views();
+		object->views.erase(this);
+		if(object->views.size()==0)
+			object->invalidate();
+		object->rel_views();
+	}
+
+	void	View::delete_from_group(){
+
+		Group	*g=get_host();
+		g->enter();
+		g->delete_view(this);
+		g->leave();
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	NotificationView::NotificationView(Group	*origin,Group	*destination,Code	*marker):View(){

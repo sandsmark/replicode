@@ -48,11 +48,11 @@ namespace	r_exec{
 		return	NULL;
 	}
 
-	Controller	*CPPPrograms::New(std::string	&pgm_name,_Mem	*mem,r_code::View	*view){
+	Controller	*CPPPrograms::New(std::string	&pgm_name,r_code::View	*view){
 		
 		CPPPrograms::Program	pgm=Get(pgm_name);
 		if(pgm!=NULL)
-			return	pgm(mem,view);
+			return	pgm(view);
 		else{
 
 			std::cerr<<"cpp pgm "<<pgm_name<<" could not be found\n";

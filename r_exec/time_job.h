@@ -44,7 +44,7 @@ namespace	r_exec{
 		TimeJob(uint64	ijt);
 	public:
 		int64			target_time;		//	0 means ASAP.
-		virtual	bool	update(_Mem	*m)=0;	//	return false to shutdown the time core.
+		virtual	bool	update()=0;	//	return false to shutdown the time core.
 		virtual	bool	is_alive()	const;
 	};
 
@@ -53,7 +53,7 @@ namespace	r_exec{
 	public:
 		P<Group>	group;
 		UpdateJob(Group	*g,uint64	ijt);
-		bool	update(_Mem	*m);
+		bool	update();
 	};
 
 	class	r_exec_dll	SignalingJob:
@@ -69,14 +69,14 @@ namespace	r_exec{
 	public	SignalingJob{
 	public:
 		AntiPGMSignalingJob(AntiPGMController	*o,uint64	ijt);
-		bool	update(_Mem	*m);
+		bool	update();
 	};
 
 	class	r_exec_dll	InputLessPGMSignalingJob:
 	public	SignalingJob{
 	public:
 		InputLessPGMSignalingJob(InputLessPGMController	*o,uint64	ijt);
-		bool	update(_Mem	*m);
+		bool	update();
 	};
 
 	class	r_exec_dll	InjectionJob:
@@ -84,7 +84,7 @@ namespace	r_exec{
 	public:
 		P<View>	view;
 		InjectionJob(View	*v,uint64	ijt);
-		bool	update(_Mem	*m);
+		bool	update();
 	};
 
 	class	r_exec_dll	EInjectionJob:
@@ -92,7 +92,7 @@ namespace	r_exec{
 	public:
 		P<View>	view;
 		EInjectionJob(View	*v,uint64	ijt);
-		bool	update(_Mem	*m);
+		bool	update();
 	};
 
 	class	r_exec_dll	GInjectionJob:
@@ -102,7 +102,7 @@ namespace	r_exec{
 		P<Group>	group;
 		P<Group>	host;
 		GInjectionJob(View	*v,Group	*g,Group	*h,uint64	ijt);
-		bool	update(_Mem	*m);
+		bool	update();
 	};
 
 	class	r_exec_dll	SaliencyPropagationJob:
@@ -112,21 +112,21 @@ namespace	r_exec{
 		float32		sln_change;
 		float32		source_sln_thr;
 		SaliencyPropagationJob(Code	*o,float32	sln_change,float32	source_sln_thr,uint64	ijt);
-		bool	update(_Mem	*m);
+		bool	update();
 	};
 
 	class	r_exec_dll	ShutdownTimeCore:
 	public	TimeJob{
 	public:
 		ShutdownTimeCore();
-		bool	update(_Mem	*m);
+		bool	update();
 	};
 
 	class	r_exec_dll	SuspendTimeCore:
 	public	TimeJob{
 	public:
 		SuspendTimeCore();
-		bool	update(_Mem	*m);
+		bool	update();
 	};
 
 	class	r_exec_dll	MonitoringJob:
@@ -134,7 +134,7 @@ namespace	r_exec{
 	public:
 		P<Monitor>	monitor;
 		MonitoringJob(Monitor	*monitor,uint64	deadline);
-		bool	update(_Mem	*m);
+		bool	update();
 		bool	is_alive()	const;
 	};
 }

@@ -41,7 +41,7 @@
 
 namespace	r_exec{
 
-	template<class	O>	Mem<O>::Mem(){
+	template<class	O>	Mem<O>::Mem():_Mem(){
 	}
 
 	template<class	O>	Mem<O>::~Mem(){
@@ -121,10 +121,10 @@ namespace	r_exec{
 		uint32	i;
 		reduction_cores=new	ReductionCore	*[reduction_core_count];
 		for(i=0;i<reduction_core_count;++i)
-			reduction_cores[i]=new	ReductionCore(this);
+			reduction_cores[i]=new	ReductionCore();
 		time_cores=new	TimeCore	*[time_core_count];
 		for(i=0;i<time_core_count;++i)
-			time_cores[i]=new	TimeCore(this);
+			time_cores[i]=new	TimeCore();
 
 		last_oid=0;
 

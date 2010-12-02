@@ -1,4 +1,4 @@
-//	model.h
+//	fact.h
 //
 //	Author: Eric Nivel
 //
@@ -28,29 +28,44 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	model_h
-#define	model_h
-
-#include	"object.h"
+#ifndef	fact_h
+#define	fact_h
 
 
 namespace	r_exec{
 
-	//	Model implementation.
-	//	This class keeps track of the success rate.
-	//	Model performance is expressed in markers (mk.success and mk.failure); it is not to be queried from instances of this class.
-	class	r_exec_dll	Model:
-	public	LObject,
-	public	CriticalSection{
-	private:
-		uint32	output_count;	//	number of outputs (predictions or goals) produced since the model has been used.
-		uint32	success_count;	//	number of successes; the number of failures is derived from it.
+	class	Any{
 	public:
-		Model(r_code::Mem	*m=NULL);
-		Model(r_code::SysObject	*source,r_code::Mem	*m);
-		~Model();
+		static	bool	Equal(const	Code	*lhs,const	Code	*rhs){
+				
+			if(lhs->code(0)!=rhs->code(0))
+				return	false;
+			if(lhs->code(0).asOpcode()==Opcodes::Ent	||	lhs->code(0).asOpcode()==Opcodes::Var)
+				return	lhs==rhs;
+			if(lhs->code_size()!=rhs->code_size())
+				return	false;
+			if(lhs->references_size()!=rhs->references_size())
+				return	false;
 
-		float32	update(bool	measurement);	//	registers an outcome and return the success rate: measurement==true means success, failure otherwise.
+			uint16	i;
+			for(i=0;i<lhs->references_size();++i)
+				if(lhs->get_reference(i)!=rhs->get_reference(i))
+					return	false;
+			for(i=0;i<lhs->code_size();++i)
+				if(lhs->code(i)!=rhs->code(i))
+					return	false;
+			return	true;
+		}
+	};
+
+	class	Fact{
+	public:
+		static	bool	Equal(const	Code	*lhs,const	Code	*rhs){	//	both operands are assumed to be of class fact or |fact.
+
+			if(lhs->code(0)!=rhs->code(0))
+				return	false;
+			return	Any::Equal(lhs->get_reference(0),rhs->get_reference(0));	//	compare the pointed objects; ignore time.
+		}
 	};
 }
 

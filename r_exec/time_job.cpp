@@ -49,9 +49,9 @@ namespace	r_exec{
 		group=g;
 	}
 
-	bool	UpdateJob::update(_Mem	*m){
+	bool	UpdateJob::update(){
 
-		m->update(group);
+		_Mem::Get()->update(group);
 		return	true;
 	}
 
@@ -72,7 +72,7 @@ namespace	r_exec{
 	AntiPGMSignalingJob::AntiPGMSignalingJob(AntiPGMController	*o,uint64	ijt):SignalingJob(o,ijt){
 	}
 
-	bool	AntiPGMSignalingJob::update(_Mem	*m){
+	bool	AntiPGMSignalingJob::update(){
 
 		if(controller->is_alive())
 			((AntiPGMController	*)controller)->signal_anti_pgm();
@@ -84,7 +84,7 @@ namespace	r_exec{
 	InputLessPGMSignalingJob::InputLessPGMSignalingJob(InputLessPGMController	*o,uint64	ijt):SignalingJob(o,ijt){
 	}
 
-	bool	InputLessPGMSignalingJob::update(_Mem	*m){
+	bool	InputLessPGMSignalingJob::update(){
 
 		if(controller->is_alive())
 			((InputLessPGMController	*)controller)->signal_input_less_pgm();
@@ -98,9 +98,9 @@ namespace	r_exec{
 		view=v;
 	}
 
-	bool	InjectionJob::update(_Mem	*m){
+	bool	InjectionJob::update(){
 
-		m->injectNow(view);
+		_Mem::Get()->injectNow(view);
 		return	true;
 	}
 
@@ -111,9 +111,9 @@ namespace	r_exec{
 		view=v;
 	}
 
-	bool	EInjectionJob::update(_Mem	*m){
+	bool	EInjectionJob::update(){
 
-		m->injectExistingObjectNow(view,view->object,view->get_host(),true);
+		_Mem::Get()->injectExistingObjectNow(view,view->object,view->get_host(),true);
 		return	true;
 	}
 
@@ -126,9 +126,9 @@ namespace	r_exec{
 		host=h;
 	}
 
-	bool	GInjectionJob::update(_Mem	*m){
+	bool	GInjectionJob::update(){
 
-		m->injectGroupNow(view,group,host);
+		_Mem::Get()->injectGroupNow(view,group,host);
 		return	true;
 	}
 
@@ -139,10 +139,10 @@ namespace	r_exec{
 		object=o;
 	}
 	
-	bool	SaliencyPropagationJob::update(_Mem	*m){
+	bool	SaliencyPropagationJob::update(){
 
 		if(!object->is_invalidated())
-			m->propagate_sln(object,sln_change,source_sln_thr);
+			_Mem::Get()->propagate_sln(object,sln_change,source_sln_thr);
 		return	true;
 	}
 
@@ -151,9 +151,9 @@ namespace	r_exec{
 	ShutdownTimeCore::ShutdownTimeCore():TimeJob(0){
 	}
 
-	bool	ShutdownTimeCore::update(_Mem	*m){
+	bool	ShutdownTimeCore::update(){
 
-		m->shutdown_core();
+		_Mem::Get()->shutdown_core();
 		return	false;
 	}
 
@@ -162,9 +162,9 @@ namespace	r_exec{
 	SuspendTimeCore::SuspendTimeCore():TimeJob(0){
 	}
 
-	bool	SuspendTimeCore::update(_Mem	*m){
+	bool	SuspendTimeCore::update(){
 
-		return	m->suspend_core();
+		return	_Mem::Get()->suspend_core();
 	}
 
 	////////////////////////////////////////////////////////////
@@ -172,7 +172,7 @@ namespace	r_exec{
 	MonitoringJob::MonitoringJob(Monitor	*m,uint64	deadline):TimeJob(deadline),monitor(m){
 	}
 
-	bool	MonitoringJob::update(_Mem	*m){
+	bool	MonitoringJob::update(){
 
 		monitor->update();
 		return	true;

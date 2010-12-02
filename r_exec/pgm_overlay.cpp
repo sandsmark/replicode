@@ -184,8 +184,6 @@ namespace	r_exec{
 
 	bool	InputLessPGMOverlay::inject_productions(Controller	*origin){
 
-		_Mem	*mem=get_mem();
-
 		uint64	now=Now();
 
 		uint16	unused_index;
@@ -241,14 +239,14 @@ namespace	r_exec{
 						productions.push_back(arg1.getObject());
 					else{
 
-						object=mem->buildObject(arg1[0]);
+						object=_Mem::Get()->buildObject(arg1[0]);
 	//					if(production_count==2)
 	//						arg1.trace();
 						arg1.copy(object,0);
 						//arg1.trace();
 	//					if(production_count==2)
 	//						object->trace();
-						productions.push_back(mem->check_existence(object));
+						productions.push_back(_Mem::Get()->check_existence(object));
 					}
 					patch_code(index,Atom::ProductionPointer(productions.size()-1));
 
@@ -307,7 +305,7 @@ namespace	r_exec{
 					view->references[1]=getView()->get_host();
 					view->code(VIEW_ORG)=Atom::RPointer(1);
 
-					mem->inject(view);
+					_Mem::Get()->inject(view);
 
 					if(mk_rdx){
 
@@ -325,7 +323,7 @@ namespace	r_exec{
 
 					Context	node=*args.getChild(3);
 
-					mem->eject(view,node[0].getNodeID());
+					_Mem::Get()->eject(view,node[0].getNodeID());
 
 					if(mk_rdx){
 
@@ -451,10 +449,10 @@ namespace	r_exec{
 
 				}else	if(function[0].asOpcode()==Opcodes::Suspend){	//	no args.
 
-					mem->suspend();
+					_Mem::Get()->suspend();
 				}else	if(function[0].asOpcode()==Opcodes::Stop){		//	no args.
 
-					mem->stop();
+					_Mem::Get()->stop();
 				}else{	//	unknown function.
 
 					rollback();
@@ -463,10 +461,10 @@ namespace	r_exec{
 				}
 			}else{	//	in case of an external device, create a cmd object and send it.
 
-				Code	*command=get_mem()->buildObject(cmd[0]);
+				Code	*command=_Mem::Get()->buildObject(cmd[0]);
 				cmd.copy(command,0);
 
-				mem->eject(command,command->code(CMD_DEVICE).getNodeID());
+				_Mem::Get()->eject(command,command->code(CMD_DEVICE).getNodeID());
 
 				if(mk_rdx){
 
@@ -513,10 +511,10 @@ namespace	r_exec{
 
 			input_view->code(VIEW_SLN)=Atom::Float(0);	//	this prevents the abstraction to reduce the abstracted object.
 			input_view->set_object(abstracted_object);
-			mem->inject(input_view);
+			_Mem::Get()->inject(input_view);
 
 			//	inject a binding ipgm in the r-grp: an instance of the same pgm, passing as template arguments the variables used for substitution.
-			Code	*binder=mem->buildObject(Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY));
+			Code	*binder=_Mem::Get()->buildObject(Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY));
 			uint16	write_index=0;
 			uint16	extent_index=IPGM_ARITY+1;
 			uint16	ref_index=0;
@@ -538,7 +536,7 @@ namespace	r_exec{
 			binder->code(IPGM_ARITY)=Atom::Float(1);				//	psln_thr.
 
 			View	*binder_view=new	View(true,now,0,-1,r_grp,NULL,binder,1);
-			mem->inject(binder_view);
+			_Mem::Get()->inject(binder_view);
 		}
 
 		if(mk_rdx){
@@ -546,7 +544,7 @@ namespace	r_exec{
 			for(uint16	i=1;i<=ntf_grp_count;++i){
 
 				NotificationView	*v=new	NotificationView(getView()->get_host(),getView()->get_host()->get_ntf_grp(i),mk_rdx);
-				mem->injectNotificationNow(v,true,origin);
+				_Mem::Get()->injectNotificationNow(v,true,origin);
 			}
 		}
 
@@ -555,7 +553,7 @@ namespace	r_exec{
 
 	Code	*InputLessPGMOverlay::duplicate(Code	*original,const	std::vector<std::pair<uint16,Code	*> >	*substitutions)	const{
 
-		Code	*duplicate=get_mem()->buildObject(original->code(0));
+		Code	*duplicate=_Mem::Get()->buildObject(original->code(0));
 		uint16	i;
 		for(i=0;i<original->code_size();++i)	//	copy the code.
 			duplicate->code(i)=original->code(i);
@@ -576,7 +574,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_RDX_ARITY+1;
 
-		Code	*mk_rdx=new	r_exec::LObject(get_mem());
+		Code	*mk_rdx=new	r_exec::LObject(_Mem::Get());
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -639,6 +637,7 @@ namespace	r_exec{
 		InputLessPGMOverlay::reset();
 		patch_indices.clear();
 		input_views.clear();
+		input_pattern_indices.clear();
 		init();
 	}
 
@@ -662,8 +661,17 @@ namespace	r_exec{
 				break;
 			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
 				return;
-			case	Atom::I_PTR:	//	go one level deper in the pattern: recurse.
-				patch_input_code(patch_index+j,input_index,/*getInputObject(input_index)->code(j).asIndex()*/j);
+			case	Atom::I_PTR:	//	caution: the pattern points to sub-structures using iptrs. However, the input object may have a rptr instead of an iptr: we have to disambiguate. go one level deper in the pattern: recurse.
+				switch(getInputObject(input_index)->code(j).getDescriptor()){
+				case	Atom::I_PTR:
+					patch_input_code(patch_index+j,input_index,getInputObject(input_index)->code(j).asIndex());
+					break;
+				case	Atom::R_PTR:
+					patch_input_code(patch_index+j,input_index,j);
+					break;
+				default:	//	shall never happen.
+					break;
+				}
 				patch_indices.push_back(patch_index+j);
 				break;
 			default:	//	leave as is.
@@ -685,6 +693,9 @@ namespace	r_exec{
 
 						((PGMController	*)controller)->notify_reduction();
 						controller->remove(this);
+						return;
+					}else{
+						rollback();
 						return;
 					}
 				}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
@@ -807,7 +818,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_RDX_ARITY+1;
 
-		Code	*mk_rdx=new	r_exec::LObject(get_mem());
+		Code	*mk_rdx=new	r_exec::LObject(_Mem::Get());
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -851,6 +862,9 @@ namespace	r_exec{
 
 						((AntiPGMController	*)controller)->restart(this);
 						break;
+					}else{
+						rollback();
+						break;
 					}
 				}else{
 
@@ -873,7 +887,7 @@ namespace	r_exec{
 		uint16	write_index=0;
 		extent_index=MK_ANTI_RDX_ARITY+1;
 
-		Code	*mk_rdx=new	r_exec::LObject(get_mem());
+		Code	*mk_rdx=new	r_exec::LObject(_Mem::Get());
 
 		mk_rdx->code(write_index++)=Atom::Marker(Opcodes::MkAntiRdx,MK_ANTI_RDX_ARITY);
 		mk_rdx->code(write_index++)=Atom::RPointer(0);				//	code.
@@ -886,7 +900,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	InputLessPGMController::InputLessPGMController(_Mem	*m,r_code::View	*ipgm_view):_PGMController(m,ipgm_view){
+	InputLessPGMController::InputLessPGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view){
 
 		overlays.push_back(new	InputLessPGMOverlay(this));
 	}
@@ -912,7 +926,7 @@ namespace	r_exec{
 					host->get_c_sln()>host->get_c_sln_thr()){		//	c-salient group.
 
 					TimeJob	*next_job=new	InputLessPGMSignalingJob(this,Now()+tsc);
-					mem->pushTimeJob(next_job);
+					_Mem::Get()->pushTimeJob(next_job);
 				}
 				host->leave();
 			}
@@ -925,7 +939,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	_PGMController::_PGMController(_Mem	*m,r_code::View	*ipgm_view):Controller(m,ipgm_view){
+	_PGMController::_PGMController(r_code::View	*ipgm_view):Controller(ipgm_view){
 
 		run_once=!ipgm_view->object->code(IPGM_RUN).asBoolean();
 	}
@@ -935,7 +949,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	PGMController::PGMController(_Mem	*m,r_code::View	*ipgm_view):_PGMController(m,ipgm_view){
+	PGMController::PGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view){
 
 		overlays.push_back(new	PGMOverlay(this));
 	}
@@ -997,7 +1011,7 @@ namespace	r_exec{
 		for(o=overlays.begin();o!=overlays.end();++o){
 
 			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
-			mem->pushReductionJob(j);
+			_Mem::Get()->pushReductionJob(j);
 		}
 
 		overlayCS.leave();
@@ -1016,7 +1030,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	AntiPGMController::AntiPGMController(_Mem	*m,r_code::View	*ipgm_view):_PGMController(m,ipgm_view),successful_match(false){
+	AntiPGMController::AntiPGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view),successful_match(false){
 
 		overlays.push_back(new	AntiPGMOverlay(this));
 	}
@@ -1033,7 +1047,7 @@ namespace	r_exec{
 		for(o=overlays.begin();o!=overlays.end();++o){
 
 			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
-			mem->pushReductionJob(j);
+			_Mem::Get()->pushReductionJob(j);
 		}
 
 		if(this!=origin)
@@ -1044,26 +1058,28 @@ namespace	r_exec{
 
 		overlayCS.enter();
 
-		AntiPGMOverlay	*overlay=(AntiPGMOverlay	*)*overlays.begin();
-		overlay->reductionCS.enter();
-		if(!successful_match)
-			overlay->inject_productions(this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlayCS.
-		overlay->reset();
-		overlay->reductionCS.leave();
-		
-		if(!run_once){
-
-			push_new_signaling_job();
-
-			std::list<P<_Overlay> >::const_iterator	first=overlays.begin();
-			std::list<P<_Overlay> >::const_iterator	o;
-			for(o=++first;o!=overlays.end();){	//	reset the first overlay and kill all others.
-
-				((Overlay	*)(*o))->kill();
-				o=overlays.erase(o);
-			}
-
+		if(successful_match)	//	a signaling job has been spawn in restart(): we are here in an old job during which a positive match occurred: do nothing.
 			successful_match=false;
+		else{	//	no positive match during this job: inject productions and restart.
+
+			AntiPGMOverlay	*overlay=(AntiPGMOverlay	*)*overlays.begin();
+			overlay->reductionCS.enter();
+			overlay->inject_productions(this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlayCS.
+			overlay->reset();
+			overlay->reductionCS.leave();
+			
+			if(!run_once){
+
+				push_new_signaling_job();
+
+				std::list<P<_Overlay> >::const_iterator	first=overlays.begin();
+				std::list<P<_Overlay> >::const_iterator	o;
+				for(o=++first;o!=overlays.end();){	//	reset the first overlay and kill all others.
+
+					((Overlay	*)(*o))->kill();
+					o=overlays.erase(o);
+				}
+			}
 		}
 
 		overlayCS.leave();
@@ -1104,9 +1120,9 @@ namespace	r_exec{
 			host->get_c_act()>host->get_c_act_thr()	&&	//	c-active group.
 			host->get_c_sln()>host->get_c_sln_thr()){	//	c-salient group.
 
-				host->leave();
+			host->leave();
 			TimeJob	*next_job=new	AntiPGMSignalingJob(this,Now()+Utils::GetTimestamp<Code>(getObject(),IPGM_TSC));
-			mem->pushTimeJob(next_job);
+			_Mem::Get()->pushTimeJob(next_job);
 		}else
 			host->leave();
 	}

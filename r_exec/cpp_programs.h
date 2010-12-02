@@ -38,13 +38,13 @@ namespace	r_exec{
 
 	class	r_exec_dll	CPPPrograms{
 	public:
-		typedef	Controller	*(*Program)(_Mem	*,r_code::View	*);
+		typedef	Controller	*(*Program)(r_code::View	*);
 	private:
 		static	UNORDERED_MAP<std::string,Program>	Programs;
 	public:
 		static	void	Register(std::string	&pgm_name,Program	pgm);
 		static	Program	Get(std::string	&pgm_name);
-		static	Controller	*New(std::string	&pgm_name,_Mem	*mem,r_code::View	*view);
+		static	Controller	*New(std::string	&pgm_name,r_code::View	*view);
 	};
 }
 

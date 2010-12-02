@@ -490,7 +490,7 @@ dereference:
 
 	uint16	Context::addProduction(Code	*object,bool	check_for_existence)	const{	//	called by operators (ins and red).
 		
-		overlay->productions.push_back(overlay->get_mem()->check_existence(object));
+		overlay->productions.push_back(_Mem::Get()->check_existence(object));
 		return	overlay->productions.size()-1;
 	}
 }

@@ -42,7 +42,7 @@ namespace	r_exec{
 	ReductionJob::ReductionJob(View	*input,Overlay	*overlay):_ReductionJob(),input(input),overlay(overlay){
 	}
 
-	bool	ReductionJob::update(_Mem	*m){
+	bool	ReductionJob::update(){
 		
 		overlay->reduce(input);
 		return	true;
@@ -50,16 +50,16 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////
 
-	bool	ShutdownReductionCore::update(_Mem	*m){
+	bool	ShutdownReductionCore::update(){
 
-		m->shutdown_core();
+		_Mem::Get()->shutdown_core();
 		return	false;
 	}
 
 	////////////////////////////////////////////////////////////
 
-	bool	SuspendReductionCore::update(_Mem	*m){
+	bool	SuspendReductionCore::update(){
 
-		return	m->suspend_core();
+		return	_Mem::Get()->suspend_core();
 	}
 }

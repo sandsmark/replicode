@@ -30,6 +30,15 @@
 
 namespace	r_exec{
 
+	inline	void	GSMonitor::add_monitor(GMonitor	*m){
+
+		monitorsCS.enter();
+		monitors[m]=0;
+		monitorsCS.leave();
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	inline	FwdController::Position	FwdController::get_position()	const{
 
 		if(getObject()->code(0).asOpcode()==Opcodes::Fmd)
@@ -39,10 +48,29 @@ namespace	r_exec{
 		return	TAIL;
 	}
 
+	inline	RGroup	*FwdController::get_rgrp()	const{
+
+		return	rgrp;
+	}
+
 	inline	void	FwdController::reduce(r_exec::View	*input){
 
 		std::list<P<_Overlay> >::iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o)	//	pass the input to all master overlays.
 			(*o)->reduce(input);
+	}
+
+	inline	void	FwdController::add_monitor(Monitor	*m){
+
+		monitorsCS.enter();
+		monitors.push_back(m);
+		monitorsCS.leave();
+	}
+	
+	inline	void	FwdController::remove_monitor(Monitor	*m){
+
+		monitorsCS.enter();
+		monitors.remove(m);
+		monitorsCS.leave();
 	}
 }

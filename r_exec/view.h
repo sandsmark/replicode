@@ -68,7 +68,7 @@ namespace	r_exec{
 		void	init(bool		sync,
 					 uint64		ijt,
 					 float32	sln,
-					 int16		res,
+					 int32		res,
 					 Code		*host,
 					 Code		*origin,
 					 Code		*object);
@@ -95,14 +95,14 @@ namespace	r_exec{
 		View(bool		sync,
 			 uint64		ijt,
 			 float32	sln,
-			 int16		res,
+			 int32		res,
 			 Code		*host,
 			 Code		*origin,
 			 Code		*object);	//	regular view; res set to -1 means forever.
 		View(bool		sync,
 			 uint64		ijt,
 			 float32	sln,
-			 int16		res,
+			 int32		res,
 			 Code		*host,
 			 Code		*origin,
 			 Code		*object,
@@ -144,6 +144,9 @@ namespace	r_exec{
 		//	Target res, sln, act, vis.
 		void	mod(uint16	member_index,float32	value);
 		void	set(uint16	member_index,float32	value);
+
+		void	delete_from_object();
+		void	delete_from_group();
 	};
 
 	class	r_exec_dll	NotificationView:

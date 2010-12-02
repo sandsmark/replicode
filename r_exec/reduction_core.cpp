@@ -44,8 +44,8 @@ namespace	r_exec{
 		bool	run=true;
 		while(run){
 
-			P<_ReductionJob>	j=_this->mem->popReductionJob();
-			run=j->update(_this->mem);
+			P<_ReductionJob>	j=_Mem::Get()->popReductionJob();
+			run=j->update();
 			j=NULL;
 		}
 
@@ -54,7 +54,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	ReductionCore::ReductionCore(_Mem	*m):Thread(),mem(m){
+	ReductionCore::ReductionCore():Thread(){
 	}
 
 	ReductionCore::~ReductionCore(){

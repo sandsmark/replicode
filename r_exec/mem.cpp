@@ -32,7 +32,7 @@
 
 namespace	r_exec{
 
-	_Mem::_Mem():state(NOT_STARTED){
+	_Mem::_Mem():r_code::Mem(),state(NOT_STARTED){
 	}
 
 	_Mem::~_Mem(){
@@ -118,13 +118,19 @@ namespace	r_exec{
 	}
 
 	void	_Mem::start_core(){
-++CoreCount;
+
+		core_countCS.enter();
+		++core_count;
 		stop_sem->acquire(0);
+		core_countCS.leave();
 	}
 
 	void	_Mem::shutdown_core(){
---CoreCount;
+
+		core_countCS.enter();
+		--core_count;
 		stop_sem->release();
+		core_countCS.leave();
 	}
 
 	bool	_Mem::suspend_core(){
@@ -154,7 +160,8 @@ namespace	r_exec{
 
 		if(state!=STOPPED	&&	state!=NOT_STARTED)
 			return	0;
-CoreCount=0;
+
+		core_count=0;
 		suspension_lock=new	Event();
 		stop_sem=new	Semaphore(1,1);
 		suspend_sem=new	Semaphore(1,1);
@@ -226,12 +233,14 @@ CoreCount=0;
 		state=RUNNING;
 
 		for(i=0;i<reduction_core_count;++i){
-++CoreCount;
+
+			++core_count;
 			stop_sem->acquire(0);
 			reduction_cores[i]->start(ReductionCore::Run);
 		}
 		for(i=0;i<time_core_count;++i){
-++CoreCount;
+
+			++core_count;
 			stop_sem->acquire(0);
 			time_cores[i]->start(TimeCore::Run);
 		}
@@ -258,16 +267,18 @@ CoreCount=0;
 			pushTimeJob(new	ShutdownTimeCore());
 		stateCS.leave();
 
-		Thread::Sleep(200);
+		Thread::Sleep(400);
+		core_countCS.enter();
 		stop_sem->acquire();	//	wait for the cores and delegates to terminate.
-		
-		if(CoreCount){	//	HACK: at this point, CoreCount shall be 0. BUG: sometimes it's not: a delegate is still waiting on timer.
+		core_countCS.leave();
+		/*
+		if(core_count){
 
-			for(uint32	i=0;i<CoreCount;++i)
+			for(uint32	i=0;i<core_count;++i)
 				stop_sem->acquire(0);
 			stop_sem->acquire();
 		}
-
+*/
 		reset();
 	}
 
@@ -466,13 +477,13 @@ CoreCount=0;
 		FOR_ALL_VIEWS_BEGIN_NO_INC(group,v)
 
 			//	update resilience.
-			float32	res=group->update_res(v->second,this);	//	will decrement res by 1 in addition to the accumulated changes.
+			float32	res=group->update_res(v->second);	//	will decrement res by 1 in addition to the accumulated changes.
 			if(res>0){
 
 				//	update saliency (apply decay).
 				float32	view_old_sln=v->second->get_sln();
 				bool	wiew_was_salient=view_old_sln>former_sln_thr;
-				float32	view_new_sln=group->update_sln(v->second,this);
+				float32	view_new_sln=group->update_sln(v->second);
 				bool	wiew_is_salient=view_new_sln>group->get_sln_thr();
 
 				if(group_is_c_salient){
@@ -537,7 +548,7 @@ CoreCount=0;
 
 					//	update activation.
 					bool	view_was_active=v->second->get_act()>group->get_act_thr();
-					bool	view_is_active=group->update_act(v->second,this)>group->get_act_thr();
+					bool	view_is_active=group->update_act(v->second)>group->get_act_thr();
 
 					//	kill newly inactive controllers, register newly active ones.
 					if(group_was_c_active	&&	group_was_c_salient){
@@ -566,13 +577,9 @@ CoreCount=0;
 				++v;
 			}else{	//	view has no resilience.
 
-				v->second->object->acq_views();
-				v->second->object->views.erase(v->second);	//	delete view from object's views.
-				if(v->second->object->views.size()==0)
-					v->second->object->invalidate();
-				v->second->object->rel_views();
+				v->second->delete_from_object();
 
-				//	delete the view.
+				//	delete the view from the group.
 				if(v->second->isNotification())
 					v=group->notification_views.erase(v);
 				else	switch(GetType(v->second->object)){
@@ -637,7 +644,7 @@ CoreCount=0;
 			group->new_controllers.clear();
 		}
 
-		group->update_stats(this);	//	triggers notifications.
+		group->update_stats();	//	triggers notifications.
 
 		//	inject the next update job for the group.
 		if(group->get_upr()>0){

@@ -62,12 +62,12 @@ namespace	r_exec{
 
 	r_code::Code	*Overlay::buildObject(Atom	head)	const{
 		
-		return	get_mem()->buildObject(head);
+		return	_Mem::Get()->buildObject(head);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	__Controller::__Controller(_Mem	*mem):mem(mem){
+	__Controller::__Controller(){
 	}
 
 	__Controller::~__Controller(){
@@ -92,7 +92,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Controller::Controller(_Mem	*mem,r_code::View	*view):_Controller<_Object>(mem),alive(true),view(view){
+	Controller::Controller(r_code::View	*view):_Controller<_Object>(),alive(true),view(view){
 
 		switch(getObject()->code(0).getDescriptor()){
 		case	Atom::INSTANTIATED_PROGRAM:

@@ -33,6 +33,7 @@
 
 #include	"overlay.h"
 #include	"r_group.h"
+#include	"model.h"
 
 
 namespace	r_exec{
@@ -82,19 +83,92 @@ namespace	r_exec{
 		void	fire(UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode);
 	};
 
-	//	Monitors the occurrence of a predicted object.
 	class	Monitor:
 	public	_Object{
+	protected:
+		Monitor();
+	public:
+		virtual	bool	is_alive()=0;
+		virtual	bool	take_input(r_exec::View	*input)=0;	//	returns true in case of success.
+		virtual	void	update()=0;	//	called by monitoring jobs.
+	};
+
+	//	Monitors one prediction.
+	class	PMonitor:
+	public	Monitor{
 	private:
 		FwdController	*controller;
+		uint64	expected_time_high;
+		uint64	expected_time_low;
+		bool	success;	//	set to true when a positive match for the target was found in due time.
 	public:
-		P<Code>	prediction;
+		P<Code>	target;	//	mk.pred.
 
-		Monitor(FwdController	*c,Code	*prediction);
+		PMonitor(FwdController	*c,Code	*target,uint64	expected_time,uint64	time_tolerance);
 
-		bool	is_alive()	const;
-		void	take_input(r_exec::View	*input);
-		void	update();	//	called by monitoring jobs.
+		bool	is_alive();
+		bool	take_input(r_exec::View	*input);
+		void	update();
+	};
+
+	class	GSMonitor;
+
+	//	Monitors one goal.
+	class	GMonitor:
+	public	Monitor{
+	private:
+		GSMonitor	*parent;
+	public:
+		P<Code>	target;	//	mk.goal.
+
+		GMonitor(GSMonitor	*c,Code	*target);
+
+		bool	is_alive();
+		bool	take_input(r_exec::View	*input);
+		void	update();
+	};
+
+	//	Monitors a set of goals.
+	class	GSMonitor:
+	public	Monitor{
+	private:
+		Model			*inv_model;
+		FwdController	*controller;
+		GSMonitor		*parent;
+
+		bool	sim;
+		bool	asmp;
+
+		class	MonitorHash{
+		public:
+			size_t	operator	()(P<Monitor>	*p)	const{
+				
+				return	(size_t)(Monitor	*)*p;
+			}
+		};
+
+		UNORDERED_MAP<P<Monitor>,uint64,typename	MonitorHash>	monitors;
+		CriticalSection												monitorsCS;
+
+		void	add_outcome(GMonitor	*m,bool	outcome);
+
+		bool			alive;
+		CriticalSection	aliveCS;
+	public:
+		GSMonitor(Model	*inv_model,FwdController	*c,GSMonitor	*parent,bool	sim,bool	asmp);
+
+		void	kill();
+		bool	is_alive();
+		bool	take_input(r_exec::View	*input);
+		void	update();
+
+		void	add_monitor(GMonitor	*m);
+
+		void	update(GMonitor	*m);
+		void	register_outcome(GMonitor	*m,Code	*object);
+
+		Code	*get_mk_sim(Code	*object)	const;
+		Code	*get_mk_asmp(Code	*object)	const;
 	};
 
 	//	R-groups behave like programs: they take inputs from visible/(newly) salient views (depending on their sync mode).
@@ -105,6 +179,7 @@ namespace	r_exec{
 	//	If the r-group has a parent, one master is built each time some parent overlay fires; otherwise there is only one master.
 	//	If the parent overlay that built a master is killed (being too old), said master is removed from the controllers, along with all its overlays;
 	//	The views of forward models hold a forward controller that takes inputs from the group the view dwells in.
+	//	Predictions are produced with an infinite resilience. They are killed by PMonitors at the time their object is predicted to happen.
 	class	r_exec_dll	FwdController:
 	public	Controller{
 	public:
@@ -118,27 +193,15 @@ namespace	r_exec{
 		std::vector<P<View> >	pending_inputs;	//	stored before the controller becomes activated (i.e. before its parent fires).
 
 		void	reduce(r_exec::View	*input);	//	convenience.
-		void	injectProductions(UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode);
-		Code	*bind_object(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings)	const;
-		Code	*bind_reference(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings)	const;
-		bool	needs_binding(Code	*object)	const;
+		void	inject_productions(UNORDERED_MAP<Code	*,P<Code> >	*bindings,uint8	reduction_mode);
 
-		void	register_outcome(Monitor	*m,bool	outcome);	//	outcome:true means success, failure otherwise.
-
-		class	MonitorHash{
-		public:
-			size_t	operator	()(P<Monitor>	*p)	const{
-				
-				return	(size_t)(Monitor	*)*p;
-			}
-		};
-
-		UNORDERED_MAP<P<Monitor>,uint64,typename	MonitorHash>	monitors;	//	the u8int64 is the time at which an object matching the prediction has been received; 0 means no object.
-		CriticalSection												monitorsCS;
+		std::list<P<Monitor> >	monitors;
+		CriticalSection			monitorsCS;
 	public:
-		FwdController(_Mem	*mem,r_code::View	*view);	//	view is either a r-grp view (grp_view) or a mdl view (pgm_view).
+		FwdController(r_code::View	*view);	//	view is either a r-grp view (grp_view) or a mdl view (pgm_view).
 		~FwdController();
 
+		RGroup		*get_rgrp()	const;
 		Position	get_position()	const;
 
 		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
@@ -148,9 +211,12 @@ namespace	r_exec{
 		void	fire(UNORDERED_MAP<Code	*,P<Code> >	*overlay_bindings,
 					 UNORDERED_MAP<Code	*,P<Code> >	*master_overlay_bindings,
 					 uint8							reduction_mode);
+		
+		//	Called back by monitors.
+		void	add_outcome(PMonitor	*m,bool	success);
 
-		void	register_object(Monitor	*m,Code	*object);
-		void	check_prediction(Monitor	*m);
+		void	add_monitor(Monitor	*m);
+		void	remove_monitor(Monitor	*m);
 	};
 
 	//	The views of inverse models hold an inverse controller that takes inputs from the group the view dwells in.
@@ -159,7 +225,7 @@ namespace	r_exec{
 	private:
 		RGroup	*rgrp;
 	public:
-		InvController(_Mem	*mem,r_code::View	*view);	//	view is a mdl view (pgm_view).
+		InvController(r_code::View	*view);	//	view is a mdl view (pgm_view).
 		~InvController();
 
 		void	take_input(r_exec::View	*input,Controller	*origin=NULL);

@@ -72,8 +72,6 @@ namespace	r_exec{
 		CriticalSection	views_sem;
 		CriticalSection	markers_sem;
 	protected:
-		r_code::Mem	*mem;
-		
 		Object(r_code::Mem	*mem);
 	public:
 		virtual	~Object();	//	un-registers from the rMem's object_register.
@@ -85,7 +83,6 @@ namespace	r_exec{
 
 		void	bind(r_code::Mem	*mem){
 			
-			this->mem=mem;
 			setOID(mem->get_oid());
 		}
 
@@ -107,12 +104,13 @@ namespace	r_exec{
 
 		View	*find_view(Code	*group,bool	lock);
 
-		bool	is_pred();
-		bool	is_goal();
-		bool	is_hyp();
-		bool	is_sim();
-		bool	is_asmp();
-		bool	is_actual();
+		Code	*get_pred();
+		Code	*get_goal();
+		Code	*get_hyp();
+		Code	*get_sim();
+		Code	*get_asmp();
+
+		void	kill();
 
 		class	Hash{
 		public:
@@ -154,9 +152,9 @@ namespace	r_exec{
 	public	Object<r_code::LObject,LObject>{
 	public:
 		static	bool	RequiresPacking(){	return	false;	}
-		static	LObject	*Pack(Code	*object,r_code::Mem	*m){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
-		LObject(r_code::Mem	*m=NULL):Object<r_code::LObject,LObject>(m){}
-		LObject(r_code::SysObject	*source,r_code::Mem	*m=NULL):Object<r_code::LObject,LObject>(m){
+		static	LObject	*Pack(Code	*object,r_code::Mem	*mem){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
+		LObject(r_code::Mem	*mem=NULL):Object<r_code::LObject,LObject>(mem){}
+		LObject(r_code::SysObject	*source,r_code::Mem	*mem=NULL):Object<r_code::LObject,LObject>(mem){
 		
 			load(source);
 		}

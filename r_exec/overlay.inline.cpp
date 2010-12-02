@@ -37,11 +37,6 @@ namespace	r_exec{
 		reductionCS.leave();
 	}
 
-	inline	_Mem	*Overlay::get_mem()	const{
-
-		return	controller->get_mem();
-	}
-
 	inline	r_code::Code	*Overlay::getObject()	const{	
 		
 		return	((Controller	*)controller)->getObject();
@@ -54,14 +49,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	inline	_Mem	*__Controller::get_mem()		const{
-		
-		return	mem;
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	template<class	S>	_Controller<S>::_Controller(_Mem	*mem):S(),__Controller(mem){
+	template<class	S>	_Controller<S>::_Controller():S(),__Controller(){
 	}
 
 	template<class	S>	_Controller<S>::~_Controller(){

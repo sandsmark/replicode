@@ -161,7 +161,7 @@ namespace	r_exec{
 	protected:
 		bool	run_once;
 
-		_PGMController(_Mem	*m,r_code::View	*ipgm_view);
+		_PGMController(r_code::View	*ipgm_view);
 		virtual	~_PGMController();
 	};
 
@@ -169,7 +169,7 @@ namespace	r_exec{
 	class	r_exec_dll	PGMController:
 	public	_PGMController{
 	public:
-		PGMController(_Mem	*m,r_code::View	*ipgm_view);
+		PGMController(r_code::View	*ipgm_view);
 		virtual	~PGMController();
 
 		void	add(Overlay	*overlay);
@@ -185,7 +185,7 @@ namespace	r_exec{
 	class	r_exec_dll	InputLessPGMController:
 	public	_PGMController{
 	public:
-		InputLessPGMController(_Mem	*m,r_code::View	*ipgm_view);
+		InputLessPGMController(r_code::View	*ipgm_view);
 		~InputLessPGMController();
 
 		void	signal_input_less_pgm();
@@ -200,7 +200,7 @@ namespace	r_exec{
 
 		void	push_new_signaling_job();
 	public:
-		AntiPGMController(_Mem	*m,r_code::View	*ipgm_view);
+		AntiPGMController(r_code::View	*ipgm_view);
 		~AntiPGMController();
 
 		void	take_input(r_exec::View	*input,Controller	*origin=NULL);

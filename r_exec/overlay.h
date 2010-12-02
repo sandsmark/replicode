@@ -41,9 +41,7 @@ using	namespace	r_code;
 
 namespace	r_exec{
 
-	class	_Mem;
-	class	View;
-
+						class	View;
 						class	__Controller;
 	template<class	S>	class	_Controller;
 						class	Controller;
@@ -80,7 +78,6 @@ namespace	r_exec{
 		void	kill();
 
 		// Delegated to the controller.
-		_Mem			*get_mem()		const;
 		r_code::Code	*getObject()	const;
 		r_exec::View	*getView()		const;
 		r_code::Code	*buildObject(Atom	head)	const;
@@ -92,13 +89,10 @@ namespace	r_exec{
 		CriticalSection			overlayCS;
 
 		uint64					tsc;
-		_Mem					*mem;
 
-		__Controller(_Mem	*mem);
+		__Controller();
 	public:
 		virtual	~__Controller();
-
-		_Mem			*get_mem()		const;
 
 		virtual	void	add(_Overlay	*overlay);
 				void	remove(_Overlay	*overlay);
@@ -108,7 +102,7 @@ namespace	r_exec{
 	public	S,
 	public	__Controller{
 	protected:
-		_Controller(_Mem	*mem);
+		_Controller();
 	public:
 		virtual	~_Controller();
 	};
@@ -127,7 +121,7 @@ namespace	r_exec{
 
 		r_code::View	*view;
 
-		Controller(_Mem	*mem,r_code::View	*view);
+		Controller(r_code::View	*view);
 	public:
 		virtual	~Controller();
 

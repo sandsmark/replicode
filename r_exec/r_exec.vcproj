@@ -556,6 +556,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\fact.h"
+				>
+			</File>
+			<File
 				RelativePath=".\factory.h"
 				>
 			</File>

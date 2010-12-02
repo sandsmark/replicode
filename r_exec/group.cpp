@@ -117,7 +117,7 @@ namespace	r_exec{
 			--act_change_monitoring_periods_to_go;	//	notification will occur when =0.
 	}
 
-	void	Group::update_stats(_Mem	*mem){
+	void	Group::update_stats(){
 
 		if(decay_periods_to_go>0)
 			--decay_periods_to_go;
@@ -151,7 +151,7 @@ namespace	r_exec{
 
 					uint16	ntf_grp_count=get_ntf_grp_count();
 					for(uint16	i=1;i<=ntf_grp_count;++i)
-						mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkSlnChg(mem,v->second->object,change)),false);
+						_Mem::Get()->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkSlnChg(_Mem::Get(),v->second->object,change)),false);
 				}
 
 			FOR_ALL_NON_NTF_VIEWS_END
@@ -166,7 +166,7 @@ namespace	r_exec{
 
 					uint16	ntf_grp_count=get_ntf_grp_count();
 					for(uint16	i=1;i<=ntf_grp_count;++i)
-						mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkActChg(mem,v->second->object,change)),false);
+						_Mem::Get()->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkActChg(_Mem::Get(),v->second->object,change)),false);
 				}
 
 			FOR_ALL_NON_NTF_VIEWS_END
@@ -325,19 +325,19 @@ namespace	r_exec{
 		return	get_c_act_thr();
 	}
 
-	float32	Group::update_res(View	*v,_Mem	*mem){
+	float32	Group::update_res(View	*v){
 
 		float	res=v->update_res();
 		if(!v->isNotification()	&&	res>0	&&	res<get_low_res_thr()){
 
 			uint16	ntf_grp_count=get_ntf_grp_count();
 			for(uint16	i=1;i<=ntf_grp_count;++i)
-				mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowRes(mem,v->object)),false);
+				_Mem::Get()->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowRes(_Mem::Get(),v->object)),false);
 		}
 		return	res;
 	}
 
-	float32	Group::update_sln(View	*v,_Mem	*mem){
+	float32	Group::update_sln(View	*v){
 
 		if(decay_periods_to_go>0	&&	sln_decay!=0)
 			v->mod_sln(v->get_sln()*sln_decay);
@@ -356,19 +356,19 @@ namespace	r_exec{
 				v->periods_at_high_sln=0;
 				uint16	ntf_grp_count=get_ntf_grp_count();
 				for(uint16	i=1;i<=ntf_grp_count;++i)
-					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkHighSln(mem,v->object)),false);
+					_Mem::Get()->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkHighSln(_Mem::Get(),v->object)),false);
 			}else	if(v->periods_at_low_sln==get_sln_ntf_prd()){
 
 				v->periods_at_low_sln=0;
 				uint16	ntf_grp_count=get_ntf_grp_count();
 				for(uint16	i=1;i<=ntf_grp_count;++i)
-					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowSln(mem,v->object)),false);
+					_Mem::Get()->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowSln(_Mem::Get(),v->object)),false);
 			}
 		}
 		return	sln;
 	}
 
-	float32	Group::update_act(View	*v,_Mem	*mem){
+	float32	Group::update_act(View	*v){
 
 		float32	act=v->update_act(get_low_act_thr(),get_high_act_thr());
 		avg_act+=act;
@@ -384,13 +384,13 @@ namespace	r_exec{
 				v->periods_at_high_act=0;
 				uint16	ntf_grp_count=get_ntf_grp_count();
 				for(uint16	i=1;i<=ntf_grp_count;++i)
-					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkHighAct(mem,v->object)),false);
+					_Mem::Get()->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkHighAct(_Mem::Get(),v->object)),false);
 			}else	if(v->periods_at_low_act==get_act_ntf_prd()){
 
 				v->periods_at_low_act=0;
 				uint16	ntf_grp_count=get_ntf_grp_count();
 				for(uint16	i=1;i<=ntf_grp_count;++i)
-					mem->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowAct(mem,v->object)),false);
+					_Mem::Get()->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowAct(_Mem::Get(),v->object)),false);
 			}
 		}
 		return	act;
@@ -417,7 +417,7 @@ namespace	r_exec{
 			ipgm_views[view->getOID()]=view;
 			if(view->get_act()>get_act_thr()){	//	active ipgm.
 
-				PGMController	*o=new	PGMController((r_exec::_Mem	*)mem,view);	//	now will be added to the deadline at start time.
+				PGMController	*o=new	PGMController(view);	//	now will be added to the deadline at start time.
 				view->controller=o;
 			}
 			break;
@@ -425,7 +425,7 @@ namespace	r_exec{
 			icpp_pgm_views[view->getOID()]=view;
 			if(view->get_act()>get_act_thr()){	//	active icpp_pgm.
 
-				Controller	*o=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),(r_exec::_Mem	*)mem,view);	//	now will be added to the deadline at start time.
+				Controller	*o=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),view);	//	now will be added to the deadline at start time.
 				if(!o)
 					return	false;
 				view->controller=o;
@@ -435,7 +435,7 @@ namespace	r_exec{
 			input_less_ipgm_views[view->getOID()]=view;
 			if(view->get_act()>get_act_thr()){	//	active ipgm.
 
-				InputLessPGMController	*o=new	InputLessPGMController((r_exec::_Mem	*)mem,view);	//	now will be added to the deadline at start time.
+				InputLessPGMController	*o=new	InputLessPGMController(view);	//	now will be added to the deadline at start time.
 				view->controller=o;
 			}
 			break;
@@ -443,7 +443,7 @@ namespace	r_exec{
 			anti_ipgm_views[view->getOID()]=view;
 			if(view->get_act()>get_act_thr()){	//	active ipgm.
 
-				AntiPGMController	*o=new	AntiPGMController((r_exec::_Mem	*)mem,view);	//	now will be added to the deadline at start time.
+				AntiPGMController	*o=new	AntiPGMController(view);	//	now will be added to the deadline at start time.
 				view->controller=o;
 			}
 			break;
@@ -451,7 +451,7 @@ namespace	r_exec{
 			mdl_views[view->getOID()]=view;
 			if(view->get_act()>get_act_thr()){	//	active model.
 
-				FwdController	*o=new	FwdController((r_exec::_Mem	*)mem,view);
+				FwdController	*o=new	FwdController(view);
 				view->controller=o;
 			}
 			break;
@@ -459,7 +459,7 @@ namespace	r_exec{
 			mdl_views[view->getOID()]=view;
 			if(view->get_act()>get_act_thr()){	//	active model.
 
-				InvController	*o=new	InvController((r_exec::_Mem	*)mem,view);
+				InvController	*o=new	InvController(view);
 				view->controller=o;
 			}
 			break;
@@ -482,7 +482,7 @@ namespace	r_exec{
 		switch(GetType(view->object)){
 		case	ObjectType::IPGM:{
 			ipgm_views[view->getOID()]=view;
-			PGMController	*o=new	PGMController((r_exec::_Mem	*)mem,view);
+			PGMController	*o=new	PGMController(view);
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
@@ -493,7 +493,7 @@ namespace	r_exec{
 			break;
 		}case	ObjectType::ICPP_PGM:{
 			icpp_pgm_views[view->getOID()]=view;
-			Controller	*o=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),(r_exec::_Mem	*)mem,view);
+			Controller	*o=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),view);
 			if(!o)
 				break;
 			view->controller=o;
@@ -506,7 +506,7 @@ namespace	r_exec{
 			break;
 		}case	ObjectType::ANTI_IPGM:{
 			anti_ipgm_views[view->getOID()]=view;
-			AntiPGMController	*o=new	AntiPGMController((r_exec::_Mem	*)mem,view);
+			AntiPGMController	*o=new	AntiPGMController(view);
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
@@ -514,19 +514,19 @@ namespace	r_exec{
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
 					o->take_input(*v);	//	view will be copied.
 
-				((r_exec::_Mem	*)mem)->pushTimeJob(new	AntiPGMSignalingJob(o,t+Utils::GetTimestamp<Code>(o->getObject(),IPGM_TSC)));
+				_Mem::Get()->pushTimeJob(new	AntiPGMSignalingJob(o,t+Utils::GetTimestamp<Code>(o->getObject(),IPGM_TSC)));
 			}
 			break;
 		}case	ObjectType::INPUT_LESS_IPGM:{
 			input_less_ipgm_views[view->getOID()]=view;
-			InputLessPGMController	*o=new	InputLessPGMController((r_exec::_Mem	*)mem,view);
+			InputLessPGMController	*o=new	InputLessPGMController(view);
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr())	//	active ipgm in a c-salient and c-active group.
-				((r_exec::_Mem	*)mem)->pushTimeJob(new	InputLessPGMSignalingJob(o,t+Utils::GetTimestamp<Code>(view->object,IPGM_TSC)));
+				_Mem::Get()->pushTimeJob(new	InputLessPGMSignalingJob(o,t+Utils::GetTimestamp<Code>(view->object,IPGM_TSC)));
 			break;
 		}case	ObjectType::FWD_MODEL:{	//	treated as an ipgm.
 			mdl_views[view->getOID()]=view;
-			FwdController	*o=new	FwdController((r_exec::_Mem	*)mem,view);
+			FwdController	*o=new	FwdController(view);
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active model in a c-salient and c-active group.
 
@@ -537,7 +537,7 @@ namespace	r_exec{
 			break;
 		}case	ObjectType::INV_MODEL:{	//	treated as an ipgm.
 			mdl_views[view->getOID()]=view;
-			InvController	*o=new	InvController((r_exec::_Mem	*)mem,view);
+			InvController	*o=new	InvController(view);
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active model in a c-salient and c-active group.
 
@@ -564,8 +564,11 @@ namespace	r_exec{
 			break;
 		}
 
-		if(get_c_sln()>get_c_sln_thr()	&&	view->get_sln()>get_sln_thr())	//	group is c-salient and view is salient.
-			((r_exec::_Mem	*)mem)->inject_reduction_jobs(view,this);
+		if(get_c_sln()>get_c_sln_thr()	&&	view->get_sln()>get_sln_thr()){	//	group is c-salient and view is salient.
+
+			newly_salient_views.insert(view);
+			_Mem::Get()->inject_reduction_jobs(view,this);
+		}
 
 		notifyNew(view);
 	}
@@ -581,12 +584,12 @@ namespace	r_exec{
 			if(view->get_vis()>get_vis_thr())	//	new visible group in a c-active and c-salient host.
 				((Group	*)view->object)->viewing_groups[this]=view->get_cov();
 
-			((r_exec::_Mem	*)mem)->inject_reduction_jobs(view,this);
+			_Mem::Get()->inject_reduction_jobs(view,this);
 		}
 
 		//	inject the next update job for the group.
 		if(((Group	*)view->object)->get_upr()>0)
-			((r_exec::_Mem	*)mem)->pushTimeJob(new	UpdateJob((Group	*)view->object,t+((Group	*)view->object)->get_upr()*((r_exec::_Mem	*)mem)->get_base_period()));
+			_Mem::Get()->pushTimeJob(new	UpdateJob((Group	*)view->object,t+((Group	*)view->object)->get_upr()*_Mem::Get()->get_base_period()));
 
 		notifyNew(view);
 	}
@@ -596,7 +599,7 @@ namespace	r_exec{
 		notification_views[view->getOID()]=view;
 				
 		if(get_c_sln()>get_c_sln_thr()	&&	view->get_sln()>get_sln_thr())	//	group is c-salient and view is salient.
-			((r_exec::_Mem	*)mem)->inject_reduction_jobs(view,this,origin);
+			_Mem::Get()->inject_reduction_jobs(view,this,origin);
 	}
 
 	void	Group::injectRGroup(View	*view){
@@ -608,7 +611,7 @@ namespace	r_exec{
 
 			uint16	ntf_grp_count=get_ntf_grp_count();
 			for(uint16	i=1;i<=ntf_grp_count;++i)
-				((r_exec::_Mem	*)mem)->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkNew(mem,view->object)),get_ntf_grp(i)!=this);	//	the object appears for the first time in the group: notify.
+				_Mem::Get()->injectNotificationNow(new	NotificationView(this,get_ntf_grp(i),new	factory::MkNew(_Mem::Get(),view->object)),get_ntf_grp(i)!=this);	//	the object appears for the first time in the group: notify.
 		}
 	}
 
@@ -618,7 +621,7 @@ namespace	r_exec{
 		for(vg=viewing_groups.begin();vg!=viewing_groups.end();++vg){
 
 			if(vg->second)	//	cov==true, vieiwing group c-salient and c-active (otherwise it wouldn't be a viewing group).
-				((r_exec::_Mem	*)mem)->injectCopyNow(view,vg->first,t);
+				_Mem::Get()->injectCopyNow(view,vg->first,t);
 		}
 	}
 
@@ -646,11 +649,46 @@ namespace	r_exec{
 					case	ObjectType::INV_MODEL:
 						break;
 					default:
-						((r_exec::_Mem	*)mem)->injectCopyNow(*v,vg->first,t);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.
+						_Mem::Get()->injectCopyNow(*v,vg->first,t);	//	no need to protect group->newly_salient_views[i] since the support values for the ctrl values are not even read.
 						break;
 					}
 				}
 			}
+		}
+	}
+
+	void	Group::delete_view(View	*v){
+
+		if(v->isNotification())
+			notification_views.erase(v->getOID());
+		else	switch(GetType(v->object)){
+		case	ObjectType::IPGM:
+			ipgm_views.erase(v->getOID());
+			break;
+		case	ObjectType::ANTI_IPGM:
+			anti_ipgm_views.erase(v->getOID());
+			break;
+		case	ObjectType::INPUT_LESS_IPGM:
+			input_less_ipgm_views.erase(v->getOID());
+			break;
+		case	ObjectType::ICPP_PGM:
+			icpp_pgm_views.erase(v->getOID());
+			break;
+		case	ObjectType::OBJECT:
+		case	ObjectType::MARKER:
+			other_views.erase(v->getOID());
+			break;
+		case	ObjectType::VARIABLE:
+			variable_views.erase(v->getOID());
+			break;
+		break;
+		case	ObjectType::GROUP:
+			group_views.erase(v->getOID());
+			break;
+		case	ObjectType::FWD_MODEL:
+		case	ObjectType::INV_MODEL:
+			mdl_views.erase(v->getOID());
+			break;
 		}
 	}
 }

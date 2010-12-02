@@ -33,6 +33,8 @@
 
 #include	"reduction_core.h"
 #include	"time_core.h"
+#include	"pgm_overlay.h"
+#include	"rgrp_overlay.h"
 #include	"dll.h"
 
 #include	<list>
@@ -40,9 +42,6 @@
 #include	"../r_comp/segments.h"
 
 #include	"../../CoreLibrary/trunk/CoreLibrary/pipe.h"
-
-#include	"pgm_overlay.h"
-#include	"rgrp_overlay.h"
 
 
 namespace	r_exec{
@@ -81,7 +80,10 @@ namespace	r_exec{
 		ReductionCore	**reduction_cores;
 		uint32			time_core_count;
 		TimeCore		**time_cores;
-uint32	CoreCount;
+
+		uint32			core_count;
+		CriticalSection	core_countCS;
+
 		typedef	enum{
 			NOT_STARTED=0,
 			RUNNING=1,
@@ -112,6 +114,8 @@ uint32	CoreCount;
 
 		_Mem();
 	public:
+		static	_Mem	*Get(){	return	(_Mem	*)Mem::Get();	}
+
 		typedef	enum{
 			STDIN=0,
 			STDOUT=1
