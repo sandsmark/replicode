@@ -12,7 +12,7 @@ P1:(|pgm
    |[]
    |[]
 []
-   (inj [(ent 1) [SYNC_FRONT now 1 10 root nil]])
+   (inj [(ent 1) [SYNC_FRONT now 1 forever root nil]])
 1; psln_thr
 )
 |[]

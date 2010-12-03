@@ -13,7 +13,7 @@ _start:(pgm
    |[]
 []
    (inj []
-      (mk.val self position (vec3 1 1 (+ z 1)) 1)
+      (mk.val self position (vec3 x 1 (+ z 1)) 1)
       [SYNC_FRONT now 1 forever root nil]
    )
 1
@@ -33,7 +33,7 @@ _start2:(pgm
    |[]
 []
    (inj []
-      (mk.val self position (vec3 (+ x 1) 1 1) 1)
+      (mk.val self position (vec3 (+ x 1) 1 z) 1)
       [SYNC_FRONT now 1 forever root nil]
    )
 1

@@ -374,7 +374,7 @@ namespace	r_comp{
 					out_stream->push("|st",read_index);
 				else{
 
-					std::string	s=Utils::GetString(&atom);
+					std::string	s=Utils::GetString(&current_object->code[index]);
 					*out_stream<<'\"'<<s<<'\"';
 				}
 				break;

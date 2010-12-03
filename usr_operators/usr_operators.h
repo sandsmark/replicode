@@ -60,8 +60,8 @@ bool	dll_export	dis(const	r_exec::Context	&context,uint16	&index);
 uint16	dll_export	GetProgramCount();
 void	dll_export	GetProgramName(char	*pgm_name);
 
-r_exec::Controller	dll_export	*test_program(r_exec::_Mem	*,r_code::View	*);
-r_exec::Controller	dll_export	*correlator(r_exec::_Mem	*,r_code::View	*);
+r_exec::Controller	dll_export	*test_program(r_code::View	*);
+r_exec::Controller	dll_export	*correlator(r_code::View	*);
 }
 
 

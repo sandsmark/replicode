@@ -198,7 +198,7 @@ private:
 	float32	arg1;
 	bool	arg2;
 public:
-	TestController(r_exec::_Mem	*m,r_code::View	*icpp_pgm_view):r_exec::Controller(m,icpp_pgm_view){
+	TestController(r_code::View	*icpp_pgm_view):r_exec::Controller(icpp_pgm_view){
 
 		//	Load arguments here: one float and one Boolean.
 		uint16	arg_set_index=getObject()->code(ICPP_PGM_ARGS).asIndex();
@@ -231,7 +231,7 @@ private:
 
 	r_comp::Decompiler	decompiler;
 public:
-	CorrelatorController(r_exec::_Mem	*m,r_code::View	*icpp_pgm_view):r_exec::Controller(m,icpp_pgm_view){
+	CorrelatorController(r_code::View	*icpp_pgm_view):r_exec::Controller(icpp_pgm_view){
 
 		//	Load arguments here.
 		uint16	arg_set_index=getObject()->code(ICPP_PGM_ARGS).asIndex();
@@ -270,9 +270,9 @@ public:
 
 	void	decompile(uint64	time_offset){
 
-		mem->suspend();
-		r_comp::Image	*image=((r_exec::Mem<r_exec::LObject>	*)mem)->getImage();
-		mem->resume();
+		r_exec::_Mem::Get()->suspend();
+		r_comp::Image	*image=((r_exec::Mem<r_exec::LObject>	*)r_exec::_Mem::Get())->getImage();
+		r_exec::_Mem::Get()->resume();
 
 		uint32	object_count=decompiler.decompile_references(image);
 		std::cout<<object_count<<" objects in the image\n";
@@ -293,14 +293,14 @@ public:
 	}
 };
 
-r_exec::Controller	*test_program(r_exec::_Mem	*mem,r_code::View	*view){
+r_exec::Controller	*test_program(r_code::View	*view){
 
-	return	new	TestController(mem,view);
+	return	new	TestController(view);
 }
 
-r_exec::Controller	*correlator(r_exec::_Mem	*mem,r_code::View	*view){
+r_exec::Controller	*correlator(r_code::View	*view){
 
-	return	new	CorrelatorController(mem,view);
+	return	new	CorrelatorController(view);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -229,4 +229,18 @@ namespace	r_code{
 				std::cout<<j<<" "<<views[k]->references[j]<<std::endl;
 		}
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Mem	*Mem::Singleton=NULL;
+
+	Mem::Mem(){
+		
+		Singleton=this;
+	}
+
+	Mem	*Mem::Get(){
+
+		return	Singleton;
+	}
 }

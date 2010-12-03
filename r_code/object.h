@@ -199,6 +199,8 @@ namespace	r_code{
 		virtual	void	acq_markers(){}
 		virtual	void	rel_markers(){}
 
+		virtual	void	kill(){}
+
 		virtual	float32	get_psln_thr(){	return	1;	}
 
 		Code():axiom(SysObject::NON_STD),is_registered(false){}
@@ -214,12 +216,11 @@ namespace	r_code{
 			markers.remove(m);
 			rel_markers();
 		}
-		virtual	bool	is_pred(){	return	false;	}
-		virtual	bool	is_goal(){	return	false;	}
-		virtual	bool	is_hyp(){	return	false;	}
-		virtual	bool	is_sim(){	return	false;	}
-		virtual	bool	is_asmp(){	return	false;	}
-		virtual	bool	is_actual(){	return	true;	}
+		virtual	Code	*get_pred(){	return	NULL;	}
+		virtual	Code	*get_goal(){	return	NULL;	}
+		virtual	Code	*get_hyp(){		return	NULL;	}
+		virtual	Code	*get_sim(){		return	NULL;	}
+		virtual	Code	*get_asmp(){	return	NULL;	}
 
 		bool								is_registered;
 		std::list<Code	*>::const_iterator	position_in_objects;
@@ -268,8 +269,14 @@ namespace	r_code{
 		void	add_reference(Code	*object)	const{	_references.as_std()->push_back(object);	}
 	};
 
-	class	Mem{
+	class	dll_export	Mem{
+	private:
+		static	Mem	*Singleton;
+	protected:
+		Mem();
 	public:
+		static	Mem	*Get();
+
 		virtual	Code	*buildObject(SysObject	*source)=0;
 		virtual	void	deleteObject(Code	*object)=0;
 		virtual	uint32	get_oid()=0;

@@ -36,7 +36,7 @@ target_grp:(grp
 1; act_ntf_prd
 0; ntf_new
 0; low_res_thr
-nil; ntf_grp
+[nil]; ntf_grp
 1; psln_thr
 )
 []

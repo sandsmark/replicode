@@ -112,8 +112,8 @@
 #define	FMD_TSC		4
 #define	IMD_FMD		4
 
-#define	FMD_ARITY	6
-#define	IMD_ARITY	6
+#define	FMD_ARITY	5
+#define	IMD_ARITY	5
 
 #define	MK_RDX_ARITY		4
 #define	MK_ANTI_RDX_ARITY	3
@@ -134,19 +134,24 @@
 #define	MK_PRED_ARITY	4
 
 #define	MK_ASMP_OBJ		1
-#define	MK_ASMP_FMD		2
+#define	MK_ASMP_MDL		2
 #define	MK_ASMP_CFD		3
 #define	MK_ASMP_ARITY	4
 
 #define	MK_GOAL_OBJ		1
-#define	MK_GOAL_ARITY	2
+#define	MK_GOAL_IMD		2
+#define	MK_GOAL_ARITY	3
 
 #define	MK_HYP_OBJ		1
 #define	MK_HYP_ARITY	2
 
 #define	MK_SIM_OBJ		1
-#define	MK_SIM_FMD		2
+#define	MK_SIM_MDL		2
 #define	MK_SIM_ARITY	3
+
+#define	MK_SUB_GOAL_PARENT	1
+#define	MK_SUB_GOAL_CHILD	2
+#define	MK_SUB_GOAL_ARITY	3
 
 #define	MK_SUCCESS_OBJ		1
 #define	MK_SUCCESS_RATE		2
@@ -156,7 +161,9 @@
 #define	MK_FAILURE_RATE		2
 #define	MK_FAILURE_ARITY	3
 
-#define	VAL_VALUE	1
+#define	VAL_VAL		1
+#define	VAL_TOL		2
+#define	VAL_ARITY	3
 
 
 #endif
