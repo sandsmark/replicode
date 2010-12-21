@@ -1,11 +1,7 @@
 !load ../Test/std.replicode
 
 !class (vec3 x:nb y:nb z:nb)
-!class (mk.last_known (_obj event:))
-!class (mk.val (_obj {object: attribute: value:}))
 !class (mk.tag (_obj {object: tag:st}))
-
-!class (ValueClass (_obj {value:nb}))
 
 !class (tagged_v vector:vec3 string:st)
 

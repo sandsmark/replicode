@@ -32,7 +32,7 @@
 #define	view_h
 
 #include	"../r_code/object.h"
-#include	"pgm_overlay.h"
+#include	"overlay.h"
 #include	"dll.h"
 
 

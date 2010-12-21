@@ -120,7 +120,7 @@ namespace	r_exec{
 		UNORDERED_MAP<Group	*,bool>		viewing_groups;
 
 		//	Populated within update; ordered by increasing ijt; cleared at the beginning of update.
-		std::set<View	*,r_code::View::Less>	newly_salient_views;
+		std::multiset<P<View>,r_code::View::Less>	newly_salient_views;
 
 		//	Populated upon ipgm injection; used at update time; cleared afterward.
 		std::vector<Controller	*>	new_controllers;

@@ -34,10 +34,10 @@
 
 namespace	r_exec{
 
-	_Overlay::_Overlay(){
+	_Overlay::_Overlay():_Object(){
 	}
 
-	_Overlay::_Overlay(__Controller	*c):controller(c){
+	_Overlay::_Overlay(__Controller	*c):_Object(),controller(c){
 	}
 
 	_Overlay::~_Overlay(){
@@ -102,7 +102,7 @@ namespace	r_exec{
 			tsc=Utils::GetTimestamp<Code>(getObject(),ICPP_PGM_TSC);
 			break;
 		case	Atom::MODEL:
-			if(getObject()->code(0)==Opcodes::Fmd)
+			if(getObject()->code(0).asOpcode()==Opcodes::Fmd)
 				tsc=Utils::GetTimestamp<Code>(getObject(),FMD_TSC);
 			break;
 		}

@@ -68,7 +68,6 @@ namespace	r_exec{
 	protected:
 		uint32	base_period;
 		uint32	ntf_mk_res;
-		uint32	pred_res;
 		uint32	goal_res;
 		uint32	asmp_res;
 		uint32	sim_res;
@@ -96,7 +95,10 @@ namespace	r_exec{
 		Semaphore		*stop_sem;			//	blocks the rMem until all cores terminate.
 		Semaphore		*suspend_sem;		//	blocks the rMem until all cores are suspended.
 
-		P<Group>	root;	//	holds everything.
+		P<Group>	_root;	//	holds everything.
+		Code		*_stdin;
+		Code		*_stdout;
+		Code		*_self;
 
 		void	reset();	//	clear the content of the mem.
 
@@ -111,6 +113,9 @@ namespace	r_exec{
 		std::vector<Group	*>	initial_groups;	//	convenience; cleared after start();
 
 		uint32	last_oid;
+		uint32	probe_level;
+
+		uint64	starting_time;
 
 		_Mem();
 	public:
@@ -126,18 +131,24 @@ namespace	r_exec{
 		void	init(uint32	base_period,	//	in us; same for upr, spr and res.
 					uint32	reduction_core_count,
 					uint32	time_core_count,
+					uint32	probe_level,
 					uint32	ntf_mk_res,	//	resilience for notifications markers.
-					uint32	pred_res,	//	resilience for predictions.
 					uint32	goal_res,	//	resilience for goals.
 					uint32	asmp_res,	//	resilience for assumptions.
 					uint32	sim_res);	//	resilience for simulations.
 
 		uint64	get_base_period()	const{	return	base_period;	}
+		uint64	get_probe_level()	const{	return	probe_level;	}
+		uint64	get_starting_time()	const{	return	starting_time;	}
 		uint32	get_ntf_mk_res()	const{	return	ntf_mk_res;	}
-		uint32	get_pred_res()		const{	return	pred_res;	}
 		uint32	get_goal_res()		const{	return	goal_res;	}
 		uint32	get_asmp_res()		const{	return	asmp_res;	}
 		uint32	get_sim_res()		const{	return	sim_res;	}
+
+		Code	*get_root()		const;
+		Code	*get_stdin()	const;
+		Code	*get_stdout()	const;
+		Code	*get_self()		const;
 
 		void	wait_for_delegate();//	called by delegates just before performing their task.
 		void	delegate_done();	//	called by delegates just after completion of their task.
@@ -234,10 +245,6 @@ namespace	r_exec{
 		//	Functions called by internal processing of jobs (see internal processing section below).
 		void	injectNow(View	*view);	//	also called by inject() (see below).
 		void	injectGroupNow(View	*view,Group	*object,Group	*host);
-	protected:
-		Group	*_stdin;	//	convenience.
-		Group	*_stdout;	//	convenience.
-		O		*_self;		//	convenience (unused for now).
 	public:
 		Mem();
 		virtual	~Mem();
@@ -252,10 +259,6 @@ namespace	r_exec{
 																//	ijt will be set at now=Time::Get() whatever the source code.
 																//	return false on error.
 		void	deleteObject(Code	*object);	//	called by object destructors/Group::clear().
-
-		//	called upon reception of a remote object (for converting STDGroupID into actual objects).
-		Group	*get_stdin()	const;
-		Group	*get_stdout()	const;
 
 		//	External device I/O	////////////////////////////////////////////////////////////////
 		r_comp::Image	*getImage();	//	create an image; fill with all objects; call only when stopped.

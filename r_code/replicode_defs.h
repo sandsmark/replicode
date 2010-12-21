@@ -122,11 +122,15 @@
 #define	CMD_DEVICE		2
 #define	CMD_ARGS		3
 
-#define	VAR_ARITY		1
+#define	VAR_TOL			1
+#define	VAR_ARITY		2
+
+#define	VAL_HLD_ARITY	2
 
 #define	FACT_OBJ		1
 #define	FACT_TIME		2
-#define	FACT_ARITY		3
+#define	FACT_CFD		3
+#define	FACT_ARITY		4
 
 #define	MK_PRED_OBJ		1
 #define	MK_PRED_FMD		2
@@ -154,16 +158,9 @@
 #define	MK_SUB_GOAL_ARITY	3
 
 #define	MK_SUCCESS_OBJ		1
-#define	MK_SUCCESS_RATE		2
-#define	MK_SUCCESS_ARITY	3
-
-#define	MK_FAILURE_OBJ		1
-#define	MK_FAILURE_RATE		2
-#define	MK_FAILURE_ARITY	3
-
-#define	VAL_VAL		1
-#define	VAL_TOL		2
-#define	VAL_ARITY	3
+#define	MK_SUCCESS_P_RATE	2
+#define	MK_SUCCESS_N_RATE	3
+#define	MK_SUCCESS_ARITY	4
 
 
 #endif

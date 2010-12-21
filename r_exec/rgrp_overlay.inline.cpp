@@ -30,15 +30,6 @@
 
 namespace	r_exec{
 
-	inline	void	GSMonitor::add_monitor(GMonitor	*m){
-
-		monitorsCS.enter();
-		monitors[m]=0;
-		monitorsCS.leave();
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	inline	FwdController::Position	FwdController::get_position()	const{
 
 		if(getObject()->code(0).asOpcode()==Opcodes::Fmd)
@@ -60,17 +51,31 @@ namespace	r_exec{
 			(*o)->reduce(input);
 	}
 
-	inline	void	FwdController::add_monitor(Monitor	*m){
+	inline	void	FwdController::add_monitor(PMonitor	*m){
 
-		monitorsCS.enter();
-		monitors.push_back(m);
-		monitorsCS.leave();
+		p_monitorsCS.enter();
+		p_monitors.push_back(m);
+		p_monitorsCS.leave();
 	}
 	
-	inline	void	FwdController::remove_monitor(Monitor	*m){
+	inline	void	FwdController::remove_monitor(PMonitor	*m){
 
-		monitorsCS.enter();
-		monitors.remove(m);
-		monitorsCS.leave();
+		p_monitorsCS.enter();
+		p_monitors.remove(m);
+		p_monitorsCS.leave();
+	}
+
+	inline	void	FwdController::add_monitor(GSMonitor	*m){
+
+		gs_monitorsCS.enter();
+		gs_monitors.push_back(m);
+		gs_monitorsCS.leave();
+	}
+	
+	inline	void	FwdController::remove_monitor(GSMonitor	*m){
+
+		gs_monitorsCS.enter();
+		gs_monitors.remove(m);
+		gs_monitorsCS.leave();
 	}
 }

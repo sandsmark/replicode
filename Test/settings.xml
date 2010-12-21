@@ -3,18 +3,17 @@
   <Parameters
     base_period="100000"
 	  
-    reduction_core_count="1"
+    reduction_core_count="3"
 	  time_core_count="1"
   	
     notification_resilience="1000"
-    prediction_resilience="1000"
     goal_resilience="1000"
     assumption_resilience="1000"
     simulation_resilience="1000"
     
 	  run_time="1000"
     
-    decompile_timestamps="relative"
+    probe_level="2"
     
     usr_operator_path="./usr_operators.dll"
     usr_class_path="../Test/rgrp.user.classes.replicode"
@@ -41,6 +40,8 @@ notification_resilience: in upr (i.e. relative to the ntf group). For debugging 
 run_time: in ms.
 
 decompile_timestamps: either "relative" or "absolute". When "relative", timestamps are displayed as offsets from mem->start().
+
+probe_level: any probe set to a level >= this level will not be executed. 0 means no probe will be executed.
 
 decompile_image: yes or no.
 

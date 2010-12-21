@@ -31,6 +31,8 @@
 #include	"group.h"
 #include	"factory.h"
 #include	"mem.h"
+#include	"pgm_controller.h"
+#include	"rgrp_controller.h"
 #include	<math.h>
 
 
@@ -486,7 +488,7 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
 					o->take_input(*v);	//	view will be copied.
 			}
@@ -499,7 +501,7 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active icpp_pgm in a c-salient and c-active group.
 
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
 					o->take_input(*v);	//	view will be copied.
 			}
@@ -510,7 +512,7 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
 					o->take_input(*v);	//	view will be copied.
 
@@ -530,7 +532,7 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active model in a c-salient and c-active group.
 
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
 					o->take_input(*v);	//	view will be copied.
 			}
@@ -541,7 +543,7 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active model in a c-salient and c-active group.
 
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
 					o->take_input(*v);	//	view will be copied.
 			}
@@ -634,7 +636,7 @@ namespace	r_exec{
 
 			if(vg->second){	//	cov==true.
 
-				std::set<View	*,r_code::View::Less>::const_iterator	v;
+				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v){	//	no cov for pgm, groups, r-groups, models or notifications.
 
 					if((*v)->isNotification())

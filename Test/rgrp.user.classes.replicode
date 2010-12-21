@@ -19,7 +19,7 @@ stdout:(std_grp 1 0 0 0 |[])
    [SYNC_FRONT now 0 forever root nil COV_OFF 0]
 
 
-;ontology
+; ontology
 
 self:(ent 1)
 []

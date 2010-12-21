@@ -29,133 +29,207 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"r_group.h"
+#include	"rgrp_controller.h"
 #include	"mem.h"
 
 
 namespace	r_exec{
-
-	Code	*RGroup::BindObject(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings){
-
-		Code	*bound_object=_Mem::Get()->buildObject(original->code(0));
-
-		uint16	i;
-		for(i=0;i<original->code_size();++i)		//	copy the code.
-			bound_object->code(i)=original->code(i);
-		for(i=0;i<original->references_size();++i)	//	bind references when needed.
-			bound_object->set_reference(i,BindReference(original->get_reference(i),bindings));
-
-		return	bound_object;
-	}
-
-	Code	*RGroup::BindReference(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings){
-
-		if(original->code(0).asOpcode()==Opcodes::Var){
-
-			UNORDERED_MAP<Code	*,P<Code> >::const_iterator	b=bindings->find(original);
-			if(b!=bindings->end())
-				return	b->second;
-			else
-				return	original;
-		}
-
-		for(uint16	i=0;i<original->references_size();++i){
-
-			Code	*reference=original->get_reference(i);
-			if(NeedsBinding(reference,bindings))
-				return	BindObject(original,bindings);
-		}
-
-		return	original;
-	}
-
-	bool	RGroup::NeedsBinding(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings){
-
-		if(original->code(0).asOpcode()==Opcodes::Var){
-
-			UNORDERED_MAP<Code	*,P<Code> >::const_iterator	b=bindings->find(original);
-			if(b!=bindings->end())
-				return	true;
-			else
-				return	false;
-		}
-
-		for(uint16	i=0;i<original->references_size();++i){
-
-			if(NeedsBinding(original->get_reference(i),bindings))
-				return	true;
-		}
-
-		return	false;
-	}
 
 	void	RGroup::injectRGroup(View	*view){
 
 		if(!parent	&&	!substitutions){	//	init the head; this assumes that children are injected from left to right.
 
 			substitutionsCS=new	CriticalSection();
-			substitutions=new	UNORDERED_MAP<Code	*,std::pair<Code	*,std::list<RGroup	*> > >();
+			substitutions=new	BindingMap();
 		}
 
 		((RGroup	*)view->object)->parent=this;
 		((RGroup	*)view->object)->substitutions=substitutions;
 		((RGroup	*)view->object)->substitutionsCS=substitutionsCS;
 
-		view->controller=new	FwdController(view);
+		FwdController	*c=new	FwdController(view);
+		view->controller=c;
+		((RGroup	*)view->object)->set_controller(c);
 	}
 
-	Code	*RGroup::get_var(Code	*value){
+	Atom	RGroup::get_numerical_variable(Atom	value,float32	tolerance){	//	tolerance used for finding the least deviation from the value.
+																			//	in case of a draw, take the first.
+		Atom	var;
 
-		Code	*var;
-		bool	inject=false;
+		float32	min=value.asFloat()*(1-tolerance);
+		float32	max=value.asFloat()*(1+tolerance);
 
 		substitutionsCS->enter();
+		UNORDERED_MAP<Atom,Atom>::const_iterator	s;
+		for(s=substitutions->atoms.begin();s!=substitutions->atoms.end();++s)
+			if(s->second.asFloat()>=min	&&
+				s->second.asFloat()<=max){	//	variable already exists for the value.
 
-		// sharp matching on values. TODO: fuzzy matching.
-		UNORDERED_MAP<Code	*,std::pair<Code	*,std::list<RGroup	*> > >::iterator	s=substitutions->find(value);
-		if(s!=substitutions->end()){	//	variable already exists for the value.
-
-			var=s->second.first;
-
-			std::list<RGroup	*>::const_iterator	g;
-			for(g=s->second.second.begin();g!=s->second.second.end();++g)
-				if((*g)==this)
-					break;
-
-			if(g==s->second.second.end()){	//	variable not injected (yet) in the group.
-
-				s->second.second.push_back(this);
-				inject=true;
+				var=s->first;
+				break;
 			}
-		}else{	//	no variable exists yet for the value.
-			
-			var=_Mem::Get()->buildObject(Atom::Object(Opcodes::Var,VAR_ARITY));
-			var->code(VAR_ARITY)=Atom::Float(1);	//	psln_thr.
+		
+		if(!var){
 
-			std::pair<Code	*,std::list<RGroup	*> >	entry;
-			entry.first=var;
-			entry.second.push_back(this);
-			(*substitutions)[value]=entry;
+			var=Atom::NumericalVariable(substitutions->atoms.size(),Atom::GetTolerance(tolerance));
+			substitutions->atoms[var]=value;
+			numerical_variables.push_back(var);
+		}else{
 
-			inject=true;
+			uint16	i;
+			for(i=0;i<numerical_variables.size();++i)
+				if(var==numerical_variables[i])
+					break;
+			if(i==numerical_variables.size())
+				numerical_variables.push_back(var);
 		}
-
 		substitutionsCS->leave();
-
-		if(inject){	//	inject the variable in the group.
-
-			View	*var_view=new	View(true,Now(),0,-1,this,NULL,var);
-			_Mem::Get()->inject(var_view);
-		}
 
 		return	var;
 	}
 
-	void	RGroup::instantiate_goals(std::vector<Code	*>				*initial_goals,
-									  GSMonitor							*initial_monitor,
-									  bool								sim,
-									  bool								asmp,
-									  Code								*inv_model,
-									  UNORDERED_MAP<Code	*,P<Code> >	*bindings){	//	instantiates goals and propagates in one single thread; starts in InvController::take_input().
+	Atom	RGroup::get_structural_variable(Atom	*value,float32	tolerance){	//	structure is a timestamp, a string or any user-defined structure.
+
+		Atom	var;
+
+		substitutionsCS->enter();
+		switch(value[0].getDescriptor()){
+		case	Atom::TIMESTAMP:{	//	tolerance is used.
+			
+			uint64	t=Utils::GetTimestamp(value);
+			uint64	min;
+			uint64	max;
+			uint64	now;
+			if(t>0){
+
+				now=Now();
+				int64	delta_t=now-t;
+				if(delta_t<0)
+					delta_t=-delta_t;
+				min=delta_t*(1-tolerance);
+				max=delta_t*(1+tolerance);
+			}else
+				min=max=0;
+
+			UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	s;
+			for(s=substitutions->structures.begin();s!=substitutions->structures.end();++s){
+
+				if(value[0]==s->second[0]){
+
+					int64	_t=Utils::GetTimestamp(&s->second[0]);
+					if(t>0)
+						_t-=now;
+					if(_t<0)
+						_t=-_t;
+					if(_t>=min	&&	_t<=max){	//	variable already exists for the value.
+
+						var=s->first;
+						break;
+					}
+				}
+			}
+			break;
+		}case	Atom::STRING:{	//	tolerance is not used.
+
+			UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	s;
+			for(s=substitutions->structures.begin();s!=substitutions->structures.end();++s){
+
+				if(value[0]==s->second[0]){
+
+					uint16	i;
+					for(i=1;i<=value[0].getAtomCount();++i)
+						if(value[i]!=s->second[i])
+							break;
+					if(i==value[0].getAtomCount()+1){
+
+						var=s->first;
+						break;
+					}
+				}
+			}
+			break;
+		}case	Atom::OBJECT:{	//	tolerance is used to compare numerical structure members.
+
+			UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	s;
+			for(s=substitutions->structures.begin();s!=substitutions->structures.end();++s){
+
+				if(value[0]==s->second[0]){
+
+					uint16	i;
+					for(i=1;i<=value[0].getAtomCount();++i){
+
+						if(value[i].isFloat()){
+
+							float32	min=value[i].asFloat()*(1-tolerance);
+							float32	max=value[i].asFloat()*(1+tolerance);
+							if(s->second[i].asFloat()<min	||	s->second[i].asFloat()>max)
+								break;
+						}else	if(value[i]!=s->second[i])
+							break;
+					}
+					if(i==value[0].getAtomCount()+1){
+
+						var=s->first;
+						break;
+					}
+				}
+			}
+			break;
+		}
+		}
+
+		if(!var){
+
+			var=Atom::StructuralVariable(substitutions->structures.size(),Atom::GetTolerance(tolerance));
+			std::vector<Atom>	_value;
+			for(uint16	i=0;i<=value[0].getAtomCount();++i)
+				_value.push_back(value[i]);
+			substitutions->structures[var]=_value;
+			structural_variables.push_back(var);
+		}else{
+
+			uint16	i;
+			for(i=0;i<structural_variables.size();++i)
+				if(var==structural_variables[i])
+					break;
+			if(i==structural_variables.size())
+				structural_variables.push_back(var);
+		}
+		substitutionsCS->leave();
+
+		return	var;
+	}
+
+	Code	*RGroup::get_variable_object(Code	*value,float32	tolerance){
+
+		Code	*var=NULL;
+		bool	exists=false;
+
+		substitutionsCS->enter();
+		UNORDERED_MAP<Code	*,P<Code> >::const_iterator		s;
+		for(s=substitutions->objects.begin();s!=substitutions->objects.end();++s)
+			if(s->second==value){	//	variable already exists for the value. TODO: apply tolerance on a distance (TBD) between an existing value and the requested value.
+
+				var=s->first;
+				break;
+			}
+		
+		if(!var){
+
+			var=factory::Object::Var(tolerance,1);
+
+			P<Code>	p=value;
+			substitutions->objects.insert(std::pair<Code	*,P<Code> >(var,p));
+		}
+		substitutionsCS->leave();
+
+		View	*var_view=new	View(true,Now(),0,-1,this,NULL,var);	//	inject in r-grp: overlays will be initialized with the variables they need.
+		_Mem::Get()->inject(var_view);
+
+		return	var;
+	}
+
+	void	RGroup::instantiate_goals(std::vector<Code	*>	*initial_goals,GSMonitor	*initial_monitor,uint8	reduction_mode,Code	*inv_model,BindingMap	*bindings){	//	instantiates goals and propagates in one single thread; starts in InvController::take_input().
 
 		uint16	out_group_set_index=inv_model->code(MD_OUT_GRPS).asIndex();
 		uint16	out_group_count=inv_model->code(out_group_set_index).getAtomCount();
@@ -165,7 +239,7 @@ namespace	r_exec{
 
 		uint64	now=Now();
 
-		GSMonitor	*gs_monitor=new	GSMonitor((Model	*)inv_model,controller,initial_monitor,sim,asmp);
+		GSMonitor	*gs_monitor=new	GSMonitor((Model	*)inv_model,controller,initial_monitor,this,bindings,reduction_mode);
 		controller->add_monitor(gs_monitor);
 
 		std::vector<Code	*>	new_goals;
@@ -174,27 +248,15 @@ namespace	r_exec{
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 		for(v=other_views.begin();v!=other_views.end();++v){	//	we are only interested in objects and markers.
 
-			Code	*bound_object=RGroup::BindObject(v->second->object,bindings);
-
-			Code	*goal=_Mem::Get()->buildObject(Atom::Object(Opcodes::MkGoal,MK_GOAL_ARITY));
-			goal->code(MK_GOAL_OBJ)=Atom::RPointer(0);
-			goal->code(MK_GOAL_IMD)=Atom::RPointer(1);
-			goal->code(MK_GOAL_ARITY)=Atom::Float(1);	//	psln_thr.
-			goal->set_reference(0,bound_object);
-			goal->set_reference(1,inv_model);
-
+			Code	*original=v->second->object;
+			Code	*bound_object=bindings->bind_object(original);
+			Code	*goal=factory::Object::MkGoal(bound_object,inv_model,1);
 			new_goals.push_back(goal);
 
 			std::vector<Code	*>	sub_goals;
-			for(uint16	i=0;i<initial_goals->size();++i){	//	build sub-goal markers for the new goal and inject only this sub-goal marker (in the notification groups of the inverse model).
+			for(uint16	i=0;i<initial_goals->size();++i){	//	build sub-goal markers for the new goal.
 			
-				Code	*mk_sub_goal=_Mem::Get()->buildObject(Atom::Object(Opcodes::MkSubGoal,MK_SUB_GOAL_ARITY));
-				mk_sub_goal->code(MK_SUB_GOAL_PARENT)=Atom::RPointer(0);
-				mk_sub_goal->code(MK_SUB_GOAL_CHILD)=Atom::RPointer(1);
-				mk_sub_goal->code(MK_SUB_GOAL_ARITY)=Atom::Float(1);	//	psln_thr.
-				mk_sub_goal->set_reference(0,goal);
-				mk_sub_goal->set_reference(1,(*initial_goals)[i]);
-
+				Code	*mk_sub_goal=factory::Object::MkSubGoal((*initial_goals)[i],goal,1);
 				sub_goals.push_back(mk_sub_goal);
 			}
 
@@ -202,7 +264,7 @@ namespace	r_exec{
 			Code	*mk_asmp=NULL;
 			if(!parent){	//	inject the bound object in the model's output groups; monitor the goal.
 
-				//	Add asmp/sim markers to the bound object depending on the initial goal (sim/asmp: similar arrangement as for predictions).
+				//	Add asmp/sim markers to the bound object depending on sim/asmp (similar arrangement as for predictions).
 				mk_sim=gs_monitor->get_mk_sim(bound_object);
 				mk_asmp=gs_monitor->get_mk_asmp(bound_object);
 
@@ -213,11 +275,14 @@ namespace	r_exec{
 					_Mem::Get()->inject(view);
 				}
 
-				GMonitor	*m=new	GMonitor(gs_monitor,goal);
-				uint64		expected_time=Utils::GetTimestamp<Code>(bound_object->get_reference(1),VAL_VAL);
+				if(bound_object->code(bound_object->code(FACT_TIME).asIndex()+1).getDescriptor()!=Atom::STRUCTURAL_VARIABLE){	//	bound_object may contain a variable for time: in that case, no monitoring.
 
-				gs_monitor->add_monitor(m);
-				_Mem::Get()->pushTimeJob(new	MonitoringJob(m,expected_time));
+					uint64		expected_time=Utils::GetTimestamp<Code>(bound_object,FACT_TIME);
+					float32		multiplier=original->code(original->code(FACT_TIME).asIndex()+1).getMultiplier();
+					uint64		time_tolerance=abs((float32)((int64)(expected_time-now)))*multiplier;
+
+					gs_monitor->add_goal(goal);
+				}
 			}
 
 			for(uint16	i=1;i<=ntf_group_count;++i){	//	inject the sub-goal markers in the model's notification groups.
@@ -252,6 +317,6 @@ namespace	r_exec{
 		}
 
 		if(parent)	//	propagate.
-			parent->instantiate_goals(&new_goals,gs_monitor,sim,asmp,inv_model,bindings);
+			parent->instantiate_goals(&new_goals,gs_monitor,reduction_mode,inv_model,bindings);
 	}
 }

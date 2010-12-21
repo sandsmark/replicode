@@ -81,6 +81,30 @@ namespace	r_comp{
 
 		this->metadata=metadata;
 		this->time_offset=0;
+
+		//	Load the renderers;
+		for(uint16	i=0;i<metadata->classes_by_opcodes.size();++i){
+
+			Class	*c=metadata->getClass(i);
+			std::string	class_name=c->str_opcode;
+			size_t		p=class_name.find("mk.");
+			if(p!=std::string::npos)
+				renderers[i]=&Decompiler::write_marker;
+			else	if(class_name=="grp")
+				renderers[i]=&Decompiler::write_group;
+			else	if(class_name=="ipgm"	||	class_name=="icpp_pgm")
+				renderers[i]=&Decompiler::write_ipgm;
+			else	if(class_name=="pgm"	||	class_name==" |pgm")
+				renderers[i]=&Decompiler::write_pgm;
+			else	if(class_name=="fmd")
+				renderers[i]=&Decompiler::write_fmd;
+			else	if(class_name=="imd")
+				renderers[i]=&Decompiler::write_imd;
+			else	if(class_name=="cmd")
+				renderers[i]=&Decompiler::write_cmd;
+			else
+				renderers[i]=&Decompiler::write_expression;
+		}
 	}
 
 	uint32	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream,uint64	time_offset){
@@ -133,7 +157,7 @@ namespace	r_comp{
 
 		return	image->code_segment.objects.size();
 	}
-	
+
 	void	Decompiler::decompile_object(uint16	object_index,std::ostringstream	*stream,uint64	time_offset){
 
 		if(!out_stream)
@@ -156,40 +180,20 @@ namespace	r_comp{
 		s+=":";
 		*out_stream<<s;
 
-		out_stream->push('(',read_index);
-		write_expression_head(read_index);
-		write_indent(0);
-		write_expression_tail(read_index,true);
-		*out_stream<<')';
-		
-		write_indent(0);
-		write_indent(0);
+		(this->*renderers[current_object->code[read_index].asOpcode()])(read_index);
 
 		uint16	view_count=sys_object->views.size();
 		if(view_count){	//	write the set of views
 
-			*out_stream<<"[]; view set";
+			*out_stream<<" []";
 			for(uint16	i=0;i<view_count;++i){
 
 				write_indent(3);
 				current_object=sys_object->views[i];
-				read_index=0;
-				after_tail_wildcard=false;
-
-				decompiling_view=true;
-				*out_stream<<"[";
-				uint16	arity=current_object->code[0].getAtomCount();
-				for(uint16	j=1;j<=arity;++j){
-
-					write_any(read_index+j,after_tail_wildcard,false);
-					if(j<arity)
-						*out_stream<<" ";
-				}
-				*out_stream<<"]";
-				decompiling_view=false;
+				write_view(0,current_object->code[0].getAtomCount());
 			}
 		}else
-			*out_stream<<"|[]; view set";
+			*out_stream<<" |[]";
 		write_indent(0);
 		write_indent(0);
 	}
@@ -236,19 +240,15 @@ namespace	r_comp{
 		}
 	}
 
-	void	Decompiler::write_expression_tail(uint16	read_index,bool	vertical){	//	read_index points initially to the head.
+	void	Decompiler::write_expression_tail(uint16	read_index,bool	apply_time_offset,bool	vertical){	//	read_index points initially to the head.
 
 		uint16	arity=current_object->code[read_index].getAtomCount();
 		bool	after_tail_wildcard=false;
 
-		bool	in_inj=(current_object->code[read_index].asOpcode()==metadata->classes.find("cmd")->second.atom.asOpcode()	&&
-						current_object->code[read_index+1].asOpcode()==metadata->classes.find("_inj")->second.atom.asOpcode()
-						);
-
 		for(uint16	i=0;i<arity;++i){
 
 			if(after_tail_wildcard)
-				write_any(++read_index,after_tail_wildcard,false);
+				write_any(++read_index,after_tail_wildcard,apply_time_offset);
 			else{
 
 				if(closing_set){
@@ -258,7 +258,7 @@ namespace	r_comp{
 				}else	if(!vertical)
 					*out_stream<<' ';
 
-				write_any(++read_index,after_tail_wildcard,(in_inj	&&	i==2));
+				write_any(++read_index,after_tail_wildcard,apply_time_offset);
 
 				if(!closing_set	&&	vertical)
 					*out_stream<<NEWLINE;
@@ -275,7 +275,7 @@ namespace	r_comp{
 		}
 		out_stream->push('(',read_index);
 		write_expression_head(read_index);
-		write_expression_tail(read_index);
+		write_expression_tail(read_index,true);
 		if(closing_set){
 
 			closing_set=false;
@@ -284,7 +284,175 @@ namespace	r_comp{
 		*out_stream<<')';
 	}
 
-	void	Decompiler::write_set(uint16	read_index,bool	in_inj_args){	//	read_index points initially to set atom.
+	void	Decompiler::write_group(uint16	read_index){
+
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		out_stream->push('(',read_index);
+		write_expression_head(read_index);
+		write_expression_tail(read_index,false);
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		*out_stream<<')';
+	}
+
+	void	Decompiler::write_marker(uint16	read_index){
+
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		out_stream->push('(',read_index);
+		write_expression_head(read_index);
+		write_expression_tail(read_index,false);
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		*out_stream<<')';
+	}
+
+	void	Decompiler::write_pgm(uint16	read_index){
+
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		out_stream->push('(',read_index);
+		write_expression_head(read_index);
+		write_expression_tail(read_index,true);
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		*out_stream<<')';
+	}
+
+
+	void	Decompiler::write_ipgm(uint16	read_index){
+
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		out_stream->push('(',read_index);
+		write_expression_head(read_index);
+		write_expression_tail(read_index,false);
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		*out_stream<<')';
+	}
+
+	void	Decompiler::write_fmd(uint16	read_index){
+
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		out_stream->push('(',read_index);
+		write_expression_head(read_index);
+		write_expression_tail(read_index,false);
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		*out_stream<<')';
+	}
+
+	void	Decompiler::write_imd(uint16	read_index){
+
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		out_stream->push('(',read_index);
+		write_expression_head(read_index);
+		write_expression_tail(read_index,false);
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		*out_stream<<')';
+	}
+
+	void	Decompiler::write_cmd(uint16	read_index){
+
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		out_stream->push('(',read_index);
+		write_expression_head(read_index);
+		//write_expression_tail(read_index,true);
+
+		uint16	write_as_view_index=0;
+		if(current_object->code[read_index+1].asOpcode()==metadata->classes.find("_inj")->second.atom.asOpcode()){
+
+			uint16	arg_set_index=current_object->code[read_index+3].asIndex();	//	2 args for _inj; the view is the second.
+			write_as_view_index=current_object->code[arg_set_index+2].asIndex();
+		}
+
+		uint16	arity=current_object->code[read_index].getAtomCount();
+		bool	after_tail_wildcard=false;
+
+		for(uint16	i=0;i<arity;++i){
+
+			if(after_tail_wildcard)
+				write_any(++read_index,after_tail_wildcard,true);
+			else{
+
+				if(closing_set){
+
+					closing_set=false;
+					write_indent(indents);
+				}else
+					*out_stream<<' ';
+
+				write_any(++read_index,after_tail_wildcard,true,write_as_view_index);
+			}
+		}
+
+		if(closing_set){
+
+			closing_set=false;
+			write_indent(indents);
+		}
+		*out_stream<<')';
+	}
+
+	void	Decompiler::write_view(uint16	read_index,uint16	arity){
+
+		bool	after_tail_wildcard=false;
+		*out_stream<<"[";
+		for(uint16	j=1;j<=arity;++j){
+
+			write_any(read_index+j,after_tail_wildcard,true);
+			if(j<arity)
+				*out_stream<<" ";
+		}
+		*out_stream<<"]";
+	}
+
+	void	Decompiler::write_set(uint16	read_index,bool	aply_time_offset,uint16	write_as_view_index){	//	read_index points to a set atom.
 
 		uint16	arity=current_object->code[read_index].getAtomCount();
 		bool	after_tail_wildcard=false;
@@ -292,23 +460,22 @@ namespace	r_comp{
 		if(arity==1){	//	write [element]
 
 			out_stream->push('[',read_index);
-			write_any(++read_index,after_tail_wildcard,false);
+			write_any(++read_index,after_tail_wildcard,aply_time_offset);
 			*out_stream<<']';
-		}else{		//	write []+indented elements.
+		}else	if(write_as_view_index>0	&&	write_as_view_index==read_index)
+			write_view(read_index,arity);
+		else{		//	write []+indented elements.
 
 			out_stream->push("[]",read_index);
 			indents+=3;
 			for(uint16	i=0;i<arity;++i){
 
 				if(after_tail_wildcard)
-					write_any(++read_index,after_tail_wildcard,false);
+					write_any(++read_index,after_tail_wildcard,aply_time_offset);
 				else{
 
 					write_indent(indents);
-					if(in_inj_args	&&	i==1)
-						decompiling_view=true;
-					write_any(++read_index,after_tail_wildcard,false);
-					decompiling_view=false;
+					write_any(++read_index,after_tail_wildcard,aply_time_offset,write_as_view_index);
 				}
 			}
 			closing_set=true;
@@ -316,7 +483,7 @@ namespace	r_comp{
 		}
 	}
 
-	void	Decompiler::write_any(uint16	read_index,bool	&after_tail_wildcard,bool	in_inj_args){	//	after_tail_wildcard meant to avoid printing ':' after "::".
+	void	Decompiler::write_any(uint16	read_index,bool	&after_tail_wildcard,bool	apply_time_offset,uint16	write_as_view_index){	//	after_tail_wildcard meant to avoid printing ':' after "::".
 
 		Atom	a=current_object->code[read_index];
 
@@ -353,29 +520,52 @@ namespace	r_comp{
 				break;
 			}
 			switch(atom.getDescriptor()){	//	structures.
-			case	Atom::OBJECT:
-			case	Atom::MARKER:
+			case	Atom::OBJECT:{
+
+				std::string	class_name=metadata->class_names[current_object->code[index].asOpcode()];
+				if(class_name!="val_hld"){
+
+					Atom	first=current_object->code[index+1];
+					if(first.getDescriptor()==Atom::STRUCTURAL_VARIABLE){
+
+						*out_stream<<class_name;
+						out_stream->push("<",read_index);
+						*out_stream<<first.getVariableID()<<",";
+						*out_stream<<first.getMultiplier()<<">";
+						break;
+					}
+				}
+			}case	Atom::MARKER:
 			case	Atom::GROUP:
 			case	Atom::REDUCTION_GROUP:
 			case	Atom::INSTANTIATED_PROGRAM:
 			case	Atom::INSTANTIATED_CPP_PROGRAM:
 			case	Atom::OPERATOR:
-				write_expression(index);
+				(this->*renderers[atom.asOpcode()])(index);
 				break;
 			case	Atom::SET:
 			case	Atom::S_SET:
 				if(atom.readsAsNil())
 					out_stream->push("|[]",read_index);
 				else
-					write_set(index,in_inj_args);
+					write_set(index,apply_time_offset,write_as_view_index);
 				break;
 			case	Atom::STRING:
 				if(atom.readsAsNil())
 					out_stream->push("|st",read_index);
 				else{
 
-					std::string	s=Utils::GetString(&current_object->code[index]);
-					*out_stream<<'\"'<<s<<'\"';
+					Atom	first=current_object->code[index+1];
+					if(first.getDescriptor()==Atom::STRUCTURAL_VARIABLE){
+
+						out_stream->push("st<",read_index);
+						*out_stream<<first.getVariableID()<<",";
+						*out_stream<<first.getMultiplier()<<">";
+					}else{
+
+						std::string	s=Utils::GetString(&current_object->code[index]);
+						*out_stream<<'\"'<<s<<'\"';
+					}
 				}
 				break;
 			case	Atom::TIMESTAMP:
@@ -383,10 +573,19 @@ namespace	r_comp{
 					out_stream->push("|us",read_index);
 				else{
 
-					uint64	ts=Utils::GetTimestamp(&current_object->code[index]);
-					if(decompiling_view)
-						ts-=time_offset;
-					out_stream->push(Time::ToString_seconds(ts),read_index);
+					Atom	first=current_object->code[index+1];
+					if(first.getDescriptor()==Atom::STRUCTURAL_VARIABLE){
+
+						out_stream->push("us<",read_index);
+						*out_stream<<first.getVariableID()<<",";
+						*out_stream<<first.getMultiplier()<<">";
+					}else{
+
+						uint64	ts=Utils::GetTimestamp(&current_object->code[index]);
+						if(ts>0	&&	apply_time_offset)
+							ts-=time_offset;
+						out_stream->push(Time::ToString_seconds(ts),read_index);
+					}
 				}
 				break;
 			case	Atom::C_PTR:{
@@ -533,6 +732,16 @@ namespace	r_comp{
 			break;
 		case	Atom::VWS:
 			out_stream->push("vws",read_index);
+			break;
+		case	Atom::NUMERICAL_VARIABLE:
+			out_stream->push("nb<",read_index);
+			*out_stream<<a.getVariableID()<<",";
+			*out_stream<<a.getMultiplier()<<">";
+			break;
+		case	Atom::STRUCTURAL_VARIABLE:
+			out_stream->push("svar<",read_index);
+			*out_stream<<a.getVariableID()<<",";
+			*out_stream<<a.getMultiplier()<<">";
 			break;
 		default:
 			//	out_stream->push("undefined-atom",read_index).

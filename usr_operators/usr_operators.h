@@ -43,9 +43,12 @@ typedef	uint16	(*OpcodeRetriever)(const	char	*);
 
 //	User-defined operators for vec3: add, sub, mul, dis.
 //	User-defined test program.
+//	User-defined callback.
 
 extern	"C"{
 void	dll_export	Init(OpcodeRetriever	r);	//	OpcodeRetriever allows the dll to retrieve opcodes from the r_rxec dll without referencing the corresponding STL structures.
+
+//	Operators		//////////////////////////////////////////////////////////////////////////////
 
 uint16	dll_export	GetOperatorCount();
 void	dll_export	GetOperatorName(char	*op_name);
@@ -55,13 +58,20 @@ bool	dll_export	sub(const	r_exec::Context	&context,uint16	&index);
 bool	dll_export	mul(const	r_exec::Context	&context,uint16	&index);
 bool	dll_export	dis(const	r_exec::Context	&context,uint16	&index);
 
-////////////////////////////////////////////////////////////////////////////////
+//	CPP Programs	//////////////////////////////////////////////////////////////////////////////
 
 uint16	dll_export	GetProgramCount();
 void	dll_export	GetProgramName(char	*pgm_name);
 
 r_exec::Controller	dll_export	*test_program(r_code::View	*);
 r_exec::Controller	dll_export	*correlator(r_code::View	*);
+
+//	Callbacks		//////////////////////////////////////////////////////////////////////////////
+
+uint16	dll_export	GetCallbackCount();
+void	dll_export	GetCallbackName(char	*callback_name);
+
+bool	dll_export	print(uint64	t,bool	suspended,const	char	*msg,uint8	object_count,Code	**objects);
 }
 
 

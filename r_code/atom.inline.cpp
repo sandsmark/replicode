@@ -76,6 +76,11 @@ namespace	r_code{
 		return	Atom((IN_OBJ_PTR<<24)+(inputIndex<<12)+(index	&	0x0FFF));
 	}
 
+	inline	Atom	Atom::DInObjPointer(uint8	relativeIndex,uint16 index){
+		
+		return	Atom((D_IN_OBJ_PTR<<24)+(relativeIndex<<12)+(index	&	0x0FFF));
+	}
+
 	inline	Atom	Atom::OutObjPointer(uint16	index){
 		
 		return	Atom((OUT_OBJ_PTR<<24)+(index	&	0x0FFF));
@@ -219,6 +224,16 @@ namespace	r_code{
 		return	Atom((MODEL<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
+	inline	Atom	Atom::NumericalVariable(uint16	variableID,uint8	tolerance){
+
+		return	Atom((NUMERICAL_VARIABLE<<24)+((variableID	&	0x0FFF)<<8)+tolerance);
+	}
+	
+	inline	Atom	Atom::StructuralVariable(uint16	variableID,uint8	tolerance){
+
+		return	Atom((STRUCTURAL_VARIABLE<<24)+((variableID	&	0x0FFF)<<8)+tolerance);
+	}
+
 	inline	Atom::Atom(uint32	a):atom(a){
 	}
 
@@ -239,6 +254,21 @@ namespace	r_code{
 	inline	bool	Atom::operator	!=(const	Atom&	a)	const{
 		
 		return	atom!=a.atom;
+	}
+
+	inline	bool	Atom::operator	!()	const{
+
+		return	isUndefined();
+	}
+
+	inline	Atom::operator	size_t	()	const{
+		
+		return	(size_t)atom;
+	}
+
+	inline	bool	Atom::isUndefined()	const{
+
+		return	atom==0xFFFFFFFF;
 	}
 
 	inline	uint8	Atom::getDescriptor()	const{
@@ -289,6 +319,11 @@ namespace	r_code{
 		return	(uint8)((atom	&	0x000FF000)>>12);
 	}
 
+	inline	uint8	Atom::asRelativeIndex()	const{
+
+		return	(uint8)((atom	&	0x000FF000)>>12);
+	}
+
 	inline	uint16	Atom::asOpcode()	const{
 
 		return	(atom>>8)	&	0x00000FFF;
@@ -314,23 +349,19 @@ namespace	r_code{
 		return	atom	&	0x000000FF;
 	}
 
-	inline	bool	Atom::isPointer()	const{
+	inline	uint16	Atom::getVariableID()	const{
 
-		switch(getDescriptor()){
-		case	I_PTR:
-		case	VL_PTR:
-		case	R_PTR:
-		case	THIS:
-		case	C_PTR:
-		case	IPGM_PTR:
-		case	IN_OBJ_PTR:
-		case	OUT_OBJ_PTR:
-		case	VALUE_PTR:
-		case	PROD_PTR:
-			return true;
-		default:
-			return false;
-		}
+		return	(atom	&	0x000FFF00)>>8;
+	}
+
+	inline	uint8	Atom::getTolerance()	const{
+
+		return	atom	&	0x000000FF;
+	}
+
+	inline	void	Atom::setTolerance(uint8	t){
+
+		atom=(atom	&	0xFFFFFF00)	|	t;
 	}
 
 	inline	uint8	Atom::getAtomCount()	const{

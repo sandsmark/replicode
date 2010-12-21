@@ -37,6 +37,15 @@ namespace	r_exec{
 		reductionCS.leave();
 	}
 
+	inline	bool	Overlay::is_alive(){
+
+		bool	_alive;
+		reductionCS.enter();
+		_alive=alive;
+		reductionCS.leave();
+		return	_alive;
+	}
+
 	inline	r_code::Code	*Overlay::getObject()	const{	
 		
 		return	((Controller	*)controller)->getObject();

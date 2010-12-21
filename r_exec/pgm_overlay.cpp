@@ -29,10 +29,12 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"pgm_overlay.h"
+#include	"pgm_controller.h"
 #include	"mem.h"
 #include	"group.h"
 #include	"opcodes.h"
 #include	"context.h"
+#include	"callbacks.h"
 
 
 //	pgm layout:
@@ -86,6 +88,85 @@
 //	...												>...
 
 namespace	r_exec{
+
+	bool	InputLessPGMOverlay::NeedsAbstraction(Code	*original,SubstitutionData	*substitution_data){
+
+		UNORDERED_MAP<Code	*,std::vector<Substitution> >::const_iterator	s=substitution_data->substitutions.find(original);
+		if(s!=substitution_data->substitutions.end())
+			return	true;
+
+		for(uint16	i=0;i<original->references_size();++i)
+			if(NeedsAbstraction(original->get_reference(i),substitution_data))
+				return	true;
+
+		return	false;
+	}
+
+	Code	*InputLessPGMOverlay::AbstractObject(Code	*original,SubstitutionData	*substitution_data,bool	head){
+		
+		UNORDERED_MAP<Code	*,std::vector<Substitution> >::const_iterator	s=substitution_data->substitutions.find(original);
+		if(s!=substitution_data->substitutions.end()){
+
+			Code	*abstracted_object=_Mem::Get()->buildObject(original->code(0));
+			uint16	i;
+			for(i=0;i<original->code_size();++i)	//	copy the code.
+				abstracted_object->code(i)=original->code(i);
+
+			for(i=0;i<original->references_size();++i)	//	reset the references.
+				abstracted_object->set_reference(i,NULL);
+			
+			for(uint16	i=0;i<s->second.size();++i){	//	patch atoms/references by atomic variables/variable objects.
+
+				switch(s->second[i].type){
+				case	0:	//	numerical variable.
+					abstracted_object->code(s->second[i].member_index)=substitution_data->numerical_variables[s->second[i].variable_index];
+					break;
+				case	1:	//	structural variable.
+					abstracted_object->code(abstracted_object->code(s->second[i].member_index).asIndex()+1)=substitution_data->structural_variables[s->second[i].variable_index];
+					break;
+				case	2:	//	variable object.
+					abstracted_object->set_reference(abstracted_object->code(s->second[i].member_index).asIndex(),substitution_data->variable_objects[s->second[i].variable_index]);
+					break;
+				}
+			}
+
+			for(i=0;i<original->references_size();++i)	//	abstract the references left un-abstracted.
+				if(abstracted_object->get_reference(i)==NULL)
+					abstracted_object->set_reference(i,AbstractObject(original->get_reference(i),substitution_data));
+
+			return	abstracted_object;
+		}else	if(head){
+
+			Code	*abstracted_object=_Mem::Get()->buildObject(original->code(0));
+			uint16	i;
+			for(i=0;i<original->code_size();++i)	//	copy the code.
+				abstracted_object->code(i)=original->code(i);
+
+			for(i=0;i<original->references_size();++i)	//	abstract references.
+				abstracted_object->set_reference(i,AbstractObject(original->get_reference(i),substitution_data));
+
+			return	abstracted_object;
+		}else{
+			
+			for(uint16	i=0;i<original->references_size();++i){
+
+				if(NeedsAbstraction(original->get_reference(i),substitution_data)){
+
+					Code	*abstracted_object=_Mem::Get()->buildObject(original->code(0));
+					uint16	i;
+					for(i=0;i<original->code_size();++i)	//	copy the code.
+						abstracted_object->code(i)=original->code(i);
+
+					for(i=0;i<original->references_size();++i)	//	abstract references.
+						abstracted_object->set_reference(i,AbstractObject(original->get_reference(i),substitution_data));
+
+					return	abstracted_object;
+				}
+			}
+		}
+
+		return	original;
+	}
 
 	InputLessPGMOverlay::InputLessPGMOverlay():Overlay(){	//	used for constructing PGMOverlay offsprings.
 	}
@@ -179,7 +260,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	InputLessPGMOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){
+	void	InputLessPGMOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index,int16	parent_index){
 	}
 
 	bool	InputLessPGMOverlay::inject_productions(Controller	*origin){
@@ -240,18 +321,18 @@ namespace	r_exec{
 					else{
 
 						object=_Mem::Get()->buildObject(arg1[0]);
-	//					if(production_count==2)
-	//						arg1.trace();
+//						arg1.trace();
 						arg1.copy(object,0);
-						//arg1.trace();
-	//					if(production_count==2)
-	//						object->trace();
+//						arg1.trace();
+//						object->trace();
 						productions.push_back(_Mem::Get()->check_existence(object));
 					}
 					patch_code(index,Atom::ProductionPointer(productions.size()-1));
 
 					++cmd_count;
-				}else	if(function[0].asOpcode()!=Opcodes::Mod	&&	function[0].asOpcode()!=Opcodes::Set){
+				}else	if(function[0].asOpcode()!=Opcodes::Mod		&&
+							function[0].asOpcode()!=Opcodes::Set	&&
+							function[0].asOpcode()!=Opcodes::Prb){
 
 					++cmd_count;
 				}
@@ -271,13 +352,15 @@ namespace	r_exec{
 			extent_index=write_index+cmd_count;
 		}
 		
-		//	all productions have evaluated correctly; now we can execute the commands one by one.
 		//	case of abstraction programs: further processing is performed after all substitutions have been executed.
-		r_exec::View	*input_view;
-		RGroup			*r_grp;
+		r_exec::View		*input_view;				//	the view of the object being abstracted.
+		RGroup				*r_grp;						//	group where the abstraction takes place.
+		SubstitutionData	*substitution_data=NULL;
+		Code				*binder;					//	ipgm built according to the substitutions which were used for abstraction.
+		uint16				binder_val_index;			//	index of the val_hld i the binder tpl args.
+		uint16				binder_reference_index=0;	//	index of the last reference.
 
-		UNORDERED_MAP<Code	*,std::vector<std::pair<uint16,Code	*> > >	substitutions;	//	object|list of <member_index,variable>
-		std::vector<Code	*>											variables;		//	variables used for substitution.
+		//	all productions have evaluated correctly; now we can execute the commands one by one.
 		for(uint16	i=1;i<=production_count;++i){
 
 			Context	cmd=*prods.getChild(i);
@@ -392,43 +475,86 @@ namespace	r_exec{
 							break;
 						}
 					}
-				}else	if(function[0].asOpcode()==Opcodes::Subst){	//	args:[c-ptr r-ptr]: member, ref to var (or nil).
+				}else	if(function[0].asOpcode()==Opcodes::Subst){	//	args:[cptr iptr-to-val_hld].
 
-					void				*object;		//	object holding references to be substitued for, or variables to be bound.
+					void				*object;		//	object holding values to be substitued for, or variables to be bound.
 					Context::ObjectType	object_type;
-					int16				member_index;	//	this is assumed to be a r-ptr.
+					int16				member_index;	//	points to either a rptr or an iptr to an atomic or structural value.
 					uint32				view_oid;
-					args.getChild(1).getMember(object,view_oid,object_type,member_index);	//	args.getChild(1) is an iptr.
+					args.getChild(1).getMember(object,view_oid,object_type,member_index);	//	args.getChild(1) is an iptr to a cptr.
 					//args.trace();
-					Context	_var=*args.getChild(2);
+					Context	_var=*args.getChild(2);		//	points to a val_hdl: the val member is either (substitution mode) a tolerance, or (binding mode) an atomic variable, a structural variable or a rptr to a variable object.
 					//_var.trace();
-					Code	*value=(*args.getChild(1)).getObject();
-
+					Context	_val=*args.getChild(1);		//	dereferenced cptr.
+					//_val.trace();
 					//	language constraints - no runtime check:
-					//		abstraction pgms must specify exactly one input: therefore subst cannot be found in input-less programs or anti-programs.
-					//		abstraction ipgms must specify nil variable objects.
+					//	abstraction pgms must specify exactly one input: therefore subst cannot be found in input-less programs or anti-programs.
 					RGRPOverlay	*source=(RGRPOverlay	*)((PGMOverlay	*)this)->getSource();
-					if(!source){	//	substitution mode, _var is nil.
+					if(!source){	//	substitution mode.
 
-						//	find a variable that was abstracted from the same object; if none, a new one is returned: in any case, the var is injected into the r-grp if not already so.
-						input_view=(r_exec::View*)((PGMOverlay	*)this)->getInputView(0);
-						r_grp=((RGroup	*)input_view->get_host());
+						if(!substitution_data){
+							
+							input_view=(r_exec::View*)((PGMOverlay	*)this)->getInputView(0);
+							r_grp=((RGroup	*)input_view->get_host());
+
+							substitution_data=new	SubstitutionData();
+
+							Code	*abstractor=getObject();
+
+							//	build the binder as a duplicate of the abstractor, then patch its tpl args.
+							binder=_Mem::Get()->buildObject(Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY));
+							for(uint16	i=1;i<abstractor->code_size();++i)
+								binder->code(i)=abstractor->code(i);
+							for(uint16	i=0;i<abstractor->references_size();++i)
+								binder->set_reference(i,abstractor->get_reference(i));
+							binder_val_index=binder->code(binder->code(IPGM_ARGS).asIndex()+1).asIndex()+1;
+						}
 						
-						Code	*var=r_grp->get_var(value);
+						//	find a variable that was abstracted from the same value; if none, a new one is returned: if of class var, it is injected into the r-grp if not already so.
+						float32	tolerance=_var[1].asFloat();
+						if(_val[0].isFloat()){
 
-						//	check if the object has already been registered for substitution.
-						std::pair<uint16,Code	*>	p(member_index,var);
-						UNORDERED_MAP<Code	*,std::vector<std::pair<uint16,Code	*> > >::const_iterator	s=substitutions.find((Code	*)object);
-						if(s==substitutions.end()){
+							Substitution	s;
+							s.member_index=member_index;
+							s.type=0;
+							s.variable_index=substitution_data->numerical_variables.size();
 
-							std::vector<std::pair<uint16,Code	*> >	v;
-							v.push_back(p);
-							substitutions[(Code	*)object]=v;
-						}else
-							substitutions[(Code	*)object].push_back(p);
-						variables.push_back(var);
-					}else	//	binding mode: _var is an existing variable.
-						source->bind(value,_var.getObject());
+							Atom	numerical_variable=r_grp->get_numerical_variable(_val[0].asFloat(),tolerance);
+							substitution_data->numerical_variables.push_back(numerical_variable);
+							substitution_data->substitutions[(Code	*)object].push_back(s);
+							binder->code(binder_val_index)=numerical_variable;
+						}else	if(object!=_val.getObject()){
+							
+							Substitution	s;
+							s.member_index=member_index;
+							s.type=2;
+							s.variable_index=substitution_data->variable_objects.size();
+
+							Code	*variable_object=r_grp->get_variable_object(_val.getObject(),tolerance);
+							substitution_data->variable_objects.push_back(variable_object);
+							substitution_data->substitutions[(Code	*)object].push_back(s);
+							binder->code(binder_val_index)=Atom::RPointer(++binder_reference_index);
+							binder->set_reference(binder_reference_index,variable_object);
+						}else	switch(_val[0].getDescriptor()){	//	structure embedded in object's code.
+						case	Atom::OBJECT:
+						case	Atom::TIMESTAMP:
+						case	Atom::STRING:{
+
+							Substitution	s;
+							s.member_index=member_index;
+							s.type=1;
+							s.variable_index=substitution_data->structural_variables.size();
+
+							Atom	structural_variable=r_grp->get_structural_variable(&((Code	*)object)->code(_val.getIndex()),tolerance);
+							substitution_data->structural_variables.push_back(structural_variable);
+							substitution_data->substitutions[(Code	*)object].push_back(s);
+							binder->code(binder_val_index)=structural_variable;
+							break;
+						}
+						}
+						binder_val_index+=VAL_HLD_ARITY;
+					}else	//	binding mode: _var is of class val_hld and holds an existing variable.
+						source->bind((Code	*)object,_val.getIndex(),_var.getObject(),_var.getIndex()+1);
 
 					if(mk_rdx){
 
@@ -447,9 +573,56 @@ namespace	r_exec{
 
 				}else	if(function[0].asOpcode()==Opcodes::DelDev){	// TODO
 
-				}else	if(function[0].asOpcode()==Opcodes::Suspend){	//	no args.
+				}else	if(function[0].asOpcode()==Opcodes::Prb){		//	args:[probe_level,callback_name,msg,set of objects].
 
-					_Mem::Get()->suspend();
+					float32	probe_lvl=(*args.getChild(1))[0].asFloat();
+					if(probe_lvl<_Mem::Get()->get_probe_level()){
+
+						std::string	callback_name=Utils::GetString(&(*args.getChild(2))[0]);
+
+						Callbacks::Callback	callback=Callbacks::Get(callback_name);
+						if(callback){
+
+							std::string	msg=Utils::GetString(&(*args.getChild(3))[0]);
+							Context	_objects=*args.getChild(4);
+
+							uint8	object_count=_objects[0].getAtomCount();
+							Code	**objects=NULL;
+							if(object_count){
+
+								objects=new	Code	*[object_count];
+								for(uint8	i=1;i<=object_count;++i)
+									objects[i-1]=(*_objects.getChild(i)).getObject();
+							}
+							callback(now-_Mem::Get()->get_starting_time(),false,msg.c_str(),object_count,objects);
+							if(object_count)
+								delete[]	objects;
+						}
+					}
+				}else	if(function[0].asOpcode()==Opcodes::Suspend){	//	args:[callback_name,msg,set of objects].
+
+					std::string	callback_name=Utils::GetString(&(*args.getChild(1))[0]);
+					Callbacks::Callback	callback=Callbacks::Get(callback_name);
+					if(callback){
+
+						_Mem::Get()->suspend();
+
+						std::string	msg=Utils::GetString(&(*args.getChild(2))[0]);
+						Context	_objects=*args.getChild(3);
+
+						uint8	object_count=_objects[0].getAtomCount();
+						Code	**objects=NULL;
+						if(object_count){
+
+							objects=new	Code	*[object_count];
+							for(uint8	i=1;i<=object_count;++i)
+								objects[i-1]=(*_objects.getChild(i)).getObject();
+						}
+						if(callback(now-_Mem::Get()->get_starting_time(),true,msg.c_str(),object_count,objects))
+							_Mem::Get()->resume();
+						if(object_count)
+							delete[]	objects;
+					}
 				}else	if(function[0].asOpcode()==Opcodes::Stop){		//	no args.
 
 					_Mem::Get()->stop();
@@ -474,69 +647,26 @@ namespace	r_exec{
 			}
 		}
 
-		if(substitutions.size()){	//	abstract an object given a set of substitutions.
+		if(substitution_data){
 
-			//	duplicate the objects holding a value to be substituted for.
-			UNORDERED_MAP<Code	*,Code	*>	replacements;	//	original object|replacement.
-			UNORDERED_MAP<Code	*,std::vector<std::pair<uint16,Code	*> > >::const_iterator	s;
-			for(s=substitutions.begin();s!=substitutions.end();++s)
-				replacements[s->first]=duplicate(s->first,&s->second);
+			Code	*original_object=input_view->object;
+			Code	*abstracted_object=AbstractObject(original_object,substitution_data,true);
 
-			//	duplicate the original object if not already in the replacements.
-			Code	*original=input_view->object;
-			Code	*abstracted_object;
-			UNORDERED_MAP<Code	*,Code	*>::const_iterator	r=replacements.find(original);
-			if(r==replacements.end())
-				replacements[original]=abstracted_object=duplicate(original,NULL);
-			else
-				abstracted_object=r->second;
+			original_object->acq_views();
+			original_object->views.erase(input_view);	//	delete the input view from the original's views.
+			if(original_object->views.size()==0)
+				original_object->invalidate();
+			original_object->rel_views();
 
-			//	relink: for each replacement, assign its references to a replacement if any.
-			for(r=replacements.begin();r!=replacements.end();++r){
-
-				UNORDERED_MAP<Code	*,Code	*>::const_iterator	_r;
-				for(uint16	i=0;i<r->second->references_size();++i){
-
-					_r=replacements.find(r->second->get_reference(i));
-					if(_r!=replacements.end())
-						r->second->set_reference(i,_r->second);
-				}
-			}
-
-			original->acq_views();
-			original->views.erase(input_view);	//	delete the input view from the original's views.
-			if(original->views.size()==0)
-				original->invalidate();
-			original->rel_views();
-
-			input_view->code(VIEW_SLN)=Atom::Float(0);	//	this prevents the abstraction to reduce the abstracted object.
+			input_view->code(VIEW_SLN)=Atom::Float(0);	//	this prevents the abstraction pgm from reducing the abstracted object.
 			input_view->set_object(abstracted_object);
 			_Mem::Get()->inject(input_view);
 
-			//	inject a binding ipgm in the r-grp: an instance of the same pgm, passing as template arguments the variables used for substitution.
-			Code	*binder=_Mem::Get()->buildObject(Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY));
-			uint16	write_index=0;
-			uint16	extent_index=IPGM_ARITY+1;
-			uint16	ref_index=0;
-
-			binder->code(IPGM_PGM)=Atom::RPointer(ref_index);			//	rptr to code.
-			binder->set_reference(ref_index,getObject()->get_reference(ref_index));
-
-			binder->code(IPGM_ARGS)=Atom::IPointer(extent_index);		//	iptr to arg set.
-			binder->code(extent_index++)=Atom::Set(variables.size());	//	arg set.
-			for(uint16	i=0;i<variables.size();++i){					//	args.
-
-				binder->code(extent_index++)=Atom::RPointer(++ref_index);
-				binder->set_reference(ref_index,variables[i]);
-			}
-			binder->code(IPGM_RUN)=Atom::Boolean(true);				//	run.
-			binder->code(IPGM_TSC)=Atom::IPointer(extent_index);	//	iptr to tsc.
-			Utils::SetTimestamp<Code>(binder,IPGM_TSC,0);			//	tsc.
-			binder->code(IPGM_NFR)=Atom::Boolean(false);			//	nfr.
-			binder->code(IPGM_ARITY)=Atom::Float(1);				//	psln_thr.
-
+			//	inject a binding ipgm in the r-grp: an instance of the abstraction pgm, passing as template arguments the variables used for substitution.
 			View	*binder_view=new	View(true,now,0,-1,r_grp,NULL,binder,1);
 			_Mem::Get()->inject(binder_view);
+
+			delete	substitution_data;
 		}
 
 		if(mk_rdx){
@@ -549,24 +679,6 @@ namespace	r_exec{
 		}
 
 		return	true;
-	}
-
-	Code	*InputLessPGMOverlay::duplicate(Code	*original,const	std::vector<std::pair<uint16,Code	*> >	*substitutions)	const{
-
-		Code	*duplicate=_Mem::Get()->buildObject(original->code(0));
-		uint16	i;
-		for(i=0;i<original->code_size();++i)	//	copy the code.
-			duplicate->code(i)=original->code(i);
-		for(i=0;i<original->references_size();++i)	//	copy the references.
-			duplicate->set_reference(i,original->get_reference(i));
-		
-		if(substitutions){
-			
-			for(int16	i=0;i<substitutions->size();++i)
-				duplicate->set_reference((*substitutions)[i].first-1,(*substitutions)[i].second);
-		}
-
-		return	duplicate;
 	}
 
 	Code	*InputLessPGMOverlay::get_mk_rdx(uint16	&extent_index)	const{
@@ -641,40 +753,66 @@ namespace	r_exec{
 		init();
 	}
 
-	void	PGMOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index){	//	patch recursively : in pgm_code[pgm_code_index] with IN_OBJ_PTRs until ::.
+	Code	*PGMOverlay::dereference_in_ptr(Atom	a){
 
-		uint16	patch_index=pgm_code_index;
-		uint16	atom_count;
-		if(pgm_code[pgm_code_index].getDescriptor()==Atom::I_PTR)
-			patch_index=pgm_code[pgm_code_index].asIndex();	
-		atom_count=pgm_code[patch_index].getAtomCount();
+		switch(a.getDescriptor()){
+		case	Atom::IN_OBJ_PTR:
+			return	getInputObject(a.asInputIndex());
+		case	Atom::D_IN_OBJ_PTR:{
+			Atom	ptr=pgm_code[a.asRelativeIndex()];	//	must be either an IN_OBJ_PTR or a D_IN_OBJ_PTR.
+			Code	*parent=dereference_in_ptr(ptr);
+			return	parent->get_reference(parent->code(ptr.asIndex()).asIndex());
+		}default:	//	shall never happen.
+			return	NULL;
+		}
+	}
 
-		pgm_code[pgm_code_index]=Atom::InObjPointer(input_index,input_code_index);	//	replace the skeleton atom by a ptr to the input object.
+	void	PGMOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index,int16	parent_index){	//	patch recursively : in pgm_code[pgm_code_index] with (D_)IN_OBJ_PTRs until ::.
+
+		uint16	atom_count=pgm_code[pgm_code_index].getAtomCount();
+
+		//	Replace the head of a structure by a ptr to the input object.
+		Atom	head;
+		if(parent_index<0)
+			head=pgm_code[pgm_code_index]=Atom::InObjPointer(input_index,input_code_index);
+		else
+			head=pgm_code[pgm_code_index]=Atom::DInObjPointer(parent_index,input_code_index);
 		patch_indices.push_back(pgm_code_index);
 
+		//	Proceed with the structure's members.
 		for(uint16	j=1;j<=atom_count;++j){
 
-			switch(pgm_code[patch_index+j].getDescriptor()){
-			case	Atom::WILDCARD:
-				pgm_code[patch_index+j]=Atom::InObjPointer(input_index,input_code_index+j);
-				patch_indices.push_back(patch_index+j);
-				break;
+			uint16	patch_index=pgm_code_index+j;
+			switch(pgm_code[patch_index].getDescriptor()){
 			case	Atom::T_WILDCARD:	//	leave as is and stop patching.
 				return;
-			case	Atom::I_PTR:	//	caution: the pattern points to sub-structures using iptrs. However, the input object may have a rptr instead of an iptr: we have to disambiguate. go one level deper in the pattern: recurse.
-				switch(getInputObject(input_index)->code(j).getDescriptor()){
-				case	Atom::I_PTR:
-					patch_input_code(patch_index+j,input_index,getInputObject(input_index)->code(j).asIndex());
+			case	Atom::WILDCARD:
+				if(parent_index<0)
+					pgm_code[patch_index]=Atom::InObjPointer(input_index,input_code_index+j);
+				else
+					pgm_code[patch_index]=Atom::DInObjPointer(parent_index,input_code_index+j);
+				patch_indices.push_back(patch_index);
+				break;
+			case	Atom::I_PTR:{		//	sub-structure: go one level deeper in the pattern.
+				uint16	indirection=pgm_code[patch_index].asIndex();	//	save the indirection before patching.
+
+				if(parent_index<0)
+					pgm_code[patch_index]=Atom::InObjPointer(input_index,input_code_index+j);
+				else
+					pgm_code[patch_index]=Atom::DInObjPointer(parent_index,input_code_index+j);
+				patch_indices.push_back(patch_index);
+				switch(dereference_in_ptr(head)->code(j).getDescriptor()){	//	caution: the pattern points to sub-structures using iptrs. However, the input object may have a rptr instead of an iptr: we have to disambiguate.
+				case	Atom::I_PTR:	//	dereference and recurse.
+					patch_input_code(indirection,input_index,dereference_in_ptr(head)->code(j).asIndex(),parent_index);
 					break;
-				case	Atom::R_PTR:
-					patch_input_code(patch_index+j,input_index,j);
+				case	Atom::R_PTR:	//	do not dereference and recurse.
+					patch_input_code(indirection,input_index,0,patch_index);
 					break;
-				default:	//	shall never happen.
+				default:				//	shall never happen.
 					break;
 				}
-				patch_indices.push_back(patch_index+j);
 				break;
-			default:	//	leave as is.
+			}default:					//	leave as is.
 				break;
 			}
 		}
@@ -683,7 +821,7 @@ namespace	r_exec{
 	void	PGMOverlay::_reduce(r_exec::View	*input){
 
 		if(alive){
-			
+
 			uint16	input_index;
 			switch(match(input,input_index)){
 			case	SUCCESS:
@@ -898,232 +1036,4 @@ namespace	r_exec{
 		return	mk_rdx;
 	}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	InputLessPGMController::InputLessPGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view){
-
-		overlays.push_back(new	InputLessPGMOverlay(this));
-	}
-	
-	InputLessPGMController::~InputLessPGMController(){
-	}
-
-	void	InputLessPGMController::signal_input_less_pgm(){	//	next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
-
-		overlayCS.enter();
-		if(overlays.size()){
-
-			Overlay	*o=*overlays.begin();
-			((InputLessPGMOverlay	*)o)->inject_productions(NULL);
-			o->reset();
-
-			if(!run_once){
-
-				Group	*host=getView()->get_host();
-				host->enter();
-				if(getView()->get_act()>host->get_act_thr()		&&	//	active ipgm.
-					host->get_c_act()>host->get_c_act_thr()		&&	//	c-active group.
-					host->get_c_sln()>host->get_c_sln_thr()){		//	c-salient group.
-
-					TimeJob	*next_job=new	InputLessPGMSignalingJob(this,Now()+tsc);
-					_Mem::Get()->pushTimeJob(next_job);
-				}
-				host->leave();
-			}
-		}
-		overlayCS.leave();
-
-		if(run_once)
-			kill();
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	_PGMController::_PGMController(r_code::View	*ipgm_view):Controller(ipgm_view){
-
-		run_once=!ipgm_view->object->code(IPGM_RUN).asBoolean();
-	}
-
-	_PGMController::~_PGMController(){
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	PGMController::PGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view){
-
-		overlays.push_back(new	PGMOverlay(this));
-	}
-	
-	PGMController::~PGMController(){
-	}
-
-	void	PGMController::add(Overlay	*overlay){	//	the first overlay is the master.
-													//	the last overlay is the oldest, the one after the master is the youngest.
-		overlayCS.enter();
-		if(overlays.size()==1)
-			overlays.push_back(overlay);
-		else{
-
-			std::list<P<_Overlay> >::iterator	master=overlays.begin();
-			overlays.insert(++master,overlay);
-		}
-		overlayCS.leave();
-	}
-
-	void	PGMController::notify_reduction(){
-
-		if(run_once)
-			kill();
-	}
-
-	void	PGMController::take_input(r_exec::View	*input,Controller	*origin){	//	origin unused since there is no recursion here.
-
-		overlayCS.enter();
-
-		if(tsc>0){	// the first overlay is the master (no match yet); other overlays are pushed right after the master in order of their matching time.
-			
-			// start from the last overlay (the oldest), and erase all of them that are older than tsc.
-			uint64	now=Now();
-			Overlay	*master=overlays.front();
-
-			if(run_once	&&	now-((PGMOverlay	*)master)->birth_time>tsc){
-
-				overlayCS.leave();
-				kill();
-				return;
-			}else{
-
-				Overlay	*current=overlays.back();
-				while(current!=master){
-
-					if(now-((PGMOverlay	*)current)->birth_time>tsc){
-						
-						current->kill();
-						overlays.pop_back();
-						current=overlays.back();
-					}else
-						break;
-				}
-			}
-		}
-
-		std::list<P<_Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o){
-
-			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
-			_Mem::Get()->pushReductionJob(j);
-		}
-
-		overlayCS.leave();
-	}
-
-	void	PGMController::take_input(r_exec::View	*input,Overlay	*source){	//	called from an r-grp overlay. Perform the reduction immediately (no reduction job pushed).
-																				//	no tsc check.
-		overlayCS.enter();
-
-		std::list<P<_Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o)
-			((PGMOverlay	*)(*o))->reduce(input,source);
-
-		overlayCS.leave();
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	AntiPGMController::AntiPGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view),successful_match(false){
-
-		overlays.push_back(new	AntiPGMOverlay(this));
-	}
-	
-	AntiPGMController::~AntiPGMController(){
-	}
-
-	void	AntiPGMController::take_input(r_exec::View	*input,Controller	*origin){
-
-		if(this!=origin)
-			overlayCS.enter();
-
-		std::list<P<_Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o){
-
-			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
-			_Mem::Get()->pushReductionJob(j);
-		}
-
-		if(this!=origin)
-			overlayCS.leave();
-	}
-
-	void	AntiPGMController::signal_anti_pgm(){
-
-		overlayCS.enter();
-
-		if(successful_match)	//	a signaling job has been spawn in restart(): we are here in an old job during which a positive match occurred: do nothing.
-			successful_match=false;
-		else{	//	no positive match during this job: inject productions and restart.
-
-			AntiPGMOverlay	*overlay=(AntiPGMOverlay	*)*overlays.begin();
-			overlay->reductionCS.enter();
-			overlay->inject_productions(this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlayCS.
-			overlay->reset();
-			overlay->reductionCS.leave();
-			
-			if(!run_once){
-
-				push_new_signaling_job();
-
-				std::list<P<_Overlay> >::const_iterator	first=overlays.begin();
-				std::list<P<_Overlay> >::const_iterator	o;
-				for(o=++first;o!=overlays.end();){	//	reset the first overlay and kill all others.
-
-					((Overlay	*)(*o))->kill();
-					o=overlays.erase(o);
-				}
-			}
-		}
-
-		overlayCS.leave();
-
-		if(run_once)
-			kill();
-	}
-
-	void	AntiPGMController::restart(AntiPGMOverlay	*overlay){	//	one anti overlay matched all its inputs, timings and guards: push a new signaling job, 
-																	//	reset the overlay and kill all others.
-		overlayCS.enter();
-		
-		overlay->reset();
-		
-		push_new_signaling_job();
-
-		std::list<P<_Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();){
-
-			if(overlay!=*o){
-
-				((AntiPGMOverlay	*)*o)->kill();
-				o=overlays.erase(o);
-			}else
-				++o;
-		}
-
-		successful_match=true;
-
-		overlayCS.leave();
-	}
-
-	void	AntiPGMController::push_new_signaling_job(){
-
-		Group	*host=getView()->get_host();
-		host->enter();
-		if(getView()->get_act()>host->get_act_thr()	&&	//	active ipgm.
-			host->get_c_act()>host->get_c_act_thr()	&&	//	c-active group.
-			host->get_c_sln()>host->get_c_sln_thr()){	//	c-salient group.
-
-			host->leave();
-			TimeJob	*next_job=new	AntiPGMSignalingJob(this,Now()+Utils::GetTimestamp<Code>(getObject(),IPGM_TSC));
-			_Mem::Get()->pushTimeJob(next_job);
-		}else
-			host->leave();
-	}
 }

@@ -76,7 +76,6 @@ namespace	r_exec{
 		static	uint16	MkAntiRdx;
 
 		static	uint16	MkSuccess;
-		static	uint16	MkFailure;
 
 		static	uint16	MkNew;
 
@@ -99,6 +98,7 @@ namespace	r_exec{
 		static	uint16	Swap;
 		static	uint16	NewDev;
 		static	uint16	DelDev;
+		static	uint16	Prb;
 		static	uint16	Suspend;
 		static	uint16	Stop;
 	};

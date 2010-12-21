@@ -1,4 +1,4 @@
-;simple number sequence generation.
+; simple number sequence generation.
 
 _start:(pgm
 |[]
@@ -18,7 +18,7 @@ _start; code
 |[]; args
 RUN_ONCE
 80000us
-SILENT
+NOTIFY
 1; propagation saliency threshold
 )
 []

@@ -104,16 +104,6 @@ namespace	r_exec{
 		objectsCS.leave();
 	}
 
-	template<class	O>	Group	*Mem<O>::get_stdin()	const{
-
-		return	_stdin;
-	}
-	
-	template<class	O>	Group	*Mem<O>::get_stdout()	const{
-
-		return	_stdout;
-	}
-
 	////////////////////////////////////////////////////////////////
 
 	template<class	O>	bool	Mem<O>::load(std::vector<r_code::Code	*>	*objects){	//	NB: no cov at init time.
@@ -129,10 +119,10 @@ namespace	r_exec{
 		last_oid=0;
 
 		//	load root (always comes first).
-		root=(Group	*)(*objects)[0];
-		this->objects.push_back(root);
-		initial_groups.push_back(root);
-		root->setOID(get_oid());
+		_root=(Group	*)(*objects)[0];
+		this->objects.push_back(_root);
+		initial_groups.push_back(_root);
+		_root->setOID(get_oid());
 
 		for(uint32	i=1;i<objects->size();++i){	//	skip root as it has no initial views.
 

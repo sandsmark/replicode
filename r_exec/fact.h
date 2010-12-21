@@ -48,12 +48,30 @@ namespace	r_exec{
 				return	false;
 
 			uint16	i;
-			for(i=0;i<lhs->references_size();++i)
-				if(lhs->get_reference(i)!=rhs->get_reference(i))
+			for(i=0;i<lhs->references_size();++i){
+
+				if(lhs->get_reference(i)->code(0).asOpcode()==Opcodes::Var	||
+					rhs->get_reference(i)->code(0).asOpcode()==Opcodes::Var)
+					continue;
+				if(!Any::Equal(lhs->get_reference(i),rhs->get_reference(i)))
 					return	false;
-			for(i=0;i<lhs->code_size();++i)
-				if(lhs->code(i)!=rhs->code(i))
-					return	false;
+			}
+			for(i=0;i<lhs->code_size();){
+
+				switch(lhs->code(i).getDescriptor()){
+				case	Atom::NUMERICAL_VARIABLE:
+					++i;
+					break;
+				case	Atom::STRUCTURAL_VARIABLE:
+					i+=lhs->code(i-1).getAtomCount();
+					break;
+				default:
+					if(lhs->code(i)!=rhs->code(i))
+						return	false;
+					++i;
+					break;
+				}
+			}
 			return	true;
 		}
 	};

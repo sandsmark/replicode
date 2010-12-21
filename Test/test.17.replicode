@@ -1,7 +1,7 @@
-;dynamic generation of a program
-;case 2
-;the generated program has one input and
-;does not depend on any value from the generating program.
+; dynamic generation of a program
+; case 2
+; the generated program has one input and
+; does not depend on any value from the generating program.
 
 _start:(pgm
 |[]

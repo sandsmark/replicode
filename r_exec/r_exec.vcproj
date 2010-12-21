@@ -258,6 +258,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\binding_map.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\callbacks.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\context.cpp"
 				>
 			</File>
@@ -342,6 +350,30 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monitor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\monitor.inline.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\object.cpp"
 				>
 			</File>
@@ -406,6 +438,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\pgm_controller.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pgm_controller.inline.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\pgm_overlay.cpp"
 				>
 			</File>
@@ -467,6 +507,10 @@
 			</File>
 			<File
 				RelativePath=".\reduction_job.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\rgrp_controller.cpp"
 				>
 			</File>
 			<File
@@ -544,6 +588,14 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\binding_map.h"
+				>
+			</File>
+			<File
+				RelativePath=".\callbacks.h"
+				>
+			</File>
+			<File
 				RelativePath=".\context.h"
 				>
 			</File>
@@ -580,6 +632,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monitor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\object.h"
 				>
 			</File>
@@ -596,6 +652,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\pgm_controller.h"
+				>
+			</File>
+			<File
 				RelativePath=".\pgm_overlay.h"
 				>
 			</File>
@@ -609,6 +669,10 @@
 			</File>
 			<File
 				RelativePath=".\reduction_job.h"
+				>
+			</File>
+			<File
+				RelativePath=".\rgrp_controller.h"
 				>
 			</File>
 			<File

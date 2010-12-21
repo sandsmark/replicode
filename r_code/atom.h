@@ -59,10 +59,11 @@ namespace	r_code{
 			R_PTR=0x85,			// reference pointer.
 			VL_PTR=0x86,		// value pointer.
 			IPGM_PTR=0x87,		// r_exec internal: index of data of a tpl arg held by an ipgm.
-			IN_OBJ_PTR=0x88,	// r_exec internal: index of data held by the object held by an input view.
+			IN_OBJ_PTR=0x88,	// r_exec internal: index of data held by an input object.
 			VALUE_PTR=0x89,		// r_exec internal: index of data held by the overlay's value array.
 			PROD_PTR=0x8A,		// r_exec internal: index of data held by the overlay's production array.
 			OUT_OBJ_PTR=0x8B,	// r_exec internal: index of data held by a newly produced object.
+			D_IN_OBJ_PTR=0x8C,	// r_exec internal: index of data held by an object referenced by an input object.
 			THIS=0x90,			// this pointer.
 			VIEW=0x91,
 			MKS=0x92,
@@ -70,6 +71,8 @@ namespace	r_code{
 			NODE=0xA0,
 			DEVICE=0xA1,
 			DEVICE_FUNCTION=0xA2,
+			NUMERICAL_VARIABLE=0xB0,
+			STRUCTURAL_VARIABLE=0xB1,
 			C_PTR =0xC0,		// chain pointer.
 			SET=0xC1,
 			S_SET=0xC2,			// structured set.
@@ -98,7 +101,8 @@ namespace	r_code{
 		static	Atom	RPointer(uint16 index);
 		static	Atom	VLPointer(uint16 index,uint16	cast_opcode=0x0FFF);
 		static	Atom	IPGMPointer(uint16 index);
-		static	Atom	InObjPointer(uint8	inputIndex,uint16 index);
+		static	Atom	InObjPointer(uint8	inputIndex,uint16 index);		//	inputIndex: index of the input view; index: index of data in the object's code.
+		static	Atom	DInObjPointer(uint8	relativeIndex,uint16 index);	//	relativeIndex: index of an in-obj-ptr in the program's (patched) code; index: index of data in the referenced object code.
 		static	Atom	OutObjPointer(uint16 index);
 		static	Atom	ValuePointer(uint16 index);
 		static	Atom	ProductionPointer(uint16 index);
@@ -127,6 +131,8 @@ namespace	r_code{
 		static	Atom	ReductionGroup(uint16 opcode,uint8 arity);
 		static	Atom	InstantiatedCPPProgram(uint16 opcode,uint8 arity);
 		static	Atom	Model(uint16	opcode,uint8	arity);
+		static	Atom	NumericalVariable(uint16	variableID,uint8	tolerance);
+		static	Atom	StructuralVariable(uint16	variableID,uint8	tolerance);
 
 		Atom(uint32	a=0xFFFFFFFF);
 		~Atom();
@@ -134,31 +140,40 @@ namespace	r_code{
 		Atom	&operator	=(const	Atom&	a);
 		bool	operator	==(const	Atom&	a)	const;
 		bool	operator	!=(const	Atom&	a)	const;
+		bool	operator	!()	const;
+		operator	size_t	()	const;
 
 		uint32	atom;
 
 		// decoders
-		uint8	getDescriptor()	const;
-		bool	isPointer()		const;	// returns true for all pointer types.
-										// incl. index, this and view.
-		bool	isStructural()	const;
-		bool	isFloat()		const;
-		bool	readsAsNil()	const;	// returns true for all undefined values.
-		float32	asFloat()		const;
-		bool	asBoolean()		const;
-		uint16	asIndex()		const;	// applicable to internal, view, reference,
-										// and value pointers.
-		uint8	asInputIndex()	const;	// applicable to IN_OBJ_PTR.
-		uint16	asOpcode()		const;
-		uint8	asCastOpcode()	const;	// applicable to VL_PTR.
-		uint8	getAtomCount()	const;	// arity of operators and
-										// objects/markers/structured sets,
-										// number of atoms in pointers chains,
-										// number of blocks of characters in
-										// strings.
-		uint8	getNodeID()		const;	// applicable to nodes and devices.
-		uint8	getClassID()	const;	// applicable to devices.
-		uint8	getDeviceID()	const;	// applicable to devices.
+		bool	isUndefined()		const;
+		uint8	getDescriptor()		const;
+		bool	isStructural()		const;
+		bool	isFloat()			const;
+		bool	readsAsNil()		const;	// returns true for all undefined values.
+		float32	asFloat()			const;
+		bool	asBoolean()			const;
+		uint16	asIndex()			const;	// applicable to internal, view, reference,
+											// and value pointers.
+		uint8	asInputIndex()		const;	// applicable to IN_OBJ_PTR.
+		uint8	asRelativeIndex()	const;	// applicable to D_IN_OBJ_PTR.
+		uint16	asOpcode()			const;
+		uint8	asCastOpcode()		const;	// applicable to VL_PTR.
+		uint8	getAtomCount()		const;	// arity of operators and
+											// objects/markers/structured sets,
+											// number of atoms in pointers chains,
+											// number of blocks of characters in
+											// strings.
+		uint8	getNodeID()			const;	// applicable to nodes and devices.
+		uint8	getClassID()		const;	// applicable to devices.
+		uint8	getDeviceID()		const;	// applicable to devices.
+		uint16	getVariableID()		const;	// applicable to variables.
+		uint8	getTolerance()		const;	// applicable to variables and timestamps: returns the entry in the lookup table (7 bits used).
+		float32	getMultiplier()		const;	// applicable to variables and timestamps: lookup table (even distribution): returns the multiplier to apply to a number to get the tolerance.
+
+		void	setTolerance(uint8	t);		//	stores the tolerance in the LSB; used for timestamps.
+
+		static	uint8	GetTolerance(float32	t);	//	converts a tolerance into an entry in the lookup table.
 
 		void	trace()	const;
 		static	void	Trace(Atom	*base,uint16	count);

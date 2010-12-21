@@ -39,8 +39,6 @@ namespace	r_exec{
 
 		ReductionCore	*_this=((ReductionCore	*)args);
 
-		std::cout<<"Reduction Core created.\n";
-
 		bool	run=true;
 		while(run){
 

@@ -29,6 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"factory.h"
+#include	"mem.h"
 
 
 namespace	r_exec{
@@ -120,6 +121,108 @@ namespace	r_exec{
 			code(write_index++)=r_code::Atom::Float(value);	//	change.
 			code(write_index++)=r_code::Atom::Float(0);		//	psln_thr.
 			set_reference(0,object);
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		Code	*Object::Var(float32	tolerance,float32	psln_thr){
+
+			Code	*v=_Mem::Get()->buildObject(Atom::Object(Opcodes::Var,VAR_ARITY));
+			v->code(VAR_TOL)=Atom::Float(tolerance);
+			v->code(VAR_ARITY)=Atom::Float(psln_thr);
+			return	v;
+		}
+
+		Code	*Object::Fact(Code	*object,uint64	time,float32	confidence,float32	psln_thr){
+
+			Code	*f=_Mem::Get()->buildObject(Atom::Object(Opcodes::Fact,FACT_ARITY));
+			f->code(FACT_OBJ)=Atom::RPointer(0);
+			f->code(FACT_TIME)=Atom::IPointer(FACT_ARITY+1);
+			f->code(FACT_CFD)=Atom::Float(confidence);
+			f->code(FACT_ARITY)=Atom::Float(psln_thr);
+			Utils::SetTimestamp<Code>(f,FACT_TIME,time);
+			f->set_reference(0,object);
+			return	f;
+		}
+
+		Code	*Object::AntiFact(Code	*object,uint64	time,float32	confidence,float32	psln_thr){
+
+			Code	*f=_Mem::Get()->buildObject(Atom::Object(Opcodes::AntiFact,FACT_ARITY));
+			f->code(FACT_OBJ)=Atom::RPointer(0);
+			f->code(FACT_TIME)=Atom::IPointer(FACT_ARITY+1);
+			f->code(FACT_CFD)=Atom::Float(confidence);
+			f->code(FACT_ARITY)=Atom::Float(psln_thr);
+			Utils::SetTimestamp<Code>(f,FACT_TIME,time);
+			f->set_reference(0,object);
+			return	f;
+		}
+
+		Code	*Object::MkSim(Code	*object,Code	*model,float32	psln_thr){
+
+			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkSim,MK_SIM_ARITY));
+			mk->code(MK_SIM_OBJ)=Atom::RPointer(0);
+			mk->code(MK_SIM_MDL)=Atom::RPointer(1);
+			mk->code(MK_SIM_ARITY)=Atom::Float(psln_thr);
+			mk->set_reference(0,object);
+			mk->set_reference(1,model);
+			return	mk;
+		}
+
+		Code	*Object::MkPred(Code	*object,Code	*model,float32	confidence,float32	psln_thr){
+
+			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkPred,MK_PRED_ARITY));
+			mk->code(MK_PRED_OBJ)=Atom::RPointer(0);
+			mk->code(MK_PRED_FMD)=Atom::RPointer(1);
+			mk->code(MK_PRED_CFD)=Atom::Float(confidence);
+			mk->code(MK_PRED_ARITY)=Atom::Float(psln_thr);
+			mk->set_reference(0,object);
+			mk->set_reference(1,model);
+			return	mk;
+		}
+
+		Code	*Object::MkAsmp(Code	*object,Code	*model,float32	confidence,float32	psln_thr){
+
+			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkAsmp,MK_ASMP_ARITY));
+			mk->code(MK_ASMP_OBJ)=Atom::RPointer(0);
+			mk->code(MK_ASMP_MDL)=Atom::RPointer(1);
+			mk->code(MK_ASMP_CFD)=Atom::Float(confidence);
+			mk->code(MK_ASMP_ARITY)=Atom::Float(psln_thr);
+			mk->set_reference(0,object);
+			mk->set_reference(1,model);
+			return	mk;
+		}
+
+		Code	*Object::MkGoal(Code	*object,Code	*model,float32	psln_thr){
+
+			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkGoal,MK_GOAL_ARITY));
+			mk->code(MK_GOAL_OBJ)=Atom::RPointer(0);
+			mk->code(MK_GOAL_IMD)=Atom::RPointer(1);
+			mk->code(MK_GOAL_ARITY)=Atom::Float(psln_thr);
+			mk->set_reference(0,object);
+			mk->set_reference(1,model);
+			return	mk;
+		}
+
+		Code	*Object::MkSubGoal(Code	*parent,Code	*child,float32	psln_thr){
+
+			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkSubGoal,MK_SUB_GOAL_ARITY));
+			mk->code(MK_SUB_GOAL_PARENT)=Atom::RPointer(0);
+			mk->code(MK_SUB_GOAL_CHILD)=Atom::RPointer(1);
+			mk->code(MK_SUB_GOAL_ARITY)=Atom::Float(psln_thr);
+			mk->set_reference(0,parent);
+			mk->set_reference(1,child);
+			return	mk;
+		}
+
+		Code	*Object::MkSuccess(Code	*object,float32	p_rate,float32	n_rate,float32	psln_thr){
+
+			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkSuccess,MK_SUCCESS_ARITY));
+			mk->code(MK_SUCCESS_OBJ)=Atom::RPointer(0);
+			mk->code(MK_SUCCESS_P_RATE)=Atom::Float(p_rate);
+			mk->code(MK_SUCCESS_N_RATE)=Atom::Float(n_rate);
+			mk->code(MK_SUCCESS_ARITY)=Atom::Float(psln_thr);
+			mk->set_reference(0,object);
+			return	mk;
 		}
 	}
 }

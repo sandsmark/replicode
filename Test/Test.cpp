@@ -57,15 +57,12 @@ void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
 		}
 		std::ostringstream	decompiled_code;
 		decompiler.decompile_object(index,&decompiled_code,time_offset);
-		std::cout<<"... done\n";
 		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 	}
 #else
-	std::cout<<"\ndecompiling ...\n";
 	std::ostringstream	decompiled_code;
 	uint32	object_count=decompiler.decompile(image,&decompiled_code,time_offset);
 	//uint32	object_count=image->code_segment.objects.size();
-	std::cout<<"... done\n";
 	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 	std::cout<<"Image taken at: "<<Time::ToString_year(image->timestamp)<<std::endl<<std::endl;
 	std::cout<<object_count<<" objects\n";
@@ -135,8 +132,8 @@ int32	main(int	argc,char	**argv){
 		mem->init(	settings.base_period,
 					settings.reduction_core_count,
 					settings.time_core_count,
+					settings.probe_level,
 					settings.notification_resilience,
-					settings.prediction_resilience,
 					settings.goal_resilience,
 					settings.assumption_resilience,
 					settings.simulation_resilience);
@@ -162,10 +159,10 @@ int32	main(int	argc,char	**argv){
 		//probe.check();
 		
 		if(settings.write_image)
-			write_to_file(image,settings.image_path,settings.test_image?&decompiler:NULL,settings.decompile_timestamps==Settings::TS_RELATIVE?starting_time:0);
+			write_to_file(image,settings.image_path,settings.test_image?&decompiler:NULL,starting_time);
 
 		if(settings.decompile_image	&&	(!settings.write_image	||	!settings.test_image))
-			decompile(decompiler,image,settings.decompile_timestamps==Settings::TS_RELATIVE?starting_time:0);
+			decompile(decompiler,image,starting_time);
 		//uint32	w;std::cin>>w;
 		delete	image;
 

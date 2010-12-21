@@ -34,6 +34,7 @@
 #include	"../r_code/atom.h"
 #include	"../r_code/utils.h"
 #include	"object.h"
+#include	"pgm_overlay.h"
 
 
 namespace	r_exec{
@@ -213,7 +214,19 @@ namespace	r_exec{
 				case	Atom::OUT_OBJ_PTR:
 					destination->code(write_index)=Atom::VLPointer(code[(*this)[0].asIndex()].asIndex());
 					break;
-				default:
+				case	Atom::D_IN_OBJ_PTR:{
+
+					Context	c=**this;
+					if(c.index==0)
+						addReference(destination,write_index,c.object);
+					else	if(c[0].isStructural()){
+
+						destination->code(write_index++)=Atom::IPointer(extent_index);
+						c.copy_structure(destination,extent_index,extent_index,dereference_cptr,pgm_index);
+					}else
+						c.copy_member(destination,write_index,extent_index,dereference_cptr,pgm_index);
+					break;
+				}default:
 					(**this).copy_member(destination,write_index,extent_index,dereference_cptr,pgm_index);
 					break;
 				}
@@ -227,7 +240,11 @@ namespace	r_exec{
 			case	Atom::IN_OBJ_PTR:
 				addReference(destination,write_index,((PGMOverlay	*)overlay)->getInputObject((*this)[0].asIndex()));
 				break;
-			case	Atom::OPERATOR:
+			case	Atom::D_IN_OBJ_PTR:{
+				Context	c=**this;
+				addReference(destination,write_index,c.object);
+				break;
+			}case	Atom::OPERATOR:
 			case	Atom::OBJECT:
 			case	Atom::MODEL:
 			case	Atom::MARKER:

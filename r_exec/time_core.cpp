@@ -39,8 +39,6 @@ namespace	r_exec{
 
 		TimeCore	*_this=((TimeCore	*)args);
 
-		std::cout<<"Time Core created.\n";
-
 		bool	run=true;
 		while(run){	//	enter a wait state when the rMem is suspended.
 

@@ -33,6 +33,9 @@
 
 namespace	r_exec{
 
+	template<class	C,class	U>	Object<C,U>::Object():C(),hash_value(0),invalidated(false){
+	}
+
 	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),hash_value(0),invalidated(false){
 
 		if(mem)
@@ -57,7 +60,7 @@ namespace	r_exec{
 			return	true;
 		invalidated=true;
 
-		if(_oid!=UNDEFINED_OID){
+		if(is_registered){
 
 			if(code(0).getDescriptor()==Atom::MARKER){
 
@@ -65,8 +68,7 @@ namespace	r_exec{
 					get_reference(i)->remove_marker(this);
 			}
 		
-			if(is_registered)
-				r_code::Mem::Get()->deleteObject(this);
+			r_code::Mem::Get()->deleteObject(this);
 		}
 
 		return	false;

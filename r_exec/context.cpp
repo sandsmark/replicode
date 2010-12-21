@@ -64,12 +64,23 @@ namespace	r_exec{
 		return	true;
 	}
 
+	inline	bool	Context::operator	!=(const	Context	&c)	const{
+
+		return	!(*this==c);
+	}
+
 	bool	Context::match(const	Context	&input)	const{
-//input.trace();
-//this->trace();
+
 		if(data==REFERENCE	&&	index==0	&&
-			input.data==REFERENCE	&&	input.index==0)	//	both point to an object's head, not one of its members.
-			return	object==input.object;
+			input.data==REFERENCE	&&	input.index==0){	//	both point to an object's head, not one of its members.
+
+			if(object==input.object)
+				return	true;
+			if(object->code(0).asOpcode()==Opcodes::Var	||
+				input.object->code(0).asOpcode()==Opcodes::Var)
+				return	true;
+			return	false;
+		}
 
 		if(code[index].isStructural()){
 
@@ -77,13 +88,17 @@ namespace	r_exec{
 			if(input.getChildrenCount()!=atom_count)
 				return	false;
 
-			if((*this)[0].atom!=input[0].atom)
+			if(((*this)[0].atom	&	0xFFFFFFF8)!=(input[0].atom	&	0xFFFFFFF8))	//	masking a possible tolerance embedded in timestamps; otherwise, the last 3 bits encode an arity.
 				return	false;
 
 			for(uint16	i=1;i<=atom_count;++i){
 
 				Context	pc=*getChild(i);
+				if(pc[0].getDescriptor()==Atom::STRUCTURAL_VARIABLE)
+					return	true;
 				Context	ic=*input.getChild(i);
+				if(input[0].getDescriptor()==Atom::STRUCTURAL_VARIABLE)
+					return	true;
 				if(!pc.match(ic))
 					return	false;
 			}
@@ -93,17 +108,15 @@ namespace	r_exec{
 		switch((*this)[0].getDescriptor()){
 		case	Atom::WILDCARD:
 		case	Atom::T_WILDCARD:
+		case	Atom::NUMERICAL_VARIABLE:
 			return	true;
 		case	Atom::IPGM_PTR:
 			return	(**this).match(input);
 		default:
+			if(input[0].getDescriptor()==Atom::NUMERICAL_VARIABLE)
+				return	true;
 			return	(*this)[0]==input[0];
 		}
-	}
-
-	inline	bool	Context::operator	!=(const	Context	&c)	const{
-
-		return	!(*this==c);
 	}
 
 	void	Context::dereference_once(){
@@ -140,7 +153,6 @@ namespace	r_exec{
 		}case	Atom::I_PTR:
 			return	*Context(object,view,code,(*this)[0].asIndex(),overlay,data);
 		case	Atom::R_PTR:{
-
 			Code	*o=object->get_reference((*this)[0].asIndex());
 			return	Context(o,NULL,&o->code(0),0,NULL,REFERENCE);
 		}case	Atom::C_PTR:{
@@ -185,6 +197,10 @@ namespace	r_exec{
 			Code	*input_object=((PGMOverlay	*)overlay)->getInputObject((*this)[0].asInputIndex());
 			View	*input_view=(r_exec::View*)((PGMOverlay	*)overlay)->getInputView((*this)[0].asInputIndex());
 			return	*Context(input_object,input_view,&input_object->code(0),(*this)[0].asIndex(),NULL,REFERENCE);
+		}case	Atom::D_IN_OBJ_PTR:{
+			Context	parent=*Context(object,view,code,(*this)[0].asRelativeIndex(),overlay,data);
+			Code	*parent_object=parent.object;
+			return	*Context(parent_object,NULL,&parent_object->code(0),(*this)[0].asIndex(),NULL,REFERENCE);
 		}case	Atom::PROD_PTR:
 			return	Context(overlay->productions[(*this)[0].asIndex()],0);
 		default:
@@ -325,6 +341,7 @@ dereference:
 			return;
 		case	Atom::PROD_PTR:
 		case	Atom::IN_OBJ_PTR:
+		case	Atom::D_IN_OBJ_PTR:
 		case	Atom::R_PTR:
 			overlay->values[write_index]=head;
 			return;

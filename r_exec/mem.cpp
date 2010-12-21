@@ -39,14 +39,14 @@ namespace	r_exec{
 
 		if(state==RUNNING	||	state==SUSPENDED)
 			stop();
-		root=NULL;
+		_root=NULL;
 	}
 
 	void	_Mem::init(uint32	base_period,	//	in us; same for upr, spr and res.
 						uint32	reduction_core_count,
 						uint32	time_core_count,
+						uint32	probe_level,
 						uint32	ntf_mk_res,
-						uint32	pred_res,
 						uint32	goal_res,
 						uint32	asmp_res,
 						uint32	sim_res){
@@ -54,9 +54,9 @@ namespace	r_exec{
 		this->base_period=base_period;
 		this->reduction_core_count=reduction_core_count;
 		this->time_core_count=time_core_count;
+		this->probe_level=probe_level;
 
 		this->ntf_mk_res=ntf_mk_res;
-		this->pred_res=pred_res;
 		this->goal_res=goal_res;
 		this->asmp_res=asmp_res;
 		this->sim_res=sim_res;
@@ -78,6 +78,28 @@ namespace	r_exec{
 		delete	suspension_lock;
 		delete	stop_sem;
 		delete	suspend_sem;
+	}
+
+	////////////////////////////////////////////////////////////////
+
+	Code	*_Mem::get_root()	const{
+
+		return	_root;
+	}
+
+	Code	*_Mem::get_stdin()	const{
+
+		return	_stdin;
+	}
+	
+	Code	*_Mem::get_stdout()	const{
+
+		return	_stdout;
+	}
+	
+	Code	*_Mem::get_self()	const{
+
+		return	_self;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -170,7 +192,7 @@ namespace	r_exec{
 		reduction_job_queue=new	PipeNN<P<_ReductionJob>,1024>();
 
 		uint32	i;
-		uint64	now=Now();
+		uint64	now=starting_time=Now();
 		for(i=0;i<initial_groups.size();++i){
 
 			Group	*g=initial_groups[i];
@@ -443,7 +465,7 @@ namespace	r_exec{
 
 		group->enter();
 
-		if(group!=root	&&	group->views.size()==0){
+		if(group!=_root	&&	group->views.size()==0){
 
 			group->invalidate();
 			group->leave();
@@ -618,7 +640,7 @@ namespace	r_exec{
 			group->cov(now);
 
 		//	build reduction jobs.
-		std::set<View	*,r_code::View::Less>::const_iterator	v;
+		std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 		for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
 			inject_reduction_jobs(*v,group);
 
@@ -759,7 +781,7 @@ namespace	r_exec{
 
 	void	_Mem::_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path){
 
-		if(object==root)
+		if(object==_root)
 			return;
 
 		//	prevent loops.

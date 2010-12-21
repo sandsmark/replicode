@@ -19,7 +19,7 @@ _start:(pgm
 |[]
 []
    (inj []
-      init_pos:(vec3_holder (vec3 0 0 0) 1)
+      init_pos:(val (vec3 0 0 0) 0 1)
       [SYNC_STATE now 1 forever stdin nil]
    )
    (inj []
@@ -54,12 +54,12 @@ hand_pos_updater:(pgm
 |[]
 []
    []
-      (ptn (mk.val self_hand position pos#vec3_holder: ::) |[])
+      (ptn (mk.val self_hand position pos#val: ::) |[])
    |[]
    |[]
 []
    (inj []
-      new_pos:(vec3_holder (+ pos.value (vec3 0 0 0.1)) 1)
+      new_pos:(val (+ pos.val (vec3 0 0 0.1)) 1)
       [SYNC_STATE now 1 forever stdin nil] 
    )
    (inj []
@@ -78,12 +78,12 @@ cup_pos_updater:(pgm
 |[]
 []
    []
-      (ptn (mk.val cup position pos#vec3_holder: ::) |[])
+      (ptn (mk.val cup position pos#val: ::) |[])
    |[]
    |[]
 []
    (inj []
-      new_pos:(vec3_holder (+ pos.value (vec3 0 0 0.1)) 1)
+      new_pos:(val (+ pos.value (vec3 0 0 0.1)) 1)
       [SYNC_STATE now 1 forever stdin nil]
    )
    (inj []

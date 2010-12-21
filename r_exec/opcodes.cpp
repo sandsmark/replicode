@@ -67,7 +67,6 @@ namespace	r_exec{
 	uint16	Opcodes::MkAntiRdx;
 
 	uint16	Opcodes::MkSuccess;
-	uint16	Opcodes::MkFailure;
 
 	uint16	Opcodes::MkNew;
 
@@ -90,6 +89,7 @@ namespace	r_exec{
 	uint16	Opcodes::Swap;
 	uint16	Opcodes::NewDev;
 	uint16	Opcodes::DelDev;
+	uint16	Opcodes::Prb;
 	uint16	Opcodes::Suspend;
 	uint16	Opcodes::Stop;
 }

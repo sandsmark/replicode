@@ -29,6 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"time_job.h"
+#include	"pgm_controller.h"
 #include	"mem.h"
 
 
@@ -165,21 +166,5 @@ namespace	r_exec{
 	bool	SuspendTimeCore::update(){
 
 		return	_Mem::Get()->suspend_core();
-	}
-
-	////////////////////////////////////////////////////////////
-
-	MonitoringJob::MonitoringJob(Monitor	*m,uint64	deadline):TimeJob(deadline),monitor(m){
-	}
-
-	bool	MonitoringJob::update(){
-
-		monitor->update();
-		return	true;
-	}
-
-	bool	MonitoringJob::is_alive()	const{
-
-		return	monitor->is_alive();
 	}
 }

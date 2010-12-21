@@ -44,13 +44,16 @@ namespace	r_exec{
 	public	CriticalSection{
 	private:
 		uint32	output_count;	//	number of outputs (predictions or goals) produced since the model has been used.
-		uint32	success_count;	//	number of successes; the number of failures is derived from it.
+		float32	success_count;	//	number of successes weighted by a confidence value.
+		float32	failure_count;	//	number of failures weighted by a confidence value.
 	public:
 		Model(r_code::Mem	*m=NULL);
 		Model(r_code::SysObject	*source,r_code::Mem	*m);
 		~Model();
 
-		float32	update(bool	measurement);	//	registers an outcome and return the success rate: measurement==true means success, failure otherwise.
+		void	register_outcome(bool	measurement,float32	confidence);	//	registers an outcome and return the success rate: measurement==true means success, failure otherwise.
+		float32	get_success_rate()	const;
+		float32	get_failure_rate()	const;
 	};
 }
 

@@ -70,12 +70,26 @@ namespace	r_exec{
 		void				unpatch_code(uint16	patch_index);
 		void				patch_tpl_args();	//	no views in tpl args; patches the ptn skeleton's first atom with IPGM_PTR with an index in the ipgm arg set; patches wildcards with similar IPGM_PTRs.
 		void				patch_tpl_code(uint16	pgm_code_index,uint16	ipgm_code_index);	//	to recurse.
-		virtual	void		patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index);	//	defined in PGMOverlay.
+		virtual	void		patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index,int16	parent_index=-1);	//	defined in PGMOverlay.
 
 		void	rollback();	//	reset the overlay to the last commited state: unpatch code and values.
 		void	commit();	//	empty the patch_indices and set value_commit_index to values.size().
 
-		Code	*duplicate(Code	*original,const	std::vector<std::pair<uint16,Code	*> >	*substitutions)	const;
+		typedef	struct{
+			uint16	member_index;
+			uint8	type;			//	0:numerical, 1:structural, 2:object.
+			uint16	variable_index;	//	in the vectors below.
+		}Substitution;
+
+		typedef	struct{
+			UNORDERED_MAP<Code	*,std::vector<Substitution> >	substitutions;	//	object|list of substitutions.
+			std::vector<Atom>									numerical_variables;
+			std::vector<Atom>									structural_variables;
+			std::vector<Code	*>								variable_objects;
+		}SubstitutionData;
+
+		static	Code	*AbstractObject(Code	*original,SubstitutionData	*substitution_data,bool	head=false);
+		static	bool	NeedsAbstraction(Code	*original,SubstitutionData	*substitution_data);
 
 		InputLessPGMOverlay();
 		InputLessPGMOverlay(Controller	*c);
@@ -99,7 +113,7 @@ namespace	r_exec{
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
 
-		P<Overlay>	source;	//	points to an overlay from which the reduction was triggered.
+		P<_Overlay>	source;	//	points to an instance passed when the reduction was triggered.
 
 		typedef	enum{
 			SUCCESS=0,
@@ -114,7 +128,8 @@ namespace	r_exec{
 		MatchResult	_match(r_exec::View	*input,uint16	pattern_index);		//	delegates to __match.
 		MatchResult	__match(r_exec::View	*input,uint16	pattern_index);	//	return SUCCESS upon a successful match, IMPOSSIBLE if the input is not of the right class, FAILURE otherwise.
 
-		void	patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index);
+		Code	*dereference_in_ptr(Atom	a);
+		void	patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index,int16	parent_index=-1);
 
 		virtual	Code	*get_mk_rdx(uint16	&extent_index)	const;
 
@@ -135,7 +150,7 @@ namespace	r_exec{
 		r_code::Code	*getInputObject(uint16	i)	const;
 		r_code::View	*getInputView(uint16	i)	const;
 
-		Overlay	*getSource()	const{	return	source;	}
+		_Overlay	*getSource()	const{	return	source;	}
 	};
 
 	//	Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
@@ -152,61 +167,6 @@ namespace	r_exec{
 		~AntiPGMOverlay();
 
 		void	reduce(r_exec::View	*input);	//	called upon the processing of a reduction job.
-	};
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	class	r_exec_dll	_PGMController:
-	public	Controller{
-	protected:
-		bool	run_once;
-
-		_PGMController(r_code::View	*ipgm_view);
-		virtual	~_PGMController();
-	};
-
-	// Controller for programs with inputs.
-	class	r_exec_dll	PGMController:
-	public	_PGMController{
-	public:
-		PGMController(r_code::View	*ipgm_view);
-		virtual	~PGMController();
-
-		void	add(Overlay	*overlay);
-
-		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
-		void	take_input(r_exec::View	*input,Overlay	*source);
-
-		void	notify_reduction();
-	};
-
-	//	TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
-	//	No contention on overlays.
-	class	r_exec_dll	InputLessPGMController:
-	public	_PGMController{
-	public:
-		InputLessPGMController(r_code::View	*ipgm_view);
-		~InputLessPGMController();
-
-		void	signal_input_less_pgm();
-	};
-
-	//	Signaled by TimeCores (holding AntiPGMSignalingJob).
-	//	Possible recursive locks: signal_anti_pgm()->overlay->inject_productions()->mem->inject()->injectNow()->inject_reduction_jobs()->overlay->take_input().
-	class	r_exec_dll	AntiPGMController:
-	public	_PGMController{
-	private:
-		bool	successful_match;
-
-		void	push_new_signaling_job();
-	public:
-		AntiPGMController(r_code::View	*ipgm_view);
-		~AntiPGMController();
-
-		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
-		void	signal_anti_pgm();
-
-		void	restart(AntiPGMOverlay	*overlay);
 	};
 }
 

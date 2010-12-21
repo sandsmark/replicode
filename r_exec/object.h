@@ -72,6 +72,7 @@ namespace	r_exec{
 		CriticalSection	views_sem;
 		CriticalSection	markers_sem;
 	protected:
+		Object();
 		Object(r_code::Mem	*mem);
 	public:
 		virtual	~Object();	//	un-registers from the rMem's object_register.

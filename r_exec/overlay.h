@@ -76,6 +76,7 @@ namespace	r_exec{
 		virtual	~Overlay();
 
 		void	kill();
+		bool	is_alive();
 
 		// Delegated to the controller.
 		r_code::Code	*getObject()	const;

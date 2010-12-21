@@ -4,18 +4,23 @@
 ; build an abstraction group (abst_grp: contains abstraction programs (abst_pgmx)).
 ; build three r-groups (r_grpx) made visible from abst_grp.
 ; populate each r-group, i.e. inject objects in the r-groups: they are abstracted by the ipgm in abst_grp (see i_abst_pgm1).
-; after 90ms, the model is built and projected onto stdin (see assemble_model) so it gets inputs from there (like any program).
+; after 90ms, the model is built and projected onto stdin (see build_model) so it gets inputs from there (like any program).
 ; after 100 ms (i.e. the upr of abst_grp), the r-groups are no longer projected in abst_grp, this switches abstraction off.
-; WARNING
-; pertaining to abstraction programs:
-; a - we are currently limited to 2 levels of depth for chain pointers (ex: in.object; we cannot write things like in.x.y since in is already a member of f).
-; b - the notification of chain pointers is wrong (but the calculus is correct).
+; caveat: do not define constriants on facts' timings in abstraction programs.
 ;
-; 2 - exploitation:
-; after 120ms, inject samples in stdin: the r-groups will reduce them and produce predictions.
+; 2 - forward chaining:
+; after 120ms, inject samples in stdin: the r-groups will reduce them and produce predictions (mk.pred).
 ; N.B.: do not inject anything in r-groups after the construction phase.
+;
+; 3 - backward chaining:
+; after 120ms (simultaneously wrt forward chaining), inject a goal: r-groups will produce sub-goals (mk.sgoal).
+;
+; 4 - interaction with I/O devices:
+; these devices are simulated in replicode and provide the answers real devices would give.
+; that's a mere convenience for this tutorial.
 
 
+; 1
 ; build the abstraction group and programs.
 
 abst_grp:(std_grp 1 0 0 0 [root])
@@ -24,43 +29,53 @@ abst_grp:(std_grp 1 0 0 0 [root])
 
 abst_pgm1:(pgm
 []
-   (ptn var1:(var ::) |[])
-   (ptn var2:(var ::) |[])
+   (ptn val1:(val_hld ::) |[])
+   (ptn val2:(val_hld ::) |[])
+   (ptn val3:(val_hld ::) |[])
 []
    []
-      (ptn (fact in:(mk.val : hold ::) ::) |[])
+      (ptn f:(fact in:(mk.val : hold ::) ::) |[])
    |[]
    |[]
 []
-   (subst [in.obj var1])
-   (subst [in.val var2])
+   (subst [in.obj val1]); use the values in the same order as they appear in the tpl arg list.
+   (subst [in.val val2])
+   (subst [f.time val3])
 1
 )
 |[]
 
-i_abst_pgm1:(ipgm abst_pgm1 [nil nil] RUN_ALWAYS 0us NOTIFY 1)
+i_abst_pgm1:(ipgm abst_pgm1 []
+   (val_hld 0); 0 is the tolerance to be used for variable identification.
+   (val_hld 0)
+   (val_hld 0.20472); tolerances are discretized (internally encoded on 7 bits), so the actual tolerance is an approximation of the value you pass here.
+RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever abst_grp nil 1]
 
 abst_pgm2:(pgm
 []
-   (ptn var1:(var ::) |[])
-   (ptn var2:(var ::) |[])
-   (ptn var3:(var ::) |[])
+   (ptn val1:(val_hld ::) |[])
+   (ptn val2:(val_hld ::) |[])
+   (ptn val3:(val_hld ::) |[])
 []
    []
       (ptn f:(fact in:(mk.val : position ::) ::) |[])
    |[]
    |[]
 []
-   (subst [in.obj var1])
-   (subst [in.val var2])
-   (subst [f.time var3])
+   (subst [in.obj val1])
+   (subst [in.val val2])
+   (subst [f.time val3])
 1
 )
 |[]
 
-i_abst_pgm2:(ipgm abst_pgm2 [nil nil nil] RUN_ALWAYS 0us NOTIFY 1)
+i_abst_pgm2:(ipgm abst_pgm2 []
+   (val_hld 0)
+   (val_hld 0.10236)
+   (val_hld 0.20472)
+RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever abst_grp nil 1]
 
@@ -69,7 +84,7 @@ i_abst_pgm2:(ipgm abst_pgm2 [nil nil nil] RUN_ALWAYS 0us NOTIFY 1)
 r_grp1:(std_rgrp 0 0 0 0)
 []
    [SYNC_FRONT now 0 1 abst_grp nil COV_OFF 1]; make r_grp1 visible from abst_grp to allow abstraction programs..
-                                             ; reducing the content of r_grp; notice the resilience set to 1.
+                                              ; reducing the content of r_grp; notice the resilience set to 1.
 r_grp2:(std_rgrp 0 0 0 0)
 []
    [SYNC_FRONT now 0 forever r_grp1 nil COV_OFF 0]; project the child on its parent before anywhere else.
@@ -83,34 +98,25 @@ r_grp3:(std_rgrp 0 0 0 0)
 hand_holds_cup:(mk.val hand hold cup 1)
 |[]
 
-(fact hand_holds_cup 0us 1)
+(fact hand_holds_cup 0us 1 1)
 []
    [SYNC_STATE now 1 1 r_grp1 nil]
 
-pos:(val (vec3 0 0 0) 0.1 1)
+hand_pos:(mk.val hand position (vec3 0 0 0) 1)
 |[]
 
-t:(val 0us 0.1 1)
-|[]
-
-hand_pos:(mk.val hand position pos 1)
-|[]
-
-(fact hand_pos t 1)
+(fact hand_pos 0us 1 1)
 []
    [SYNC_STATE now 1 1 r_grp2 nil]
 
-cup_pos:(mk.val cup position pos 1)
+cup_pos:(mk.val cup position (vec3 0 0 0) 1)
 |[]
 
-(fact cup_pos t 1)
+(fact cup_pos 0us 1 1)
 []
    [SYNC_STATE now 1 1 r_grp3 nil]
 
-build_model:(pgm
-|[]
-|[]
-[]
+build_model:(pgm |[] |[] []
    (inj []
       fmd:(fmd r_grp1 [root] [root] 0us 1); fmd points to the head r-group.
       [SYNC_FRONT now 0 forever stdin nil 1]; put the fmd in stdin, in an active state.
@@ -127,44 +133,144 @@ i_build_model:(ipgm build_model |[] RUN_ONCE 90000us SILENT 1)
    [SYNC_FRONT now 0 1 root nil 1]
 
 
+; 2
 ; inject inputs in stdin to be matched by the model (will trigger the production of predictions/assumptions).
 
-new_pos:(val (vec3 2 2 2) 0.1 1)
-|[]
-
-new_hand_pos:(mk.val hand position new_pos 1)
-|[]
-
-new_cup_pos:(mk.val cup position new_pos 1)
-|[]
-
-inject_inputs:(pgm
-|[]
-|[]
-[]
+inject_inputs:(pgm |[] |[] []
    (inj []
-      (fact hand_holds_cup now 1)
+      (fact hand_holds_cup now 1 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
    (inj []
-      new_t:(val now 0.2 1)
+      new_hand_pos:(mk.val hand position (vec3 2 2 2) 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
    (inj []
-      (fact new_hand_pos new_t 1)
+      (fact new_hand_pos now 1 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
    (inj []
-      (fact new_cup_pos new_t 1)
+      new_cup_pos:(mk.val cup position (vec3 2 2 2) 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact new_cup_pos now 1 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
 1)
 |[]
 
-i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us NOTIFY 1)
+i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us SILENT 1)
 []
    [SYNC_FRONT now 0 2 root nil 1]
 
-; an assumption is produced (mk.asmp (fact (mk.val cup pos new_pos 1) new_t 1) fmd 1 1).
-; it is an assumption since the predicted time is <= the time the conclusion is built.
-; the validity of the assumption is checked and produces a mk.success on the assumption.
+; an assumption is produced (mk.asmp (fact (mk.val cup pos (vec3 2 2 2) 1) new_t 1) fmd 1 1).
+; it is an assumption (and not a prediction) since the predicted time is <= the time at which the conclusion is produced.
+; the validity of the assumption is checked and this produces a mk.success on the assumption.
+
+
+; 3
+; inject one goal in stdin.
+
+inject_goal:(pgm |[] |[] []
+   (inj []
+      target:(mk.val cup position (vec3 3 3 3) 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      goal:(fact target (+ now 20000) 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (mk.goal goal nil 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+1)
+|[]
+
+i_inject_goal:(ipgm inject_goal |[] RUN_ONCE 140000us SILENT 1)
+[]
+   [SYNC_FRONT now 0 2 root nil 1]
+
+; the goal (mk.goal (fact (mk.val a_variable hold cup 1) 160000us 1) imd0 1) is produced.
+; the goal is monitored and this produces a failure, i.e. (|fact (mk.success ...)), since no such input exists at the specified time,
+; unless the device simulation is activated (see below): then the goals succeed.
+
+
+; how to catch the goal and trigger the calling of a debug probe.
+; prb args: [dbg lvl, callback name, list of objects to be passed to the callbeck].
+; callback is some custom c++ code defined in usr_operators.dll.
+; currently only one probe callback is defined: "print".
+; to be executed, a probe shall be passed a dbg lvl < probe level as defined in settings.xml.
+
+prb_catch_goal:(pgm
+|[]
+[]
+   []
+      (ptn goal:(mk.goal target:(fact ::) ::) |[])
+   |[]
+   |[]
+[]
+   (prb [1 "print" "got goal" [goal target target.obj]]); trace the goal, its target (a fact) and the object it refers to.
+1)
+|[]
+
+i_prb_catch_goal:(ipgm prb_catch_goal |[] RUN_ALWAYS 0us SILENT 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 0]; set act to 1 to let the ipgm run.
+
+
+; 4
+; devices are simulated: a quick way to experiment with goals/predictions
+; without using the mBrane I/O modules.
+; in an operational setup, the pgms below would send command to the devices instead of injecting what
+; the devices would have answered.
+
+; simulation of a grasping device: when the goal "hold the cup" is issued, simulates the performance of "grab cup".
+
+grab:(pgm |[]
+[]
+   []
+      (ptn goal:(mk.goal (fact (mk.val hand hold what: ::) when: ::) ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      target:(mk.val hand hold what 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact target when 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+1)
+|[]
+
+i_grab:(ipgm grab |[] RUN_ALWAYS 0us NOTIFY 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 0]
+
+   
+; simulation of a hand-moving device: when the goal "have the hand at position P" is issued, simulates the performance of "move hand to P".
+
+move:(pgm |[]
+[]
+   []
+      (ptn goal:(mk.goal (fact (mk.val hand position where: ::) when: ::) ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      target:(mk.val hand position where 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact target when 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+1)
+|[]
+
+i_move:(ipgm move |[] RUN_ALWAYS 0us NOTIFY 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 0]

@@ -89,6 +89,21 @@ namespace	r_exec{
 		public:
 			MkActChg(r_code::Mem	*m,Code	*object,float32	value);
 		};
+
+		//	Non-notification constructs: all builders rely on _Mem::buildObject().
+		//	Their base class is O as in Mem<O>.
+		class	r_exec_dll	Object{
+		public:
+			static	Code	*Var(float32	tolerance,float32	psln_thr);
+			static	Code	*Fact(Code	*object,uint64	time,float32	confidence,float32	psln_thr);
+			static	Code	*AntiFact(Code	*object,uint64	time,float32	confidence,float32	psln_thr);
+			static	Code	*MkSim(Code	*object,Code	*model,float32	psln_thr);
+			static	Code	*MkPred(Code	*object,Code	*model,float32	confidence,float32	psln_thr);
+			static	Code	*MkAsmp(Code	*object,Code	*model,float32	confidence,float32	psln_thr);
+			static	Code	*MkSuccess(Code	*object,float32	p_rate,float32	n_rate,float32	psln_thr);
+			static	Code	*MkGoal(Code	*object,Code	*model,float32	psln_thr);
+			static	Code	*MkSubGoal(Code	*parent,Code	*child,float32	psln_thr);
+		};
 	}
 }
 

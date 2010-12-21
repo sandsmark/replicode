@@ -33,24 +33,33 @@
 
 namespace	r_exec{
 
-	Model::Model(r_code::Mem	*m):LObject(m),CriticalSection(),output_count(0),success_count(0){
+	Model::Model(r_code::Mem	*m):LObject(m),CriticalSection(),output_count(0),success_count(0),failure_count(0){
 	}
 
-	Model::Model(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),CriticalSection(),output_count(0),success_count(0){
+	Model::Model(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),CriticalSection(),output_count(0),success_count(0),failure_count(0){
 	}
 
 	Model::~Model(){
 	}
 
-	float32	Model::update(bool	measurement){
+	void	Model::register_outcome(bool	measurement,float32	confidence){
 
-		float32	r;
 		enter();
 		++output_count;
 		if(measurement)	//	one success.
-			++success_count;
-		r=((float32)success_count)/((float32)output_count);
+			success_count+=confidence;
+		else
+			failure_count+=confidence;
 		leave();
-		return	r;
+	}
+
+	float32	Model::get_success_rate()	const{
+
+		return	success_count/((float32)output_count);
+	}
+	
+	float32	Model::get_failure_rate()	const{
+
+		return	failure_count/((float32)output_count);
 	}
 }

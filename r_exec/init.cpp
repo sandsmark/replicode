@@ -32,6 +32,7 @@
 #include	"object.h"
 #include	"operator.h"
 #include	"cpp_programs.h"
+#include	"callbacks.h"
 #include	"opcodes.h"
 #include	"overlay.h"
 
@@ -155,7 +156,6 @@ namespace	r_exec{
 		Opcodes::MkAntiRdx=_Opcodes.find("mk.|rdx")->second;
 		
 		Opcodes::MkSuccess=_Opcodes.find("mk.success")->second;
-		Opcodes::MkFailure=_Opcodes.find("mk.failure")->second;
 
 		Opcodes::MkNew=_Opcodes.find("mk.new")->second;
 
@@ -179,6 +179,7 @@ namespace	r_exec{
 		Opcodes::Swap=_Opcodes.find("_swp")->second;
 		Opcodes::NewDev=_Opcodes.find("_new_dev")->second;
 		Opcodes::DelDev=_Opcodes.find("_del_dev")->second;
+		Opcodes::Prb=_Opcodes.find("_prb")->second;
 		Opcodes::Suspend=_Opcodes.find("_suspend")->second;
 		Opcodes::Stop=_Opcodes.find("_stop")->second;
 
@@ -281,6 +282,35 @@ namespace	r_exec{
 				return	false;
 
 			CPPPrograms::Register(_pgm_name,pgm);
+		}
+
+		//	Callbacks.
+		typedef	uint16	(*UserGetCallbackCount)();
+		UserGetCallbackCount	GetCallbackCount=userOperatorLibrary.getFunction<UserGetCallbackCount>("GetCallbackCount");
+		if(!GetCallbackCount)
+			return	false;
+
+		typedef	void	(*UserGetCallbackName)(char	*);
+		UserGetCallbackName	GetCallbackName=userOperatorLibrary.getFunction<UserGetCallbackName>("GetCallbackName");
+		if(!GetCallbackName)
+			return	false;
+		
+		typedef	bool	(*UserCallback)(uint64,bool,const	char	*,uint8,Code	**);
+
+		uint16	callbackCount=GetCallbackCount();
+		for(uint16	i=0;i<callbackCount;++i){
+
+			char	callback_name[256];
+			memset(callback_name,0,256);
+			GetCallbackName(callback_name);
+
+			std::string	_callback_name=callback_name;
+
+			UserCallback	callback=userOperatorLibrary.getFunction<UserCallback>(callback_name);
+			if(!callback)
+				return	false;
+
+			Callbacks::Register(_callback_name,callback);
 		}
 
 		std::cout<<"> User-defined operator library "<<user_operator_library_path<<" loaded"<<std::endl;

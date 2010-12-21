@@ -331,3 +331,32 @@ void	GetProgramName(char	*pgm_name){
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool	print(uint64	t,bool	suspended,const	char	*msg,uint8	object_count,Code	**objects){	//	return true to resume the executive (applies when called from a suspend call, i.e. suspended==true).
+
+	std::cout<<Time::ToString_seconds(t)<<": "<<msg<<std::endl;
+	for(uint8	i=0;i<object_count;++i)
+		objects[i]->trace();
+	return	true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint16	GetCallbackCount(){
+
+	return	1;
+}
+
+void	GetCallbackName(char	*callback_name){
+
+	static	uint16	callback_index=0;
+
+	if(callback_index==0){
+
+		std::string	s="print";
+		memcpy(callback_name,s.c_str(),s.length());
+		++callback_index;
+		return;
+	}
+}

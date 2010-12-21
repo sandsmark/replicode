@@ -129,13 +129,20 @@ namespace	r_exec{
 		bool	update();
 	};
 
-	class	r_exec_dll	MonitoringJob:
+	template<class	M>	class	MonitoringJob:
 	public	TimeJob{
 	public:
-		P<Monitor>	monitor;
-		MonitoringJob(Monitor	*monitor,uint64	deadline);
-		bool	update();
-		bool	is_alive()	const;
+		P<M>	monitor;
+		MonitoringJob(M	*monitor,uint64	deadline):TimeJob(deadline),monitor(monitor){}
+		bool	update(){
+
+			monitor->update();
+			return	true;
+		}
+		bool	is_alive()	const{
+
+			return	monitor->is_alive();
+		}
 	};
 }
 

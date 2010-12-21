@@ -32,6 +32,7 @@
 #define	r_group_h
 
 #include	"group.h"
+#include	"binding_map.h"
 
 
 namespace	r_exec{
@@ -53,23 +54,27 @@ namespace	r_exec{
 		RGroup			*parent;
 		FwdController	*controller;
 
-		CriticalSection														*substitutionsCS;
-		UNORDERED_MAP<Code	*,std::pair<Code	*,std::list<RGroup	*> > >	*substitutions;	// temporary structure used while performing abstractions: not written in images.
-																							// all children share the same substitutions as their one common ancestor.
+		CriticalSection	*substitutionsCS;
+		BindingMap		*substitutions;	// temporary structure used while performing abstractions: not written in images.
+										// all children share the same substitutions as their one common ancestor.
 		Code	*fwd_model;
 
 		void	injectRGroup(View	*view);
 	public:
-		static	Code	*BindObject(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings);
-		static	Code	*BindReference(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings);
-		static	bool	NeedsBinding(Code	*original,UNORDERED_MAP<Code	*,P<Code> >	*bindings);
+		//	Keep track of the variables in use in the r-group; variable objects are stored in Group::variable_views.
+		std::vector<Atom>	numerical_variables;
+		std::vector<Atom>	structural_variables;
 
 		RGroup(r_code::Mem	*m=NULL);
 		RGroup(r_code::SysObject	*source,r_code::Mem	*m);
 		~RGroup();
 
-		Code	*get_var(Code	*value);	// returns a variable object from the existing substitutions holding the same value.
-											// if none, build a new variable object; in any case, inject the variable object in the group if not already there.
+		// Return a variable from the existing substitutions holding the same value (tolerance applies); if none, build a new one.
+		// All variables are stored in the r-groups where they are used (variable objects stored in the group's var_views, others in dedicated structures).
+		// Tolerances equal bounding box half edge.
+		Atom	get_numerical_variable(Atom	value,float32	tolerance);	
+		Atom	get_structural_variable(Atom	*value,float32	tolerance);
+		Code	*get_variable_object(Code	*value,float32	tolerance);
 
 		Code	*get_fwd_model()	const;
 		void	set_fwd_model(Code	*mdl);
@@ -78,12 +83,7 @@ namespace	r_exec{
 		FwdController	*get_controller()	const;
 		void			set_controller(FwdController	*c);
 
-		void	instantiate_goals(std::vector<Code	*>				*initial_goals,
-								  GSMonitor							*initial_monitor,
-								  bool								sim,
-								  bool								asmp,
-								  Code								*inv_model,
-								  UNORDERED_MAP<Code	*,P<Code> >	*bindings);
+		void	instantiate_goals(std::vector<Code	*>	*initial_goals,GSMonitor	*initial_monitor,uint8	reduction_mode,Code	*inv_model,BindingMap	*bindings);
 	};
 }
 
