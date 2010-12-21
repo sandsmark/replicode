@@ -1,0 +1,48 @@
+; This basic examples has one program that regularly injects object to the root group and another program 
+; that catches those objects and injects them to the stdout group
+
+; An anti-program that regularly injects objects into the root group
+Prog0:(pgm
+|[]; tpl
+|[]; input
+[]
+   (inj [(mk.val self position (vec3 1 2 3) 0) [now 1 forever root nil]])
+500000s; tsc
+1; nfr
+1; psln_thr
+)
+|[]
+
+; A program to catch objects produced by Prog0 and inject them to the stdout group
+Prog1:(pgm
+|[]
+[]
+   []
+      (ptn m:(mk.val ::) |[])      
+   |[]
+   |[]
+[]
+   (inj [m [now 1 forever stdout nil]])
+0us; tsc
+1; nfr
+1; psln_thr
+)
+|[]
+
+; Instansiate Prog0
+iProg0:(ipgm
+Prog0; code
+|[]; args
+1; psln_thr
+)
+[]
+   [now 1 forever root nil 1]
+   
+; Instansiate Prog1
+iProg1:(ipgm
+Prog1; code
+|[]; args
+1; psln_thr
+)
+[]
+   [now 1 forever root nil 1]

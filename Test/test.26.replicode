@@ -1,0 +1,96 @@
+; test: deep pattern matching with references.
+; change the sln of the inputs to test each case without the others.
+
+; level 0: no reference, embedded sub-structure.
+
+(fact (vec3 1 2 3) nil 1)
+[]
+   [SYNC_FRONT now 0 2 root nil]
+   
+p0:(pgm
+|[]
+[]
+   []
+      (ptn f:(fact v#vec3:(vec3 x: y: z:) ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      (mk.val self position (vec3 (+ v.x 1) y 0) 1)
+      [SYNC_FRONT now 1 2 root nil]
+   )
+1
+)
+|[]
+
+ip0:(ipgm p0 |[] RUN_ONCE 0us NOTIFY 1)
+[]
+   [SYNC_FRONT now 0 2 root nil 1]
+
+
+; level 1: sub-structure embedded in reference.
+
+m1:(mk.val self position (vec3 1 2 3) 1)
+|[]
+
+(fact m1 nil 1)
+[]
+   [SYNC_FRONT now 0 2 root nil]
+   
+p1:(pgm
+|[]
+[]
+   []
+      (ptn f:(fact o:(mk.val : position v#vec3:(vec3 x: y: z:) ::) ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      (mk.val self position (vec3 (+ v.x 1) y 0) 1)
+      [SYNC_FRONT now 1 2 root nil]
+   )
+   (inj [o [SYNC_FRONT now 1 2 stdout nil]])
+1
+)
+|[]
+
+ip1:(ipgm p1 |[] RUN_ONCE 0us NOTIFY 1)
+[]
+   [SYNC_FRONT now 0 2 root nil 1]
+
+
+; level 2: sub-structure embedded in the reference of a reference.
+
+h:(val (vec3 1 2 3) 0 1)
+|[]
+
+m2:(mk.val self position h 1)
+|[]
+
+(fact m2 nil 1)
+[]
+   [SYNC_FRONT now 1 2 root nil]
+   
+p2:(pgm
+|[]
+[]
+   []
+      (ptn f:(fact o:(mk.val : position v:(val vector:(vec3 x: y: z:) ::) ::) ::) |[])
+   |[]
+   |[]
+[]
+   (inj []
+      (mk.val self position (vec3 (+ vector.x 1) y 0) 1)
+      [SYNC_FRONT now 1 2 root nil]
+   )
+   (inj [o [SYNC_FRONT now 1 2 stdout nil]])
+   (inj [f.obj [SYNC_FRONT now 1 2 stdin nil]])
+   (inj [v [SYNC_FRONT now 1 2 stdout nil]])
+   (inj [o.val [SYNC_FRONT now 1 2 stdin nil]])
+1
+)
+|[]
+
+ip2:(ipgm p2 |[] RUN_ONCE 0us NOTIFY 1)
+[]
+   [SYNC_FRONT now 0 2 root nil 1]

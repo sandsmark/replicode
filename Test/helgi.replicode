@@ -1,0 +1,57 @@
+(Ping
+0
+1
+)
+[]
+   [SYNC_FRONT now 1 forever stdin nil]
+
+ProgPing:(pgm
+|[]
+[]
+   []
+      (ptn o:(Ping v: :) |[])
+   |[]
+   |[]
+[]
+   (inj [(Pong now 1) [SYNC_FRONT now 1 forever stdout nil]])
+1; psln_thr
+)
+|[]
+
+ProgPong:(pgm
+|[]
+[]
+   []
+      (ptn o:(Pong v: :) |[])
+   |[]
+   |[]
+[]
+   (inj [(Ping now 1) [SYNC_FRONT now 1 forever stdin nil]])
+1; psln_thr
+)
+|[]
+
+iProgPing:(ipgm
+ProgPing;
+|[]; args
+RUN_ALWAYS; run
+0us; tsc
+NOTIFY; nfr
+1; psln_thr
+)
+
+[]
+   [SYNC_FRONT now 1 forever stdin nil 1]
+
+iProgPong:(ipgm
+ProgPong;
+|[]; args
+RUN_ALWAYS; run
+0us; tsc
+NOTIFY; nfr
+1; psln_thr
+)
+
+[]
+   [SYNC_FRONT now 1 forever stdout nil 1]
+

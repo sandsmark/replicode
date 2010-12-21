@@ -1,0 +1,106 @@
+; pattern-matching on variables.
+
+
+variable:(var 0 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+v_hold_cup:(mk.val variable hold cup 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+
+prb0:(pgm |[]
+[]
+   []
+      (ptn m:(mk.val hand hold ::) |[])
+   |[]
+   |[]
+[]
+   (prb [1 "print" "got variable" [m.obj]])
+1)
+|[]
+
+i_prb0:(ipgm prb0 |[] RUN_ALWAYS 0us NOTIFY 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 0]
+
+
+f:(fact v_hold_cup 0us 1 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+
+prb1:(pgm |[]
+[]
+   []
+      (ptn (fact m:(mk.val hand hold ::) ::) |[])
+   |[]
+   |[]
+[]
+   (prb [1 "print" "got variable" [m.obj]])
+1)
+|[]
+
+i_prb1:(ipgm prb1 |[] RUN_ALWAYS 0us NOTIFY 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 0]
+
+
+g:(mk.goal f nil 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+
+prb2:(pgm |[]
+[]
+   []
+      (ptn (mk.goal (fact m:(mk.val hand hold what: ::) when: ::) ::) |[])
+   |[]
+   |[]
+[]
+   (prb [2 "print" "got variable" [m m.val]])
+   (inj []
+      _mk:(mk.val hand hold what 1)
+      [SYNC_FRONT now 1 forever stdin nil]
+   )
+   (inj []
+      (fact _mk when 1 1)
+      [SYNC_FRONT now 1 forever stdin nil]
+   )
+1)
+|[]
+
+i_prb2:(ipgm prb2 |[] RUN_ALWAYS 0us NOTIFY 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 1]
+
+
+; --------------------------------------------
+
+var_pos:(mk.val variable position (vec3 2 2 2) 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+f_var_pos:(fact var_pos 0us 1 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+g_var_pos:(mk.goal f_var_pos nil 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+prb3:(pgm |[]
+[]
+   []
+      (ptn (mk.goal (fact m:(mk.val hand position ::) ::) ::) |[])
+   |[]
+   |[]
+[]
+   (prb [1 "print" "got variable" [m]])
+1)
+|[]
+
+i_prb3:(ipgm prb3 |[] RUN_ALWAYS 0us NOTIFY 1)
+[]
+   [SYNC_FRONT now 0 forever root nil 0]
