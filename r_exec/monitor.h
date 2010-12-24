@@ -74,6 +74,8 @@ namespace	r_exec{
 
 		std::vector<P<Code>	>	goals;
 
+		uint64	tsc;
+
 		static	void	KillSubGoals(Code	*mk_goal);
 		static	void	KillSuperGoals(Code	*mk_goal);
 		static	void	KillRelatedGoals(Code	*mk_goal);
@@ -97,7 +99,7 @@ namespace	r_exec{
 
 		void	instantiate();	//	injects facts->goals->target in the model's output groups.
 
-		void	add_goal(Code	*g);
+		void	set_goals(std::vector<Code	*>	&goals);
 
 		Code	*get_mk_sim(Code	*object)	const;
 		Code	*get_mk_asmp(Code	*object)	const;

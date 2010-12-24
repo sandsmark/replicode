@@ -29,9 +29,4 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace	r_exec{
-
-	inline	void	GSMonitor::add_goal(Code	*g){
-
-		goals.push_back(g);
-	}
 }

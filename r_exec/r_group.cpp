@@ -272,16 +272,14 @@ namespace	r_exec{
 			}
 
 			gs_monitor=new	GSMonitor((Model	*)inv_model,controller,initial_monitor,this,bindings,reduction_mode);	//	bindings are according to the new goals.
-			for(uint32	i=0;i<new_goals.size();++i)
-				gs_monitor->add_goal(new_goals[i]);
+			gs_monitor->set_goals(new_goals);
 
 			if(parent)	//	propagate.
 				parent->instantiate_goals(&new_goals,gs_monitor,reduction_mode,inv_model,bindings);
 		}else{	
 		
 			gs_monitor=new	GSMonitor((Model	*)inv_model,controller,initial_monitor,this,bindings,reduction_mode);	//	original bindings.
-			for(uint32	i=0;i<initial_goals->size();++i)
-				gs_monitor->add_goal((*initial_goals)[i]);
+			gs_monitor->set_goals(*initial_goals);
 
 			if(parent)	//	propagate.
 				parent->instantiate_goals(initial_goals,gs_monitor,reduction_mode,inv_model,bindings);

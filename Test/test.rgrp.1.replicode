@@ -160,7 +160,7 @@ inject_inputs:(pgm |[] |[] []
 1)
 |[]
 
-i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us NOTIFY 1)
+i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us SILENT 1)
 []
    [SYNC_FRONT now 0 forever root nil 1]
 
@@ -195,7 +195,7 @@ inject_goal:(pgm |[] |[] []
 1)
 |[]
 
-i_inject_goal:(ipgm inject_goal |[] RUN_ONCE 140000us SILENT 1)
+i_inject_goal:(ipgm inject_goal |[] RUN_ONCE 120000us SILENT 1)
 []
    [SYNC_FRONT now 0 2 root nil 1]
 

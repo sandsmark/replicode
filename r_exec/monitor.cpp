@@ -170,7 +170,8 @@ namespace	r_exec{
 						 BindingMap		*bindings,
 						 uint8			reduction_mode):BindingOverlay(c,group,bindings,reduction_mode),
 														inv_model(inv_model),
-														parent(parent){
+														parent(parent),
+														tsc(0){
 	}
 
 	GSMonitor::GSMonitor(GSMonitor	*original):BindingOverlay(original){
@@ -178,6 +179,7 @@ namespace	r_exec{
 		parent=original->parent;
 		inv_model=original->inv_model;
 		goals=original->goals;
+		tsc=original->tsc;
 	}
 
 	GSMonitor::~GSMonitor(){
@@ -390,6 +392,18 @@ namespace	r_exec{
 
 	inline	uint64	GSMonitor::get_tsc()	const{
 
-		return	Utils::GetTimestamp<Code>(get_rgrp()->get_fwd_model(),FMD_TSC);
+		return	tsc;
+	}
+
+	void	GSMonitor::set_goals(std::vector<Code	*>	&goals){
+
+		uint64	now=Now();
+		for(uint32	i=0;i<goals.size();++i){
+			
+			this->goals.push_back(goals[i]);
+			uint64	dt=Utils::GetTimestamp<Code>(goals[i]->get_reference(0),FACT_TIME)-now;
+			if(tsc<dt)
+				tsc=dt;
+		}
 	}
 }
