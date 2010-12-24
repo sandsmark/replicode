@@ -40,7 +40,7 @@ namespace	r_exec{
 
 		this->bindings.init(group);	//	init bindings from r-group.
 
-		if(bindings)	//	bind some of the variables in use in the r-group to values already assigned (by c).
+		if(bindings)	//	bind some of the variables in use in the r-group to values already assigned.
 			this->bindings.add(bindings);
 
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
@@ -193,15 +193,16 @@ namespace	r_exec{
 	void	FwdOverlay::reduce(r_exec::View	*input){
 
 		//	for all remaining binders in this overlay:
-		//		binder_view->take_input(input,this); "this" is needed for calling the overlay back from _subst.
+		//		binder_view->take_input(input,this); 'this' is needed for calling the overlay back from _subst.
 		//		_subst: callback (bind()):
 		//			store values for variables for this overlay.
-		//			if an object of the r-grp becomes fully bound (how to know?), inject a copy (poitning to actual values instead of variables)
-		//			in the out_grps.
 		//	if at least one binder matched:
 		//		create an overlay (binders and bindings as they were prior to the match).
 		//		remove the binder from this overlay.
 		//	if no more unbound values, fire and kill the overlay.
+
+		if(!is_alive())
+			return;
 
 		reductionCS.enter();
 		last_bound_variable_objects.clear();
@@ -226,6 +227,7 @@ namespace	r_exec{
 
 				if(!bindings.unbound_var_count){
 
+					kill();
 					controller->remove(this);
 					((RGRPMasterOverlay	*)controller)->fire(&bindings,reduction_mode);
 				}else
@@ -236,7 +238,6 @@ namespace	r_exec{
 		reductionCS.leave();
 	}
 
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	RGRPMasterOverlay::RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,BindingMap	*bindings,uint8	reduction_mode):_Controller<Overlay>(){	//	when bindings==NULL, called by the controller of the head of the model.
@@ -246,10 +247,7 @@ namespace	r_exec{
 
 		tsc=Utils::GetTimestamp<Code>(mdl,FMD_TSC);
 
-		if(bindings)
-			this->bindings=*bindings;
-
-		FwdOverlay	*m=new	FwdOverlay(this,rgrp,bindings,reduction_mode);	//	master overlay.
+		FwdOverlay	*m=new	FwdOverlay(this,rgrp,bindings,reduction_mode);	//	master overlay (birth_time=Now()).
 		overlays.push_back(m);
 	}
 
@@ -263,8 +261,8 @@ namespace	r_exec{
 		if(tsc>0){	// kill all overlays older than tsc.
 
 			uint64	now=Now();
-			std::list<P<_Overlay> >::iterator	o;
-			for(o=overlays.begin();o!=overlays.end();){	// start from the first overlay (oldest), and erase all of them that are older than tsc.
+			std::list<P<_Overlay> >::iterator	o=++overlays.begin();
+			for(;o!=overlays.end();){	// start from the first overlay (master, oldest), and erase all of them that are older than tsc.
 
 				if(now-((FwdOverlay	*)(*o))->birth_time>tsc){
 					
@@ -287,6 +285,6 @@ namespace	r_exec{
 
 	void	RGRPMasterOverlay::fire(BindingMap	*bindings,uint8	reduction_mode){	//	add one master overlay to the group's children' controller.
 
-		((FwdController	*)controller)->fire(bindings,&this->bindings,reduction_mode);
+		((FwdController	*)controller)->fire(bindings,reduction_mode);
 	}
 }

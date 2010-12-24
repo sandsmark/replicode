@@ -50,9 +50,6 @@ namespace	r_exec{
 
 	bool	PMonitor::take_input(r_exec::View	*input){	//	executed in the same thread as for FwdController::take_input().
 
-		if(input->object->get_sim()	||	input->object->get_asmp()	||	input->object->get_pred())	//	we are only interested in actual facts: discard pred, asmp and hyp/sim.
-			return	false;
-
 		if(Any::Equal(input->object->get_reference(0),target->get_reference(0)->get_reference(0))){	//	first, check the objects pointed to by the facts.
 
 			uint64	occurrence_time=Utils::GetTimestamp<Code>(input->object,FACT_TIME);	//	input->object is either a fact or a |fact.
@@ -102,6 +99,9 @@ namespace	r_exec{
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//	N.B.: when a super-goal changes saliency, use the sln propagation to replicate to sub-goals; but not the other way around.
+	//	N.B.: shall a goal become non salient, this has no effect on its monitors, if any.
 
 	void	GSMonitor::KillSubGoals(Code	*mk_goal){	//	recursively kill all the target's sub-goals and their related monitors.
 
@@ -183,16 +183,25 @@ namespace	r_exec{
 	GSMonitor::~GSMonitor(){
 	}
 
-	bool	GSMonitor::take_input(r_exec::View	*input){	//	when returns true, the monitor is removed from its controller.
+	void	GSMonitor::reduce(r_exec::View	*input){	//	return true => the monitor is removed from its controller.
 
 		if(!is_alive())
-			return	true;
+			return;
 
 		Code	*input_object=input->object;
-		if(input_object->get_goal())	//	discard object marked as goals; this does not mean that goals are discarded when they are the input.
-			return	false;
+		if(input_object->code(0).asOpcode()==Opcodes::AntiFact	&&
+			input_object->get_reference(0)->code(0).asOpcode()==Opcodes::MkSuccess){	//	check if we got a |fact->mk.success->one_of_our_goals: if yes, propagate failure to the parent.
 
-		bool	r=false;
+			for(uint32	i=0;i<goals.size();++i){	
+
+				if(goals[i]==input_object->get_reference(0)){
+
+					propagate_failure();
+					controller->remove(this);
+					return;
+				}
+			}
+		}
 
 		reductionCS.enter();
 		last_bound_variable_objects.clear();
@@ -209,6 +218,7 @@ namespace	r_exec{
 
 				GSMonitor	*offspring=new	GSMonitor(this);
 				((FwdController	*)controller)->add_monitor(offspring);
+				_Mem::Get()->pushTimeJob(new	MonitoringJob<GSMonitor>(offspring,Now()+offspring->get_tsc()));
 
 				if(input_object->get_sim())
 					reduction_mode|=RDX_MODE_SIMULATION;
@@ -217,162 +227,144 @@ namespace	r_exec{
 
 				if(!bindings.unbound_var_count){
 
+					if(parent!=NULL)
+						parent->instantiate();
+					else
+						propagate_success();
+					
+					kill();
 					controller->remove(this);
-					//	register success.
-					r=true;
 				}else
 					binders.erase(b);
 				break;
 			}
 		}
 		reductionCS.leave();
-
-		return	r;
 	}
 
-	void	GSMonitor::update(){	//	occurs on tsc.
+	void	GSMonitor::propagate_success(){
 
-		if(!bindings.unbound_var_count){	//	success.
-
-
-		}else{
-
-
-		}
+		for(uint32	i=0;i<goals.size();++i)
+			inject_success(goals[i],1);
 	}
 
-	void	GSMonitor::add_outcome(Outcome	outcome,float32	confidence){	//	executed in the thread of a time core (from GMonitor::update()).
+	void	GSMonitor::propagate_failure(){
 
 		if(!is_alive())
 			return;
 
+		for(uint32	i=0;i<goals.size();++i)	
+			goals[i]->kill();
+
+		if(parent!=NULL)
+			parent->propagate_failure();
+		else{
+
+			for(uint32	i=0;i<goals.size();++i)
+				inject_failure(goals[i],1);
+		}
+
+		kill();
+	}
+
+	void	GSMonitor::update(){	//	occurs upon reaching the tsc.
+
+		if(!is_alive())
+			return;
+
+		propagate_failure();
+	}
+
+	void	GSMonitor::inject_success(Code	*g,float32	confidence){
+
 		uint64	now=Now();
 
-		switch(outcome){
-		case	SUCCESS:{
-/*
-			//	Shall the goal target be marked with a hyp/sim, an asmp or a pred, the notification shall also be marked by similar markers.
+		inv_model->register_outcome(true,confidence);
+		Code	*marker=factory::Object::MkSuccess(g,inv_model->get_success_rate(),inv_model->get_failure_rate(),1);
+		Code	*fact=factory::Object::Fact(marker,now,confidence,1);
 
-			//	Notify.
-			inv_model->register_outcome(true,confidence);
-			Code	*marker=factory::Object::MkSuccess(monitor->target,inv_model->get_success_rate(),inv_model->get_failure_rate(),1);
-			Code	*fact=factory::Object::Fact(marker,now,confidence,1);
+		inject_outcome(fact,marker,now);
+	}
 
-			uint16	ntf_group_set_index=inv_model->code(MD_NTF_GRPS).asIndex();
-			uint16	ntf_group_count=inv_model->code(ntf_group_set_index).getAtomCount();
-			for(uint16	i=1;i<=ntf_group_count;++i){	//	inject notification in ntf groups.
+	void	GSMonitor::inject_failure(Code	*g,float32	confidence){
 
-				Group				*ntf_group=(Group	*)inv_model->get_reference(inv_model->code(ntf_group_set_index+i).asIndex());
-				NotificationView	*ntf_view=new	NotificationView(get_rgrp(),ntf_group,marker);
-				_Mem::Get()->injectNotificationNow(ntf_view,true);
+		uint64	now=Now();
 
-				View	*fact_view=new	View(true,now,1,_Mem::Get()->get_ntf_mk_res(),ntf_group,get_rgrp(),fact);
-				_Mem::Get()->inject(fact_view);
+		inv_model->register_outcome(false,confidence);
+		Code	*marker=factory::Object::MkSuccess(g,inv_model->get_success_rate(),inv_model->get_failure_rate(),1);
+		Code	*fact=factory::Object::AntiFact(marker,now,confidence,1);
+
+		inject_outcome(fact,marker,now);
+	}
+
+	void	GSMonitor::inject_outcome(Code	*fact,Code	*marker,uint64	t){
+
+		Code	*mk_sim=get_mk_sim(marker->get_reference(0));
+		Code	*mk_asmp=get_mk_asmp(marker->get_reference(0));
+
+		RGroup	*rgrp=get_rgrp();
+		uint16	ntf_group_set_index=inv_model->code(MD_NTF_GRPS).asIndex();
+		uint16	ntf_group_count=inv_model->code(ntf_group_set_index).getAtomCount();
+		for(uint16	i=1;i<=ntf_group_count;++i){	//	inject notification in ntf groups.
+
+			Group				*ntf_group=(Group	*)inv_model->get_reference(inv_model->code(ntf_group_set_index+i).asIndex());
+			NotificationView	*ntf_view=new	NotificationView(get_rgrp(),ntf_group,marker);
+			_Mem::Get()->injectNotificationNow(ntf_view,true);
+
+			View	*view=new	View(true,t,1,_Mem::Get()->get_ntf_mk_res(),ntf_group,rgrp,fact);
+			_Mem::Get()->inject(view);
+
+			if(mk_sim){
+
+				view=new	View(true,t,1,_Mem::Get()->get_sim_res(),ntf_group,rgrp,mk_sim);
+				_Mem::Get()->inject(view);
 			}
 
-			KillSubGoals(monitor->target);
+			if(mk_asmp){
 
-			uint32	monitor_count;
-			reductionCS.enter();
-			monitor_count=monitors.size();
-			reductionCS.leave();
+				view=new	View(true,t,1,_Mem::Get()->get_asmp_res(),ntf_group,rgrp,mk_asmp);
+				_Mem::Get()->inject(view);
+			}
+		}
+	}
 
-			if(monitor_count==1){	//	no monitor left but the caller, i.e. all monitors succeeded: activate the supergoals of the goal (m->target).
+	void	GSMonitor::instantiate(){
 
-				uint16	out_group_set_index=inv_model->code(MD_OUT_GRPS).asIndex();
-				uint16	out_group_count=inv_model->code(out_group_set_index).getAtomCount();
+		uint64	now=Now();
+		if(parent!=NULL){
 
-				monitor->target->acq_markers();
-				std::list<Code	*>::const_iterator	mk;
-				for(mk=monitor->target->markers.begin();mk!=monitor->target->markers.end();++mk){	//	the monitor's target is marked by sub-goal markers pointing to the super-goals.
+			RGroup	*rgrp=get_rgrp();
+			uint16	out_group_set_index=inv_model->code(MD_OUT_GRPS).asIndex();
+			uint16	out_group_count=inv_model->code(out_group_set_index).getAtomCount();
 
-					if((*mk)->code(0).asOpcode()==Opcodes::MkSubGoal){	//	inject the super-goals and target objects, plus associated sim/asmp if any.
+			for(uint32	i=0;i<goals.size();++i){	//	create a fact (confidence=1) pointing to each goal and inject it into the model's output groups.
 
-						Code	*super_goal=(*mk)->get_reference(0);
-						if(m->target==super_goal)
-							continue;
-						Code	*goal_target=super_goal->get_reference(0);
-						Code	*mk_sim=get_mk_sim(goal_target);
-						Code	*mk_asmp=get_mk_asmp(goal_target);
+				Code	*fact=factory::Object::Fact(goals[i],now,1,1);
+				for(uint16	i=1;i<=out_group_count;++i){
 
-						for(uint16	i=1;i<=out_group_count;++i){	//	inject the super-goal target in the model's output groups.
+					Code	*out_group=inv_model->get_reference(inv_model->code(out_group_set_index+i).asIndex());
 
-							Code	*out_group=inv_model->get_reference(inv_model->code(out_group_set_index+i).asIndex());
-							View	*view=new	View(true,now,1,1,out_group,get_rgrp(),goal_target);
-							_Mem::Get()->inject(view);
-						}
+					View	*view=new	View(true,now,1,1,out_group,rgrp,fact);
+					_Mem::Get()->inject(view);
 
-						for(uint16	i=1;i<=ntf_group_count;++i){	//	inject notification in ntf groups: super-goal and sim/asmp.
+					Code	*mk_sim=get_mk_sim(fact);
+					if(mk_sim){
 
-							Group	*ntf_group=(Group	*)inv_model->get_reference(inv_model->code(ntf_group_set_index+i).asIndex());
-							View	*view;
+						view=new	View(true,now,1,_Mem::Get()->get_sim_res(),out_group,rgrp,mk_sim);
+						_Mem::Get()->inject(view);
+					}
+					
+					Code	*mk_asmp=get_mk_asmp(fact);
+					if(mk_asmp){
 
-							view=new	View(true,now,1,_Mem::Get()->get_goal_res(),ntf_group,get_rgrp(),super_goal);
-							_Mem::Get()->inject(view);
-
-							if(mk_sim){
-
-								view=new	View(true,now,1,_Mem::Get()->get_sim_res(),ntf_group,get_rgrp(),mk_sim);
-								_Mem::Get()->inject(view);
-							}
-
-							if(mk_asmp){
-
-								view=new	View(true,now,1,_Mem::Get()->get_asmp_res(),ntf_group,get_rgrp(),mk_asmp);
-								_Mem::Get()->inject(view);
-							}
-						}
-
-						if(parent!=NULL){	//	add a GMonitor to the parent GSMonitor.
-
-							uint64		expected_time=Utils::GetTimestamp<Code>(goal_target,FACT_TIME);
-							float32		multiplier=goal_target->code(goal_target->code(FACT_TIME).asIndex()).getMultiplier();	//	tolerance is stored in the timestamp atom of the bound object (here: goal_target).
-							uint64		time_tolerance=abs((float32)((int64)(expected_time-now)))*multiplier;
-							GMonitor	*m=new	GMonitor(parent,super_goal,expected_time,time_tolerance);
-
-							parent->add_monitor(m);
-							_Mem::Get()->pushTimeJob(new	MonitoringJob<GMonitor>(m,expected_time));
-						}
+						view=new	View(true,now,1,_Mem::Get()->get_asmp_res(),out_group,rgrp,mk_asmp);
+						_Mem::Get()->inject(view);
 					}
 				}
-				monitor->target->rel_markers();
-
-				kill();
-				return;
-			}*/
-			return;
-		}case	FAILURE:{
-/*
-			//	Notify.
-			inv_model->register_outcome(false,confidence);
-			Code	*marker=factory::Object::MkSuccess(monitor->target,inv_model->get_success_rate(),inv_model->get_failure_rate(),1);
-			Code	*fact=factory::Object::AntiFact(marker,now,confidence,1);
-
-			uint16	ntf_group_set_index=inv_model->code(MD_NTF_GRPS).asIndex();
-			uint16	ntf_group_count=inv_model->code(ntf_group_set_index).getAtomCount();
-			for(uint16	i=1;i<=ntf_group_count;++i){	//	inject notification in ntf groups.
-
-				Group				*ntf_group=(Group	*)inv_model->get_reference(inv_model->code(ntf_group_set_index+i).asIndex());
-				NotificationView	*ntf_view=new	NotificationView(get_rgrp(),ntf_group,marker);
-				_Mem::Get()->injectNotificationNow(ntf_view,true);
-
-				View	*fact_view=new	View(true,now,1,_Mem::Get()->get_ntf_mk_res(),ntf_group,get_rgrp(),fact);
-				_Mem::Get()->inject(fact_view);
 			}
-
-			KillRelatedGoals(monitor->target);
-			kill();*/
-			return;
-		}case	INVALIDATED:{	//	all of the target (mk.goal)'s views are dead, i.e. the goal is no longer pursued.
-/*
-			KillRelatedGoals(monitor->target);
-			kill();*/
-			return;
-		}
 		}
 
-		//	N.B.: when a super-goal changes saliency, use the sln propagation to replicate to sub-goals; but not the other way around.
-		//	N.B.: shall a goal become non salient, this has no effect on its monitors, if any.
+		_Mem::Get()->pushTimeJob(new	MonitoringJob<GSMonitor>(this,now+get_tsc()));
 	}
 
 	Code	*GSMonitor::get_mk_sim(Code	*object)	const{
@@ -395,79 +387,9 @@ namespace	r_exec{
 
 		return	((FwdController	*)controller)->get_rgrp();
 	}
-/*
-	GMonitor::GMonitor(GSMonitor	*p,Code	*target,uint64	expected_time,uint64	time_tolerance):_Object(),parent(p),target(target),success(false){
 
-		expected_time_high=expected_time+time_tolerance;
-		expected_time_low=expected_time-time_tolerance;
+	inline	uint64	GSMonitor::get_tsc()	const{
+
+		return	Utils::GetTimestamp<Code>(get_rgrp()->get_fwd_model(),FMD_TSC);
 	}
-
-	GMonitor::~GMonitor(){
-	}
-
-	bool	GMonitor::is_alive(){
-
-		return	parent->is_alive();
-	}
-
-	bool	GMonitor::take_input(r_exec::View	*input){	//	executed by reduction cores.
-
-		if(target->is_invalidated()){
-
-			parent->add_outcome(this,GSMonitor::INVALIDATED,1);
-			return	true;
-		}
-
-		//	The goal may contain variables: Any::Equal is variable-aware.
-		if(Any::Equal(input->object->get_reference(0),target->get_reference(0)->get_reference(0))){	//	first, check the objects pointed to by the facts.
-
-			int64	occurrence_time=Utils::GetTimestamp<Code>(input->object,FACT_TIME);	//	input->object is either a fact or a |fact.
-			if(expected_time_low<=occurrence_time	&&	expected_time_high>=occurrence_time){
-
-				if(input->object->get_sim()	||	input->object->get_asmp()	||	input->object->get_pred()){	//	TODO.
-				}
-
-				if(input->object->code(0)==target->get_reference(0)->code(0)){	//	positive match: expected a fact or |fact and got a fact or a |fact.
-
-					parent->add_outcome(this,GSMonitor::SUCCESS,input->object->code(FACT_CFD).asFloat());
-					success=true;
-					return	true;	//	the caller will remove the monitor from its list (will not take any more inputs).
-				}else{															//	negative match: expected a fact or |fact and got a |fact or a fact.
-
-					parent->add_outcome(this,GSMonitor::FAILURE,input->object->code(FACT_CFD).asFloat());
-					success=true;
-					return	false;	//	stays in the controller's monitors list (will take more inputs).
-				}
-			}
-		}
-		return	false;
-	}
-
-	void	GMonitor::update(){	//	parent will kill itself (along with its monitors).
-
-		if(target->is_invalidated())
-			parent->add_outcome(this,GSMonitor::INVALIDATED,1);
-		else	if(!success){	//	received nothing matching the target's object so far (neither positively nor negatively).
-
-			uint64	now=Now();
-			Code	*f;	//	generate the opposite of the target's fact (negative findings).
-			if(target->get_reference(0)->code(0).asOpcode()==Opcodes::Fact)
-				f=factory::Object::AntiFact(target->get_reference(0)->get_reference(0),now,1,1);
-			else
-				f=factory::Object::Fact(target->get_reference(0)->get_reference(0),now,1,1);
-
-			Code	*fwd_model=parent->get_rgrp()->get_fwd_model();
-			uint16	out_group_set_index=fwd_model->code(MD_OUT_GRPS).asIndex();
-			uint16	out_group_count=fwd_model->code(out_group_set_index).getAtomCount();
-
-			for(uint16	i=1;i<=out_group_count;++i){	//	inject the negative findings in the ouptut groups.
-
-				Code	*out_group=fwd_model->get_reference(fwd_model->code(out_group_set_index+i).asIndex());
-				View	*view=new	View(true,now,1,1,out_group,NULL,f);	//	inject in stdin: TODO: allow specifying the destination group.
-				_Mem::Get()->inject(view);
-			}
-
-			parent->add_outcome(this,GSMonitor::FAILURE,1);
-		}
-	}*/
 }

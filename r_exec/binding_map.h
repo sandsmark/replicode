@@ -52,7 +52,7 @@ namespace	r_exec{
 		void	init(BindingMap	*source);
 		void	init(RGroup	*source);
 
-		void	add(BindingMap	*source);	//	add bindings from source to this.
+		void	add(BindingMap	*source);	//	add bindings from source to this: if this has a variable v0 and source also, then bind v0 with source[v0]; if source has a variable v1 not in this, add v1.
 
 		void	bind_atom(const	Atom	&var,const	Atom	&val);
 		void	bind_structure(const	Atom	&var,const	std::vector<Atom>	&val);

@@ -30,17 +30,8 @@
 
 namespace	r_exec{
 
-	inline	void	GSMonitor::add_goal(Code	*goal){
+	inline	void	GSMonitor::add_goal(Code	*g){
 
-		reductionCS.enter();
-		goals.push_back(goal);
-		reductionCS.leave();
-	}
-
-	inline	void	GSMonitor::remove_goal(Code	*goal){
-
-		reductionCS.enter();
-		goals.remove(goal);
-		reductionCS.leave();
+		goals.push_back(g);
 	}
 }

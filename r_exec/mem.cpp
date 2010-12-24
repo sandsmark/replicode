@@ -91,12 +91,12 @@ namespace	r_exec{
 
 		return	_stdin;
 	}
-	
+
 	Code	*_Mem::get_stdout()	const{
 
 		return	_stdout;
 	}
-	
+
 	Code	*_Mem::get_self()	const{
 
 		return	_self;

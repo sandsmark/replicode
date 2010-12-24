@@ -118,7 +118,7 @@ cup_pos:(mk.val cup position (vec3 0 0 0) 1)
 
 build_model:(pgm |[] |[] []
    (inj []
-      fmd:(fmd r_grp1 [root] [root] 0us 1); fmd points to the head r-group.
+      fmd:(fmd r_grp1 [root] [root] 4000us 1); fmd points to the head r-group.
       [SYNC_FRONT now 0 forever stdin nil 1]; put the fmd in stdin, in an active state.
    )
    (inj []
@@ -160,9 +160,10 @@ inject_inputs:(pgm |[] |[] []
 1)
 |[]
 
-i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us SILENT 1)
+i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us NOTIFY 1)
 []
-   [SYNC_FRONT now 0 2 root nil 1]
+   [SYNC_FRONT now 0 forever root nil 1]
+
 
 ; an assumption is produced (mk.asmp (fact (mk.val cup pos (vec3 2 2 2) 1) new_t 1) fmd 1 1).
 ; it is an assumption (and not a prediction) since the predicted time is <= the time at which the conclusion is produced.
@@ -171,18 +172,24 @@ i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us SILENT 1)
 
 ; 3
 ; inject one goal in stdin.
+; make sure no object injected here gets in the forward model (here sln=0;
+; alternatively we could have set another input group for the inverse model).
 
 inject_goal:(pgm |[] |[] []
    (inj []
       target:(mk.val cup position (vec3 3 3 3) 1)
-      [SYNC_FRONT now 1 1 stdin nil]
+      [SYNC_FRONT now 0 1 stdin nil]
    )
    (inj []
-      goal:(fact target (+ now 20000) 1 1)
-      [SYNC_FRONT now 1 1 stdin nil]
+      goal_target:(fact target (+ now 20000) 1 1)
+      [SYNC_FRONT now 0 1 stdin nil]
    )
    (inj []
-      (mk.goal goal nil 1)
+      goal:(mk.goal goal_target nil 1)
+      [SYNC_FRONT now 0 1 stdin nil]
+   )
+   (inj []
+      (fact goal now 1 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
 1)

@@ -74,8 +74,8 @@ namespace	r_exec{
 		Position	get_position()	const;
 
 		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
-		void	activate(BindingMap	*overlay_bindings,BindingMap	*master_overlay_bindings,uint8		reduction_mode);
-		void	fire(BindingMap	*overlay_bindings,BindingMap	*master_overlay_bindings,uint8		reduction_mode);
+		void	activate(BindingMap	*bindings,uint8		reduction_mode);
+		void	fire(BindingMap	*bindings,uint8		reduction_mode);
 		
 		//	Called back by monitors.
 		void	add_outcome(PMonitor	*m,bool	success,float32	confidence);

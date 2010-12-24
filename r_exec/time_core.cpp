@@ -65,7 +65,7 @@ namespace	r_exec{
 				}else{	//	we are late: do the job and report.
 
 					run=j->update();
-					std::cout<<"Time Core report: late on target: "<<-deadline/1000<<" ms behind."<<std::endl;
+					std::cout<<"Time Core report: late on target: "<<-deadline<<" us behind."<<std::endl;
 				}
 			}
 

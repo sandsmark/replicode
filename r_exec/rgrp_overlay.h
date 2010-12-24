@@ -98,8 +98,6 @@ namespace	r_exec{
 	public	_Controller<Overlay>{
 	friend	class	FwdController;
 	private:
-		BindingMap	bindings;
-
 		RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,BindingMap	*bindings,uint8	reduction_mode);
 	public:
 		~RGRPMasterOverlay();

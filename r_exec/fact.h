@@ -37,11 +37,14 @@ namespace	r_exec{
 	class	Any{
 	public:
 		static	bool	Equal(const	Code	*lhs,const	Code	*rhs){
-				
+
+			if(lhs==rhs)
+				return	true;
+			if(lhs->code(0).asOpcode()==Opcodes::Ent	||
+				rhs->code(0).asOpcode()==Opcodes::Ent)
+				return	false;
 			if(lhs->code(0)!=rhs->code(0))
 				return	false;
-			if(lhs->code(0).asOpcode()==Opcodes::Ent	||	lhs->code(0).asOpcode()==Opcodes::Var)
-				return	lhs==rhs;
 			if(lhs->code_size()!=rhs->code_size())
 				return	false;
 			if(lhs->references_size()!=rhs->references_size())

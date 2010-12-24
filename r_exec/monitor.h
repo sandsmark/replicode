@@ -64,40 +64,40 @@ namespace	r_exec{
 
 	//	Monitors a set of goals, each held by g monitors.
 	//	Held by forward controllers.
-	//	If what is expected occurs on time, register a success and dismiss the monitor (positive match).
-	//	If at the deadline (tsc), some goals have not been matched, register a failure.
-	//	For these unmatched goals, generate a fact or |fact (depending on what is expected).
-	//	If aéé goals are matched, propagate success to the parent monitor.
+	//	When all the goals are matched (no unbound variableleft), propagate to its parent monitor (instantiate).
+	//	If there is none, register a succes for the goal that came in the tail rgrp.
 	class	GSMonitor:
 	public	BindingOverlay{
 	private:
 		Model			*inv_model;
 		P<GSMonitor>	parent;
 
-		std::list<P<Code> >	goals;	//	protected by the inherited reductionCS.
+		std::vector<P<Code>	>	goals;
 
 		static	void	KillSubGoals(Code	*mk_goal);
 		static	void	KillSuperGoals(Code	*mk_goal);
 		static	void	KillRelatedGoals(Code	*mk_goal);
+
+		void	propagate_success();
+		void	propagate_failure();
+
+		void	inject_success(Code	*g,float32	confidence);
+		void	inject_failure(Code	*g,float32	confidence);
+		void	inject_outcome(Code	*fact,Code	*marker,uint64	t);
 	public:
 		GSMonitor(Model	*inv_model,FwdController	*c,GSMonitor	*parent,RGroup	*group,BindingMap	*bindings,uint8	reduction_mode);
 		GSMonitor(GSMonitor	*original);
 		~GSMonitor();
 
 		RGroup	*get_rgrp()	const;
+		uint64	get_tsc()	const;
 
-		bool	take_input(r_exec::View	*input);
+		void	reduce(r_exec::View	*input);
 		void	update();	//	called by monitoring jobs.
 
-		typedef	enum{
-			SUCCESS=0,
-			FAILURE=1,
-			INVALIDATED=2
-		}Outcome;
-		void	add_outcome(Outcome	outcome,float32	confidence);
+		void	instantiate();	//	injects facts->goals->target in the model's output groups.
 
-		void	add_goal(Code	*goal);
-		void	remove_goal(Code	*goal);
+		void	add_goal(Code	*g);
 
 		Code	*get_mk_sim(Code	*object)	const;
 		Code	*get_mk_asmp(Code	*object)	const;

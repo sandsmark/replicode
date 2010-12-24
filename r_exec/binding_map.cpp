@@ -43,10 +43,12 @@ namespace	r_exec{
 		objects.clear();
 		atoms.clear();
 		structures.clear();
+		unbound_var_count=0;
 	}
 
 	void	BindingMap::init(BindingMap	*source){
 
+		unbound_var_count=0;
 		UNORDERED_MAP<Code	*,P<Code> >::const_iterator	o;
 		for(o=source->objects.begin();o!=source->objects.end();++o){
 
@@ -73,32 +75,29 @@ namespace	r_exec{
 	void	BindingMap::add(BindingMap	*source){
 
 		UNORDERED_MAP<Code	*,P<Code> >::const_iterator	o;
-		for(o=objects.begin();o!=objects.end();++o){
+		for(o=source->objects.begin();o!=source->objects.end();++o){
 
-			UNORDERED_MAP<Code	*,P<Code> >::const_iterator	_o=source->objects.find(o->first);
-			if(_o!=source->objects.end()){
+			if(!objects.insert(std::pair<Code	*,P<Code> >(o->first,o->second)).second){
 
-				objects[o->first]=_o->second;
+				objects[o->first]=o->second;
 				--unbound_var_count;
 			}
 		}
 		UNORDERED_MAP<Atom,Atom>::const_iterator	a;
-		for(a=atoms.begin();a!=atoms.end();++a){
+		for(a=source->atoms.begin();a!=source->atoms.end();++a){
 
-			UNORDERED_MAP<Atom,Atom>::const_iterator	_a=source->atoms.find(a->first);
-			if(_a!=source->atoms.end()){
+			if(!atoms.insert(std::pair<Atom,Atom>(a->first,a->second)).second){
 
-				atoms[a->first]=_a->second;
+				atoms[a->first]=a->second;
 				--unbound_var_count;
 			}
 		}
 		UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	s;
-		for(s=structures.begin();s!=structures.end();++s){
+		for(s=source->structures.begin();s!=source->structures.end();++s){
 
-			UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	_s=source->structures.find(s->first);
-			if(_s!=source->structures.end()){
+			if(!structures.insert(std::pair<Atom,std::vector<Atom> >(s->first,s->second)).second){
 
-				structures[s->first]=_s->second;
+				structures[s->first]=s->second;
 				--unbound_var_count;
 			}
 		}
@@ -206,15 +205,6 @@ namespace	r_exec{
 
 	bool	BindingMap::needs_binding(Code	*original){
 
-		for(uint16	i=0;i<original->code_size();++i){		//	find code containing variables.
-
-			switch(original->code(i).getDescriptor()){
-			case	Atom::NUMERICAL_VARIABLE:
-			case	Atom::STRUCTURAL_VARIABLE:
-				return	true;
-			}
-		}
-
 		if(original->code(0).asOpcode()==Opcodes::Var){
 
 			UNORDERED_MAP<Code	*,P<Code> >::const_iterator	b=objects.find(original);
@@ -222,6 +212,15 @@ namespace	r_exec{
 				return	true;
 			else
 				return	false;
+		}
+
+		for(uint16	i=0;i<original->code_size();++i){		//	find code containing variables.
+
+			switch(original->code(i).getDescriptor()){
+			case	Atom::NUMERICAL_VARIABLE:
+			case	Atom::STRUCTURAL_VARIABLE:
+				return	true;
+			}
 		}
 
 		for(uint16	i=0;i<original->references_size();++i){

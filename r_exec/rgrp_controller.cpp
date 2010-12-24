@@ -52,16 +52,17 @@ namespace	r_exec{
 	FwdController::~FwdController(){
 	}
 
-	void	FwdController::fire(BindingMap	*overlay_bindings,BindingMap	*master_overlay_bindings,uint8	reduction_mode){
+	void	FwdController::fire(BindingMap	*bindings,uint8	reduction_mode){
 
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 		for(v=rgrp->group_views.begin();v!=rgrp->group_views.end();++v)	//	fire.
-			((FwdController	*)v->second->controller)->activate(overlay_bindings,master_overlay_bindings,reduction_mode);
+			((FwdController	*)v->second->controller)->activate(bindings,reduction_mode);
 	}
 
 	void	FwdController::take_input(r_exec::View	*input,Controller	*origin){	//	origin unused since there is no recursion here.
 		
-		if(input->object->code(0).asOpcode()!=Opcodes::Fact	&&	input->object->code(0).asOpcode()!=Opcodes::AntiFact)	//	discard everything but facts and |facts.
+		Code	*input_object=input->object;
+		if(input_object->code(0).asOpcode()!=Opcodes::Fact	&&	input_object->code(0).asOpcode()!=Opcodes::AntiFact)	//	discard everything but facts and |facts.
 			return;
 
 		overlayCS.enter();
@@ -71,44 +72,48 @@ namespace	r_exec{
 			pending_inputs.push_back(input);
 		overlayCS.leave();
 
+		if(!input_object->get_sim()	&&
+			!input_object->get_asmp()	&&
+			!input_object->get_pred()){	//	we are only interested in actual facts: discard pred, asmp and hyp/sim.
+
+			p_monitorsCS.enter();
+			std::list<P<PMonitor> >::const_iterator	p;
+			for(p=p_monitors.begin();p!=p_monitors.end();){
+
+				if((*p)->take_input(input))
+					p=p_monitors.erase(p);
+				else
+					++p;
+			}
+			p_monitorsCS.leave();
+		}
+
+		if(!input_object->get_goal()){	//	discard facts marked as goals; this does not mean that goals are discarded when they are the input.
+
+			gs_monitorsCS.enter();
+			std::list<P<GSMonitor> >::const_iterator	gs;
+			for(gs=gs_monitors.begin();gs!=gs_monitors.end();++gs){
+
+				ReductionJob	*j=new	ReductionJob(new	View(input),*gs);
+				_Mem::Get()->pushReductionJob(j);
+			}
+			gs_monitorsCS.leave();
+		}
+
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 		for(v=rgrp->group_views.begin();v!=rgrp->group_views.end();++v)	//	pass the input to children controllers.
-			v->second->controller->take_input(input);
+			v->second->controller->take_input(input,this);
 
-		p_monitorsCS.enter();
-		std::list<P<PMonitor> >::const_iterator	p;
-		for(p=p_monitors.begin();p!=p_monitors.end();){
-
-			if((*p)->take_input(input))
-				p=p_monitors.erase(p);
-			else
-				++p;
-		}
-		p_monitorsCS.leave();
-
-		gs_monitorsCS.enter();
-		std::list<P<GSMonitor> >::const_iterator	gs;
-		for(gs=gs_monitors.begin();gs!=gs_monitors.end();){
-
-			if((*gs)->take_input(input))
-				gs=gs_monitors.erase(gs);
-			else
-				++gs;
-		}
-		gs_monitorsCS.leave();
+		Thread::Sleep(1);
 	}
 
-	void	FwdController::activate(BindingMap	*overlay_bindings,BindingMap	*master_overlay_bindings,uint8	reduction_mode){	//	called when a parent fires.
-
-		BindingMap	bindings;	//	merge the bindings into this map.
-		bindings.init(overlay_bindings);
-		bindings.add(master_overlay_bindings);
+	void	FwdController::activate(BindingMap	*bindings,uint8	reduction_mode){	//	called when a parent fires.
 
 		if(get_position()==TAIL)	//	all variables shall be bound: inject productions.
-			inject_productions(&bindings,reduction_mode);
+			inject_productions(bindings,reduction_mode);
 		else{
 
-			RGRPMasterOverlay	*m=new	RGRPMasterOverlay(this,rgrp->get_fwd_model(),rgrp,&bindings,reduction_mode);
+			RGRPMasterOverlay	*m=new	RGRPMasterOverlay(this,rgrp->get_fwd_model(),rgrp,bindings,reduction_mode);
 
 			overlayCS.enter();
 			overlays.push_back(m);
@@ -218,7 +223,7 @@ namespace	r_exec{
 			}
 
 			if(monitor){
-				
+
 				for(uint16	i=0;i<pending_inputs.size();++i)	//	check the prediction/assumption among the pending inputs.
 					if(monitor->take_input(pending_inputs[i])){
 
@@ -320,12 +325,15 @@ namespace	r_exec{
 
 	void	InvController::take_input(r_exec::View	*input,Controller	*origin){	//	propagates the instantiation of goals in one single thread.
 
-		if(input->object->code(0).asOpcode()!=Opcodes::MkGoal)
+		Code	*input_object=input->object;
+		if(input_object->code(0).asOpcode()!=Opcodes::Fact	&&	input_object->code(0).asOpcode()!=Opcodes::AntiFact)	//	discard everything but fact or |fact.
+			return;
+		Code	*goal=input_object->get_reference(0);
+		if(goal->code(0).asOpcode()!=Opcodes::MkGoal)	//	discard everything but goals.
 			return;
 
-		Code	*goal_target=input->object->get_reference(0);
-		bool	asmp=goal_target->get_asmp()!=NULL;
-		bool	sim=(goal_target->get_hyp()!=NULL	||	goal_target->get_sim()!=NULL);
+		bool	asmp=input_object->get_asmp()!=NULL;
+		bool	sim=(input_object->get_hyp()!=NULL	||	input_object->get_sim()!=NULL);
 
 		uint8	reduction_mode=RDX_MODE_REGULAR;
 		if(sim)
@@ -334,7 +342,7 @@ namespace	r_exec{
 			reduction_mode|=RDX_MODE_ASSUMPTION;
 
 		P<_InvOverlay>	o=new	_InvOverlay(this);
-		P<View>			view=new	View(true,Now(),0,1,rgrp,NULL,goal_target);	//	temporary view; N.B.: binders do not exploit view data.
+		P<View>			view=new	View(true,Now(),0,1,rgrp,NULL,goal->get_reference(0));	//	temporary view; N.B.: binders do not exploit view data.
 
 		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
 		for(v=rgrp->ipgm_views.begin();v!=rgrp->ipgm_views.end();++v){	//	attempt to bind (one binder after the other).
@@ -342,9 +350,9 @@ namespace	r_exec{
 			((PGMController	*)v->second->controller)->take_input(view,(_InvOverlay	*)o);
 			if(o->success){	//	one binder matched: propagate and stop.
 
-				std::vector<Code	*>	initial_goals;
-				initial_goals.push_back(input->object);
-				rgrp->get_parent()->instantiate_goals(&initial_goals,NULL,reduction_mode,getObject(),o->get_bindings());	//	here, getObject() returns the inverse model.
+				std::vector<Code	*>	initial_goal;
+				initial_goal.push_back(goal);
+				rgrp->instantiate_goals(&initial_goal,NULL,reduction_mode,getObject(),o->get_bindings());	//	here, getObject() returns the inverse model.
 				return;
 			}
 		}
