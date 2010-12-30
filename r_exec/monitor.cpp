@@ -117,7 +117,7 @@ namespace	r_exec{
 			delete	family;
 	}
 
-	void	GSMonitor::reduce(r_exec::View	*input){	//	called by reduction cores; never called on tail monitors.
+	void	GSMonitor::reduce(r_exec::View	*input){	//	called by reduction cores.
 
 		if(!goals.size())	//	not instantiated yet.
 			return;

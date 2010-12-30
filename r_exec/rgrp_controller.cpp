@@ -112,7 +112,7 @@ namespace	r_exec{
 			p_monitorsCS.leave();
 		}
 
-		if(get_position()!=TAIL	&&	!input_object->get_goal()){	//	monitoring goals: discard facts marked as goals; this does not mean that goals are discarded when they are the input.
+		if(!input_object->get_goal()){	//	monitoring goals: discard facts marked as goals; this does not mean that goals are discarded when they are the input.
 
 			gs_monitorsCS.enter();
 			std::list<P<GSMonitor> >::const_iterator	gs;

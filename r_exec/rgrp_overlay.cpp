@@ -80,6 +80,9 @@ namespace	r_exec{
 
 	void	BindingOverlay::bind(Code	*value_source,uint16	value_index,Code	*variable_source,uint16	variable_index){	//	called back by _subst.
 
+		if(discard_bindings)
+			return;
+
 		Atom	var=variable_source->code(variable_index);	//	variable_source is an ipgm (binder); variable_index points to the variable defined in its tpl args.
 		float32	multiplier=var.getMultiplier();
 		switch(var.getDescriptor()){

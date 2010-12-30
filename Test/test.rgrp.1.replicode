@@ -259,6 +259,7 @@ i_grab:(ipgm grab |[] RUN_ALWAYS 0us NOTIFY 1)
 
    
 ; simulation of a hand-moving device: when the goal "have the hand at position P" is issued, simulates the performance of "move hand to P".
+; also reports the cup's position.
 
 move:(pgm |[]
 []
@@ -268,11 +269,19 @@ move:(pgm |[]
    |[]
 []
    (inj []
-      target:(mk.val hand position where 1)
+      h_target:(mk.val hand position where 1)
       [SYNC_FRONT now 0 1 stdin nil]
    )
    (inj []
-      (fact target when 1 1)
+      (fact h_target when 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      c_target:(mk.val cup position where 1)
+      [SYNC_FRONT now 0 1 stdin nil]
+   )
+   (inj []
+      (fact c_target when 1 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
 1)
