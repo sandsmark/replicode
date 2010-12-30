@@ -162,7 +162,7 @@ inject_inputs:(pgm |[] |[] []
 
 i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us SILENT 1)
 []
-   [SYNC_FRONT now 0 forever root nil 1]
+   [SYNC_FRONT now 0 forever root nil 0]
 
 
 ; an assumption is produced (mk.asmp (fact (mk.val cup pos (vec3 2 2 2) 1) new_t 1) fmd 1 1).
@@ -197,7 +197,7 @@ inject_goal:(pgm |[] |[] []
 
 i_inject_goal:(ipgm inject_goal |[] RUN_ONCE 140000us SILENT 1)
 []
-   [SYNC_FRONT now 0 2 root nil 0]
+   [SYNC_FRONT now 0 2 root nil 1]
 
 ; the goal (mk.goal (fact (mk.val a_variable hold cup 1) 160000us 1) imd0 1) is produced.
 ; the goal is monitored and this produces a failure, i.e. (|fact (mk.success ...)), since no such input exists at the specified time,

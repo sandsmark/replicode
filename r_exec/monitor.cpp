@@ -136,16 +136,13 @@ namespace	r_exec{
 
 			std::list<P<View> >::const_iterator	b;
 			for(b=binders.begin();b!=binders.end();++b){	//	binders called sequentially (at most one can bind an input).
-				if(parent->parent==NULL)
-					std::cout<<"A "<<std::hex<<(PGMController	*)(*b)<<std::dec<<" "<<bindings.unbound_var_count<<std::endl;
+				
 				((PGMController	*)(*b)->controller)->take_input(input,this);	//	language constraint: abstraction programs shall not define constraints on facts' timings.
-				if(parent->parent==NULL)
-					std::cout<<"B "<<std::hex<<(PGMController	*)(*b)<<std::dec<<" "<<bindings.unbound_var_count<<std::endl;
-				if(discard_bindings){std::cout<<std::hex<<(PGMController	*)(*b)<<std::dec<<" Discard\n";
-				break;}
+				
+				if(discard_bindings)
+					break;
 				if(no_binding_needed	||	last_bound_variable_objects.size()	||	last_bound_code_variables.size()){	//	at least one variable was bound.
-					if(parent->parent==NULL)
-						std::cout<<"In "<<std::hex<<(PGMController	*)(*b)<<std::dec<<std::endl;
+					
 					if(!bindings.unbound_var_count){
 
 						update_reduction_mode(input_object);
