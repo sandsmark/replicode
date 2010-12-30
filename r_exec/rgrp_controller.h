@@ -58,7 +58,6 @@ namespace	r_exec{
 		RGroup	*rgrp;
 		std::vector<P<View> >	pending_inputs;	//	stored before the controller becomes activated (i.e. before its parent fires) and flushed in upon activation.
 
-		void	reduce(r_exec::View	*input);	//	convenience.
 		void	inject_productions(BindingMap	*bindings,uint8	reduction_mode);
 
 		std::list<P<PMonitor> >		p_monitors;
@@ -78,7 +77,7 @@ namespace	r_exec{
 		void	fire(BindingMap	*bindings,uint8		reduction_mode);
 		
 		//	Called back by monitors.
-		void	add_outcome(PMonitor	*m,bool	success,float32	confidence);
+		void	add_outcome(PMonitor	*m,bool	success,float32	confidence)	const;
 
 		void	add_monitor(PMonitor		*m);
 		void	remove_monitor(PMonitor		*m);

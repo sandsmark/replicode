@@ -51,6 +51,8 @@ namespace	r_exec{
 		FwdController	*controller;
 		uint64			expected_time_high;
 		uint64			expected_time_low;
+
+		CriticalSection	successCS;
 		bool			success;	//	set to true when a match (positive or negative) for the target was found in due time.
 	public:
 		P<Code>	target;	//	mk.pred.
@@ -58,34 +60,35 @@ namespace	r_exec{
 		PMonitor(FwdController	*c,Code	*target,uint64	expected_time,uint64	time_tolerance);
 
 		bool	is_alive();
-		bool	take_input(r_exec::View	*input);
+		void	take_input(r_exec::View	*input);
 		void	update();	//	called by monitoring jobs.
 	};
 
-	//	Monitors a set of goals, each held by g monitors.
+	//	Monitors a set of goals.
 	//	Held by forward controllers.
 	//	When all the goals are matched (no unbound variableleft), propagate to its parent monitor (instantiate).
 	//	If there is none, register a succes for the goal that came in the tail rgrp.
+	//	tsc enforced by time jobs.
 	class	GSMonitor:
 	public	BindingOverlay{
 	private:
-		Model			*inv_model;
-		P<GSMonitor>	parent;
-
+		Model					*inv_model;
+		P<GSMonitor>			parent;
 		std::vector<P<Code>	>	goals;
+
+		bool						master;		//	true means the monitor allocates the family.
+		std::vector<GSMonitor	*>	*family;	//	holds offsprings; when one monitor dies the family is killed.
 
 		uint64	tsc;
 
-		static	void	KillSubGoals(Code	*mk_goal);
-		static	void	KillSuperGoals(Code	*mk_goal);
-		static	void	KillRelatedGoals(Code	*mk_goal);
+		void	update_reduction_mode(Code	*input_object);
 
-		void	propagate_success();
 		void	propagate_failure();
+		void	kill_family();
 
 		void	inject_success(Code	*g,float32	confidence);
 		void	inject_failure(Code	*g,float32	confidence);
-		void	inject_outcome(Code	*fact,Code	*marker,uint64	t);
+		void	inject_outcome(Code	*fact,Code	*marker,uint64	t);	//	convenience.
 	public:
 		GSMonitor(Model	*inv_model,FwdController	*c,GSMonitor	*parent,RGroup	*group,BindingMap	*bindings,uint8	reduction_mode);
 		GSMonitor(GSMonitor	*original);
@@ -97,7 +100,8 @@ namespace	r_exec{
 		void	reduce(r_exec::View	*input);
 		void	update();	//	called by monitoring jobs.
 
-		void	instantiate();	//	injects facts->goals->target in the model's output groups.
+		void	instantiate();												//	injects facts->mk.goal->target in the model's output groups; called on the head r-group.
+		void	instantiate(BindingMap	*bindings,uint8	reduction_mode);	//	same as above, propagates from head to tail r-groups.
 
 		void	set_goals(std::vector<Code	*>	&goals);
 

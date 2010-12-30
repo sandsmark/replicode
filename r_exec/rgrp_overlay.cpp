@@ -94,6 +94,8 @@ namespace	r_exec{
 
 				if(val.asFloat()<min	||	val.asFloat()>max)
 					discard_bindings=true;	//	at least one value differs from an existing binding.
+				else
+					no_binding_needed=true;
 				return;
 			}
 
@@ -111,7 +113,11 @@ namespace	r_exec{
 
 					uint64	vt=Utils::GetTimestamp(&v[0]);
 					uint64	now=Now();
-					uint64	delta_t=now-vt;
+					uint64	delta_t;
+					if(now>vt)
+						delta_t=now-vt;
+					else
+						delta_t=vt-now;
 					uint64	min=delta_t*(1-multiplier);
 					uint64	max=delta_t*(1+multiplier);
 					uint64	t=Utils::GetTimestamp(&value_source->code(value_index));
@@ -121,6 +127,8 @@ namespace	r_exec{
 						t=t-now;
 					if(t<min	||	t>max)
 						discard_bindings=true;	//	the value differs from an existing binding.
+					else
+						no_binding_needed=true;
 					return;
 				}case	Atom::STRING:	//	tolerance is not used.
 					for(uint16	i=0;i<=value_source->code(value_index).getAtomCount();++i){
@@ -131,6 +139,7 @@ namespace	r_exec{
 							return;
 						}
 					}
+					no_binding_needed=true;
 					return;
 				case	Atom::OBJECT:	//	tolerance is used to compare numerical structure members.
 					for(uint16	i=0;i<=value_source->code(value_index).getAtomCount();++i){
@@ -151,6 +160,7 @@ namespace	r_exec{
 							return;
 						}
 					}
+					no_binding_needed=true;
 					return;
 				}
 			}
@@ -163,16 +173,17 @@ namespace	r_exec{
 		}case	Atom::R_PTR:{
 
 			Code	*variable_object=variable_source->get_reference(var.asIndex());
-			Code	*val=value_source->get_reference(value_index);
 			Code	*v=bindings.objects[variable_object];
 			if(v){
 			
-				if(v!=val)
+				if(v!=value_source)
 					discard_bindings=true;	//	at least one value differs from an existing binding.
+				else
+					no_binding_needed=true;
 				return;
 			}
 
-			bindings.bind_object(variable_object,val);
+			bindings.bind_object(variable_object,value_source);
 			last_bound_variable_objects.push_back(variable_object);
 			break;
 		}
@@ -201,38 +212,39 @@ namespace	r_exec{
 		//		remove the binder from this overlay.
 		//	if no more unbound values, fire and kill the overlay.
 
-		if(!is_alive())
-			return;
-
 		reductionCS.enter();
-		last_bound_variable_objects.clear();
-		last_bound_code_variables.clear();
-		discard_bindings=false;
+		if(alive){
 
-		std::list<P<View> >::const_iterator	b;
-		for(b=binders.begin();b!=binders.end();++b){	//	binders called sequentially (at most one can bind an input).
+			last_bound_variable_objects.clear();
+			last_bound_code_variables.clear();
+			discard_bindings=false;
+			no_binding_needed=false;
 
-			((PGMController	*)(*b)->controller)->take_input(input,this);
-			if(discard_bindings)
-				break;
-			if(last_bound_variable_objects.size()	||	last_bound_code_variables.size()){	//	at least one variable was bound.
+			std::list<P<View> >::const_iterator	b;
+			for(b=binders.begin();b!=binders.end();++b){	//	binders called sequentially (at most one can bind an input).
 
-				FwdOverlay	*offspring=new	FwdOverlay(this);
-				controller->add(offspring);
+				((PGMController	*)(*b)->controller)->take_input(input,this);
+				if(discard_bindings)
+					break;
+				if(no_binding_needed	||	last_bound_variable_objects.size()	||	last_bound_code_variables.size()){	//	at least one variable was bound.
 
-				if(input->object->get_sim())
-					reduction_mode|=RDX_MODE_SIMULATION;
-				if(input->object->get_asmp())
-					reduction_mode|=RDX_MODE_ASSUMPTION;
+					FwdOverlay	*offspring=new	FwdOverlay(this);
+					controller->add(offspring);
 
-				if(!bindings.unbound_var_count){
+					if(input->object->get_sim())
+						reduction_mode|=RDX_MODE_SIMULATION;
+					if(input->object->get_asmp())
+						reduction_mode|=RDX_MODE_ASSUMPTION;
 
-					kill();
-					controller->remove(this);
-					((RGRPMasterOverlay	*)controller)->fire(&bindings,reduction_mode);
-				}else
-					binders.erase(b);
-				break;
+					if(!bindings.unbound_var_count){
+
+						kill();
+						controller->remove(this);
+						((FwdController	*)controller)->fire(&bindings,reduction_mode);
+					}else
+						binders.erase(b);
+					break;
+				}
 			}
 		}
 		reductionCS.leave();
@@ -240,51 +252,36 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	RGRPMasterOverlay::RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,BindingMap	*bindings,uint8	reduction_mode):_Controller<Overlay>(){	//	when bindings==NULL, called by the controller of the head of the model.
-
-		controller=c;
-		alive=true;
-
-		tsc=Utils::GetTimestamp<Code>(mdl,FMD_TSC);
-
-		FwdOverlay	*m=new	FwdOverlay(this,rgrp,bindings,reduction_mode);	//	master overlay (birth_time=Now()).
-		overlays.push_back(m);
+	InvOverlay::InvOverlay(InvController	*c):RGRPOverlay(c),success(false){
 	}
 
-	RGRPMasterOverlay::~RGRPMasterOverlay(){
+	InvOverlay::~InvOverlay(){
 	}
 
-	void	RGRPMasterOverlay::reduce(r_exec::View	*input){
+	void	InvOverlay::bind(Code	*value_source,uint16	value_index,Code	*variable_source,uint16	variable_index){	//	the object being bound may contain unbound variables.
 
-		overlayCS.enter();
+		Atom	var=variable_source->code(variable_index);	//	variable_source is an ipgm (binder); variable_index points to the variable defined in its tpl args.
+		switch(var.getDescriptor()){
+		case	Atom::NUMERICAL_VARIABLE:{
 
-		if(tsc>0){	// kill all overlays older than tsc.
+			Atom	val=value_source->code(value_index);
+			bindings.atoms[var]=val;
+			break;
+		}case	Atom::STRUCTURAL_VARIABLE:{	//	value_index points to the head of an embedded structure.
+			
+			std::vector<Atom>	val;
+			for(uint16	i=0;i<=value_source->code(value_index).getAtomCount();++i)
+				val.push_back(value_source->code(value_index+i));
+			bindings.structures[var]=val;
+			break;
+		}case	Atom::R_PTR:{
 
-			uint64	now=Now();
-			std::list<P<_Overlay> >::iterator	o=++overlays.begin();
-			for(;o!=overlays.end();){	// start from the first overlay (master, oldest), and erase all of them that are older than tsc.
-
-				if(now-((FwdOverlay	*)(*o))->birth_time>tsc){
-					
-					((FwdOverlay	*)(*o))->kill();
-					o=overlays.erase(o);
-				}else
-					break;
-			}
+			Code	*variable_object=variable_source->get_reference(var.asIndex());
+			bindings.objects[variable_object]=value_source;
+			break;
+		}
 		}
 
-		std::list<P<_Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o){
-
-			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
-			_Mem::Get()->pushReductionJob(j);
-		}
-
-		overlayCS.leave();
-	}
-
-	void	RGRPMasterOverlay::fire(BindingMap	*bindings,uint8	reduction_mode){	//	add one master overlay to the group's children' controller.
-
-		((FwdController	*)controller)->fire(bindings,reduction_mode);
+		success=true;
 	}
 }

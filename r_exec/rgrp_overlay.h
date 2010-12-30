@@ -66,6 +66,7 @@ namespace	r_exec{
 		std::vector<Code	*>	last_bound_variable_objects;
 		std::vector<Atom>		last_bound_code_variables;
 		bool					discard_bindings;
+		bool					no_binding_needed;
 		uint8					reduction_mode;	//	initialized by a master overlay.
 
 		BindingOverlay(__Controller	*c,RGroup	*group,BindingMap	*bindings,uint8	reduction_mode);
@@ -73,37 +74,37 @@ namespace	r_exec{
 	public:
 		virtual	~BindingOverlay();
 
+		uint64	get_birth_time()	const{	return	birth_time;	}
+
 		void	bind(Code	*value_source,uint16	value_index,Code	*variable_source,uint16	variable_index);
 	};
 
-	class	FwdController;
-	class	RGRPMasterOverlay;
-
 	class	r_exec_dll	FwdOverlay:
 	public	BindingOverlay{
-	friend	class	RGRPMasterOverlay;
-	private:
-		FwdOverlay(__Controller	*c,RGroup	*group,BindingMap	*bindings,uint8	reduction_mode);
+	private:		
 		FwdOverlay(FwdOverlay	*original);
 	public:
+		FwdOverlay(__Controller	*c,RGroup	*group,BindingMap	*bindings,uint8	reduction_mode);
 		~FwdOverlay();
 
 		void	reduce(r_exec::View	*input);
 	};
 
-	//	Master r-group overlays.
-	//	Acts as a sub-controller.
-	//	See FwdController comments.
-	class	r_exec_dll	RGRPMasterOverlay:
-	public	_Controller<Overlay>{
-	friend	class	FwdController;
-	private:
-		RGRPMasterOverlay(FwdController	*c,Code	*mdl,RGroup	*rgrp,BindingMap	*bindings,uint8	reduction_mode);
-	public:
-		~RGRPMasterOverlay();
+	class	InvController;
 
-		void	reduce(r_exec::View	*input);
-		void	fire(BindingMap	*bindings,uint8	reduction_mode);
+	//	Mere convenience to enable _subst to call the controller back (bind()).
+	//	Used by inverse controllers' take_input().
+	class	InvOverlay:
+	public	RGRPOverlay{
+	public:
+		bool	success;	//	true means one binder matched.
+
+		InvOverlay(InvController	*c);
+		~InvOverlay();
+
+		BindingMap	*get_bindings(){	return	&bindings;	}
+
+		void	bind(Code	*value_source,uint16	value_index,Code	*variable_source,uint16	variable_index);
 	};
 }
 

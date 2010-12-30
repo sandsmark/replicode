@@ -77,7 +77,10 @@ namespace	r_exec{
 		UNORDERED_MAP<Code	*,P<Code> >::const_iterator	o;
 		for(o=source->objects.begin();o!=source->objects.end();++o){
 
-			if(!objects.insert(std::pair<Code	*,P<Code> >(o->first,o->second)).second){
+			UNORDERED_MAP<Code	*,P<Code> >::const_iterator	e=objects.find(o->first);
+			if(e==objects.end())	//	add new binding.
+				objects[o->first]=o->second;
+			else	if(!objects[o->first]){	//	bind existing variable to provided value.
 
 				objects[o->first]=o->second;
 				--unbound_var_count;
@@ -86,7 +89,10 @@ namespace	r_exec{
 		UNORDERED_MAP<Atom,Atom>::const_iterator	a;
 		for(a=source->atoms.begin();a!=source->atoms.end();++a){
 
-			if(!atoms.insert(std::pair<Atom,Atom>(a->first,a->second)).second){
+			UNORDERED_MAP<Atom,Atom>::const_iterator	e=atoms.find(a->first);
+			if(e==atoms.end())	//	add new binding.
+				atoms[a->first]=a->second;
+			else	if(!atoms[a->first]){	//	bind existing variable to provided value.
 
 				atoms[a->first]=a->second;
 				--unbound_var_count;
@@ -95,7 +101,10 @@ namespace	r_exec{
 		UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	s;
 		for(s=source->structures.begin();s!=source->structures.end();++s){
 
-			if(!structures.insert(std::pair<Atom,std::vector<Atom> >(s->first,s->second)).second){
+			UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	e=structures.find(s->first);
+			if(e==structures.end())	//	add new binding.
+				structures[s->first]=s->second;
+			else	if(!structures[s->first].size()){	//	bind existing variable to provided value.
 
 				structures[s->first]=s->second;
 				--unbound_var_count;
@@ -156,7 +165,7 @@ namespace	r_exec{
 		if(original->code(0).asOpcode()==Opcodes::Var){
 
 			UNORDERED_MAP<Code	*,P<Code> >::const_iterator	b=objects.find(original);
-			if(b!=objects.end())
+			if(b!=objects.end()	&&	b->second!=NULL)
 				return	b->second;
 			else
 				return	original;	//	no registered value; original is left unbound.

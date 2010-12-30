@@ -29,4 +29,23 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace	r_exec{
+
+	inline	void	GSMonitor::kill_family(){
+
+		if(family)
+			for(uint16	i=0;i<family->size();++i){
+
+				GSMonitor	*m=(*family)[i];
+				m->kill();
+				controller->remove(m);
+			}
+	}
+
+	inline	void	GSMonitor::update_reduction_mode(Code	*input_object){
+
+		if(input_object->get_sim())
+			reduction_mode|=RDX_MODE_SIMULATION;
+		if(input_object->get_asmp())
+			reduction_mode|=RDX_MODE_ASSUMPTION;
+	}
 }

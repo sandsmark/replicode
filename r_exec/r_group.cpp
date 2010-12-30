@@ -231,63 +231,15 @@ namespace	r_exec{
 
 	void	RGroup::instantiate_goals(std::vector<Code	*>	*initial_goals,GSMonitor	*initial_monitor,uint8	reduction_mode,Code	*inv_model,BindingMap	*bindings){	//	instantiates goals and propagates in one single thread; starts in InvController::take_input().
 
-		uint16	ntf_group_set_index=inv_model->code(MD_NTF_GRPS).asIndex();
-		uint16	ntf_group_count=inv_model->code(ntf_group_set_index).getAtomCount();
-
-		uint64	now=Now();
-
-		GSMonitor	*gs_monitor;
-
-		if(initial_monitor){
-
-			std::vector<Code	*>	new_goals;
-
-			//	Build new objects and their respective new goal markers.
-			UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
-			for(v=other_views.begin();v!=other_views.end();++v){	//	we are only interested in objects and markers.
-
-				Code	*original=v->second->object;
-				Code	*bound_object=bindings->bind_object(original);
-				Code	*goal=factory::Object::MkGoal(bound_object,inv_model,1);
-				new_goals.push_back(goal);
-
-				std::vector<Code	*>	sub_goals;
-				for(uint16	i=0;i<initial_goals->size();++i){	//	build sub-goal markers for the new goal.
-				
-					Code	*mk_sub_goal=factory::Object::MkSubGoal((*initial_goals)[i],goal,1);
-					sub_goals.push_back(mk_sub_goal);
-				}
-
-				for(uint16	i=1;i<=ntf_group_count;++i){	//	inject the sub-goal markers in the model's notification groups.
-
-					Code	*ntf_group=inv_model->get_reference(inv_model->code(ntf_group_set_index+i).asIndex());
-					View	*view;
-
-					for(uint16	i=0;i<sub_goals.size();++i){
-
-						view=new	View(true,now,1,_Mem::Get()->get_goal_res(),ntf_group,this,sub_goals[i]);
-						_Mem::Get()->inject(view);
-					}
-				}
-			}
-
-			gs_monitor=new	GSMonitor((Model	*)inv_model,controller,initial_monitor,this,bindings,reduction_mode);	//	bindings are according to the new goals.
-			gs_monitor->set_goals(new_goals);
-
-			if(parent)	//	propagate.
-				parent->instantiate_goals(&new_goals,gs_monitor,reduction_mode,inv_model,bindings);
-		}else{	
-		
-			gs_monitor=new	GSMonitor((Model	*)inv_model,controller,initial_monitor,this,bindings,reduction_mode);	//	original bindings.
+		GSMonitor	*gs_monitor=new	GSMonitor((Model	*)inv_model,controller,initial_monitor,this,bindings,reduction_mode);
+		if(!initial_monitor)	//	tail.
 			gs_monitor->set_goals(*initial_goals);
 
-			if(parent)	//	propagate.
-				parent->instantiate_goals(initial_goals,gs_monitor,reduction_mode,inv_model,bindings);
-		}
-
 		controller->add_monitor(gs_monitor);
-		
+
 		if(!parent)
 			gs_monitor->instantiate();
+		else	//	propagate.
+			parent->instantiate_goals(initial_goals,gs_monitor,reduction_mode,inv_model,bindings);
 	}
 }

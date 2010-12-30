@@ -29,6 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"model.h"
+#include	"mem.h"
 
 
 namespace	r_exec{
@@ -57,9 +58,29 @@ namespace	r_exec{
 
 		return	success_count/((float32)output_count);
 	}
-	
+
 	float32	Model::get_failure_rate()	const{
 
 		return	failure_count/((float32)output_count);
+	}
+
+	void	Model::inject_opposite(Code	*fact)	const{
+
+		uint64	now=Now();
+		uint16	out_group_set_index=code(MD_OUT_GRPS).asIndex();
+		uint16	out_group_count=code(out_group_set_index).getAtomCount();
+
+		Code	*f;
+		if(fact->code(0).asOpcode()==Opcodes::Fact)
+			f=factory::Object::AntiFact(fact->get_reference(0),now,1,1);
+		else
+			f=factory::Object::Fact(fact->get_reference(0),now,1,1);
+
+		for(uint16	i=1;i<=out_group_count;++i){	//	inject the negative findings in the ouptut groups.
+
+			Code	*out_group=get_reference(code(out_group_set_index+i).asIndex());
+			View	*view=new	View(true,now,1,1,out_group,NULL,f);
+			_Mem::Get()->inject(view);
+		}
 	}
 }

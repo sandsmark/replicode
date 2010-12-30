@@ -44,13 +44,6 @@ namespace	r_exec{
 		return	rgrp;
 	}
 
-	inline	void	FwdController::reduce(r_exec::View	*input){
-
-		std::list<P<_Overlay> >::iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o)	//	pass the input to all master overlays.
-			(*o)->reduce(input);
-	}
-
 	inline	void	FwdController::add_monitor(PMonitor	*m){
 
 		p_monitorsCS.enter();

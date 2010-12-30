@@ -36,7 +36,7 @@
 
 namespace	r_exec{
 
-	//	Model implementation.
+	//	Model implementation for both forward and inverse models.
 	//	This class keeps track of the success rate.
 	//	Model performance is expressed in markers (mk.success and mk.failure); it is not to be queried from instances of this class.
 	class	r_exec_dll	Model:
@@ -54,6 +54,8 @@ namespace	r_exec{
 		void	register_outcome(bool	measurement,float32	confidence);	//	registers an outcome and return the success rate: measurement==true means success, failure otherwise.
 		float32	get_success_rate()	const;
 		float32	get_failure_rate()	const;
+
+		void	inject_opposite(Code	*fact)	const;	//	injects the negation of what was expected (fact); called by monitors' update().
 	};
 }
 

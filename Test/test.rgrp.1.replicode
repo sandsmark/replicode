@@ -173,7 +173,7 @@ i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us SILENT 1)
 ; 3
 ; inject one goal in stdin.
 ; make sure no object injected here gets in the forward model (here sln=0;
-; alternatively we could have set another input group for the inverse model).
+; alternatively we could have the inverse model take its inputs from another group than stdin).
 
 inject_goal:(pgm |[] |[] []
    (inj []
@@ -186,7 +186,7 @@ inject_goal:(pgm |[] |[] []
    )
    (inj []
       goal:(mk.goal goal_target nil 1)
-      [SYNC_FRONT now 0 1 stdin nil]
+      [SYNC_FRONT now 1 1 stdin nil]
    )
    (inj []
       (fact goal now 1 1)
@@ -195,9 +195,9 @@ inject_goal:(pgm |[] |[] []
 1)
 |[]
 
-i_inject_goal:(ipgm inject_goal |[] RUN_ONCE 120000us SILENT 1)
+i_inject_goal:(ipgm inject_goal |[] RUN_ONCE 140000us SILENT 1)
 []
-   [SYNC_FRONT now 0 2 root nil 1]
+   [SYNC_FRONT now 0 2 root nil 0]
 
 ; the goal (mk.goal (fact (mk.val a_variable hold cup 1) 160000us 1) imd0 1) is produced.
 ; the goal is monitored and this produces a failure, i.e. (|fact (mk.success ...)), since no such input exists at the specified time,
@@ -214,7 +214,7 @@ prb_catch_goal:(pgm
 |[]
 []
    []
-      (ptn goal:(mk.goal target:(fact ::) ::) |[])
+      (ptn (fact goal:(mk.goal target:(fact ::) ::) ::) |[])
    |[]
    |[]
 []
@@ -238,13 +238,13 @@ i_prb_catch_goal:(ipgm prb_catch_goal |[] RUN_ALWAYS 0us SILENT 1)
 grab:(pgm |[]
 []
    []
-      (ptn goal:(mk.goal (fact (mk.val hand hold what: ::) when: ::) ::) |[])
+      (ptn (fact goal:(mk.goal (fact (mk.val hand hold what: ::) when: ::) ::) ::) |[])
    |[]
    |[]
 []
    (inj []
       target:(mk.val hand hold what 1)
-      [SYNC_FRONT now 1 1 stdin nil]
+      [SYNC_FRONT now 0 1 stdin nil]
    )
    (inj []
       (fact target when 1 1)
@@ -255,7 +255,7 @@ grab:(pgm |[]
 
 i_grab:(ipgm grab |[] RUN_ALWAYS 0us NOTIFY 1)
 []
-   [SYNC_FRONT now 0 forever root nil 0]
+   [SYNC_FRONT now 0 forever root nil 1]
 
    
 ; simulation of a hand-moving device: when the goal "have the hand at position P" is issued, simulates the performance of "move hand to P".
@@ -263,13 +263,13 @@ i_grab:(ipgm grab |[] RUN_ALWAYS 0us NOTIFY 1)
 move:(pgm |[]
 []
    []
-      (ptn goal:(mk.goal (fact (mk.val hand position where: ::) when: ::) ::) |[])
+      (ptn (fact goal:(mk.goal (fact (mk.val hand position where: ::) when: ::) ::) ::) |[])
    |[]
    |[]
 []
    (inj []
       target:(mk.val hand position where 1)
-      [SYNC_FRONT now 1 1 stdin nil]
+      [SYNC_FRONT now 0 1 stdin nil]
    )
    (inj []
       (fact target when 1 1)
@@ -280,4 +280,4 @@ move:(pgm |[]
 
 i_move:(ipgm move |[] RUN_ALWAYS 0us NOTIFY 1)
 []
-   [SYNC_FRONT now 0 forever root nil 0]
+   [SYNC_FRONT now 0 forever root nil 1]

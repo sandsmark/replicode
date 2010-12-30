@@ -48,50 +48,36 @@ namespace	r_exec{
 		return	controller->is_alive();
 	}
 
-	bool	PMonitor::take_input(r_exec::View	*input){	//	executed in the same thread as for FwdController::take_input().
+	void	PMonitor::take_input(r_exec::View	*input){	//	executed (a) in the same thread as for FwdController::take_input() or, (b) in the same thread as FwdController::inject_productions().
 
 		if(Any::Equal(input->object->get_reference(0),target->get_reference(0)->get_reference(0))){	//	first, check the objects pointed to by the facts.
 
 			uint64	occurrence_time=Utils::GetTimestamp<Code>(input->object,FACT_TIME);	//	input->object is either a fact or a |fact.
 			if(expected_time_low<=occurrence_time	&&	expected_time_high>=occurrence_time){
 
-				if(input->object->code(0)==target->get_reference(0)->code(0)){	//	positive match: expected a fact or |fact and got a fact or a |fact.
-
+				if(input->object->code(0)==target->get_reference(0)->code(0))	//	positive match: expected a fact or |fact and got a fact or a |fact.
 					controller->add_outcome(this,true,input->object->code(FACT_CFD).asFloat());
-					success=true;
-					return	true;	//	the caller will remove the monitor from its list (will not take any more inputs).
-				}else{															//	negative match: expected a fact or |fact and got a |fact or a fact.
-
+				else															//	negative match: expected a fact or |fact and got a |fact or a fact.
 					controller->add_outcome(this,false,input->object->code(FACT_CFD).asFloat());
-					success=true;
-					return	false;	//	stays in the controller's monitors list (will take more inputs).
-				}
+
+				successCS.enter();
+				success=true;
+				successCS.leave();
 			}
 		}
-		return	false;
 	}
 
-	void	PMonitor::update(){
+	void	PMonitor::update(){	//	executed by a time core, upon reaching the expected time of occurrence of the target of a pred/asmp.
 
-		if(!success){	//	received nothing matching the target's object so far (neither positively nor negatively).
+		bool	s;
+		successCS.enter();
+		s=success;
+		successCS.leave();
 
-			uint64	now=Now();
-			Code	*f;	//	generate the opposite of the target's fact (negative findings).
-			if(target->get_reference(0)->code(0).asOpcode()==Opcodes::Fact)
-				f=factory::Object::AntiFact(target->get_reference(0)->get_reference(0),now,1,1);
-			else
-				f=factory::Object::Fact(target->get_reference(0)->get_reference(0),now,1,1);
+		if(!s){	//	received nothing matching the target's object so far (neither positively nor negatively).
 
-			Code	*fwd_model=controller->get_rgrp()->get_fwd_model();
-			uint16	out_group_set_index=fwd_model->code(MD_OUT_GRPS).asIndex();
-			uint16	out_group_count=fwd_model->code(out_group_set_index).getAtomCount();
-
-			for(uint16	i=1;i<=out_group_count;++i){	//	inject the negative findings in the ouptut groups.
-
-				Code	*out_group=fwd_model->get_reference(fwd_model->code(out_group_set_index+i).asIndex());
-				View	*view=new	View(true,now,1,1,out_group,NULL,f);	//	inject in stdin: TODO: allow specifying the destination group.
-				_Mem::Get()->inject(view);
-			}
+			Model	*fwd_model=(Model	*)controller->get_rgrp()->get_fwd_model();
+			fwd_model->inject_opposite(target->get_reference(0));
 
 			controller->add_outcome(this,false,1);
 			controller->remove_monitor(this);
@@ -100,68 +86,8 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	//	N.B.: when a super-goal changes saliency, use the sln propagation to replicate to sub-goals; but not the other way around.
+	//	N.B.: when a super-goal changes saliency, use the sln propagation to replicate to sub-goals; but not the other way around. Needs sub-goals though.
 	//	N.B.: shall a goal become non salient, this has no effect on its monitors, if any.
-
-	void	GSMonitor::KillSubGoals(Code	*mk_goal){	//	recursively kill all the target's sub-goals and their related monitors.
-
-		mk_goal->acq_markers();
-		std::list<Code	*>::const_iterator	mk;
-		for(mk=mk_goal->markers.begin();mk!=mk_goal->markers.end();++mk){
-
-			if((*mk)->code(0).asOpcode()==Opcodes::MkSubGoal){
-
-				Code	*sub_goal=(*mk)->get_reference(1);
-				if(mk_goal==sub_goal)
-					continue;
-				KillSubGoals(sub_goal);
-				sub_goal->kill();
-			}
-		}
-		mk_goal->rel_markers();
-	}
-
-	void	GSMonitor::KillSuperGoals(Code	*mk_goal){	//	recursively kill all the target's super-goals and their related monitors.
-
-		mk_goal->acq_markers();
-		std::list<Code	*>::const_iterator	mk;
-		for(mk=mk_goal->markers.begin();mk!=mk_goal->markers.end();++mk){
-
-			if((*mk)->code(0).asOpcode()==Opcodes::MkSubGoal){
-
-				Code	*super_goal=(*mk)->get_reference(0);
-				if(mk_goal==super_goal)
-					continue;
-				KillSuperGoals(super_goal);
-				super_goal->kill();
-			}
-		}
-		mk_goal->rel_markers();
-	}
-
-	void	GSMonitor::KillRelatedGoals(Code	*mk_goal){	//	recursively kill all the target's sub- and super-goals and their related monitors.
-
-		mk_goal->acq_markers();
-		std::list<Code	*>::const_iterator	mk;
-		for(mk=mk_goal->markers.begin();mk!=mk_goal->markers.end();++mk){
-
-			if((*mk)->code(0).asOpcode()==Opcodes::MkSubGoal){
-
-				Code	*sub_goal=(*mk)->get_reference(1);
-				Code	*super_goal=(*mk)->get_reference(0);
-				if(mk_goal==sub_goal){
-
-					KillSuperGoals(super_goal);
-					super_goal->kill();
-				}else{
-
-					KillSubGoals(sub_goal);
-					sub_goal->kill();
-				}
-			}
-		}
-		mk_goal->rel_markers();
-	}
 
 	GSMonitor::GSMonitor(Model			*inv_model,
 						 FwdController	*c,
@@ -171,110 +97,107 @@ namespace	r_exec{
 						 uint8			reduction_mode):BindingOverlay(c,group,bindings,reduction_mode),
 														inv_model(inv_model),
 														parent(parent),
-														tsc(0){
+														tsc(0),
+														master(false),
+														family(NULL){
 	}
 
-	GSMonitor::GSMonitor(GSMonitor	*original):BindingOverlay(original){
+	GSMonitor::GSMonitor(GSMonitor	*original):BindingOverlay(original),master(false){
 
 		parent=original->parent;
 		inv_model=original->inv_model;
 		goals=original->goals;
 		tsc=original->tsc;
+		family=original->family;
 	}
 
 	GSMonitor::~GSMonitor(){
+
+		if(master)
+			delete	family;
 	}
 
-	void	GSMonitor::reduce(r_exec::View	*input){	//	return true => the monitor is removed from its controller.
+	void	GSMonitor::reduce(r_exec::View	*input){	//	called by reduction cores; never called on tail monitors.
 
-		if(!is_alive())
+		if(!goals.size())	//	not instantiated yet.
 			return;
 
 		Code	*input_object=input->object;
-		if(input_object->code(0).asOpcode()==Opcodes::AntiFact	&&
-			input_object->get_reference(0)->code(0).asOpcode()==Opcodes::MkSuccess){	//	check if we got a |fact->mk.success->one_of_our_goals: if yes, propagate failure to the parent.
-
-			for(uint32	i=0;i<goals.size();++i){	
-
-				if(goals[i]==input_object->get_reference(0)){
-
-					propagate_failure();
-					controller->remove(this);
-					return;
-				}
-			}
-		}
+		if(input_object->code(0).asOpcode()!=Opcodes::Fact	&&	input_object->code(0).asOpcode()!=Opcodes::AntiFact)	//	discard everything but facts and |facts.
+			return;
 
 		reductionCS.enter();
-		last_bound_variable_objects.clear();
-		last_bound_code_variables.clear();
-		discard_bindings=false;
+		if(alive){
 
-		std::list<P<View> >::const_iterator	b;
-		for(b=binders.begin();b!=binders.end();++b){	//	binders called sequentially (at most one can bind an input).
+			last_bound_variable_objects.clear();
+			last_bound_code_variables.clear();
+			discard_bindings=false;
+			no_binding_needed=false;
 
-			((PGMController	*)(*b)->controller)->take_input(input,this);	//	language constraint: abstraction programs shall not define constraints on facts' timings.
-			if(discard_bindings)
-				break;
-			if(last_bound_variable_objects.size()	||	last_bound_code_variables.size()){	//	at least one variable was bound.
+			std::list<P<View> >::const_iterator	b;
+			for(b=binders.begin();b!=binders.end();++b){	//	binders called sequentially (at most one can bind an input).
+				if(parent->parent==NULL)
+					std::cout<<"A "<<std::hex<<(PGMController	*)(*b)<<std::dec<<" "<<bindings.unbound_var_count<<std::endl;
+				((PGMController	*)(*b)->controller)->take_input(input,this);	//	language constraint: abstraction programs shall not define constraints on facts' timings.
+				if(parent->parent==NULL)
+					std::cout<<"B "<<std::hex<<(PGMController	*)(*b)<<std::dec<<" "<<bindings.unbound_var_count<<std::endl;
+				if(discard_bindings){std::cout<<std::hex<<(PGMController	*)(*b)<<std::dec<<" Discard\n";
+				break;}
+				if(no_binding_needed	||	last_bound_variable_objects.size()	||	last_bound_code_variables.size()){	//	at least one variable was bound.
+					if(parent->parent==NULL)
+						std::cout<<"In "<<std::hex<<(PGMController	*)(*b)<<std::dec<<std::endl;
+					if(!bindings.unbound_var_count){
 
-				GSMonitor	*offspring=new	GSMonitor(this);
-				((FwdController	*)controller)->add_monitor(offspring);
-				_Mem::Get()->pushTimeJob(new	MonitoringJob<GSMonitor>(offspring,Now()+offspring->get_tsc()));
+						update_reduction_mode(input_object);
 
-				if(input_object->get_sim())
-					reduction_mode|=RDX_MODE_SIMULATION;
-				if(input_object->get_asmp())
-					reduction_mode|=RDX_MODE_ASSUMPTION;
+						if(parent==NULL){	//	tail.
 
-				if(!bindings.unbound_var_count){
+							for(uint32	i=0;i<goals.size();++i)
+								inject_success(goals[i],1);
+						}else
+							parent->instantiate(&bindings,reduction_mode);
+						
+						kill_family();
+					}else{
 
-					if(parent!=NULL)
-						parent->instantiate();
-					else
-						propagate_success();
-					
-					kill();
-					controller->remove(this);
-				}else
-					binders.erase(b);
-				break;
+						GSMonitor	*offspring=new	GSMonitor(this);
+						((FwdController	*)controller)->add_monitor(offspring);
+						family->push_back(offspring);
+						_Mem::Get()->pushTimeJob(new	MonitoringJob<GSMonitor>(offspring,Now()+offspring->get_tsc()));
+
+						update_reduction_mode(input_object);
+
+						binders.erase(b);
+					}
+					break;
+				}
 			}
 		}
 		reductionCS.leave();
 	}
 
-	void	GSMonitor::propagate_success(){
+	void	GSMonitor::update(){	//	occurs upon reaching the tsc; if still alive, that means that no success nor failure has been registered so far for some of the goals.
+
+		if(!is_alive())
+			return;
+
+		for(uint32	i=0;i<goals.size();++i){
+
+			goals[i]->kill();
+			inject_failure(goals[i],1);
+		}
+
+		propagate_failure();
 
 		for(uint32	i=0;i<goals.size();++i)
-			inject_success(goals[i],1);
+			inv_model->inject_opposite(goals[i]->get_reference(0));
 	}
 
 	void	GSMonitor::propagate_failure(){
 
-		if(!is_alive())
-			return;
-
-		for(uint32	i=0;i<goals.size();++i)	
-			goals[i]->kill();
-
+		kill_family();
 		if(parent!=NULL)
 			parent->propagate_failure();
-		else{
-
-			for(uint32	i=0;i<goals.size();++i)
-				inject_failure(goals[i],1);
-		}
-
-		kill();
-	}
-
-	void	GSMonitor::update(){	//	occurs upon reaching the tsc.
-
-		if(!is_alive())
-			return;
-
-		propagate_failure();
 	}
 
 	void	GSMonitor::inject_success(Code	*g,float32	confidence){
@@ -332,10 +255,29 @@ namespace	r_exec{
 
 	void	GSMonitor::instantiate(){
 
+		family=new	std::vector<GSMonitor	*>();
+		master=true;
+		family->push_back(this);
+
 		uint64	now=Now();
+
 		if(parent!=NULL){
 
 			RGroup	*rgrp=get_rgrp();
+
+			//	Build new objects and their respective new goal markers.
+			UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
+			for(v=rgrp->other_views.begin();v!=rgrp->other_views.end();++v){	//	we are only interested in objects and markers.
+
+				Code	*original=v->second->object;
+				Code	*bound_object=bindings.bind_object(original);
+				Code	*goal=factory::Object::MkGoal(bound_object,inv_model,1);
+				goals.push_back(goal);
+				uint64	dt=Utils::GetTimestamp<Code>(goal->get_reference(0),FACT_TIME)-now;
+				if(tsc<dt)
+					tsc=dt;
+			}
+
 			uint16	out_group_set_index=inv_model->code(MD_OUT_GRPS).asIndex();
 			uint16	out_group_count=inv_model->code(out_group_set_index).getAtomCount();
 
@@ -367,6 +309,13 @@ namespace	r_exec{
 		}
 
 		_Mem::Get()->pushTimeJob(new	MonitoringJob<GSMonitor>(this,now+get_tsc()));
+	}
+
+	void	GSMonitor::instantiate(BindingMap	*bindings,uint8	reduction_mode){
+
+		this->bindings.add(bindings);
+		this->reduction_mode=reduction_mode;
+		instantiate();
 	}
 
 	Code	*GSMonitor::get_mk_sim(Code	*object)	const{

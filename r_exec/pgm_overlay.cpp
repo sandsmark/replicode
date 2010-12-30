@@ -553,8 +553,13 @@ namespace	r_exec{
 						}
 						}
 						binder_val_index+=VAL_HLD_ARITY;
-					}else	//	binding mode: _var is of class val_hld and holds an existing variable.
-						source->bind((Code	*)object,_val.getIndex(),_var.getObject(),_var.getIndex()+1);
+					}else{	//	binding mode: _var is of class val_hld and holds an existing variable.
+						
+						if(object!=_val.getObject())
+							source->bind(_val.getObject(),_val.getIndex(),_var.getObject(),_var.getIndex()+1);
+						else
+							source->bind((Code	*)object,_val.getIndex(),_var.getObject(),_var.getIndex()+1);
+					}
 
 					if(mk_rdx){
 
