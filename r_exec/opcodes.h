@@ -70,7 +70,6 @@ namespace	r_exec{
 		static	uint16	MkHyp;
 		static	uint16	MkSim;
 		static	uint16	MkAsmp;
-		static	uint16	MkSubGoal;
 
 		static	uint16	MkRdx;
 		static	uint16	MkAntiRdx;

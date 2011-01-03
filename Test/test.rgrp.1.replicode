@@ -6,7 +6,7 @@
 ; populate each r-group, i.e. inject objects in the r-groups: they are abstracted by the ipgm in abst_grp (see i_abst_pgm1).
 ; after 90ms, the model is built and projected onto stdin (see build_model) so it gets inputs from there (like any program).
 ; after 100 ms (i.e. the upr of abst_grp), the r-groups are no longer projected in abst_grp, this switches abstraction off.
-; caveat: do not define constriants on facts' timings in abstraction programs.
+; caveat: do not define constraints on facts' timings in abstraction programs.
 ;
 ; 2 - forward chaining:
 ; after 120ms, inject samples in stdin: the r-groups will reduce them and produce predictions (mk.pred).
@@ -79,6 +79,32 @@ RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever abst_grp nil 1]
 
+abst_pgm3:(pgm
+[]
+   (ptn val1:(val_hld ::) |[])
+   (ptn val2:(val_hld ::) |[])
+   (ptn val3:(val_hld ::) |[])
+[]
+   []
+      (ptn f:(fact in:(mk.val : color ::) ::) |[])
+   |[]
+   |[]
+[]
+   (subst [in.obj val1])
+   (subst [in.val val2])
+   (subst [f.time val3])
+1
+)
+|[]
+
+i_abst_pgm3:(ipgm abst_pgm3 []
+   (val_hld 0)
+   (val_hld 0.10236)
+   (val_hld 0.20472)
+RUN_ALWAYS 0us SILENT 1)
+[]
+   [SYNC_FRONT now 0 forever abst_grp nil 1]
+
 ; build the model: first the r-groups, then their population.
 
 r_grp1:(std_rgrp 0 0 0 0)
@@ -99,6 +125,13 @@ hand_holds_cup:(mk.val hand hold cup 1)
 |[]
 
 (fact hand_holds_cup 0us 1 1)
+[]
+   [SYNC_STATE now 1 1 r_grp1 nil]
+
+cup_col:(mk.val cup color (vec3 1 1 1) 1)
+|[]
+
+(fact cup_col 0us 1 1)
 []
    [SYNC_STATE now 1 1 r_grp1 nil]
 
@@ -139,6 +172,10 @@ i_build_model:(ipgm build_model |[] RUN_ONCE 90000us SILENT 1)
 inject_inputs:(pgm |[] |[] []
    (inj []
       (fact hand_holds_cup now 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact cup_col now 1 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
    (inj []
@@ -195,7 +232,7 @@ inject_goal:(pgm |[] |[] []
 1)
 |[]
 
-i_inject_goal:(ipgm inject_goal |[] RUN_ONCE 140000us SILENT 1)
+i_inject_goal:(ipgm inject_goal |[] RUN_ONCE 140000us NOTIFY 1)
 []
    [SYNC_FRONT now 0 2 root nil 1]
 
@@ -233,7 +270,8 @@ i_prb_catch_goal:(ipgm prb_catch_goal |[] RUN_ALWAYS 0us SILENT 1)
 ; in an operational setup, the pgms below would send command to the devices instead of injecting what
 ; the devices would have answered.
 
-; simulation of a grasping device: when the goal "hold the cup" is issued, simulates the performance of "grab cup".
+; simulation of a grasping device: when the goal "hold the cup" is issued, simulates the performance of "grab cup";
+; also reports the color of the cup.
 
 grab:(pgm |[]
 []
@@ -248,6 +286,10 @@ grab:(pgm |[]
    )
    (inj []
       (fact target when 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact cup_col when 1 1)
       [SYNC_FRONT now 1 1 stdin nil]
    )
 1)

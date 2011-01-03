@@ -50,10 +50,9 @@
 ; mapping high-level markers -> r-code
 !class (mk.pred (_obj {obj: mdl:fmd cfd:nb}))
 !class (mk.goal (_obj {obj: mdl:imd}))
-!class (mk.sim (_obj {obj: mdl:}))
+!class (mk.sim (_obj {obj: src:}))
 !class (mk.hyp (_obj obj:))
-!class (mk.asmp (_obj {obj: mdl: cfd:nb}))
-!class (mk.sgoal (_obj {prnt: chld:}))
+!class (mk.asmp (_obj {obj: src: cfd:nb}))
 !class (mk.success (_obj {obj: p_rate:nb n_rate:nb}))
 
 ; mapping operator opcodes -> r-atoms

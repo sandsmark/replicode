@@ -35,10 +35,6 @@
 #include	"r_group.h"
 
 
-#define	RDX_MODE_REGULAR	0
-#define	RDX_MODE_SIMULATION	1
-#define	RDX_MODE_ASSUMPTION	2
-
 namespace	r_exec{
 
 	//	Unifies FwdOverlay, GSMonitor and _InvOverlay.

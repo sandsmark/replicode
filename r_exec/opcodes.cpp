@@ -61,7 +61,6 @@ namespace	r_exec{
 	uint16	Opcodes::MkHyp;
 	uint16	Opcodes::MkSim;
 	uint16	Opcodes::MkAsmp;
-	uint16	Opcodes::MkSubGoal;
 
 	uint16	Opcodes::MkRdx;
 	uint16	Opcodes::MkAntiRdx;

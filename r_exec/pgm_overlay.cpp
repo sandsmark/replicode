@@ -168,10 +168,10 @@ namespace	r_exec{
 		return	original;
 	}
 
-	InputLessPGMOverlay::InputLessPGMOverlay():Overlay(){	//	used for constructing PGMOverlay offsprings.
+	InputLessPGMOverlay::InputLessPGMOverlay():Overlay(),reduction_mode(RDX_MODE_REGULAR),confidence(1){	//	used for constructing PGMOverlay offsprings.
 	}
 
-	InputLessPGMOverlay::InputLessPGMOverlay(Controller	*c):Overlay(c),value_commit_index(0){
+	InputLessPGMOverlay::InputLessPGMOverlay(Controller	*c):Overlay(c),value_commit_index(0),reduction_mode(RDX_MODE_REGULAR),confidence(1){
 
 		//	copy the original pgm code.
 		pgm_code_size=getObject()->get_reference(0)->code_size();
@@ -325,7 +325,10 @@ namespace	r_exec{
 						arg1.copy(object,0);
 //						arg1.trace();
 //						object->trace();
-						productions.push_back(_Mem::Get()->check_existence(object));
+						if((reduction_mode	&	RDX_MODE_SIMULATION)	||	(reduction_mode	&	RDX_MODE_ASSUMPTION))
+							productions.push_back(object);	//	object may be a duplicate: it will be tagged with a mk.sim/mk.asmp.
+						else
+							productions.push_back(_Mem::Get()->check_existence(object));
 					}
 					patch_code(index,Atom::ProductionPointer(productions.size()-1));
 
@@ -389,6 +392,20 @@ namespace	r_exec{
 					view->code(VIEW_ORG)=Atom::RPointer(1);
 
 					_Mem::Get()->inject(view);
+
+					if(reduction_mode	&	RDX_MODE_SIMULATION){
+
+						Code	*mk_sim=factory::Object::MkSim(object,((Controller	*)controller)->getObject()->get_reference(0),1);
+						View	*mk_view=new	View(view->get_sync(),now,view->get_sln(),view->get_res(),view->get_host(),getView()->get_host(),mk_sim);
+						_Mem::Get()->inject(mk_view);
+					}
+
+					if(reduction_mode	&	RDX_MODE_ASSUMPTION){
+
+						Code	*mk_asmp=factory::Object::MkAsmp(object,((Controller	*)controller)->getObject()->get_reference(0),confidence,1);
+						View	*mk_view=new	View(view->get_sync(),now,view->get_sln(),view->get_res(),view->get_host(),getView()->get_host(),mk_asmp);
+						_Mem::Get()->inject(mk_view);
+					}
 
 					if(mk_rdx){
 
@@ -746,6 +763,9 @@ namespace	r_exec{
 		for(uint16	i=1;i<=pattern_count;++i)
 			input_pattern_indices.push_back(pgm_code[pattern_set_index+i].asIndex());
 
+		reduction_mode=RDX_MODE_REGULAR;
+		confidence=1;
+
 		birth_time=Now();
 	}
 
@@ -827,9 +847,24 @@ namespace	r_exec{
 
 		if(alive){
 
+			uint8	old_reduction_mode=reduction_mode;
+			float32	old_confidence=confidence;
 			uint16	input_index;
+			bool	sim=false;
+			Code	*mk_asmp=input->object->get_asmp();
+			if(input->object->get_hyp()	||	input->object->get_sim())
+				sim=true;
 			switch(match(input,input_index)){
 			case	SUCCESS:
+				if(sim)
+					reduction_mode|=RDX_MODE_SIMULATION;
+				if(mk_asmp){
+
+					reduction_mode|=RDX_MODE_ASSUMPTION;
+					float32	cfd=mk_asmp->code(MK_ASMP_CFD).asFloat();
+					if(confidence>cfd)
+						confidence=cfd;
+				}
 				if(input_pattern_indices.size()==0){	//	all patterns matched.
 
 					if(check_timings()	&&	check_guards()	&&	inject_productions(NULL)){
@@ -838,12 +873,16 @@ namespace	r_exec{
 						controller->remove(this);
 						return;
 					}else{
+						reduction_mode=old_reduction_mode;
+						confidence=old_confidence;
 						rollback();
 						return;
 					}
 				}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
 
 					PGMOverlay	*offspring=new	PGMOverlay(this,input_index,value_commit_index);
+					offspring->reduction_mode=old_reduction_mode;
+					offspring->confidence=old_confidence;
 					controller->add(offspring);
 					commit();
 					return;

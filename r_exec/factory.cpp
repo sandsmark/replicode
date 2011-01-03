@@ -157,14 +157,14 @@ namespace	r_exec{
 			return	f;
 		}
 
-		Code	*Object::MkSim(Code	*object,Code	*model,float32	psln_thr){
+		Code	*Object::MkSim(Code	*object,Code	*source,float32	psln_thr){
 
 			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkSim,MK_SIM_ARITY));
 			mk->code(MK_SIM_OBJ)=Atom::RPointer(0);
-			mk->code(MK_SIM_MDL)=Atom::RPointer(1);
+			mk->code(MK_SIM_SRC)=Atom::RPointer(1);
 			mk->code(MK_SIM_ARITY)=Atom::Float(psln_thr);
 			mk->set_reference(0,object);
-			mk->set_reference(1,model);
+			mk->set_reference(1,source);
 			return	mk;
 		}
 
@@ -180,15 +180,15 @@ namespace	r_exec{
 			return	mk;
 		}
 
-		Code	*Object::MkAsmp(Code	*object,Code	*model,float32	confidence,float32	psln_thr){
+		Code	*Object::MkAsmp(Code	*object,Code	*source,float32	confidence,float32	psln_thr){
 
 			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkAsmp,MK_ASMP_ARITY));
 			mk->code(MK_ASMP_OBJ)=Atom::RPointer(0);
-			mk->code(MK_ASMP_MDL)=Atom::RPointer(1);
+			mk->code(MK_ASMP_SRC)=Atom::RPointer(1);
 			mk->code(MK_ASMP_CFD)=Atom::Float(confidence);
 			mk->code(MK_ASMP_ARITY)=Atom::Float(psln_thr);
 			mk->set_reference(0,object);
-			mk->set_reference(1,model);
+			mk->set_reference(1,source);
 			return	mk;
 		}
 
@@ -200,17 +200,6 @@ namespace	r_exec{
 			mk->code(MK_GOAL_ARITY)=Atom::Float(psln_thr);
 			mk->set_reference(0,object);
 			mk->set_reference(1,model);
-			return	mk;
-		}
-
-		Code	*Object::MkSubGoal(Code	*parent,Code	*child,float32	psln_thr){
-
-			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkSubGoal,MK_SUB_GOAL_ARITY));
-			mk->code(MK_SUB_GOAL_PARENT)=Atom::RPointer(0);
-			mk->code(MK_SUB_GOAL_CHILD)=Atom::RPointer(1);
-			mk->code(MK_SUB_GOAL_ARITY)=Atom::Float(psln_thr);
-			mk->set_reference(0,parent);
-			mk->set_reference(1,child);
 			return	mk;
 		}
 

@@ -32,6 +32,7 @@
 #define	monitor_h
 
 #include	"model.h"
+#include	"pgm_overlay.h"
 #include	"rgrp_overlay.h"
 
 

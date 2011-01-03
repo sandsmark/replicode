@@ -138,7 +138,7 @@
 #define	MK_PRED_ARITY	4
 
 #define	MK_ASMP_OBJ		1
-#define	MK_ASMP_MDL		2
+#define	MK_ASMP_SRC		2
 #define	MK_ASMP_CFD		3
 #define	MK_ASMP_ARITY	4
 
@@ -150,12 +150,8 @@
 #define	MK_HYP_ARITY	2
 
 #define	MK_SIM_OBJ		1
-#define	MK_SIM_MDL		2
+#define	MK_SIM_SRC		2
 #define	MK_SIM_ARITY	3
-
-#define	MK_SUB_GOAL_PARENT	1
-#define	MK_SUB_GOAL_CHILD	2
-#define	MK_SUB_GOAL_ARITY	3
 
 #define	MK_SUCCESS_OBJ		1
 #define	MK_SUCCESS_P_RATE	2

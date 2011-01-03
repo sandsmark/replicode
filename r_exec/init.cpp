@@ -150,7 +150,6 @@ namespace	r_exec{
 		Opcodes::MkHyp=_Opcodes.find("mk.hyp")->second;
 		Opcodes::MkSim=_Opcodes.find("mk.sim")->second;
 		Opcodes::MkAsmp=_Opcodes.find("mk.asmp")->second;
-		Opcodes::MkSubGoal=_Opcodes.find("mk.sgoal")->second;
 
 		Opcodes::MkRdx=_Opcodes.find("mk.rdx")->second;
 		Opcodes::MkAntiRdx=_Opcodes.find("mk.|rdx")->second;

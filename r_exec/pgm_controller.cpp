@@ -86,6 +86,17 @@ namespace	r_exec{
 	PGMController::PGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view){
 
 		overlays.push_back(new	PGMOverlay(this));
+
+		Code	*pgm=getObject()->get_reference(0);
+		uint16	prod_index=pgm->code(PGM_PRODS).asIndex();
+		uint16	command_count=pgm->code(prod_index).getAtomCount();
+		can_sim=true;
+		for(uint16	i=1;i<=command_count;++i)
+			if(pgm->code(pgm->code(prod_index+i).asIndex()+1).asOpcode()!=Opcodes::Inject){
+
+				can_sim=false;
+				break;
+			}
 	}
 
 	PGMController::~PGMController(){
@@ -111,6 +122,11 @@ namespace	r_exec{
 	}
 
 	void	PGMController::take_input(r_exec::View	*input,Controller	*origin){	//	origin unused since there is no recursion here.
+
+		if(input->object->get_pred()	||	input->object->get_goal())
+			return;
+		if(!can_sim	&&	(input->object->get_hyp()	||	input->object->get_sim()	||	input->object->get_asmp()))
+			return;
 
 		overlayCS.enter();
 
@@ -173,6 +189,9 @@ namespace	r_exec{
 	}
 
 	void	AntiPGMController::take_input(r_exec::View	*input,Controller	*origin){
+
+		if(input->object->get_pred()	||	input->object->get_goal())
+			return;
 
 		if(this!=origin)
 			overlayCS.enter();

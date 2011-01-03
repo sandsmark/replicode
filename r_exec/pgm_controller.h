@@ -48,6 +48,8 @@ namespace	r_exec{
 	// Controller for programs with inputs.
 	class	r_exec_dll	PGMController:
 	public	_PGMController{
+	protected:
+		bool	can_sim;	//	true for pgm that contain only injection commands.
 	public:
 		PGMController(r_code::View	*ipgm_view);
 		virtual	~PGMController();

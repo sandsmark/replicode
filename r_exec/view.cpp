@@ -86,7 +86,7 @@ namespace	r_exec{
 		object=view->object;
 		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom));
 		_code[VIEW_OID].atom=GetOID();
-		references[0]=group;		//	host.
+		references[0]=group;	//	host.
 		references[1]=source;	//	origin.
 
 		//	morph ctrl values; NB: res is not morphed as it is expressed as a multiple of the upr.

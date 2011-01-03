@@ -133,6 +133,11 @@ namespace	r_exec{
 		return	(Group	*)references[host_reference];
 	}
 
+	inline	bool	View::get_sync(){
+
+		return	code(VIEW_SYNC).asBoolean();
+	}
+
 	inline	float32	View::get_res(){
 
 		return	code(VIEW_RES).asFloat();

@@ -34,6 +34,10 @@
 #include	"overlay.h"
 
 
+#define	RDX_MODE_REGULAR	0
+#define	RDX_MODE_SIMULATION	1
+#define	RDX_MODE_ASSUMPTION	2
+
 namespace	r_exec{
 
 	class	PGMController;
@@ -55,6 +59,9 @@ namespace	r_exec{
 		//		a ptr to an input if the result is a pattern input.
 		Atom	*pgm_code;
 		uint16	pgm_code_size;
+
+		uint8	reduction_mode;	//	applies to pgm with inputs only; set to RDX_MODE_SIMULATION/RDX_MODE_ASSUMPTION whenever at least one successful input is tagged with hyp/sim or asmp markers - requires can_sim()==true.
+		float32	confidence;		//	applies to pgm with inputs only; set to the lowest confidence of the input assumptions.
 
 		r_code::vector<Atom>	values;			//	value array.
 		std::vector<P<Code> >	productions;	//	receives the results of ins, inj and eje; views are retrieved (fvw) or built (reduction) in the value array.
@@ -98,7 +105,7 @@ namespace	r_exec{
 
 		virtual	void	reset();	//	reset to original state (pristine copy of the pgm code and empty value set).
 
-		bool	inject_productions(Controller	*origin);	//	return true upon successful evaluation.
+		bool	inject_productions(Controller	*origin);	//	return true upon successful evaluation; no existence check in simulation mode.
 	};
 
 	//	Overlay with inputs.

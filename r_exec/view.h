@@ -118,6 +118,7 @@ namespace	r_exec{
 
 		Group	*get_host();
 
+		bool	get_sync();
 		float32	get_res();
 		float32	get_sln();
 		float32	get_act();
