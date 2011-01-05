@@ -42,7 +42,8 @@ public:
 
 	void	reduce(r_exec::View	*input){
 
-		correlator->get_output();
+		CorrelatorOutput	*output=correlator->get_output();
+		output->trace();
 		
 		//	TODO: exploit the output: build rgroups and inject data therein.
 

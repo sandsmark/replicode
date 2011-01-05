@@ -1,142 +1,68 @@
 !load ../Test/std.replicode
 
+!def (std_grp _upr _sln_thr _act_thr _vis_thr _ntf_grps) (grp _upr _sln_thr _act_thr _vis_thr 1 0 1 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 _ntf_grps 1); c-salient and c-active.
+!def (std_rgrp _upr _sln_thr _act_thr _vis_thr) (rgrp _upr _sln_thr _act_thr _vis_thr 1 0 0 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 |[] 1); c-salient, non c-active.
+
 !class (vec3 x:nb y:nb z:nb)
+!class (rgb r:nb g:nb b:nb)
 !class (noise (_obj :))
 !class (episode_end (_obj time:us))
 
-root:(grp
-1; upr
-0.5; sln_thr
-0.4; act_thr
-0; vis_thr
-1; c_sln
-0; c_sln_thr
-1; c_act
-0; c_act_thr
-0; dcy_per
-0; dcy_tgt
-1; dcy_prd
-0; dcy_auto
-1; sln_chg_thr
-1; sln_chg_prd
-1; act_chg_thr
-1; act_chg_prd
-0; avg_sln
-0; high_sln
-0; low_sln
-0; avg_act
-0; high_act
-0; low_act
-1; high_sln_thr
-0; low_sln_thr
-1; sln_ntf_prd
-1; high_act_thr
-0; low_act_thr
-1; act_ntf_prd
-0; ntf_new
-0; low_res_thr
-[nil]; ntf_grps
-1; psln_thr
-)
+root:(std_grp 1 0 0 0 [nil])
 []
    [SYNC_FRONT now 0 forever nil nil COV_OFF 0]
 
-stdin:(grp
-1; upr
-0; sln_thr
-0; act_thr
-0; vis_thr
-1; c_sln
-0; c_sln_thr
-1; c_act
-0; c_act_thr
-0; dcy_per
-1; dcy_tgt
-0; dcy_prd
-0; dcy_auto
-1; sln_chg_thr
-1; sln_chg_prd
-1; act_chg_thr
-1; act_chg_prd
-0; avg_sln
-0; high_sln
-0; low_sln
-0; avg_act
-0; high_act
-0; low_act
-1; high_sln_thr
-0; low_sln_thr
-1; sln_ntf_prd
-1; high_act_thr
-0; low_act_thr
-1; act_ntf_prd
-0; ntf_new
-0; low_res_thr
-[root]; ntf_grps
-1; psln_thr
-)
+stdin:(std_grp 1 0 0 0 |[])
 []
    [SYNC_FRONT now 0 forever root nil COV_OFF 0]
 
-stdout:(grp
-1; upr
-0; sln_thr
-0; act_thr
-0; vis_thr
-1; c_sln
-0; c_sln_thr
-1; c_act
-0; c_act_thr
-0; dcy_per
-0; dcy_tgt
-1; dcy_prd
-0; dcy_auto
-1; sln_chg_thr
-1; sln_chg_prd
-1; act_chg_thr
-1; act_chg_prd
-0; avg_sln
-0; high_sln
-0; low_sln
-0; avg_act
-0; high_act
-0; low_act
-1; high_sln_thr
-0; low_sln_thr
-1; sln_ntf_prd
-1; high_act_thr
-0; low_act_thr
-1; act_ntf_prd
-0; ntf_new
-0; low_res_thr
-[nil]; ntf_grps
-1; psln_thr
-)
+stdout:(std_grp 1 0 0 0 |[])
 []
    [SYNC_FRONT now 0 forever root nil COV_OFF 0]
 
-position:(ent 1)
-[]
-   [SYNC_FRONT now 1 forever root nil]
-   
-attachment:(ent 1)
-[]
-   [SYNC_FRONT now 1 forever root nil]
 
-self:(ent
-1; psln_thr
-)
-[]
-   [SYNC_FRONT now 1 forever root nil]
+; ontology
 
-human:(ent 1)
-[]
-   [SYNC_FRONT now 1 forever root nil]
-
-self_hand:(ent 1)
+self:(ent 1)
 []
    [SYNC_FRONT now 1 forever root nil]
 
 cup:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+hand:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+position:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+color:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+size:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+large:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+medium:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+small:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+hold:(ent 1)
+[]
+   [SYNC_FRONT now 1 forever root nil]
+
+human:(ent 1)
 []
    [SYNC_FRONT now 1 forever root nil]

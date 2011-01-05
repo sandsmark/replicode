@@ -56,4 +56,26 @@ namespace	r_code{
 		s+=buffer;
 		return	s;
 	}
+
+	void	Utils::SetString(Atom	*iptr,const	std::string	&s){
+
+		uint8	l=(uint8)s.length();
+		uint8	index=0;
+		iptr[index]=Atom::String(l);
+		uint32	_st=0;
+		int8	shift=0;
+		for(uint8	i=0;i<l;++i){
+			
+			_st|=s[i]<<shift;
+			shift+=8;
+			if(shift==32){
+
+				iptr[++index]=_st;
+				_st=0;
+				shift=0;
+			}
+		}
+		if(l%4)
+			iptr[++index]=_st;
+	}
 }

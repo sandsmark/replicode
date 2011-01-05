@@ -57,6 +57,7 @@ namespace	r_code{
 		}
 
 		static	std::string	GetString(const	Atom	*iptr);
+		static	void	SetString(Atom	*iptr,const	std::string	&s);
 
 		template<class	O>	static	std::string	GetString(O	*object,uint16	index){
 
@@ -68,6 +69,28 @@ namespace	r_code{
 			buffer[char_count]=0;
 			s+=buffer;
 			return	s;
+		}
+
+		template<class	O>	static	void	SetString(O	*object,uint16	index,const	std::string	&s){
+
+			uint16	s_index=object->code(index).asIndex();
+			uint8	l=(uint8)s.length();
+			object->code(s_index)=Atom::String(l);
+			uint32	_st=0;
+			int8	shift=0;
+			for(uint8	i=0;i<l;++i){
+				
+				_st|=s[i]<<shift;
+				shift+=8;
+				if(shift==32){
+
+					object->code(++s_index)=_st;
+					_st=0;
+					shift=0;
+				}
+			}
+			if(l%4)
+				object->code(++s_index)=_st;
 		}
 	};
 }
