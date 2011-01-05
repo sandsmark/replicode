@@ -45,13 +45,17 @@ namespace	r_exec{
 		virtual	bool	update()=0;	//	return false to shutdown the reduction core.
 	};
 
-	class	r_exec_dll	ReductionJob:
+	template<class	T>	class	ReductionJob:
 	public	_ReductionJob{
 	public:
-		P<View>		input;
-		P<Overlay>	overlay;
-		ReductionJob(View	*input,Overlay	*overlay);
-		bool	update();
+		P<View>	input;
+		P<T>	target;
+		ReductionJob(View	*input,T	*target):_ReductionJob(),input(input),target(target){}
+		bool	update(){
+			
+			target->reduce(input);
+			return	true;
+		}
 	};
 
 	class	r_exec_dll	ShutdownReductionCore:

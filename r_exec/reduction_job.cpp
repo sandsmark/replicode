@@ -39,17 +39,6 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////
 
-	ReductionJob::ReductionJob(View	*input,Overlay	*overlay):_ReductionJob(),input(input),overlay(overlay){
-	}
-
-	bool	ReductionJob::update(){
-		
-		overlay->reduce(input);
-		return	true;
-	}
-
-	////////////////////////////////////////////////////////////
-
 	bool	ShutdownReductionCore::update(){
 
 		_Mem::Get()->shutdown_core();

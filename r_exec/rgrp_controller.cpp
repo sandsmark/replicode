@@ -92,7 +92,7 @@ namespace	r_exec{
 			std::list<P<_Overlay> >::const_iterator	o;
 			for(o=overlays.begin();o!=overlays.end();++o){
 
-				ReductionJob	*j=new	ReductionJob(new	View(input),*o);
+				ReductionJob<_Overlay>	*j=new	ReductionJob<_Overlay>(new	View(input),*o);
 				_Mem::Get()->pushReductionJob(j);
 			}
 		}else	//	not activated yet, or tail.
@@ -118,7 +118,7 @@ namespace	r_exec{
 			std::list<P<GSMonitor> >::const_iterator	gs;
 			for(gs=gs_monitors.begin();gs!=gs_monitors.end();++gs){
 
-				ReductionJob	*j=new	ReductionJob(new	View(input),*gs);
+				ReductionJob<GSMonitor>	*j=new	ReductionJob<GSMonitor>(new	View(input),*gs);
 				_Mem::Get()->pushReductionJob(j);
 			}
 			gs_monitorsCS.leave();
@@ -137,7 +137,7 @@ namespace	r_exec{
 			overlays.push_back(o);
 			for(uint16	i=0;i<pending_inputs.size();++i){
 
-				ReductionJob	*j=new	ReductionJob(new	View(pending_inputs[i]),o);
+				ReductionJob<FwdOverlay>	*j=new	ReductionJob<FwdOverlay>(new	View(pending_inputs[i]),o);
 				_Mem::Get()->pushReductionJob(j);
 			}
 		}

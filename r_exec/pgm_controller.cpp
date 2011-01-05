@@ -160,7 +160,7 @@ namespace	r_exec{
 		std::list<P<_Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
 
-			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
+			ReductionJob<_Overlay>	*j=new	ReductionJob<_Overlay>(new	View(input),*o);
 			_Mem::Get()->pushReductionJob(j);
 		}
 
@@ -199,7 +199,7 @@ namespace	r_exec{
 		std::list<P<_Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();++o){
 
-			ReductionJob	*j=new	ReductionJob(new	View(input),*o);
+			ReductionJob<_Overlay>	*j=new	ReductionJob<_Overlay>(new	View(input),*o);
 			_Mem::Get()->pushReductionJob(j);
 		}
 

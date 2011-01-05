@@ -340,10 +340,6 @@
 					RelativePath=".\Correlator\LstmNetwork.cpp"
 					>
 				</File>
-				<File
-					RelativePath=".\Correlator\usr_operators.cpp"
-					>
-				</File>
 			</Filter>
 		</Filter>
 		<Filter

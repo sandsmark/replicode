@@ -34,17 +34,24 @@ public:
 		std::string	episode_end="episode_end";
 		if(input->object->code(0).asOpcode()==r_exec::Metadata.getClass(episode_end)->atom.asOpcode()){
 
-			correlator->get_output();
-			//	TODO (eric): exploit the output: build rgroups and inject data therein.
-
-			//decompile(0);
-			
-			//	For now, we do not retrain the Correlator on more episodes: we build another correlator instead.
-			//	We could also implement a method (clear()) to reset the existing correlator.
-			delete	correlator;
-			correlator=new	Correlator();
+			r_exec::ReductionJob<CorrelatorController>	*j=new	r_exec::ReductionJob<CorrelatorController>(input,this);
+			r_exec::_Mem::Get()->pushReductionJob(j);
 		}else
 			correlator->take_input(input);
+	}
+
+	void	reduce(r_exec::View	*input){
+
+		correlator->get_output();
+		
+		//	TODO: exploit the output: build rgroups and inject data therein.
+
+		decompile(0);
+			
+		//	For now, we do not retrain the Correlator on more episodes: we build another correlator instead.
+		//	We could also implement a method (clear()) to reset the existing correlator.
+		delete	correlator;
+		correlator=new	Correlator();
 	}
 
 	void	decompile(uint64	time_offset){
