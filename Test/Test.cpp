@@ -111,6 +111,7 @@ int32	main(int	argc,char	**argv){
 	std::cout<<"... done\n";
 
 	srand(r_exec::Now());
+	Random::Init();
 
 	std::string	error;
 	if(!r_exec::Compile(settings.source_file_name.c_str(),error)){

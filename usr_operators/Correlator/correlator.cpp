@@ -34,8 +34,10 @@ public:
 		std::string	episode_end="episode_end";
 		if(input->object->code(0).asOpcode()==r_exec::Metadata.getClass(episode_end)->atom.asOpcode()){
 
-			r_exec::ReductionJob<CorrelatorController>	*j=new	r_exec::ReductionJob<CorrelatorController>(input,this);
-			r_exec::_Mem::Get()->pushReductionJob(j);
+			//r_exec::ReductionJob<CorrelatorController>	*j=new	r_exec::ReductionJob<CorrelatorController>(input,this);
+			//r_exec::_Mem::Get()->pushReductionJob(j);
+			CorrelatorOutput	*output=correlator->get_output();
+			output->trace();
 		}else
 			correlator->take_input(input);
 	}
@@ -51,8 +53,8 @@ public:
 			
 		//	For now, we do not retrain the Correlator on more episodes: we build another correlator instead.
 		//	We could also implement a method (clear()) to reset the existing correlator.
-		delete	correlator;
-		correlator=new	Correlator();
+		//delete	correlator;
+		//correlator=new	Correlator();
 	}
 
 	void	decompile(uint64	time_offset){

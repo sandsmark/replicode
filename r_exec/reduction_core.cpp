@@ -43,6 +43,8 @@ namespace	r_exec{
 		while(run){
 
 			P<_ReductionJob>	j=_Mem::Get()->popReductionJob();
+			if(j==NULL)
+				break;
 			run=j->update();
 			j=NULL;
 		}

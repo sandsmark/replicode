@@ -43,6 +43,8 @@ namespace	r_exec{
 		while(run){	//	enter a wait state when the rMem is suspended.
 
 			P<TimeJob>	j=_Mem::Get()->popTimeJob();
+			if(j==NULL)
+				break;
 			if(!j->is_alive()){
 
 				j=NULL;

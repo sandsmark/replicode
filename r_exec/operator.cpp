@@ -70,6 +70,9 @@ namespace	r_exec{
 			return	false;
 		}
 
+		/*Random	r;float32	rng=range[0].asFloat();
+		float32	result=r(range[0].asFloat());
+		result/=ULONG_MAX;*/
 		float32	result=(((float32)(rand()%100))/100)*range[0].asFloat();
 		index=context.setAtomicResult(Atom::Float(result));
 		return	true;

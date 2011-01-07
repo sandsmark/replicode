@@ -185,7 +185,7 @@ namespace	r_exec{
 
 		core_count=0;
 		suspension_lock=new	Event();
-		stop_sem=new	Semaphore(1,1);
+		stop_sem=new	Semaphore(0,1);
 		suspend_sem=new	Semaphore(1,1);
 
 		time_job_queue=new	PipeNN<P<TimeJob>,1024>();
@@ -281,7 +281,7 @@ namespace	r_exec{
 		if(state==SUSPENDED)
 			suspension_lock->fire();
 		state=STOPPED;
-		
+
 		uint32	i;
 		for(i=0;i<reduction_core_count;++i)
 			pushReductionJob(new	ShutdownReductionCore());
@@ -289,18 +289,12 @@ namespace	r_exec{
 			pushTimeJob(new	ShutdownTimeCore());
 		stateCS.leave();
 
-		Thread::Sleep(400);
-		core_countCS.enter();
-		stop_sem->acquire();	//	wait for the cores and delegates to terminate.
-		core_countCS.leave();
-		/*
-		if(core_count){
+		for(i=0;i<time_core_count;++i)
+			Thread::Wait(time_cores[i]);
 
-			for(uint32	i=0;i<core_count;++i)
-				stop_sem->acquire(0);
-			stop_sem->acquire();
-		}
-*/
+		for(i=0;i<reduction_core_count;++i)
+			Thread::Wait(reduction_cores[i]);
+
 		reset();
 	}
 
@@ -347,22 +341,30 @@ namespace	r_exec{
 
 	_ReductionJob	*_Mem::popReductionJob(){
 
+		if(state==STOPPED)
+			return	NULL;
 		return	reduction_job_queue->pop();
 	}
 
 	void	_Mem::pushReductionJob(_ReductionJob	*j){
 
+		if(state==STOPPED)
+			return;
 		P<_ReductionJob>	_j=j;
 		reduction_job_queue->push(_j);
 	}
 
 	TimeJob	*_Mem::popTimeJob(){
 
+		if(state==STOPPED)
+			return	NULL;
 		return	time_job_queue->pop();
 	}
 
 	void	_Mem::pushTimeJob(TimeJob	*j){
 
+		if(state==STOPPED)
+			return;
 		P<TimeJob>	_j=j;
 		time_job_queue->push(_j);
 	}

@@ -1,29 +1,26 @@
-;motor babbling episode generation.
-;cup is grabbed (attached) and this is notified out-of-sync.
-;hand moves to several new positions every 100ms.
-;cup moves to the same positions at the same frequency with a
-;slight random delay (in [0,10ms[).
-;noise is injected randomly (using a pseudo random number generator).
-;N.B.: inputs are set with an infinite resilience to retain them
-;in memory for processing by the Correlator.
-;we use value holders like vec3_holder so that the Correlator can work
-;on views'oid instead of having to examine the content of objects
-;as would be the case using (mk.val self_hand position an_embedded_vec3 1)
+; motor babbling episode generation.
+; cup is grabbed ("hold") and this is notified out-of-sync.
+; hand moves to several new positions every 100ms.
+; cup moves to the same positions at the same frequency with a
+; slight random delay (in [0,10ms[).
+; noise is injected randomly (using a pseudo random number generator).
+; N.B.: inputs are set with an infinite resilience to retain them
+; in memory for processing by the Correlator.
+; we use value holders like val so that the Correlator can work
+; on views'oid instead of having to examine the content of objects
+; as would be the case using (mk.val self_hand position an_embedded_vec3 1)
 
-;we simulate the following behavior from the I/O devices:
-;send a position p, one mk referencing p, p again, another mk, etc.
-;this is meant ot give the correlator many instances of the same objects (contexts, or lhs of patterns).
+; we simulate the following behavior from the I/O devices:
+; send a position p, one mk referencing p, p again, another mk, etc.
+; this is meant ot give the correlator many instances of the same objects (contexts, or lhs of patterns).
 
-_start:(pgm
-|[]
-|[]
-[]
+_start:(pgm |[] |[] []
    (inj []
-      init_pos:(val (vec3 0 0 0) 0 1)
+      init_pos:(val (vec3 0 0 0) 1)
       [SYNC_STATE now 1 forever stdin nil]
    )
    (inj []
-      (mk.val self_hand position init_pos 1)
+      (mk.val hand position init_pos 1)
       [SYNC_STATE now 1 forever stdin nil]
    )
    (inj []
@@ -35,26 +32,23 @@ _start:(pgm
       [SYNC_STATE now 1 forever stdin nil]
    )
    (inj []
-      (mk.val self_hand attachment cup 1)
+      (mk.val hand hold cup 1)
       [SYNC_STATE (+ now (rnd 10000)) 1 forever stdin nil]
    )
    (inj []
       (noise now 1)
       [SYNC_STATE (+ now (rnd 10000)) 1 forever stdin nil]
    )
-1
-)
+1)
 |[]
 
 i_start:(ipgm _start |[] RUN_ONCE 90000us SILENT 1)
 []
    [SYNC_FRONT now 0 1 root nil 1]
 
-hand_pos_updater:(pgm
-|[]
-[]
+hand_pos_updater:(pgm |[] []
    []
-      (ptn (mk.val self_hand position pos#val: ::) |[])
+      (ptn (mk.val hand position pos#val: ::) |[])
    |[]
    |[]
 []
@@ -63,44 +57,38 @@ hand_pos_updater:(pgm
       [SYNC_STATE now 1 forever stdin nil] 
    )
    (inj []
-      (mk.val self_hand position new_pos 1)
+      (mk.val hand position new_pos 1)
       [SYNC_STATE (+ now 10000us) 1 forever stdin nil]
    )
-1
-)
+1)
 |[]
 
 i_hand_pos_updater:(ipgm hand_pos_updater |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
-cup_pos_updater:(pgm
-|[]
-[]
+cup_pos_updater:(pgm |[] []
    []
       (ptn (mk.val cup position pos#val: ::) |[])
    |[]
    |[]
 []
    (inj []
-      new_pos:(val (+ pos.value (vec3 0 0 0.1)) 1)
+      new_pos:(val (+ pos.val (vec3 0 0 0.1)) 1)
       [SYNC_STATE now 1 forever stdin nil]
    )
    (inj []
       (mk.val cup position new_pos 1)
       [SYNC_STATE (+ now 10000us) 1 forever stdin nil]
    )
-1
-)
+1)
 |[]
 
 i_cup_pos_updater:(ipgm cup_pos_updater |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
-noise_updater:(pgm
-|[]
-[]
+noise_updater:(pgm |[] []
    []
       (ptn (noise ::) |[])
    |[]
@@ -110,19 +98,16 @@ noise_updater:(pgm
       (noise now 1)
       [SYNC_STATE (+ now (rnd 40000)) 1 forever stdin nil]
    )
-1
-)
+1)
 |[]
 
 i_noise_updater:(ipgm noise_updater |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
-grab_updater:(pgm
-|[]
-[]
+grab_updater:(pgm |[] []
    []
-      (ptn m:(mk.val : attachment ::) |[])
+      (ptn m:(mk.val : hold ::) |[])
    |[]
    |[]
 []
@@ -130,27 +115,22 @@ grab_updater:(pgm
       m
       [SYNC_STATE (+ now (rnd 50000)) 1 forever stdin nil]
    )
-1
-)
+1)
 |[]
 
 i_grab_updater:(ipgm grab_updater |[] RUN_ALWAYS 0us SILENT 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
-episode_notifier:(pgm
-|[]
-|[]
-[]
+episode_notifier:(pgm |[] |[] []
    (inj []
       (episode_end now 1)
       [SYNC_FRONT now 1 forever stdin nil]
    )
-1
-)
+1)
 |[]
 
-i_episode_notifier.(ipgm episode_notifier |[] RUN_ALWAYS 1000000us SILENT 1)
+i_episode_notifier.(ipgm episode_notifier |[] RUN_ALWAYS 1000000us NOTIFY 1)
 []
    [SYNC_FRONT now 0 forever stdin nil 1]
 
