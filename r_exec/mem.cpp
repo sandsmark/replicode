@@ -142,16 +142,16 @@ namespace	r_exec{
 	void	_Mem::start_core(){
 
 		core_countCS.enter();
-		++core_count;
-		stop_sem->acquire(0);
+		if(++core_count==1)
+			stop_sem->acquire();
 		core_countCS.leave();
 	}
 
 	void	_Mem::shutdown_core(){
 
 		core_countCS.enter();
-		--core_count;
-		stop_sem->release();
+		if(--core_count==0)
+			stop_sem->release();
 		core_countCS.leave();
 	}
 
@@ -185,7 +185,7 @@ namespace	r_exec{
 
 		core_count=0;
 		suspension_lock=new	Event();
-		stop_sem=new	Semaphore(0,1);
+		stop_sem=new	Semaphore(1,1);
 		suspend_sem=new	Semaphore(1,1);
 
 		time_job_queue=new	PipeNN<P<TimeJob>,1024>();
@@ -254,18 +254,10 @@ namespace	r_exec{
 
 		state=RUNNING;
 
-		for(i=0;i<reduction_core_count;++i){
-
-			++core_count;
-			stop_sem->acquire(0);
+		for(i=0;i<reduction_core_count;++i)
 			reduction_cores[i]->start(ReductionCore::Run);
-		}
-		for(i=0;i<time_core_count;++i){
-
-			++core_count;
-			stop_sem->acquire(0);
+		for(i=0;i<time_core_count;++i)
 			time_cores[i]->start(TimeCore::Run);
-		}
 
 		return	now;
 	}
@@ -280,13 +272,14 @@ namespace	r_exec{
 		}
 		if(state==SUSPENDED)
 			suspension_lock->fire();
-		state=STOPPED;
 
 		uint32	i;
 		for(i=0;i<reduction_core_count;++i)
 			pushReductionJob(new	ShutdownReductionCore());
 		for(i=0;i<time_core_count;++i)
 			pushTimeJob(new	ShutdownTimeCore());
+
+		state=STOPPED;
 		stateCS.leave();
 
 		for(i=0;i<time_core_count;++i)
@@ -294,6 +287,8 @@ namespace	r_exec{
 
 		for(i=0;i<reduction_core_count;++i)
 			Thread::Wait(reduction_cores[i]);
+
+		stop_sem->acquire();	//	wait for delegates.
 
 		reset();
 	}

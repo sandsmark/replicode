@@ -41,7 +41,6 @@ namespace	r_exec{
 
 	bool	ShutdownReductionCore::update(){
 
-		_Mem::Get()->shutdown_core();
 		return	false;
 	}
 

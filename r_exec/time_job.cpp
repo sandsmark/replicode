@@ -154,7 +154,6 @@ namespace	r_exec{
 
 	bool	ShutdownTimeCore::update(){
 
-		_Mem::Get()->shutdown_core();
 		return	false;
 	}
 

@@ -27,17 +27,15 @@ public:
 	}
 
 	void	take_input(r_exec::View	*input,r_exec::Controller	*origin=NULL){
-
+static	bool	once=false;if(once)return;
 		//	Inputs are all types of objects - salient or that have become salient depending on their view's sync member.
 		//	Manual filtering is needed instead of pattern-matching.
 		//	Here we take all inputs until we get an episode notification.
 		std::string	episode_end="episode_end";
 		if(input->object->code(0).asOpcode()==r_exec::Metadata.getClass(episode_end)->atom.asOpcode()){
 
-			//r_exec::ReductionJob<CorrelatorController>	*j=new	r_exec::ReductionJob<CorrelatorController>(input,this);
-			//r_exec::_Mem::Get()->pushReductionJob(j);
-			CorrelatorOutput	*output=correlator->get_output();
-			output->trace();
+			r_exec::ReductionJob<CorrelatorController>	*j=new	r_exec::ReductionJob<CorrelatorController>(input,this);
+			r_exec::_Mem::Get()->pushReductionJob(j);once=true;
 		}else
 			correlator->take_input(input);
 	}
@@ -462,6 +460,7 @@ void Correlator::extract_rules(JacobianRules& rules, uint32 episode_size) {
 	uint32 num_calls = episode_size - SLICE_SIZE;
 	rules.reserve(num_calls);
 	JacobianSlice slice(SLICE_SIZE, LSTMState(32));
+
 
 	for(int32 t = num_calls - 1; t >= 0; --t) {
 
