@@ -226,7 +226,7 @@ namespace	r_exec{
 	//		Mem::object_register: accessed by Mem::update, Mem::injectNow and Mem::deleteObject (see above).
 	template<class	O>	class	Mem:
 	public	_Mem{
-	private:
+	protected:
 		std::list<Code	*>											objects;			//	to insert in an image (getImage()); in order of injection.
 		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>	object_register;	//	to eliminate duplicates (content-wise); does not include groups.
 
