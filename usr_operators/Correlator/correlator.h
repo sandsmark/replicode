@@ -3,6 +3,9 @@
 
 #include	"../types.h"
 
+// switch to use WinEpi instead of LSTM for finding correlations
+#define USE_WINEPI
+
 
 extern	"C"{
 r_exec::Controller	dll_export	*correlator(r_code::View	*view);
@@ -17,11 +20,16 @@ r_exec::Controller	dll_export	*correlator(r_code::View	*view);
 #include	<set>
 #include	<algorithm>
 #include	<iterator>
+#include	<utility> // pair
 #include	<math.h>
 #include	<../../CoreLibrary/trunk/CoreLibrary/base.h>
 #include	<../r_code/object.h>
 
+#ifdef USE_WINEPI
+#include	"winepi.h"
+#else
 #include	"CorrelatorCore.h"
+#endif
 
 class	State:
 public	core::_Object{
@@ -82,6 +90,30 @@ public:
 	}
 };
 
+
+#ifdef USE_WINEPI
+
+//typedef uint64 timestamp_t;
+//typedef P<r_code::Code> event_t;
+typedef std::vector<std::pair<timestamp_t,event_t> > Episode;
+
+class	Correlator{
+private:
+	Episode episode;
+	size_t episode_start; // index of start of current episode
+	WinEpi winepi;
+
+public:
+	Correlator();
+
+	void take_input(r_code::View* input);
+	CorrelatorOutput* get_output(bool useEntireHistory = false);
+
+	void dump(std::ostream& out = std::cout, std::string (*oid2str)(uint32) = NULL) const;
+};
+
+#else // USE_WINEPI
+
 // Lots of typedefs, not because I'm too lazy to type "std::" all the time,
 // but because this makes it easier to change container types;
 // also, it makes the code easier to follow
@@ -118,7 +150,7 @@ private:
 	CorrelatorCore	corcor; // holds and maintains the learning core
 
 	// finds a sparse binary encoding of the provided identifier
-	// sets is_new to true iff an encoding already exists
+	// sets is_new to false iff an encoding already exists
 	// currently, the encoding is generated randomly,
 	// but in the future we may implement a better algorithm
 	enc_t encode(OID_t id, bool& is_new);
@@ -167,5 +199,6 @@ public:
 	static float64	RULE_THR; // threshold for Jacobian rule confidence
 };
 
+#endif // USE_WINEPI
 
 #endif

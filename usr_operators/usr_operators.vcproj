@@ -312,6 +312,10 @@
 					RelativePath=".\Correlator\VectorMath.h"
 					>
 				</File>
+				<File
+					RelativePath=".\Correlator\winepi.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -338,6 +342,10 @@
 				</File>
 				<File
 					RelativePath=".\Correlator\LstmNetwork.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Correlator\winepi.cpp"
 					>
 				</File>
 			</Filter>

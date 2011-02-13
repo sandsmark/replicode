@@ -47,7 +47,7 @@ static	bool	once=false;if(once)return;
 		
 		//	TODO: exploit the output: build rgroups and inject data therein.
 
-		decompile(0);
+		//decompile(0);
 			
 		//	For now, we do not retrain the Correlator on more episodes: we build another correlator instead.
 		//	We could also implement a method (clear()) to reset the existing correlator.
@@ -92,7 +92,7 @@ static	bool	once=false;if(once)return;
 			}
 		} closure(decompiler, image->code_segment.objects, object_count, time_offset);
 		char buf[33];
-		std::ofstream file((std::string("_DATA_") + itoa(rand(), buf, 10) + ".txt").c_str());
+		std::ofstream file((std::string("_DATA_") + itoa(rand(), buf, 10) + ".txt").c_str(), std::ios_base::trunc);
 		if(file.is_open())
 			correlator->dump(file, OID2string::wrapper);
 		else
@@ -136,6 +136,86 @@ r_exec::Controller	*correlator(r_code::View	*view){
 ////////////////////////////////////////////////////////////////////////////////
 
 #include	<ctime>
+
+#ifdef USE_WINEPI
+
+bool operator< (const P<r_code::Code>& x, const P<r_code::Code>& y) {
+	return x->getOID() < y->getOID();
+}
+
+Correlator::Correlator() : episode(), episode_start(0), winepi() {
+	// no-op
+}
+
+
+void Correlator::take_input(r_code::View* input) {
+
+	if(!input || !input->object)
+		return;
+
+	episode.push_back(std::pair<timestamp_t,event_t>(input->get_ijt(), input->object));
+}
+
+CorrelatorOutput* Correlator::get_output(bool useEntireHistory) {
+
+	if(episode_start == episode.size())
+		// no new inputs since last call to get_output => nothing to correlate
+		return new CorrelatorOutput;
+
+	Episode::iterator it = episode.begin();
+	if(useEntireHistory)
+		episode_start = 0;
+	std::advance(it, episode_start);
+	winepi.setSeq(it, episode.end());
+
+#	define AVG_IN_WINDOW 10
+	int window_size = AVG_IN_WINDOW * (episode.back().first - episode[episode_start].first) / (episode.size() - episode_start);
+	winepi.setParams(window_size, 0.1, 0.5, 2); // TODO: find a way to set these appropriately!
+
+	std::vector<Rule> rules;
+//	clock_t t1 = clock();
+	winepi.algorithm_1(rules); // perform the actual WinEpi algorithm
+//	clock_t t2 = clock();
+//	COUT("Total time taken: " << DIFF_CLOCK(t1,t2) << " seconds.\n");
+//	for(size_t i = 0; i < rules.size(); ++i)
+//		COUT(rules[i].toString());
+
+	CorrelatorOutput* c = new CorrelatorOutput;
+	c->states.reserve(rules.size());
+	for(size_t i = 0; i < rules.size(); ++i) {
+		Rule& rule = rules[i];
+		Pattern* p = new Pattern;
+		// LHS and RHS of rules are sorted by OID
+		std::map<int,event_t>::iterator lit = rule.lhs.G.begin(), rit = rule.rhs.G.begin();
+		while(lit != rule.lhs.G.end()) {
+			if(lit->second->getOID() == rit->second->getOID()) {
+				p->left.push_back(lit->second);
+				++lit;
+				++rit;
+			}
+			else {
+				p->right.push_back(rit->second);
+				++rit;
+			}
+		}
+		for(; rit != rule.rhs.G.end(); ++rit) {
+			p->right.push_back(rit->second);
+		}
+		p->confidence = rule.conf;
+		c->states.push_back(p);
+	}
+
+	episode_start = episode.size(); // remember where we left off
+	return c;
+}
+
+// not yet implemented
+void Correlator::dump(std::ostream& out, std::string (*oid2str)(uint32)) const {
+
+//	::dump(episode, enc2obj, out, oid2str);
+}
+
+#else // USE_WINEPI
 
 uint16	Correlator::NUM_BLOCKS		= 8;
 uint16	Correlator::CELLS_PER_BLOCK	= 1;
@@ -550,3 +630,5 @@ r_code::Code* Correlator::findBestMatch(InputIterator first, float64& bestMatch)
 
 	return object;
 }
+
+#endif // USE_WINEPI
