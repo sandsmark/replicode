@@ -31,38 +31,43 @@
 #ifndef	binding_map_h
 #define	binding_map_h
 
+#include	"../r_code/object.h"
+
+
+using	namespace	r_code;
 
 namespace	r_exec{
 
-	class	RGroup;
-
 	//	Holds three kinds of bindings (i.e. pairs variable|value).
-	class	BindingMap{
+	class	BindingMap:
+	public	_Object{
 	public:
 		UNORDERED_MAP<Code	*,P<Code> >			objects;	//	objects of class var, values are system objects.
 		UNORDERED_MAP<Atom,Atom>				atoms;		//	numerical variables, values are atoms (Atom::Float).
 		UNORDERED_MAP<Atom,std::vector<Atom> >	structures;	//	structural variables, values are structures embedded in code.
 
-		uint16	unbound_var_count;
-
 		BindingMap();
+		BindingMap(const	BindingMap	*source);
 
+		void	init(const	BindingMap	*source);
+		void	init(Code	*source);
 		void	clear();
 
-		void	init(BindingMap	*source);
-		void	init(RGroup	*source);
+		Code	*bind_object(Code	*original)	const;
+		bool	needs_binding(Code	*original)	const;
 
-		void	add(BindingMap	*source);	//	add bindings from source to this: if this has a variable v0 and source also, then bind v0 with source[v0]; if source has a variable v1 not in this, add v1.
+		Atom	get_atomic_variable(const	Code	*object,uint16	index);
+		Atom	get_structural_variable(const	Code	*object,uint16	index);
+		Code	*get_variable_object(Code	*object);
 
-		void	bind_atom(const	Atom	&var,const	Atom	&val);
-		void	bind_structure(const	Atom	&var,const	std::vector<Atom>	&val);
-		void	bind_object(Code	*var,Code	*val);
-		void	unbind_atom(const	Atom	&var);
-		void	unbind_structure(const	Atom	&var);
-		void	unbind_object(Code	*var);
+		bool	match(Code	*object,Code	*pattern);
+		bool	bind_float_variable(Atom	val,Atom	var);
+		bool	bind_boolean_variable(Atom	val,Atom	var);
+		bool	bind_structural_variable(Atom	*val,Atom	var);
+		bool	bind_object_variable(Code	*val,Code	*var);
 
-		Code	*bind_object(Code	*original);
-		bool	needs_binding(Code	*original);
+		void	copy(Code	*object,uint16	index)	const;
+		void	load(const	Code	*object);	//	icst or imdl.
 	};
 }
 

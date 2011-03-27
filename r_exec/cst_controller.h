@@ -1,4 +1,4 @@
-//	model.h
+//	cst_controller.h
 //
 //	Author: Eric Nivel
 //
@@ -28,34 +28,54 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	model_h
-#define	model_h
+#ifndef	cst_controller_h
+#define	cst_controller_h
 
-#include	"object.h"
+#include	"hlp_overlay.h"
+#include	"hlp_controller.h"
 
 
 namespace	r_exec{
 
-	//	Model implementation for both forward and inverse models.
-	//	This class keeps track of the success rate.
-	//	Model performance is expressed in markers (mk.success and mk.failure); it is not to be queried from instances of this class.
-	class	r_exec_dll	Model:
-	public	LObject,
-	public	CriticalSection{
-	private:
-		uint32	output_count;	//	number of outputs (predictions or goals) produced since the model has been used.
-		float32	success_count;	//	number of successes weighted by a confidence value.
-		float32	failure_count;	//	number of failures weighted by a confidence value.
+	class	CSTOverlay:
+	public	HLPOverlay{
+	protected:
+		uint64	birth_time;
+
+		std::vector<P<Code> >	inputs;
+
+		void	inject_instance();
+
+		CSTOverlay(const	CSTOverlay	*original);
 	public:
-		Model(r_code::Mem	*m=NULL);
-		Model(r_code::SysObject	*source,r_code::Mem	*m);
-		~Model();
+		CSTOverlay(Controller	*c,BindingMap	*bindings,uint8	reduction_mode);
+		~CSTOverlay();
 
-		void	register_outcome(bool	measurement,float32	confidence);	//	registers an outcome and return the success rate: measurement==true means success, failure otherwise.
-		float32	get_success_rate()	const;
-		float32	get_failure_rate()	const;
+		Overlay	*reduce(View	*input);
 
-		void	inject_opposite(Code	*fact)	const;	//	injects the negation of what was expected (fact); called by monitors' update().
+		void	load_patterns();
+
+		uint64	get_birth_time()	const{	return	birth_time;	}
+	};
+
+	class	CSTController:
+	public	HLPController{
+	private:
+		void	produce_goals(Code	*super_goal,BindingMap	*bm);
+		Code	*get_ntf_instance(BindingMap	*bm)	const;
+		void	add_monitor(BindingMap	*bindings,
+							Code		*goal,
+							Code		*super_goal,
+							Code		*matched_pattern,
+							uint64		expected_time_high,
+							uint64		expected_time_low);
+	public:
+		CSTController(r_code::View	*view);
+		~CSTController();
+
+		void	take_input(r_exec::View	*input);
+		void	reduce(r_exec::View	*input);
+		void	produce_goals(Code	*super_goal,BindingMap	*bm,Code	*excluded_pattern);
 	};
 }
 

@@ -245,12 +245,14 @@ namespace	r_exec{
 				result_index=index;
 				return	true;
 			}
-		case	Atom::MODEL:
 		case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
+		case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
+		case	Atom::INSTANTIATED_ANTI_PROGRAM:
+		case	Atom::COMPOSITE_STATE:
+		case	Atom::MODEL:
 		case	Atom::GROUP:
-		case	Atom::REDUCTION_GROUP:
 		case	Atom::SET:
 		case	Atom::S_SET:{
 
@@ -407,18 +409,17 @@ dereference:
 		//	c is pointing at the first atom of an object or a view.
 		switch(c[0].getDescriptor()){
 		case	Atom::OBJECT:
-		case	Atom::MODEL:
 		case	Atom::MARKER:
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
+		case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
+		case	Atom::INSTANTIATED_ANTI_PROGRAM:
+		case	Atom::COMPOSITE_STATE:
+		case	Atom::MODEL:
 			object_type=TYPE_OBJECT;
 			object=c.getObject();
 			break;
 		case	Atom::GROUP:
-		case	Atom::REDUCTION_GROUP:
-			object_type=TYPE_GROUP;
-			object=c.getObject();
-			break;
 		case	Atom::SET:		//	dynamically generated views can be sets.
 		case	Atom::S_SET:	//	views are always copied; set the object to the view's group on which to perform an operation for the view's oid.
 			if(c.data==VALUE_ARRAY)
@@ -447,8 +448,7 @@ dereference:
 		if((*this)[2].atom!=EXECUTIVE_DEVICE)
 			return	false;
 		return	(*this)[1].asOpcode()==Opcodes::Mod	||
-				(*this)[1].asOpcode()==Opcodes::Set	||
-				(*this)[1].asOpcode()==Opcodes::Subst;
+				(*this)[1].asOpcode()==Opcodes::Set;
 	}
 
 	void	Context::trace()	const{

@@ -101,7 +101,7 @@ namespace	r_exec{
 
 	bool	InjectionJob::update(){
 
-		_Mem::Get()->injectNow(view);
+		_Mem::Get()->inject(view);
 		return	true;
 	}
 
@@ -114,22 +114,7 @@ namespace	r_exec{
 
 	bool	EInjectionJob::update(){
 
-		_Mem::Get()->injectExistingObjectNow(view,view->object,view->get_host(),true);
-		return	true;
-	}
-
-	////////////////////////////////////////////////////////////
-
-	GInjectionJob::GInjectionJob(View	*v,Group	*g,Group	*h,uint64	ijt):TimeJob(ijt){
-
-		view=v;
-		group=g;
-		host=h;
-	}
-
-	bool	GInjectionJob::update(){
-
-		_Mem::Get()->injectGroupNow(view,group,host);
+		_Mem::Get()->inject_existing_object(view,view->object,view->get_host(),true);
 		return	true;
 	}
 

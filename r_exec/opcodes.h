@@ -47,6 +47,7 @@ namespace	r_exec{
 		static	uint16	GrpView;
 
 		static	uint16	Ent;
+		static	uint16	MkVal;
 
 		static	uint16	Grp;
 
@@ -56,14 +57,16 @@ namespace	r_exec{
 		static	uint16	IPgm;
 		static	uint16	Pgm;
 		static	uint16	AntiPgm;
-		static	uint16	Fmd;
-		static	uint16	Imd;
 
+		static	uint16	ICmd;
 		static	uint16	Cmd;
 
 		static	uint16	Var;
 		static	uint16	Fact;
 		static	uint16	AntiFact;
+
+		static	uint16	ICST;
+		static	uint16	IMDL;
 
 		static	uint16	MkPred;
 		static	uint16	MkGoal;
@@ -90,7 +93,6 @@ namespace	r_exec{
 		static	uint16	Eject;
 		static	uint16	Mod;
 		static	uint16	Set;
-		static	uint16	Subst;
 		static	uint16	NewClass;
 		static	uint16	DelClass;
 		static	uint16	LDC;

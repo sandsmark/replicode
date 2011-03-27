@@ -90,18 +90,20 @@ namespace	r_exec{
 			MkActChg(r_code::Mem	*m,Code	*object,float32	value);
 		};
 
-		//	Non-notification constructs: all builders rely on _Mem::buildObject().
+		//	Non-notification constructs: all builders rely on _Mem::build_object().
 		//	Their base class is O as in Mem<O>.
 		class	r_exec_dll	Object{
 		public:
-			static	Code	*Var(float32	tolerance,float32	psln_thr);
+			static	Code	*Var(float32	psln_thr);
 			static	Code	*Fact(Code	*object,uint64	time,float32	confidence,float32	psln_thr);
 			static	Code	*AntiFact(Code	*object,uint64	time,float32	confidence,float32	psln_thr);
 			static	Code	*MkSim(Code	*object,Code	*source,float32	psln_thr);
-			static	Code	*MkPred(Code	*object,Code	*model,float32	confidence,float32	psln_thr);
+			static	Code	*MkPred(Code	*object,float32	confidence,float32	psln_thr);
 			static	Code	*MkAsmp(Code	*object,Code	*source,float32	confidence,float32	psln_thr);
-			static	Code	*MkSuccess(Code	*object,float32	p_rate,float32	n_rate,float32	psln_thr);
-			static	Code	*MkGoal(Code	*object,Code	*model,float32	psln_thr);
+			static	Code	*MkSuccess(Code	*object,float32	psln_thr);
+			static	Code	*MkGoal(Code	*object,Code	*actor,float32	psln_thr);
+			static	Code	*MkRdx(Code	*imdl_fact,Code	*input,Code	*output,float32	psln_thr);	//	for mdl.
+			static	Code	*MkRdx(Code	*icst_fact,std::vector<P<Code> > *inputs,float32	psln_thr);	//	for cst.
 		};
 	}
 }

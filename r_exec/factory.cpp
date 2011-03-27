@@ -125,17 +125,16 @@ namespace	r_exec{
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		Code	*Object::Var(float32	tolerance,float32	psln_thr){
+		Code	*Object::Var(float32	psln_thr){
 
-			Code	*v=_Mem::Get()->buildObject(Atom::Object(Opcodes::Var,VAR_ARITY));
-			v->code(VAR_TOL)=Atom::Float(tolerance);
+			Code	*v=_Mem::Get()->build_object(Atom::Object(Opcodes::Var,VAR_ARITY));
 			v->code(VAR_ARITY)=Atom::Float(psln_thr);
 			return	v;
 		}
 
 		Code	*Object::Fact(Code	*object,uint64	time,float32	confidence,float32	psln_thr){
 
-			Code	*f=_Mem::Get()->buildObject(Atom::Object(Opcodes::Fact,FACT_ARITY));
+			Code	*f=_Mem::Get()->build_object(Atom::Object(Opcodes::Fact,FACT_ARITY));
 			f->code(FACT_OBJ)=Atom::RPointer(0);
 			f->code(FACT_TIME)=Atom::IPointer(FACT_ARITY+1);
 			f->code(FACT_CFD)=Atom::Float(confidence);
@@ -147,7 +146,7 @@ namespace	r_exec{
 
 		Code	*Object::AntiFact(Code	*object,uint64	time,float32	confidence,float32	psln_thr){
 
-			Code	*f=_Mem::Get()->buildObject(Atom::Object(Opcodes::AntiFact,FACT_ARITY));
+			Code	*f=_Mem::Get()->build_object(Atom::Object(Opcodes::AntiFact,FACT_ARITY));
 			f->code(FACT_OBJ)=Atom::RPointer(0);
 			f->code(FACT_TIME)=Atom::IPointer(FACT_ARITY+1);
 			f->code(FACT_CFD)=Atom::Float(confidence);
@@ -159,7 +158,7 @@ namespace	r_exec{
 
 		Code	*Object::MkSim(Code	*object,Code	*source,float32	psln_thr){
 
-			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkSim,MK_SIM_ARITY));
+			Code	*mk=_Mem::Get()->build_object(Atom::Marker(Opcodes::MkSim,MK_SIM_ARITY));
 			mk->code(MK_SIM_OBJ)=Atom::RPointer(0);
 			mk->code(MK_SIM_SRC)=Atom::RPointer(1);
 			mk->code(MK_SIM_ARITY)=Atom::Float(psln_thr);
@@ -168,21 +167,19 @@ namespace	r_exec{
 			return	mk;
 		}
 
-		Code	*Object::MkPred(Code	*object,Code	*model,float32	confidence,float32	psln_thr){
+		Code	*Object::MkPred(Code	*object,float32	confidence,float32	psln_thr){
 
-			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkPred,MK_PRED_ARITY));
+			Code	*mk=_Mem::Get()->build_object(Atom::Marker(Opcodes::MkPred,MK_PRED_ARITY));
 			mk->code(MK_PRED_OBJ)=Atom::RPointer(0);
-			mk->code(MK_PRED_FMD)=Atom::RPointer(1);
 			mk->code(MK_PRED_CFD)=Atom::Float(confidence);
 			mk->code(MK_PRED_ARITY)=Atom::Float(psln_thr);
 			mk->set_reference(0,object);
-			mk->set_reference(1,model);
 			return	mk;
 		}
 
 		Code	*Object::MkAsmp(Code	*object,Code	*source,float32	confidence,float32	psln_thr){
 
-			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkAsmp,MK_ASMP_ARITY));
+			Code	*mk=_Mem::Get()->build_object(Atom::Marker(Opcodes::MkAsmp,MK_ASMP_ARITY));
 			mk->code(MK_ASMP_OBJ)=Atom::RPointer(0);
 			mk->code(MK_ASMP_SRC)=Atom::RPointer(1);
 			mk->code(MK_ASMP_CFD)=Atom::Float(confidence);
@@ -192,23 +189,58 @@ namespace	r_exec{
 			return	mk;
 		}
 
-		Code	*Object::MkGoal(Code	*object,Code	*model,float32	psln_thr){
+		Code	*Object::MkGoal(Code	*object,Code	*actor,float32	psln_thr){
 
-			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkGoal,MK_GOAL_ARITY));
+			Code	*mk=_Mem::Get()->build_object(Atom::Marker(Opcodes::MkGoal,MK_GOAL_ARITY));
 			mk->code(MK_GOAL_OBJ)=Atom::RPointer(0);
-			mk->code(MK_GOAL_IMD)=Atom::RPointer(1);
+			mk->code(MK_GOAL_ACTR)=Atom::RPointer(1);
 			mk->code(MK_GOAL_ARITY)=Atom::Float(psln_thr);
 			mk->set_reference(0,object);
-			mk->set_reference(1,model);
+			mk->set_reference(1,actor);
 			return	mk;
 		}
 
-		Code	*Object::MkSuccess(Code	*object,float32	p_rate,float32	n_rate,float32	psln_thr){
+		Code	*Object::MkRdx(Code	*imdl_fact,Code	*input,Code	*output,float32	psln_thr){
 
-			Code	*mk=_Mem::Get()->buildObject(Atom::Marker(Opcodes::MkSuccess,MK_SUCCESS_ARITY));
+			uint16	extent_index=MK_RDX_ARITY+1;
+			Code	*mk=_Mem::Get()->build_object(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
+			mk->code(MK_RDX_CODE)=Atom::RPointer(0);				//	code.
+			mk->add_reference(imdl_fact);
+			mk->code(MK_RDX_INPUTS)=Atom::IPointer(extent_index);	//	inputs.
+			mk->code(MK_RDX_ARITY)=Atom::Float(psln_thr);
+			mk->code(extent_index++)=Atom::Set(1);					//	set of one input.
+			mk->code(extent_index++)=Atom::RPointer(1);
+			mk->add_reference(input);
+			mk->code(MK_RDX_PRODS)=Atom::IPointer(extent_index);	//	set of one production.
+			mk->code(extent_index++)=Atom::Set(1);
+			mk->code(extent_index++)=Atom::RPointer(2);
+			mk->add_reference(output);
+			return	mk;
+		}
+
+		Code	*Object::MkRdx(Code	*icst_fact,std::vector<P<Code> >	*inputs,float32	psln_thr){
+
+			uint16	extent_index=MK_RDX_ARITY+1;
+			Code	*mk=_Mem::Get()->build_object(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
+			mk->code(MK_RDX_CODE)=Atom::RPointer(0);				//	code.
+			mk->add_reference(icst_fact);
+			mk->code(MK_RDX_INPUTS)=Atom::IPointer(extent_index);	//	inputs.
+			mk->code(MK_RDX_ARITY)=Atom::Float(psln_thr);
+			mk->code(extent_index++)=Atom::Set(inputs->size());
+			for(uint16	i=1;i<=inputs->size();++i){					//	set of n inputs.
+				
+				mk->code(extent_index++)=Atom::RPointer(i);
+				mk->add_reference((*inputs)[i-1]);
+			}
+			mk->code(MK_RDX_PRODS)=Atom::IPointer(extent_index);	//	empty set of productions.
+			mk->code(extent_index++)=Atom::Set(0);
+			return	mk;
+		}
+
+		Code	*Object::MkSuccess(Code	*object,float32	psln_thr){
+
+			Code	*mk=_Mem::Get()->build_object(Atom::Marker(Opcodes::MkSuccess,MK_SUCCESS_ARITY));
 			mk->code(MK_SUCCESS_OBJ)=Atom::RPointer(0);
-			mk->code(MK_SUCCESS_P_RATE)=Atom::Float(p_rate);
-			mk->code(MK_SUCCESS_N_RATE)=Atom::Float(n_rate);
 			mk->code(MK_SUCCESS_ARITY)=Atom::Float(psln_thr);
 			mk->set_reference(0,object);
 			return	mk;

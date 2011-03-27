@@ -32,18 +32,12 @@ namespace	r_exec{
 
 	inline	void	Overlay::kill(){
 		
-		reductionCS.enter();
 		alive=false;
-		reductionCS.leave();
 	}
 
 	inline	bool	Overlay::is_alive(){
 
-		bool	_alive;
-		reductionCS.enter();
-		_alive=alive;
-		reductionCS.leave();
-		return	_alive;
+		return	alive;
 	}
 
 	inline	r_code::Code	*Overlay::getObject()	const{	
@@ -54,14 +48,6 @@ namespace	r_exec{
 	inline	r_exec::View	*Overlay::getView()	const{	
 		
 		return	((Controller	*)controller)->getView();
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	template<class	S>	_Controller<S>::_Controller():S(),__Controller(){
-	}
-
-	template<class	S>	_Controller<S>::~_Controller(){
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

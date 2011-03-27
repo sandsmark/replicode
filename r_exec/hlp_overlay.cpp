@@ -1,4 +1,4 @@
-//	r_group.inline.h
+//	hlp_overlay.cpp
 //
 //	Author: Eric Nivel
 //
@@ -28,48 +28,32 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include	"hlp_overlay.h"
+#include	"hlp_controller.h"
+#include	"mem.h"
+
+
 namespace	r_exec{
 
-	inline	RGroup::RGroup(r_code::Mem	*m):Group(m),parent(NULL),controller(NULL),substitutions(NULL){
+	HLPOverlay::HLPOverlay(Controller	*c,const	BindingMap	*bindings,uint8	reduction_mode):Overlay(c),reduction_mode(reduction_mode){
+
+		this->bindings=(BindingMap	*)bindings;
 	}
 
-	inline	RGroup::RGroup(r_code::SysObject	*source,r_code::Mem	*m):Group(source,m),parent(NULL),controller(NULL),substitutions(NULL){
+	HLPOverlay::~HLPOverlay(){
 	}
 
-	inline	RGroup::~RGroup(){
+	Code	*HLPOverlay::get_mk_sim(Code	*object)	const{
 
-		if(!parent	&&	substitutions){
-
-			delete	substitutions;
-			delete	substitutionsCS;
-		}
+		if(reduction_mode	&	RDX_MODE_SIMULATION)
+			return	factory::Object::MkSim(object,getObject(),1);
+		return	NULL;
 	}
 
-	inline	Code	*RGroup::get_fwd_model()	const{
+	Code	*HLPOverlay::get_mk_asmp(Code	*object)	const{
 
-		return	fwd_model;
-	}
-
-	inline	void	RGroup::set_fwd_model(Code	*mdl){
-
-		fwd_model=mdl;
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
-		for(v=group_views.begin();v!=group_views.end();++v)
-			((RGroup	*)v->second->object)->set_fwd_model(mdl);
-	}
-
-	inline	RGroup	*RGroup::get_parent()	const{
-
-		return	parent;
-	}
-
-	inline	FwdController	*RGroup::get_controller()	const{
-
-		return	controller;
-	}
-
-	inline	void	RGroup::set_controller(FwdController	*c){
-
-		controller=c;
+		if(reduction_mode	&	RDX_MODE_ASSUMPTION)
+			return	factory::Object::MkAsmp(object,getObject(),1,1);	//	TODO: put the right value (from where?) for the confidence member.
+		return	NULL;
 	}
 }

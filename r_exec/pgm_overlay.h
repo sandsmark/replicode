@@ -82,22 +82,6 @@ namespace	r_exec{
 		void	rollback();	//	reset the overlay to the last commited state: unpatch code and values.
 		void	commit();	//	empty the patch_indices and set value_commit_index to values.size().
 
-		typedef	struct{
-			uint16	member_index;
-			uint8	type;			//	0:numerical, 1:structural, 2:object.
-			uint16	variable_index;	//	in the vectors below.
-		}Substitution;
-
-		typedef	struct{
-			UNORDERED_MAP<Code	*,std::vector<Substitution> >	substitutions;	//	object|list of substitutions.
-			std::vector<Atom>									numerical_variables;
-			std::vector<Atom>									structural_variables;
-			std::vector<Code	*>								variable_objects;
-		}SubstitutionData;
-
-		static	Code	*AbstractObject(Code	*original,SubstitutionData	*substitution_data,bool	head=false);
-		static	bool	NeedsAbstraction(Code	*original,SubstitutionData	*substitution_data);
-
 		InputLessPGMOverlay();
 		InputLessPGMOverlay(Controller	*c);
 	public:
@@ -105,7 +89,7 @@ namespace	r_exec{
 
 		virtual	void	reset();	//	reset to original state (pristine copy of the pgm code and empty value set).
 
-		bool	inject_productions(Controller	*origin);	//	return true upon successful evaluation; no existence check in simulation mode.
+		bool	inject_productions();	//	return true upon successful evaluation; no existence check in simulation mode.
 	};
 
 	//	Overlay with inputs.
@@ -119,8 +103,6 @@ namespace	r_exec{
 	protected:
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
-
-		P<_Overlay>	source;	//	points to an instance passed when the reduction was triggered.
 
 		typedef	enum{
 			SUCCESS=0,
@@ -142,8 +124,6 @@ namespace	r_exec{
 
 		void	init();
 
-		void	_reduce(r_exec::View	*input);	//	convenience; called by the reduce() functions.
-
 		PGMOverlay(Controller	*c);
 		PGMOverlay(PGMOverlay	*original,uint16	last_input_index,uint16	value_commit_index);	//	copy from the original and rollback.
 	public:
@@ -151,13 +131,12 @@ namespace	r_exec{
 
 		void	reset();
 
-		virtual	void	reduce(r_exec::View	*input);					//	called upon the processing of a reduction job.
-				void	reduce(r_exec::View	*input,Overlay	*source);	//	called from another overlay's reduce() call.
+		virtual	Overlay	*reduce(r_exec::View	*input);					//	called upon the processing of a reduction job.
 
 		r_code::Code	*getInputObject(uint16	i)	const;
 		r_code::View	*getInputView(uint16	i)	const;
 
-		_Overlay	*getSource()	const{	return	source;	}
+		uint64	get_birth_time()	const{	return	birth_time;	}
 	};
 
 	//	Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
@@ -173,7 +152,7 @@ namespace	r_exec{
 	public:
 		~AntiPGMOverlay();
 
-		void	reduce(r_exec::View	*input);	//	called upon the processing of a reduction job.
+		Overlay	*reduce(r_exec::View	*input);	//	called upon the processing of a reduction job.
 	};
 }
 

@@ -68,7 +68,7 @@ namespace	r_exec{
 					get_reference(i)->remove_marker(this);
 			}
 		
-			r_code::Mem::Get()->deleteObject(this);
+			r_code::Mem::Get()->delete_object(this);
 		}
 
 		return	false;

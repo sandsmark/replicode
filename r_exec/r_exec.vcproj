@@ -274,7 +274,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cst_controller.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\cst_g_monitor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\factory.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\g_monitor.cpp"
 				>
 			</File>
 			<File
@@ -310,7 +322,19 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\hlp_controller.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hlp_overlay.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\init.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\mdl_controller.cpp"
 				>
 			</File>
 			<File
@@ -348,10 +372,42 @@
 			<File
 				RelativePath=".\model.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\monitor.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\monitor.inline.cpp"
@@ -438,12 +494,32 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\p_monitor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\pgm_controller.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\pgm_controller.inline.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\pgm_overlay.cpp"
@@ -480,6 +556,22 @@
 			<File
 				RelativePath=".\r_group.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\r_group.inline.cpp"
@@ -512,10 +604,42 @@
 			<File
 				RelativePath=".\rgrp_controller.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\rgrp_overlay.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\rgrp_overlay.inline.cpp"
@@ -548,6 +672,22 @@
 			<File
 				RelativePath=".\var.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\view.cpp"
@@ -604,6 +744,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cst_controller.h"
+				>
+			</File>
+			<File
+				RelativePath=".\cst_g_monitor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\dll.h"
 				>
 			</File>
@@ -616,11 +764,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\g_monitor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\group.h"
 				>
 			</File>
 			<File
+				RelativePath=".\hlp_controller.h"
+				>
+			</File>
+			<File
+				RelativePath=".\hlp_overlay.h"
+				>
+			</File>
+			<File
 				RelativePath=".\init.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mdl_controller.h"
 				>
 			</File>
 			<File
@@ -630,10 +794,42 @@
 			<File
 				RelativePath=".\model.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\monitor.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\object.h"
@@ -652,6 +848,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\p_monitor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\pgm_controller.h"
 				>
 			</File>
@@ -662,6 +862,22 @@
 			<File
 				RelativePath=".\r_group.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\reduction_core.h"
@@ -674,10 +890,42 @@
 			<File
 				RelativePath=".\rgrp_controller.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\rgrp_overlay.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\time_core.h"
@@ -690,6 +938,22 @@
 			<File
 				RelativePath=".\var.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\view.h"

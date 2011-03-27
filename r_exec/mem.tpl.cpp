@@ -31,8 +31,6 @@
 #include	"init.h"
 #include	"../r_code/replicode_defs.h"
 #include	"operator.h"
-#include	"r_group.h"
-#include	"model.h"
 #include	"factory.h"
 #include	"cpp_programs.h"
 #include	"../r_code/utils.h"
@@ -49,32 +47,22 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O>	r_code::Code	*Mem<O>::buildObject(r_code::SysObject	*source){
+	template<class	O>	r_code::Code	*Mem<O>::build_object(r_code::SysObject	*source){
 
 		switch(source->code[0].getDescriptor()){
 		case	Atom::GROUP:
 			return	new	Group(source,this);
-		case	Atom::REDUCTION_GROUP:
-			return	new	RGroup(source,this);
-		case	Atom::MODEL:
-			return	new	Model(source,this);
 		default:
 			return	new	O(source,this);
 		}
 	}
 
-	template<class	O>	r_code::Code	*Mem<O>::buildObject(Atom	head){
+	template<class	O>	r_code::Code	*Mem<O>::build_object(Atom	head){
 
 		r_code::Code	*object;
 		switch(head.getDescriptor()){
 		case	Atom::GROUP:
 			object=new	Group();
-			break;
-		case	Atom::REDUCTION_GROUP:
-			object=new	RGroup();
-			break;
-		case	Atom::MODEL:
-			object=new	Model();
 			break;
 		default:
 			if(O::RequiresPacking())
@@ -90,9 +78,9 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O>	void	Mem<O>::deleteObject(Code	*object){
+	template<class	O>	void	Mem<O>::delete_object(Code	*object){
 
-		if(!IsNotification(object)	&&	GetType(object)!=GROUP){
+		if(!IsNotification(object)	&&	object->code(0).getDescriptor()!=Atom::GROUP){
 
 			object_registerCS.enter();
 			object_register.erase(((O	*)object)->position_in_object_register);
@@ -124,6 +112,8 @@ namespace	r_exec{
 		initial_groups.push_back(_root);
 		_root->setOID(get_oid());
 
+		UNORDERED_MAP<Code	*,Code	*>	abstraction_map;
+
 		for(uint32	i=1;i<objects->size();++i){	//	skip root as it has no initial views.
 
 			Code	*object=(*objects)[i];
@@ -139,13 +129,58 @@ namespace	r_exec{
 				break;
 			}
 
-			object->setOID(get_oid());
+			Code	*abstracted_object=NULL;
+			switch(object->code(0).getDescriptor()){
+			case	Atom::MODEL:
+			case	Atom::COMPOSITE_STATE:	//	these constructs are assumed not to be already abstracted.
+				abstracted_object=_Mem::Get()->abstract_high_level_pattern(object);	//	original is not deleted if abstracted.
+				abstraction_map[object]=abstracted_object;
+				break;
+			case	Atom::INSTANTIATED_PROGRAM:	//	refine the opcode depending on the inputs and the program type.
+				if(object->get_reference(0)->code(0).asOpcode()==Opcodes::Pgm){
 
-			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	it;
-			for(it=object->views.begin();it!=object->views.end();++it){
+					if(object->get_reference(0)->code(object->get_reference(0)->code(PGM_INPUTS).asIndex()).getAtomCount()==0)
+						object->code(0)=Atom::InstantiatedInputLessProgram(object->code(0).asOpcode(),object->code(0).getAtomCount());
+				}else
+					object->code(0)=Atom::InstantiatedAntiProgram(object->code(0).asOpcode(),object->code(0).getAtomCount());
+				break;
+			}
+
+			for(uint16	j=0;j<object->references_size();++j){	//	update the references to objects that have been abstracted.
+
+				UNORDERED_MAP<Code	*,Code	*>::const_iterator	a=abstraction_map.find(object->get_reference(j));
+				if(a!=abstraction_map.end())
+					object->set_reference(j,a->second);
+			}
+
+			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v;
+			if(abstracted_object){	//	copy the object's views for the abstracted_object; set the object's views resilience to 1 and activation to 0.
+
+				for(v=object->views.begin();v!=object->views.end();++v){
+
+					r_exec::View	*copy=new	View((r_exec::View	*)*v,true);
+					copy->set_object(abstracted_object);
+					abstracted_object->views.insert(copy);
+
+					//	init hosts' member_set.
+					Group	*host=copy->get_host();
+					(*v)->code(VIEW_RES)=Atom::Float(1);
+					(*v)->code(VIEW_ACT)=Atom::Float(0);
+
+					if(!host->load(copy,abstracted_object))
+						return	false;
+				}
+
+				abstracted_object->setOID(get_oid());
+				abstracted_object->position_in_objects=this->objects.insert(this->objects.end(),abstracted_object);
+				abstracted_object->is_registered=true;
+				((O	*)abstracted_object)->position_in_object_register=object_register.insert((O	*)abstracted_object).first;
+			}
+			
+			for(v=object->views.begin();v!=object->views.end();++v){
 
 				//	init hosts' member_set.
-				View	*view=(r_exec::View	*)*it;
+				View	*view=(r_exec::View	*)*v;
 				view->set_object(object);
 				Group	*host=view->get_host();
 
@@ -153,9 +188,10 @@ namespace	r_exec{
 					return	false;
 			}
 
+			object->setOID(get_oid());
 			object->position_in_objects=this->objects.insert(this->objects.end(),object);
 			object->is_registered=true;
-			if(GetType(object)!=ObjectType::GROUP)	//	load non-group object in register.
+			if(object->code(0).getDescriptor()!=Atom::GROUP)	//	load non-group object in register.
 				((O	*)object)->position_in_object_register=object_register.insert((O	*)object).first;
 			else
 				initial_groups.push_back((Group	*)object);	//	convenience to create initial update jobs - see start().
@@ -164,9 +200,20 @@ namespace	r_exec{
 		return	true;
 	}
 
+	template<class	O>	void	Mem<O>::init_timings(uint64	now){
+
+		std::list<Code	*>::const_iterator	o;
+		for(o=objects.begin();o!=objects.end();++o){
+
+			uint16	opcode=(*o)->code(0).asOpcode();
+			if(opcode==Opcodes::Fact	||	opcode==Opcodes::AntiFact)	//	uset facts' times as offset from now.
+				Utils::SetTimestamp<Code>(*o,FACT_TIME,Utils::GetTimestamp<Code>(*o,FACT_TIME)+now);
+		}
+	}
+
 	////////////////////////////////////////////////////////////////
 
-	template<class	O>	r_comp::Image	*Mem<O>::getImage(){
+	template<class	O>	r_comp::Image	*Mem<O>::get_image(){
 
 		r_comp::Image	*image=new	r_comp::Image();
 		image->timestamp=Now();
@@ -181,11 +228,8 @@ namespace	r_exec{
 
 	template<class	O>	Code	*Mem<O>::check_existence(Code	*object){
 
-		switch(object->code(0).getDescriptor()){
-		case	Atom::GROUP:
-		case	Atom::REDUCTION_GROUP:	//	groups are always new.
+		if(object->code(0).getDescriptor()==Atom::GROUP)	//	groups are always new.
 			return	object;
-		}
 
 		O	*_object;
 		if(O::RequiresPacking())			//	false if LObject, true for network-aware objects.
@@ -207,7 +251,7 @@ namespace	r_exec{
 	template<class	O>	void	Mem<O>::inject(O	*object,View	*view){
 
 		view->set_object(object);
-		injectNow(view);
+		injectNewObject(view);
 	}
 
 	template<class	O>	void	Mem<O>::inject(View	*view){
@@ -215,35 +259,29 @@ namespace	r_exec{
 		Group	*host=view->get_host();
 
 		host->enter();
-		if(host->is_invalidated())
+		if(host->is_invalidated()){
+
 			host->leave();
+			return;
+		}
 		host->leave();
 
 		uint64	now=Now();
 		uint64	ijt=view->get_ijt();
 
-		if(view->object->code(0).getDescriptor()==Atom::GROUP	||	view->object->code(0).getDescriptor()==Atom::REDUCTION_GROUP){	//	group.
+		if(view->object->is_registered){	//	existing object.
 
 			if(ijt<=now)
-				injectGroupNow(view,(Group	*)view->object,host);
-			else{
-				
-				P<TimeJob>	j=new	GInjectionJob(view,(Group	*)view->object,host,ijt);
-				time_job_queue->push(j);
-			}
-		}else	if(view->object->is_registered){	//	existing object.
-
-			if(ijt<=now)
-				injectExistingObjectNow(view,view->object,host,true);
+				inject_existing_object(view,view->object,host,true);
 			else{
 				
 				P<TimeJob>	j=new	EInjectionJob(view,ijt);
 				time_job_queue->push(j);
 			}
-		}else{	//	new object.
+		}else{								//	new object.
 
 			if(ijt<=now)
-				injectNow(view);
+				inject_new_object(view);
 			else{
 				
 				P<TimeJob>	j=new	InjectionJob(view,ijt);
@@ -254,37 +292,36 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O>	void	Mem<O>::injectNow(View	*view){
+	template<class	O>	void	Mem<O>::inject_new_object(View	*view){
 
 		Group	*host=view->get_host();
-		O	*object=(O	*)view->object;	//	has been packed if necessary in inject(view).
 
 		uint64	now=Now();
 
-		object_registerCS.enter();
-		object->position_in_object_register=object_register.insert(object).first;
-		object_registerCS.leave();
+		switch(view->object->code(0).getDescriptor()){
+		case	Atom::GROUP:
+			bind<Group>(view,now);
 
-		bind<O>(view,now);
+			host->enter();
+			host->injectGroup(view,now);
+			host->leave();
+			break;
+		default:
+			object_registerCS.enter();
+			((O	*)view->object)->position_in_object_register=object_register.insert((O	*)view->object).first;
+			object_registerCS.leave();
 
-		host->enter();
-		host->inject(view,now);
-		host->leave();
+			bind<O>(view,now);
+
+			host->enter();
+			host->inject(view,now);
+			host->leave();
+			break;
+		}
 	}
 
-	template<class	O>	void	Mem<O>::injectGroupNow(View	*view,Group	*object,Group	*host){	//	groups are always new; no cov for groups; no need to protect object.
-
-		uint64	now=Now();
-		
-		bind<Group>(view,now);
-
-		host->enter();
-		host->injectGroup(view,now);
-		host->leave();
-	}
-
-	template<class	O>	void	Mem<O>::injectNotificationNow(View	*view,bool	lock,Controller	*origin){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
-																											//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
+	template<class	O>	void	Mem<O>::inject_notification(View	*view,bool	lock){	//	no notification for notifications; no registration either (object_register and object_io_map) and no cov.
+																										//	notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
 		Group	*host=view->get_host();
 		LObject	*object=(LObject	*)view->object;
 
@@ -296,7 +333,7 @@ namespace	r_exec{
 		
 		if(lock)
 			host->enter();
-		host->injectNotification(view,origin);
+		host->inject_notification(view);
 		if(lock)
 			host->leave();
 	}

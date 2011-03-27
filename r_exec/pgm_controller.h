@@ -37,12 +37,23 @@
 namespace	r_exec{
 
 	class	r_exec_dll	_PGMController:
-	public	Controller{
+	public	OController{
 	protected:
 		bool	run_once;
 
 		_PGMController(r_code::View	*ipgm_view);
 		virtual	~_PGMController();
+	};
+
+	//	TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
+	//	No overlays.
+	class	r_exec_dll	InputLessPGMController:
+	public	_PGMController{
+	public:
+		InputLessPGMController(r_code::View	*ipgm_view);
+		~InputLessPGMController();
+
+		void	signal_input_less_pgm();
 	};
 
 	// Controller for programs with inputs.
@@ -54,23 +65,10 @@ namespace	r_exec{
 		PGMController(r_code::View	*ipgm_view);
 		virtual	~PGMController();
 
-		void	add(Overlay	*overlay);
-
-		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
-		void	take_input(r_exec::View	*input,Overlay	*source);
+		void	take_input(r_exec::View	*input);
+		void	reduce(r_exec::View	*input);
 
 		void	notify_reduction();
-	};
-
-	//	TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
-	//	No contention on overlays.
-	class	r_exec_dll	InputLessPGMController:
-	public	_PGMController{
-	public:
-		InputLessPGMController(r_code::View	*ipgm_view);
-		~InputLessPGMController();
-
-		void	signal_input_less_pgm();
 	};
 
 	//	Signaled by TimeCores (holding AntiPGMSignalingJob).
@@ -85,10 +83,11 @@ namespace	r_exec{
 		AntiPGMController(r_code::View	*ipgm_view);
 		~AntiPGMController();
 
-		void	take_input(r_exec::View	*input,Controller	*origin=NULL);
+		void	take_input(r_exec::View	*input);
+		void	reduce(r_exec::View	*input);
 		void	signal_anti_pgm();
 
-		void	restart(AntiPGMOverlay	*overlay);
+		void	restart();
 	};
 }
 

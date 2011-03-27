@@ -34,6 +34,16 @@
 
 namespace	r_exec{
 
+	_PGMController::_PGMController(r_code::View	*ipgm_view):OController(ipgm_view){
+
+		run_once=!ipgm_view->object->code(IPGM_RUN).asBoolean();
+	}
+
+	_PGMController::~_PGMController(){
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	InputLessPGMController::InputLessPGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view){
 
 		overlays.push_back(new	InputLessPGMOverlay(this));
@@ -44,11 +54,11 @@ namespace	r_exec{
 
 	void	InputLessPGMController::signal_input_less_pgm(){	//	next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
 
-		overlayCS.enter();
+		reductionCS.enter();
 		if(overlays.size()){
 
 			Overlay	*o=*overlays.begin();
-			((InputLessPGMOverlay	*)o)->inject_productions(NULL);
+			((InputLessPGMOverlay	*)o)->inject_productions();
 			o->reset();
 
 			if(!run_once){
@@ -65,20 +75,10 @@ namespace	r_exec{
 				host->leave();
 			}
 		}
-		overlayCS.leave();
+		reductionCS.leave();
 
 		if(run_once)
 			kill();
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	_PGMController::_PGMController(r_code::View	*ipgm_view):Controller(ipgm_view){
-
-		run_once=!ipgm_view->object->code(IPGM_RUN).asBoolean();
-	}
-
-	_PGMController::~_PGMController(){
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,80 +102,39 @@ namespace	r_exec{
 	PGMController::~PGMController(){
 	}
 
-	void	PGMController::add(Overlay	*overlay){	//	the first overlay is the master.
-													//	the last overlay is the oldest, the one after the master is the youngest.
-		overlayCS.enter();
-		if(overlays.size()==1)
-			overlays.push_back(overlay);
-		else{
-
-			std::list<P<_Overlay> >::iterator	master=overlays.begin();
-			overlays.insert(++master,overlay);
-		}
-		overlayCS.leave();
-	}
-
 	void	PGMController::notify_reduction(){
 
 		if(run_once)
 			kill();
 	}
 
-	void	PGMController::take_input(r_exec::View	*input,Controller	*origin){	//	origin unused since there is no recursion here.
+	void	PGMController::take_input(r_exec::View	*input){
 
 		if(input->object->get_pred()	||	input->object->get_goal())
 			return;
 		if(!can_sim	&&	(input->object->get_hyp()	||	input->object->get_sim()	||	input->object->get_asmp()))
 			return;
-
-		overlayCS.enter();
-
-		if(tsc>0){	// the first overlay is the master (no match yet); other overlays are pushed right after the master in order of their matching time.
-			
-			// start from the last overlay (the oldest), and erase all of them that are older than tsc.
-			uint64	now=Now();
-			Overlay	*master=overlays.front();
-
-			if(run_once	&&	now-((PGMOverlay	*)master)->birth_time>tsc){
-
-				overlayCS.leave();
-				kill();
-				return;
-			}else{
-
-				Overlay	*current=overlays.back();
-				while(current!=master){
-
-					if(now-((PGMOverlay	*)current)->birth_time>tsc){
-						
-						current->kill();
-						overlays.pop_back();
-						current=overlays.back();
-					}else
-						break;
-				}
-			}
-		}
-
-		std::list<P<_Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o){
-
-			ReductionJob<_Overlay>	*j=new	ReductionJob<_Overlay>(new	View(input),*o);
-			_Mem::Get()->pushReductionJob(j);
-		}
-
-		overlayCS.leave();
+		Controller::_take_input<PGMController>(input);
 	}
 
-	void	PGMController::take_input(r_exec::View	*input,Overlay	*source){	//	called from an r-grp overlay. Perform the reduction immediately (no reduction job pushed).
-																				//	no tsc check.
-		overlayCS.enter();
+	void	PGMController::reduce(r_exec::View	*input){
 
-		std::list<P<_Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o)
-			((PGMOverlay	*)(*o))->reduce(input,source);
+		reductionCS.enter();
+		std::list<P<Overlay> >::const_iterator	o;
+		for(o=overlays.begin();o!=overlays.end();){
 
-		overlayCS.leave();
+			if(tsc>0	&&	Now()-((PGMOverlay	*)*o)->get_birth_time()>tsc)
+				o=overlays.erase(o);
+			else	if((*o)->is_alive()){
+
+				Overlay	*offspring=(*o)->reduce(input);
+				++o;
+				if(offspring)
+					overlays.push_front(offspring);
+			}else
+				o=overlays.erase(o);
+		}
+		reductionCS.leave();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,81 +147,66 @@ namespace	r_exec{
 	AntiPGMController::~AntiPGMController(){
 	}
 
-	void	AntiPGMController::take_input(r_exec::View	*input,Controller	*origin){
+	void	AntiPGMController::take_input(r_exec::View	*input){
 
 		if(input->object->get_pred()	||	input->object->get_goal())
 			return;
+		Controller::_take_input<AntiPGMController>(input);
+	}
 
-		if(this!=origin)
-			overlayCS.enter();
+	void	AntiPGMController::reduce(r_exec::View	*input){
 
-		std::list<P<_Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();++o){
+		reductionCS.enter();
+		std::list<P<Overlay> >::const_iterator	o;
+		for(o=overlays.begin();o!=overlays.end();){
 
-			ReductionJob<_Overlay>	*j=new	ReductionJob<_Overlay>(new	View(input),*o);
-			_Mem::Get()->pushReductionJob(j);
+			if((*o)->is_alive()){
+
+				Overlay	*offspring=(*o)->reduce(input);
+				if(successful_match){	//	the controller has been restarted: reset the overlay and kill all others
+
+					Overlay	*overlay=*o;
+					overlay->reset();
+					overlays.clear();
+					overlays.push_back(overlay);
+					successful_match=false;
+					break;
+				}
+				++o;
+				if(offspring)
+					overlays.push_front(offspring);
+			}else
+				o=overlays.erase(o);
 		}
-
-		if(this!=origin)
-			overlayCS.leave();
+		reductionCS.leave();
 	}
 
 	void	AntiPGMController::signal_anti_pgm(){
 
-		overlayCS.enter();
-
+		reductionCS.enter();
 		if(successful_match)	//	a signaling job has been spawn in restart(): we are here in an old job during which a positive match occurred: do nothing.
 			successful_match=false;
 		else{	//	no positive match during this job: inject productions and restart.
 
-			AntiPGMOverlay	*overlay=(AntiPGMOverlay	*)*overlays.begin();
-			overlay->reductionCS.enter();
-			overlay->inject_productions(this);	//	eventually calls take_input(): origin set to this to avoid a deadlock on overlayCS.
-			overlay->reset();
-			overlay->reductionCS.leave();
-			
+			Overlay	*overlay=*overlays.begin();
+			((AntiPGMOverlay	*)overlay)->inject_productions();
+			overlay->reset();	//	reset the first overlay and kill all others.
 			if(!run_once){
 
-				push_new_signaling_job();
-
-				std::list<P<_Overlay> >::const_iterator	first=overlays.begin();
-				std::list<P<_Overlay> >::const_iterator	o;
-				for(o=++first;o!=overlays.end();){	//	reset the first overlay and kill all others.
-
-					((Overlay	*)(*o))->kill();
-					o=overlays.erase(o);
-				}
+				overlays.clear();
+				overlays.push_back(overlay);
 			}
 		}
-
-		overlayCS.leave();
+		reductionCS.leave();
 
 		if(run_once)
 			kill();
 	}
 
-	void	AntiPGMController::restart(AntiPGMOverlay	*overlay){	//	one anti overlay matched all its inputs, timings and guards: push a new signaling job, 
-																	//	reset the overlay and kill all others.
-		overlayCS.enter();
-		
-		overlay->reset();
-		
+	void	AntiPGMController::restart(){	//	one anti overlay matched all its inputs, timings and guards. 
+
 		push_new_signaling_job();
-
-		std::list<P<_Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();){
-
-			if(overlay!=*o){
-
-				((AntiPGMOverlay	*)*o)->kill();
-				o=overlays.erase(o);
-			}else
-				++o;
-		}
-
 		successful_match=true;
-
-		overlayCS.leave();
 	}
 
 	void	AntiPGMController::push_new_signaling_job(){

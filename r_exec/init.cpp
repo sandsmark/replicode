@@ -127,6 +127,7 @@ namespace	r_exec{
 		Opcodes::GrpView=_Opcodes.find("grp_view")->second;
 
 		Opcodes::Ent=_Opcodes.find("ent")->second;
+		Opcodes::MkVal=_Opcodes.find("mk.val")->second;
 
 		Opcodes::Grp=_Opcodes.find("grp")->second;
 
@@ -136,14 +137,16 @@ namespace	r_exec{
 		Opcodes::IPgm=_Opcodes.find("ipgm")->second;
 		Opcodes::Pgm=_Opcodes.find("pgm")->second;
 		Opcodes::AntiPgm=_Opcodes.find("|pgm")->second;
-		Opcodes::Fmd=_Opcodes.find("fmd")->second;
-		Opcodes::Imd=_Opcodes.find("imd")->second;
 
+		Opcodes::ICmd=_Opcodes.find("icmd")->second;
 		Opcodes::Cmd=_Opcodes.find("cmd")->second;
 
 		Opcodes::Var=_Opcodes.find("var")->second;
 		Opcodes::Fact=_Opcodes.find("fact")->second;
 		Opcodes::AntiFact=_Opcodes.find("|fact")->second;
+
+		Opcodes::ICST=_Opcodes.find("icst")->second;
+		Opcodes::IMDL=_Opcodes.find("imdl")->second;
 
 		Opcodes::MkPred=_Opcodes.find("mk.pred")->second;
 		Opcodes::MkGoal=_Opcodes.find("mk.goal")->second;
@@ -171,7 +174,6 @@ namespace	r_exec{
 		Opcodes::Eject=_Opcodes.find("_eje")->second;
 		Opcodes::Mod=_Opcodes.find("_mod")->second;
 		Opcodes::Set=_Opcodes.find("_set")->second;
-		Opcodes::Subst=_Opcodes.find("_subst")->second;
 		Opcodes::NewClass=_Opcodes.find("_new_class")->second;
 		Opcodes::DelClass=_Opcodes.find("_del_class")->second;
 		Opcodes::LDC=_Opcodes.find("_ldc")->second;

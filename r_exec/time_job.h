@@ -33,7 +33,6 @@
 
 #include	"group.h"
 #include	"pgm_overlay.h"
-#include	"rgrp_overlay.h"
 
 
 namespace	r_exec{
@@ -92,16 +91,6 @@ namespace	r_exec{
 	public:
 		P<View>	view;
 		EInjectionJob(View	*v,uint64	ijt);
-		bool	update();
-	};
-
-	class	r_exec_dll	GInjectionJob:
-	public	TimeJob{
-	public:
-		P<View>		view;
-		P<Group>	group;
-		P<Group>	host;
-		GInjectionJob(View	*v,Group	*g,Group	*h,uint64	ijt);
 		bool	update();
 	};
 

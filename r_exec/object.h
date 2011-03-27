@@ -41,21 +41,7 @@
 
 namespace	r_exec{
 
-	typedef	enum{
-		IPGM=0,
-		INPUT_LESS_IPGM=1,
-		ANTI_IPGM=2,
-		OBJECT=3,
-		MARKER=4,
-		GROUP=5,
-		FWD_MODEL=6,
-		INV_MODEL=7,
-		ICPP_PGM=8,
-		VARIABLE=9
-	}ObjectType;
-
 	r_exec_dll	bool		IsNotification(Code	*object);
-	r_exec_dll	ObjectType	GetType(Code	*object);
 
 	//	Shared resources:
 	//		views: accessed by Mem::injectNow (via various sub calls) and Mem::update.
@@ -127,16 +113,32 @@ namespace	r_exec{
 		public:
 			bool	operator	()(const	U	*lhs,const	U	*rhs)	const{	//	lhs and rhs have the same hash value, i.e. same opcode, same code size and same reference size.
 				
-				if(lhs->code(0).asOpcode()==Opcodes::Ent	||	lhs->code(0).asOpcode()==Opcodes::Var)
+				if(lhs->code(0).asOpcode()==Opcodes::Ent	||	rhs->code(0).asOpcode()==Opcodes::Ent)
 					return	lhs==rhs;
 
 				uint16	i;
 				for(i=0;i<lhs->references_size();++i)
 					if(lhs->get_reference(i)!=rhs->get_reference(i))
 						return	false;
-				for(i=0;i<lhs->code_size();++i)
+				for(i=0;i<lhs->code_size();++i){
+
+					switch(lhs->code(i).getDescriptor()){
+					case	Atom::NUMERICAL_VARIABLE:
+						if(rhs->code(i).getDescriptor()!=Atom::NUMERICAL_VARIABLE)
+							return	false;
+						break;
+					case	Atom::BOOLEAN_VARIABLE:
+						if(rhs->code(i).getDescriptor()!=Atom::BOOLEAN_VARIABLE)
+							return	false;
+						break;
+					case	Atom::STRUCTURAL_VARIABLE:
+						if(rhs->code(i).getDescriptor()!=Atom::STRUCTURAL_VARIABLE)
+							return	false;
+						break;
+					}
 					if(lhs->code(i)!=rhs->code(i))
 						return	false;
+				}
 				return	true;
 			}
 		};

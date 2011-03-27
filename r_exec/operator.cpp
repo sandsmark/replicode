@@ -619,7 +619,7 @@ namespace	r_exec{
 			}
 
 			//	create an ipgm in the production array.
-			Code	*ipgm=context.buildObject(_object->code(0));
+			Code	*ipgm=context.build_object(_object->code(0));
 
 			ipgm->code(0)=Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY);
 			ipgm->code(IPGM_PGM)=Atom::RPointer(0);				//	points to the pgm object.
@@ -669,6 +669,8 @@ namespace	r_exec{
 			if(!(*guard_set.getChild(i)).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
 				return	false;
 		}
+
+		return	true;
 	}
 
 	bool	match(const	Context	&input,const	Context	&pattern,const	Context	&productions,std::vector<uint16>	&production_indices){

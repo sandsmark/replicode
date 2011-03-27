@@ -1,4 +1,4 @@
-//	rgrp_overlay.inline.cpp
+//	cst_g_monitor.h
 //
 //	Author: Eric Nivel
 //
@@ -28,47 +28,32 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef	cst_g_monitor_h
+#define	cst_g_monitor_h
+
+#include	"binding_map.h"
+#include	"g_monitor.h"
+
+
 namespace	r_exec{
 
-	inline	FwdController::Position	FwdController::get_position()	const{
+	class	CSTController;
 
-		if(getObject()->code(0).asOpcode()==Opcodes::Fmd)
-			return	HEAD;
-		if(((RGroup	*)getObject())->group_views.size())
-			return	MIDDLE;
-		return	TAIL;
-	}
+	class	CSTGMonitor:
+	public	GMonitor{
+	public:
+		CSTGMonitor(CSTController	*controller,
+					BindingMap		*bindings,
+					Code			*super_goal,
+					Code			*matched_pattern,
+					uint64			deadline);
+		~CSTGMonitor();
 
-	inline	RGroup	*FwdController::get_rgrp()	const{
-
-		return	rgrp;
-	}
-
-	inline	void	FwdController::add_monitor(PMonitor	*m){
-
-		p_monitorsCS.enter();
-		p_monitors.push_back(m);
-		p_monitorsCS.leave();
-	}
-	
-	inline	void	FwdController::remove_monitor(PMonitor	*m){
-
-		p_monitorsCS.enter();
-		p_monitors.remove(m);
-		p_monitorsCS.leave();
-	}
-
-	inline	void	FwdController::add_monitor(GSMonitor	*m){
-
-		gs_monitorsCS.enter();
-		gs_monitors.push_back(m);
-		gs_monitorsCS.leave();
-	}
-	
-	inline	void	FwdController::remove_monitor(GSMonitor	*m){
-
-		gs_monitorsCS.enter();
-		gs_monitors.remove(m);
-		gs_monitorsCS.leave();
-	}
+		bool	is_alive();
+		bool	reduce(Code	*input);
+		void	update();
+	};
 }
+
+
+#endif

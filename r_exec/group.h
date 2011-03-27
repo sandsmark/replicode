@@ -41,6 +41,7 @@
 namespace	r_exec{
 
 	class	_Mem;
+	class	HLPController;
 
 	//	Shared resources:
 	//		all parameters: accessed by Mem::update and reduction cores (via overlay mod/set).
@@ -97,9 +98,9 @@ namespace	r_exec{
 		void	_set_minus1_plus1(uint16	member_index,float32	value);
 		void	_set_0_1(uint16	member_index,float32	value);
 	protected:
-				void	notifyNew(View	*view);
-		virtual	void	injectRGroup(View	*view);
-				void	cov(View	*view,uint64	t);
+		void	notifyNew(View	*view);
+		void	cov(View	*view,uint64	t);
+		void	add_dependencies(HLPController	*c)	const;
 	public:
 		//	xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
 		//	Active overlays are to be found in xxx_ipgm_views and rgroup_views.
@@ -108,9 +109,6 @@ namespace	r_exec{
 		UNORDERED_MAP<uint32,P<View> >	input_less_ipgm_views;
 		UNORDERED_MAP<uint32,P<View> >	notification_views;
 		UNORDERED_MAP<uint32,P<View> >	group_views;
-		UNORDERED_MAP<uint32,P<View> >	mdl_views;
-		UNORDERED_MAP<uint32,P<View> >	icpp_pgm_views;
-		UNORDERED_MAP<uint32,P<View> >	variable_views;
 		UNORDERED_MAP<uint32,P<View> >	other_views;
 
 		//	Defined to create reduction jobs in the viewing groups from the viewed group.
@@ -194,22 +192,10 @@ namespace	r_exec{
 					end=group_views.end();
 					break;
 				case	4:
-					it=mdl_views.begin();
-					end=mdl_views.end();
-					break;
-				case	5:
-					it=icpp_pgm_views.begin();
-					end=icpp_pgm_views.end();
-					break;
-				case	6:
-					it=variable_views.begin();
-					end=variable_views.end();
-					break;
-				case	7:
 					it=other_views.begin();
 					end=other_views.end();
 					break;
-				case	8:
+				case	5:
 					selector=0;
 					return	false;
 				}
@@ -240,14 +226,6 @@ namespace	r_exec{
 					end=anti_ipgm_views.end();
 					break;
 				case	1:
-					it=mdl_views.begin();
-					end=mdl_views.end();
-					break;
-				case	2:
-					it=icpp_pgm_views.begin();
-					end=icpp_pgm_views.end();
-					break;
-				case	3:
 					selector=0;
 					return	false;
 				}
@@ -280,22 +258,10 @@ namespace	r_exec{
 					end=group_views.end();
 					break;
 				case	3:
-					it=mdl_views.begin();
-					end=mdl_views.end();
-					break;
-				case	4:
-					it=icpp_pgm_views.begin();
-					end=icpp_pgm_views.end();
-					break;
-				case	5:
-					it=variable_views.begin();
-					end=variable_views.end();
-					break;
-				case	6:
 					it=other_views.begin();
 					end=other_views.end();
 					break;
-				case	7:
+				case	4:
 					selector=0;
 					return	false;
 				}
@@ -314,17 +280,17 @@ namespace	r_exec{
 
 		View	*get_view(uint32	OID);
 
-		uint32	get_upr();
+		uint32	get_upr()	const;
 		
-		float32	get_sln_thr();
-		float32	get_act_thr();
-		float32	get_vis_thr();
+		float32	get_sln_thr()	const;
+		float32	get_act_thr()	const;
+		float32	get_vis_thr()	const;
 
-		float32	get_c_sln();
-		float32	get_c_act();
+		float32	get_c_sln()	const;
+		float32	get_c_act()	const;
 
-		float32	get_c_sln_thr();
-		float32	get_c_act_thr();
+		float32	get_c_sln_thr()	const;
+		float32	get_c_act_thr()	const;
 
 		void	mod_sln_thr(float32	value);
 		void	set_sln_thr(float32	value);
@@ -391,7 +357,7 @@ namespace	r_exec{
 				bool	load(View	*view,Code	*object);
 		virtual	void	inject(View	*view,uint64	t);
 		virtual	void	injectGroup(View	*view,uint64	t);
-				void	injectNotification(View	*view,Controller	*origin);
+				void	inject_notification(View	*view);
 				void	cov(uint64	t);
 
 		class	Hash{

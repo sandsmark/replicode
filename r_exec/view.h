@@ -91,7 +91,7 @@ namespace	r_exec{
 		View();
 		View(r_code::SysView	*source,r_code::Code	*object);
 		View(View	*view,Group	*group);	//	copy the view and assigns it to the group (used for cov); morph ctrl values.
-		View(const	View	*view);			//	simple copy.
+		View(const	View	*view,bool	new_OID=false);	//	simple copy.
 		View(bool		sync,
 			 uint64		ijt,
 			 float32	sln,

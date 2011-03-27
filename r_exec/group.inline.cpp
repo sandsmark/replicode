@@ -74,53 +74,50 @@ namespace	r_exec{
 
 		notification_views.clear();
 		ipgm_views.clear();
-		icpp_pgm_views.clear();
 		anti_ipgm_views.clear();
 		input_less_ipgm_views.clear();
 		other_views.clear();
-		variable_views.clear();
 		group_views.clear();
-		mdl_views.clear();
 */
 		return	false;
 	}
 
-	inline	uint32	Group::get_upr(){
+	inline	uint32	Group::get_upr()	const{
 
 		return	code(GRP_UPR).asFloat();
 	}
 
-	inline	float32	Group::get_sln_thr(){
+	inline	float32	Group::get_sln_thr()	const{
 
 		return	code(GRP_SLN_THR).asFloat();
 	}
 
-	inline	float32	Group::get_act_thr(){
+	inline	float32	Group::get_act_thr()	const{
 
 		return	code(GRP_ACT_THR).asFloat();
 	}
 
-	inline	float32	Group::get_vis_thr(){
+	inline	float32	Group::get_vis_thr()	const{
 
 		return	code(GRP_VIS_THR).asFloat();
 	}
 
-	inline	float32	Group::get_c_sln_thr(){
+	inline	float32	Group::get_c_sln_thr()	const{
 
 		return	code(GRP_C_SLN_THR).asFloat();
 	}
 
-	inline	float32	Group::get_c_act_thr(){
+	inline	float32	Group::get_c_act_thr()	const{
 
 		return	code(GRP_C_ACT_THR).asFloat();
 	}
 
-	inline	float32	Group::get_c_sln(){
+	inline	float32	Group::get_c_sln()	const{
 
 		return	code(GRP_C_SLN).asFloat();
 	}
 
-	inline	float32	Group::get_c_act(){
+	inline	float32	Group::get_c_act()	const{
 
 		return	code(GRP_C_ACT).asFloat();
 	}

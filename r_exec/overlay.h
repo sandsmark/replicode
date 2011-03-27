@@ -41,39 +41,22 @@ using	namespace	r_code;
 
 namespace	r_exec{
 
-						class	View;
-						class	__Controller;
-	template<class	S>	class	_Controller;
-						class	Controller;
+	class	View;
+	class	Controller;
 
-	class	r_exec_dll	_Overlay:
+	class	r_exec_dll	Overlay:
 	public	_Object{
 	protected:
-		CriticalSection	reductionCS;
-
-		__Controller	*controller;
-
-		_Overlay();
-		_Overlay(__Controller	*c);
-	public:
-		virtual	~_Overlay();
-
-		virtual	void	reset();	//	reset to original state.
-		virtual	void	reduce(r_exec::View	*input);
-	};
-
-	//	Unified overlay: derived in program overlay and rgroup overlay.
-	//	Shared resources:
-	//	- alive: read by ReductionCore (via reductionJob::update()), written by TimeCore (via the controller).
-	class	r_exec_dll	Overlay:
-	public	_Overlay{
-	protected:
-		bool	alive;
+		bool			alive;
+		Controller		*controller;
 
 		Overlay();
-		Overlay(__Controller	*c);
+		Overlay(Controller	*c);
 	public:
 		virtual	~Overlay();
+
+		virtual	void	reset();							//	reset to original state.
+		virtual	Overlay	*reduce(r_exec::View	*input);	//	returns an offspring in case of a match.
 
 		void	kill();
 		bool	is_alive();
@@ -81,50 +64,32 @@ namespace	r_exec{
 		// Delegated to the controller.
 		r_code::Code	*getObject()	const;
 		r_exec::View	*getView()		const;
-		r_code::Code	*buildObject(Atom	head)	const;
+		r_code::Code	*build_object(Atom	head)	const;
 	};
 
-	class	r_exec_dll	__Controller{
-	protected:
-		std::list<P<_Overlay> >	overlays;
-		CriticalSection			overlayCS;
-
-		uint64					tsc;
-
-		__Controller();
-	public:
-		virtual	~__Controller();
-
-		virtual	void	add(_Overlay	*overlay);
-				void	remove(_Overlay	*overlay);
-	};
-
-	template<class	S>	class	_Controller:
-	public	S,
-	public	__Controller{
-	protected:
-		_Controller();
-	public:
-		virtual	~_Controller();
-	};
-
-	//	Unified controller: derived in program controller and rgroup controller.
 	//	Upon invocation of take_input() the overlays older than tsc are killed, assuming stc>0; otherwise, overlays live unitl the ipgm dies.
 	//	Shared resources:
 	//	- alive: written by TimeCores (via UpdateJob::update() and _Mem::update()), read by TimeCores (via SignalingJob::update()).
 	//	- overlays: modified by take_input, executed by TimeCores (via UpdateJob::update() and _Mem::update()) and ReductionCore::Run() (via ReductionJob::update(), PGMOverlay::reduce(), _Mem::inject() and add()/remove()/restart()).
 	//	Controllers are built at loading time and at the view's injection time.
+	//	Derived classes must expose a function: void	reduce(r_code::View*input);	(called by reduction jobs).
 	class	r_exec_dll	Controller:
-	public	_Controller<_Object>{
+	public	_Object{
 	protected:
 		bool			alive;
 		CriticalSection	aliveCS;
 
+		uint64	tsc;
+
 		r_code::View	*view;
+
+		CriticalSection	reductionCS;
 
 		Controller(r_code::View	*view);
 	public:
 		virtual	~Controller();
+
+		uint64	get_tsc(){	return	tsc;	}
 
 		void	kill();
 		bool	is_alive();
@@ -132,7 +97,25 @@ namespace	r_exec{
 		r_code::Code	*getObject()	const;	// return the reduction object (e.g. ipgm, r-grp, icpp_pgm). The object must have a tsc.
 		r_exec::View	*getView()		const;	// return the reduction object's view.
 
-		virtual	void	take_input(r_exec::View	*input,Controller	*origin=NULL);	// push one job for each overlay; called by the rMem at update time and at injection time.
+		virtual	void	take_input(r_exec::View	*input){}	// called by the rMem at update time and at injection time.
+		template<class	C>	void	_take_input(r_exec::View	*input){	//	utility: to be called by sub-classes.
+
+			ReductionJob<C>	*j=new	ReductionJob<C>(new	View(input),(C	*)this);
+			_Mem::Get()->pushReductionJob(j);
+		}
+
+		virtual	void	gain_activation()	const{}
+		virtual	void	lose_activation()	const{}
+	};
+
+	class	r_exec_dll	OController:
+	public	Controller{
+	protected:
+		std::list<P<Overlay> >	overlays;
+
+		OController(r_code::View	*view);
+	public:
+		virtual	~OController();
 	};
 }
 

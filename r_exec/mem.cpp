@@ -49,7 +49,9 @@ namespace	r_exec{
 						uint32	ntf_mk_res,
 						uint32	goal_res,
 						uint32	asmp_res,
-						uint32	sim_res){
+						uint32	sim_res,
+						float32	float_tolerance,
+						float32	time_tolerance){
 
 		this->base_period=base_period;
 		this->reduction_core_count=reduction_core_count;
@@ -60,6 +62,9 @@ namespace	r_exec{
 		this->goal_res=goal_res;
 		this->asmp_res=asmp_res;
 		this->sim_res=sim_res;
+
+		this->float_tolerance=float_tolerance;
+		this->time_tolerance=time_tolerance;
 	}
 
 	void	_Mem::reset(){
@@ -198,7 +203,7 @@ namespace	r_exec{
 			Group	*g=initial_groups[i];
 			bool	c_active=g->get_c_act()>g->get_c_act_thr();
 			bool	c_salient=g->get_c_sln()>g->get_c_sln_thr();
-
+			
 			FOR_ALL_VIEWS_BEGIN(g,v)
 				Utils::SetTimestamp<View>(v->second,VIEW_IJT,now);	//	init injection time for the view.
 			FOR_ALL_VIEWS_END
@@ -251,6 +256,8 @@ namespace	r_exec{
 		}
 
 		initial_groups.clear();
+
+		init_timings(now);
 
 		state=RUNNING;
 
@@ -369,19 +376,19 @@ namespace	r_exec{
 	void	_Mem::eject(View	*view,uint16	nodeID){
 	}
 
-	void	_Mem::eject(Code	*object,uint16	nodeID){
+	void	_Mem::eject(Code	*command){
 	}
 
 	////////////////////////////////////////////////////////////////
 
-	void	_Mem::injectCopyNow(View	*view,Group	*destination,uint64	now){
+	void	_Mem::inject_copy(View	*view,Group	*destination,uint64	now){
 
 		View	*copied_view=new	View(view,destination);	//	ctrl values are morphed.
 		Utils::SetTimestamp<View>(copied_view,VIEW_IJT,now);
-		injectExistingObjectNow(copied_view,view->object,destination,true);
+		inject_existing_object(copied_view,view->object,destination,true);
 	}
 
-	void	_Mem::injectExistingObjectNow(View	*view,Code	*object,Group	*host,bool	lock){
+	void	_Mem::inject_existing_object(View	*view,Code	*object,Group	*host,bool	lock){
 
 		view->set_object(object);	//	the object already exists (content-wise): have the view point to the existing one.
 
@@ -394,25 +401,22 @@ namespace	r_exec{
 		View	*existing_view=(View	*)object->find_view(host,false);
 		if(!existing_view){	//	no existing view: add the view to the group and to the object's view_map.
 
-			switch(GetType(object)){
-			case	ObjectType::IPGM:
+			switch(object->code(0).getDescriptor()){
+			case	Atom::INSTANTIATED_PROGRAM:
+			case	Atom::INSTANTIATED_CPP_PROGRAM:
+			case	Atom::COMPOSITE_STATE:
+			case	Atom::MODEL:
 				host->ipgm_views[view->getOID()]=view;
 				break;
-			case	ObjectType::ICPP_PGM:
-				host->icpp_pgm_views[view->getOID()]=view;
-				break;
-			case	ObjectType::ANTI_IPGM:
+			case	Atom::INSTANTIATED_ANTI_PROGRAM:
 				host->anti_ipgm_views[view->getOID()]=view;
 				break;
-			case	ObjectType::INPUT_LESS_IPGM:
+			case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
 				host->input_less_ipgm_views[view->getOID()]=view;
 				break;
-			case	ObjectType::OBJECT:
-			case	ObjectType::MARKER:
+			case	Atom::OBJECT:
+			case	Atom::MARKER:
 				host->other_views[view->getOID()]=view;
-				break;
-			case	ObjectType::VARIABLE:
-				host->variable_views[view->getOID()]=view;
 				break;
 			}
 
@@ -426,11 +430,13 @@ namespace	r_exec{
 
 			host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),VIEW_RES,view->get_res()));
 			host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),VIEW_SLN,view->get_sln()));
-			switch(GetType(object)){
-			case	ObjectType::IPGM:
-			case	ObjectType::ICPP_PGM:
-			case	ObjectType::ANTI_IPGM:
-			case	ObjectType::INPUT_LESS_IPGM:
+			switch(object->code(0).getDescriptor()){
+			case	Atom::INSTANTIATED_PROGRAM:
+			case	Atom::INSTANTIATED_ANTI_PROGRAM:
+			case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
+			case	Atom::INSTANTIATED_CPP_PROGRAM:
+			case	Atom::COMPOSITE_STATE:
+			case	Atom::MODEL:
 				host->pending_operations.push_back(new	Group::Set(existing_view->getOID(),VIEW_ACT,view->get_act()));
 				break;
 			}
@@ -479,17 +485,12 @@ namespace	r_exec{
 		}
 		group->pending_operations.clear();
 
-		float32	former_sln_thr=group->get_sln_thr();
-
 		//	update group's ctrl values.
 		group->update_sln_thr();	//	applies decay on sln thr. 
 		group->update_act_thr();
 		group->update_vis_thr();
 
-		bool	group_was_c_active=group->get_c_act()>group->get_c_act_thr();
-		bool	group_is_c_active=group->update_c_act()>group->get_c_act_thr();
-		bool	group_was_c_salient=group->get_c_sln()>group->get_c_sln_thr();
-		bool	group_is_c_salient=group->update_c_sln()>group->get_c_sln_thr();
+		GroupState	group_state(group->get_sln_thr(),group->get_c_act()>group->get_c_act_thr(),group->update_c_act()>group->get_c_act_thr(),group->get_c_sln()>group->get_c_sln_thr(),group->update_c_sln()>group->get_c_sln_thr());
 
 		group->reset_stats();
 
@@ -499,99 +500,20 @@ namespace	r_exec{
 			float32	res=group->update_res(v->second);	//	will decrement res by 1 in addition to the accumulated changes.
 			if(res>0){
 
-				//	update saliency (apply decay).
-				float32	view_old_sln=v->second->get_sln();
-				bool	wiew_was_salient=view_old_sln>former_sln_thr;
-				float32	view_new_sln=group->update_sln(v->second);
-				bool	wiew_is_salient=view_new_sln>group->get_sln_thr();
+				_update_saliency(group,&group_state,v->second);	//	(apply decay).
 
-				if(group_is_c_salient){
-					
-					if(wiew_is_salient){
-
-						if(v->second->synced_on_front()){
-							
-							if(!wiew_was_salient)	// sync on front: crosses the threshold upward: record as a newly salient view.
-								group->newly_salient_views.insert(v->second);
-						}else						// sync on state.
-							group->newly_salient_views.insert(v->second);
-					}
-
-					//	inject sln propagation jobs.
-					//	the idea is to propagate sln changes when a view "occurs to the mind", i.e. becomes more salient in a group and is eligible for reduction in that group.
-					//		- when a view is now salient because the group becomes c-salient, no propagation;
-					//		- when a view is now salient because the group's sln_thr gets lower, no propagation;
-					//		- propagation can occur only if the group is c_active. For efficiency reasons, no propagation occurs even if some of the group's viewing groups are c-active and c-salient.
-					if(group_is_c_active)
-						_initiate_sln_propagation(v->second->object,view_new_sln-view_old_sln,group->get_sln_thr());
-				}
-
-				switch(GetType(v->second->object)){
-				case	ObjectType::GROUP:{
-
-					//	update visibility.
-					bool	view_was_visible=v->second->get_vis()>group->get_vis_thr();
-					bool	view_is_visible=v->second->update_vis()>group->get_vis_thr();
-					bool	cov=v->second->get_cov();
-
-					//	update viewing groups.
-					if(group_was_c_active	&&	group_was_c_salient){
-
-						if(!group_is_c_active	||	!group_is_c_salient)	//	group is not c-active and c-salient anymore: unregister as a viewing group.
-							((Group	*)v->second->object)->viewing_groups.erase(group);
-						else{	//	group remains c-active and c-salient.
-
-							if(!view_was_visible){
-								
-								if(view_is_visible)		//	newly visible view.
-									((Group	*)v->second->object)->viewing_groups[group]=cov;
-							}else{
-								
-								if(!view_is_visible)	//	the view is no longer visible.
-									((Group	*)v->second->object)->viewing_groups.erase(group);
-								else					//	the view is still visible, cov might have changed.
-									((Group	*)v->second->object)->viewing_groups[group]=cov;
-							}
-						}
-					}else	if(group_is_c_active	&&	group_is_c_salient){	//	group becomes c-active and c-salient.
-
-						if(view_is_visible)		//	update viewing groups for any visible group.
-							((Group	*)v->second->object)->viewing_groups[group]=cov;
-					}	
-				}case	ObjectType::IPGM:
-				case	ObjectType::INPUT_LESS_IPGM:
-				case	ObjectType::ANTI_IPGM:
-				case	ObjectType::ICPP_PGM:
-				case	ObjectType::FWD_MODEL:
-				case	ObjectType::INV_MODEL:{
-
-					//	update activation.
-					bool	view_was_active=v->second->get_act()>group->get_act_thr();
-					bool	view_is_active=group->update_act(v->second)>group->get_act_thr();
-
-					//	kill newly inactive controllers, register newly active ones.
-					if(group_was_c_active	&&	group_was_c_salient){
-
-						if(!group_is_c_active	||	!group_is_c_salient)	//	group is not c-active and c-salient anymore: kill the view's controller.
-							v->second->controller->kill();
-						else{	//	group remains c-active and c-salient.
-
-							if(!view_was_active){
-						
-								if(view_is_active)	//	register the controller for the newly active ipgm view.
-									group->new_controllers.push_back(v->second->controller);
-							}else{
-								
-								if(!view_is_active)	//	kill the newly inactive ipgm view's overlays.
-									v->second->controller->kill();
-							}
-						}
-					}else	if(group_is_c_active	&&	group_is_c_salient){	//	group becomes c-active and c-salient.
-
-						if(view_is_active)	//	register the controller for any active ipgm view.
-							group->new_controllers.push_back(v->second->controller);
-					}
-				}
+				switch(v->second->object->code(0).getDescriptor()){
+				case	Atom::GROUP:
+					_update_visibility(group,&group_state,v->second);
+					break;
+				case	Atom::INSTANTIATED_PROGRAM:
+				case	Atom::INSTANTIATED_ANTI_PROGRAM:
+				case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
+				case	Atom::INSTANTIATED_CPP_PROGRAM:
+				case	Atom::COMPOSITE_STATE:
+				case	Atom::MODEL:
+					_update_activation(group,&group_state,v->second);
+					break;
 				}
 				++v;
 			}else{	//	view has no resilience.
@@ -601,39 +523,31 @@ namespace	r_exec{
 				//	delete the view from the group.
 				if(v->second->isNotification())
 					v=group->notification_views.erase(v);
-				else	switch(GetType(v->second->object)){
-				case	ObjectType::IPGM:
+				else	switch(v->second->object->code(0).getDescriptor()){
+				case	Atom::INSTANTIATED_PROGRAM:
+				case	Atom::INSTANTIATED_CPP_PROGRAM:
+				case	Atom::COMPOSITE_STATE:
+				case	Atom::MODEL:
 					v=group->ipgm_views.erase(v);
 					break;
-				case	ObjectType::ANTI_IPGM:
+				case	Atom::INSTANTIATED_ANTI_PROGRAM:
 					v=group->anti_ipgm_views.erase(v);
 					break;
-				case	ObjectType::INPUT_LESS_IPGM:
+				case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
 					v=group->input_less_ipgm_views.erase(v);
 					break;
-				case	ObjectType::ICPP_PGM:
-					v=group->icpp_pgm_views.erase(v);
-					break;
-				case	ObjectType::OBJECT:
-				case	ObjectType::MARKER:
+				case	Atom::OBJECT:
+				case	Atom::MARKER:
 					v=group->other_views.erase(v);
 					break;
-				case	ObjectType::VARIABLE:
-					v=group->variable_views.erase(v);
-					break;
-				break;
-				case	ObjectType::GROUP:
+				case	Atom::GROUP:
 					v=group->group_views.erase(v);
-					break;
-				case	ObjectType::FWD_MODEL:
-				case	ObjectType::INV_MODEL:
-					v=group->mdl_views.erase(v);
 					break;
 				}
 			}
 		FOR_ALL_VIEWS_END
 
-		if(group_is_c_salient)
+		if(group_state.is_c_salient)
 			group->cov(now);
 
 		//	build reduction jobs.
@@ -641,17 +555,17 @@ namespace	r_exec{
 		for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
 			inject_reduction_jobs(*v,group);
 
-		if(group_is_c_active	&&	group_is_c_salient){	//	build signaling jobs for new ipgms.
+		if(group_state.is_c_active	&&	group_state.is_c_salient){	//	build signaling jobs for new ipgms.
 
 			for(uint32	i=0;i<group->new_controllers.size();++i){
 
-				switch(GetType(group->new_controllers[i]->getObject())){
-				case	ObjectType::ANTI_IPGM:{	//	inject signaling jobs for |ipgm (tsc).
+				switch(group->new_controllers[i]->getObject()->code(0).getDescriptor()){
+				case	Atom::INSTANTIATED_ANTI_PROGRAM:{	//	inject signaling jobs for |ipgm (tsc).
 
 					P<TimeJob>	j=new	AntiPGMSignalingJob((AntiPGMController	*)group->new_controllers[i],now+Utils::GetTimestamp<Code>(group->new_controllers[i]->getObject(),IPGM_TSC));
 					time_job_queue->push(j);
 					break;
-				}case	ObjectType::INPUT_LESS_IPGM:{	//	inject a signaling job for an input-less pgm.
+				}case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:{	//	inject a signaling job for an input-less pgm.
 
 					P<TimeJob>	j=new	InputLessPGMSignalingJob((InputLessPGMController	*)group->new_controllers[i],now+Utils::GetTimestamp<Code>(group->new_controllers[i]->getObject(),IPGM_TSC));
 					time_job_queue->push(j);
@@ -675,7 +589,106 @@ namespace	r_exec{
 		group->leave();
 	}
 
-	void	_Mem::inject_reduction_jobs(View	*view,Group	*host,Controller	*origin){	//	host is assumed to be c-salient; host already protected.
+	void	_Mem::_update_saliency(Group	*group,GroupState	*state,View	*view){
+
+		float32	view_old_sln=view->get_sln();
+		bool	wiew_was_salient=view_old_sln>state->former_sln_thr;
+		float32	view_new_sln=group->update_sln(view);
+		bool	wiew_is_salient=view_new_sln>group->get_sln_thr();
+
+		if(state->is_c_salient){
+			
+			if(wiew_is_salient){
+
+				if(view->synced_on_front()){
+					
+					if(!wiew_was_salient)	// sync on front: crosses the threshold upward: record as a newly salient view.
+						group->newly_salient_views.insert(view);
+				}else						// sync on state.
+					group->newly_salient_views.insert(view);
+			}
+
+			//	inject sln propagation jobs.
+			//	the idea is to propagate sln changes when a view "occurs to the mind", i.e. becomes more salient in a group and is eligible for reduction in that group.
+			//		- when a view is now salient because the group becomes c-salient, no propagation;
+			//		- when a view is now salient because the group's sln_thr gets lower, no propagation;
+			//		- propagation can occur only if the group is c_active. For efficiency reasons, no propagation occurs even if some of the group's viewing groups are c-active and c-salient.
+			if(state->is_c_active)
+				_initiate_sln_propagation(view->object,view_new_sln-view_old_sln,group->get_sln_thr());
+		}
+	}
+
+	void	_Mem::_update_visibility(Group	*group,GroupState	*state,View	*view){
+
+		bool	view_was_visible=view->get_vis()>group->get_vis_thr();
+		bool	view_is_visible=view->update_vis()>group->get_vis_thr();
+		bool	cov=view->get_cov();
+
+		//	update viewing groups.
+		if(state->was_c_active	&&	state->was_c_salient){
+
+			if(!state->is_c_active	||	!state->is_c_salient)	//	group is not c-active and c-salient anymore: unregister as a viewing group.
+				((Group	*)view->object)->viewing_groups.erase(group);
+			else{	//	group remains c-active and c-salient.
+
+				if(!view_was_visible){
+					
+					if(view_is_visible)		//	newly visible view.
+						((Group	*)view->object)->viewing_groups[group]=cov;
+				}else{
+					
+					if(!view_is_visible)	//	the view is no longer visible.
+						((Group	*)view->object)->viewing_groups.erase(group);
+					else					//	the view is still visible, cov might have changed.
+						((Group	*)view->object)->viewing_groups[group]=cov;
+				}
+			}
+		}else	if(state->is_c_active	&&	state->is_c_salient){	//	group becomes c-active and c-salient.
+
+			if(view_is_visible)		//	update viewing groups for any visible group.
+				((Group	*)view->object)->viewing_groups[group]=cov;
+		}
+	}
+
+	void	_Mem::_update_activation(Group	*group,GroupState	*state,View	*view){
+
+		bool	view_was_active=view->get_act()>group->get_act_thr();
+		bool	view_is_active=group->update_act(view)>group->get_act_thr();
+
+		//	kill newly inactive controllers, register newly active ones.
+		if(state->was_c_active	&&	state->was_c_salient){
+
+			if(!state->is_c_active	||	!state->is_c_salient)	//	group is not c-active and c-salient anymore: kill the view's controller.
+				view->controller->kill();
+			else{	//	group remains c-active and c-salient.
+
+				if(!view_was_active){
+			
+					if(view_is_active){	//	register the controller for the newly active ipgm view.
+
+						view->controller->gain_activation();
+						group->new_controllers.push_back(view->controller);
+					}
+				}else{
+					
+					if(!view_is_active){	//	kill the newly inactive ipgm view's overlays.
+
+						view->controller->lose_activation();
+						view->controller->kill();
+					}
+				}
+			}
+		}else	if(state->is_c_active	&&	state->is_c_salient){	//	group becomes c-active and c-salient.
+
+			if(view_is_active){	//	register the controller for any active ipgm view.
+
+				view->controller->gain_activation();
+				group->new_controllers.push_back(view->controller);
+			}
+		}
+	}
+
+	void	_Mem::inject_reduction_jobs(View	*view,Group	*host){	//	host is assumed to be c-salient; host already protected.
 
 		if(host->get_c_act()>host->get_c_act_thr()){	//	host is c-active.
 
@@ -683,7 +696,7 @@ namespace	r_exec{
 			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(host,v)
 
 				if(v->second->get_act()>host->get_act_thr())		//	active ipgm/icpp_pgm/rgrp view.
-					v->second->controller->take_input(view,origin);	//	view will be copied.
+					v->second->controller->take_input(view);	//	view will be copied.
 
 			FOR_ALL_VIEWS_WITH_INPUTS_END
 		}
@@ -700,7 +713,7 @@ namespace	r_exec{
 			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
 
 				if(v->second->get_act()>vg->first->get_act_thr())	//	active ipgm/icpp_pgm/rgrp view.
-					v->second->controller->take_input(view,origin);	//	view will be copied.
+					v->second->controller->take_input(view);	//	view will be copied.
 			
 			FOR_ALL_VIEWS_WITH_INPUTS_END
 		}
@@ -738,7 +751,7 @@ namespace	r_exec{
 			std::vector<Code	*>	path;
 			path.push_back(object);
 
-			if(GetType(object)==ObjectType::MARKER){	//	if marker, propagate to references.
+			if(object->code(0).getDescriptor()==Atom::MARKER){	//	if marker, propagate to references.
 
 				for(uint16	i=0;i<object->references_size();++i)
 					_propagate_sln(object->get_reference(i),change,source_sln_thr,path);
@@ -763,7 +776,7 @@ namespace	r_exec{
 					return;
 			path.push_back(object);
 
-			if(GetType(object)==ObjectType::MARKER)	//	if marker, propagate to references.
+			if(object->code(0).getDescriptor()==Atom::MARKER)	//	if marker, propagate to references.
 				for(uint16	i=0;i<object->references_size();++i)
 					_propagate_sln(object->get_reference(i),change,source_sln_thr,path);
 
@@ -791,5 +804,126 @@ namespace	r_exec{
 		time_job_queue->push(j);
 		
 		_initiate_sln_propagation(object,change,source_sln_thr,path);
+	}
+
+	////////////////////////////////////////////////////////////////
+
+	Code	*_Mem::clone_object(Code	*object){
+
+		Code	*clone=build_object(object->code(0));
+		for(uint16	i=0;i<object->code_size();++i)
+			clone->code(i)=object->code(i);
+		for(uint16	i=0;i<object->references_size();++i)
+			clone->set_reference(i,object->get_reference(i));
+		return	clone;
+	}
+
+	Code	*_Mem::abstract_high_level_pattern(Code	*object){
+
+		BindingMap	bm;
+		return	abstract_high_level_pattern(object,&bm);
+	}
+
+	Code	*_Mem::abstract_high_level_pattern(Code	*object,BindingMap	*bm){
+
+		Code	*abstracted_object;
+
+		switch(object->code(0).getDescriptor()){
+		case	Atom::COMPOSITE_STATE:
+			abstracted_object=clone_object(object);
+			abstract_object_member(abstracted_object,HLP_OBJS,bm);
+			break;
+		case	Atom::MODEL:
+			abstracted_object=clone_object(object);
+			abstract_object_member(abstracted_object,HLP_LHS,bm);
+			abstract_object_member(abstracted_object,HLP_RHS,bm);
+			break;
+		default:
+			return	object;
+		}
+
+		return	abstracted_object;
+	}
+
+	Code	*_Mem::abstract_object(Code	*object){
+
+		BindingMap	bm;
+		return	abstract_object(object,&bm);
+	}
+
+	Code	*_Mem::abstract_object(Code	*object,BindingMap	*bm){
+
+		Code	*abstracted_object;
+
+		uint16	opcode=object->code(0).asOpcode();
+		switch(object->code(0).getDescriptor()){
+		case	Atom::OBJECT:
+			if(	opcode==Opcodes::Fact	||
+				opcode==Opcodes::AntiFact){
+
+				abstracted_object=clone_object(object);
+				abstract_object_member(abstracted_object,FACT_OBJ,bm);
+				abstract_object_member(abstracted_object,FACT_TIME,bm);
+			}else	if(opcode==Opcodes::Cmd){
+
+				abstracted_object=clone_object(object);
+				abstract_object_member(abstracted_object,CMD_ARGS,bm);
+			}else	if(	opcode==Opcodes::ICST	||
+						opcode==Opcodes::IMDL){
+
+				abstracted_object=clone_object(object);
+				abstract_object_member(abstracted_object,I_HLP_ARGS,bm);
+			}else	if(opcode==Opcodes::Ent)
+				return	bm->get_variable_object(object);
+			else
+				return	object;
+			break;
+		case	Atom::MARKER:
+			if(opcode==Opcodes::MkVal){
+
+				abstracted_object=clone_object(object);
+				abstract_object_member(abstracted_object,MK_VAL_OBJ,bm);
+				abstract_object_member(abstracted_object,MK_VAL_VALUE,bm);
+			}else	if(opcode==Opcodes::MkGoal){
+
+				abstracted_object=clone_object(object);
+				abstract_object_member(abstracted_object,MK_GOAL_ACTR,bm);
+				abstract_object_member(abstracted_object,MK_GOAL_OBJ,bm);
+			}else	if(opcode==Opcodes::MkPred){
+
+				abstracted_object=clone_object(object);
+				abstract_object_member(abstracted_object,MK_PRED_OBJ,bm);
+			}else	if(opcode==Opcodes::MkSuccess){
+
+				abstracted_object=clone_object(object);
+				abstract_object_member(abstracted_object,MK_SUCCESS_OBJ,bm);
+			}else
+				return	object;
+			break;
+		default:
+			return	object;
+		}
+
+		return	abstracted_object;
+	}
+
+	void	_Mem::abstract_object_member(Code	*object,uint16	index,BindingMap	*bm){
+
+		Atom	a=object->code(index);
+		switch(a.getDescriptor()){
+		case	Atom::R_PTR:
+			object->set_reference(a.asIndex(),abstract_object(object->get_reference(a.asIndex()),bm));
+			break;
+		case	Atom::I_PTR:
+			if(object->code(a.asIndex()).getDescriptor()==Atom::SET)
+				for(uint16	i=1;i<=object->code(a.asIndex()).getAtomCount();++i)
+					abstract_object_member(object,a.asIndex()+i,bm);
+			else
+				object->code(a.asIndex()+1)=bm->get_structural_variable(object,a.asIndex());
+			break;
+		default:
+			object->code(index)=bm->get_atomic_variable(object,index);
+			break;
+		}
 	}
 }

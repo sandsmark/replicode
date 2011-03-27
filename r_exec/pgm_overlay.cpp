@@ -89,85 +89,6 @@
 
 namespace	r_exec{
 
-	bool	InputLessPGMOverlay::NeedsAbstraction(Code	*original,SubstitutionData	*substitution_data){
-
-		UNORDERED_MAP<Code	*,std::vector<Substitution> >::const_iterator	s=substitution_data->substitutions.find(original);
-		if(s!=substitution_data->substitutions.end())
-			return	true;
-
-		for(uint16	i=0;i<original->references_size();++i)
-			if(NeedsAbstraction(original->get_reference(i),substitution_data))
-				return	true;
-
-		return	false;
-	}
-
-	Code	*InputLessPGMOverlay::AbstractObject(Code	*original,SubstitutionData	*substitution_data,bool	head){
-		
-		UNORDERED_MAP<Code	*,std::vector<Substitution> >::const_iterator	s=substitution_data->substitutions.find(original);
-		if(s!=substitution_data->substitutions.end()){
-
-			Code	*abstracted_object=_Mem::Get()->buildObject(original->code(0));
-			uint16	i;
-			for(i=0;i<original->code_size();++i)	//	copy the code.
-				abstracted_object->code(i)=original->code(i);
-
-			for(i=0;i<original->references_size();++i)	//	reset the references.
-				abstracted_object->set_reference(i,NULL);
-			
-			for(uint16	i=0;i<s->second.size();++i){	//	patch atoms/references by atomic variables/variable objects.
-
-				switch(s->second[i].type){
-				case	0:	//	numerical variable.
-					abstracted_object->code(s->second[i].member_index)=substitution_data->numerical_variables[s->second[i].variable_index];
-					break;
-				case	1:	//	structural variable.
-					abstracted_object->code(abstracted_object->code(s->second[i].member_index).asIndex()+1)=substitution_data->structural_variables[s->second[i].variable_index];
-					break;
-				case	2:	//	variable object.
-					abstracted_object->set_reference(abstracted_object->code(s->second[i].member_index).asIndex(),substitution_data->variable_objects[s->second[i].variable_index]);
-					break;
-				}
-			}
-
-			for(i=0;i<original->references_size();++i)	//	abstract the references left un-abstracted.
-				if(abstracted_object->get_reference(i)==NULL)
-					abstracted_object->set_reference(i,AbstractObject(original->get_reference(i),substitution_data));
-
-			return	abstracted_object;
-		}else	if(head){
-
-			Code	*abstracted_object=_Mem::Get()->buildObject(original->code(0));
-			uint16	i;
-			for(i=0;i<original->code_size();++i)	//	copy the code.
-				abstracted_object->code(i)=original->code(i);
-
-			for(i=0;i<original->references_size();++i)	//	abstract references.
-				abstracted_object->set_reference(i,AbstractObject(original->get_reference(i),substitution_data));
-
-			return	abstracted_object;
-		}else{
-			
-			for(uint16	i=0;i<original->references_size();++i){
-
-				if(NeedsAbstraction(original->get_reference(i),substitution_data)){
-
-					Code	*abstracted_object=_Mem::Get()->buildObject(original->code(0));
-					uint16	i;
-					for(i=0;i<original->code_size();++i)	//	copy the code.
-						abstracted_object->code(i)=original->code(i);
-
-					for(i=0;i<original->references_size();++i)	//	abstract references.
-						abstracted_object->set_reference(i,AbstractObject(original->get_reference(i),substitution_data));
-
-					return	abstracted_object;
-				}
-			}
-		}
-
-		return	original;
-	}
-
 	InputLessPGMOverlay::InputLessPGMOverlay():Overlay(),reduction_mode(RDX_MODE_REGULAR),confidence(1){	//	used for constructing PGMOverlay offsprings.
 	}
 
@@ -263,7 +184,7 @@ namespace	r_exec{
 	void	InputLessPGMOverlay::patch_input_code(uint16	pgm_code_index,uint16	input_index,uint16	input_code_index,int16	parent_index){
 	}
 
-	bool	InputLessPGMOverlay::inject_productions(Controller	*origin){
+	bool	InputLessPGMOverlay::inject_productions(){
 
 		uint64	now=Now();
 
@@ -294,19 +215,24 @@ namespace	r_exec{
 				return	false;
 			}//cmd.trace();
 			Context	function=*cmd.getChild(1);
-			Context	device=*cmd.getChild(2);
 
 			//	layout of a command:
+			//	0	>icmd opcode
+			//	1	>function
+			//	2	>iptr to the set of arguments
+			//	3	>set
+			//	4	>first arg
+			//	or:
 			//	0	>cmd opcode
 			//	1	>function
-			//	2	>device
-			//	3	>iptr to the set of arguments
-			//	4	>set
+			//	2	>iptr to the set of arguments
+			//	3	>set
+			//	4	>psln_thr
 			//	5	>first arg
 
 			//	identify the production of new objects.
-			Context	args=*cmd.getChild(4);
-			if(device[0].atom==EXECUTIVE_DEVICE){
+			Context	args=*cmd.getChild(2);
+			if(cmd[0].asOpcode()==Opcodes::ICmd){
 
 				if(function[0].asOpcode()==Opcodes::Inject	||
 					function[0].asOpcode()==Opcodes::Eject){	//	args:[object view]; create an object if not a reference.
@@ -320,7 +246,7 @@ namespace	r_exec{
 						productions.push_back(arg1.getObject());
 					else{
 
-						object=_Mem::Get()->buildObject(arg1[0]);
+						object=_Mem::Get()->build_object(arg1[0]);
 //						arg1.trace();
 						arg1.copy(object,0);
 //						arg1.trace();
@@ -335,10 +261,8 @@ namespace	r_exec{
 					++cmd_count;
 				}else	if(function[0].asOpcode()!=Opcodes::Mod		&&
 							function[0].asOpcode()!=Opcodes::Set	&&
-							function[0].asOpcode()!=Opcodes::Prb){
-
+							function[0].asOpcode()!=Opcodes::Prb)
 					++cmd_count;
-				}
 			}else
 				++cmd_count;
 		}
@@ -354,33 +278,22 @@ namespace	r_exec{
 			mk_rdx->code(write_index++)=Atom::Set(cmd_count);
 			extent_index=write_index+cmd_count;
 		}
-		
-		//	case of abstraction programs: further processing is performed after all substitutions have been executed.
-		r_exec::View		*input_view;				//	the view of the object being abstracted.
-		RGroup				*r_grp;						//	group where the abstraction takes place.
-		SubstitutionData	*substitution_data=NULL;
-		Code				*binder;					//	ipgm built according to the substitutions which were used for abstraction.
-		uint16				binder_val_index;			//	index of the val_hld i the binder tpl args.
-		uint16				binder_reference_index=0;	//	index of the last reference.
 
 		//	all productions have evaluated correctly; now we can execute the commands one by one.
 		for(uint16	i=1;i<=production_count;++i){
 
 			Context	cmd=*prods.getChild(i);
 			Context	function=*cmd.getChild(1);
-			Context	device=*cmd.getChild(2);
 
 			//	call device functions.
-			Context	args=*cmd.getChild(4);
-			if(device[0].atom==EXECUTIVE_DEVICE){
+			Context	args=*cmd.getChild(2);
+			if(cmd[0].asOpcode()==Opcodes::ICmd){	//	command to the executive.
 
 				if(function[0].asOpcode()==Opcodes::Inject){	//	args:[object view]; retrieve the object and create a view.
 
 					Context	arg1=args.getChild(1);
 					arg1.dereference_once();
 //arg1.trace();
-					uint16	prod_index=arg1[0].asIndex();	//	args[1] is a prod_ptr.
-
 					Code	*object=(*args.getChild(1)).getObject();
 //object->trace();
 					Context	_view=*args.getChild(2);
@@ -492,97 +405,6 @@ namespace	r_exec{
 							break;
 						}
 					}
-				}else	if(function[0].asOpcode()==Opcodes::Subst){	//	args:[cptr iptr-to-val_hld].
-
-					void				*object;		//	object holding values to be substitued for, or variables to be bound.
-					Context::ObjectType	object_type;
-					int16				member_index;	//	points to either a rptr or an iptr to an atomic or structural value.
-					uint32				view_oid;
-					args.getChild(1).getMember(object,view_oid,object_type,member_index);	//	args.getChild(1) is an iptr to a cptr.
-					//args.trace();
-					Context	_var=*args.getChild(2);		//	points to a val_hdl: the val member is either (substitution mode) a tolerance, or (binding mode) an atomic variable, a structural variable or a rptr to a variable object.
-					//_var.trace();
-					Context	_val=*args.getChild(1);		//	dereferenced cptr.
-					//_val.trace();
-					//	language constraints - no runtime check:
-					//	abstraction pgms must specify exactly one input: therefore subst cannot be found in input-less programs or anti-programs.
-					RGRPOverlay	*source=(RGRPOverlay	*)((PGMOverlay	*)this)->getSource();
-					if(!source){	//	substitution mode.
-
-						if(!substitution_data){
-							
-							input_view=(r_exec::View*)((PGMOverlay	*)this)->getInputView(0);
-							r_grp=((RGroup	*)input_view->get_host());
-
-							substitution_data=new	SubstitutionData();
-
-							Code	*abstractor=getObject();
-
-							//	build the binder as a duplicate of the abstractor, then patch its tpl args.
-							binder=_Mem::Get()->buildObject(Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY));
-							for(uint16	i=1;i<abstractor->code_size();++i)
-								binder->code(i)=abstractor->code(i);
-							for(uint16	i=0;i<abstractor->references_size();++i)
-								binder->set_reference(i,abstractor->get_reference(i));
-							binder_val_index=binder->code(binder->code(IPGM_ARGS).asIndex()+1).asIndex()+1;
-						}
-						
-						//	find a variable that was abstracted from the same value; if none, a new one is returned: if of class var, it is injected into the r-grp if not already so.
-						float32	tolerance=_var[1].asFloat();
-						if(_val[0].isFloat()){
-
-							Substitution	s;
-							s.member_index=member_index;
-							s.type=0;
-							s.variable_index=substitution_data->numerical_variables.size();
-
-							Atom	numerical_variable=r_grp->get_numerical_variable(_val[0].asFloat(),tolerance);
-							substitution_data->numerical_variables.push_back(numerical_variable);
-							substitution_data->substitutions[(Code	*)object].push_back(s);
-							binder->code(binder_val_index)=numerical_variable;
-						}else	if(object!=_val.getObject()){
-							
-							Substitution	s;
-							s.member_index=member_index;
-							s.type=2;
-							s.variable_index=substitution_data->variable_objects.size();
-
-							Code	*variable_object=r_grp->get_variable_object(_val.getObject(),tolerance);
-							substitution_data->variable_objects.push_back(variable_object);
-							substitution_data->substitutions[(Code	*)object].push_back(s);
-							binder->code(binder_val_index)=Atom::RPointer(++binder_reference_index);
-							binder->set_reference(binder_reference_index,variable_object);
-						}else	switch(_val[0].getDescriptor()){	//	structure embedded in object's code.
-						case	Atom::OBJECT:
-						case	Atom::TIMESTAMP:
-						case	Atom::STRING:{
-
-							Substitution	s;
-							s.member_index=member_index;
-							s.type=1;
-							s.variable_index=substitution_data->structural_variables.size();
-
-							Atom	structural_variable=r_grp->get_structural_variable(&((Code	*)object)->code(_val.getIndex()),tolerance);
-							substitution_data->structural_variables.push_back(structural_variable);
-							substitution_data->substitutions[(Code	*)object].push_back(s);
-							binder->code(binder_val_index)=structural_variable;
-							break;
-						}
-						}
-						binder_val_index+=VAL_HLD_ARITY;
-					}else{	//	binding mode: _var is of class val_hld and holds an existing variable.
-						
-						if(object!=_val.getObject())
-							source->bind(_val.getObject(),_val.getIndex(),_var.getObject(),_var.getIndex()+1);
-						else
-							source->bind((Code	*)object,_val.getIndex(),_var.getObject(),_var.getIndex()+1);
-					}
-
-					if(mk_rdx){
-
-						mk_rdx->code(write_index++)=Atom::IPointer(extent_index);
-						(*prods.getChild(i)).copy(mk_rdx,extent_index,extent_index);
-					}
 				}else	if(function[0].asOpcode()==Opcodes::NewClass){	// TODO
 
 				}else	if(function[0].asOpcode()==Opcodes::DelClass){	// TODO
@@ -654,12 +476,16 @@ namespace	r_exec{
 					productions.clear();
 					return	false;
 				}
-			}else{	//	in case of an external device, create a cmd object and send it.
+			}else	if(cmd[0].asOpcode()==Opcodes::Cmd){	//	command to an external device, build a cmd object and send it.
 
-				Code	*command=_Mem::Get()->buildObject(cmd[0]);
+				Code	*command=_Mem::Get()->build_object(cmd[0]);
 				cmd.copy(command,0);
 
-				_Mem::Get()->eject(command,command->code(CMD_DEVICE).getNodeID());
+				_Mem::Get()->eject(command);
+				
+				Code	*fact=factory::Object::Fact(command,now,1,1);	//	build a fact of the command and inject it in stdin.
+				View	*view=new	View(true,now,1,1,_Mem::Get()->get_stdin(),getView()->get_host(),fact);	//	SYNC_FRONT, sln=1, res=1,
+				_Mem::Get()->inject(view);
 
 				if(mk_rdx){
 
@@ -669,34 +495,12 @@ namespace	r_exec{
 			}
 		}
 
-		if(substitution_data){
-
-			Code	*original_object=input_view->object;
-			Code	*abstracted_object=AbstractObject(original_object,substitution_data,true);
-
-			original_object->acq_views();
-			original_object->views.erase(input_view);	//	delete the input view from the original's views.
-			if(original_object->views.size()==0)
-				original_object->invalidate();
-			original_object->rel_views();
-
-			input_view->code(VIEW_SLN)=Atom::Float(0);	//	this prevents the abstraction pgm from reducing the abstracted object.
-			input_view->set_object(abstracted_object);
-			_Mem::Get()->inject(input_view);
-
-			//	inject a binding ipgm in the r-grp: an instance of the abstraction pgm, passing as template arguments the variables used for substitution.
-			View	*binder_view=new	View(true,now,0,-1,r_grp,NULL,binder,1);
-			_Mem::Get()->inject(binder_view);
-
-			delete	substitution_data;
-		}
-
 		if(mk_rdx){
 
 			for(uint16	i=1;i<=ntf_grp_count;++i){
 
 				NotificationView	*v=new	NotificationView(getView()->get_host(),getView()->get_host()->get_ntf_grp(i),mk_rdx);
-				_Mem::Get()->injectNotificationNow(v,true,origin);
+				_Mem::Get()->inject_notification(v,true);
 			}
 		}
 
@@ -843,72 +647,55 @@ namespace	r_exec{
 		}
 	}
 
-	void	PGMOverlay::_reduce(r_exec::View	*input){
+	Overlay	*PGMOverlay::reduce(r_exec::View	*input){
 
-		if(alive){
+		uint8	old_reduction_mode=reduction_mode;
+		float32	old_confidence=confidence;
+		uint16	input_index;
+		bool	sim=false;
+		Code	*mk_asmp=input->object->get_asmp();
+		if(input->object->get_hyp()	||	input->object->get_sim())
+			sim=true;
+		switch(match(input,input_index)){
+		case	SUCCESS:
+			if(sim)
+				reduction_mode|=RDX_MODE_SIMULATION;
+			if(mk_asmp){
 
-			uint8	old_reduction_mode=reduction_mode;
-			float32	old_confidence=confidence;
-			uint16	input_index;
-			bool	sim=false;
-			Code	*mk_asmp=input->object->get_asmp();
-			if(input->object->get_hyp()	||	input->object->get_sim())
-				sim=true;
-			switch(match(input,input_index)){
-			case	SUCCESS:
-				if(sim)
-					reduction_mode|=RDX_MODE_SIMULATION;
-				if(mk_asmp){
+				reduction_mode|=RDX_MODE_ASSUMPTION;
+				float32	cfd=mk_asmp->code(MK_ASMP_CFD).asFloat();
+				if(confidence>cfd)
+					confidence=cfd;
+			}
+			if(input_pattern_indices.size()==0){	//	all patterns matched.
 
-					reduction_mode|=RDX_MODE_ASSUMPTION;
-					float32	cfd=mk_asmp->code(MK_ASMP_CFD).asFloat();
-					if(confidence>cfd)
-						confidence=cfd;
-				}
-				if(input_pattern_indices.size()==0){	//	all patterns matched.
+				if(check_timings()	&&	check_guards()	&&	inject_productions()){
 
-					if(check_timings()	&&	check_guards()	&&	inject_productions(NULL)){
-
-						((PGMController	*)controller)->notify_reduction();
-						controller->remove(this);
-						return;
-					}else{
-						reduction_mode=old_reduction_mode;
-						confidence=old_confidence;
-						rollback();
-						return;
-					}
-				}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
-
+					((PGMController	*)controller)->notify_reduction();
 					PGMOverlay	*offspring=new	PGMOverlay(this,input_index,value_commit_index);
 					offspring->reduction_mode=old_reduction_mode;
 					offspring->confidence=old_confidence;
-					controller->add(offspring);
-					commit();
-					return;
+					kill();
+					return	offspring;
+				}else{
+					reduction_mode=old_reduction_mode;
+					confidence=old_confidence;
+					rollback();
+					return	NULL;
 				}
-			case	FAILURE:	//	just rollback: let the overlay match other inputs.
-				rollback();
-				return;
+			}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
+
+				PGMOverlay	*offspring=new	PGMOverlay(this,input_index,value_commit_index);
+				offspring->reduction_mode=old_reduction_mode;
+				offspring->confidence=old_confidence;
+				commit();
+				return	offspring;
 			}
+		case	FAILURE:	//	just rollback: let the overlay match other inputs.
+			rollback();
+		case	IMPOSSIBLE:
+			return	NULL;
 		}
-	}
-
-	void	PGMOverlay::reduce(r_exec::View	*input){
-
-		reductionCS.enter();
-		this->source=NULL;
-		_reduce(input);
-		reductionCS.leave();
-	}
-
-	void	PGMOverlay::reduce(r_exec::View	*input,Overlay	*source){
-
-		reductionCS.enter();
-		this->source=source;
-		_reduce(input);
-		this->source=NULL;
-		reductionCS.leave();
 	}
 
 	PGMOverlay::MatchResult	PGMOverlay::match(r_exec::View	*input,uint16	&input_index){
@@ -1029,39 +816,32 @@ namespace	r_exec{
 	inline	AntiPGMOverlay::~AntiPGMOverlay(){
 	}
 
-	void	AntiPGMOverlay::reduce(r_exec::View	*input){
+	Overlay	*AntiPGMOverlay::reduce(r_exec::View	*input){
 
-		reductionCS.enter();
+		uint16	input_index;
+		switch(match(input,input_index)){
+		case	SUCCESS:
+			if(input_pattern_indices.size()==0){	//	all patterns matched.
 
-		if(alive){
+				if(check_timings()	&&	check_guards()){
 
-			uint16	input_index;
-			switch(match(input,input_index)){
-			case	SUCCESS:
-				if(input_pattern_indices.size()==0){	//	all patterns matched.
-
-					if(check_timings()	&&	check_guards()){
-
-						((AntiPGMController	*)controller)->restart(this);
-						break;
-					}else{
-						rollback();
-						break;
-					}
+					((AntiPGMController	*)controller)->restart();
+					return	NULL;
 				}else{
-
-					AntiPGMOverlay	*offspring=new	AntiPGMOverlay(this,input_index,value_commit_index);
-					controller->add(offspring);
-					commit();
-					break;
+					rollback();
+					return	NULL;
 				}
-			case	FAILURE:	//	just rollback: let the overlay match other inputs.
-				rollback();
-				break;
-			}
-		}
+			}else{
 
-		reductionCS.leave();
+				AntiPGMOverlay	*offspring=new	AntiPGMOverlay(this,input_index,value_commit_index);
+				commit();
+				return	offspring;
+			}
+		case	FAILURE:	//	just rollback: let the overlay match other inputs.
+			rollback();
+		case	IMPOSSIBLE:
+			return	NULL;
+		}
 	}
 
 	Code	*AntiPGMOverlay::get_mk_rdx(uint16	&extent_index)	const{

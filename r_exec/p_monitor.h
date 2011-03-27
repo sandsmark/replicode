@@ -1,4 +1,4 @@
-//	var.h
+//	p_monitor.h
 //
 //	Author: Eric Nivel
 //
@@ -28,24 +28,40 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	var_h
-#define	var_h
+#ifndef	p_monitor_h
+#define	p_monitor_h
 
-#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
-
-#include	"object.h"
+#include	"binding_map.h"
+#include	"overlay.h"
 
 
 namespace	r_exec{
 
-	//	Variable object.
-	//	Values the variable is bound to are held by r-grp overlays.
-	class	r_exec_dll	Var:
-	public	LObject{
+	class	MDLController;
+
+	class	PMonitor:
+	public	_Object{
+	private:
+		P<BindingMap>	bindings;
+		P<Code>	prediction;	//	mk.pred.
+		uint64	expected_time_high;
+		uint64	expected_time_low;
+
+		CriticalSection	matchCS;
+		bool			match;
+
+		MDLController	*controller;
 	public:
-		Var(r_code::Mem	*m=NULL):LObject(m){}
-		Var(r_code::SysObject	*source,r_code::Mem	*m=NULL):LObject(source,m){}
-		~Var(){}
+		PMonitor(	MDLController	*controller,
+					BindingMap		*bindings,
+					Code			*prediction,
+					uint64			expected_time_high,
+					uint64			expected_time_low);
+		~PMonitor();
+
+		bool	is_alive();
+		bool	reduce(Code	*input);
+		void	update();
 	};
 }
 

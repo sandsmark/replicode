@@ -1,4 +1,4 @@
-//	model.cpp
+//	hlp_overlay.h
 //
 //	Author: Eric Nivel
 //
@@ -28,59 +28,33 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"model.h"
-#include	"mem.h"
+#ifndef	hlp_overlay_h
+#define	hlp_overlay_h
+
+#include	"overlay.h"
+#include	"binding_map.h"
 
 
 namespace	r_exec{
 
-	Model::Model(r_code::Mem	*m):LObject(m),CriticalSection(),output_count(0),success_count(0),failure_count(0){
-	}
+	//	HLP: high-level patterns.
+	class	HLPOverlay:
+	public	Overlay{
+	protected:
+		P<BindingMap>	bindings;
 
-	Model::Model(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),CriticalSection(),output_count(0),success_count(0),failure_count(0){
-	}
+		uint8	reduction_mode;
 
-	Model::~Model(){
-	}
+		std::list<Code	*>	patterns;
 
-	void	Model::register_outcome(bool	measurement,float32	confidence){
+		Code	*get_mk_sim(Code	*object)	const;
+		Code	*get_mk_asmp(Code	*object)	const;
 
-		enter();
-		++output_count;
-		if(measurement)	//	one success.
-			success_count+=confidence;
-		else
-			failure_count+=confidence;
-		leave();
-	}
-
-	float32	Model::get_success_rate()	const{
-
-		return	success_count/((float32)output_count);
-	}
-
-	float32	Model::get_failure_rate()	const{
-
-		return	failure_count/((float32)output_count);
-	}
-
-	void	Model::inject_opposite(Code	*fact)	const{
-
-		uint64	now=Now();
-		uint16	out_group_set_index=code(MD_OUT_GRPS).asIndex();
-		uint16	out_group_count=code(out_group_set_index).getAtomCount();
-
-		Code	*f;
-		if(fact->code(0).asOpcode()==Opcodes::Fact)
-			f=factory::Object::AntiFact(fact->get_reference(0),now,1,1);
-		else
-			f=factory::Object::Fact(fact->get_reference(0),now,1,1);
-
-		for(uint16	i=1;i<=out_group_count;++i){	//	inject the negative findings in the ouptut groups.
-
-			Code	*out_group=get_reference(code(out_group_set_index+i).asIndex());
-			View	*view=new	View(true,now,1,1,out_group,NULL,f);
-			_Mem::Get()->inject(view);
-		}
-	}
+		HLPOverlay(Controller	*c,const	BindingMap	*bindings,uint8	reduction_mode);
+	public:
+		virtual	~HLPOverlay();
+	};
 }
+
+
+#endif

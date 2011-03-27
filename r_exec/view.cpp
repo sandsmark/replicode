@@ -97,11 +97,11 @@ namespace	r_exec{
 			break;
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
+		case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
+		case	Atom::INSTANTIATED_ANTI_PROGRAM:
+		case	Atom::COMPOSITE_STATE:
+		case	Atom::MODEL:
 			code(VIEW_ACT)=Atom::Float(MorphValue(view->code(VIEW_ACT).asFloat(),source->get_act_thr(),group->get_act_thr()));
-			break;
-		case	Atom::REDUCTION_GROUP:
-			code(VIEW_ACT)=Atom::Float(MorphValue(view->code(VIEW_ACT).asFloat(),source->get_vis_thr(),group->get_vis_thr()));
-			code(GRP_VIEW_VIS)=Atom::Float(MorphValue(view->code(GRP_VIEW_VIS).asFloat(),source->get_act_thr(),group->get_act_thr()));
 			break;
 		}
 
@@ -258,6 +258,8 @@ namespace	r_exec{
 		code(VIEW_HOST)=r_code::Atom::RPointer(0);			//	destination.
 		code(VIEW_ORG)=r_code::Atom::RPointer(1);			//	origin.
 		code(VIEW_ARITY+1)=r_code::Atom::Timestamp();		//	ijt will be set at injection time.
+		code(VIEW_ARITY+2)=0;
+		code(VIEW_ARITY+3)=0;
 		references[0]=destination;
 		references[1]=origin;
 

@@ -38,6 +38,7 @@ namespace	r_exec{
 	uint16	Opcodes::GrpView;
 
 	uint16	Opcodes::Ent;
+	uint16	Opcodes::MkVal;
 
 	uint16	Opcodes::Grp;
 
@@ -47,14 +48,16 @@ namespace	r_exec{
 	uint16	Opcodes::IPgm;
 	uint16	Opcodes::Pgm;
 	uint16	Opcodes::AntiPgm;
-	uint16	Opcodes::Fmd;
-	uint16	Opcodes::Imd;
 
+	uint16	Opcodes::ICmd;
 	uint16	Opcodes::Cmd;
 
 	uint16	Opcodes::Var;
 	uint16	Opcodes::Fact;
 	uint16	Opcodes::AntiFact;
+
+	uint16	Opcodes::ICST;
+	uint16	Opcodes::IMDL;
 
 	uint16	Opcodes::MkPred;
 	uint16	Opcodes::MkGoal;
@@ -81,7 +84,6 @@ namespace	r_exec{
 	uint16	Opcodes::Eject;
 	uint16	Opcodes::Mod;
 	uint16	Opcodes::Set;
-	uint16	Opcodes::Subst;
 	uint16	Opcodes::NewClass;
 	uint16	Opcodes::DelClass;
 	uint16	Opcodes::LDC;

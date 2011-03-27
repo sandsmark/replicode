@@ -1,4 +1,4 @@
-//	var.cpp
+//	g_monitor.h
 //
 //	Author: Eric Nivel
 //
@@ -28,9 +28,50 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"var.h"
+#ifndef	g_monitor_h
+#define	g_monitor_h
+
+#include	"binding_map.h"
+#include	"overlay.h"
 
 
 namespace	r_exec{
 
+	class	HLPController;
+
+	class	GMonitor:
+	public	_Object{
+	protected:
+		P<Code>	goal;	//	mk.goal.
+		P<Code>	super_goal;	//	mk.goal.
+		uint64	expected_time_high;
+		uint64	expected_time_low;
+
+		P<BindingMap>	bindings;
+
+		P<Code>	matched_pattern;
+
+		CriticalSection	matchCS;
+		bool			match;
+
+		HLPController	*controller;
+	public:
+		GMonitor(	HLPController	*controller,
+					BindingMap	*bindings,
+					Code		*goal,
+					Code		*super_goal,
+					Code		*matched_pattern,
+					uint64		expected_time_high,
+					uint64		expected_time_low);
+		virtual	~GMonitor();
+
+		bool	is_alive();
+		virtual	bool	reduce(Code	*input);
+		void	update();
+
+		uint64	get_deadline()	const{	return	expected_time_high;	}
+	};
 }
+
+
+#endif

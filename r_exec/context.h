@@ -246,12 +246,14 @@ namespace	r_exec{
 				break;
 			}case	Atom::OPERATOR:
 			case	Atom::OBJECT:
-			case	Atom::MODEL:
 			case	Atom::MARKER:
 			case	Atom::INSTANTIATED_PROGRAM:
 			case	Atom::INSTANTIATED_CPP_PROGRAM:
+			case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
+			case	Atom::INSTANTIATED_ANTI_PROGRAM:
+			case	Atom::COMPOSITE_STATE:
+			case	Atom::MODEL:
 			case	Atom::GROUP:
-			case	Atom::REDUCTION_GROUP:
 			case	Atom::SET:
 			case	Atom::S_SET:
 			case	Atom::STRING:
@@ -412,7 +414,7 @@ namespace	r_exec{
 		bool	match(const	Context	&input)	const;
 
 		//	called by operators.
-		r_code::Code	*buildObject(Atom	head)	const{	return	overlay->buildObject(head);	}
+		r_code::Code	*build_object(Atom	head)	const{	return	overlay->build_object(head);	}
 
 		void	trace()	const;
 	};

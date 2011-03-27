@@ -34,7 +34,7 @@
 #include	"reduction_core.h"
 #include	"time_core.h"
 #include	"pgm_overlay.h"
-#include	"rgrp_overlay.h"
+#include	"binding_map.h"
 #include	"dll.h"
 
 #include	<list>
@@ -71,6 +71,8 @@ namespace	r_exec{
 		uint32	goal_res;
 		uint32	asmp_res;
 		uint32	sim_res;
+		float32	float_tolerance;
+		float32	time_tolerance;
 
 		PipeNN<P<_ReductionJob>,1024>	*reduction_job_queue;
 		PipeNN<P<TimeJob>,1024>			*time_job_queue;
@@ -106,6 +108,22 @@ namespace	r_exec{
 		CriticalSection	objectsCS;
 
 		//	Utilities.
+		class	GroupState{
+		public:
+			float32	former_sln_thr;
+			bool	was_c_active;
+			bool	is_c_active;
+			bool	was_c_salient;
+			bool	is_c_salient;
+			GroupState(	float32	former_sln_thr,
+						bool	was_c_active,
+						bool	is_c_active,
+						bool	was_c_salient,
+						bool	is_c_salient):former_sln_thr(former_sln_thr),was_c_active(was_c_active),is_c_active(is_c_active),was_c_salient(was_c_salient),is_c_salient(is_c_salient){}
+		};
+		void	_update_visibility(Group	*group,GroupState	*state,View	*view);
+		void	_update_saliency(Group	*group,GroupState	*state,View	*view);
+		void	_update_activation(Group	*group,GroupState	*state,View	*view);
 		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr);
 		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
 		void	_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
@@ -116,6 +134,8 @@ namespace	r_exec{
 		uint32	probe_level;
 
 		uint64	starting_time;
+
+		virtual	void	init_timings(uint64	now)=0;
 
 		_Mem();
 	public:
@@ -128,14 +148,16 @@ namespace	r_exec{
 
 		virtual	~_Mem();
 
-		void	init(uint32	base_period,	//	in us; same for upr, spr and res.
+		void	init(uint32	base_period,	//	in us.
 					uint32	reduction_core_count,
 					uint32	time_core_count,
 					uint32	probe_level,
 					uint32	ntf_mk_res,	//	resilience for notifications markers.
 					uint32	goal_res,	//	resilience for goals.
 					uint32	asmp_res,	//	resilience for assumptions.
-					uint32	sim_res);	//	resilience for simulations.
+					uint32	sim_res,	//	resilience for simulations.
+					float32	float_tolerance,
+					float32	time_tolerance);
 
 		uint64	get_base_period()	const{	return	base_period;	}
 		uint64	get_probe_level()	const{	return	probe_level;	}
@@ -144,6 +166,8 @@ namespace	r_exec{
 		uint32	get_goal_res()		const{	return	goal_res;	}
 		uint32	get_asmp_res()		const{	return	asmp_res;	}
 		uint32	get_sim_res()		const{	return	sim_res;	}
+		float32	get_float_tolerance()	const{	return	float_tolerance;	}
+		float32	get_time_tolerance()	const{	return	time_tolerance;	}
 
 		Code	*get_root()		const;
 		Code	*get_stdin()	const;
@@ -167,7 +191,7 @@ namespace	r_exec{
 		//	Called by groups at update time.
 		//	Called by PGMOverlays at reduction time.
 		//	Called by AntiPGMOverlays at signaling time and reduction time.
-		virtual	void	injectNotificationNow(View	*view,bool	lock,Controller	*origin=NULL)=0;
+		virtual	void	inject_notification(View	*view,bool	lock)=0;
 
 		//	Internal core processing	////////////////////////////////////////////////////////////////
 
@@ -188,18 +212,17 @@ namespace	r_exec{
 		void	update(Group	*group);
 
 		//	Called upon successful reduction.
-		virtual	void	injectNow(View	*view)=0;
-		virtual	void	injectGroupNow(View	*view,Group	*object,Group	*host)=0;
-		void	injectExistingObjectNow(View	*view,Code	*object,Group	*host,bool	lock);
+		virtual	void	inject_new_object(View	*view)=0;
+				void	inject_existing_object(View	*view,Code	*object,Group	*host,bool	lock);
 
 		//	Called as a result of a group update (sln change).
 		//	Calls mod_sln on the object's view with morphed sln changes.
 		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);
 
 		//	Called by groups.
-		void	injectCopyNow(View	*view,Group	*destination,uint64	now);	//	for cov; NB: no cov for groups, r-groups, models, pgm or notifications.
-		void	inject_reduction_jobs(View	*view,Group	*host,Controller	*origin=NULL);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
-																							//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
+		void	inject_copy(View	*view,Group	*destination,uint64	now);	//	for cov; NB: no cov for groups, r-groups, models, pgm or notifications.
+		void	inject_reduction_jobs(View	*view,Group	*host);	//	builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
+																//	builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
 
 		//	Interface for overlays and I/O devices	////////////////////////////////////////////////////////////////
 		virtual	void	inject(View	*view)=0;
@@ -212,9 +235,15 @@ namespace	r_exec{
 
 		//	From rMem to I/O device.
 		//	To be redefined by object transport aware subcalsses.
-		virtual	void	eject(Code	*command,uint16	nodeID);
+		virtual	void	eject(Code	*command);
 
-		virtual	r_code::Code	*buildObject(Atom	head)=0;
+		virtual	r_code::Code	*build_object(Atom	head)=0;
+				r_code::Code	*clone_object(r_code::Code	*object);	//	views are cloned; markers are not.
+				r_code::Code	*abstract_object(r_code::Code	*object);
+				r_code::Code	*abstract_high_level_pattern(r_code::Code	*object);
+				r_code::Code	*abstract_high_level_pattern(r_code::Code	*object,BindingMap	*bm);
+				r_code::Code	*abstract_object(r_code::Code	*object,BindingMap	*bm);
+				void			abstract_object_member(r_code::Code	*object,uint16	index,BindingMap	*bm);
 	};
 
 	//	O is the class of the objects held by the rMem (except groups and notifications):
@@ -242,26 +271,27 @@ namespace	r_exec{
 			object->is_registered=true;
 		}
 
+		void	init_timings(uint64	now);
+
 		//	Functions called by internal processing of jobs (see internal processing section below).
-		void	injectNow(View	*view);	//	also called by inject() (see below).
-		void	injectGroupNow(View	*view,Group	*object,Group	*host);
+		void	inject_new_object(View	*view);	//	also called by inject() (see below).
 	public:
 		Mem();
 		virtual	~Mem();
 
 		//	Called by r_comp::Image.
-		r_code::Code	*buildObject(r_code::SysObject	*source);
+		r_code::Code	*build_object(r_code::SysObject	*source);
 
 		//	Called by operators and overlays.
-		r_code::Code	*buildObject(Atom	head);
+		r_code::Code	*build_object(Atom	head);
 
 		bool	load(std::vector<r_code::Code	*>	*objects);	//	call before start; no mod/set/eje will be executed (only inj);
 																//	ijt will be set at now=Time::Get() whatever the source code.
 																//	return false on error.
-		void	deleteObject(Code	*object);	//	called by object destructors/Group::clear().
+		void	delete_object(Code	*object);	//	called by object destructors/Group::clear().
 
 		//	External device I/O	////////////////////////////////////////////////////////////////
-		r_comp::Image	*getImage();	//	create an image; fill with all objects; call only when stopped.
+		r_comp::Image	*get_image();	//	create an image; fill with all objects; call only when stopped.
 
 		//	Executive device functions	////////////////////////////////////////////////////////
 		
@@ -273,7 +303,7 @@ namespace	r_exec{
 		void	inject(O	*object,View	*view);
 
 		//	Variant of injectNow optimized for notifications.
-		void	injectNotificationNow(View	*view,bool	lock,Controller	*origin=NULL);
+		void	inject_notification(View	*view,bool	lock);
 
 		//	Called by time cores.	////////////////////////////////////////////////////////////////
 		void	update(SaliencyPropagationJob	*j);

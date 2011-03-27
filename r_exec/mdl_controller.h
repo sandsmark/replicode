@@ -1,4 +1,4 @@
-//	monitor.inline.cpp
+//	mdl_controller.h
 //
 //	Author: Eric Nivel
 //
@@ -28,24 +28,57 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef	mdl_controller_h
+#define	mdl_controller_h
+
+#include	"hlp_overlay.h"
+#include	"hlp_controller.h"
+#include	"p_monitor.h"
+
+
 namespace	r_exec{
 
-	inline	void	GSMonitor::kill_family(){
+	class	MDLOverlay:
+	public	HLPOverlay{
+	protected:
+		void	inject_prediction(Code	*input)	const;
 
-		if(family)
-			for(uint16	i=0;i<family->size();++i){
+		MDLOverlay(const	MDLOverlay	*original);
+	public:
+		MDLOverlay(Controller	*c,const	BindingMap	*bindngs,uint8	reduction_mode);
+		~MDLOverlay();
 
-				GSMonitor	*m=(*family)[i];
-				m->kill();
-				controller->remove(m);
-			}
-	}
+		Overlay	*reduce(View	*input);
+		void	load_patterns();
+		Code	*instantiate_pattern(uint64	now,uint32	&resilience);
+	};
 
-	inline	void	GSMonitor::update_reduction_mode(Code	*input_object){
+	class	MDLController:
+	public	HLPController{
+	private:
+		CriticalSection			p_monitorsCS;
+		std::list<P<PMonitor> >	p_monitors;
 
-		if(input_object->get_sim())
-			reduction_mode|=RDX_MODE_SIMULATION;
-		if(input_object->get_asmp())
-			reduction_mode|=RDX_MODE_ASSUMPTION;
-	}
+		HLPController	*get_rhs_controller()	const;
+		Code	*get_ntf_instance(BindingMap	*bm)	const;
+	public:
+		MDLController(r_code::View	*view);
+		~MDLController();
+
+		void	reduce(r_exec::View	*input);
+
+		void	add_monitor(PMonitor	*m);
+		void	remove_monitor(PMonitor	*m);
+
+		void	monitor(Code	*object);
+
+		Code	*get_lhs()	const;
+		Code	*get_rhs()	const;
+
+		void	gain_activation()	const;
+		void	lose_activation()	const;
+	};
 }
+
+
+#endif

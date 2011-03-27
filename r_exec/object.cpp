@@ -48,40 +48,10 @@ namespace	r_exec{
 					object->code(0).asOpcode()==Opcodes::MkLowSln	||
 					object->code(0).asOpcode()==Opcodes::MkNew		||
 					object->code(0).asOpcode()==Opcodes::MkRdx		||
-					object->code(0).asOpcode()==Opcodes::MkSlnChg;
+					object->code(0).asOpcode()==Opcodes::MkSlnChg	||
+					object->code(0).asOpcode()==Opcodes::MkSuccess;
 		default:
 			return	false;
-		}
-	}
-
-	ObjectType	GetType(Code	*object){
-
-		switch(object->code(0).getDescriptor()){
-		case	Atom::INSTANTIATED_PROGRAM:
-			if(object->get_reference(0)->code(0).asOpcode()==Opcodes::Pgm){
-
-				if(object->get_reference(0)->code(object->get_reference(0)->code(PGM_INPUTS).asIndex()).getAtomCount()>0)
-					return	IPGM;
-				else
-					return	INPUT_LESS_IPGM;
-			}else
-				return	ANTI_IPGM;
-		case	Atom::OBJECT:
-			if(object->code(0).asOpcode()==Opcodes::Var)
-				return	VARIABLE;
-			return	OBJECT;
-		case	Atom::MODEL:
-			if(object->code(0).asOpcode()==Opcodes::Fmd)
-				return	FWD_MODEL;
-			if(object->code(0).asOpcode()==Opcodes::Imd)
-				return	INV_MODEL;
-		case	Atom::MARKER:
-			return	MARKER;
-		case	Atom::GROUP:
-		case	Atom::REDUCTION_GROUP:
-			return	GROUP;
-		case	Atom::INSTANTIATED_CPP_PROGRAM:
-			return	ICPP_PGM;
 		}
 	}
 }
