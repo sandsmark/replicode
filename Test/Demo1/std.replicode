@@ -1,0 +1,149 @@
+; std.replicode
+
+; utilities.
+!class (_obj :~ psln_thr:nb)
+!class (_grp (_obj {upr:nb sln_thr:nb act_thr:nb vis_thr:nb c_sln:nb c_sln_thr:nb c_act:nb c_act_thr:nb dcy_per:nb dcy_tgt:nb dcy_prd:nb dcy_auto:nb sln_chg_thr:nb sln_chg_prd:nb act_chg_thr:nb act_chg_prd:nb avg_sln:nb high_sln:nb low_sln:nb avg_act:nb high_act:nb low_act:nb high_sln_thr:nb low_sln_thr:nb sln_ntf_prd:nb high_act_thr:nb low_act_thr:nb act_ntf_prd:nb ntf_new:nb low_res_thr:nb ntf_grps:[::grp] :~}))
+!class (_in_sec[] inputs:[] timings:[::xpr] guards:[::xpr] :~)
+!class (_fact (_obj {obj: time: cfd:nb :~}))
+!class (val (_obj val:))
+
+; mapping low-level objects -> r-code.
+!class (view[] sync:bl ijt:us sln:nb res:nb grp:grp org:)
+!class (grp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: cov:bl vis:nb)
+!class (pgm_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: act:nb)
+!class (ptn skel:xpr guards:[::xpr])
+!class (|ptn skel:xpr guards:[::xpr])
+!class (pgm (_obj {tpl:[::ptn] input:(_in_sec nil) prods:}))
+!class (|pgm (_obj {tpl:[::ptn] input:(_in_sec nil) prods:}))
+!class (grp (_grp nil))
+!class (icmd function:fid args:[])
+!class (cmd (_obj {function:fid args:[]}))
+!class (ent (_obj nil))
+!class (ont (_obj nil))
+!class (dev (_obj nil))
+!class (nod (_obj id:nid))
+!class (ipgm (_obj {code: args:[] run:bl tsc:us nfr:bl}))
+!class (icpp_pgm (_obj {code:st args:[] run:bl tsc:us nfr:bl}))
+
+; mapping low-level markers -> r-code.
+!class (mk.rdx (_obj {code: inputs:[] prods:[]}))
+!class (mk.|rdx (_obj {code: prods:[]}))
+!class (mk.low_sln (_obj obj:))
+!class (mk.high_sln (_obj obj:))
+!class (mk.low_act (_obj obj:))
+!class (mk.high_act (_obj obj:))
+!class (mk.low_res (_obj obj:))
+!class (mk.sln_chg (_obj {obj: chg:nb}))
+!class (mk.act_chg (_obj {obj: chg:nb}))
+!class (mk.new (_obj obj:))
+
+; mapping high-level objects -> r-code.
+!class (mk.val (_obj {obj: attr: val:}))
+!class (val_hld val:)
+!class (fact (_fact nil))
+!class (|fact (_fact nil))
+!class (var (_obj nil))
+!class (cst (_obj {objs:[] out_grps:[::grp] tsc:us}))
+!class (mdl (_obj {objs:[] out_grps:[::grp] tsc:us}))
+!class (icst (_obj {cst: args:[]}))
+!class (imdl (_obj {mdl: args:[]}))
+
+; mapping high-level markers -> r-code.
+!class (mk.pred (_obj {obj: cfd:nb}))
+!class (mk.goal (_obj {obj: actr:}))
+!class (mk.sim (_obj {obj: src:}))
+!class (mk.hyp (_obj obj:))
+!class (mk.asmp (_obj {obj: src: cfd:nb}))
+!class (mk.success (_obj obj:))
+
+; mapping operator opcodes -> r-atoms.
+!op (_now):us
+!op (rnd :nb):nb
+!op (equ : :):
+!op (neq : :):
+!op (gtr : :):
+!op (lsr : :):
+!op (gte : :):
+!op (lse : :):
+!op (add : :):
+!op (sub : :):
+!op (mul :nb :nb):nb
+!op (div :nb :nb):nb
+!op (dis :nb :nb):nb
+!op (ln :nb):nb
+!op (exp :nb):nb
+!op (log :nb):nb
+!op (e10 :nb):nb
+!op (syn :):
+!op (ins : :[] :bl :us :bl):
+!op (red :[] :[] :[]):[]
+!op (fvw : :):
+
+; operator aliases.
+!def now (_now)
+!def = equ
+!def <> neq
+!def > gtr
+!def < lsr
+!def <= gte
+!def >= lse
+!def + add
+!def - sub
+!def * mul
+!def \ syn
+
+; mapping devices -> r-atoms.
+!def exe 0xA1000000; the executive.
+
+; mapping device functions -> r-atoms.
+!dfn (_inj : :)
+!dfn (_eje : : :nid)
+!dfn (_mod : :nb)
+!dfn (_set : :nb)
+!dfn (_subst : :val_hld)
+!dfn (_new_class :)
+!dfn (_del_class :)
+!dfn (_ldc :st)
+!dfn (_swp :nb)
+!dfn (_new_dev :st :nb)
+!dfn (_del_dev :did)
+!dfn (_prb :nb :st :st :[])
+!dfn (_suspend :st :st :[])
+!dfn (_stop)
+
+; device functions aliases.
+!def (inj args) (icmd _inj args)
+!def (eje args) (icmd _eje args)
+!def (mod args) (icmd _mod args)
+!def (set args) (icmd _set args)
+!def (new_class args) (icmd _new_class args)
+!def (del_class args) (icmd _del_class args)
+!def (ldc args) (icmd _ldc args)
+!def (swp args) (icmd _swp args)
+!def (new_dev args) (icmd _new_dev args)
+!def (del_dev args) (icmd _del_dev args)
+!def (prb args) (icmd _prb args)
+!def (stop args) (icmd _stop args)
+!def (suspend args) (icmd _suspend args)
+
+; various constants.
+!counter __constant 0
+!def OFF __constant
+!def ON __constant
+
+; parameters for tuning the behavior of reactive objects.
+; member nfr.
+!def SILENT false ; no notification upon production
+!def NOTIFY true ; notification upon productions
+
+; parameters for tuning the behavior of groups.
+!def DCY_SLN 0
+!def DCY_SLN_THR 1
+!def COV_ON true
+!def COV_OFF false
+
+!def SYNC_FRONT true
+!def SYNC_STATE false
+
+!def RUN_ALWAYS true
+!def RUN_ONCE false

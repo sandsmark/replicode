@@ -42,9 +42,9 @@ namespace	r_code{
 
 	uint8	Atom::GetTolerance(float32	t){
 
-		if(t<0)
+		if(t<=0)
 			return	0;
-		if(t>1)
+		if(t>=1)
 			return	1;
 		float32	f=t*127;
 		uint8	u=f;
@@ -221,12 +221,15 @@ namespace	r_code{
 		case	OPERATOR:				std::cout<<"op: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		case	STRING:					std::cout<<"st: "<<std::dec<<(uint16)getAtomCount();Members_to_go=String_data=getAtomCount();Char_count=(atom	&	0x000000FF);return;
 		case	TIMESTAMP:				std::cout<<"us";Members_to_go=Timestamp_data=2;return;
-		case	INSTANTIATED_PROGRAM:	std::cout<<"ipgm: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		case	GROUP:					std::cout<<"grp: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
-		case	REDUCTION_GROUP:		std::cout<<"rgrp: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
-		case	INSTANTIATED_CPP_PROGRAM:	std::cout<<"icpp_pgm: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	INSTANTIATED_PROGRAM:
+		case	INSTANTIATED_ANTI_PROGRAM:
+		case	INSTANTIATED_INPUT_LESS_PROGRAM:
+										std::cout<<"ipgm: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	COMPOSITE_STATE:		std::cout<<"cst: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		case	MODEL:					std::cout<<"mdl: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		case	NUMERICAL_VARIABLE:		std::cout<<"num_var: "<<std::dec<<getVariableID()<<" "<<std::fixed<<getTolerance();return;
+		case	BOOLEAN_VARIABLE:		std::cout<<"num_var: "<<std::dec<<getVariableID();return;
 		case	STRUCTURAL_VARIABLE:	std::cout<<"struct_var: "<<std::dec<<getVariableID()<<" "<<std::fixed<<getTolerance();return;
 		default:
 			if(Timestamp_data){

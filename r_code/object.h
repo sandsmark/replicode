@@ -234,6 +234,7 @@ namespace	r_code{
 				code(i).trace();
 				std::cout<<std::endl;
 			}
+			std::cout<<"OID: "<<getOID()<<std::endl;
 		}
 	};
 
@@ -277,8 +278,8 @@ namespace	r_code{
 	public:
 		static	Mem	*Get();
 
-		virtual	Code	*buildObject(SysObject	*source)=0;
-		virtual	void	deleteObject(Code	*object)=0;
+		virtual	Code	*build_object(SysObject	*source)=0;
+		virtual	void	delete_object(Code	*object)=0;
 		virtual	uint32	get_oid()=0;
 	};
 }

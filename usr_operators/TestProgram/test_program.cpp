@@ -57,7 +57,7 @@ public:
 	~TestController(){
 	}
 
-	void	take_input(r_exec::View	*input,r_exec::Controller	*origin=NULL){
+	void	take_input(r_exec::View	*input){
 
 		//	Inputs are all types of objects - salient or that have become salient depending on their view's sync member.
 		//	Manual filtering may be needed instead of pattern-matching.

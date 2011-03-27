@@ -1225,13 +1225,13 @@ bool	RepliCondition::isActive(UNORDERED_MAP<std::string,RepliMacro	*>	&RepliMacr
 				Atom	atom;
 				if(class_name=="grp")
 					atom=Atom::Group(class_opcode,members.size());
-				else	if(class_name=="rgrp")
-					atom=Atom::ReductionGroup(class_opcode,members.size());
 				else	if(class_name=="ipgm")
 					atom=Atom::InstantiatedProgram(class_opcode,members.size());
 				else	if(class_name=="icpp_pgm")
 					atom=Atom::InstantiatedCPPProgram(class_opcode,members.size());
-				else	if(class_name=="fmd"	||	class_name=="imd")
+				else	if(class_name=="cst")
+					atom=Atom::CompositeState(class_opcode,members.size());
+				else	if(class_name=="mdl")
 					atom=Atom::Model(class_opcode,members.size());
 				else	if(class_name.find("mk.")!=string::npos)
 					atom=Atom::Marker(class_opcode,members.size());

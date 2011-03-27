@@ -92,6 +92,8 @@ namespace	r_code{
 			if(l%4)
 				object->code(++s_index)=_st;
 		}
+
+		static	int32	GetResilience(uint64	time_to_live,uint64	upr);	//	ttl: us, upr: us.
 	};
 }
 

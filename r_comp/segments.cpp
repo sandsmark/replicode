@@ -415,7 +415,7 @@ namespace	r_comp{
 	void	Image::getObjects(Mem	*mem,r_code::vector<Code	*>	&ram_objects){
 
 		for(uint16	i=0;i<code_segment.objects.size();++i)
-			ram_objects[i]=mem->buildObject(code_segment.objects[i]);
+			ram_objects[i]=mem->build_object(code_segment.objects[i]);
 		unpackObjects(ram_objects);
 	}
 

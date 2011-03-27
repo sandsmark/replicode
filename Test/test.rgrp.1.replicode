@@ -154,10 +154,10 @@ build_model:(pgm |[] |[] []
       fmd:(fmd r_grp1 [root] [root] 4000us 1); fmd points to the head r-group.
       [SYNC_FRONT now 0 forever stdin nil 1]; put the fmd in stdin, in an active state.
    )
-   (inj []
-      (imd r_grp3 [root] [root] fmd 1); imd points to the tail r-group.
-      [SYNC_FRONT now 0 forever stdin nil 1]; put the imd in stdin, in an active state.
-   )
+;   (inj []
+;      (imd r_grp3 [root] [root] fmd 1); imd points to the tail r-group.
+;      [SYNC_FRONT now 0 forever stdin nil 1]; put the imd in stdin, in an active state.
+;   )
 1)
 |[]
 
@@ -199,7 +199,7 @@ inject_inputs:(pgm |[] |[] []
 
 i_inject_inputs:(ipgm inject_inputs |[] RUN_ONCE 120000us SILENT 1)
 []
-   [SYNC_FRONT now 0 forever root nil 0]
+   [SYNC_FRONT now 0 forever root nil 1]
 
 
 ; an assumption is produced (mk.asmp (fact (mk.val cup pos (vec3 2 2 2) 1) new_t 1) fmd 1 1).
@@ -234,7 +234,7 @@ inject_goal:(pgm |[] |[] []
 
 i_inject_goal:(ipgm inject_goal |[] RUN_ONCE 140000us NOTIFY 1)
 []
-   [SYNC_FRONT now 0 2 root nil 1]
+   [SYNC_FRONT now 0 2 root nil 0]
 
 ; the goal (mk.goal (fact (mk.val a_variable hold cup 1) 160000us 1) imd0 1) is produced.
 ; the goal is monitored and this produces a failure, i.e. (|fact (mk.success ...)), since no such input exists at the specified time,

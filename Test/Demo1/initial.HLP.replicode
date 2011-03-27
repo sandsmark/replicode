@@ -1,0 +1,43 @@
+; initial high-level patterns (HLP).
+; abstraction is fully automatic: HLPs are built from examples.
+; the provided examples will die at the first upr.
+
+; utilities.
+
+a_cube:(ent 1) |[]
+
+
+; same position.
+
+same_pos_1:(mk.val self_right_hand position (vec3 0 0 0) 1) |[]
+f_same_pos_1:(fact same_pos_1 0us 1 1) |[]
+
+same_pos_2:(mk.val a_cube position (vec3 0 0 0) 1) |[]
+f_same_pos_2:(fact same_pos_2 0us 1 1) |[]
+
+same_pos:(cst [f_same_pos_1 f_same_pos_2] [stdout] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

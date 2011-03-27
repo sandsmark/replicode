@@ -26,7 +26,7 @@ public:
 		delete	correlator;
 	}
 
-	void	take_input(r_exec::View	*input,r_exec::Controller	*origin=NULL){
+	void	take_input(r_exec::View	*input){
 static	bool	once=false;if(once)return;
 		//	Inputs are all types of objects - salient or that have become salient depending on their view's sync member.
 		//	Manual filtering is needed instead of pattern-matching.
@@ -34,10 +34,11 @@ static	bool	once=false;if(once)return;
 		std::string	episode_end="episode_end";
 		if(input->object->code(0).asOpcode()==r_exec::Metadata.getClass(episode_end)->atom.asOpcode()){
 
-			r_exec::ReductionJob<CorrelatorController>	*j=new	r_exec::ReductionJob<CorrelatorController>(input,this);
-			r_exec::_Mem::Get()->pushReductionJob(j);once=true;
-		}else
-			correlator->take_input(input);
+			//r_exec::ReductionJob<CorrelatorController>	*j=new	r_exec::ReductionJob<CorrelatorController>(input,this);
+			//r_exec::_Mem::Get()->pushReductionJob(j);once=true;
+			reduce(input);once=true;
+			}else{//std::cout<<"input\n";
+		correlator->take_input(input);}
 	}
 
 	void	reduce(r_exec::View	*input){
@@ -58,7 +59,7 @@ static	bool	once=false;if(once)return;
 	void	decompile(uint64	time_offset){
 
 		r_exec::_Mem::Get()->suspend();
-		r_comp::Image	*image=((r_exec::Mem<r_exec::LObject>	*)r_exec::_Mem::Get())->getImage();
+		r_comp::Image	*image=((r_exec::Mem<r_exec::LObject>	*)r_exec::_Mem::Get())->get_image();
 		r_exec::_Mem::Get()->resume();
 
 		uint32	object_count=decompiler.decompile_references(image);

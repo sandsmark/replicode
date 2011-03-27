@@ -203,12 +203,12 @@ namespace	r_comp{
 
 			indent(false);
 
-			if(current_class.str_opcode=="grp"	||	current_class.str_opcode=="rgrp")
+			if(current_class.str_opcode=="grp")
 				current_class=_metadata->classes.find("grp_view")->second;
 			else	if(current_class.str_opcode=="ipgm"			||
 						current_class.str_opcode=="icpp_pgm"	||
-						current_class.str_opcode=="fmd"			||
-						current_class.str_opcode=="imd")
+						current_class.str_opcode=="mdl"			||
+						current_class.str_opcode=="cst")
 				current_class=_metadata->classes.find("pgm_view")->second;
 			else
 				current_class=_metadata->classes.find("view")->second;

@@ -7,17 +7,21 @@
 	  time_core_count="1"
   	
     notification_resilience="1000"
-    goal_resilience="1000"
-    assumption_resilience="1000"
-    simulation_resilience="1000"
+    
+    goal_resilience="10000"
+    assumption_resilience="10000"
+    simulation_resilience="10000"
+    
+    float_tolerance="0.1"
+    time_tolerance="0.1"
     
 	  run_time="1000"
     
     probe_level="2"
-    
+
     usr_operator_path="./usr_operators.dll"
-    usr_class_path="../Test/rgrp.user.classes.replicode"
-    source_file_name="../Test/test.rgrp.1.replicode"
+    usr_class_path="../Test/Demo1/user.classes.replicode"
+    source_file_name="../Test/Demo1/main.replicode"
 
     decompile_image="yes"
     write_image="no"
@@ -36,6 +40,7 @@ reduction_core_count: number of threads processing reduction jobs.
 time_core_count: number of thread processing update jobs.
 
 notification_resilience: in upr (i.e. relative to the ntf group). For debugging only - otherwise shall be 1.
+goal_resilience, assumption_resilience and simulation_resilience: in us.
 
 run_time: in ms.
 

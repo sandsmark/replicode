@@ -209,29 +209,44 @@ namespace	r_code{
 		return	Atom((GROUP<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
-	inline	Atom	Atom::ReductionGroup(uint16 opcode,uint8 arity){
-
-		return	Atom((REDUCTION_GROUP<<24)+((opcode	&	0x0FFF)<<8)+arity);
-	}
-
 	inline	Atom	Atom::InstantiatedCPPProgram(uint16 opcode,uint8 arity){
 
 		return	Atom((INSTANTIATED_CPP_PROGRAM<<24)+((opcode	&	0x0FFF)<<8)+arity);
-	}
-
-	inline	Atom	Atom::Model(uint16 opcode,uint8 arity){
-
-		return	Atom((MODEL<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
 	inline	Atom	Atom::NumericalVariable(uint16	variableID,uint8	tolerance){
 
 		return	Atom((NUMERICAL_VARIABLE<<24)+((variableID	&	0x0FFF)<<8)+tolerance);
 	}
+
+	inline	Atom	Atom::BooleanVariable(uint16	variableID){
+
+		return	Atom((BOOLEAN_VARIABLE<<24)+((variableID	&	0x0FFF)<<8));
+	}
 	
 	inline	Atom	Atom::StructuralVariable(uint16	variableID,uint8	tolerance){
 
 		return	Atom((STRUCTURAL_VARIABLE<<24)+((variableID	&	0x0FFF)<<8)+tolerance);
+	}
+
+	inline	Atom	Atom::InstantiatedAntiProgram(uint16 opcode,uint8 arity){
+
+		return	Atom((INSTANTIATED_ANTI_PROGRAM<<24)+((opcode	&	0x0FFF)<<8)+arity);
+	}
+
+	inline	Atom	Atom::InstantiatedInputLessProgram(uint16 opcode,uint8 arity){
+
+		return	Atom((INSTANTIATED_INPUT_LESS_PROGRAM<<24)+((opcode	&	0x0FFF)<<8)+arity);
+	}
+
+	inline	Atom	Atom::CompositeState(uint16 opcode,uint8 arity){
+
+		return	Atom((COMPOSITE_STATE<<24)+((opcode	&	0x0FFF)<<8)+arity);
+	}
+
+	inline	Atom	Atom::Model(uint16 opcode,uint8 arity){
+
+		return	Atom((MODEL<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
 	inline	Atom::Atom(uint32	a):atom(a){
@@ -278,7 +293,7 @@ namespace	r_code{
 
 	inline	bool	Atom::isStructural()	const{
 
-		return	(atom	&	0xC0000000)==0xC0000000;
+		return	((atom	&	0xC0000000)==0xC0000000	||	(atom	&	0xD0000000)==0xD0000000);
 	}
 
 	inline	bool	Atom::isFloat()	const{
@@ -374,9 +389,11 @@ namespace	r_code{
 		case	OPERATOR:
 		case	INSTANTIATED_PROGRAM:
 		case	INSTANTIATED_CPP_PROGRAM:
-		case	GROUP:
-		case	REDUCTION_GROUP:
+		case	INSTANTIATED_INPUT_LESS_PROGRAM:
+		case	INSTANTIATED_ANTI_PROGRAM:
+		case	COMPOSITE_STATE:
 		case	MODEL:
+		case	GROUP:
 		case	S_SET:	return	atom	&	0x000000FF;
 		case	STRING:	return	(atom	&	0x0000FF00)>>8;
 		case	TIMESTAMP: return 2;

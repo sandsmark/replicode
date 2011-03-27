@@ -137,7 +137,9 @@ int32	main(int	argc,char	**argv){
 					settings.notification_resilience,
 					settings.goal_resilience,
 					settings.assumption_resilience,
-					settings.simulation_resilience);
+					settings.simulation_resilience,
+					settings.float_tolerance,
+					settings.time_tolerance);
 
 		if(!mem->load(ram_objects.as_std()))
 			return	4;
@@ -150,7 +152,7 @@ int32	main(int	argc,char	**argv){
 		//probe.set();
 
 		mem->suspend();
-		image=mem->getImage();
+		image=mem->get_image();
 		mem->resume();
 
 		std::cout<<"\nShutting rMem down...\n";

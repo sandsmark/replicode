@@ -96,10 +96,6 @@ namespace	r_comp{
 				renderers[i]=&Decompiler::write_ipgm;
 			else	if(class_name=="pgm"	||	class_name==" |pgm")
 				renderers[i]=&Decompiler::write_pgm;
-			else	if(class_name=="fmd")
-				renderers[i]=&Decompiler::write_fmd;
-			else	if(class_name=="imd")
-				renderers[i]=&Decompiler::write_imd;
 			else	if(class_name=="cmd")
 				renderers[i]=&Decompiler::write_cmd;
 			else
@@ -218,21 +214,25 @@ namespace	r_comp{
 			*out_stream<<metadata->operator_names[current_object->code[read_index].asOpcode()];
 			break;
 		case	Atom::OBJECT:
-		case	Atom::MODEL:
 		case	Atom::MARKER:
 			*out_stream<<metadata->class_names[current_object->code[read_index].asOpcode()];
 			break;
 		case	Atom::INSTANTIATED_PROGRAM:
+		case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
+		case	Atom::INSTANTIATED_ANTI_PROGRAM:
 			*out_stream<<"ipgm";
-			break;
-		case	Atom::GROUP:
-			*out_stream<<"grp";
-			break;
-		case	Atom::REDUCTION_GROUP:
-			*out_stream<<"rgrp";
 			break;
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
 			*out_stream<<"icpp_pgm";
+			break;
+		case	Atom::COMPOSITE_STATE:
+			*out_stream<<"cst";
+			break;
+		case	Atom::MODEL:
+			*out_stream<<"mdl";
+			break;
+		case	Atom::GROUP:
+			*out_stream<<"grp";
 			break;
 		default:
 			*out_stream<<"undefined-class";
@@ -340,42 +340,6 @@ namespace	r_comp{
 
 
 	void	Decompiler::write_ipgm(uint16	read_index){
-
-		if(closing_set){
-
-			closing_set=false;
-			write_indent(indents);
-		}
-		out_stream->push('(',read_index);
-		write_expression_head(read_index);
-		write_expression_tail(read_index,false);
-		if(closing_set){
-
-			closing_set=false;
-			write_indent(indents);
-		}
-		*out_stream<<')';
-	}
-
-	void	Decompiler::write_fmd(uint16	read_index){
-
-		if(closing_set){
-
-			closing_set=false;
-			write_indent(indents);
-		}
-		out_stream->push('(',read_index);
-		write_expression_head(read_index);
-		write_expression_tail(read_index,false);
-		if(closing_set){
-
-			closing_set=false;
-			write_indent(indents);
-		}
-		*out_stream<<')';
-	}
-
-	void	Decompiler::write_imd(uint16	read_index){
 
 		if(closing_set){
 
@@ -537,9 +501,12 @@ namespace	r_comp{
 				}
 			}case	Atom::MARKER:
 			case	Atom::GROUP:
-			case	Atom::REDUCTION_GROUP:
 			case	Atom::INSTANTIATED_PROGRAM:
+			case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
+			case	Atom::INSTANTIATED_ANTI_PROGRAM:
 			case	Atom::INSTANTIATED_CPP_PROGRAM:
+			case	Atom::COMPOSITE_STATE:
+			case	Atom::MODEL:
 			case	Atom::OPERATOR:
 				(this->*renderers[atom.asOpcode()])(index);
 				break;
@@ -650,12 +617,12 @@ namespace	r_comp{
 
 						atom=current_object->code[index+member_count];	//	atom is the last internal pointer.
 						Class	view_class;
-						if(embedding_class.str_opcode=="grp"	||	embedding_class.str_opcode=="rgrp")
+						if(embedding_class.str_opcode=="grp")
 							view_class=metadata->classes.find("grp_view")->second;
 						else	if(embedding_class.str_opcode=="ipgm"		||
 									embedding_class.str_opcode=="icpp_pgm"	||
-									embedding_class.str_opcode=="fmd"		||
-									embedding_class.str_opcode=="imd")
+									embedding_class.str_opcode=="mdl"		||
+									embedding_class.str_opcode=="cst")
 							view_class=metadata->classes.find("pgm_view")->second;
 						else
 							view_class=metadata->classes.find("view")->second;

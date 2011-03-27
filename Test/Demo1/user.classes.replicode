@@ -1,0 +1,58 @@
+!load ../Test/Demo1/std.replicode
+
+
+; utilities.
+
+!def (std_grp _upr _sln_thr _act_thr _vis_thr _ntf_grps) (grp _upr _sln_thr _act_thr _vis_thr 1 0 1 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 _ntf_grps 1); c-salient and c-active.
+
+
+; classes.
+
+!class (vec3 x:nb y:nb z:nb)
+!class (rgb r:nb g:nb b:nb)
+
+
+; initial groups.
+
+root:(std_grp 1 0 0 0 [nil]) [[SYNC_FRONT now 0 forever nil nil COV_OFF 0]]
+stdin:(std_grp 1 0 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]
+stdout:(std_grp 1 0 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]
+
+
+; application ontology.
+
+; attributes.
+
+name:(ont 1) [[SYNC_FRONT now 1 forever root nil]]; usage: (mk.val x name "a name" 1) [[SYNC_FRONT now 1 forever root nil]]
+essence:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+part_of:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+position:(ont 1) [[SYNC_FRONT now 1 forever root nil]]; usage: (mk.val x position (vec3 0 0 0) 1)
+color:(ont 1) [[SYNC_FRONT now 1 forever root nil]]; usage: (mk.val x color (rgb 0 0 255) 1)
+size:(ont 1) [[SYNC_FRONT now 1 forever root nil]]; usage: (mk.val x size "small" 1): no tolerance can apply (issue: distance on small:(ent 1) vs large:(ent 1)).
+attachment:(ont 1) [[SYNC_FRONT now 1 forever root nil]]; usage: (mk.val self_right_hand attachment a_thing 1)
+role:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+speech:(ont 1) [[SYNC_FRONT now 1 forever root nil]]; usage: (mk.val an_actor speech a_word 1)
+
+; values.
+
+actor:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+interviewer:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+interviewee:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+hand:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+cube:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+
+
+; initial application objects.
+
+self:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+self_right_hand:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+(mk.val self_right_hand essence hand 1) [[SYNC_FRONT now 1 forever root nil]]
+(mk.val self_right_hand part_of self 1) [[SYNC_FRONT now 1 forever root nil]]
+(mk.val self essence actor 1) [[SYNC_FRONT now 1 forever root nil]]
+
+
+; device functions.
+
+!dfn (grab_hand); arg0: a hand, arg1: deadline.
+!dfn (release_hand); arg0: a hand, arg1: deadline.
+!dfn (move_hand :); arg0: a hand, arg1: target position, arg2: deadline.

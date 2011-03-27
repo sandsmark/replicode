@@ -78,4 +78,12 @@ namespace	r_code{
 		if(l%4)
 			iptr[++index]=_st;
 	}
+
+	int32	Utils::GetResilience(uint64	time_to_live,uint64	upr){
+
+		uint64	r=time_to_live/upr;
+		if(time_to_live%upr>1)
+			++r;
+		return	r;
+	}
 }

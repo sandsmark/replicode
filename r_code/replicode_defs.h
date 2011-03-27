@@ -105,27 +105,46 @@
 #define	ICPP_PGM_NFR	5
 #define	ICPP_PGM_ARITY	6
 
-#define	MD_HEAD		1
-#define	MD_OUT_GRPS	2
-#define	MD_NTF_GRPS	3
-
-#define	FMD_TSC		4
-#define	IMD_FMD		4
-
-#define	FMD_ARITY	5
-#define	IMD_ARITY	5
-
+#define	MK_RDX_CODE			1
+#define	MK_RDX_INPUTS		2
+#define	MK_RDX_PRODS		3
 #define	MK_RDX_ARITY		4
 #define	MK_ANTI_RDX_ARITY	3
 
 #define	CMD_FUNCTION	1
-#define	CMD_DEVICE		2
-#define	CMD_ARGS		3
+#define	CMD_ARGS		2
 
-#define	VAR_TOL			1
-#define	VAR_ARITY		2
+#define	VAR_ARITY		1
 
 #define	VAL_HLD_ARITY	2
+
+#define	MK_VAL_OBJ		1
+#define	MK_VAL_ATTR		2
+#define	MK_VAL_VALUE	3
+#define	MK_VAL_ARITY	4
+
+#define	HLP_OBJS		1
+#define	HLP_OUT_GRPS	2
+#define	HLP_TSC			3
+#define	HLP_ARITY		4
+
+#define	CST_OBJS		1
+#define	CST_OUT_GRPS	2
+#define	CST_TSC			3
+#define	CST_ARITY		4
+
+#define	MDL_OBJS		1
+#define	MDL_OUT_GRPS	2
+#define	MDL_TSC			3
+#define	MDL_ARITY		4
+
+#define	HLP_OBJS		1
+#define	HLP_LHS			1
+#define	HLP_RHS			2
+
+#define	I_HLP_OBJ		1
+#define	I_HLP_ARGS		2
+#define	I_HLP_ARITY		3
 
 #define	FACT_OBJ		1
 #define	FACT_TIME		2
@@ -133,9 +152,8 @@
 #define	FACT_ARITY		4
 
 #define	MK_PRED_OBJ		1
-#define	MK_PRED_FMD		2
-#define	MK_PRED_CFD		3
-#define	MK_PRED_ARITY	4
+#define	MK_PRED_CFD		2
+#define	MK_PRED_ARITY	3
 
 #define	MK_ASMP_OBJ		1
 #define	MK_ASMP_SRC		2
@@ -143,7 +161,7 @@
 #define	MK_ASMP_ARITY	4
 
 #define	MK_GOAL_OBJ		1
-#define	MK_GOAL_IMD		2
+#define	MK_GOAL_ACTR	2
 #define	MK_GOAL_ARITY	3
 
 #define	MK_HYP_OBJ		1
@@ -154,9 +172,7 @@
 #define	MK_SIM_ARITY	3
 
 #define	MK_SUCCESS_OBJ		1
-#define	MK_SUCCESS_P_RATE	2
-#define	MK_SUCCESS_N_RATE	3
-#define	MK_SUCCESS_ARITY	4
+#define	MK_SUCCESS_ARITY	2
 
 
 #endif
