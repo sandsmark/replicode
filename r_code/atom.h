@@ -33,6 +33,7 @@
 
 #include	"../../CoreLibrary/trunk/CoreLibrary/types.h"
 
+#undef	THIS
 
 using	namespace	core;
 

@@ -926,4 +926,38 @@ namespace	r_exec{
 			break;
 		}
 	}
+
+	r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const	char	*user_operator_library_path,
+		uint64			(*time_base)(),
+		const	char	*seed_path,
+		const	char	*source_file_name)
+	{
+		r_exec::Init(user_operator_library_path,time_base,seed_path );
+
+		srand(r_exec::Now());
+		Random::Init();
+
+		std::string	error;
+		r_exec::Compile(source_file_name,error);
+
+		r_exec::Mem<r_exec::LObject> *mem = new r_exec::Mem<r_exec::LObject>();
+
+		r_code::vector<r_code::Code	*>	ram_objects;
+		r_exec::Seed.getObjects(mem,ram_objects);
+
+		mem->init(	100000,
+			3,
+			1,
+			2,
+			1000,
+			1000,
+			1000,
+			1000,
+			0.1,
+			0.1);
+
+		mem->load( ram_objects.as_std() );
+
+		return mem;
+	}
 }

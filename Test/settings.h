@@ -36,17 +36,17 @@
 
 class	Settings{
 public:
-	uint64		base_period;
-	uint32		reduction_core_count;
-	uint32		time_core_count;
-	uint32		notification_resilience;
-	uint32		goal_resilience;
-	uint32		assumption_resilience;
-	uint32		simulation_resilience;
-	float32		float_tolerance;
-	float32		time_tolerance;
-	uint32		run_time;
-	uint32		probe_level;
+	core::uint64		base_period;
+	core::uint32		reduction_core_count;
+	core::uint32		time_core_count;
+	core::uint32		notification_resilience;
+	core::uint32		goal_resilience;
+	core::uint32		assumption_resilience;
+	core::uint32		simulation_resilience;
+	core::float32		float_tolerance;
+	core::float32		time_tolerance;
+	core::uint32		run_time;
+	core::uint32		probe_level;
 	std::string	usr_operator_path;
 	std::string	usr_class_path;
 	std::string source_file_name;
@@ -57,14 +57,14 @@ public:
 
 	bool	load(const	char	*file_name){
 
-		XMLNode	mainNode=XMLNode::openFileHelper(file_name,"TestConfiguration");
+		core::XMLNode	mainNode=core::XMLNode::openFileHelper(file_name,"TestConfiguration");
 		if(!mainNode){
 
 			std::cerr<<"> Error: TestConfiguration is unreadable"<<std::endl;
 			return	false;
 		}
 		
-		XMLNode	parameters=mainNode.getChildNode("Parameters");
+		core::XMLNode	parameters=mainNode.getChildNode("Parameters");
 		if(!!parameters){
 
 			const	char	*_base_period=parameters.getAttribute("base_period");

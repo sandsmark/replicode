@@ -308,6 +308,11 @@ namespace	r_exec{
 		//	Called by time cores.	////////////////////////////////////////////////////////////////
 		void	update(SaliencyPropagationJob	*j);
 	};
+
+	r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const	char	*user_operator_library_path,
+		uint64			(*time_base)(),
+		const	char	*seed_path,
+		const	char	*source_file_name);
 }
 
 
