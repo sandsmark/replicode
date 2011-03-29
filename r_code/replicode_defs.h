@@ -139,8 +139,6 @@
 #define	MDL_ARITY		4
 
 #define	HLP_OBJS		1
-#define	HLP_LHS			1
-#define	HLP_RHS			2
 
 #define	I_HLP_OBJ		1
 #define	I_HLP_ARGS		2
