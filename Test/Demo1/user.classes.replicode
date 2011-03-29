@@ -56,3 +56,6 @@ self_right_hand:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
 !dfn (grab_hand); arg0: a hand, arg1: deadline.
 !dfn (release_hand); arg0: a hand, arg1: deadline.
 !dfn (move_hand :); arg0: a hand, arg1: target position, arg2: deadline.
+!dfn (speak :); arg0: a word, arg1: deadline.
+!dfn (look_at :); arg0: a vec3, arg1: deadline.
+!dfn (point_at :); arg0: a hand, arg1: target position, arg2: deadline.

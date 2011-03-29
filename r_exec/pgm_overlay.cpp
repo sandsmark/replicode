@@ -200,9 +200,9 @@ namespace	r_exec{
 				productions.clear();
 				return	false;
 			}
-			prods=*prods;//prods.trace();
+			prods=*prods;
 		}
-
+//prods.trace();
 		uint16	production_count=prods.getChildrenCount();
 		uint16	cmd_count=0;	//	cmds to the executive (excl. mod/set) and external devices.
 		for(uint16	i=1;i<=production_count;++i){

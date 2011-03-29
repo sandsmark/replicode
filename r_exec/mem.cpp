@@ -830,13 +830,9 @@ namespace	r_exec{
 
 		switch(object->code(0).getDescriptor()){
 		case	Atom::COMPOSITE_STATE:
-			abstracted_object=clone_object(object);
-			abstract_object_member(abstracted_object,HLP_OBJS,bm);
-			break;
 		case	Atom::MODEL:
 			abstracted_object=clone_object(object);
-			abstract_object_member(abstracted_object,HLP_LHS,bm);
-			abstract_object_member(abstracted_object,HLP_RHS,bm);
+			abstract_object_member(abstracted_object,HLP_OBJS,bm);
 			break;
 		default:
 			return	object;
