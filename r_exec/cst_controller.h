@@ -76,6 +76,8 @@ namespace	r_exec{
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
 		void	produce_goals(Code	*super_goal,BindingMap	*bm,Code	*excluded_pattern);
+
+		uint16	get_instance_opcode()	const;
 	};
 }
 

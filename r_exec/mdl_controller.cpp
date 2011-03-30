@@ -299,4 +299,8 @@ namespace	r_exec{
 
 		return	get_instance(bm,Opcodes::IMDL);
 	}
+	uint16	MDLController::get_instance_opcode()	const{
+
+		return	Opcodes::IMDL;
+	}
 }

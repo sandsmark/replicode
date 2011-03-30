@@ -259,4 +259,9 @@ namespace	r_exec{
 
 		return	get_instance(bm,Opcodes::ICST);
 	}
+
+	uint16	CSTController::get_instance_opcode()	const{
+
+		return	Opcodes::ICST;
+	}
 }

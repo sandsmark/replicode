@@ -77,6 +77,8 @@ namespace	r_exec{
 
 		void	gain_activation()	const;
 		void	lose_activation()	const;
+
+		uint16	get_instance_opcode()	const;
 	};
 }
 

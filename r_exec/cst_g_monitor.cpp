@@ -38,7 +38,7 @@ namespace	r_exec{
 	CSTGMonitor::CSTGMonitor(	CSTController	*controller,
 								BindingMap		*bindings,
 								Code			*super_goal,
-								Code			*matched_pattern,
+								Code			*matched_pattern,	//	the pattern the matching of which triggered the need for ensuring requirements.
 								uint64			deadline):GMonitor(	controller,
 																	bindings,
 																	NULL,
@@ -58,18 +58,26 @@ namespace	r_exec{
 
 	bool	CSTGMonitor::reduce(Code	*input){
 
+		Code	*_input=input;
+		Code	*_input_fact_object=_input->get_reference(0);
+		if(	matched_pattern!=NULL	&&
+			_input_fact_object->code(0).asOpcode()==Opcodes::MkPred	&&
+			_input_fact_object->get_reference(0)->get_reference(0)->code(0).asOpcode()==controller->get_instance_opcode()	&&
+			_input_fact_object->get_reference(0)->get_reference(0)->get_reference(0)==controller->getObject())	//	we got fact or |fact -> pred -> icst or imdl referring to this cst/mdl.
+			_input_fact_object=_input_fact_object->get_reference(0)->get_reference(0);
+
 		matchCS.enter();
-		if(bindings->match(input->get_reference(0),goal->get_reference(0)->get_reference(0))){	//	first, check the objects pointed to by the facts.
+		if(bindings->match(_input_fact_object,goal->get_reference(0)->get_reference(0))){	//	first, check the objects pointed to by the facts.
 
 			uint64	occurrence_time=Utils::GetTimestamp<Code>(input,FACT_TIME);	//	input is either a fact or a |fact.
 			if(expected_time_low<=occurrence_time	&&	expected_time_high>=occurrence_time){
 
-				if(input->code(0)==goal->get_reference(0)->code(0)){	//	positive match: expected a fact or |fact and got a fact or a |fact.
+				if(_input->code(0)==goal->get_reference(0)->code(0)){	//	positive match: expected a fact or |fact and got a fact or a |fact.
 
 					((CSTController	*)controller)->produce_goals(super_goal,bindings,matched_pattern);
-					controller->add_outcome(goal,true,input->code(FACT_CFD).asFloat());
+					controller->add_outcome(goal,true,_input->code(FACT_CFD).asFloat());
 				}else													//	negative match: expected a fact or |fact and got a |fact or a fact.
-					controller->add_outcome(goal,false,input->code(FACT_CFD).asFloat());
+					controller->add_outcome(goal,false,_input->code(FACT_CFD).asFloat());
 				match=true;
 			}
 		}

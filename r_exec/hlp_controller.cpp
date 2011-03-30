@@ -219,7 +219,7 @@ namespace	r_exec{
 										uint64		expected_time_high,
 										uint64		expected_time_low){
 
-											add_monitor<GMonitor>(new	GMonitor(this,bindings,goal,super_goal->get_reference(0),matched_pattern,expected_time_high,expected_time_low));
+		add_monitor<GMonitor>(new	GMonitor(this,bindings,goal,super_goal->get_reference(0),matched_pattern,expected_time_high,expected_time_low));
 	}
 
 	void	HLPController::inject_sub_goal(	uint64	now,
