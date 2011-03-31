@@ -32,6 +32,10 @@
 #include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 #include	"group.h"
 
+#include <limits>
+
+const	float32	PLUS_INFINITY=std::numeric_limits<float>::infinity();
+
 
 namespace	r_exec{
 
@@ -147,6 +151,8 @@ namespace	r_exec{
 	float32	View::update_res(){
 
 		float32	new_res=get_res();
+		if(new_res==PLUS_INFINITY)
+			return	new_res;
 		if(res_changes>0	&&	acc_res!=0)
 			new_res=get_res()+(float32)acc_res/(float32)res_changes;
 		if(--new_res<0)	//	decremented by one on behalf of the group (at upr).
