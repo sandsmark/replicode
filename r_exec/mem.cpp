@@ -29,6 +29,8 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"mem.h"
+#include	"mdl_controller.h"
+
 
 namespace	r_exec{
 
@@ -229,6 +231,18 @@ namespace	r_exec{
 
 						P<TimeJob>	j=new	AntiPGMSignalingJob(v->second->controller,now+Utils::GetTimestamp<Code>(v->second->object,IPGM_TSC));
 						time_job_queue->push(j);
+					}
+				}
+
+				//	set the initial dependencies for hlp: active models add requirements to other hlp in the same group.
+				if(g->get_c_sln()>g->get_c_sln_thr()	&&	g->get_c_act()>g->get_c_act_thr()){
+
+					UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
+					for(v=g->ipgm_views.begin();v!=g->ipgm_views.end();++v){
+
+						if(	v->second->object->code(0).getDescriptor()==Atom::MODEL	&&
+							v->second->get_act()>g->get_act_thr())
+							((MDLController	*)v->second->controller)->gain_activation();
 					}
 				}
 			}

@@ -82,6 +82,8 @@ namespace	r_comp{
 		this->metadata=metadata;
 		this->time_offset=0;
 
+		ignore_ontology=false;
+
 		//	Load the renderers;
 		for(uint16	i=0;i<metadata->classes_by_opcodes.size();++i){
 
@@ -103,7 +105,9 @@ namespace	r_comp{
 		}
 	}
 
-	uint32	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream,uint64	time_offset){
+	uint32	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream,uint64	time_offset,bool	ignore_ontology){
+
+		this->ignore_ontology=ignore_ontology;
 
 		uint32	object_count=decompile_references(image);
 
@@ -171,6 +175,15 @@ namespace	r_comp{
 		uint16	read_index=0;
 		bool	after_tail_wildcard=false;
 		indents=0;
+
+		if(ignore_ontology){
+
+			std::string	ent="ent";
+			std::string	ont="ont";
+			if(	current_object->code[0]==metadata->getClass(ent)->atom	||
+				current_object->code[0]==metadata->getClass(ont)->atom)
+				return;
+		}
 
 		std::string	s=object_names[object_index];
 		s+=":";

@@ -64,7 +64,7 @@ void	decompile(r_comp::Decompiler	&decompiler,r_comp::Image	*image,uint64	time_o
 #else
 	std::cout<<"\ndecompiling ...\n";
 	std::ostringstream	decompiled_code;
-	uint32	object_count=decompiler.decompile(image,&decompiled_code,time_offset);
+	uint32	object_count=decompiler.decompile(image,&decompiled_code,time_offset,false);
 	std::cout<<"... done\n";
 	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 	std::cout<<"Image taken at: "<<Time::ToString_year(image->timestamp)<<std::endl<<std::endl;

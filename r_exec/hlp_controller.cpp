@@ -168,7 +168,7 @@ namespace	r_exec{
 		uint64	now=Now();
 		uint64	deadline_high;
 		uint64	deadline_low;
-		if(object->code(object->code(FACT_TIME).asIndex()+1).getDescriptor()==Atom::STRUCTURAL_VARIABLE){
+		if(object->code(object->code(FACT_TIME).asIndex()+1).getDescriptor()==Atom::STRUCTURAL_VARIABLE){	//	the deadline is passed to the requirement (instance) if any.
 
 			deadline_high=now+_Mem::Get()->get_goal_res();
 			deadline_low=now;
@@ -178,9 +178,19 @@ namespace	r_exec{
 			deadline_low=now;	//	TODO: figure out the right value.
 		}
 
-		Code	*sub_goal=factory::Object::MkGoal(object,super_goal->get_reference(0)->get_reference(1),1);	//	super_goal->get_reference(1) is the actor pursuing the goal.
+		Code	*sub_goal;
+		Code	*actor=super_goal->get_reference(0)->get_reference(1);
+		Code	*matched_pattern=NULL;
+		if(instance){	//	there exist a requirement.
+						
+			Code	*ip_f=factory::Object::Fact(instance,now,1,1);					
+			sub_goal=factory::Object::MkGoal(ip_f,actor,1);
+			matched_pattern=object;
+		}else
+			sub_goal=factory::Object::MkGoal(object,actor,1);
+
 		Code	*_sub_goal=_Mem::Get()->check_existence(sub_goal);
-		if(_sub_goal!=sub_goal){	//	a goal already exists for the same target (object).
+		if(_sub_goal!=sub_goal){	//	a goal already exists for the same target (object or ip_f).
 			
 			notify_existing_sub_goal(Now(),
 									deadline_high,
@@ -189,16 +199,6 @@ namespace	r_exec{
 									get_ntf_instance(bm));
 			delete	sub_goal;
 			return;
-		}
-
-		Code	*matched_pattern=NULL;
-		if(instance){
-						
-			Code	*ip_f=factory::Object::Fact(instance,now,1,1);					
-			sub_goal=factory::Object::MkGoal(ip_f,super_goal->get_reference(0)->get_reference(1),1);
-			matched_pattern=object;
-			deadline_high=deadline_low;
-			deadline_low=now;
 		}
 		
 		if(monitor)
@@ -266,10 +266,10 @@ namespace	r_exec{
 			view=new	View(true,now,1,resilience,out_group,origin,sub_goal_fact);	//	SYNC_FRONT,sln=1,res=resilience.
 			_Mem::Get()->inject(view);
 
-			view=new	View(true,now,1,1,out_group,origin,ntf_instance);	//	SYNC_FRONT,sln=1,res=1.
+			view=new	View(true,now,1,0,out_group,origin,ntf_instance);	//	SYNC_FRONT,sln=0,res=1.
 			_Mem::Get()->inject(view);
 
-			view=new	View(true,now,1,1,out_group,origin,ntf_instance_fact);	//	SYNC_FRONT,sln=1,res=1.
+			view=new	View(true,now,1,0,out_group,origin,ntf_instance_fact);	//	SYNC_FRONT,sln=0,res=1.
 			_Mem::Get()->inject(view);
 
 			view=new	NotificationView(origin,out_group,mk_rdx);
@@ -343,10 +343,10 @@ namespace	r_exec{
 			view=new	View(true,now,1,resilience,out_group,origin,sub_goal_fact);	//	SYNC_FRONT,sln=1,res=resilience.
 			_Mem::Get()->inject(view);
 
-			view=new	View(true,now,1,1,out_group,origin,ntf_instance);	//	SYNC_FRONT,sln=1,res=1.
+			view=new	View(true,now,1,0,out_group,origin,ntf_instance);	//	SYNC_FRONT,sln=0,res=1.
 			_Mem::Get()->inject(view);
 
-			view=new	View(true,now,1,1,out_group,origin,ntf_instance_fact);	//	SYNC_FRONT,sln=1,res=1.
+			view=new	View(true,now,1,0,out_group,origin,ntf_instance_fact);	//	SYNC_FRONT,sln=0,res=1.
 			_Mem::Get()->inject(view);
 
 			view=new	NotificationView(origin,out_group,mk_rdx);

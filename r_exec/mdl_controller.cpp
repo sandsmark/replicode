@@ -154,30 +154,18 @@ namespace	r_exec{
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	MDLController::MDLController(r_code::View	*view):HLPController(view){
+
+		MDLOverlay	*o=new	MDLOverlay(this,bindings,RDX_MODE_REGULAR);	//	master overlay.
+		o->load_patterns();
+		overlays.push_back(o);
 	}
 
 	MDLController::~MDLController(){
 	}
 
-	void	MDLController::monitor(Code	*input){
+	void	MDLController::take_input(r_exec::View	*input){
 
-		if(	!input->get_sim()	&&
-			!input->get_asmp()	&&
-			!input->get_pred()){	//	we are only interested in actual facts: discard pred, asmp and hyp/sim.
-
-			std::list<P<PMonitor> >::const_iterator	m;
-			p_monitorsCS.enter();
-			for(m=p_monitors.begin();m!=p_monitors.end();){
-
-				if((*m)->reduce(input))
-					m=p_monitors.erase(m);
-				else
-					++m;
-			}
-			p_monitorsCS.leave();
-		}
-
-		HLPController::monitor(input);
+		HLPController::_take_input<MDLController>(input);
 	}
 
 	void	MDLController::reduce(r_exec::View	*input){
@@ -238,6 +226,27 @@ namespace	r_exec{
 		monitor(input->object);
 	}
 
+	void	MDLController::monitor(Code	*input){
+
+		if(	!input->get_sim()	&&
+			!input->get_asmp()	&&
+			!input->get_pred()){	//	we are only interested in actual facts: discard pred, asmp and hyp/sim.
+
+			std::list<P<PMonitor> >::const_iterator	m;
+			p_monitorsCS.enter();
+			for(m=p_monitors.begin();m!=p_monitors.end();){
+
+				if((*m)->reduce(input))
+					m=p_monitors.erase(m);
+				else
+					++m;
+			}
+			p_monitorsCS.leave();
+		}
+
+		HLPController::monitor(input);
+	}
+
 	void	MDLController::add_monitor(PMonitor	*m){
 
 		p_monitorsCS.enter();
@@ -273,7 +282,8 @@ namespace	r_exec{
 			opcode==Opcodes::IMDL){
 
 			Code			*rhs_hlp=rhs_ihlp->get_reference(0);
-			r_exec::View	*rhs_hlp_v=(r_exec::View*)rhs_hlp->find_view(getView()->get_host(),true);
+			Group			*host=getView()->get_host();
+			r_exec::View	*rhs_hlp_v=(r_exec::View*)rhs_hlp->find_view(host,true);
 			if(rhs_hlp_v)
 				return	(HLPController	*)rhs_hlp_v->controller;
 		}

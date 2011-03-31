@@ -441,23 +441,18 @@ namespace	r_exec{
 			break;
 		case	Atom::COMPOSITE_STATE:
 			ipgm_views[view->getOID()]=view;
-			if(view->get_act()>get_act_thr()){	//	active idp.
+			if(view->get_act()>get_act_thr()){	//	active cst.
 
 				CSTController	*o=new	CSTController(view);	//	now will be added to the deadline at start time.
 				view->controller=o;
-				if(get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr())
-					add_dependencies(o);
 			}
 			break;
 		case	Atom::MODEL:
 			ipgm_views[view->getOID()]=view;
-			if(view->get_act()>get_act_thr()){	//	active req.
+			if(view->get_act()>get_act_thr()){	//	active mdl.
 
 				MDLController	*o=new	MDLController(view);	//	now will be added to the deadline at start time.
 				view->controller=o;
-				o->gain_activation();
-				if(get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr())
-					add_dependencies(o);
 			}
 			break;
 		case	Atom::MARKER:	//	populate the marker set of the referenced objects.
@@ -537,7 +532,6 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
-				add_dependencies(o);
 				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
 					o->take_input(*v);	//	view will be copied.
@@ -549,7 +543,6 @@ namespace	r_exec{
 			view->controller=o;
 			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
 
-				add_dependencies(o);
 				o->gain_activation();
 				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
@@ -681,36 +674,4 @@ namespace	r_exec{
 		}
 	}
 
-	void	Group::add_dependencies(HLPController	*c)	const{	//	called from a state where the group is c-active and c-salient; c's view is also active.
-
-		UNORDERED_MAP<uint32,P<View> >::const_iterator	v;
-		for(v=ipgm_views.begin();v!=ipgm_views.end();++v){
-
-			Code	*hlp=v->second->object;
-			if((void	*)v->second->controller==(void	*)c)
-				continue;
-			MDLController	*_c;
-			switch(hlp->code(0).getDescriptor()){
-			case	Atom::MODEL:
-				_c=(MDLController	*)v->second->controller;
-				if(_c){
-
-					Code	*rhs=_c->get_rhs();	//	fact or |fact.
-					Code	*rhs_ihlp=rhs->get_reference(0);
-					uint16	opcode=rhs_ihlp->code(0).asOpcode();
-					if(	opcode==Opcodes::ICST	||
-						opcode==Opcodes::IMDL){
-
-						Code	*rhs_hlp=rhs_ihlp->get_reference(0);
-						if(rhs_hlp==hlp){
-
-							if(v->second->get_act()>get_act_thr())
-								c->add_requirement();		
-						}
-					}
-				}
-				break;
-			}
-		}
-	}
 }

@@ -55,6 +55,7 @@ void	dll_export	GetCallbackName(char	*callback_name);
 
 #include	"./Vec3/vec3.h"
 #include	"./TestProgram/test_program.h"
+#include	"./PatternDetector/pattern_detector.h"
 #include	"./Correlator/correlator.h"
 #include	"./Callbacks/callbacks.h"
 

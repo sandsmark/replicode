@@ -105,7 +105,7 @@ namespace	r_exec{
 	}
 
 	Overlay	*CSTOverlay::reduce(View	*input){
-
+		//std::cout<<std::hex<<this<<std::dec<<" "<<input->object->getOID();
 		BindingMap	*bm=new	BindingMap(bindings);
 		std::list<Code	*>::const_iterator	p;
 		Code	*bound_pattern=NULL;
@@ -129,13 +129,14 @@ namespace	r_exec{
 			if(input->object->get_asmp())
 				reduction_mode|=RDX_MODE_ASSUMPTION;
 			if(!patterns.size()){
-
+//std::cout<<" full";
 				kill();
 				inject_instance();
 			}
+			//	std::cout<<" match\n";
 			return	offspring;
 		}else{
-
+//std::cout<<" no match\n";
 			delete	bm;
 			return	NULL;
 		}
@@ -163,18 +164,21 @@ namespace	r_exec{
 		Overlay	*offspring=NULL;
 		std::list<P<Overlay> >::const_iterator	o;
 		reductionCS.enter();
-		for(o=overlays.begin();o!=overlays.end();){
+		if(!input->object->get_goal()){
 
-			if(tsc>0	&&	Now()-((CSTOverlay	*)*o)->get_birth_time()>tsc)
-				o=overlays.erase(o);
-			else	if((*o)->is_alive()){
+			for(o=overlays.begin();o!=overlays.end();){
 
-				offspring=(*o)->reduce(input);
-				++o;
-				if(offspring)
-					overlays.push_front(offspring);
-			}else
-				o=overlays.erase(o);
+				if(tsc>0	&&	Now()-((CSTOverlay	*)*o)->get_birth_time()>tsc)
+					o=overlays.erase(o);
+				else	if((*o)->is_alive()){
+
+					offspring=(*o)->reduce(input);
+					++o;
+					if(offspring)
+						overlays.push_front(offspring);
+				}else
+					o=overlays.erase(o);
+			}
 		}
 
 		if(!offspring){	//	no match.
@@ -252,7 +256,7 @@ namespace	r_exec{
 										uint64		expected_time_high,
 										uint64		expected_time_low){
 
-		HLPController::add_monitor<CSTGMonitor>(new	CSTGMonitor(this,bindings,super_goal,matched_pattern,expected_time_high));
+		HLPController::add_monitor<CSTGMonitor>(new	CSTGMonitor(this,bindings,goal,super_goal,matched_pattern,expected_time_high));
 	}
 
 	Code	*CSTController::get_ntf_instance(BindingMap	*bm)	const{

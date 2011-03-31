@@ -1,7 +1,44 @@
 ;
 
-p1:(pgm |[]  |[] [(cmd speak ["Hello World."] 1)]
+test_match_cst1:(pgm |[] |[] []
+   (inj []
+      shp:(mk.val self_right_hand position (vec3 10 20 30) 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact shp now 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact self_right_hand_belongs_to_self now 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact self_right_hand_is_a_hand now 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
 1) |[]
 
-ip1:(ipgm p1 |[] RUN_ONCE 120000us NOTIFY 1) [[SYNC_FRONT now 0 forever root nil 1]]
+i_test_match_cst1:(ipgm test_match_cst1 |[] RUN_ONCE 120000us SILENT 1) [[SYNC_FRONT now 0 forever root nil 0]]
 
+
+test_goal_cst1:(pgm |[] |[] []
+   (inj []
+      shp:(mk.val self_right_hand position (vec3 10 20 30) 1)
+      [SYNC_FRONT now 1 0 stdin nil]
+   )
+   (inj []
+      f_g:(fact shp now 1 1)
+      [SYNC_FRONT now 1 0 stdin nil]
+   )
+   (inj []
+      g:(mk.goal f_g self 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact g now 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+1) |[]
+
+i_test_goal_cst1:(ipgm test_goal_cst1 |[] RUN_ONCE 120000us SILENT 1) [[SYNC_FRONT now 0 forever root nil 1]]

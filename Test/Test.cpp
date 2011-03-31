@@ -39,7 +39,7 @@
 
 using	namespace	r_comp;
 
-void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
+void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset,bool	ignore_ontology){
 
 #ifdef	DECOMPILE_ONE_BY_ONE
 	uint32	object_count=decompiler.decompile_references(image);
@@ -61,7 +61,7 @@ void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset){
 	}
 #else
 	std::ostringstream	decompiled_code;
-	uint32	object_count=decompiler.decompile(image,&decompiled_code,time_offset);
+	uint32	object_count=decompiler.decompile(image,&decompiled_code,time_offset,ignore_ontology);
 	//uint32	object_count=image->code_segment.objects.size();
 	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 	std::cout<<"Image taken at: "<<Time::ToString_year(image->timestamp)<<std::endl<<std::endl;
@@ -90,7 +90,7 @@ void	write_to_file(r_comp::Image	*image,std::string	&image_path,Decompiler	*deco
 		r_comp::Image			*_i=new	r_comp::Image();
 		_i->load(img);
 
-		decompile(*decompiler,_i,time_offset);
+		decompile(*decompiler,_i,time_offset,false);
 		delete	_i;
 
 		delete	img;
@@ -165,7 +165,7 @@ int32	main(int	argc,char	**argv){
 			write_to_file(image,settings.image_path,settings.test_image?&decompiler:NULL,starting_time);
 
 		if(settings.decompile_image	&&	(!settings.write_image	||	!settings.test_image))
-			decompile(decompiler,image,starting_time);
+			decompile(decompiler,image,starting_time,settings.ignore_ontology);
 		//uint32	w;std::cin>>w;
 		delete	image;
 

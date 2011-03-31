@@ -89,7 +89,7 @@ namespace	r_exec{
 		void	set(uint16	member_index,float32	value);
 		void	mod(uint16	member_index,float32	value);
 
-		View	*find_view(Code	*group,bool	lock);
+		View	*find_view(Code	*group,bool	lock);	//	returns a copy of the found view if any, NULL otherwise.
 
 		Code	*get_pred();
 		Code	*get_goal();

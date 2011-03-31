@@ -1234,7 +1234,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\main.replicode"
+				RelativePath=".\Demo1\main.replicode"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"

@@ -7,15 +7,27 @@
 a_cube:(ent 1) |[]
 
 
-; same position.
+; a self hand position.
 
-same_pos_1:(mk.val self_right_hand position (vec3 0 0 0) 1) |[]
-f_same_pos_1:(fact same_pos_1 0us 1 1) |[]
+f_self_right_hand_is_a_hand:(fact self_right_hand_is_a_hand 0us 1 1) |[]
 
-same_pos_2:(mk.val a_cube position (vec3 0 0 0) 1) |[]
-f_same_pos_2:(fact same_pos_2 0us 1 1) |[]
+f_self_right_hand_belongs_to_self:(fact self_right_hand_belongs_to_self 0us 1 1) |[]
 
-same_pos:(cst [f_same_pos_1 f_same_pos_2] [stdout] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+self_right_hand_pos:(mk.val self_right_hand position (vec3 0 0 0) 1) |[]
+f_self_right_hand_pos:(fact self_right_hand_pos 0us 1 1) |[]
+
+self_hand_position:(cst [f_self_right_hand_is_a_hand f_self_right_hand_belongs_to_self f_self_right_hand_pos] [stdout] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+
+
+; move a self hand -> update a self hand position.
+
+cmd_move:(cmd move_hand [self_right_hand (vec3 0 0 0) 0us] 1) |[]
+f_cmd_move:(fact cmd_move 0us 1 1) |[]
+
+a_self_hand_pos:(icst self_hand_position [self_right_hand (vec3 0 0 0) 0us] 1) |[]
+f_a_self_hand_pos:(fact a_self_hand_pos 0us 1 1) |[]
+
+move_hand:(mdl [f_cmd_move f_a_self_hand_pos] [stdout] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
 
 
 

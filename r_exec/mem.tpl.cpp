@@ -154,8 +154,8 @@ namespace	r_exec{
 			}
 
 			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v;
-			if(abstracted_object){	//	copy the object's views for the abstracted_object; set the object's views resilience to 1 and activation to 0.
-
+			if(abstracted_object){	//	copy the object's views for the abstracted_object;
+									//	set the original object's views resilience to 1 and activation to 0: the original object will be destrozed after the first upr.
 				for(v=object->views.begin();v!=object->views.end();++v){
 
 					r_exec::View	*copy=new	View((r_exec::View	*)*v,true);

@@ -37,11 +37,12 @@ namespace	r_exec{
 
 	CSTGMonitor::CSTGMonitor(	CSTController	*controller,
 								BindingMap		*bindings,
-								Code			*super_goal,
-								Code			*matched_pattern,	//	the pattern the matching of which triggered the need for ensuring requirements.
+								Code			*goal,				//	(mk.goal (fact (icst controller->getObject() [args] ...)...)...)
+								Code			*super_goal,		//	(fact (mk.goal ...) ...).
+								Code			*matched_pattern,	//	the pattern the matching of which triggered the need for ensuring requirements; never NULL.
 								uint64			deadline):GMonitor(	controller,
 																	bindings,
-																	NULL,
+																	goal,
 																	super_goal,
 																	matched_pattern,
 																	deadline,
@@ -56,18 +57,21 @@ namespace	r_exec{
 		return	controller->is_alive();
 	}
 
-	bool	CSTGMonitor::reduce(Code	*input){
+	bool	CSTGMonitor::reduce(Code	*input){	//	catches (icst controller->getObject() [args] ...).
 
 		Code	*_input=input;
 		Code	*_input_fact_object=_input->get_reference(0);
-		if(	matched_pattern!=NULL	&&
-			_input_fact_object->code(0).asOpcode()==Opcodes::MkPred	&&
-			_input_fact_object->get_reference(0)->get_reference(0)->code(0).asOpcode()==controller->get_instance_opcode()	&&
-			_input_fact_object->get_reference(0)->get_reference(0)->get_reference(0)==controller->getObject())	//	we got fact or |fact -> pred -> icst or imdl referring to this cst/mdl.
-			_input_fact_object=_input_fact_object->get_reference(0)->get_reference(0);
+		Code	*goal_icst=goal->get_reference(0)->get_reference(0);
+		if(	_input_fact_object->code(0).asOpcode()==Opcodes::MkPred){	//	we may have got fact or |fact -> pred -> fact -> icst referring to this cst.
+
+			Code	*pred_fact_object=_input_fact_object->get_reference(0)->get_reference(0);
+			if(	pred_fact_object->code(0).asOpcode()==goal_icst->code(0).asOpcode()	&&
+				pred_fact_object->get_reference(0)==controller->getObject())
+			_input_fact_object=pred_fact_object;
+		}
 
 		matchCS.enter();
-		if(bindings->match(_input_fact_object,goal->get_reference(0)->get_reference(0))){	//	first, check the objects pointed to by the facts.
+		if(bindings->match(_input_fact_object,goal_icst)){	//	first, check the objects pointed to by the facts.
 
 			uint64	occurrence_time=Utils::GetTimestamp<Code>(input,FACT_TIME);	//	input is either a fact or a |fact.
 			if(expected_time_low<=occurrence_time	&&	expected_time_high>=occurrence_time){
@@ -83,18 +87,5 @@ namespace	r_exec{
 		}
 		matchCS.leave();
 		return	match;
-	}
-
-	void	CSTGMonitor::update(){	//	executed by a time core, upon reaching the expected time of occurrence of the target of the goal.
-
-		matchCS.enter();
-		bool	m=match;
-		matchCS.leave();
-
-		if(!m){	//	received nothing matching the target's object so far (neither positively nor negatively).
-
-			controller->add_outcome(goal,false,1);
-			controller->remove_monitor(this);
-		}
 	}
 }

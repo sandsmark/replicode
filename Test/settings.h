@@ -51,6 +51,7 @@ public:
 	std::string	usr_class_path;
 	std::string source_file_name;
 	bool		decompile_image;
+	bool		ignore_ontology;
 	bool		write_image;
 	std::string	image_path;
 	bool		test_image;
@@ -79,6 +80,7 @@ public:
 			const	char	*_run_time=parameters.getAttribute("run_time");
 			const	char	*_probe_level=parameters.getAttribute("probe_level");
 			const	char	*_decompile_image=parameters.getAttribute("decompile_image");
+			const	char	*_ignore_ontology=parameters.getAttribute("ignore_ontology");
 			const	char	*_write_image=parameters.getAttribute("write_image");
 			const	char	*_test_image=parameters.getAttribute("test_image");
 
@@ -98,6 +100,7 @@ public:
 			run_time=atoi(_run_time);
 			probe_level=atoi(_probe_level);
 			decompile_image=(strcmp(_decompile_image,"yes")==0);
+			ignore_ontology=(strcmp(_ignore_ontology,"yes")==0);
 			write_image=(strcmp(_write_image,"yes")==0);
 			if(write_image){
 

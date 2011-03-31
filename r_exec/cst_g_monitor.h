@@ -44,6 +44,7 @@ namespace	r_exec{
 	public:
 		CSTGMonitor(CSTController	*controller,
 					BindingMap		*bindings,
+					Code			*goal,
 					Code			*super_goal,
 					Code			*matched_pattern,
 					uint64			deadline);
@@ -51,7 +52,6 @@ namespace	r_exec{
 
 		bool	is_alive();
 		bool	reduce(Code	*input);
-		void	update();
 	};
 }
 

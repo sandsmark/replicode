@@ -65,6 +65,7 @@ namespace	r_exec{
 		MDLController(r_code::View	*view);
 		~MDLController();
 
+		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
 
 		void	add_monitor(PMonitor	*m);

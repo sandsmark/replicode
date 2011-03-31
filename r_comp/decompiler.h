@@ -78,12 +78,14 @@ namespace	r_comp{
 		void	write_cmd(uint16	read_index);
 
 		void	write_view(uint16	read_index,uint16	arity);
+
+		bool	ignore_ontology;
 	public:
 		Decompiler();
 		~Decompiler();
 
 		void	init(r_comp::Metadata	*metadata);
-		uint32	decompile(r_comp::Image	*image,std::ostringstream	*stream,uint64	time_offset);					//	decompiles the whole image; returns the number of objects.
+		uint32	decompile(r_comp::Image	*image,std::ostringstream	*stream,uint64	time_offset,bool	ignore_ontology);					//	decompiles the whole image; returns the number of objects.
 		uint32	decompile_references(r_comp::Image	*image);														//	initialize a reference table so that objects can be decompiled individually; returns the number of objects.
 		void	decompile_object(uint16	object_index,std::ostringstream	*stream,uint64	time_offset);				//	decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
 		void	decompile_object(const	std::string	object_name,std::ostringstream	*stream,uint64	time_offset);	//	decompiles a single object given its name: use this function to follow references.

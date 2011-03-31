@@ -410,6 +410,26 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="PatternDetector"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\PatternDetector\pattern_detector.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\PatternDetector\pattern_detector.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

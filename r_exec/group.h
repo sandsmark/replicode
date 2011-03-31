@@ -100,7 +100,6 @@ namespace	r_exec{
 	protected:
 		void	notifyNew(View	*view);
 		void	cov(View	*view,uint64	t);
-		void	add_dependencies(HLPController	*c)	const;
 	public:
 		//	xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
 		//	Active overlays are to be found in xxx_ipgm_views and rgroup_views.

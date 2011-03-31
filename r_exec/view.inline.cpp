@@ -52,6 +52,7 @@ namespace	r_exec{
 		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom)+2*sizeof(Code	*));	//	reference_set is contiguous to code; memcpy in one go.
 		if(new_OID)
 			_code[VIEW_OID].atom=GetOID();
+		controller=view->controller;
 		reset();
 	}
 

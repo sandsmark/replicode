@@ -57,12 +57,12 @@ namespace	r_exec{
 		HLPController	*controller;
 	public:
 		GMonitor(	HLPController	*controller,
-					BindingMap	*bindings,
-					Code		*goal,
-					Code		*super_goal,
-					Code		*matched_pattern,
-					uint64		expected_time_high,
-					uint64		expected_time_low);
+					BindingMap		*bindings,
+					Code			*goal,
+					Code			*super_goal,
+					Code			*matched_pattern,
+					uint64			expected_time_high,
+					uint64			expected_time_low);
 		virtual	~GMonitor();
 
 		bool	is_alive();

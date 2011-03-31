@@ -149,7 +149,7 @@ namespace	r_exec{
 		rel_markers();
 		return	mk;
 	}
-	
+
 	template<class	C,class	U>	Code	*Object<C,U>::get_goal(){
 
 		Code	*mk=NULL;
@@ -164,7 +164,7 @@ namespace	r_exec{
 		rel_markers();
 		return	mk;
 	}
-	
+
 	template<class	C,class	U>	Code	*Object<C,U>::get_hyp(){
 
 		Code	*mk=NULL;
@@ -179,7 +179,7 @@ namespace	r_exec{
 		rel_markers();
 		return	mk;
 	}
-	
+
 	template<class	C,class	U>	Code	*Object<C,U>::get_sim(){
 
 		Code	*mk=NULL;
@@ -194,7 +194,7 @@ namespace	r_exec{
 		rel_markers();
 		return	mk;
 	}
-		
+
 	template<class	C,class	U>	Code	*Object<C,U>::get_asmp(){
 
 		Code	*mk=NULL;
