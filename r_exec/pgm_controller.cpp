@@ -110,6 +110,8 @@ namespace	r_exec{
 
 	void	PGMController::take_input(r_exec::View	*input){
 
+		if(!is_alive())
+			return;
 		if(input->object->get_pred()	||	input->object->get_goal())
 			return;
 		if(!can_sim	&&	(input->object->get_hyp()	||	input->object->get_sim()	||	input->object->get_asmp()))
@@ -118,6 +120,9 @@ namespace	r_exec{
 	}
 
 	void	PGMController::reduce(r_exec::View	*input){
+
+		if(!is_alive())
+			return;
 
 		reductionCS.enter();
 		std::list<P<Overlay> >::const_iterator	o;
