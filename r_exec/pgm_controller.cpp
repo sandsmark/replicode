@@ -154,12 +154,17 @@ namespace	r_exec{
 
 	void	AntiPGMController::take_input(r_exec::View	*input){
 
+		if(!is_alive())
+			return;
 		if(input->object->get_pred()	||	input->object->get_goal())
 			return;
 		Controller::_take_input<AntiPGMController>(input);
 	}
 
 	void	AntiPGMController::reduce(r_exec::View	*input){
+
+		if(!is_alive())
+			return;
 
 		reductionCS.enter();
 		std::list<P<Overlay> >::const_iterator	o;

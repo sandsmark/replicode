@@ -678,10 +678,15 @@ namespace	r_exec{
 					kill();
 					return	offspring;
 				}else{
-					reduction_mode=old_reduction_mode;
+					/*reduction_mode=old_reduction_mode;
 					confidence=old_confidence;
 					rollback();
-					return	NULL;
+					return	NULL;*/
+					PGMOverlay	*offspring=new	PGMOverlay(this,input_index,value_commit_index);
+					offspring->reduction_mode=old_reduction_mode;
+					offspring->confidence=old_confidence;
+					kill();
+					return	offspring;
 				}
 			}else{	//	create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
 
@@ -766,9 +771,11 @@ namespace	r_exec{
 
 		uint16	timing_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+2].asIndex();
 		uint16	timing_count=pgm_code[timing_set_index].getAtomCount();
-		for(uint16	i=1;i<=timing_count;++i)
+		for(uint16	i=1;i<=timing_count;++i){
+
 			if(!evaluate(timing_set_index+i))
 				return	false;
+		}
 		return	true;
 	}
 
@@ -776,9 +783,11 @@ namespace	r_exec{
 
 		uint16	guard_set_index=pgm_code[pgm_code[PGM_INPUTS].asIndex()+3].asIndex();
 		uint16	guard_count=pgm_code[guard_set_index].getAtomCount();
-		for(uint16	i=1;i<=guard_count;++i)
+		for(uint16	i=1;i<=guard_count;++i){
+
 			if(!evaluate(guard_set_index+i))
 				return	false;
+		}
 		return	true;
 	}
 
