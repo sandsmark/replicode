@@ -160,22 +160,23 @@ namespace	r_exec{
 	}
 
 	void	HLPController::produce_sub_goal(BindingMap	*bm,
-											Code		*super_goal,	//	fact->mk.goal; its time may be a variable.
-											Code		*object,		//	fact or |fact; its time may be a variable.
+											Code		*super_goal,	//	fact->mk.goal->fact; its time may be a variable.
+											Code		*object,		//	fact; its time may be a variable.
 											Code		*instance,
 											bool		monitor){
 		
 		uint64	now=Now();
 		uint64	deadline_high;
 		uint64	deadline_low;
-		if(object->code(object->code(FACT_TIME).asIndex()+1).getDescriptor()==Atom::STRUCTURAL_VARIABLE){	//	the deadline is passed to the requirement (instance) if any.
+		Code	*super_goal_fact=super_goal->get_reference(0)->get_reference(0);
+		if(super_goal_fact->code(super_goal_fact->code(FACT_TIME).asIndex()+1).getDescriptor()==Atom::STRUCTURAL_VARIABLE){
 
 			deadline_high=now+_Mem::Get()->get_goal_res();
 			deadline_low=now;
 		}else{
 
-			deadline_high=Utils::GetTimestamp<Code>(object,FACT_TIME);
-			deadline_low=now;	//	TODO: figure out the right value.
+			deadline_high=Utils::GetTimestamp<Code>(super_goal_fact,FACT_TIME);
+			deadline_low=deadline_high;
 		}
 
 		Code	*sub_goal;
@@ -186,6 +187,7 @@ namespace	r_exec{
 			Code	*ip_f=factory::Object::Fact(instance,now,1,1);					
 			sub_goal=factory::Object::MkGoal(ip_f,actor,1);
 			matched_pattern=object;
+			deadline_low=now;	//	try to get an instance asap.
 		}else
 			sub_goal=factory::Object::MkGoal(object,actor,1);
 
@@ -254,8 +256,8 @@ namespace	r_exec{
 
 			Group	*out_group=(Group	*)get_out_group(i);
 			uint64	base=_Mem::Get()->get_base_period()*out_group->get_upr();
-
-			int32	resilience=Utils::GetResilience(deadline-now,base);
+			int64	delta=abs((float32)((int64)(deadline-now)));
+			int32	resilience=Utils::GetResilience(delta,base);
 
 			View	*view=new	View(true,now,1,1,out_group,origin,target);	//	SYNC_FRONT,sln=1,res=1.
 			_Mem::Get()->inject(view);

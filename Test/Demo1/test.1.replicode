@@ -28,7 +28,7 @@ test_goal_cst1:(pgm |[] |[] []
       [SYNC_FRONT now 1 0 stdin nil]
    )
    (inj []
-      f_g:(fact shp now 1 1)
+      f_g:(fact shp (+ now 500000us) 1 1)
       [SYNC_FRONT now 1 0 stdin nil]
    )
    (inj []

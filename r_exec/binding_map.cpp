@@ -458,13 +458,11 @@ namespace	r_exec{
 	bool	BindingMap::bind_structural_variable(Atom	*val,Atom	var){
 
 		uint16	val_size=val->getAtomCount();
-		UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	s=structures.find(var);
+		UNORDERED_MAP<Atom,std::vector<Atom> >::iterator	s=structures.find(var);
 		if(s->second[1].getDescriptor()==Atom::STRUCTURAL_VARIABLE){
 
-			std::vector<Atom>	v;
 			for(uint16	i=0;i<=val_size;++i)
-				v.push_back(val[i]);
-			structures[var]=v;
+				s->second[i]=val[i];
 			return	true;
 		}
 		

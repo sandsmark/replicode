@@ -182,14 +182,45 @@ namespace	r_exec{
 		if(!match){
 			
 			Code	*mk_goal=input->object->get_reference(0);	//	input->object is  fact or |fact.
+			Code	*rhs=get_rhs();
 			if(mk_goal->code(0).asOpcode()==Opcodes::MkGoal){
 
 				BindingMap	*bm=new	BindingMap(bindings);
 				Code		*goal_target=mk_goal->get_reference(0);
-				Code		*rhs_target=get_rhs()->get_reference(0);
-				if(bm->match(goal_target->get_reference(0),rhs_target->get_reference(0))){	//	first, check the objects pointed to by the facts.
+				Code		*rhs_target=rhs->get_reference(0);
+				if(bm->match(goal_target->get_reference(0),rhs_target)){	//	first, check the objects pointed to by the facts.
 
-					if(bm->match(goal_target,get_rhs())){	//	the fact pointed by a goal matches the rhs.
+					//	check timings on facts or |facts and if consistent, determine the fact type for the sub-goal target (bound_lhs).
+					bool	time_consistency=false;
+					if(goal_target->code(goal_target->code(FACT_TIME).asIndex()+1).getDescriptor()==Atom::STRUCTURAL_VARIABLE)
+						time_consistency=true;					
+					else{
+						
+						Code	*bound_rhs=bm->bind_object(rhs);
+						if(bound_rhs->code(bound_rhs->code(FACT_TIME).asIndex()+1).getDescriptor()==Atom::STRUCTURAL_VARIABLE)
+							time_consistency=true;
+						else{
+						
+							uint64	bound_rhs_time=Utils::GetTimestamp<Code>(bound_rhs,FACT_TIME);
+							uint64	goal_time_target=Utils::GetTimestamp<Code>(goal_target,FACT_TIME);
+
+							uint64	now=Now();
+							uint64	reference=abs((float32)((int64)(goal_time_target-now)));
+							uint64	delta=abs((float32)((int64)(bound_rhs_time-goal_time_target)));
+							uint64	time_tolerance=reference*_Mem::Get()->get_time_tolerance();
+							
+							if(delta<time_tolerance)
+								time_consistency=true;
+							else{
+								std::cout<<bound_rhs_time<<std::endl;
+								std::cout<<goal_time_target<<std::endl;
+								std::cout<<delta<<" "<<time_tolerance<<std::endl;
+							}
+						}
+						delete	bound_rhs;
+					}
+
+					if(time_consistency){	
 
 						Code	*bound_lhs=bm->bind_object(get_lhs());	//	fact or |fact: no need to check for existence (timings always different).
 						if(goal_target->code(0).asOpcode()==Opcodes::Fact){

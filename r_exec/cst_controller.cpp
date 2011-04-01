@@ -211,7 +211,7 @@ namespace	r_exec{
 								if(!requirement_count)
 									produce_goals(input->object,bm,pattern);
 								else
-									produce_sub_goal(bindings,input->object,pattern,get_instance(bm,Opcodes::ICST),true);
+									produce_sub_goal(bm,input->object,pattern,get_instance(bm,Opcodes::ICST),true);
 								break;
 							}else
 								delete	bm;
