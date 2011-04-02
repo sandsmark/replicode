@@ -75,7 +75,7 @@ namespace	r_comp{
 		void	write_marker(uint16	read_index);
 		void	write_pgm(uint16	read_index);
 		void	write_ipgm(uint16	read_index);
-		void	write_cmd(uint16	read_index);
+		void	write_icmd(uint16	read_index);
 
 		void	write_view(uint16	read_index,uint16	arity);
 

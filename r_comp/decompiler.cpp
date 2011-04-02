@@ -98,8 +98,8 @@ namespace	r_comp{
 				renderers[i]=&Decompiler::write_ipgm;
 			else	if(class_name=="pgm"	||	class_name==" |pgm")
 				renderers[i]=&Decompiler::write_pgm;
-			else	if(class_name=="cmd")
-				renderers[i]=&Decompiler::write_cmd;
+			else	if(class_name=="icmd")
+				renderers[i]=&Decompiler::write_icmd;
 			else
 				renderers[i]=&Decompiler::write_expression;
 		}
@@ -370,7 +370,7 @@ namespace	r_comp{
 		*out_stream<<')';
 	}
 
-	void	Decompiler::write_cmd(uint16	read_index){
+	void	Decompiler::write_icmd(uint16	read_index){
 
 		if(closing_set){
 
@@ -384,7 +384,7 @@ namespace	r_comp{
 		uint16	write_as_view_index=0;
 		if(current_object->code[read_index+1].asOpcode()==metadata->classes.find("_inj")->second.atom.asOpcode()){
 
-			uint16	arg_set_index=current_object->code[read_index+3].asIndex();	//	2 args for _inj; the view is the second.
+			uint16	arg_set_index=current_object->code[read_index+2].asIndex();	//	2 args for _inj; the view is the second.
 			write_as_view_index=current_object->code[arg_set_index+2].asIndex();
 		}
 
