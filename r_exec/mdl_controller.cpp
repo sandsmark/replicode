@@ -40,10 +40,10 @@ namespace	r_exec{
 	MDLOverlay::~MDLOverlay(){
 	}
 
-	void	MDLOverlay::inject_prediction(Code	*input)	const{
+	void	MDLOverlay::inject_production(Code	*input)	const{
 
 		uint64	now=Now();
-		Code	*instance=((HLPController	*)controller)->get_instance(bindings,Opcodes::IMDL);
+		Code	*instance=((HLPController	*)controller)->get_instance(Opcodes::IMDL);
 		Code	*instance_fact=factory::Object::Fact(instance,now,1,1);
 		
 		Code	*rhs=((MDLController	*)controller)->get_rhs();
@@ -59,8 +59,6 @@ namespace	r_exec{
 		Code	*mk_asmp_pred=get_mk_asmp(pred_fact);
 
 		Code	*mk_rdx=factory::Object::MkRdx(instance_fact,input,pred_fact,1);
-		Code	*mk_sim_instance=get_mk_sim(instance_fact);
-		Code	*mk_asmp_instance=get_mk_asmp(instance_fact);
 		
 		Group	*origin=getView()->get_host();
 		uint16	out_group_count=((HLPController	*)controller)->get_out_group_count();
@@ -70,29 +68,8 @@ namespace	r_exec{
 			uint64	base=_Mem::Get()->get_base_period()*out_group->get_upr();
 			uint32	res=Utils::GetResilience(pred_resilience,base);
 
-			View	*view=new	View(true,now,1,1,out_group,origin,instance);	//	SYNC_FRONT,sln=1,res=1.
-			_Mem::Get()->inject(view);
-			
-			view=new	View(true,now,1,1,out_group,origin,instance_fact);	//	SYNC_FRONT,sln=1,res=1.
-			_Mem::Get()->inject(view);
-
-			view=new	NotificationView(origin,out_group,mk_rdx);
+			View	*view=new	NotificationView(origin,out_group,mk_rdx);
 			_Mem::Get()->inject_notification(view,true);
-
-			if(mk_sim_instance){
-
-				view=new	View(true,now,1,Utils::GetResilience(_Mem::Get()->get_sim_res(),base),out_group,origin,mk_sim_instance);
-				_Mem::Get()->inject(view);
-			}
-			
-			if(mk_asmp_instance){
-
-				view=new	View(true,now,1,Utils::GetResilience(_Mem::Get()->get_asmp_res(),base),out_group,origin,mk_asmp_instance);
-				_Mem::Get()->inject(view);
-			}
-
-			view=new	View(true,now,1,pred_resilience,out_group,origin,bound_rhs);	//	SYNC_FRONT,sln=1,res=pred_resilience.
-			_Mem::Get()->inject(view);
 
 			view=new	View(true,now,1,pred_resilience,out_group,origin,mk_pred);	//	SYNC_FRONT,sln=1,res=pred_resilience.
 			_Mem::Get()->inject(view);
@@ -133,7 +110,7 @@ namespace	r_exec{
 			if(input->object->get_asmp())
 				reduction_mode|=RDX_MODE_ASSUMPTION;
 
-			inject_prediction(input->object);
+			inject_production(input->object);
 			
 			//	reset.
 			bindings=tmp;

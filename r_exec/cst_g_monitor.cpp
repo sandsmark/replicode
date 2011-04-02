@@ -58,7 +58,7 @@ namespace	r_exec{
 		return	controller->is_alive();
 	}
 
-	bool	CSTGMonitor::reduce(Code	*input){	//	catches (icst controller->getObject() [args] ...).
+	bool	CSTGMonitor::reduce(Code	*input){	//	catches fact (or |fact) -> (icst controller->getObject() [args] ...).
 
 		Code	*_input=input;
 		Code	*_input_fact_object=_input->get_reference(0);
@@ -70,7 +70,9 @@ namespace	r_exec{
 				pred_fact_object->get_reference(0)==controller->getObject())
 			_input_fact_object=pred_fact_object;
 		}
-
+		if(_input_fact_object->code(0).asOpcode()==Opcodes::ICST){
+			uint32	u=0;
+			}
 		matchCS.enter();
 		if(bindings->match(_input_fact_object,goal_icst)){	//	first, check the objects pointed to by the facts.
 

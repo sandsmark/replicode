@@ -371,6 +371,73 @@ namespace	r_exec{
 		objects.insert(Objects::value_type(object,original));
 	}
 
+	bool	BindingMap::match_atom(Atom	o,Atom	p){
+
+		switch(p.getDescriptor()){
+		case	Atom::NUMERICAL_VARIABLE:
+			if(!o.isFloat())
+				return	false;
+			if(!bind_float_variable(o,p))
+				return	false;
+			break;
+		case	Atom::BOOLEAN_VARIABLE:
+			if(o.getDescriptor()!=Atom::BOOLEAN_)
+				return	false;
+			if(!bind_boolean_variable(o,p))
+				return	false;
+			break;
+		default:
+			if(o!=p){
+			
+				if(o.isFloat()	&&	p.isFloat()){
+
+					if(abs(o.asFloat()-p.asFloat())>_Mem::Get()->get_float_tolerance())
+						return	false;
+				}else
+					return	false;
+			}
+			break;
+		}
+		return	true;
+	}
+
+	bool	BindingMap::match_timestamp(Atom	*o,Atom	*p){
+
+		if((p+1)->getDescriptor()==Atom::STRUCTURAL_VARIABLE){
+
+			if(!bind_structural_variable(o,p[1]))
+				return	false;
+		}else{
+
+			uint64	now=Now();
+			uint64	object_time=Utils::GetTimestamp(o);
+			uint64	pattern_time=Utils::GetTimestamp(p);
+
+			uint64	time_tolerance=abs((float32)((int64)(pattern_time-now)))*_Mem::Get()->get_time_tolerance();
+			uint64	delta=abs((float32)((int64)(pattern_time-object_time)));
+			if(delta>time_tolerance)
+				return	false;
+		}
+		return	true;
+	}
+
+	bool	BindingMap::match_structure(Atom	*o,Atom	*p){
+
+		if((p+1)->getDescriptor()==Atom::STRUCTURAL_VARIABLE){
+
+			if(!bind_structural_variable(o,p[1]))
+				return	false;
+		}else{
+
+			for(uint16	i=1;i<=p->getAtomCount();++i){
+
+				if(!match_atom(o[i],p[i]))
+					return	false;
+			}
+		}
+		return	true;
+	}
+
 	bool	BindingMap::match(Code	*object,Code	*pattern){
 
 		if(pattern->code(0).asOpcode()==Opcodes::Var){
@@ -387,37 +454,24 @@ namespace	r_exec{
 			if(object->references_size()!=pattern->references_size())
 				return	false;
 
-			for(uint16	i=0;i<pattern->code_size();){
+			for(uint16	i=1;i<pattern->code_size();++i){
 
-				Atom	a=object->code(i);
-				Atom	p=pattern->code(i);
-				if(a!=p){
-
-					switch(p.getDescriptor()){
-					case	Atom::NUMERICAL_VARIABLE:
-						if(!a.isFloat())
-							return	false;
-						if(!bind_float_variable(a,p))
-							return	false;
-						++i;
-						break;
-					case	Atom::BOOLEAN_VARIABLE:
-						if(a.getDescriptor()!=Atom::BOOLEAN_)
-							return	false;
-						if(!bind_boolean_variable(a,p))
-							return	false;
-						++i;
-						break;
-					case	Atom::STRUCTURAL_VARIABLE:	//	necessarily of the same type (otherwise would have returned false at i-1).
-						if(!bind_structural_variable(&object->code(i-1),p))
-							return	false;
-						i+=pattern->code(i-1).getAtomCount();	//	skip the rest of the structure.
-						break;
-					default:
+				switch(pattern->code(i).getDescriptor()){
+				case	Atom::TIMESTAMP:
+					if(!match_timestamp(&object->code(i),&pattern->code(i)))
 						return	false;
-					}
-				}else
-					++i;
+					i+=2;	//	skip the rest of the structure.
+					break;
+				case	Atom::OBJECT:
+					if(!match_structure(&object->code(i),&pattern->code(i)))
+						return	false;
+					i+=pattern->code(i).getAtomCount();	//	skip the rest of the structure.
+					break;
+				default:
+					if(!match_atom(object->code(i),pattern->code(i)))
+						return	false;
+					break;
+				}
 			}
 
 			for(uint16	i=0;i<pattern->references_size();++i){

@@ -46,6 +46,17 @@ namespace	r_exec{
 		UNORDERED_MAP<Code	*,P<Code> >			objects;	//	objects of class var, values are system objects.
 		UNORDERED_MAP<Atom,Atom>				atoms;		//	numerical variables, values are atoms (Atom::Float).
 		UNORDERED_MAP<Atom,std::vector<Atom> >	structures;	//	structural variables, values are structures embedded in code.
+
+		bool	match_atom(Atom	o,Atom	p);
+		bool	match_timestamp(Atom	*o,Atom	*p);
+		bool	match_structure(Atom	*o,Atom	*p);
+
+		bool	needs_binding(Code	*original)	const;
+
+		bool	bind_float_variable(Atom	val,Atom	var);
+		bool	bind_boolean_variable(Atom	val,Atom	var);
+		bool	bind_structural_variable(Atom	*val,Atom	var);
+		bool	bind_object_variable(Code	*val,Code	*var);
 	public:
 		BindingMap();
 		BindingMap(const	BindingMap	*source);
@@ -55,7 +66,6 @@ namespace	r_exec{
 		void	clear();
 
 		Code	*bind_object(Code	*original)	const;
-		bool	needs_binding(Code	*original)	const;
 
 		Atom	get_atomic_variable(const	Code	*object,uint16	index);
 		Atom	get_structural_variable(const	Code	*object,uint16	index);
@@ -63,10 +73,6 @@ namespace	r_exec{
 		void	set_variable_object(Code	*object);
 
 		bool	match(Code	*object,Code	*pattern);
-		bool	bind_float_variable(Atom	val,Atom	var);
-		bool	bind_boolean_variable(Atom	val,Atom	var);
-		bool	bind_structural_variable(Atom	*val,Atom	var);
-		bool	bind_object_variable(Code	*val,Code	*var);
 
 		void	copy(Code	*object,uint16	index)	const;
 		void	load(const	Code	*object);	//	icst or imdl.

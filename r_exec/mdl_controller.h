@@ -41,7 +41,7 @@ namespace	r_exec{
 	class	MDLOverlay:
 	public	HLPOverlay{
 	protected:
-		void	inject_prediction(Code	*input)	const;
+		void	inject_production(Code	*input)	const;
 
 		MDLOverlay(const	MDLOverlay	*original);
 	public:
