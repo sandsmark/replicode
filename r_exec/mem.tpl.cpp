@@ -29,6 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"init.h"
+#include	"binding_map.h"
 #include	"../r_code/replicode_defs.h"
 #include	"operator.h"
 #include	"factory.h"
@@ -112,7 +113,8 @@ namespace	r_exec{
 		initial_groups.push_back(_root);
 		_root->setOID(get_oid());
 
-		UNORDERED_MAP<Code	*,Code	*>	abstraction_map;
+		typedef	UNORDERED_MAP<Code	*,P<BindingMap> >	Abstraction;
+		UNORDERED_MAP<Code	*,P<BindingMap> >			abstraction_map;
 
 		for(uint32	i=1;i<objects->size();++i){	//	skip root as it has no initial views.
 
@@ -129,14 +131,39 @@ namespace	r_exec{
 				break;
 			}
 
-			Code	*abstracted_object=NULL;
 			switch(object->code(0).getDescriptor()){
-			case	Atom::MODEL:
-			case	Atom::COMPOSITE_STATE:	//	these constructs are assumed not to be already abstracted.
-				abstracted_object=_Mem::Get()->abstract_high_level_pattern(object);	//	original is not deleted if abstracted.
-				abstraction_map[object]=abstracted_object;
+			case	Atom::MODEL:				//	these constructs are assumed not to be already abstracted.
+			case	Atom::COMPOSITE_STATE:{		//	consider the following example: object b is abstracted (code patched); 
+												//	then comes a -> b, to be also abstracted: a needs the BM of b so that its variables are consistent with the variables in b.
+				bool		abstracted_reference=false;
+				BindingMap	*bm=NULL;
+				for(uint16	i=0;i<object->references_size();++i){	//	models and composite states may point to at most one instance of each other.
+																	//	caveat: this will not work if there were more than one abstracted reference.
+					
+					Code	*reference=object->get_reference(i);
+					switch(reference->code(0).getDescriptor()){
+					case	Atom::MODEL:
+					case	Atom::COMPOSITE_STATE:{
+
+						Abstraction::const_iterator	a=abstraction_map.find(reference);
+						if(a!=abstraction_map.end())
+							bm=new	BindingMap(a->second);
+						abstracted_reference=true;
+						break;
+					}
+					}
+
+					if(abstracted_reference)
+						break;
+				}
+
+				if(bm==NULL)	//	no abstracted reference.
+					bm=new	BindingMap();
+
+				_Mem::Get()->abstract_high_level_pattern(object,bm);	//	any object pointing to object will now point to an abstracted version. NB: markers included.
+				abstraction_map.insert(Abstraction::value_type(object,bm));
 				break;
-			case	Atom::INSTANTIATED_PROGRAM:	//	refine the opcode depending on the inputs and the program type.
+			}case	Atom::INSTANTIATED_PROGRAM:	//	refine the opcode depending on the inputs and the program type.
 				if(object->get_reference(0)->code(0).asOpcode()==Opcodes::Pgm){
 
 					if(object->get_reference(0)->code(object->get_reference(0)->code(PGM_INPUTS).asIndex()).getAtomCount()==0)
@@ -146,37 +173,7 @@ namespace	r_exec{
 				break;
 			}
 
-			for(uint16	j=0;j<object->references_size();++j){	//	update the references to objects that have been abstracted.
-
-				UNORDERED_MAP<Code	*,Code	*>::const_iterator	a=abstraction_map.find(object->get_reference(j));
-				if(a!=abstraction_map.end())
-					object->set_reference(j,a->second);
-			}
-
 			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v;
-			if(abstracted_object){	//	copy the object's views for the abstracted_object;
-									//	set the original object's views resilience to 1 and activation to 0: the original object will be destrozed after the first upr.
-				for(v=object->views.begin();v!=object->views.end();++v){
-
-					r_exec::View	*copy=new	View((r_exec::View	*)*v,true);
-					copy->set_object(abstracted_object);
-					abstracted_object->views.insert(copy);
-
-					//	init hosts' member_set.
-					Group	*host=copy->get_host();
-					(*v)->code(VIEW_RES)=Atom::Float(1);
-					(*v)->code(VIEW_ACT)=Atom::Float(0);
-
-					if(!host->load(copy,abstracted_object))
-						return	false;
-				}
-
-				abstracted_object->setOID(get_oid());
-				abstracted_object->position_in_objects=this->objects.insert(this->objects.end(),abstracted_object);
-				abstracted_object->is_registered=true;
-				((O	*)abstracted_object)->position_in_object_register=object_register.insert((O	*)abstracted_object).first;
-			}
-			
 			for(v=object->views.begin();v!=object->views.end();++v){
 
 				//	init hosts' member_set.
@@ -200,14 +197,17 @@ namespace	r_exec{
 		return	true;
 	}
 
-	template<class	O>	void	Mem<O>::init_timings(uint64	now){
+	template<class	O>	void	Mem<O>::init_timings(uint64	now){	//	called at the end of _Mem::start(); use initial user-supplied facts' times as offsets from now.
 
 		std::list<Code	*>::const_iterator	o;
 		for(o=objects.begin();o!=objects.end();++o){
 
 			uint16	opcode=(*o)->code(0).asOpcode();
-			if(opcode==Opcodes::Fact	||	opcode==Opcodes::AntiFact)	//	uset facts' times as offset from now.
-				Utils::SetTimestamp<Code>(*o,FACT_TIME,Utils::GetTimestamp<Code>(*o,FACT_TIME)+now);
+			if(opcode==Opcodes::Fact	||	opcode==Opcodes::AntiFact){
+
+				if((*o)->code((*o)->code(FACT_TIME).asIndex()+1).getDescriptor()!=Atom::STRUCTURAL_VARIABLE)	//	does not apply to abstractions.
+					Utils::SetTimestamp<Code>(*o,FACT_TIME,Utils::GetTimestamp<Code>(*o,FACT_TIME)+now);
+			}
 		}
 	}
 

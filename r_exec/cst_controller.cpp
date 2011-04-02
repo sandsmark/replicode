@@ -105,7 +105,7 @@ namespace	r_exec{
 	}
 
 	Overlay	*CSTOverlay::reduce(View	*input){
-		//std::cout<<std::hex<<this<<std::dec<<" "<<input->object->getOID();
+//std::cout<<std::hex<<this<<std::dec<<" "<<input->object->getOID();
 		BindingMap	*bm=new	BindingMap(bindings);
 		std::list<Code	*>::const_iterator	p;
 		Code	*bound_pattern=NULL;
@@ -133,7 +133,7 @@ namespace	r_exec{
 				kill();
 				inject_instance();
 			}
-			//	std::cout<<" match\n";
+//std::cout<<" match\n";
 			return	offspring;
 		}else{
 //std::cout<<" no match\n";

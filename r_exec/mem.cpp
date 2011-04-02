@@ -832,57 +832,39 @@ namespace	r_exec{
 		return	clone;
 	}
 
-	Code	*_Mem::abstract_high_level_pattern(Code	*object){
+	Code	*_Mem::abstract_object_clone(Code	*object){
 
 		BindingMap	bm;
-		return	abstract_high_level_pattern(object,&bm);
+		return	abstract_object_clone(object,&bm);
 	}
 
-	Code	*_Mem::abstract_high_level_pattern(Code	*object,BindingMap	*bm){
-
-		Code	*abstracted_object;
-
-		switch(object->code(0).getDescriptor()){
-		case	Atom::COMPOSITE_STATE:
-		case	Atom::MODEL:
-			abstracted_object=clone_object(object);
-			abstract_object_member(abstracted_object,HLP_OBJS,bm);
-			break;
-		default:
-			return	object;
-		}
-
-		return	abstracted_object;
-	}
-
-	Code	*_Mem::abstract_object(Code	*object){
-
-		BindingMap	bm;
-		return	abstract_object(object,&bm);
-	}
-
-	Code	*_Mem::abstract_object(Code	*object,BindingMap	*bm){
+	Code	*_Mem::abstract_object_clone(Code	*object,BindingMap	*bm){
 
 		Code	*abstracted_object;
 
 		uint16	opcode=object->code(0).asOpcode();
 		switch(object->code(0).getDescriptor()){
+		case	Atom::COMPOSITE_STATE:
+		case	Atom::MODEL:
+			abstracted_object=clone_object(object);
+			abstract_object_member_clone(abstracted_object,HLP_OBJS,bm);
+			break;
 		case	Atom::OBJECT:
 			if(	opcode==Opcodes::Fact	||
 				opcode==Opcodes::AntiFact){
 
 				abstracted_object=clone_object(object);
-				abstract_object_member(abstracted_object,FACT_OBJ,bm);
-				abstract_object_member(abstracted_object,FACT_TIME,bm);
+				abstract_object_member_clone(abstracted_object,FACT_OBJ,bm);
+				abstract_object_member_clone(abstracted_object,FACT_TIME,bm);
 			}else	if(opcode==Opcodes::Cmd){
 
 				abstracted_object=clone_object(object);
-				abstract_object_member(abstracted_object,CMD_ARGS,bm);
+				abstract_object_member_clone(abstracted_object,CMD_ARGS,bm);
 			}else	if(	opcode==Opcodes::ICST	||
 						opcode==Opcodes::IMDL){
 
 				abstracted_object=clone_object(object);
-				abstract_object_member(abstracted_object,I_HLP_ARGS,bm);
+				abstract_object_member_clone(abstracted_object,I_HLP_ARGS,bm);
 			}else	if(opcode==Opcodes::Ent)
 				return	bm->get_variable_object(object);
 			else
@@ -892,21 +874,21 @@ namespace	r_exec{
 			if(opcode==Opcodes::MkVal){
 
 				abstracted_object=clone_object(object);
-				abstract_object_member(abstracted_object,MK_VAL_OBJ,bm);
-				abstract_object_member(abstracted_object,MK_VAL_VALUE,bm);
+				abstract_object_member_clone(abstracted_object,MK_VAL_OBJ,bm);
+				abstract_object_member_clone(abstracted_object,MK_VAL_VALUE,bm);
 			}else	if(opcode==Opcodes::MkGoal){
 
 				abstracted_object=clone_object(object);
-				abstract_object_member(abstracted_object,MK_GOAL_ACTR,bm);
-				abstract_object_member(abstracted_object,MK_GOAL_OBJ,bm);
+				abstract_object_member_clone(abstracted_object,MK_GOAL_ACTR,bm);
+				abstract_object_member_clone(abstracted_object,MK_GOAL_OBJ,bm);
 			}else	if(opcode==Opcodes::MkPred){
 
 				abstracted_object=clone_object(object);
-				abstract_object_member(abstracted_object,MK_PRED_OBJ,bm);
+				abstract_object_member_clone(abstracted_object,MK_PRED_OBJ,bm);
 			}else	if(opcode==Opcodes::MkSuccess){
 
 				abstracted_object=clone_object(object);
-				abstract_object_member(abstracted_object,MK_SUCCESS_OBJ,bm);
+				abstract_object_member_clone(abstracted_object,MK_SUCCESS_OBJ,bm);
 			}else
 				return	object;
 			break;
@@ -917,25 +899,91 @@ namespace	r_exec{
 		return	abstracted_object;
 	}
 
-	void	_Mem::abstract_object_member(Code	*object,uint16	index,BindingMap	*bm){
+	void	_Mem::abstract_object_member_clone(Code	*object,uint16	index,BindingMap	*bm){
 
 		Atom	a=object->code(index);
+		uint16	ai=a.asIndex();
 		switch(a.getDescriptor()){
 		case	Atom::R_PTR:
-			object->set_reference(a.asIndex(),abstract_object(object->get_reference(a.asIndex()),bm));
+			object->set_reference(ai,abstract_object_clone(object->get_reference(ai),bm));
 			break;
 		case	Atom::I_PTR:
-			if(object->code(a.asIndex()).getDescriptor()==Atom::SET)
-				for(uint16	i=1;i<=object->code(a.asIndex()).getAtomCount();++i)
-					abstract_object_member(object,a.asIndex()+i,bm);
+			if(object->code(ai).getDescriptor()==Atom::SET)
+				for(uint16	i=1;i<=object->code(ai).getAtomCount();++i)
+					abstract_object_member_clone(object,ai+i,bm);
 			else
-				object->code(a.asIndex()+1)=bm->get_structural_variable(object,a.asIndex());
+				object->code(ai+1)=bm->get_structural_variable(object,ai);
 			break;
 		default:
 			object->code(index)=bm->get_atomic_variable(object,index);
 			break;
 		}
 	}
+
+	////////////////////////////////////////////////////////////////
+	
+	void	_Mem::abstract_high_level_pattern(r_code::Code	*object,BindingMap	*bm){
+
+		abstract_object_member(object,HLP_OBJS,bm);
+	}
+
+	void	_Mem::abstract_object(r_code::Code	*object,BindingMap	*bm){
+
+		uint16	opcode=object->code(0).asOpcode();
+		switch(object->code(0).getDescriptor()){
+		case	Atom::OBJECT:
+			if(	opcode==Opcodes::Fact	||
+				opcode==Opcodes::AntiFact){
+
+				abstract_object_member(object,FACT_OBJ,bm);
+				abstract_object_member(object,FACT_TIME,bm);
+			}else	if(opcode==Opcodes::Cmd)
+				abstract_object_member(object,CMD_ARGS,bm);
+			else	if(	opcode==Opcodes::ICST	||
+						opcode==Opcodes::IMDL)
+				abstract_object_member(object,I_HLP_ARGS,bm);
+			else	if(opcode==Opcodes::Ent)
+				bm->set_variable_object(object);	//	will mutate the descriptor into a variable object's. Any object referring to this object will thus point to a variable.
+			break;
+		case	Atom::MARKER:
+			if(opcode==Opcodes::MkVal){
+
+				abstract_object_member(object,MK_VAL_OBJ,bm);
+				abstract_object_member(object,MK_VAL_VALUE,bm);
+			}else	if(opcode==Opcodes::MkGoal){
+
+				abstract_object_member(object,MK_GOAL_ACTR,bm);
+				abstract_object_member(object,MK_GOAL_OBJ,bm);
+			}else	if(opcode==Opcodes::MkPred)
+				abstract_object_member(object,MK_PRED_OBJ,bm);
+			else	if(opcode==Opcodes::MkSuccess)
+				abstract_object_member(object,MK_SUCCESS_OBJ,bm);
+			break;
+		}
+	}
+
+	void	_Mem::abstract_object_member(r_code::Code	*object,uint16	index,BindingMap	*bm){
+
+		Atom	a=object->code(index);
+		uint16	ai=a.asIndex();
+		switch(a.getDescriptor()){
+		case	Atom::R_PTR:
+			abstract_object(object->get_reference(ai),bm);
+			break;
+		case	Atom::I_PTR:
+			if(object->code(ai).getDescriptor()==Atom::SET)
+				for(uint16	i=1;i<=object->code(ai).getAtomCount();++i)
+					abstract_object_member(object,ai+i,bm);
+			else
+				object->code(ai+1)=bm->get_structural_variable(object,ai);
+			break;
+		default:
+			object->code(index)=bm->get_atomic_variable(object,index);
+			break;
+		}
+	}
+
+	////////////////////////////////////////////////////////////////
 
 	r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const	char	*user_operator_library_path,
 		uint64			(*time_base)(),

@@ -32,6 +32,7 @@
 #define	binding_map_h
 
 #include	"../r_code/object.h"
+#include	"dll.h"
 
 
 using	namespace	r_code;
@@ -39,13 +40,13 @@ using	namespace	r_code;
 namespace	r_exec{
 
 	//	Holds three kinds of bindings (i.e. pairs variable|value).
-	class	BindingMap:
+	class	r_exec_dll	BindingMap:
 	public	_Object{
-	public:
+	private:
 		UNORDERED_MAP<Code	*,P<Code> >			objects;	//	objects of class var, values are system objects.
 		UNORDERED_MAP<Atom,Atom>				atoms;		//	numerical variables, values are atoms (Atom::Float).
 		UNORDERED_MAP<Atom,std::vector<Atom> >	structures;	//	structural variables, values are structures embedded in code.
-
+	public:
 		BindingMap();
 		BindingMap(const	BindingMap	*source);
 
@@ -59,6 +60,7 @@ namespace	r_exec{
 		Atom	get_atomic_variable(const	Code	*object,uint16	index);
 		Atom	get_structural_variable(const	Code	*object,uint16	index);
 		Code	*get_variable_object(Code	*object);
+		void	set_variable_object(Code	*object);
 
 		bool	match(Code	*object,Code	*pattern);
 		bool	bind_float_variable(Atom	val,Atom	var);

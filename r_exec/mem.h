@@ -238,12 +238,17 @@ namespace	r_exec{
 		virtual	void	eject(Code	*command);
 
 		virtual	r_code::Code	*build_object(Atom	head)=0;
-				r_code::Code	*clone_object(r_code::Code	*object);	//	views are cloned; markers are not.
-				r_code::Code	*abstract_object(r_code::Code	*object);
-				r_code::Code	*abstract_high_level_pattern(r_code::Code	*object);
-				r_code::Code	*abstract_high_level_pattern(r_code::Code	*object,BindingMap	*bm);
-				r_code::Code	*abstract_object(r_code::Code	*object,BindingMap	*bm);
-				void			abstract_object_member(r_code::Code	*object,uint16	index,BindingMap	*bm);
+
+		//	production of abstracted code (cloned).
+		r_code::Code	*clone_object(r_code::Code	*object);	//	views are cloned; markers are not.
+		r_code::Code	*abstract_object_clone(r_code::Code	*object);
+		r_code::Code	*abstract_object_clone(r_code::Code	*object,BindingMap	*bm);
+		void			abstract_object_member_clone(r_code::Code	*object,uint16	index,BindingMap	*bm);
+
+		//	producion of abstracted code (patched).
+		void	abstract_high_level_pattern(r_code::Code	*object,BindingMap	*bm);
+		void	abstract_object(r_code::Code	*object,BindingMap	*bm);
+		void	abstract_object_member(r_code::Code	*object,uint16	index,BindingMap	*bm);
 	};
 
 	//	O is the class of the objects held by the rMem (except groups and notifications):

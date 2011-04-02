@@ -34,6 +34,10 @@
 
 namespace	r_exec{
 
+	typedef	UNORDERED_MAP<Code	*,P<Code> >			Objects;
+	typedef	UNORDERED_MAP<Atom,Atom>				Atoms;
+	typedef	UNORDERED_MAP<Atom,std::vector<Atom> >	Structures;
+
 	BindingMap::BindingMap():_Object(){
 	}
 
@@ -59,7 +63,7 @@ namespace	r_exec{
 	void	BindingMap::init(Code	*source){	//	source is abstracted.
 
 		if(source->code(0).asOpcode()==Opcodes::Var)
-			objects[source]=source;
+			objects.insert(Objects::value_type(source,source));
 		else{
 		
 			for(uint16	i=0;i<source->code_size();++i){
@@ -67,13 +71,13 @@ namespace	r_exec{
 				switch(source->code(i).getDescriptor()){
 				case	Atom::NUMERICAL_VARIABLE:
 				case	Atom::BOOLEAN_VARIABLE:
-					atoms[source->code(i)]=source->code(i);
+					atoms.insert(Atoms::value_type(source->code(i),source->code(i)));
 					break;
 				case	Atom::STRUCTURAL_VARIABLE:{
 					std::vector<Atom>	v;
 					for(uint16	j=0;j<=source->code(i-1).getAtomCount();++j)
 						v.push_back(source->code(i-1+j));
-					structures[source->code(i)]=v;
+					structures.insert(Structures::value_type(source->code(i),v));
 					break;
 				}
 				}
@@ -88,7 +92,7 @@ namespace	r_exec{
 
 		if(original->code(0).asOpcode()==Opcodes::Var){
 
-			UNORDERED_MAP<Code	*,P<Code> >::const_iterator	o=objects.find(original);
+			Objects::const_iterator	o=objects.find(original);
 			if(o!=objects.end()	&&	o->second!=NULL)
 				return	o->second;
 			else
@@ -103,7 +107,7 @@ namespace	r_exec{
 			case	Atom::NUMERICAL_VARIABLE:
 			case	Atom::BOOLEAN_VARIABLE:{
 				
-				UNORDERED_MAP<Atom,Atom>::const_iterator	_a=atoms.find(a);
+				Atoms::const_iterator	_a=atoms.find(a);
 				if(_a==atoms.end())	//	no registered value; original is left unbound.
 					bound_object->code(i++)=a;
 				else
@@ -111,7 +115,7 @@ namespace	r_exec{
 				break;
 			}case	Atom::STRUCTURAL_VARIABLE:{
 
-				UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	_s=structures.find(a);
+				Structures::const_iterator	_s=structures.find(a);
 				if(_s==structures.end())	//	no registered value; original is left unbound.
 					bound_object->code(i++)=a;
 				else{
@@ -141,7 +145,7 @@ namespace	r_exec{
 
 		if(original->code(0).asOpcode()==Opcodes::Var){
 
-			UNORDERED_MAP<Code	*,P<Code> >::const_iterator	b=objects.find(original);
+			Objects::const_iterator	b=objects.find(original);
 			if(b!=objects.end())
 				return	true;
 			else
@@ -177,7 +181,7 @@ namespace	r_exec{
 			float32	min=val.asFloat()*(1-tolerance);
 			float32	max=val.asFloat()*(1+tolerance);
 
-			UNORDERED_MAP<Atom,Atom>::const_iterator	a;
+			Atoms::const_iterator	a;
 			for(a=atoms.begin();a!=atoms.end();++a)
 				if(a->second.asFloat()>=min	&&
 					a->second.asFloat()<=max){	//	variable already exists for the value.
@@ -189,11 +193,11 @@ namespace	r_exec{
 			if(!var){
 
 				var=Atom::NumericalVariable(atoms.size(),Atom::GetTolerance(tolerance));
-				atoms[var]=val;
+				atoms.insert(Atoms::value_type(var,val));
 			}
 		}else	if(val.getDescriptor()==Atom::BOOLEAN_){
 
-			UNORDERED_MAP<Atom,Atom>::const_iterator	a;
+			Atoms::const_iterator	a;
 			for(a=atoms.begin();a!=atoms.end();++a)
 				if(a->second.asBoolean()==val.asBoolean()){	//	variable already exists for the value.
 
@@ -204,7 +208,7 @@ namespace	r_exec{
 			if(!var){
 
 				var=Atom::BooleanVariable(atoms.size());
-				atoms[var]=val;
+				atoms.insert(Atoms::value_type(var,val));
 			}
 		}
 
@@ -238,7 +242,7 @@ namespace	r_exec{
 			}else
 				min=max=0;
 
-			UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	s;
+			Structures::const_iterator	s;
 			for(s=structures.begin();s!=structures.end();++s){
 
 				if(val[0]==s->second[0]){
@@ -262,12 +266,12 @@ namespace	r_exec{
 				std::vector<Atom>	_value;
 				for(uint16	i=0;i<=val[0].getAtomCount();++i)
 					_value.push_back(val[i]);
-				structures[var]=_value;
+				structures.insert(Structures::value_type(var,_value));
 			}
 			break;
 		}case	Atom::STRING:{	//	tolerance is not used.
 
-			UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	s;
+			Structures::const_iterator	s;
 			for(s=structures.begin();s!=structures.end();++s){
 
 				if(val[0]==s->second[0]){
@@ -290,14 +294,14 @@ namespace	r_exec{
 				std::vector<Atom>	_value;
 				for(uint16	i=0;i<=val[0].getAtomCount();++i)
 					_value.push_back(val[i]);
-				structures[var]=_value;
+				structures.insert(Structures::value_type(var,_value));
 			}
 			break;
 		}case	Atom::OBJECT:{	//	tolerance is used to compare numerical structure members.
 
 			float32	tolerance=_Mem::Get()->get_float_tolerance();
 
-			UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	s;
+			Structures::const_iterator	s;
 			for(s=structures.begin();s!=structures.end();++s){
 
 				if(val[0]==s->second[0]){
@@ -328,7 +332,7 @@ namespace	r_exec{
 				std::vector<Atom>	_value;
 				for(uint16	i=0;i<=val[0].getAtomCount();++i)
 					_value.push_back(val[i]);
-				structures[var]=_value;
+				structures.insert(Structures::value_type(var,_value));
 			}
 			break;
 		}
@@ -342,7 +346,7 @@ namespace	r_exec{
 		Code	*var=NULL;
 		bool	exists=false;
 
-		UNORDERED_MAP<Code	*,P<Code> >::const_iterator	o;
+		Objects::const_iterator	o;
 		for(o=objects.begin();o!=objects.end();++o)
 			if(o->second==object){	//	variable already exists for the value.
 
@@ -354,10 +358,17 @@ namespace	r_exec{
 
 			var=factory::Object::Var(1);
 			P<Code>	p=object;
-			objects.insert(std::pair<Code	*,P<Code> >(var,p));
+			objects.insert(Objects::value_type(var,p));
 		}
 
 		return	var;
+	}
+
+	void	BindingMap::set_variable_object(Code	*object){
+
+		P<Code>	original=_Mem::Get()->clone_object(object);
+		object->code(0)=Atom::Object(Opcodes::Var,VAR_ARITY);	//	object is an entity. var and ent have the same size.
+		objects.insert(Objects::value_type(object,original));
 	}
 
 	bool	BindingMap::match(Code	*object,Code	*pattern){
@@ -426,7 +437,7 @@ namespace	r_exec{
 
 	bool	BindingMap::bind_float_variable(Atom	val,Atom	var){
 
-		UNORDERED_MAP<Atom,Atom>::const_iterator	a=atoms.find(var);
+		Atoms::const_iterator	a=atoms.find(var);
 		if(a->second.getDescriptor()==Atom::NUMERICAL_VARIABLE){
 
 			atoms[var]=val;
@@ -443,7 +454,7 @@ namespace	r_exec{
 
 	bool	BindingMap::bind_boolean_variable(Atom	val,Atom	var){
 
-		UNORDERED_MAP<Atom,Atom>::const_iterator	a=atoms.find(var);
+		Atoms::const_iterator	a=atoms.find(var);
 		if(a->second.getDescriptor()==Atom::BOOLEAN_VARIABLE){
 
 			atoms[var]=val;
@@ -458,7 +469,7 @@ namespace	r_exec{
 	bool	BindingMap::bind_structural_variable(Atom	*val,Atom	var){
 
 		uint16	val_size=val->getAtomCount();
-		UNORDERED_MAP<Atom,std::vector<Atom> >::iterator	s=structures.find(var);
+		Structures::iterator	s=structures.find(var);
 		if(s->second[1].getDescriptor()==Atom::STRUCTURAL_VARIABLE){
 
 			for(uint16	i=0;i<=val_size;++i)
@@ -514,7 +525,7 @@ namespace	r_exec{
 
 	bool	BindingMap::bind_object_variable(Code	*val,Code	*var){
 
-		UNORDERED_MAP<Code	*,P<Code> >::const_iterator	o=objects.find(var);
+		Objects::const_iterator	o=objects.find(var);
 		if(o->second->code(0).asOpcode()==Opcodes::Var){
 
 			objects[var]=val;
@@ -533,7 +544,7 @@ namespace	r_exec{
 
 		uint16	code_index=index+1;
 		uint16	ref_index=1;
-		UNORDERED_MAP<Code	*,P<Code> >::const_iterator	o;
+		Objects::const_iterator	o;
 		for(o=objects.begin();o!=objects.end();++o,++ref_index,++code_index){
 
 			object->code(code_index)=Atom::RPointer(ref_index);
@@ -541,7 +552,7 @@ namespace	r_exec{
 		}
 
 		uint16	extent_index=index+args_size+1;
-		UNORDERED_MAP<Atom,std::vector<Atom> >::const_iterator	s;
+		Structures::const_iterator	s;
 		for(s=structures.begin();s!=structures.end();++s,++code_index){
 
 			object->code(code_index)=Atom::IPointer(extent_index);
@@ -549,7 +560,7 @@ namespace	r_exec{
 				object->code(extent_index)=s->second[j];
 		}
 
-		UNORDERED_MAP<Atom,Atom>::const_iterator	a;
+		Atoms::const_iterator	a;
 		for(a=atoms.begin();a!=atoms.end();++a,++code_index)
 			object->code(code_index)=a->second;
 	}
@@ -559,9 +570,9 @@ namespace	r_exec{
 		uint16	var_set_index=object->code(I_HLP_ARGS).asIndex();
 		uint16	var_count=object->code(var_set_index).getAtomCount();
 
-		UNORDERED_MAP<Code	*,P<Code> >::iterator			o=objects.begin();
-		UNORDERED_MAP<Atom,std::vector<Atom> >::iterator	s=structures.begin();
-		UNORDERED_MAP<Atom,Atom>::iterator					a=atoms.begin();
+		Objects::iterator		o=objects.begin();
+		Structures::iterator	s=structures.begin();
+		Atoms::iterator			a=atoms.begin();
 		
 		for(uint16	i=1;i<var_count;++i){
 
