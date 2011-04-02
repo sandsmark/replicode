@@ -336,10 +336,6 @@ namespace	r_exec{
 			c->remove_requirement();
 	}
 
-	Code	*MDLController::get_ntf_instance(BindingMap	*bm)	const{
-
-		return	get_instance(bm,Opcodes::IMDL);
-	}
 	uint16	MDLController::get_instance_opcode()	const{
 
 		return	Opcodes::IMDL;

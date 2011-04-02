@@ -62,7 +62,6 @@ namespace	r_exec{
 	public	HLPController{
 	private:
 		void	produce_goals(Code	*super_goal,BindingMap	*bm);
-		Code	*get_ntf_instance(BindingMap	*bm)	const;
 		void	add_monitor(BindingMap	*bindings,
 							Code		*goal,
 							Code		*super_goal,

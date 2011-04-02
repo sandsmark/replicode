@@ -71,8 +71,8 @@ namespace	r_exec{
 		
 		Code	*mk_rdx=factory::Object::MkRdx(instance_fact,&inputs,production_fact,1);
 		
-		Code	*mk_sim_instance=get_mk_sim(production_fact);
-		Code	*mk_asmp_instance=get_mk_asmp(production_fact);
+		Code	*mk_sim_production=get_mk_sim(production_fact);
+		Code	*mk_asmp_production=get_mk_asmp(production_fact);
 
 		Group	*origin=getView()->get_host();
 		uint16	out_group_count=((HLPController	*)controller)->get_out_group_count();
@@ -95,15 +95,15 @@ namespace	r_exec{
 			view=new	NotificationView(origin,out_group,mk_rdx);
 			_Mem::Get()->inject_notification(view,true);
 
-			if(mk_sim_instance){
+			if(mk_sim_production){
 
-				view=new	View(true,now,1,Utils::GetResilience(_Mem::Get()->get_sim_res(),base),out_group,origin,mk_sim_instance);
+				view=new	View(true,now,1,Utils::GetResilience(_Mem::Get()->get_sim_res(),base),out_group,origin,mk_sim_production);
 				_Mem::Get()->inject(view);
 			}
 
-			if(mk_asmp_instance){
+			if(mk_asmp_production){
 
-				view=new	View(true,now,1,Utils::GetResilience(_Mem::Get()->get_asmp_res(),base),out_group,origin,mk_asmp_instance);
+				view=new	View(true,now,1,Utils::GetResilience(_Mem::Get()->get_asmp_res(),base),out_group,origin,mk_asmp_production);
 				_Mem::Get()->inject(view);
 			}
 		}
@@ -262,11 +262,6 @@ namespace	r_exec{
 										uint64		expected_time_low){
 
 		HLPController::add_monitor<CSTGMonitor>(new	CSTGMonitor(this,bindings,goal,super_goal,matched_pattern,expected_time_high,expected_time_low));
-	}
-
-	Code	*CSTController::get_ntf_instance(BindingMap	*bm)	const{
-
-		return	get_instance(bm,Opcodes::ICST);
 	}
 
 	uint16	CSTController::get_instance_opcode()	const{

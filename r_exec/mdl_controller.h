@@ -60,7 +60,6 @@ namespace	r_exec{
 		std::list<P<PMonitor> >	p_monitors;
 
 		HLPController	*get_rhs_controller()	const;
-		Code	*get_ntf_instance(BindingMap	*bm)	const;
 	public:
 		MDLController(r_code::View	*view);
 		~MDLController();

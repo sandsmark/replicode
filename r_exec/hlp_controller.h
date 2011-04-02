@@ -50,7 +50,6 @@ namespace	r_exec{
 
 		void	inject_sub_goal(uint64	now,
 								uint64	deadline,
-								Code	*target,
 								Code	*super_goal,
 								Code	*sub_goal,
 								Code	*ntf_instance);
@@ -59,7 +58,6 @@ namespace	r_exec{
 											Code	*super_goal,
 											Code	*sub_goal,
 											Code	*ntf_instance);
-		virtual	Code	*get_ntf_instance(BindingMap	*bm)	const=0;
 
 		template<class	C>	void	_take_input(r_exec::View	*input){
 
@@ -84,7 +82,7 @@ namespace	r_exec{
 		void	add_outcome(Code	*target,bool	success,float32	confidence)	const;	//	target: mk.pred or mk.goal.
 		void	produce_sub_goal(	BindingMap	*bm,
 									Code		*super_goal,
-									Code		*object,
+									Code		*sub_goal_target,
 									Code		*instance,
 									bool		monitor);
 

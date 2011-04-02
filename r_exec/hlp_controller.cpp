@@ -165,8 +165,8 @@ namespace	r_exec{
 	}
 
 	void	HLPController::produce_sub_goal(BindingMap	*bm,
-											Code		*super_goal,	//	fact->mk.goal->fact; its time may be a variable.
-											Code		*object,		//	fact; its time may be a variable.
+											Code		*super_goal,		//	fact->mk.goal->fact; its time may be a variable.
+											Code		*sub_goal_target,	//	fact; its time may be a variable.
 											Code		*instance,
 											bool		monitor){
 		
@@ -192,9 +192,9 @@ namespace	r_exec{
 			deadline_low=now;	//	try to get an instance asap.
 			Code	*ip_f=factory::Object::Fact(instance,deadline_low,1,1);					
 			sub_goal=factory::Object::MkGoal(ip_f,actor,1);
-			matched_pattern=object;
+			matched_pattern=sub_goal_target;
 		}else
-			sub_goal=factory::Object::MkGoal(object,actor,1);
+			sub_goal=factory::Object::MkGoal(sub_goal_target,actor,1);
 
 		Code	*_sub_goal=_Mem::Get()->check_existence(sub_goal);
 		if(_sub_goal!=sub_goal){	//	a goal already exists for the same target (object or ip_f).
@@ -203,7 +203,7 @@ namespace	r_exec{
 									deadline_high,
 									_sub_goal,
 									super_goal,
-									get_ntf_instance(bm));
+									get_instance(get_instance_opcode()));
 			delete	sub_goal;
 			return;
 		}
@@ -213,10 +213,9 @@ namespace	r_exec{
 		
 		inject_sub_goal(now,
 						deadline_high,
-						object,
 						super_goal,
 						sub_goal,
-						get_ntf_instance(bm));
+						get_instance(get_instance_opcode()));
 	}
 
 	void	HLPController::add_monitor(	BindingMap	*bindings,
@@ -231,27 +230,18 @@ namespace	r_exec{
 
 	void	HLPController::inject_sub_goal(	uint64	now,
 											uint64	deadline,
-											Code	*target,
-											Code	*super_goal,	//	fact.
-											Code	*sub_goal,		//	mk.goal.
+											Code	*super_goal,		//	fact.
+											Code	*sub_goal,			//	mk.goal.
 											Code	*ntf_instance){
 
 		Code	*ntf_instance_fact=factory::Object::Fact(ntf_instance,now,1,1);
 		Code	*sub_goal_fact=factory::Object::Fact(sub_goal,now,1,1);
-		Code	*mk_sim_ntf_instance=NULL;
-		Code	*mk_asmp_ntf_instance=NULL;
 		Code	*mk_sim_goal=NULL;
 		Code	*mk_asmp_goal=NULL;
-		if(super_goal->get_asmp()){
-
-			mk_asmp_ntf_instance=factory::Object::MkAsmp(ntf_instance_fact,getObject(),1,1);
+		if(super_goal->get_asmp())
 			mk_asmp_goal=factory::Object::MkAsmp(sub_goal_fact,getObject(),1,1);
-		}
-		if(super_goal->get_hyp()	||	super_goal->get_sim()){
-
-			mk_sim_ntf_instance=factory::Object::MkSim(ntf_instance,getObject(),1);
+		if(super_goal->get_hyp()	||	super_goal->get_sim())
 			mk_sim_goal=factory::Object::MkSim(sub_goal_fact,getObject(),1);
-		}
 
 		Code	*mk_rdx=factory::Object::MkRdx(ntf_instance_fact,super_goal,sub_goal_fact,1);
 
@@ -264,35 +254,14 @@ namespace	r_exec{
 			int64	delta=abs((float32)((int64)(deadline-now)));
 			int32	resilience=Utils::GetResilience(delta,base);
 
-			View	*view=new	View(true,now,1,1,out_group,origin,target);	//	SYNC_FRONT,sln=1,res=1.
-			_Mem::Get()->inject(view);
-
-			view=new	View(true,now,1,resilience,out_group,origin,sub_goal);	//	SYNC_FRONT,sln=1,res=resilience.
+			View	*view=new	View(true,now,1,resilience,out_group,origin,sub_goal);	//	SYNC_FRONT,sln=1,res=resilience.
 			_Mem::Get()->inject(view);
 
 			view=new	View(true,now,1,resilience,out_group,origin,sub_goal_fact);	//	SYNC_FRONT,sln=1,res=resilience.
 			_Mem::Get()->inject(view);
 
-			view=new	View(true,now,1,0,out_group,origin,ntf_instance);	//	SYNC_FRONT,sln=0,res=1.
-			_Mem::Get()->inject(view);
-
-			view=new	View(true,now,1,0,out_group,origin,ntf_instance_fact);	//	SYNC_FRONT,sln=0,res=1.
-			_Mem::Get()->inject(view);
-
 			view=new	NotificationView(origin,out_group,mk_rdx);
 			_Mem::Get()->inject_notification(view,true);
-
-			if(mk_sim_ntf_instance){
-
-				view=new	View(true,now,1,Utils::GetResilience(_Mem::Get()->get_sim_res(),base),out_group,origin,mk_sim_ntf_instance);
-				_Mem::Get()->inject(view);
-			}
-
-			if(mk_asmp_ntf_instance){
-
-				view=new	View(true,now,1,Utils::GetResilience(_Mem::Get()->get_asmp_res(),base),out_group,origin,mk_asmp_ntf_instance);
-				_Mem::Get()->inject(view);
-			}
 
 			if(mk_sim_goal){
 
@@ -348,12 +317,6 @@ namespace	r_exec{
 			_Mem::Get()->inject(view);
 
 			view=new	View(true,now,1,resilience,out_group,origin,sub_goal_fact);	//	SYNC_FRONT,sln=1,res=resilience.
-			_Mem::Get()->inject(view);
-
-			view=new	View(true,now,1,0,out_group,origin,ntf_instance);	//	SYNC_FRONT,sln=0,res=1.
-			_Mem::Get()->inject(view);
-
-			view=new	View(true,now,1,0,out_group,origin,ntf_instance_fact);	//	SYNC_FRONT,sln=0,res=1.
 			_Mem::Get()->inject(view);
 
 			view=new	NotificationView(origin,out_group,mk_rdx);
