@@ -218,7 +218,7 @@ namespace	r_exec{
 			return	mk;
 		}
 
-		Code	*Object::MkRdx(Code	*icst_fact,std::vector<P<Code> >	*inputs,float32	psln_thr){
+		Code	*Object::MkRdx(Code	*icst_fact,std::vector<P<Code> >	*inputs,Code	*output,float32	psln_thr){
 
 			uint16	extent_index=MK_RDX_ARITY+1;
 			Code	*mk=_Mem::Get()->build_object(Atom::Marker(Opcodes::MkRdx,MK_RDX_ARITY));
@@ -232,8 +232,10 @@ namespace	r_exec{
 				mk->code(extent_index++)=Atom::RPointer(i);
 				mk->add_reference((*inputs)[i-1]);
 			}
-			mk->code(MK_RDX_PRODS)=Atom::IPointer(extent_index);	//	empty set of productions.
-			mk->code(extent_index++)=Atom::Set(0);
+			mk->code(MK_RDX_PRODS)=Atom::IPointer(extent_index);	//	set of one production.
+			mk->code(extent_index++)=Atom::Set(1);
+			mk->code(extent_index++)=Atom::RPointer(inputs->size()+1);
+			mk->add_reference(output);
 			return	mk;
 		}
 

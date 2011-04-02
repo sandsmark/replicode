@@ -84,6 +84,11 @@ namespace	r_exec{
 		return	instance;
 	}
 
+	Code	*HLPController::get_instance(uint16	opcode)	const{
+
+		return	get_instance(bindings,opcode);
+	}
+
 	bool	HLPController::monitor(Code	*input){
 
 		if(!input->get_goal()){	//	discard facts marked as goals; this does not mean that goals are discarded when they are the input.
@@ -184,10 +189,10 @@ namespace	r_exec{
 		Code	*matched_pattern=NULL;
 		if(instance){	//	there exist a requirement.
 						
-			Code	*ip_f=factory::Object::Fact(instance,now,1,1);					
+			deadline_low=now;	//	try to get an instance asap.
+			Code	*ip_f=factory::Object::Fact(instance,deadline_low,1,1);					
 			sub_goal=factory::Object::MkGoal(ip_f,actor,1);
 			matched_pattern=object;
-			deadline_low=now;	//	try to get an instance asap.
 		}else
 			sub_goal=factory::Object::MkGoal(object,actor,1);
 

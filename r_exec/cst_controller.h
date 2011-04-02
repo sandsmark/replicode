@@ -44,7 +44,7 @@ namespace	r_exec{
 
 		std::vector<P<Code> >	inputs;
 
-		void	inject_instance();
+		void	inject_production();
 
 		CSTOverlay(const	CSTOverlay	*original);
 	public:

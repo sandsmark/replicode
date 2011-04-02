@@ -101,6 +101,7 @@ namespace	r_exec{
 		void	remove_requirement();
 
 		Code	*get_instance(const	BindingMap	*bm,uint16	opcode)	const;
+		Code	*get_instance(uint16	opcode)	const;
 		virtual	uint16	get_instance_opcode()	const=0;
 
 		uint16	get_out_group_count()	const;

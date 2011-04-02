@@ -47,7 +47,8 @@ namespace	r_exec{
 					Code			*goal,
 					Code			*super_goal,
 					Code			*matched_pattern,
-					uint64			deadline);
+					uint64			expected_time_high,
+					uint64			expected_time_low);
 		~CSTGMonitor();
 
 		bool	is_alive();

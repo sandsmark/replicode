@@ -40,13 +40,14 @@ namespace	r_exec{
 								Code			*goal,				//	(mk.goal (fact (icst controller->getObject() [args] ...)...)...)
 								Code			*super_goal,		//	(fact (mk.goal ...) ...).
 								Code			*matched_pattern,	//	the pattern the matching of which triggered the need for ensuring requirements; never NULL.
-								uint64			deadline):GMonitor(	controller,
+								uint64			expected_time_high,
+								uint64			expected_time_low):GMonitor(	controller,
 																	bindings,
 																	goal,
 																	super_goal,
 																	matched_pattern,
-																	deadline,
-																	deadline){
+																	expected_time_high,
+																	expected_time_low){
 	}
 
 	CSTGMonitor::~CSTGMonitor(){

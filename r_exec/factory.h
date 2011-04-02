@@ -103,7 +103,7 @@ namespace	r_exec{
 			static	Code	*MkSuccess(Code	*object,float32	psln_thr);
 			static	Code	*MkGoal(Code	*object,Code	*actor,float32	psln_thr);
 			static	Code	*MkRdx(Code	*imdl_fact,Code	*input,Code	*output,float32	psln_thr);	//	for mdl.
-			static	Code	*MkRdx(Code	*icst_fact,std::vector<P<Code> > *inputs,float32	psln_thr);	//	for cst.
+			static	Code	*MkRdx(Code	*icst_fact,std::vector<P<Code> > *inputs,Code	*output,float32	psln_thr);	//	for cst.
 		};
 	}
 }

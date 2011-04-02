@@ -58,16 +58,21 @@ namespace	r_exec{
 			patterns.push_back(getObject()->get_reference(getObject()->code(obj_set_index+i).asIndex()));
 	}
 
-	void	CSTOverlay::inject_instance(){
+	void	CSTOverlay::inject_production(){
 
 		uint64	now=Now();
 		uint32	resilience=0;
 		
-		Code	*instance=((HLPController	*)controller)->get_instance(bindings,Opcodes::ICST);
+		Code	*instance=((HLPController	*)controller)->get_instance(Opcodes::ICST);				//	the instance that performed the reduction.
 		Code	*instance_fact=factory::Object::Fact(instance,now,1,1);
-		Code	*mk_rdx=factory::Object::MkRdx(instance_fact,&inputs,1);
-		Code	*mk_sim_instance=get_mk_sim(instance_fact);
-		Code	*mk_asmp_instance=get_mk_asmp(instance_fact);
+
+		Code	*production=((HLPController	*)controller)->get_instance(bindings,Opcodes::ICST);	//	the instance produced.
+		Code	*production_fact=factory::Object::Fact(production,now,1,1);
+		
+		Code	*mk_rdx=factory::Object::MkRdx(instance_fact,&inputs,production_fact,1);
+		
+		Code	*mk_sim_instance=get_mk_sim(production_fact);
+		Code	*mk_asmp_instance=get_mk_asmp(production_fact);
 
 		Group	*origin=getView()->get_host();
 		uint16	out_group_count=((HLPController	*)controller)->get_out_group_count();
@@ -81,10 +86,10 @@ namespace	r_exec{
 			else
 				res=Utils::GetResilience(resilience,base);
 
-			View	*view=new	View(true,now,1,res,out_group,origin,instance);	//	SYNC_FRONT,sln=1,res=resilience.
+			View	*view=new	View(true,now,1,res,out_group,origin,production);	//	SYNC_FRONT,sln=1,res=resilience.
 			_Mem::Get()->inject(view);
 			
-			view=new	View(true,now,1,res,out_group,origin,instance_fact);	//	SYNC_FRONT,sln=1,res=resilience.
+			view=new	View(true,now,1,res,out_group,origin,production_fact);	//	SYNC_FRONT,sln=1,res=resilience.
 			_Mem::Get()->inject(view);
 
 			view=new	NotificationView(origin,out_group,mk_rdx);
@@ -131,7 +136,7 @@ namespace	r_exec{
 			if(!patterns.size()){
 //std::cout<<" full";
 				kill();
-				inject_instance();
+				inject_production();
 			}
 //std::cout<<" match\n";
 			return	offspring;
@@ -256,7 +261,7 @@ namespace	r_exec{
 										uint64		expected_time_high,
 										uint64		expected_time_low){
 
-		HLPController::add_monitor<CSTGMonitor>(new	CSTGMonitor(this,bindings,goal,super_goal,matched_pattern,expected_time_high));
+		HLPController::add_monitor<CSTGMonitor>(new	CSTGMonitor(this,bindings,goal,super_goal,matched_pattern,expected_time_high,expected_time_low));
 	}
 
 	Code	*CSTController::get_ntf_instance(BindingMap	*bm)	const{
