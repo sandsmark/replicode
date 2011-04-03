@@ -8,12 +8,12 @@
   	
     notification_resilience="1000"
     
-    goal_resilience="10000"
-    assumption_resilience="10000"
-    simulation_resilience="10000"
+    goal_resilience="100000"
+    assumption_resilience="100000"
+    simulation_resilience="100000"
     
     float_tolerance="0.1"
-    time_tolerance="0.1"
+    time_tolerance="10"
     
 	  run_time="1000"
     
@@ -42,6 +42,9 @@ time_core_count: number of thread processing update jobs.
 
 notification_resilience: in upr (i.e. relative to the ntf group). For debugging only - otherwise shall be 1.
 goal_resilience, assumption_resilience and simulation_resilience: in us.
+
+float_tolerance: in [0,1].
+time_tolerance: in us/1024 (24 bits).
 
 run_time: in ms.
 

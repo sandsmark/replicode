@@ -180,8 +180,10 @@ namespace	r_exec{
 			deadline_low=now;
 		}else{
 
-			deadline_high=Utils::GetTimestamp<Code>(super_goal_fact,FACT_TIME);
-			deadline_low=deadline_high;
+			uint64	deadline=Utils::GetTimestamp<Code>(super_goal_fact,FACT_TIME);
+			uint32	time_tolerance_us=super_goal_fact->code(super_goal_fact->code(FACT_TIME).asIndex()).getTimeTolerance()<<10;
+			deadline_high=deadline+time_tolerance_us;
+			deadline_low=deadline-time_tolerance_us;
 		}
 
 		Code	*sub_goal;
@@ -190,7 +192,25 @@ namespace	r_exec{
 		if(instance){	//	there exist a requirement.
 						
 			deadline_low=now;	//	try to get an instance asap.
-			Code	*ip_f=factory::Object::Fact(instance,deadline_low,1,1);					
+			deadline_high+=_Mem::Get()->get_time_tolerance()<<10;
+			uint64	median_deadline=(uint64)((float64)(deadline_high+deadline_low))/2;
+			uint32	time_tolerance_ms=(deadline_high-median_deadline)>>10;
+
+			Code	*ip_f=factory::Object::Fact(instance,median_deadline,1,1);
+			ip_f->code(ip_f->code(FACT_TIME).asIndex()).setTimeTolerance(time_tolerance_ms);
+
+			uint16	arg_set_index=instance->code(I_HLP_ARGS).asIndex();
+			uint16	arg_count=instance->code(arg_set_index).getAtomCount();
+			for(uint16	i=1;i<=arg_count;++i){
+
+				if(instance->code(arg_set_index+i).getDescriptor()==Atom::I_PTR){
+
+					uint16	index=instance->code(arg_set_index+i).asIndex();
+					if(instance->code(index).getDescriptor()==Atom::TIMESTAMP)
+						instance->code(index).setTimeTolerance(time_tolerance_ms);
+				}
+			}
+
 			sub_goal=factory::Object::MkGoal(ip_f,actor,1);
 			matched_pattern=sub_goal_target;
 		}else

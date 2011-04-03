@@ -44,7 +44,7 @@ public:
 	core::uint32		assumption_resilience;
 	core::uint32		simulation_resilience;
 	core::float32		float_tolerance;
-	core::float32		time_tolerance;
+	core::uint32		time_tolerance;
 	core::uint32		run_time;
 	core::uint32		probe_level;
 	std::string	usr_operator_path;
@@ -96,7 +96,7 @@ public:
 			assumption_resilience=atoi(_assumption_resilience);
 			simulation_resilience=atoi(_simulation_resilience);
 			float_tolerance=atof(_float_tolerance);
-			time_tolerance=atof(_time_tolerance);
+			time_tolerance=atoi(_time_tolerance);
 			run_time=atoi(_run_time);
 			probe_level=atoi(_probe_level);
 			decompile_image=(strcmp(_decompile_image,"yes")==0);

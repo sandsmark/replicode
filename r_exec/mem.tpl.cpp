@@ -133,31 +133,28 @@ namespace	r_exec{
 
 			switch(object->code(0).getDescriptor()){
 			case	Atom::MODEL:				//	these constructs are assumed not to be already abstracted.
-			case	Atom::COMPOSITE_STATE:{		//	consider the following example: object b is abstracted (code patched); 
-												//	then comes a -> b, to be also abstracted: a needs the BM of b so that its variables are consistent with the variables in b.
-				bool		abstracted_reference=false;
+			case	Atom::COMPOSITE_STATE:{		//	case in point: object b is abstracted (code patched), then comes a -> b, to be also abstracted:
+												//	a needs the BM of b so that its variables are consistent with the variables in b.
 				BindingMap	*bm=NULL;
-				for(uint16	i=0;i<object->references_size();++i){	//	models and composite states may point to at most one instance of each other.
+				for(uint16	i=0;i<object->references_size();++i){	//	models and composite states may point to at most fact pointing to one instance of each other (ihlp: either icst or imdl).
 																	//	caveat: this will not work if there were more than one abstracted reference.
-					
-					Code	*reference=object->get_reference(i);
-					switch(reference->code(0).getDescriptor()){
-					case	Atom::MODEL:
-					case	Atom::COMPOSITE_STATE:{
+					Code	*fact=object->get_reference(i);
+					if(	fact->code(0).asOpcode()==Opcodes::Fact	||
+						fact->code(0).asOpcode()==Opcodes::AntiFact){
 
-						Abstraction::const_iterator	a=abstraction_map.find(reference);
-						if(a!=abstraction_map.end())
-							bm=new	BindingMap(a->second);
-						abstracted_reference=true;
-						break;
-					}
-					}
+						Code	*ihlp=fact->get_reference(0);
+						if(	ihlp->code(0).asOpcode()==Opcodes::ICST	||
+							ihlp->code(0).asOpcode()==Opcodes::IMDL){
 
-					if(abstracted_reference)
-						break;
+							Abstraction::const_iterator	a=abstraction_map.find(ihlp->get_reference(0));
+							if(a!=abstraction_map.end())
+								bm=new	BindingMap(a->second);
+							break;
+						}
+					}
 				}
 
-				if(bm==NULL)	//	no abstracted reference.
+				if(bm==NULL)	//	no abstracted ihlp.
 					bm=new	BindingMap();
 
 				_Mem::Get()->abstract_high_level_pattern(object,bm);	//	any object pointing to object will now point to an abstracted version. NB: markers included.

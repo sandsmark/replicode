@@ -169,15 +169,16 @@ namespace	r_exec{
 		Overlay	*offspring=NULL;
 		std::list<P<Overlay> >::const_iterator	o;
 		reductionCS.enter();
+		uint64	now=Now();
 		if(!input->object->get_goal()){
 
 			for(o=overlays.begin();o!=overlays.end();){
 
-				if(tsc>0	&&	Now()-((CSTOverlay	*)*o)->get_birth_time()>tsc)
+				if(tsc>0	&&	now-((CSTOverlay	*)*o)->get_birth_time()>tsc)
 					o=overlays.erase(o);
 				else	if((*o)->is_alive()){
 
-					offspring=(*o)->reduce(input);
+					offspring=((CSTOverlay	*)*o)->reduce(input);
 					++o;
 					if(offspring)
 						overlays.push_front(offspring);
@@ -199,9 +200,9 @@ namespace	r_exec{
 
 						if(!requirement_count){
 
-							BindingMap	bm(bindings);
-							bm.load(target);
-							produce_goals(input->object,&bm);
+							BindingMap	*bm=new	BindingMap(bindings);
+							bm->load(target);
+							produce_goals(input->object,bm);
 						}
 					}else{	//	check if the goal matches one pattern.
 

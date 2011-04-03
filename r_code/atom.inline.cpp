@@ -369,14 +369,19 @@ namespace	r_code{
 		return	(atom	&	0x000FFF00)>>8;
 	}
 
-	inline	uint8	Atom::getTolerance()	const{
+	inline	uint8	Atom::getFloatTolerance()	const{
 
 		return	atom	&	0x000000FF;
 	}
 
-	inline	void	Atom::setTolerance(uint8	t){
+	inline	uint32	Atom::getTimeTolerance()	const{
 
-		atom=(atom	&	0xFFFFFF00)	|	t;
+		return	atom	&	0x00FFFFFF;
+	}
+
+	inline	void	Atom::setTimeTolerance(uint32	t){
+
+		atom=(atom	&	0xFF000000)	|	t;
 	}
 
 	inline	uint8	Atom::getAtomCount()	const{

@@ -102,32 +102,32 @@ namespace	r_exec{
 		Code	*bound_object=_Mem::Get()->build_object(original->code(0));
 		for(uint16	i=0;i<original->code_size();){	//	patch code containing variables with actual values when they exist.
 			
-			Atom	a=original->code(i);
-			switch(a.getDescriptor()){
+			Atom	o=original->code(i);
+			switch(o.getDescriptor()){
 			case	Atom::NUMERICAL_VARIABLE:
 			case	Atom::BOOLEAN_VARIABLE:{
 				
-				Atoms::const_iterator	_a=atoms.find(a);
+				Atoms::const_iterator	_a=atoms.find(o);
 				if(_a==atoms.end())	//	no registered value; original is left unbound.
-					bound_object->code(i++)=a;
+					bound_object->code(i++)=o;
 				else
 					bound_object->code(i++)=_a->second;
 				break;
 			}case	Atom::STRUCTURAL_VARIABLE:{
 
-				Structures::const_iterator	_s=structures.find(a);
+				Structures::const_iterator	_s=structures.find(o);
 				if(_s==structures.end())	//	no registered value; original is left unbound.
-					bound_object->code(i++)=a;
+					bound_object->code(i++)=o;
 				else{
 					
 					if(bound_object->code(i-1).getDescriptor()==Atom::TIMESTAMP)	//	store the tolerance in the timestamp (used to create monitoring jobs for goals).
-						bound_object->code(i-1).setTolerance(a.getTolerance());
+						bound_object->code(i-1).setTimeTolerance(original->code(i-1).getTimeTolerance());
 					for(uint16	j=1;j<_s->second.size();++j)
 						bound_object->code(i++)=_s->second[j];
 				}
 				break;
 			}default:
-				bound_object->code(i++)=a;
+				bound_object->code(i++)=o;
 				break;
 			}
 		}
@@ -192,7 +192,7 @@ namespace	r_exec{
 			
 			if(!var){
 
-				var=Atom::NumericalVariable(atoms.size(),Atom::GetTolerance(tolerance));
+				var=Atom::NumericalVariable(atoms.size(),Atom::GetFloatTolerance(tolerance));
 				atoms.insert(Atoms::value_type(var,val));
 			}
 		}else	if(val.getDescriptor()==Atom::BOOLEAN_){
@@ -221,39 +221,31 @@ namespace	r_exec{
 		Atom	*val=&object->code(index);
 
 		switch(val[0].getDescriptor()){
-		case	Atom::TIMESTAMP:{	//	tolerance is used.
+		case	Atom::TIMESTAMP:{	//	tolerance (ms) is used.
 			
-			float32	tolerance=_Mem::Get()->get_time_tolerance();
+			uint32	tolerance_ms=_Mem::Get()->get_time_tolerance();
+			uint64	tolerance_us=tolerance_ms<<10;
 			uint64	t=Utils::GetTimestamp(val);
 			uint64	min;
 			uint64	max;
-			uint64	now;
 			if(t>0){
 
-				if(t>65535)
-					now=Now();
-				else
-					now=0;
-				int64	delta_t=now-t;
-				if(delta_t<0)
-					delta_t=-delta_t;
-				min=delta_t*(1-tolerance);
-				max=delta_t*(1+tolerance);
+				min=t>tolerance_us?t-tolerance_us:0;
+				max=t+tolerance_us;
 			}else
 				min=max=0;
 
 			Structures::const_iterator	s;
 			for(s=structures.begin();s!=structures.end();++s){
 
-				if(val[0]==s->second[0]){
+				if(s->second[0].getDescriptor()==Atom::TIMESTAMP){
 
 					int64	_t=Utils::GetTimestamp(&s->second[0]);
-					if(t>0)
-						_t-=now;
 					if(_t<0)
 						_t=-_t;
 					if(_t>=min	&&	_t<=max){	//	variable already exists for the value.
 
+						object->code(index).setTimeTolerance(tolerance_ms);
 						var=s->first;
 						break;
 					}
@@ -262,10 +254,12 @@ namespace	r_exec{
 
 			if(!var){
 
-				var=Atom::StructuralVariable(structures.size(),Atom::GetTolerance(tolerance));
+				object->code(index).setTimeTolerance(tolerance_ms);
+				var=Atom::StructuralVariable(structures.size(),0);
 				std::vector<Atom>	_value;
 				for(uint16	i=0;i<=val[0].getAtomCount();++i)
 					_value.push_back(val[i]);
+				_value[0].setTimeTolerance(tolerance_ms);
 				structures.insert(Structures::value_type(var,_value));
 			}
 			break;
@@ -290,7 +284,7 @@ namespace	r_exec{
 
 			if(!var){
 
-				var=Atom::StructuralVariable(structures.size(),Atom::GetTolerance(0));
+				var=Atom::StructuralVariable(structures.size(),0);
 				std::vector<Atom>	_value;
 				for(uint16	i=0;i<=val[0].getAtomCount();++i)
 					_value.push_back(val[i]);
@@ -328,7 +322,7 @@ namespace	r_exec{
 
 			if(!var){
 
-				var=Atom::StructuralVariable(structures.size(),Atom::GetTolerance(tolerance));
+				var=Atom::StructuralVariable(structures.size(),Atom::GetFloatTolerance(tolerance));
 				std::vector<Atom>	_value;
 				for(uint16	i=0;i<=val[0].getAtomCount();++i)
 					_value.push_back(val[i]);
@@ -405,17 +399,14 @@ namespace	r_exec{
 
 		if((p+1)->getDescriptor()==Atom::STRUCTURAL_VARIABLE){
 
-			if(!bind_structural_variable(o,p[1]))
+			if(!bind_structural_variable(o,p+1))
 				return	false;
 		}else{
 
-			uint64	now=Now();
 			uint64	object_time=Utils::GetTimestamp(o);
 			uint64	pattern_time=Utils::GetTimestamp(p);
-
-			uint64	time_tolerance=abs((float32)((int64)(pattern_time-now)))*_Mem::Get()->get_time_tolerance();
-			uint64	delta=abs((float32)((int64)(pattern_time-object_time)));
-			if(delta>time_tolerance)
+			uint64	time_tolerance_us=p->getTimeTolerance()<<10;
+			if(object_time<pattern_time-time_tolerance_us	||	object_time>pattern_time+time_tolerance_us)
 				return	false;
 		}
 		return	true;
@@ -425,7 +416,7 @@ namespace	r_exec{
 
 		if((p+1)->getDescriptor()==Atom::STRUCTURAL_VARIABLE){
 
-			if(!bind_structural_variable(o,p[1]))
+			if(!bind_structural_variable(o,p+1))
 				return	false;
 		}else{
 
@@ -444,7 +435,6 @@ namespace	r_exec{
 
 			if(!bind_object_variable(object,pattern))
 				return	false;
-			return	true;
 		}else{
 
 			if(object->code(0)!=pattern->code(0))
@@ -453,7 +443,6 @@ namespace	r_exec{
 				return	false;
 			if(object->references_size()!=pattern->references_size())
 				return	false;
-
 			for(uint16	i=1;i<pattern->code_size();++i){
 
 				switch(pattern->code(i).getDescriptor()){
@@ -498,7 +487,7 @@ namespace	r_exec{
 			return	true;
 		}
 
-		float32	multiplier=var.getMultiplier();
+		float32	multiplier=var.getFloatMultiplier();
 		float32	min=a->second.asFloat()*(1-multiplier);
 		float32	max=a->second.asFloat()*(1+multiplier);
 		if(val.asFloat()<min	||	val.asFloat()>max)	//	at least one value differs from an existing binding.
@@ -520,10 +509,10 @@ namespace	r_exec{
 		return	true;
 	}
 
-	bool	BindingMap::bind_structural_variable(Atom	*val,Atom	var){
+	bool	BindingMap::bind_structural_variable(Atom	*val,Atom	*var){
 
 		uint16	val_size=val->getAtomCount();
-		Structures::iterator	s=structures.find(var);
+		Structures::iterator	s=structures.find(*var);
 		if(s->second[1].getDescriptor()==Atom::STRUCTURAL_VARIABLE){
 
 			for(uint16	i=0;i<=val_size;++i)
@@ -534,21 +523,11 @@ namespace	r_exec{
 		switch(s->second[0].getDescriptor()){
 		case	Atom::TIMESTAMP:{	//	tolerance is used.
 
-			float32	multiplier=var.getMultiplier();
+			uint64	tolerance_us=(var-1)->getTimeTolerance()<<10;
 			uint64	vt=Utils::GetTimestamp(&s->second[0]);
-			uint64	now=Now();
-			uint64	delta_t;
-			if(now>vt)
-				delta_t=now-vt;
-			else
-				delta_t=vt-now;
-			uint64	min=delta_t*(1-multiplier);
-			uint64	max=delta_t*(1+multiplier);
+			uint64	min=vt-tolerance_us;
+			uint64	max=vt+tolerance_us;
 			uint64	t=Utils::GetTimestamp(val);
-			if(t<now)
-				t=now-t;
-			else
-				t=t-now;
 			if(t<min	||	t>max)	//	the value differs from an existing binding.
 				return	false;
 			return	true;
@@ -562,7 +541,7 @@ namespace	r_exec{
 		case	Atom::OBJECT:	//	tolerance is used to compare numerical structure members.
 			for(uint16	i=1;i<=val_size;++i){
 
-				float32	multiplier=var.getMultiplier();
+				float32	multiplier=var->getFloatMultiplier();
 				if(val[i].isFloat()){
 
 					float32	min=s->second[i].asFloat()*(1-multiplier);

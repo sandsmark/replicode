@@ -85,42 +85,7 @@ i_pgm_update_thing_pos:(ipgm pgm_update_thing_pos |[] RUN_ALWAYS 0us NOTIFY 1) [
 
 ; --------------------------------------------
 
-p1:(pgm |[] |[] []
-   (inj []
-      cp:(mk.val a_cube position (vec3 10 20 30) 1)
-      [SYNC_FRONT now 1 1 stdin nil]
-   )
-   (inj []
-      (fact cp (+ now 30000us) 1 1)
-      [SYNC_FRONT now 1 1 stdin nil]
-   )
-   (inj []
-      sp:(mk.val self_right_hand position (vec3 10 20 30) 1)
-      [SYNC_FRONT now 1 1 stdin nil]
-   )
-   (inj []
-      (fact sp (+ now 30000us) 1 1)
-      [SYNC_FRONT now 1 1 stdin nil]
-   )
-   (inj []
-      gi:(iidp same_pos [a_cube self_right_hand (vec3 10 10 10) (+ now 30000us)] 1)
-      [SYNC_FRONT now 1 1 stdin nil]
-   )
-   (inj []
-      target:(fact gi (+ now 30000us) 1 1)
-      [SYNC_FRONT now 1 1 stdin nil]
-   )
-   (inj []
-      g:(mk.goal target self 1)
-      [SYNC_FRONT now 1 1 stdin nil]
-   )
-   (inj []
-      f_g:(fact g now 1 1)
-      [SYNC_FRONT now 1 1 stdin nil]
-   )
-1) |[]
 
-ip1:(ipgm p1 |[] RUN_ONCE 120000us NOTIFY 1) [[SYNC_FRONT now 0 forever root nil 1]]
 
 ; --------------------------------------------
 

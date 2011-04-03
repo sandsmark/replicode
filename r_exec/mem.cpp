@@ -53,7 +53,7 @@ namespace	r_exec{
 						uint32	asmp_res,
 						uint32	sim_res,
 						float32	float_tolerance,
-						float32	time_tolerance){
+						uint32	time_tolerance){
 
 		this->base_period=base_period;
 		this->reduction_core_count=reduction_core_count;
@@ -1011,7 +1011,7 @@ namespace	r_exec{
 			1000,
 			1000,
 			1000,
-			0.1,
+			10,
 			0.1);
 
 		mem->load( ram_objects.as_std() );

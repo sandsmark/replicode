@@ -55,7 +55,7 @@ namespace	r_exec{
 
 		bool	bind_float_variable(Atom	val,Atom	var);
 		bool	bind_boolean_variable(Atom	val,Atom	var);
-		bool	bind_structural_variable(Atom	*val,Atom	var);
+		bool	bind_structural_variable(Atom	*val,Atom	*var);
 		bool	bind_object_variable(Code	*val,Code	*var);
 	public:
 		BindingMap();

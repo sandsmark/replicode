@@ -175,12 +175,12 @@ namespace	r_code{
 		uint8	getClassID()		const;	// applicable to devices.
 		uint8	getDeviceID()		const;	// applicable to devices.
 		uint16	getVariableID()		const;	// applicable to variables.
-		uint8	getTolerance()		const;	// applicable to variables and timestamps: returns the entry in the lookup table (7 bits used).
-		float32	getMultiplier()		const;	// applicable to variables and timestamps: lookup table (even distribution): returns the multiplier to apply to a number to get the tolerance.
+		uint8	getFloatTolerance()	const;	// applicable to numerical variables: returns the entry in the lookup table (7 bits used).
+		float32	getFloatMultiplier()const;	// applicable to numerical variables: lookup table (even distribution): returns the multiplier to apply to a number to get the tolerance.
+		uint32	getTimeTolerance()	const;	// applicable to timestamps; returns a time value in ms.
+		void	setTimeTolerance(uint32	t);	// stores the tolerance (in ms); used for timestamps.
 
-		void	setTolerance(uint8	t);		//	stores the tolerance in the LSB; used for timestamps.
-
-		static	uint8	GetTolerance(float32	t);	//	converts a tolerance into an entry in the lookup table.
+		static	uint8	GetFloatTolerance(float32	t);	//	converts a tolerance into an entry in the lookup table.
 
 		void	trace()	const;
 		static	void	Trace(Atom	*base,uint16	count);

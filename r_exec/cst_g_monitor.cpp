@@ -18,7 +18,7 @@
 //     derived from this software without specific prior written permission.
 //
 //	THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
-//	EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+//	EXPRESS OR IMPLIED WARNTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 //	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 //	DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
 //	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
@@ -70,9 +70,6 @@ namespace	r_exec{
 				pred_fact_object->get_reference(0)==controller->getObject())
 			_input_fact_object=pred_fact_object;
 		}
-		if(_input_fact_object->code(0).asOpcode()==Opcodes::ICST){
-			uint32	u=0;
-			}
 		matchCS.enter();
 		if(bindings->match(_input_fact_object,goal_icst)){	//	first, check the objects pointed to by the facts.
 

@@ -50,9 +50,8 @@ namespace	r_exec{
 		Code	*bound_rhs=bindings->bind_object(rhs);	//	fact or |fact.
 		Code	*mk_pred=factory::Object::MkPred(bound_rhs,1,1);
 		uint64	predicted_time=Utils::GetTimestamp<Code>(bound_rhs,FACT_TIME);
-		float32	multiplier=rhs->code(rhs->code(FACT_TIME).asIndex()+1).getMultiplier();
-		uint64	time_tolerance=abs((float32)((int64)(predicted_time-now)))*multiplier;
-		uint32	pred_resilience=predicted_time+time_tolerance-now;	//	time to live in us.
+		uint32	time_tolerance_us=rhs->code(rhs->code(FACT_TIME).asIndex()).getTimeTolerance()<<10;
+		uint32	pred_resilience=predicted_time+time_tolerance_us-now;	//	time to live in us.
 
 		Code	*pred_fact=factory::Object::Fact(mk_pred,now,1,1);
 		Code	*mk_sim_pred=get_mk_sim(pred_fact);
@@ -93,8 +92,8 @@ namespace	r_exec{
 		PMonitor	*m=new	PMonitor(	(MDLController	*)controller,
 										bindings,
 										mk_pred,
-										predicted_time+time_tolerance,
-										predicted_time-time_tolerance);
+										predicted_time+time_tolerance_us,
+										predicted_time-time_tolerance_us);
 		((MDLController	*)controller)->add_monitor(m);
 	}
 
@@ -150,9 +149,10 @@ namespace	r_exec{
 		bool	match=false;
 		std::list<P<Overlay> >::const_iterator	o=overlays.begin();
 		reductionCS.enter();
+		uint64	now=Now();
 		for(o=overlays.begin();o!=overlays.end();++o){
 
-			if((*o)->reduce(input))
+			if(((MDLOverlay	*)*o)->reduce(input))
 				match=true;
 		}
 
@@ -170,7 +170,7 @@ namespace	r_exec{
 					//	check timings on facts or |facts and if consistent, determine the fact type for the sub-goal target (bound_lhs).
 					bool	time_consistency=false;
 					if(goal_target->code(goal_target->code(FACT_TIME).asIndex()+1).getDescriptor()==Atom::STRUCTURAL_VARIABLE)
-						time_consistency=true;					
+						time_consistency=true;
 					else{
 						
 						Code	*bound_rhs=bm->bind_object(rhs);
@@ -180,19 +180,10 @@ namespace	r_exec{
 						
 							uint64	bound_rhs_time=Utils::GetTimestamp<Code>(bound_rhs,FACT_TIME);
 							uint64	goal_time_target=Utils::GetTimestamp<Code>(goal_target,FACT_TIME);
-
-							uint64	now=Now();
-							uint64	reference=abs((float32)((int64)(goal_time_target-now)));
-							uint64	delta=abs((float32)((int64)(bound_rhs_time-goal_time_target)));
-							uint64	time_tolerance=reference*_Mem::Get()->get_time_tolerance();
+							uint64	time_tolerance_us=goal_target->code(goal_target->code(FACT_TIME).asIndex()).getTimeTolerance()<<10;
 							
-							if(delta<time_tolerance)
+							if(bound_rhs_time>=goal_time_target-time_tolerance_us	&&	bound_rhs_time<=goal_time_target+time_tolerance_us)
 								time_consistency=true;
-							else{
-								std::cout<<bound_rhs_time<<std::endl;
-								std::cout<<goal_time_target<<std::endl;
-								std::cout<<delta<<" "<<time_tolerance<<std::endl;
-							}
 						}
 						delete	bound_rhs;
 					}

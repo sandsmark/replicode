@@ -72,7 +72,7 @@ namespace	r_exec{
 		uint32	asmp_res;
 		uint32	sim_res;
 		float32	float_tolerance;
-		float32	time_tolerance;
+		uint32	time_tolerance;
 
 		PipeNN<P<_ReductionJob>,1024>	*reduction_job_queue;
 		PipeNN<P<TimeJob>,1024>			*time_job_queue;
@@ -157,7 +157,7 @@ namespace	r_exec{
 					uint32	asmp_res,	//	resilience for assumptions.
 					uint32	sim_res,	//	resilience for simulations.
 					float32	float_tolerance,
-					float32	time_tolerance);
+					uint32	time_tolerance);
 
 		uint64	get_base_period()	const{	return	base_period;	}
 		uint64	get_probe_level()	const{	return	probe_level;	}
@@ -167,7 +167,7 @@ namespace	r_exec{
 		uint32	get_asmp_res()		const{	return	asmp_res;	}
 		uint32	get_sim_res()		const{	return	sim_res;	}
 		float32	get_float_tolerance()	const{	return	float_tolerance;	}
-		float32	get_time_tolerance()	const{	return	time_tolerance;	}
+		uint32	get_time_tolerance()	const{	return	time_tolerance;	}
 
 		Code	*get_root()		const;
 		Code	*get_stdin()	const;

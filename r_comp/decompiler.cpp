@@ -508,7 +508,7 @@ namespace	r_comp{
 						*out_stream<<class_name;
 						out_stream->push("<",read_index);
 						*out_stream<<first.getVariableID()<<",";
-						*out_stream<<first.getMultiplier()<<">";
+						*out_stream<<first.getFloatMultiplier()<<">";
 						break;
 					}
 				}
@@ -539,8 +539,7 @@ namespace	r_comp{
 					if(first.getDescriptor()==Atom::STRUCTURAL_VARIABLE){
 
 						out_stream->push("st<",read_index);
-						*out_stream<<first.getVariableID()<<",";
-						*out_stream<<first.getMultiplier()<<">";
+						*out_stream<<first.getVariableID()<<">";
 					}else{
 
 						std::string	s=Utils::GetString(&current_object->code[index]);
@@ -558,7 +557,7 @@ namespace	r_comp{
 
 						out_stream->push("us<",read_index);
 						*out_stream<<first.getVariableID()<<",";
-						*out_stream<<first.getMultiplier()<<">";
+						*out_stream<<current_object->code[index].getTimeTolerance()<<"ms>";
 					}else{
 
 						uint64	ts=Utils::GetTimestamp(&current_object->code[index]);
@@ -716,12 +715,16 @@ namespace	r_comp{
 		case	Atom::NUMERICAL_VARIABLE:
 			out_stream->push("nb<",read_index);
 			*out_stream<<a.getVariableID()<<",";
-			*out_stream<<a.getMultiplier()<<">";
+			*out_stream<<a.getFloatMultiplier()<<">";
+			break;
+		case	Atom::BOOLEAN_VARIABLE:
+			out_stream->push("b<",read_index);
+			*out_stream<<a.getVariableID()<<">";
 			break;
 		case	Atom::STRUCTURAL_VARIABLE:
 			out_stream->push("svar<",read_index);
 			*out_stream<<a.getVariableID()<<",";
-			*out_stream<<a.getMultiplier()<<">";
+			*out_stream<<a.getFloatMultiplier()<<">";
 			break;
 		default:
 			//	out_stream->push("undefined-atom",read_index).
