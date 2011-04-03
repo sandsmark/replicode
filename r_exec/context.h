@@ -138,7 +138,7 @@ namespace	r_exec{
 						for(uint16	i=1;i<=atom_count;++i){
 
 							Context	c=getChild(i);
-							c.copy_member(destination,write_index++,extent_index,i!=3,pgm_index);
+							c.copy_member(destination,write_index++,extent_index,i!=2,pgm_index);
 						}
 					}else{	// if a pgm is being copied, indicate the starting index of the pgm so that we can turn on code patching and know if a cptr is referencing code inside the pgm (in that case it will not be dereferenced).
 

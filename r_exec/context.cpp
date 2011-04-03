@@ -317,7 +317,7 @@ namespace	r_exec{
 				if(is_cmd_with_cptr()){
 
 					for(uint16	i=1;i<=atom_count;++i)
-						copy_member_to_value_array(i,prefix,write_index++,extent_index,i!=3);
+						copy_member_to_value_array(i,prefix,write_index++,extent_index,i!=2);
 				}else{
 
 					for(uint16	i=1;i<=atom_count;++i)
@@ -443,9 +443,7 @@ dereference:
 
 		if((*this)[0].getDescriptor()!=Atom::OBJECT)
 			return	false;
-		if((*this)[0].asOpcode()!=Opcodes::Cmd)
-			return	false;
-		if((*this)[2].atom!=EXECUTIVE_DEVICE)
+		if((*this)[0].asOpcode()!=Opcodes::ICmd)
 			return	false;
 		return	(*this)[1].asOpcode()==Opcodes::Mod	||
 				(*this)[1].asOpcode()==Opcodes::Set;
