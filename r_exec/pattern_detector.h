@@ -79,9 +79,9 @@ namespace	r_exec{
 	//			- change in state (e.g. |icst -> event -> icst).
 	//			- functional values (e.g. y==f(x)) (TODO).
 	//			- functional relations (e.g. o1 and o2 in the same relation wrt F as o3 and o3; relation: in or out; e.g. y==F(x), z==f(x) then as above with the constraint y==g(z) or vice-versa) (TODO).
-	//
-	//	Proxy in usr_operators.dll.
-	//	Implementation class in pattern_detector.cpp.
+	//	Tech:
+	//		Proxy in usr_operators.dll.
+	//		Implementation class in pattern_detector.cpp.
 	class	r_exec_dll	PatternDetector:
 	public	_Object{
 	protected:
