@@ -95,5 +95,4 @@ namespace	r_exec{
 
 	PatternDetector::~PatternDetector(){
 	}
-
 }
