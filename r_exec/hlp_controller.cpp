@@ -233,13 +233,8 @@ namespace	r_exec{
 			BindingMap	bm(r->second);
 			Code	*new_target=sub_goal->get_reference(0)->get_reference(0);
 			Code	*recorded_target=r->first->get_reference(0)->get_reference(0)->get_reference(0);
-			if(bm.match(recorded_target,new_target)){	//	pattern=new_target: we try to catch new goals that are less specified than the recorded goals.
-				
-				std::cout<<"match\n";
-				r->first->get_reference(0)->get_reference(0)->get_reference(0)->trace();
-				sub_goal->get_reference(0)->get_reference(0)->trace();
+			if(bm.match(recorded_target,new_target))	//	pattern=new_target: we try to catch new goals that are less specified than the recorded goals.				
 				return	NULL;
-			}
 			++r;
 		}
 

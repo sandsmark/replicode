@@ -61,10 +61,7 @@ namespace	r_exec{
 											Code	*sub_goal,
 											Code	*ntf_instance);
 
-		template<class	C>	class	PHash{
-		public:
-			size_t	operator	()(P<C>	p)	const{	return	(size_t)p.operator	->();	}
-		};
+		template<class	C>	class	PHash{	public:	size_t	operator	()(P<C>	p)	const{	return	(size_t)p.operator	->();	}	};
 		typedef	UNORDERED_MAP<P<Code>,P<BindingMap>,PHash<Code> >	GoalRecords;
 		GoalRecords	goal_records;	//	<fact->mk.goal,bm>.
 									//	used to prevent recursion on goal injection (WRT requirements).
@@ -149,13 +146,14 @@ namespace	r_exec{
 												matched_pattern);
 			if(!sub_goal_fact)
 				return;
-			
-			add_monitor<M>(	bm,
-							sub_goal_fact,
-							super_goal,
-							matched_pattern,
-							deadline_high,
-							deadline_low);
+
+			if(sub_goal_target->get_reference(0)->code(0).asOpcode()!=Opcodes::Cmd)	//	no monitoring for I/O device commands.
+				add_monitor<M>(	bm,
+								sub_goal_fact,
+								super_goal,
+								matched_pattern,
+								deadline_high,
+								deadline_low);
 			
 			inject_sub_goal(now,
 							deadline_high,
