@@ -29,9 +29,9 @@ root:(std_grp 0 0 0 0 [nil]) [[SYNC_FRONT now 0 forever nil nil COV_OFF 0]]
 
 attention:(std_grp 0 0 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]
 
-stdin:(std_grp 1 0 0 0 |[]) [[SYNC_FRONT now 0 forever attention nil COV_OFF 1]]
-
 stdout:(std_grp 0 0 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]
+
+stdin:(std_grp 1 0 0 0 [stdout]) [[SYNC_FRONT now 0 forever attention nil COV_OFF 1]]
 
 models:(std_grp 1 1 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]; for storage; models are passive in this group: sln_thr=0, act_thr=1
 
