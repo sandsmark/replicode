@@ -212,9 +212,9 @@ namespace	r_exec{
 						}
 			
 						if(requirement_count)
-							produce_sub_goal(bm,input->object,bound_lhs,get_instance(bm,Opcodes::IMDL),true);
+							produce_sub_goal<GMonitor>(bm,input->object,bound_lhs,get_instance(bm,Opcodes::IMDL));
 						else
-							produce_sub_goal(bm,input->object,bound_lhs,NULL,true);
+							produce_sub_goal<GMonitor>(bm,input->object,bound_lhs,NULL);
 					}else
 						delete	bm;
 				}

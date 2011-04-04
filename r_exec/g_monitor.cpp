@@ -84,7 +84,7 @@ namespace	r_exec{
 
 					controller->add_outcome(goal,true,input->code(FACT_CFD).asFloat());
 					if(matched_pattern!=NULL)	//	there was a requirement which has just been matched.
-						controller->produce_sub_goal(bindings,super_goal,matched_pattern,NULL,true);
+						controller->produce_sub_goal<GMonitor>(bindings,super_goal,matched_pattern,NULL);
 				}else													//	negative match: expected a fact or |fact and got a |fact or a fact.
 					controller->add_outcome(goal,false,_input->code(FACT_CFD).asFloat());
 				match=true;

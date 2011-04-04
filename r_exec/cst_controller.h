@@ -62,12 +62,6 @@ namespace	r_exec{
 	public	HLPController{
 	private:
 		void	produce_goals(Code	*super_goal,BindingMap	*bm);
-		void	add_monitor(BindingMap	*bindings,
-							Code		*goal,
-							Code		*super_goal,
-							Code		*matched_pattern,
-							uint64		expected_time_high,
-							uint64		expected_time_low);
 	public:
 		CSTController(r_code::View	*view);
 		~CSTController();

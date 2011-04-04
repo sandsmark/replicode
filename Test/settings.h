@@ -45,6 +45,7 @@ public:
 	core::uint32		simulation_resilience;
 	core::float32		float_tolerance;
 	core::uint32		time_tolerance;
+	core::uint64		goal_record_resilience;
 	core::uint32		run_time;
 	core::uint32		probe_level;
 	std::string	usr_operator_path;
@@ -77,6 +78,7 @@ public:
 			const	char	*_simulation_resilience=parameters.getAttribute("simulation_resilience");
 			const	char	*_float_tolerance=parameters.getAttribute("float_tolerance");
 			const	char	*_time_tolerance=parameters.getAttribute("time_tolerance");
+			const	char	*_goal_record_resilience=parameters.getAttribute("goal_record_resilience");
 			const	char	*_run_time=parameters.getAttribute("run_time");
 			const	char	*_probe_level=parameters.getAttribute("probe_level");
 			const	char	*_decompile_image=parameters.getAttribute("decompile_image");
@@ -97,6 +99,7 @@ public:
 			simulation_resilience=atoi(_simulation_resilience);
 			float_tolerance=atof(_float_tolerance);
 			time_tolerance=atoi(_time_tolerance);
+			goal_record_resilience=atoi(_goal_record_resilience);
 			run_time=atoi(_run_time);
 			probe_level=atoi(_probe_level);
 			decompile_image=(strcmp(_decompile_image,"yes")==0);

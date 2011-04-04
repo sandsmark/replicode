@@ -38,6 +38,8 @@
 
 namespace	r_exec{
 
+	class	NullMonitor{};
+
 	class	HLPController:
 	public	OController{
 	protected:
@@ -59,6 +61,13 @@ namespace	r_exec{
 											Code	*sub_goal,
 											Code	*ntf_instance);
 
+		template<class	C>	class	PHash{
+		public:
+			size_t	operator	()(P<C>	p)	const{	return	(size_t)p.operator	->();	}
+		};
+		typedef	UNORDERED_MAP<P<Code>,P<BindingMap>,PHash<Code> >	GoalRecords;
+		GoalRecords	goal_records;	//	<fact->mk.goal,bm>.
+									//	used to prevent recursion on goal injection (WRT requirements).
 		template<class	C>	void	_take_input(r_exec::View	*input){
 
 			if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
@@ -67,12 +76,40 @@ namespace	r_exec{
 			Controller::_take_input<C>(input);
 		}
 
-		virtual	void	add_monitor(	BindingMap	*bindings,
-										Code		*goal,
-										Code		*super_goal,
-										Code		*matched_pattern,
-										uint64		expected_time_high,
-										uint64		expected_time_low);
+		Code	*get_sub_goal(	BindingMap	*bm,
+								Code		*super_goal,
+								Code		*sub_goal_target,
+								Code		*instance,
+								uint64		&now,
+								uint64		&deadline_high,
+								uint64		&deadline_low,
+								Code		*&matched_pattern);
+
+		template<class	M>	void	add_monitor(BindingMap	*bindings,
+												Code		*goal,			//	fact.
+												Code		*super_goal,	//	fact.
+												Code		*matched_pattern,
+												uint64		expected_time_high,
+												uint64		expected_time_low){
+
+			M	*m=new	M(	this,
+							bindings,
+							goal->get_reference(0),
+							super_goal,
+							matched_pattern,
+							expected_time_high,
+							expected_time_low);
+			g_monitorsCS.enter();
+			g_monitors.push_front(m);
+			g_monitorsCS.leave();
+			_Mem::Get()->pushTimeJob(new	MonitoringJob<M>(m,expected_time_high));
+		}
+		template<>	void	add_monitor<NullMonitor>(	BindingMap	*bindings,
+														Code		*goal,
+														Code		*super_goal,
+														Code		*matched_pattern,
+														uint64		expected_time_high,
+														uint64		expected_time_low){}
 
 		HLPController(r_code::View	*view);
 	public:
@@ -80,19 +117,7 @@ namespace	r_exec{
 
 		bool	monitor(Code	*input);
 		void	add_outcome(Code	*target,bool	success,float32	confidence)	const;	//	target: mk.pred or mk.goal.
-		void	produce_sub_goal(	BindingMap	*bm,
-									Code		*super_goal,
-									Code		*sub_goal_target,
-									Code		*instance,
-									bool		monitor);
 
-		template<class	M>	void	add_monitor(GMonitor	*m){
-
-			g_monitorsCS.enter();
-			g_monitors.push_front(m);
-			g_monitorsCS.leave();
-			_Mem::Get()->pushTimeJob(new	MonitoringJob<M>((M	*)m,m->get_deadline()));
-		}
 		void	remove_monitor(GMonitor	*m);
 
 		void	add_requirement();
@@ -104,6 +129,40 @@ namespace	r_exec{
 
 		uint16	get_out_group_count()	const;
 		Code	*get_out_group(uint16	i)	const;	//	i starts at 1.
+
+		template<class	M>	void	produce_sub_goal(	BindingMap	*bm,
+														Code		*super_goal,		//	fact->mk.goal->fact; its time may be a variable.
+														Code		*sub_goal_target,	//	fact; its time may be a variable.
+														Code		*instance){
+
+			uint64	now;
+			uint64	deadline_high;
+			uint64	deadline_low;
+			Code	*matched_pattern;
+			Code	*sub_goal_fact=get_sub_goal(bm,
+												super_goal,
+												sub_goal_target,
+												instance,
+												now,
+												deadline_high,
+												deadline_low,
+												matched_pattern);
+			if(!sub_goal_fact)
+				return;
+			
+			add_monitor<M>(	bm,
+							sub_goal_fact,
+							super_goal,
+							matched_pattern,
+							deadline_high,
+							deadline_low);
+			
+			inject_sub_goal(now,
+							deadline_high,
+							super_goal,
+							sub_goal_fact,
+							get_instance(get_instance_opcode()));
+		}
 	};
 }
 

@@ -139,7 +139,8 @@ int32	main(int	argc,char	**argv){
 					settings.assumption_resilience,
 					settings.simulation_resilience,
 					settings.float_tolerance,
-					settings.time_tolerance);
+					settings.time_tolerance,
+					settings.goal_record_resilience);
 
 		if(!mem->load(ram_objects.as_std()))
 			return	4;

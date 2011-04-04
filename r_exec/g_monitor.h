@@ -68,8 +68,6 @@ namespace	r_exec{
 		bool	is_alive();
 		virtual	bool	reduce(Code	*input);
 		void	update();
-
-		uint64	get_deadline()	const{	return	expected_time_high;	}
 	};
 }
 

@@ -164,15 +164,16 @@ namespace	r_exec{
 		return	getObject()->get_reference(getObject()->code(getObject()->code(HLP_OUT_GRPS).asIndex()+i).asIndex());
 	}
 
-	void	HLPController::produce_sub_goal(BindingMap	*bm,
-											Code		*super_goal,		//	fact->mk.goal->fact; its time may be a variable.
-											Code		*sub_goal_target,	//	fact; its time may be a variable.
+	Code	*HLPController::get_sub_goal(	BindingMap	*bm,
+											Code		*super_goal,
+											Code		*sub_goal_target,
 											Code		*instance,
-											bool		monitor){
-		
-		uint64	now=Now();
-		uint64	deadline_high;
-		uint64	deadline_low;
+											uint64		&now,
+											uint64		&deadline_high,
+											uint64		&deadline_low,
+											Code		*&matched_pattern){
+
+		now=Now();
 		Code	*super_goal_fact=super_goal->get_reference(0)->get_reference(0);
 		if(super_goal_fact->code(super_goal_fact->code(FACT_TIME).asIndex()+1).getDescriptor()==Atom::STRUCTURAL_VARIABLE){
 
@@ -188,7 +189,7 @@ namespace	r_exec{
 
 		Code	*sub_goal;
 		Code	*actor=super_goal->get_reference(0)->get_reference(1);
-		Code	*matched_pattern=NULL;
+		matched_pattern=NULL;
 		if(instance){	//	there exist a requirement.
 						
 			deadline_low=now;	//	try to get an instance asap.
@@ -216,7 +217,38 @@ namespace	r_exec{
 		}else
 			sub_goal=factory::Object::MkGoal(sub_goal_target,actor,1);
 
-		Code	*_sub_goal=_Mem::Get()->check_existence(sub_goal);
+		GoalRecords::const_iterator	r;
+		for(r=goal_records.begin();r!=goal_records.end();){
+
+			if(instance){
+				uint32	u=0;
+				}
+			uint64	goal_time=Utils::GetTimestamp<Code>(r->first,FACT_TIME);
+			if(now-goal_time>_Mem::Get()->get_goal_record_resilience()){
+
+				r=goal_records.erase(r);
+				continue;
+			}
+
+			BindingMap	bm(r->second);
+			Code	*new_target=sub_goal->get_reference(0)->get_reference(0);
+			Code	*recorded_target=r->first->get_reference(0)->get_reference(0)->get_reference(0);
+			if(bm.match(recorded_target,new_target)){	//	pattern=new_target: we try to catch new goals that are less specified than the recorded goals.
+				
+				std::cout<<"match\n";
+				r->first->get_reference(0)->get_reference(0)->get_reference(0)->trace();
+				sub_goal->get_reference(0)->get_reference(0)->trace();
+				return	NULL;
+			}
+			++r;
+		}
+
+		Code	*sub_goal_fact=factory::Object::Fact(sub_goal,now,1,1);
+		goal_records.insert(GoalRecords::value_type(sub_goal_fact,bm));
+
+		return	sub_goal_fact;
+
+		/*Code	*_sub_goal=_Mem::Get()->check_existence(sub_goal);
 		if(_sub_goal!=sub_goal){	//	a goal already exists for the same target (object or ip_f).
 			
 			notify_existing_sub_goal(Now(),
@@ -226,44 +258,24 @@ namespace	r_exec{
 									get_instance(get_instance_opcode()));
 			delete	sub_goal;
 			return;
-		}
-		
-		if(monitor)
-			add_monitor(bm,sub_goal,super_goal,matched_pattern,deadline_high,deadline_low);
-		
-		inject_sub_goal(now,
-						deadline_high,
-						super_goal,
-						sub_goal,
-						get_instance(get_instance_opcode()));
-	}
-
-	void	HLPController::add_monitor(	BindingMap	*bindings,
-										Code		*goal,			//	mk.goal.
-										Code		*super_goal,	//	fact.
-										Code		*matched_pattern,
-										uint64		expected_time_high,
-										uint64		expected_time_low){
-
-		add_monitor<GMonitor>(new	GMonitor(this,bindings,goal,super_goal->get_reference(0),matched_pattern,expected_time_high,expected_time_low));
+		}*/
 	}
 
 	void	HLPController::inject_sub_goal(	uint64	now,
 											uint64	deadline,
 											Code	*super_goal,		//	fact.
-											Code	*sub_goal,			//	mk.goal.
+											Code	*sub_goal,			//	fact.
 											Code	*ntf_instance){
 
 		Code	*ntf_instance_fact=factory::Object::Fact(ntf_instance,now,1,1);
-		Code	*sub_goal_fact=factory::Object::Fact(sub_goal,now,1,1);
 		Code	*mk_sim_goal=NULL;
 		Code	*mk_asmp_goal=NULL;
 		if(super_goal->get_asmp())
-			mk_asmp_goal=factory::Object::MkAsmp(sub_goal_fact,getObject(),1,1);
+			mk_asmp_goal=factory::Object::MkAsmp(sub_goal,getObject(),1,1);
 		if(super_goal->get_hyp()	||	super_goal->get_sim())
-			mk_sim_goal=factory::Object::MkSim(sub_goal_fact,getObject(),1);
+			mk_sim_goal=factory::Object::MkSim(sub_goal,getObject(),1);
 
-		Code	*mk_rdx=factory::Object::MkRdx(ntf_instance_fact,super_goal,sub_goal_fact,1);
+		Code	*mk_rdx=factory::Object::MkRdx(ntf_instance_fact,super_goal,sub_goal,1);
 
 		Group	*origin=getView()->get_host();
 		uint16	out_group_count=get_out_group_count();
@@ -274,10 +286,10 @@ namespace	r_exec{
 			int64	delta=abs((float32)((int64)(deadline-now)));
 			int32	resilience=Utils::GetResilience(delta,base);
 
-			View	*view=new	View(true,now,1,resilience,out_group,origin,sub_goal);	//	SYNC_FRONT,sln=1,res=resilience.
+			View	*view=new	View(true,now,1,resilience,out_group,origin,sub_goal->get_reference(0));	//	SYNC_FRONT,sln=1,res=resilience.
 			_Mem::Get()->inject(view);
 
-			view=new	View(true,now,1,resilience,out_group,origin,sub_goal_fact);	//	SYNC_FRONT,sln=1,res=resilience.
+			view=new	View(true,now,1,resilience,out_group,origin,sub_goal);	//	SYNC_FRONT,sln=1,res=resilience.
 			_Mem::Get()->inject(view);
 
 			view=new	NotificationView(origin,out_group,mk_rdx);

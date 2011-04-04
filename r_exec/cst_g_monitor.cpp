@@ -35,7 +35,7 @@
 
 namespace	r_exec{
 
-	CSTGMonitor::CSTGMonitor(	CSTController	*controller,
+	CSTGMonitor::CSTGMonitor(	HLPController	*controller,
 								BindingMap		*bindings,
 								Code			*goal,				//	(mk.goal (fact (icst controller->getObject() [args] ...)...)...)
 								Code			*super_goal,		//	(fact (mk.goal ...) ...).

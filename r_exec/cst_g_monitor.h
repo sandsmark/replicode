@@ -42,7 +42,7 @@ namespace	r_exec{
 	class	CSTGMonitor:
 	public	GMonitor{
 	public:
-		CSTGMonitor(CSTController	*controller,
+		CSTGMonitor(HLPController	*controller,
 					BindingMap		*bindings,
 					Code			*goal,
 					Code			*super_goal,

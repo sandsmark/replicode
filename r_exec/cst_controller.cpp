@@ -217,7 +217,7 @@ namespace	r_exec{
 								if(!requirement_count)
 									produce_goals(input->object,bm,pattern);
 								else
-									produce_sub_goal(bm,input->object,pattern,get_instance(bm,Opcodes::ICST),true);
+									produce_sub_goal<CSTGMonitor>(bm,input->object,pattern,get_instance(bm,Opcodes::ICST));
 								break;
 							}else
 								delete	bm;
@@ -239,7 +239,7 @@ namespace	r_exec{
 			if(pattern==excluded_pattern)
 				continue;
 			Code	*bound_pattern=bm->bind_object(getObject()->get_reference(getObject()->code(obj_set_index+i).asIndex()));
-			produce_sub_goal(bm,super_goal,bound_pattern,NULL,false);
+			produce_sub_goal<NullMonitor>(bm,super_goal,bound_pattern,NULL);
 		}
 	}
 
@@ -251,18 +251,8 @@ namespace	r_exec{
 
 			Code	*pattern=getObject()->get_reference(getObject()->code(obj_set_index+i).asIndex());
 			Code	*bound_pattern=bm->bind_object(getObject()->get_reference(getObject()->code(obj_set_index+i).asIndex()));
-			produce_sub_goal(bm,super_goal,bound_pattern,NULL,false);
+			produce_sub_goal<NullMonitor>(bm,super_goal,bound_pattern,NULL);
 		}
-	}
-
-	void	CSTController::add_monitor(	BindingMap	*bindings,
-										Code		*goal,
-										Code		*super_goal,
-										Code		*matched_pattern,
-										uint64		expected_time_high,
-										uint64		expected_time_low){
-
-		HLPController::add_monitor<CSTGMonitor>(new	CSTGMonitor(this,bindings,goal,super_goal,matched_pattern,expected_time_high,expected_time_low));
 	}
 
 	uint16	CSTController::get_instance_opcode()	const{

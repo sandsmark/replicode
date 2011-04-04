@@ -53,7 +53,8 @@ namespace	r_exec{
 						uint32	asmp_res,
 						uint32	sim_res,
 						float32	float_tolerance,
-						uint32	time_tolerance){
+						uint32	time_tolerance,
+						uint64	goal_record_resilience){
 
 		this->base_period=base_period;
 		this->reduction_core_count=reduction_core_count;
@@ -67,6 +68,8 @@ namespace	r_exec{
 
 		this->float_tolerance=float_tolerance;
 		this->time_tolerance=time_tolerance;
+
+		this->goal_record_resilience=goal_record_resilience;
 	}
 
 	void	_Mem::reset(){
@@ -1012,7 +1015,8 @@ namespace	r_exec{
 			1000,
 			1000,
 			10,
-			0.1);
+			0.1,
+			1000000);
 
 		mem->load( ram_objects.as_std() );
 
