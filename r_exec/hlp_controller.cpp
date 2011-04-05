@@ -220,9 +220,6 @@ namespace	r_exec{
 		GoalRecords::const_iterator	r;
 		for(r=goal_records.begin();r!=goal_records.end();){
 
-			if(instance){
-				uint32	u=0;
-				}
 			uint64	goal_time=Utils::GetTimestamp<Code>(r->first,FACT_TIME);
 			if(now-goal_time>_Mem::Get()->get_goal_record_resilience()){
 
@@ -233,9 +230,6 @@ namespace	r_exec{
 			BindingMap	bm(r->second);
 			Code	*new_target=sub_goal->get_reference(0)->get_reference(0);
 			Code	*recorded_target=r->first->get_reference(0)->get_reference(0)->get_reference(0);
-			if(new_target->code(0).asOpcode()==Opcodes::MkVal	&&	recorded_target->code(0).asOpcode()==Opcodes::MkVal){
-uint32	u=0;
-				}
 			if(bm.match(recorded_target,new_target))	//	pattern=new_target: we try to catch new goals that are less specified than the recorded goals.				
 				return	NULL;
 			++r;
