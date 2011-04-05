@@ -143,6 +143,12 @@ namespace	r_exec{
 
 	bool	BindingMap::needs_binding(Code	*original)	const{
 
+		switch(original->code(0).getDescriptor()){
+		case	Atom::COMPOSITE_STATE:
+		case	Atom::MODEL:
+			return	false;
+		}
+
 		if(original->code(0).asOpcode()==Opcodes::Var){
 
 			Objects::const_iterator	b=objects.find(original);

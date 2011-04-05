@@ -44,9 +44,13 @@ test_match_cmd:(pgm |[] []
       (fact self_right_hand_is_a_hand deadline 1 1)
       [SYNC_FRONT deadline 1 1 stdin nil]
    )
+   (inj []
+      f_cmd
+      [SYNC_FRONT deadline 1 1 stdin nil]
+   )
 1) |[]
 
-i_test_match_cmd:(ipgm test_match_cmd |[] RUN_ALWAYS 0us NOTIFY 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+i_test_match_cmd:(ipgm test_match_cmd |[] RUN_ALWAYS 0us SILENT 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
 
 
 test_goal_cst:(pgm |[] |[] []
