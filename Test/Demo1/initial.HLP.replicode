@@ -2,12 +2,10 @@
 ; abstraction is fully automatic: HLPs are built from examples.
 ; caveat: the provided examples will be patched. Do not refer to ontological entities here (however, ont are safe).
 
-; utilities.
-
-self_hand:(ent 1) |[]
-
 
 ; a self hand position.
+
+self_hand:(ent 1) |[]
 
 self_hand_is_a_hand:(mk.val self_hand essence hand 1) |[]
 f_self_hand_is_a_hand:(fact self_hand_is_a_hand 0us 1 1) |[]
@@ -46,11 +44,65 @@ f_thing_1_position:(fact thing_1_position 0us 1 1) |[]
 same_position:(cst [f_thing_0_position f_thing_1_position] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
 
 
+; move
+
+thing_2:(ent 1) |[]
+
+thing_2_position_0:(mk.val thing_2 position (vec3 0 0 0) 1) |[]
+f_thing_2_position_0:(fact thing_2_position_0 0us 1 1) |[]
+
+thing_2_position_1:(mk.val thing_2 position (vec3 10 10 10) 1) |[]
+f_thing_2_position_1:(fact thing_2_position_1 100000us 1 1) |[]
+
+move:(cst [f_thing_2_position_0 f_thing_2_position_1] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+
+
 ; link
+
+thing_3:(ent 1) |[]
+thing_4:(ent 1) |[]
+
+thing_3_move:(icst move [thing_3 (vec3 10 10 10) 100000us (vec3 0 0 0) 0us] 1) |[]
+f_thing_3_move:(fact thing_3_move 100000us 1 1) |[]
+
+thing_4_move:(icst move [thing_4 (vec3 10 10 10) 100000us (vec3 0 0 0) 0us] 1) |[]
+f_thing_4_move:(fact thing_4_move 100000us 1 1) |[]
+
+link:(cst [f_thing_3_move f_thing_4_move] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+
 
 ; grab
 
+thing_5:(ent 1) |[]
+self_hand_1:(ent 1) |[]
+
+self_hand_1_position:(icst self_hand_position [self_hand_1 (vec3 0 0 0) 0us] 1) |[]
+f_self_hand_1_position:(fact self_hand_1_position 0us 1 1) |[]
+
+thing_5_position:(mk.val thing_5 position (vec3 0 0 0) 1) |[]
+f_thing_5_position:(fact thing_5_position 0us 1 1) |[]
+
+self_hand_thing_same_position:(cst [f_self_hand_1_position thing_5_position] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+
+thing_6:(ent 1) |[]
+self_hand_2:(ent 1) |[]
+
+self_hand_2_thing_6_same_position:(icst self_hand_thing_same_position [thing_6_position] 1) |[]
+f_self_hand_2_thing_6_same_position:(fact self_hand_2_thing_6_same_position 0us 1 1) |[]
+
+grab_self_hand_2:() |[]
+f_grab_self_hand_2:(fact grab_self_hand_2 0us 1 1) |[]
+
+link_.() |[]
+f_link:(fact link_ 0us 1 1) |[]
+
+grab:(mdl [] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+
+; add req.
+
+
 ; release
+
 
 ; reach
 
