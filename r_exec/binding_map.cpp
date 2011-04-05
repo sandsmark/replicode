@@ -490,6 +490,8 @@ namespace	r_exec{
 	bool	BindingMap::bind_float_variable(Atom	val,Atom	var){
 
 		Atoms::const_iterator	a=atoms.find(var);
+		if(a==atoms.end())
+			return	true;
 		if(a->second.getDescriptor()==Atom::NUMERICAL_VARIABLE){
 
 			atoms[var]=val;
@@ -507,6 +509,8 @@ namespace	r_exec{
 	bool	BindingMap::bind_boolean_variable(Atom	val,Atom	var){
 
 		Atoms::const_iterator	a=atoms.find(var);
+		if(a==atoms.end())
+			return	true;
 		if(a->second.getDescriptor()==Atom::BOOLEAN_VARIABLE){
 
 			atoms[var]=val;
@@ -522,6 +526,8 @@ namespace	r_exec{
 
 		uint16	val_size=val->getAtomCount();
 		Structures::iterator	s=structures.find(*var);
+		if(s==structures.end())
+			return	true;
 		if(s->second[1].getDescriptor()==Atom::STRUCTURAL_VARIABLE){
 
 			for(uint16	i=0;i<=val_size;++i)
@@ -568,6 +574,8 @@ namespace	r_exec{
 	bool	BindingMap::bind_object_variable(Code	*val,Code	*var){
 
 		Objects::const_iterator	o=objects.find(var);
+		if(o==objects.end())
+			return	true;
 		if(o->second->code(0).asOpcode()==Opcodes::Var){
 
 			objects[var]=val;

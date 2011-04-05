@@ -32,7 +32,27 @@ self_hand_position:(cst [f_self_hand_is_a_hand f_self_hand_belongs_to_self f_sel
  move_hand:(mdl [f_cmd_move f_a_self_hand_pos] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
 
 
+; same position
 
+thing_0:(ent 1) |[]
+thing_1:(ent 1) |[]
+
+thing_0_position:(mk.val thing_0 position (vec3 0 0 0) 1) |[]
+f_thing_0_position:(fact thing_0_position 0us 1 1) |[]
+
+thing_1_position:(mk.val thing_1 position (vec3 0 0 0) 1) |[]
+f_thing_1_position:(fact thing_1_position 0us 1 1) |[]
+
+same_position:(cst [f_thing_0_position f_thing_1_position] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+
+
+; link
+
+; grab
+
+; release
+
+; reach
 
 
 
