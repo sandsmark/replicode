@@ -66,13 +66,13 @@ namespace	r_exec{
 
 		Code	*_input=input;
 		Code	*_input_fact_object=_input->get_reference(0);
-		if(	matched_pattern!=NULL	&&	_input_fact_object->code(0).asOpcode()==Opcodes::MkPred){	//	we may have got fact or |fact -> pred -> fact -> icst or imdl referring to this cst/mdl.
+		/*if(	matched_pattern!=NULL	&&	_input_fact_object->code(0).asOpcode()==Opcodes::MkPred){	//	we may have got fact or |fact -> pred -> fact -> icst or imdl referring to this cst/mdl.
 
 			Code	*pred_fact_object=_input_fact_object->get_reference(0)->get_reference(0);
 			if(	pred_fact_object->code(0).asOpcode()==controller->get_instance_opcode()	&&
 				pred_fact_object->get_reference(0)==controller->getObject())
 				_input_fact_object=pred_fact_object;
-		}
+		}*/
 
 		matchCS.enter();
 		if(bindings->match(_input_fact_object,goal->get_reference(0)->get_reference(0))){	//	first, check the objects pointed to by the facts.
