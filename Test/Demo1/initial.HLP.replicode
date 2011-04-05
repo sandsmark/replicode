@@ -1,6 +1,6 @@
 ; initial high-level patterns (HLP).
 ; abstraction is fully automatic: HLPs are built from examples.
-; caveat: the provided examples will patched. Do not refer to ontological entities here (ont are safe).
+; caveat: the provided examples will be patched. Do not refer to ontological entities here (however, ont are safe).
 
 ; utilities.
 
