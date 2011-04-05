@@ -435,7 +435,10 @@ namespace	r_exec{
 
 			if(!bind_object_variable(object,pattern))
 				return	false;
-		}else{
+		}else	if(	pattern->code(0).asOpcode()==Opcodes::Ent	||
+					pattern->code(0).asOpcode()==Opcodes::Ont)
+			return	object==pattern;	
+		else{
 
 			if(object->code(0)!=pattern->code(0))
 				return	false;

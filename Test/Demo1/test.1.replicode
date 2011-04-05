@@ -1,8 +1,30 @@
 ;
 
+test_match_cst:(pgm |[] |[] []
+   (inj []
+      shp:(mk.val self_right_hand position (vec3 10 20 30) 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact shp now 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact self_right_hand_belongs_to_self now 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact self_right_hand_is_a_hand now 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+1) |[]
+
+i_test_match_cst:(ipgm test_match_cst |[] RUN_ONCE 600000us SILENT 1) [[SYNC_FRONT now 0 forever root nil 0]]
+
+
 test_match_cmd:(pgm |[] []
    []
-      (ptn (fact (mk.goal (fact (cmd move_hand [: pos: deadline:] ::) ::) ::) ::) |[])
+      (ptn (fact (mk.goal f_cmd:(fact (cmd move_hand [: pos: deadline:] ::) ::) ::) ::) |[])
    |[]
    |[]
 []
@@ -27,7 +49,7 @@ test_match_cmd:(pgm |[] []
 i_test_match_cmd:(ipgm test_match_cmd |[] RUN_ALWAYS 0us NOTIFY 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
 
 
-test_goal_cst1:(pgm |[] |[] []
+test_goal_cst:(pgm |[] |[] []
    (inj []
       shp:(mk.val self_right_hand position (vec3 10 20 30) 1)
       [SYNC_FRONT now 0 1 stdin nil]
@@ -46,4 +68,18 @@ test_goal_cst1:(pgm |[] |[] []
    )
 1) |[]
 
-i_test_goal_cst1:(ipgm test_goal_cst1 |[] RUN_ONCE 120000us SILENT 1) [[SYNC_FRONT now 0 forever root nil 1]]
+i_test_goal_cst:(ipgm test_goal_cst |[] RUN_ONCE 120000us SILENT 1) [[SYNC_FRONT now 0 forever root nil 1]]
+
+
+test_fwd_mdl:(pgm |[] |[] []
+   (inj []
+      c:(cmd move_hand [self_right_hand (vec3 10 20 30) now] 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+   (inj []
+      (fact c now 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+1) |[]
+
+i_test_fwd_mdl:(ipgm test_fwd_mdl |[] RUN_ONCE 250000us NOTIFY 1) [[SYNC_FRONT now 0 forever root nil 0]]

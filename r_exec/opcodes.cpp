@@ -38,6 +38,7 @@ namespace	r_exec{
 	uint16	Opcodes::GrpView;
 
 	uint16	Opcodes::Ent;
+	uint16	Opcodes::Ont;
 	uint16	Opcodes::MkVal;
 
 	uint16	Opcodes::Grp;

@@ -98,7 +98,9 @@ namespace	r_exec{
 	}
 
 	Overlay	*MDLOverlay::reduce(r_exec::View *input){
-
+//std::cout<<std::hex<<this<<std::dec<<" "<<input->object->getOID();
+if(input->object->get_reference(0)->code(0).asOpcode()==Opcodes::Cmd)
+std::cout<<"CMD\n";
 		BindingMap	*bm=new	BindingMap(bindings);
 		if(bm->match(input->object,((MDLController	*)controller)->get_lhs())){
 
@@ -110,13 +112,13 @@ namespace	r_exec{
 				reduction_mode|=RDX_MODE_ASSUMPTION;
 
 			inject_production(input->object);
-			
+//std::cout<<" match\n";
 			//	reset.
 			bindings=tmp;
 			reduction_mode=RDX_MODE_REGULAR;
 			return	this;
 		}else{
-
+//std::cout<<" no match\n";
 			delete	bm;
 			return	NULL;
 		}

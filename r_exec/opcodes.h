@@ -47,6 +47,7 @@ namespace	r_exec{
 		static	uint16	GrpView;
 
 		static	uint16	Ent;
+		static	uint16	Ont;
 		static	uint16	MkVal;
 
 		static	uint16	Grp;

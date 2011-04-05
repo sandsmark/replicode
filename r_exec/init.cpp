@@ -127,6 +127,7 @@ namespace	r_exec{
 		Opcodes::GrpView=_Opcodes.find("grp_view")->second;
 
 		Opcodes::Ent=_Opcodes.find("ent")->second;
+		Opcodes::Ont=_Opcodes.find("ont")->second;
 		Opcodes::MkVal=_Opcodes.find("mk.val")->second;
 
 		Opcodes::Grp=_Opcodes.find("grp")->second;
