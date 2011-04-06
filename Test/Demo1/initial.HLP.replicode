@@ -96,7 +96,7 @@ f_thing_6_same_position:(fact thing_6_same_position 0us 1 1) |[]
 grab_1:(imdl grab_hand_ [self_hand_2 thing_6 100000us 0us] 1) |[]
 f_grab_1:(fact grab_1 100000us 1 1) |[]
 
-grab_hand_req:(mdl [f_thing_6_same_position f_link_1] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+grab_hand_req:(mdl [f_thing_6_same_position f_grab_1] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
 
 
 ; attached -> link
@@ -107,7 +107,7 @@ self_hand_3:(ent 1) |[]
 thing_7_attached:(mk.val self_hand_3 attachment thing_7 1) |[]
 f_thing_7_attached:(fact thing_7_attached 0us 1 1) |[]
 
-thing_7_link_1:(icst [self_hand_3 thing_7 (vec3 10 10 10) 100000us (vec3 0 0 0) 0us] 1) |[]
+thing_7_linked:(icst link [self_hand_3 thing_7 (vec3 10 10 10) 100000us (vec3 0 0 0) 0us] 1) |[]
 f_thing_7_linked:(fact thing_7_linked 100000us 1 1) |[]
 
 attached_link:(mdl [f_thing_7_attached f_thing_7_linked] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
@@ -136,7 +136,7 @@ thing_9_attached:(mk.val self_hand_5 attachment thing_9 1) |[]
 f_thing_9_attached:(fact thing_9_attached 0us 1 1) |[]
 
 release_1:(imdl release_hand_ [self_hand_5 thing_9 100000us 0us] 1) |[]
-f_release_1:(fact link_1 100000us 1 1) |[]
+f_release_1:(fact release_1 100000us 1 1) |[]
 
 grab_hand_req:(mdl [f_thing_9_attached f_release_1] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
 
