@@ -139,6 +139,3 @@ release_1:(imdl release_hand_ [self_hand_5 thing_9 100000us 0us] 1) |[]
 f_release_1:(fact release_1 100000us 1 1) |[]
 
 grab_hand_req:(mdl [f_thing_9_attached f_release_1] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
-
-
-
