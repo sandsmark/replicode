@@ -19,7 +19,7 @@ f_self_hand_pos:(fact self_hand_pos 0us 1 1) |[]
 self_hand_position:(cst [f_self_hand_is_a_hand f_self_hand_belongs_to_self f_self_hand_pos] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
 
 
-; move_hand_[]:[(move_hand H Ptarget Ttarget)Tinit->i_self_hand_position[H Ptarget Ttarget]]
+; move_hand_[H Ptarget Ttarget Tinit]:[(move_hand H Ptarget Ttarget)Tinit->i_self_hand_position[H Ptarget Ttarget]]
 
 cmd_move:(cmd move_hand [self_hand (vec3 0 0 0) 100000us] 1) |[]
 f_cmd_move:(fact cmd_move 0us 1 1) |[]
@@ -31,6 +31,7 @@ move_hand_:(mdl [f_cmd_move f_a_self_hand_pos] [stdin] 0us 1) [[SYNC_FRONT now 0
 
 
 ; same_position
+
 
 
 ; move
