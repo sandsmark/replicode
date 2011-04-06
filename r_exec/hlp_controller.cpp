@@ -193,7 +193,13 @@ namespace	r_exec{
 		if(instance){	//	there exist a requirement.
 						
 			deadline_low=now;	//	try to get an instance asap.
-			deadline_high+=_Mem::Get()->get_time_tolerance()<<10;
+			deadline_high+=(_Mem::Get()->get_time_tolerance()<<10);
+			if(deadline_low<deadline_high){
+
+				uint64	tmp=deadline_high;
+				deadline_high=deadline_low;
+				deadline_low=tmp;
+			}
 			uint64	median_deadline=(uint64)((float64)(deadline_high+deadline_low))/2;
 			uint32	time_tolerance_ms=(deadline_high-median_deadline)>>10;
 

@@ -381,7 +381,7 @@ namespace	r_code{
 
 	inline	void	Atom::setTimeTolerance(uint32	t){
 
-		atom=(atom	&	0xFF000000)	|	t;
+		atom=(atom	&	0xFF000000)	|	(t	&	0x00FFFFFF);
 	}
 
 	inline	uint8	Atom::getAtomCount()	const{
