@@ -61,6 +61,8 @@ namespace	r_exec{
 	class	CSTController:
 	public	HLPController{
 	private:
+		void	produce_goals(Code	*super_goal,Code	*pattern);
+		void	produce_goals(Code	*super_goal);
 		void	produce_goals(Code	*super_goal,BindingMap	*bm);
 	public:
 		CSTController(r_code::View	*view);

@@ -53,6 +53,8 @@ namespace	r_exec{
 		HLPOverlay(Controller	*c,const	BindingMap	*bindings,uint8	reduction_mode);
 	public:
 		virtual	~HLPOverlay();
+
+		BindingMap	*get_bindings()	const{	return	bindings;	}
 	};
 }
 

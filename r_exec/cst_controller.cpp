@@ -189,44 +189,61 @@ namespace	r_exec{
 
 		if(!offspring){	//	no match.
 
-			if(!monitor(input->object)){	//	no luck catching (icst getObject() [args]), or there is no such goals.
+			if(!monitor(input->object)){	//	no luck catching (icst getObject() [args]).
 
 				Code	*goal=input->object->get_reference(0);
 				uint16	opcode=goal->code(0).asOpcode();
 				if(opcode==Opcodes::MkGoal){
 
 					Code	*target=goal->get_reference(0)->get_reference(0);
-					if(target->code(0).asOpcode()==Opcodes::ICST	&&	target->get_reference(0)==getObject()){
-
-						if(!requirement_count){
-
-							BindingMap	*bm=new	BindingMap(bindings);
-							bm->load(target);
-							produce_goals(input->object,bm);
-						}
-					}else{	//	check if the goal matches one pattern.
+					if(target->code(0).asOpcode()==Opcodes::ICST	&&	target->get_reference(0)==getObject())
+						produce_goals(input->object);	//	use the bm of each overlay.
+					else{	//	check if the goal matches one pattern.
 
 						uint16	obj_set_index=getObject()->code(CST_OBJS).asIndex();
 						uint16	obj_count=getObject()->code(obj_set_index).getAtomCount();
 						for(uint16	i=1;i<=obj_count;++i){
 
 							Code		*pattern=getObject()->get_reference(getObject()->code(obj_set_index+i).asIndex());
-							BindingMap	*bm=new	BindingMap(bindings);
-							if(bm->match(goal->get_reference(0),pattern)){	//	the fact pointed by a goal matches one pattern.
-
-								if(!requirement_count)
-									produce_goals(input->object,bm,pattern);
-								else
-									produce_sub_goal<CSTGMonitor>(bm,input->object,pattern,get_instance(bm,Opcodes::ICST));
-								break;
-							}else
-								delete	bm;
+							produce_goals(input->object,pattern);	//	use the bm of each overlay.
 						}
 					}
 				}
 			}
 		}
 		reductionCS.leave();
+	}
+
+	void	CSTController::produce_goals(Code	*super_goal,Code	*pattern){	//	super_goal: fact.
+
+		Code	*goal_target=super_goal->get_reference(0)->get_reference(0);
+		std::list<P<Overlay> >::const_iterator	o;
+		for(o=overlays.begin();o!=overlays.end();++o){
+
+			P<BindingMap>	bm=new	BindingMap(((HLPOverlay	*)*o)->get_bindings());
+			if(bm->match(goal_target,pattern)){	//	the fact pointed by a goal matches one pattern.
+
+				if(!requirement_count)
+					produce_goals(super_goal,(BindingMap	*)bm,pattern);
+				else
+					produce_sub_goal<CSTGMonitor>((BindingMap	*)bm,super_goal,pattern,get_instance((BindingMap	*)bm,Opcodes::ICST));
+			}
+		}
+	}
+
+	void	CSTController::produce_goals(Code	*super_goal){	//	super_goal: fact.
+
+		if(requirement_count)
+			return;
+
+		Code	*target=super_goal->get_reference(0)->get_reference(0)->get_reference(0);
+		std::list<P<Overlay> >::const_iterator	o;
+		for(o=overlays.begin();o!=overlays.end();++o){
+		
+			P<BindingMap>	bm=new	BindingMap(((HLPOverlay	*)*o)->get_bindings());
+			bm->load(target);
+			produce_goals(super_goal,(BindingMap	*)bm);
+		}
 	}
 
 	void	CSTController::produce_goals(Code	*super_goal,BindingMap	*bm,Code	*excluded_pattern){
