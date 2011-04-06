@@ -28,3 +28,31 @@ a_self_hand_pos:(icst self_hand_position [self_hand (vec3 0 0 0) 100000us] 1) |[
 f_a_self_hand_pos:(fact a_self_hand_pos 100000us 1 1) |[]
 
 move_hand_:(mdl [f_cmd_move f_a_self_hand_pos] [stdin] 0us 1) [[SYNC_FRONT now 0 forever stdin nil 1]]
+
+
+; same_position
+
+
+; move
+
+
+
+; link
+
+
+
+; attach
+
+
+
+; grab
+
+
+
+; grab req
+
+
+
+; move_hand_req_
+
+
