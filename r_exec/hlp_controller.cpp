@@ -137,11 +137,11 @@ namespace	r_exec{
 			view=new	View(true,now,1,_Mem::Get()->get_ntf_mk_res(),out_group,origin,fact);
 			_Mem::Get()->inject(view);
 
-			if(opposite){
-
-				view=new	View(true,now,1,1,out_group,getView()->get_host(),opposite);
-				_Mem::Get()->inject(view);
-			}
+			//if(opposite){
+//
+//				view=new	View(true,now,1,1,out_group,getView()->get_host(),opposite);
+//				_Mem::Get()->inject(view);
+//			}
 		}
 
 		target->kill();
