@@ -14,15 +14,15 @@
     goal_record_resilience="1000000"
     
     float_tolerance="0.1"
-    time_tolerance="10"
+    time_tolerance="50"
     
 	  run_time="1000"
     
     probe_level="2"
 
     usr_operator_path="./usr_operators.dll"
-    usr_class_path="c:/work/Replicode/Test/Demo1/user.classes.replicode"
-    source_file_name="c:/work/Replicode/Test/Demo1/main.replicode"
+    usr_class_path="../Test/Demo1/user.classes.replicode"
+    source_file_name="../Test/Demo1/main.replicode"
 
     decompile_image="yes"
     ignore_ontology="yes"
