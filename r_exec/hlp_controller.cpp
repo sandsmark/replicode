@@ -194,7 +194,7 @@ namespace	r_exec{
 						
 			deadline_low=now;	//	try to get an instance asap.
 			deadline_high+=(_Mem::Get()->get_time_tolerance()<<10);
-			if(deadline_low<deadline_high){
+			if(deadline_low>deadline_high){
 
 				uint64	tmp=deadline_high;
 				deadline_high=deadline_low;
