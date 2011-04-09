@@ -124,7 +124,7 @@ namespace	r_exec{
 		else{	//	there is no mk.failure: failure=|fact on success.
 
 			fact=factory::Object::AntiFact(mk_success,now,confidence,1);
-			opposite=factory::Object::Fact(target->get_reference(0),now,confidence,1);
+			opposite=factory::Object::AntiFact(target->get_reference(0)->get_reference(0),now,confidence,1);
 		}
 
 		for(uint16	i=1;i<=get_out_group_count();++i){	//	inject notification in out groups.
@@ -137,11 +137,11 @@ namespace	r_exec{
 			view=new	View(true,now,1,_Mem::Get()->get_ntf_mk_res(),out_group,origin,fact);
 			_Mem::Get()->inject(view);
 
-			//if(opposite){
-//
-//				view=new	View(true,now,1,1,out_group,getView()->get_host(),opposite);
-//				_Mem::Get()->inject(view);
-//			}
+			if(opposite){
+
+				view=new	View(true,now,1,1,out_group,getView()->get_host(),opposite);
+				_Mem::Get()->inject(view);
+			}
 		}
 
 		target->kill();
