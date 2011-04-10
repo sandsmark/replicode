@@ -45,6 +45,8 @@ namespace	r_exec{
 		this->bindings=bindings;
 		this->prediction=prediction;
 
+		if(expected_time_high>>56==Atom::STRUCTURAL_VARIABLE)
+			expected_time_high=Now()+500000;
 		MonitoringJob<PMonitor>	*j=new	MonitoringJob<PMonitor>(this,expected_time_high);
 		_Mem::Get()->pushTimeJob(j);
 	}
@@ -71,8 +73,8 @@ namespace	r_exec{
 					controller->add_outcome(prediction,true,input->code(FACT_CFD).asFloat());
 				else														//	negative match: expected a fact or |fact and got a |fact or a fact.
 					controller->add_outcome(prediction,false,input->code(FACT_CFD).asFloat());
-				match=true;
 			}
+			match=true;
 		}
 		matchCS.leave();
 		return	match;

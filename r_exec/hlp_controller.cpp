@@ -243,7 +243,6 @@ namespace	r_exec{
 
 		Code	*sub_goal_fact=factory::Object::Fact(sub_goal,now,1,1);
 		goal_records.insert(GoalRecords::value_type(sub_goal_fact,bm));
-
 		//std::cout<<"D3: "<<deadline_high<<std::endl;
 		return	sub_goal_fact;
 

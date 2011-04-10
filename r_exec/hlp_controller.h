@@ -147,7 +147,7 @@ namespace	r_exec{
 			if(!sub_goal_fact)
 				return;
 
-			if(sub_goal_fact->get_reference(0)->get_reference(0)->code(0).asOpcode()!=Opcodes::Cmd)	//	no monitoring for I/O device commands.
+			if(sub_goal_fact->get_reference(0)->get_reference(0)->get_reference(0)->code(0).asOpcode()!=Opcodes::Cmd)	//	no monitoring for I/O device commands.
 				add_monitor<M>(	bm,
 								sub_goal_fact,
 								super_goal,
