@@ -63,7 +63,9 @@ namespace	r_exec{
 		if(bindings->match(input->get_reference(0),prediction->get_reference(0)->get_reference(0))){	//	first, check the objects pointed to by the facts.
 
 			uint64	occurrence_time=Utils::GetTimestamp<Code>(input,FACT_TIME);	//	input is either a fact or a |fact.
-			if(expected_time_low<=occurrence_time	&&	expected_time_high>=occurrence_time){
+			if(expected_time_low>>56==Atom::STRUCTURAL_VARIABLE)
+				controller->add_outcome(prediction,true,input->code(FACT_CFD).asFloat());
+			else	if(expected_time_low<=occurrence_time	&&	expected_time_high>=occurrence_time){
 
 				if(input->code(0)==prediction->get_reference(0)->code(0))	//	positive match: expected a fact or |fact and got a fact or a |fact.
 					controller->add_outcome(prediction,true,input->code(FACT_CFD).asFloat());

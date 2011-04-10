@@ -181,7 +181,7 @@ namespace	r_exec{
 			deadline_low=now;
 		}else{
 
-			uint64	deadline=Utils::GetTimestamp<Code>(super_goal_fact,FACT_TIME);
+			uint64	deadline=Utils::GetTimestamp<Code>(super_goal_fact,FACT_TIME);//std::cout<<"D1: "<<deadline<<std::endl;
 			uint32	time_tolerance_us=super_goal_fact->code(super_goal_fact->code(FACT_TIME).asIndex()).getTimeTolerance()<<10;
 			deadline_high=deadline+time_tolerance_us;
 			deadline_low=deadline-time_tolerance_us;
@@ -200,7 +200,7 @@ namespace	r_exec{
 				deadline_high=deadline_low;
 				deadline_low=tmp;
 			}
-			uint64	median_deadline=(uint64)((float64)(deadline_high+deadline_low))/2;
+			uint64	median_deadline=(uint64)((float64)(deadline_high+deadline_low))/2;//std::cout<<"D2: "<<median_deadline<<std::endl;
 			uint32	time_tolerance_ms=(deadline_high-median_deadline)>>10;
 
 			Code	*ip_f=factory::Object::Fact(instance,median_deadline,1,1);
@@ -244,6 +244,7 @@ namespace	r_exec{
 		Code	*sub_goal_fact=factory::Object::Fact(sub_goal,now,1,1);
 		goal_records.insert(GoalRecords::value_type(sub_goal_fact,bm));
 
+		//std::cout<<"D3: "<<deadline_high<<std::endl;
 		return	sub_goal_fact;
 
 		/*Code	*_sub_goal=_Mem::Get()->check_existence(sub_goal);

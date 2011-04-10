@@ -66,13 +66,13 @@ namespace	r_exec{
 
 		Code	*_input=input;
 		Code	*_input_fact_object=_input->get_reference(0);
-		/*if(	matched_pattern!=NULL	&&	_input_fact_object->code(0).asOpcode()==Opcodes::MkPred){	//	we may have got fact or |fact -> pred -> fact -> icst or imdl referring to this cst/mdl.
+		if(	matched_pattern!=NULL	&&	_input_fact_object->code(0).asOpcode()==Opcodes::MkPred){	//	we may have got fact or |fact -> pred -> fact -> icst or imdl referring to this cst/mdl.
 
 			Code	*pred_fact_object=_input_fact_object->get_reference(0)->get_reference(0);
 			if(	pred_fact_object->code(0).asOpcode()==controller->get_instance_opcode()	&&
 				pred_fact_object->get_reference(0)==controller->getObject())
 				_input_fact_object=pred_fact_object;
-		}*/
+		}
 
 		matchCS.enter();
 		if(bindings->match(_input_fact_object,goal->get_reference(0)->get_reference(0))){	//	first, check the objects pointed to by the facts.
@@ -83,8 +83,11 @@ namespace	r_exec{
 				if(_input->code(0)==goal->get_reference(0)->code(0)){	//	positive match: expected a fact or |fact and got a fact or a |fact.
 
 					controller->add_outcome(goal,true,input->code(FACT_CFD).asFloat());
-					if(matched_pattern!=NULL)	//	there was a requirement which has just been matched.
-						controller->produce_sub_goal<GMonitor>(bindings,super_goal,matched_pattern,NULL);
+					if(matched_pattern!=NULL){	//	there was a requirement which has just been matched.
+
+						Code	*bound_pattern=bindings->bind_object(matched_pattern);
+						controller->produce_sub_goal<GMonitor>(bindings,super_goal,bound_pattern,NULL);
+					}
 				}else													//	negative match: expected a fact or |fact and got a |fact or a fact.
 					controller->add_outcome(goal,false,_input->code(FACT_CFD).asFloat());
 				match=true;
