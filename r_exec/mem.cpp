@@ -989,9 +989,9 @@ namespace	r_exec{
 	////////////////////////////////////////////////////////////////
 
 	r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const	char	*user_operator_library_path,
-		uint64			(*time_base)(),
-		const	char	*seed_path,
-		const	char	*source_file_name)
+												uint64			(*time_base)(),
+												const	char	*seed_path,
+												const	char	*source_file_name)
 	{
 		r_exec::Init(user_operator_library_path,time_base,seed_path );
 
@@ -1007,18 +1007,35 @@ namespace	r_exec{
 		r_exec::Seed.getObjects(mem,ram_objects);
 
 		mem->init(	100000,
-			3,
-			1,
-			2,
-			1000,
-			1000,
-			1000,
-			1000,
-			10,
-			0.1,
-			1000000);
+					3,
+					1,
+					2,
+					1000,
+					1000,
+					1000,
+					1000,
+					10,
+					0.1,
+					1000000);
 
-		mem->load( ram_objects.as_std() );
+		uint32	stdin_oid;
+		std::string	stdin_symbol("stdin");
+		uint32	stdout_oid;
+		std::string	stdout_symbol("stdout");
+		uint32	self_oid;
+		std::string	self_symbol("self");
+		UNORDERED_MAP<uint32,std::string>::const_iterator	n;
+		for(n=r_exec::Seed.object_names.symbols.begin();n!=r_exec::Seed.object_names.symbols.end();++n){
+
+			if(n->second==stdin_symbol)
+				stdin_oid=n->first;
+			else	if(n->second==stdout_symbol)
+				stdout_oid=n->first;
+			else	if(n->second==self_symbol)
+				self_oid=n->first;
+		}
+
+		mem->load(ram_objects.as_std(),stdin_oid,stdout_oid,self_oid);
 
 		return mem;
 	}

@@ -101,22 +101,36 @@ namespace	r_comp{
 		uint32	getSize();
 	};
 
+	class	dll_export	ObjectNames{
+	public:
+		UNORDERED_MAP<uint32,std::string>	symbols;	//	indexed by objects' OIDs.
+
+		~ObjectNames();
+
+		void	write(word32	*data);
+		void	read(word32		*data);
+		uint32	getSize();
+	};
+
 	class	dll_export	Image{
 	private:
 		uint32	map_offset;
-		UNORDERED_MAP<r_code::Code	*,uint16>	ptrs_to_indices;	//	used for >> in memory.
-		void	buildReferences(SysObject	*sys_object,r_code::Code	*object,uint16	object_index);
+		UNORDERED_MAP<r_code::Code	*,uint16>	ptrs_to_indices;	//	used for injection in memory.
+		void	buildReferences();
+		void	buildReferences(SysObject	*sys_object,r_code::Code	*object);
 		void	unpackObjects(r_code::vector<Code	*>	&ram_objects);
 	public:
 		ObjectMap	object_map;
 		CodeSegment	code_segment;
+		ObjectNames	object_names;
 
 		uint64	timestamp;
 
 		Image();
 		~Image();
 
-		void	addObject(SysObject	*object);
+		void	addSysObject(SysObject	*object,std::string	name);	//	called by the compiler.
+		void	addSysObject(SysObject	*object);					//	called by addObject().
 
 		void	getObjects(Mem	*mem,r_code::vector<r_code::Code	*>	&ram_objects);
 		template<class	O>	void	getObjects(r_code::vector<Code	*>	&ram_objects){
@@ -129,25 +143,27 @@ namespace	r_comp{
 			unpackObjects(ram_objects);
 		}
 
-		Image	&operator	<<	(r_code::vector<r_code::Code	*>	&ram_objects);
-		Image	&operator	<<	(r_code::Code	*object);
+		void	addObjects(std::list<r_code::Code	*>	&objects);	//	called by the rMem.
+		void	addObject(r_code::Code	*object);
 
 		template<class	I>	I	*serialize(){
 
-			I	*image=(I	*)I::Build(timestamp,object_map.getSize(),code_segment.getSize());
+			I	*image=(I	*)I::Build(timestamp,object_map.getSize(),code_segment.getSize(),object_names.getSize());
 
 			object_map.shift(image->map_size());
 			object_map.write(image->data());
 			code_segment.write(image->data()+image->map_size());
+			object_names.write(image->data()+image->map_size()+image->code_size());
 
 			return	image;
 		}
 
 		template<class	I>	void	load(I	*image){
 
-			timestamp=image->get_timestamp();
+			timestamp=image->timestamp();
 			object_map.read(image->data(),image->map_size());
 			code_segment.read(image->data()+image->map_size(),image->map_size());
+			object_names.read(image->data()+image->map_size()+image->code_size());
 		}
 	};
 }

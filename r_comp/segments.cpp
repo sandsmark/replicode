@@ -58,7 +58,7 @@ namespace	r_comp{
 
 		return	&classes_by_opcodes[opcode];
 	}
-	
+
 	void	Metadata::write(word32	*data){
 		
 		data[0]=classes_by_opcodes.size();
@@ -111,7 +111,7 @@ namespace	r_comp{
 			offset+=r_code::GetSize(function_names[i]);
 		}
 	}
-		
+
 	void	Metadata::read(word32	*data,uint32	size){
 		
 		uint16	class_count=data[0];
@@ -318,7 +318,7 @@ namespace	r_comp{
 		uint16	offset=0;
 		for(uint16	i=0;i<object_count;++i){
 
-			SysObject	*o=new	SysObject(SysObject::NON_STD);
+			SysObject	*o=new	SysObject();
 			o->read(data+offset);
 			objects.push_back(o);
 			offset+=o->getSize();
@@ -335,61 +335,142 @@ namespace	r_comp{
 
 	////////////////////////////////////////////////////////////////
 
+	//	Format:
+	//		number of entries
+	//		list of entries (one per user-defined symbol)
+	//			oid
+	//			symbol length
+	//			symbol characters
+
+	ObjectNames::~ObjectNames(){
+	}
+
+	void	ObjectNames::write(word32	*data){
+
+		data[0]=symbols.size();
+
+		uint32	index=1;
+
+		UNORDERED_MAP<uint32,std::string>::const_iterator	n;
+		for(n=symbols.begin();n!=symbols.end();++n){
+
+			data[index]=n->first;
+			uint32	symbol_length=n->second.length()+1;	//	add a trailing null character (for reading).
+			uint32	_symbol_length=symbol_length/4;
+			uint32	__symbol_length=symbol_length%4;
+			if(__symbol_length)
+				++_symbol_length;
+			data[index+1]=_symbol_length;
+			memcpy(data+index+2,n->second.c_str(),symbol_length);
+			index+=_symbol_length+2;
+		}
+	}
+
+	void	ObjectNames::read(word32	*data){
+
+		uint32	symbol_count=data[0];
+		uint32	index=1;
+		for(uint32	i=0;i<symbol_count;++i){
+
+			uint32	oid=data[index];
+			uint32	symbol_length=data[index+1];	//	number of words needed to store all the characters.
+			std::string	symbol((char	*)(data+index+2));
+			symbols[oid]=symbol;
+
+			index+=symbol_length+2;
+		}
+	}
+
+	uint32	ObjectNames::getSize(){
+
+		uint32	size=1;	//	size of symbols.
+
+		UNORDERED_MAP<uint32,std::string>::const_iterator	n;
+		for(n=symbols.begin();n!=symbols.end();++n){
+
+			size+=2;	//	oid and symbol's length.
+			uint32	symbol_length=n->second.length()+1;
+			uint32	_symbol_length=symbol_length/4;
+			uint32	__symbol_length=symbol_length%4;
+			if(__symbol_length)
+				++_symbol_length;
+			size+=_symbol_length;	//	characters packed in 32 bits words.
+		}
+		
+		return	size;
+	}
+
+	////////////////////////////////////////////////////////////////
+
 	Image::Image():map_offset(0),timestamp(0){
 	}
 
 	Image::~Image(){
 	}
 
-	void	Image::addObject(SysObject	*object){
+	void	Image::addSysObject(SysObject	*object,std::string	name){
+
+		addSysObject(object);
+		if(!name.empty())
+			object_names.symbols[object->oid]=name;
+	}
+
+	void	Image::addSysObject(SysObject	*object){
 
 		code_segment.objects.push_back(object);
 		object_map.objects.push_back(map_offset);
 		map_offset+=object->getSize();
 	}
 
-	Image	&Image::operator	<<(r_code::vector<Code	*>	&ram_objects){
+	void	Image::addObjects(std::list<r_code::Code	*>	&objects){
 
-		uint16	i;
-		for(i=0;i<ram_objects.size();++i)
-			*this<<ram_objects[i];
-		return	*this;
+		std::list<r_code::Code	*>::const_iterator	o;
+		for(o=objects.begin();o!=objects.end();++o)
+			addObject(*o);
+
+		buildReferences();
 	}
 
-	Image	&Image::operator	<<(Code	*object){
+	void	Image::addObject(Code	*object){
 
 		UNORDERED_MAP<Code	*,uint16>::iterator	it=ptrs_to_indices.find(object);
 		if(it!=ptrs_to_indices.end())	//	object already there.
-			return	*this;
+			return;
 
 		uint16	object_index;
 		ptrs_to_indices[object]=object_index=code_segment.objects.as_std()->size();
 		SysObject	*sys_object=new	SysObject(object);
-		addObject(sys_object);
+		addSysObject(sys_object);
+//std::cout<<"AddObject: "<<sys_object->oid<<std::endl;
+		for(uint16	i=0;i<object->references_size();++i){			//	follow reference pointers and recurse.
 
-		for(uint16	i=0;i<object->references_size();++i)			//	follow reference pointers and recurse.
-			*this<<object->get_reference(i);
-		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
-		for(v=object->views.begin();v!=object->views.end();++v)		//	follow view reference pointers and recurse.
-			for(uint8	j=0;j<2;++j){	//	2 refs maximum; may be NULL.
-
-				if((*v)->references[j])
-					*this<<(*v)->references[j];
-			}
-		std::list<Code	*>::const_iterator	m;
-		for(m=object->markers.begin();m!=object->markers.end();++m)	//	follow marker pointers and recurse.
-			*this<<*m;
-
-		sys_object->references.as_std()->clear();
-		std::vector<SysView	*>::const_iterator	_v;
-		for(_v=sys_object->views.as_std()->begin();_v!=sys_object->views.as_std()->end();++_v)
-			(*_v)->references.as_std()->clear();
-
-		buildReferences(sys_object,object,object_index);
-		return	*this;
+			Code	*reference=object->get_reference(i);
+			if(reference->getOID()==0xFFFFFFFF	||
+				reference->is_invalidated())
+				addObject(reference);
+		}
+		
+		uint32	_object=(uint32)object;
+		sys_object->references[0]=(_object	&	0x0000FFFF);
+		sys_object->references[1]=(_object	>>	16);
 	}
 
-	void	Image::buildReferences(SysObject	*sys_object,Code	*object,uint16	object_index){
+	void	Image::buildReferences(){
+
+		Code		*object;
+		SysObject	*sys_object;
+		for(uint32	i=0;i<code_segment.objects.as_std()->size();++i){
+
+			sys_object=code_segment.objects[i];
+			uint32	_object=sys_object->references[0];
+			_object|=(sys_object->references[1]<<16);
+			object=(Code	*)_object;
+			sys_object->references.as_std()->clear();
+			buildReferences(sys_object,object);
+		}
+	}
+
+	void	Image::buildReferences(SysObject	*sys_object,Code	*object){
 
 		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references.
 		uint16	i;

@@ -34,9 +34,9 @@
 
 namespace	r_code{
 
-	template<class	I>	Image<I>	*Image<I>::Build(uint64	timestamp,uint32	map_size,uint32	code_size){
+	template<class	I>	Image<I>	*Image<I>::Build(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	names_size){
 
-		I	*image=new(map_size+code_size)	I(timestamp,map_size,code_size);
+		I	*image=new(map_size+code_size)	I(timestamp,map_size,code_size,names_size);
 		return	(Image<I>	*)image;
 	}
 
@@ -45,22 +45,26 @@ namespace	r_code{
 		uint64	timestamp;
 		uint32	map_size;
 		uint32	code_size;
+		uint32	names_size;
 		stream.read((char	*)&timestamp,sizeof(uint64));
 		stream.read((char	*)&map_size,sizeof(uint32));
 		stream.read((char	*)&code_size,sizeof(uint32));
-		Image	*image=Build(timestamp,map_size,code_size);
+		stream.read((char	*)&names_size,sizeof(uint32));
+		Image	*image=Build(timestamp,map_size,code_size,names_size);
 		stream.read((char	*)image->data(),image->getSize()*sizeof(word32));
 		return	image;
 	}
 
 	template<class	I>	void	Image<I>::Write(Image<I>	*image,ofstream &stream){
 
-		uint64	timestamp=image->get_timestamp();
+		uint64	timestamp=image->timestamp();
 		uint32	map_size=image->map_size();
 		uint32	code_size=image->code_size();
+		uint32	names_size=image->names_size();
 		stream.write((char	*)&timestamp,sizeof(uint64));
 		stream.write((char	*)&map_size,sizeof(uint32));
 		stream.write((char	*)&code_size,sizeof(uint32));
+		stream.write((char	*)&names_size,sizeof(uint32));
 		stream.write((char	*)image->data(),image->getSize()*sizeof(word32));
 	}
 
@@ -72,7 +76,7 @@ namespace	r_code{
 
 	template<class	I>	uint32	Image<I>::getSize()	const{
 
-		return	map_size()+code_size();
+		return	map_size()+code_size()+names_size();
 	}
 
 	template<class	I>	uint32	Image<I>::getObjectCount()	const{
@@ -101,6 +105,7 @@ namespace	r_code{
 		std::cout<<"Size: "<<getSize()<<std::endl;
 		std::cout<<"Object Map Size: "<<map_size()<<std::endl;
 		std::cout<<"Code Segment Size: "<<code_size()<<std::endl;
+		std::cout<<"Names Size: "<<names_size()<<std::endl;
 		
 		uint32	i=0;
 
@@ -120,13 +125,13 @@ namespace	r_code{
 			uint32	object_view_set_size=data(data(j)+4);
 			std::cout<<"---object---\n";
 			std::cout<<i++;
-			switch(object_axiom){
+			/*switch(object_axiom){
 			case	SysObject::ROOT_GRP:	std::cout<<" root\n";	break;
 			case	SysObject::STDIN_GRP:	std::cout<<" stdin\n";	break;
 			case	SysObject::STDOUT_GRP:	std::cout<<" stdout\n";	break;
 			case	SysObject::SELF_ENT:	std::cout<<" self\n";	break;
 			default:	std::cout<<" non standard\n";	break;
-			}
+			}*/
 			std::cout<<i++<<" code size: "<<object_code_size<<std::endl;
 			std::cout<<i++<<" reference set size: "<<object_reference_set_size<<std::endl;
 			std::cout<<i++<<" marker set size: "<<object_marker_set_size<<std::endl;

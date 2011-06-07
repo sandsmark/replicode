@@ -166,7 +166,7 @@ namespace	r_exec{
 		std::vector<Operation	*>	pending_operations;
 
 		Group(r_code::Mem	*m=NULL);
-		Group(r_code::SysObject	*source,r_code::Mem	*m);
+		Group(r_code::SysObject	*source);
 		virtual	~Group();
 
 		bool	invalidate();	//	removes all views of itself and of any other object.

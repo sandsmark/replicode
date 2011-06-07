@@ -56,9 +56,9 @@ namespace	r_comp{
 		UNORDERED_MAP<uint16,std::string>	variable_names;				//	in the form vxxx where xxx is an integer representing the order of referencing of the variable/label in the code.
 		std::string	get_variable_name(uint16	index,bool	postfix);	//	associates iptr/vptr indexes to names; inserts them in out_stream if necessary; when postfix==true, a trailing ':' is added.
 
-		UNORDERED_MAP<uint16,std::string>	object_names;				//	in the form class_namexxx where xxx is an integer representing the order of appearence of the object in the image; N.B.: root:0 self:1 stdin:2 stdout:3
+		UNORDERED_MAP<uint16,std::string>	object_names;				//	in the form class_namexxx where xxx is an integer representing the order of appearence of the object in the image; or: user-defined names when they are provided.
 		UNORDERED_MAP<std::string,uint16>	object_indices;				//	inverted version of the object_names.
-		std::string	get_object_name(uint16	index);			//	retrieves the name of an object.
+		std::string	get_object_name(uint16	index);						//	retrieves the name of an object.
 
 		void	write_indent(uint16	i);
 		void	write_expression_head(uint16	read_index);												//	decodes the leading atom of an expression.

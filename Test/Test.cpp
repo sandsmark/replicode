@@ -108,7 +108,6 @@ int32	main(int	argc,char	**argv){
 	std::cout<<"compiling ...\n";
 	if(!r_exec::Init(settings.usr_operator_path.c_str(),Time::Get,settings.usr_class_path.c_str()))
 		return	2;
-	std::cout<<"... done\n";
 
 	srand(r_exec::Now());
 	Random::Init();
@@ -119,6 +118,8 @@ int32	main(int	argc,char	**argv){
 		std::cerr<<" <- "<<error<<std::endl;
 		return	3;
 	}else{
+
+		std::cout<<"... done\n";
 
 		Decompiler	decompiler;
 		decompiler.init(&r_exec::Metadata);
@@ -142,7 +143,24 @@ int32	main(int	argc,char	**argv){
 					settings.time_tolerance,
 					settings.goal_record_resilience);
 
-		if(!mem->load(ram_objects.as_std()))
+		uint32	stdin_oid;
+		std::string	stdin_symbol("stdin");
+		uint32	stdout_oid;
+		std::string	stdout_symbol("stdout");
+		uint32	self_oid;
+		std::string	self_symbol("self");
+		UNORDERED_MAP<uint32,std::string>::const_iterator	n;
+		for(n=r_exec::Seed.object_names.symbols.begin();n!=r_exec::Seed.object_names.symbols.end();++n){
+
+			if(n->second==stdin_symbol)
+				stdin_oid=n->first;
+			else	if(n->second==stdout_symbol)
+				stdout_oid=n->first;
+			else	if(n->second==self_symbol)
+				self_oid=n->first;
+		}
+
+		if(!mem->load(ram_objects.as_std(),stdin_oid,stdout_oid,self_oid))
 			return	4;
 		uint64	starting_time=mem->start();
 		
@@ -161,6 +179,8 @@ int32	main(int	argc,char	**argv){
 		delete	mem;
 
 		//probe.check();
+
+		image->object_names.symbols=r_exec::Seed.object_names.symbols;
 		
 		if(settings.write_image)
 			write_to_file(image,settings.image_path,settings.test_image?&decompiler:NULL,starting_time);

@@ -52,9 +52,9 @@ namespace	r_exec{
 
 		switch(source->code[0].getDescriptor()){
 		case	Atom::GROUP:
-			return	new	Group(source,this);
+			return	new	Group(source);
 		default:
-			return	new	O(source,this);
+			return	new	O(source);
 		}
 	}
 
@@ -95,7 +95,10 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O>	bool	Mem<O>::load(std::vector<r_code::Code	*>	*objects){	//	NB: no cov at init time.
+	template<class	O>	bool	Mem<O>::load(std::vector<r_code::Code	*>	*objects,
+											uint32							stdin_oid,
+											uint32							stdout_oid,
+											uint32							self_oid){	//	NB: no cov at init time.
 
 		uint32	i;
 		reduction_cores=new	ReductionCore	*[reduction_core_count];
@@ -105,13 +108,12 @@ namespace	r_exec{
 		for(i=0;i<time_core_count;++i)
 			time_cores[i]=new	TimeCore();
 
-		last_oid=0;
+		last_oid=objects->size();
 
 		//	load root (always comes first).
 		_root=(Group	*)(*objects)[0];
 		this->objects.push_back(_root);
 		initial_groups.push_back(_root);
-		_root->setOID(get_oid());
 
 		typedef	UNORDERED_MAP<Code	*,P<BindingMap> >	Abstraction;
 		UNORDERED_MAP<Code	*,P<BindingMap> >			abstraction_map;
@@ -119,17 +121,12 @@ namespace	r_exec{
 		for(uint32	i=1;i<objects->size();++i){	//	skip root as it has no initial views.
 
 			Code	*object=(*objects)[i];
-			switch(object->get_axiom()){
-			case	SysObject::STDIN_GRP:
+			if(object->getOID()==stdin_oid)
 				_stdin=(Group	*)(*objects)[i];
-				break;
-			case	SysObject::STDOUT_GRP:
+			else	if(object->getOID()==stdout_oid)
 				_stdout=(Group	*)(*objects)[i];
-				break;
-			case	SysObject::SELF_ENT:
+			else	if(object->getOID()==self_oid)
 				_self=(O	*)(*objects)[i];
-				break;
-			}
 
 			switch(object->code(0).getDescriptor()){
 			case	Atom::MODEL:				//	these constructs are assumed not to be already abstracted.
@@ -182,7 +179,6 @@ namespace	r_exec{
 					return	false;
 			}
 
-			object->setOID(get_oid());
 			object->position_in_objects=this->objects.insert(this->objects.end(),object);
 			object->is_registered=true;
 			if(object->code(0).getDescriptor()!=Atom::GROUP)	//	load non-group object in register.
@@ -214,10 +210,7 @@ namespace	r_exec{
 
 		r_comp::Image	*image=new	r_comp::Image();
 		image->timestamp=Now();
-		std::list<Code	*>::const_iterator	i;
-		for(i=objects.begin();i!=objects.end();++i)
-			if(!(*i)->is_invalidated())
-				image->operator	<<(*i);
+		image->addObjects(objects);
 		return	image;
 	}
 

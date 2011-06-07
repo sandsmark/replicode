@@ -148,17 +148,7 @@ namespace	r_comp{
 			return	false;
 		}else{
 
-			if(l=="root")
-				current_object=new	SysObject(SysObject::ROOT_GRP);
-			else	if(l=="stdin")
-				current_object=new	SysObject(SysObject::STDIN_GRP);
-			else	if(l=="stdout")
-				current_object=new	SysObject(SysObject::STDOUT_GRP);
-			else	if(l=="self")
-				current_object=new	SysObject(SysObject::SELF_ENT);
-			else
-				current_object=new	SysObject(SysObject::NON_STD);
-
+			current_object=new	SysObject();
 			if(lbl)
 				global_references[l]=Reference(_image->code_segment.objects.size(),current_class,Class());	
 		}
@@ -265,7 +255,7 @@ namespace	r_comp{
 		if(trace)
 			sys_object->trace();
 
-		_image->addObject(sys_object);
+		_image->addSysObject(sys_object,l);
 		return	true;
 	}
 

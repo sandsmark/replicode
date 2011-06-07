@@ -74,22 +74,15 @@ namespace	r_code{
 
 	class	dll_export	SysObject:
 	public	ImageObject{
+	private:
+		static	uint32	LastOID;
 	public:
-		typedef	enum{
-			ROOT_GRP=0,
-			STDIN_GRP=1,
-			STDOUT_GRP=2,
-			SELF_ENT=3,
-			NON_STD=4
-		}Axiom;
-
-		r_code::vector<uint32>		markers;		//	indexes in the relocation segment
+		r_code::vector<uint32>		markers;	//	indexes in the relocation segment
 		r_code::vector<SysView	*>	views;
 
-		Axiom	axiom;
 		uint32	oid;
 
-		SysObject(Axiom	a);
+		SysObject();
 		SysObject(Code	*source);
 		~SysObject();
 
@@ -158,14 +151,11 @@ namespace	r_code{
 
 	class	dll_export	Code:
 	public	_Object{
-	private:
-		SysObject::Axiom	axiom;
 	protected:
 		void	load(SysObject	*source){
 
 			for(uint16	i=0;i<source->code.size();++i)
 				code(i)=source->code[i];
-			axiom=source->axiom;
 			setOID(source->oid);
 		}
 		template<class	V>	View	*build_view(SysView	*source){
@@ -173,8 +163,6 @@ namespace	r_code{
 			return	new	V(source,this);
 		}
 	public:
-		SysObject::Axiom	get_axiom()	const{	return	axiom;	}
-
 		virtual	uint32	getOID()	const=0;
 		virtual	void	setOID(uint32	oid)=0;
 
@@ -203,7 +191,7 @@ namespace	r_code{
 
 		virtual	float32	get_psln_thr(){	return	1;	}
 
-		Code():axiom(SysObject::NON_STD),is_registered(false){}
+		Code():is_registered(false){}
 		virtual	~Code(){}
 
 		virtual	void	mod(uint16	member_index,float32	value){};

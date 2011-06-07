@@ -37,7 +37,7 @@ namespace	r_exec{
 		reset_decay_values();
 	}
 
-	inline	Group::Group(r_code::SysObject	*source,r_code::Mem	*m):LObject(source,m),CriticalSection(){
+	inline	Group::Group(r_code::SysObject	*source):LObject(source),CriticalSection(){
 
 		reset_ctrl_values();
 		reset_stats();

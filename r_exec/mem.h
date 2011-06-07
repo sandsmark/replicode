@@ -293,7 +293,10 @@ namespace	r_exec{
 		//	Called by operators and overlays.
 		r_code::Code	*build_object(Atom	head);
 
-		bool	load(std::vector<r_code::Code	*>	*objects);	//	call before start; no mod/set/eje will be executed (only inj);
+		bool	load(std::vector<r_code::Code	*>	*objects,
+					uint32							stdin_oid,
+					uint32							stdout_oid,
+					uint32							self_oid);	//	call before start; no mod/set/eje will be executed (only inj);
 																//	ijt will be set at now=Time::Get() whatever the source code.
 																//	return false on error.
 		void	delete_object(Code	*object);	//	called by object destructors/Group::clear().
@@ -318,9 +321,9 @@ namespace	r_exec{
 	};
 
 	r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const	char	*user_operator_library_path,
-		uint64			(*time_base)(),
-		const	char	*seed_path,
-		const	char	*source_file_name);
+												uint64			(*time_base)(),
+												const	char	*seed_path,
+												const	char	*source_file_name);
 }
 
 

@@ -135,20 +135,19 @@ namespace	r_comp{
 		for(uint16	i=0;i<image->code_segment.objects.size();++i){
 
 			SysObject	*sys_object=(SysObject	*)image->code_segment.objects[i];
-			switch(sys_object->axiom){
-			case	SysObject::ROOT_GRP:	s="root";break;
-			case	SysObject::STDIN_GRP:	s="stdin";break;
-			case	SysObject::STDOUT_GRP:	s="stdout";break;
-			case	SysObject::SELF_ENT:	s="self";break;
-			default:
+			UNORDERED_MAP<uint32,std::string>::const_iterator	n=image->object_names.symbols.find(sys_object->oid);
+			if(n!=image->object_names.symbols.end())
+				s=n->second;
+			else{
+			
 				c=metadata->getClass(sys_object->code[0].asOpcode());
 				last_object_ID=object_ID_per_class[c];
 				object_ID_per_class[c]=last_object_ID+1;
 				sprintf(buffer,"%d",last_object_ID);
 				s=c->str_opcode;
 				s+=buffer;
-				break;
 			}
+
 			object_names[i]=s;
 			object_indices[s]=i;
 		}
