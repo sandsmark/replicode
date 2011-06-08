@@ -114,6 +114,16 @@ int32	main(int	argc,char	**argv){
 	delete	img;
 
 	//	Second, filter objects: retain only those which are actual inputs in stdin and store them in a time-ordered list.
+	uint32	stdin_oid;
+	std::string	stdin_str("stdin");
+	UNORDERED_MAP<uint32,std::string>::const_iterator	n;
+	for(n=_i->object_names.symbols.begin();n!=_i->object_names.symbols.end();++n)
+		if(n->second==stdin_str){
+
+			stdin_oid=n->first;
+			break;
+		}
+	
 	std::set<r_code::View	*,r_code::View::Less>	correlator_inputs;
 	for(uint32	i=0;i<objects.size();++i){
 
@@ -127,7 +137,7 @@ int32	main(int	argc,char	**argv){
 			if(!(*v)->references[0])
 				continue;
 
-			if((*v)->references[0]->get_axiom()==r_code::SysObject::STDIN_GRP){
+			if((*v)->references[0]->getOID()==stdin_oid){
 
 				correlator_inputs.insert(*v);
 				break;
