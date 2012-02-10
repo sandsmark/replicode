@@ -1,0 +1,89 @@
+; debug
+
+!load c:/work/V1.2/drives.replicode
+
+
+s0:(cst |[] []
+   (fact (mk.val h: position p0: :) t0: t1: ::)
+   (fact (mk.val h: essence hand :) t0: t1: ::)
+|[]
+|[]
+[stdin] 1) [[SYNC_FRONT now 0 forever primary nil 1]]
+
+m0:(mdl [p0: t0:] []
+   (fact (cmd lift_hand [h: delta_p:] :) t1: t2: ::)
+   (fact (mk.val h: position p1: 1) t3: t4: : 1)
+[]
+   p1:(+ p0 delta_p)
+   t3:(+ t0 sampling_period)
+   t4:(+ t3 sampling_period)
+[]
+   delta_p:(- p1 p0)
+[stdin] 1 1 1 0 1) [[SYNC_FRONT now 0 forever primary nil 1]]
+
+m1:(mdl |[] []
+   (fact (icst s0 |[] [h: p0:] ::) t0: t1: ::)
+   (fact (imdl m0 [p0: t0:] [h: delta_p: p1: : :] : 1) t0: t2: : 1)
+[]
+   t2:(+ t0 sampling_period); domain of validity of the lhs, as enforced by the input generators.
+[]
+   t0:(- t2 sampling_period)
+[stdin] 1 1 1 0 1) [[SYNC_FRONT now 0 forever primary nil 1]]
+
+
+; top-level models.
+
+m_run_0:(mdl |[] []
+   (fact (mk.val self_right_hand position (vec3 10 20 30) :) t0: t1: ::)
+   (fact run t2: t3: ::)
+|[]
+[]
+   t0:(now)
+   t1:(+ t0 100000us)
+[stdin drives] 1 1 1 0 1) [[SYNC_FRONT now 0 forever primary nil 0]]
+
+
+; input generators.
+
+pgm0:(pgm |[] |[] |[] []
+   (inj []
+      p:(mk.val self_right_hand position (vec3 10 20 30) 1)
+      |[]
+   )
+   (inj []
+      (fact p now (+ now sampling_period) 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm0:(ipgm pgm0 |[] RUN_ONCE sampling_period SILENT 1) [[SYNC_FRONT now 0 1 stdin nil 1]]
+
+pgm1:(pgm |[] |[] |[] []
+   (inj []
+      c:(cmd lift_hand [self_right_hand (vec3 2 2 2)] 1)
+      |[]
+   )
+   (inj []
+      (fact c now now 1 1)
+      [SYNC_FRONT now 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm1:(ipgm pgm1 |[] RUN_ONCE 150000us SILENT 1) [[SYNC_FRONT now 0 1 stdin nil 1]]
+
+pgm2:(pgm |[] []
+   (ptn (fact (cmd lift_hand [h: v#vec3:] :) t0: t1: ::) |[])
+   (ptn p:(fact (mk.val h: position old_p#vec3: :) ::) |[])
+|[]
+[]
+   (inj []
+      new_p:(mk.val self_right_hand position (+ v old_p) 1)
+      |[]
+   )
+   (inj []
+      (fact new_p t3:(+ p.vw.ijt sampling_period) (+ t3 sampling_period) 1 1)
+      [SYNC_FRONT t3 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm2:(ipgm pgm2 |[] RUN_ONCE 0us SILENT 1) [[SYNC_FRONT now 0 1 stdin nil 1]]

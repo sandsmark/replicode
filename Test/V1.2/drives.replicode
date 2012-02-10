@@ -1,0 +1,81 @@
+; debug
+
+
+; drive injectors.
+
+init_run_pgm:(pgm |[] |[] |[] []
+   (inj []
+      f_run:(fact run t:(now) (+ t 200000us) 1 1)
+      |[]
+   )
+   (inj []
+      g:(goal f_run self 1)
+      |[]
+   )
+   (inj []
+      (fact g t t 1 1)
+      [SYNC_FRONT t 1 1 primary nil]
+   )
+1) |[]
+
+init_run_ipgm:(ipgm init_run_pgm |[] RUN_ONCE 200000us NOTIFY 1) [[SYNC_FRONT now 0 1 drives nil 0]]
+
+success_run_pgm:(pgm |[] []
+   (ptn (fact (success (fact (goal (fact run after: before: ::) ::) ::) ::) ::) |[])
+|[]
+[]
+   (inj []
+      f_run:(fact run t:(now) (+ t (+ (- before after) 50000us)) 1 1)
+      |[]
+   )
+   (inj []
+      g:(goal f_run self 1)
+      |[]
+   )
+   (inj []
+      (fact g t t 1 1)
+      [SYNC_FRONT t 1 1 primary nil]
+   )
+1) |[]
+
+success_run_ipgm:(ipgm success_run_pgm |[] RUN_ALWAYS 0us NOTIFY 1) [[SYNC_FRONT now 0 1 drives nil 0]]
+
+failure_0_run_pgm:(pgm |[] []
+   (ptn (|fact (success (fact (goal (fact run after: before: ::) ::) ::) ::) ::) [(< 0 delta:(- (- before after) 50000us))])
+|[]
+[]
+   (inj []
+      f_run:(fact run t:(now) (+ t delta) 1 1)
+      |[]
+   )
+   (inj []
+      g:(goal f_run self 1)
+      |[]
+   )
+   (inj []
+      (fact g t t 1 1)
+      [SYNC_FRONT t 1 1 primary nil]
+   )
+1) |[]
+
+failure_0_run_ipgm:(ipgm failure_0_run_pgm |[] RUN_ALWAYS 0us NOTIFY 1) [[SYNC_FRONT now 0 1 drives nil 0]]
+
+failure_1_run_pgm:(pgm |[] []
+   (ptn (|fact (success (fact (goal (fact run after: before: ::) ::) ::) ::) ::) [(>= 50000us (- before after))])
+|[]
+[]
+   (inj []
+      f_run:(fact run t:(now) (+ t 50000us) 1 1)
+      |[]
+   )
+   (inj []
+      g:(goal f_run self 1)
+      |[]
+   )
+   (inj []
+      (fact g t t 1 1)
+      [SYNC_FRONT t 1 1 primary nil]
+   )
+1) |[]
+
+failure_1_run_ipgm:(ipgm failure_1_run_pgm |[] RUN_ALWAYS 0us NOTIFY 1) [[SYNC_FRONT now 0 1 drives nil 0]]

@@ -1,0 +1,145 @@
+; std.replicode
+
+; utilities.
+!class (_obj :~ psln_thr:nb)
+!class (_grp (_obj {upr:nb sln_thr:nb act_thr:nb vis_thr:nb c_sln:nb c_sln_thr:nb c_act:nb c_act_thr:nb dcy_per:nb dcy_tgt:nb dcy_prd:nb dcy_auto:nb sln_chg_thr:nb sln_chg_prd:nb act_chg_thr:nb act_chg_prd:nb avg_sln:nb high_sln:nb low_sln:nb avg_act:nb high_act:nb low_act:nb high_sln_thr:nb low_sln_thr:nb sln_ntf_prd:nb high_act_thr:nb low_act_thr:nb act_ntf_prd:nb ntf_new:nb low_res_thr:nb ntf_grps:[::grp] :~}))
+!class (_fact (_obj {obj: after:us before:us cfd:nb :~}))
+!class (val (_obj val:))
+!class (val_hld val:)
+
+; mapping low-level objects -> r-code.
+!class (ent (_obj nil))
+!class (ont (_obj nil))
+!class (dev (_obj nil))
+!class (nod (_obj id:nid))
+!class (view[] sync:bl ijt:us sln:nb res:nb grp:grp org:)
+!class (grp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: cov:bl vis:nb)
+!class (pgm_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: act:nb)
+!class (ptn skel:xpr guards:[::xpr])
+!class (|ptn skel:xpr guards:[::xpr])
+!class (pgm (_obj {tpl:[::ptn] inputs:[] guards:[::xpr] prods:}))
+!class (|pgm (_obj {tpl:[::ptn] inputs:[] guards:[::xpr] prods:}))
+!class (grp (_grp nil))
+!class (icmd function:fid args:[])
+!class (cmd (_obj {function:fid args:[]}))
+!class (cmd_arg (_obj {function:fid arg:ont}))
+!class (ipgm (_obj {code: args:[] run:bl tsc:us nfr:bl}))
+!class (icpp_pgm (_obj {code:st args:[] run:bl tsc:us nfr:bl}))
+
+; mapping low-level markers -> r-code.
+!class (mk.rdx (_obj {code: inputs:[] prods:[]}))
+!class (mk.low_sln (_obj obj:))
+!class (mk.high_sln (_obj obj:))
+!class (mk.low_act (_obj obj:))
+!class (mk.high_act (_obj obj:))
+!class (mk.low_res (_obj obj:))
+!class (mk.sln_chg (_obj {obj: chg:nb}))
+!class (mk.act_chg (_obj {obj: chg:nb}))
+!class (mk.new (_obj obj:))
+
+; mapping high-level objects -> r-code.
+!class (mk.val (_obj {obj: attr:ont val:}))
+!class (mk.act (_obj {actr:ent cmd:cmd}))
+!class (fact (_fact nil))
+!class (|fact (_fact nil))
+!class (cst (_obj {tpl_args:[] objs:[] fwd_guards:[] bwd_guards:[] out_grps:[::grp]}))
+!class (mdl (_obj {tpl_args:[] objs:[] fwd_guards:[] bwd_guards:[] out_grps:[::grp] str:nb cnt:nb sr:nb dsr:nb}))
+!class (icst (_obj {cst:cst tpl_args:[] args:[] wr_e:bl}))
+!class (imdl (_obj {mdl:mdl tpl_args:[] args:[] wr_e:bl}))
+!class (pred (_obj {obj:}))
+!class (goal (_obj {obj: actr:ent}))
+!class (success (_obj obj: evd:))
+!class (mk.grp_pair (_obj {primary:grp secondary:grp}))
+
+; performance counters (latencies).
+!class (perf (_obj {rj_ltcy:nb d_rj_ltcy:nb tj_ltcy:nb d_tj_ltcy:nb})); latencies and derivatives in us encoded as floats.
+
+; mapping operator opcodes -> r-atoms.
+!op (_now):us
+!op (rnd :nb):nb
+!op (equ : :):
+!op (neq : :):
+!op (gtr : :):
+!op (lsr : :):
+!op (gte : :):
+!op (lse : :):
+!op (add : :):
+!op (sub : :):
+!op (mul :nb :nb):nb
+!op (div :nb :nb):nb
+!op (dis : :):nb
+!op (ln :nb):nb
+!op (exp :nb):nb
+!op (log :nb):nb
+!op (e10 :nb):nb
+!op (syn :):
+!op (ins : :[] :bl :us :bl):
+!op (red :[] :[] :[]):[]
+!op (fvw : :):
+
+; operator aliases.
+!def now (_now)
+!def = equ
+!def <> neq
+!def > gtr
+!def < lsr
+!def <= gte
+!def >= lse
+!def + add
+!def - sub
+!def * mul
+!def / div
+!def \ syn
+
+; mapping devices -> r-atoms.
+!def exe 0xA1000000; the executive.
+
+; mapping device functions -> r-atoms.
+!dfn (_inj : :)
+!dfn (_eje : : :nid)
+!dfn (_mod : :nb)
+!dfn (_set : :nb)
+!dfn (_new_class :)
+!dfn (_del_class :)
+!dfn (_ldc :st)
+!dfn (_swp :nb)
+!dfn (_prb :nb :st :st :[])
+!dfn (_stop)
+
+; device functions aliases.
+!def (inj args) (icmd _inj args)
+!def (eje args) (icmd _eje args)
+!def (mod args) (icmd _mod args)
+!def (set args) (icmd _set args)
+!def (new_class args) (icmd _new_class args)
+!def (del_class args) (icmd _del_class args)
+!def (ldc args) (icmd _ldc args)
+!def (swp args) (icmd _swp args)
+!def (prb args) (icmd _prb args)
+!def (stop args) (icmd _stop args)
+
+; various constants.
+!counter __constant 0
+!def OFF __constant
+!def ON __constant
+
+; parameters for tuning the behavior of reactive objects.
+; member nfr.
+!def SILENT false ; no notification upon production
+!def NOTIFY true ; notification upon productions
+
+; parameters for tuning the behavior of groups.
+!def DCY_SLN 0
+!def DCY_SLN_THR 1
+!def COV_ON true
+!def COV_OFF false
+
+!def SYNC_FRONT true
+!def SYNC_STATE false
+
+!def RUN_ALWAYS true
+!def RUN_ONCE false
+
+; system internal constants.
+!def MAX_TIME 18446744073709551615us; 2^64-1.
+

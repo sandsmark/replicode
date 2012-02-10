@@ -1,0 +1,101 @@
+!load c:/work/V1.2/std.replicode
+
+
+; utilities.
+
+!def (std_grp _upr _sln_thr _act_thr _vis_thr _ntf_grps) (grp _upr _sln_thr _act_thr _vis_thr 1 0 1 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 _ntf_grps 1); c-salient and c-active.
+
+
+; domain-dependent classes.
+
+!class (vec3 x:nb y:nb z:nb)
+!class (speech_context (_obj {speaker:ent listener:ent}))
+
+
+; device functions.
+
+!dfn (grab_hand :); arg0: a hand, arg1: deadline.
+!dfn (release_hand :); arg0: a hand, arg1: deadline.
+!dfn (move_hand :); arg0: a hand, arg1: target position, arg2: deadline.
+!dfn (speak :); arg0: a word, arg1: deadline.
+!dfn (look_at :); arg0: a vec3, arg1: deadline.
+!dfn (point_at :); arg0: a hand, arg1: target position, arg2: deadline.
+
+!dfn (lift_hand :); arg0: a hand, arg1: a distance.
+
+!def sampling_period 100000us
+
+
+; initial groups.
+
+root:(std_grp 0 0 0 0 [nil]) [[SYNC_FRONT now 0 forever nil nil COV_OFF 0]]
+stdout:(std_grp 0 0 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]
+stdin:(std_grp 0 0 0 0 [stdout]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]
+
+primary:(std_grp 2 0 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]; ensure upr>0.
+secondary:(std_grp 2 0 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]; ensure upr>0.
+grp_pair:(mk.grp_pair primary secondary 1) [[SYNC_FRONT now 0 forever root nil]]
+drives:(std_grp 0 0 0 0 [stdout]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]; holds pgm that inject drives periodically; drive priority=pgm.act; be sure that the pgm tsc is larger than the primary's upr.
+
+
+; extensions.
+
+auto_focus:(icpp_pgm "auto_focus" [true primary secondary] RUN_ALWAYS 0us SILENT 1) [[SYNC_FRONT now 0 forever stdin nil 1]]; args: pass_through, primary group, secondary group, other output groups.
+
+
+; application ontology.
+
+; attributes.
+
+essence:(ont 1) [[SYNC_FRONT now 0 forever root nil]]; usage: (mk.val x essence "sphere" 1) or (mk.val x essence sphere 1) if sphere is defined as an entity.
+position:(ont 1) [[SYNC_FRONT now 0 forever root nil]]; usage: (mk.val x position (vec3 0 0 0) 1)
+color:(ont 1) [[SYNC_FRONT now 0 forever root nil]]; usage: (mk.val x color "green" 1) or (mk.val x color green 1) if green is defined as an entity.
+role:(ont 1) [[SYNC_FRONT now 0 forever root nil]]; usage (mk.val self role interviewer 1)
+
+attachment:(ont 1) [[SYNC_FRONT now 0 forever root nil]]; usage: (mk.val self_right_hand attachment a_thing 1)
+spoken:(ont 1) [[SYNC_FRONT now 0 forever root nil]]; usage: (mk.val an_actor spoken a_sentence 1)
+pointed_at:(ont 1) [[SYNC_FRONT now 0 forever root nil]]; usage: (mk.val an_actor pointed_at a_location 1)
+looked_at:(ont 1) [[SYNC_FRONT now 0 forever root nil]]; usage: (mk.val an_actor looked_at a_location 1)
+
+knowing:(ont 1) [[SYNC_FRONT now 0 forever root nil]]; usage: (mk.val an_actor knowing something 1)
+most_salient:(ont 1) [[SYNC_FRONT now 0 forever root nil]]
+
+
+; values.
+
+actor:(ont 1) [[SYNC_FRONT now 0 forever root nil]]
+interviewer:(ont 1) [[SYNC_FRONT now 0 forever root nil]]
+interviewee:(ont 1) [[SYNC_FRONT now 0 forever root nil]]
+hand:(ont 1) [[SYNC_FRONT now 0 forever root nil]]
+head:(ont 1) [[SYNC_FRONT now 0 forever root nil]]
+
+
+; initial application objects.
+
+self:(ont 1) [[SYNC_FRONT now 0 forever root nil]]
+; (mk.val self essence actor 1) [[SYNC_STATE now 1 forever stdin nil]]
+self_right_hand:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+self_right_hand_is_a_hand:(mk.val self_right_hand essence hand 1) |[]
+f_self_right_hand_is_a_hand:(fact self_right_hand_is_a_hand 0us MAX_TIME 1 1) [[SYNC_STATE now 1 forever stdin nil]]
+; self_head:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; self_head_is_a_head(mk.val self_head essence head 1) [[SYNC_STATE now 1 forever stdin nil]]
+; f_self_head_is_a_head:(fact self_head_is_a_head 0us MAX_TIME 1 1) [[SYNC_STATE now 1 forever stdin nil]]
+
+; programmer:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+
+; human1:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human1 essence actor 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human1_right_hand:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human1_right_hand essence hand 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human1_head:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human1_head essence head 1) [[SYNC_STATE now 1 forever stdin nil]]
+
+; human2:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human2 essence actor 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human2_right_hand:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human2_right_hand essence hand 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human2_head:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human2_head essence head 1) [[SYNC_STATE now 1 forever stdin nil]]
+
+; drive targets; drives are goals whose target fact points to an entity.
+run:(ent 1) [[SYNC_FRONT now 0 forever root nil]]
