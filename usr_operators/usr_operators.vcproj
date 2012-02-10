@@ -351,13 +351,13 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="Vec3"
+			Name="operators"
 			>
 			<Filter
 				Name="Header Files"
 				>
 				<File
-					RelativePath=".\Vec3\vec3.h"
+					RelativePath=".\Operators\operators.h"
 					>
 				</File>
 			</Filter>
@@ -365,7 +365,7 @@
 				Name="Source Files"
 				>
 				<File
-					RelativePath=".\Vec3\vec3.cpp"
+					RelativePath=".\Operators\operators.cpp"
 					>
 				</File>
 			</Filter>

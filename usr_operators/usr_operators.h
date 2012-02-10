@@ -53,9 +53,8 @@ uint16	dll_export	GetCallbackCount();
 void	dll_export	GetCallbackName(char	*callback_name);
 }
 
-#include	"./Vec3/vec3.h"
+#include	"./Operators/operators.h"
 #include	"./TestProgram/test_program.h"
-#include	"./PatternDetector/pattern_detector.h"
 #include	"./Correlator/correlator.h"
 #include	"./Callbacks/callbacks.h"
 

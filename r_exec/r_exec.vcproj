@@ -450,10 +450,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pattern_detector.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pattern_extractor.cpp"
 				>
 			</File>
@@ -657,10 +653,6 @@
 			</File>
 			<File
 				RelativePath=".\p_monitor.h"
-				>
-			</File>
-			<File
-				RelativePath=".\pattern_detector.h"
 				>
 			</File>
 			<File

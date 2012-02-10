@@ -38,7 +38,7 @@
 
 void	Init(OpcodeRetriever	r){
 
-	Vec3::Init(r);
+	Operators::Init(r);
 
 	std::cout<<"usr operators initialized"<<std::endl;
 }
