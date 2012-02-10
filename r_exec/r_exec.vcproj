@@ -286,10 +286,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\cst_g_monitor.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\factory.cpp"
 				>
 			</File>
@@ -600,15 +596,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\cst_g_monitor.h"
-				>
-			</File>
-			<File
 				RelativePath=".\dll.h"
-				>
-			</File>
-			<File
-				RelativePath=".\fact.h"
 				>
 			</File>
 			<File
