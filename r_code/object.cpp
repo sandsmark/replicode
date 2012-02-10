@@ -44,7 +44,7 @@ namespace	r_code{
 		for(uint32	i=0;i<VIEW_CODE_MAX_SIZE;++i)
 			code[i]=source->code(i);
 
-		for(uint32	i=0;i<2;++i)	//	to get the right size in Image::addObject().
+		for(uint32	i=0;i<2;++i)	//	to get the right size in Image::add_object().
 			if(source->references[i])
 				references.push_back(0);
 	}
@@ -72,7 +72,7 @@ namespace	r_code{
 			references.push_back(data[2+i+j]);
 	}
 
-	uint32	SysView::getSize()	const{
+	uint32	SysView::get_size()	const{
 
 		return	2+code.size()+references.size();
 	}
@@ -109,9 +109,9 @@ namespace	r_code{
 		for(i=0,v=source->views.begin();v!=source->views.end();++i,++v)
 			views[i]=new	SysView(*v);
 
-		oid=source->getOID();
+		oid=source->get_oid();
 
-		for(i=0;i<source->references_size();++i)	//	to get the right size in Image::addObject().
+		for(i=0;i<source->references_size();++i)	//	to get the right size in Image::add_object().
 			references.push_back(0);
 	}
 
@@ -142,7 +142,7 @@ namespace	r_code{
 		for(l=0;l<views.size();++l){
 
 			views[l]->write(data+5+i+j+k+offset);
-			offset+=views[l]->getSize();
+			offset+=views[l]->get_size();
 		}
 	}
 
@@ -169,15 +169,15 @@ namespace	r_code{
 			SysView	*v=new	SysView();
 			v->read(data+5+i+j+k+offset);
 			views.push_back(v);
-			offset+=v->getSize();
+			offset+=v->get_size();
 		}
 	}
 
-	uint32	SysObject::getSize(){
+	uint32	SysObject::get_size(){
 
 		uint32	view_set_size=0;
 		for(uint32	i=0;i<views.size();++i)
-			view_set_size+=views[i]->getSize();
+			view_set_size+=views[i]->get_size();
 		return	5+code.size()+references.size()+markers.size()+view_set_size;
 	}
 

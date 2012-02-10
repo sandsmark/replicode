@@ -31,51 +31,189 @@
 #ifndef	binding_map_h
 #define	binding_map_h
 
-#include	"../r_code/object.h"
+#include	"object.h"
 #include	"dll.h"
 
 
-using	namespace	r_code;
-
 namespace	r_exec{
 
-	//	Holds three kinds of bindings (i.e. pairs variable|value).
+	class	BindingMap;
+	class	AtomValue;
+	class	StructureValue;
+	class	ObjectValue;
+
+	class	r_exec_dll	Value:
+	public	_Object{
+	protected:
+		BindingMap	*map;
+		Value(BindingMap	*map);
+	public:
+		virtual	Value	*copy(BindingMap	*map)	const=0;
+		virtual	void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const=0;
+		virtual	bool	match(const	Code	*object,uint16	index)=0;
+		virtual	Atom	*get_code()=0;
+		virtual	uint16	get_code_size()=0;
+
+		virtual	bool	intersect(const	Value	*v)				const{	return	false;	};
+		virtual	bool	_intersect(const	AtomValue	*v)		const{	return	false;	};
+		virtual	bool	_intersect(const	StructureValue	*v)	const{	return	false;	};
+		virtual	bool	_intersect(const	ObjectValue	*v)		const{	return	false;	};
+
+		void	trace();
+	};
+
+	class	r_exec_dll	BoundValue:
+	public	Value{
+	protected:
+		BoundValue(BindingMap	*map);
+	public:
+	};
+
+	class	r_exec_dll	UnboundValue:
+	public	Value{
+	private:
+		uint8	index;
+	public:
+		UnboundValue(BindingMap	*map,uint8	index);
+
+		Value	*copy(BindingMap	*map)	const;
+		void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const;
+		bool	match(const	Code	*object,uint16	index);
+		Atom	*get_code();
+		uint16	get_code_size();
+	};
+
+	class	r_exec_dll	AtomValue:
+	public	BoundValue{
+	private:
+		Atom	atom;
+	public:
+		AtomValue(BindingMap	*map,Atom	atom);
+
+		Value	*copy(BindingMap	*map)	const;
+		void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const;
+		bool	match(const	Code	*object,uint16	index);
+		Atom	*get_code();
+		uint16	get_code_size();
+
+		bool	intersect(const	Value	*v)			const;
+		bool	_intersect(const	AtomValue	*v)	const;
+	};
+
+	class	r_exec_dll	StructureValue:
+	public	BoundValue{
+	private:
+		P<Code>	structure;
+		StructureValue(BindingMap	*map,const	Code	*structure);
+	public:
+		StructureValue(BindingMap	*map,const	Code	*source,uint16	structure_index);
+		StructureValue(BindingMap	*map,Atom	*source,uint16	structure_index);
+		StructureValue(BindingMap	*map,uint64	time);
+
+		Value	*copy(BindingMap	*map)	const;
+		void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const;
+		bool	match(const	Code	*object,uint16	index);
+		Atom	*get_code();
+		uint16	get_code_size();
+
+		bool	intersect(const	Value	*v)				const;
+		bool	_intersect(const	StructureValue	*v)	const;
+	};
+
+	class	r_exec_dll	ObjectValue:
+	public	BoundValue{
+	private:
+		const	P<Code>	object;
+	public:
+		ObjectValue(BindingMap	*map,Code	*object);
+
+		Value	*copy(BindingMap	*map)	const;
+		void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const;
+		bool	match(const	Code	*object,uint16	index);
+		Atom	*get_code();
+		uint16	get_code_size();
+
+		bool	intersect(const	Value	*v)			const;
+		bool	_intersect(const	ObjectValue	*v)	const;
+	};
+
+	typedef	enum{
+		MATCH_SUCCESS_POSITIVE=0,
+		MATCH_SUCCESS_NEGATIVE=1,
+		MATCH_FAILURE=2
+	}MatchResult;
+
+	typedef	enum{
+		MATCH_FORWARD=0,
+		MATCH_BACKWARD=1
+	}MatchDirection;
+
+	class	_Fact;
+	class	Fact;
+
 	class	r_exec_dll	BindingMap:
 	public	_Object{
 	private:
-		UNORDERED_MAP<Code	*,P<Code> >			objects;	//	objects of class var, values are system objects.
-		UNORDERED_MAP<Atom,Atom>				atoms;		//	numerical variables, values are atoms (Atom::Float).
-		UNORDERED_MAP<Atom,std::vector<Atom> >	structures;	//	structural variables, values are structures embedded in code.
+		std::vector<P<Value> >	map;	// indexed by vl-ptrs.
 
-		bool	match_atom(Atom	o,Atom	p);
-		bool	match_timestamp(Atom	*o,Atom	*p);
-		bool	match_structure(Atom	*o,Atom	*p);
+		void	add_unbound_value(uint8	id);
+		void	init_from_pattern(const	Code	*source);	// first source is f->obj.
+		bool	need_binding(Code	*pattern)	const;
 
-		bool	needs_binding(Code	*original)	const;
+		uint16	first_index;	// index of the first value found in the first fact.
+		int16	after_index;	// before is at after_index+1; tpl args (if any) are located before after_index.
 
-		bool	bind_float_variable(Atom	val,Atom	var);
-		bool	bind_boolean_variable(Atom	val,Atom	var);
-		bool	bind_structural_variable(Atom	*val,Atom	*var);
-		bool	bind_object_variable(Code	*val,Code	*var);
+		bool	match_timings(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d);
+		bool	match(const	Code	*object,uint16	o_base_index,uint16	o_index,const	Code	*pattern,uint16	p_index,uint16	o_arity);
+
+		Code	*abstract_object(Code	*object);
+		_Fact	*abstract_fact(_Fact	*fact,_Fact	*original);
+		void	abstract_member(Code	*object,Code	*abstracted_object,uint16	index);
+		Atom	get_atom_variable(Atom	a);
+		Atom	get_structure_variable(Code	*object,uint16	index);
+		Atom	get_object_variable(Code	*object);
 	public:
+		static	Code	*Abstract(Code	*object,BindingMap	*&bindings);
+				_Fact	*abstract_f_ihlp(_Fact	*fact)	const;	// for icst and imdl.
+
 		BindingMap();
 		BindingMap(const	BindingMap	*source);
+		BindingMap(const	BindingMap	&source);
 
-		void	init(const	BindingMap	*source);
-		void	init(Code	*source);
+		BindingMap&	operator	=(const	BindingMap	&source);
+		void	load(const	BindingMap	*source);
+
 		void	clear();
 
-		Code	*bind_object(Code	*original)	const;
+		void	init_from_hlp(const	Code	*hlp);	// hlp is icst or imdl.
+		void	init_from_f_ihlp(const	_Fact	*f_ihlp);
+		Fact	*build_f_ihlp(Code	*hlp,uint16	opcode,bool	wr_enabled)	const;	// return f->ihlp.
 
-		Atom	get_atomic_variable(const	Code	*object,uint16	index);
-		Atom	get_structural_variable(const	Code	*object,uint16	index);
-		Code	*get_variable_object(Code	*object);
-		void	set_variable_object(Code	*object);
+		MatchResult	match_lenient(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d);	// use for facts when we are lenient about fact vs |fact.
+		bool	match_strict(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d);		// use for facts when we need sharp match.
 
-		bool	match(Code	*object,Code	*pattern);
+		bool	match_object(const	Code	*object,const	Code	*pattern);
+		bool	match_structure(const	Code	*object,uint16	o_base_index,uint16	o_index,const	Code	*pattern,uint16	p_index);
+		bool	match_atom(Atom	o_atom,Atom	p_atom);
 
-		void	copy(Code	*object,uint16	index)	const;
-		void	load(const	Code	*object);	//	icst or imdl.
+		void	bind_variable(BoundValue	*value,uint8	id);
+		void	bind_variable(Atom	*code,uint8	id,uint16	value_index,Atom	*intermediate_results);
+		Code	*bind_pattern(Code	*pattern)	const;
+
+		Atom	*get_value_code(uint16	id);
+		uint16	get_value_code_size(uint16	id);
+
+		void	reset_fwd_timings(_Fact	*reference_fact);	// reset after and before from the timings of the reference object.
+		void	reset_bwd_timings(_Fact	*reference_fact);	// idem for the last 2 unbound variables (i.e. timings of the second pattern in a mdl).
+
+		uint64	get_fwd_after()		const;	// assumes the timings are valuated.
+		uint64	get_fwd_before()	const;	// idem.
+		uint64	get_bwd_after()		const;	// idem.
+		uint64	get_bwd_before()	const;	// idem.
+
+		bool	intersect(BindingMap	*bm);	// return true if at least one value is shared.
+
+		void	trace();
 	};
 }
 

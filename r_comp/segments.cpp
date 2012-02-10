@@ -46,7 +46,7 @@ namespace	r_comp{
 	Metadata::Metadata(){
 	}
 
-	Class	*Metadata::getClass(std::string	&class_name){
+	Class	*Metadata::get_class(std::string	&class_name){
 
 		UNORDERED_MAP<std::string,Class>::iterator	it=classes.find(class_name);
 		if(it!=classes.end())
@@ -54,7 +54,7 @@ namespace	r_comp{
 		return	NULL;
 	}
 
-	Class	*Metadata::getClass(uint16	opcode){
+	Class	*Metadata::get_class(uint16	opcode){
 
 		return	&classes_by_opcodes[opcode];
 	}
@@ -67,7 +67,7 @@ namespace	r_comp{
 		for(i=0;i<classes_by_opcodes.size();++i){
 
 			classes_by_opcodes[i].write(data+offset);
-			offset+=classes_by_opcodes[i].getSize();
+			offset+=classes_by_opcodes[i].get_size();
 		}
 
 		data[offset++]=classes.size();
@@ -122,7 +122,7 @@ namespace	r_comp{
 			Class	c;
 			c.read(data+offset);
 			classes_by_opcodes.push_back(c);
-			offset+=c.getSize();
+			offset+=c.get_size();
 		}
 
 		uint16	classes_count=data[offset++];
@@ -171,14 +171,14 @@ namespace	r_comp{
 		}
 	}
 
-	uint32	Metadata::getSize(){
+	uint32	Metadata::get_size(){
 
-		return	getClassArraySize()+
-				getClassesSize()+
-				getSysClassesSize()+
-				getClassNamesSize()+
-				getOperatorNamesSize()+
-				getFunctionNamesSize();
+		return	get_class_array_size()+
+				get_classes_size()+
+				get_sys_classes_size()+
+				get_class_names_size()+
+				get_operator_names_size()+
+				get_function_names_size();
 	}
 
 	//	RAM layout:
@@ -220,15 +220,15 @@ namespace	r_comp{
 	//		- size in word32
 	//		- list of words: contain the charaacters; the last one is \0; some of the least significant bytes of the last word my be empty
 
-	uint32	Metadata::getClassArraySize(){
+	uint32	Metadata::get_class_array_size(){
 
 		uint32	size=1;	//	size of the array
 		for(uint32	i=0;i<classes_by_opcodes.size();++i)
-			size+=classes_by_opcodes[i].getSize();
+			size+=classes_by_opcodes[i].get_size();
 		return	size;
 	}
 
-	uint32	Metadata::getClassesSize(){
+	uint32	Metadata::get_classes_size(){
 
 		uint32	size=1;	//	size of the hash table
 		UNORDERED_MAP<std::string,Class>::iterator	it=classes.begin();
@@ -237,7 +237,7 @@ namespace	r_comp{
 		return	size;
 	}
 
-	uint32	Metadata::getSysClassesSize(){
+	uint32	Metadata::get_sys_classes_size(){
 
 		uint32	size=1;	//	size of the hash table
 		UNORDERED_MAP<std::string,Class>::iterator	it=sys_classes.begin();
@@ -246,7 +246,7 @@ namespace	r_comp{
 		return	size;
 	}
 
-	uint32	Metadata::getClassNamesSize(){
+	uint32	Metadata::get_class_names_size(){
 
 		uint32	size=1;	//	size of the vector
 		for(uint32	i=0;i<class_names.size();++i)
@@ -254,7 +254,7 @@ namespace	r_comp{
 		return	size;
 	}
 
-	uint32	Metadata::getOperatorNamesSize(){
+	uint32	Metadata::get_operator_names_size(){
 
 		uint32	size=1;	//	size of the vector
 		for(uint32	i=0;i<operator_names.size();++i)
@@ -262,7 +262,7 @@ namespace	r_comp{
 		return	size;
 	}
 
-	uint32	Metadata::getFunctionNamesSize(){
+	uint32	Metadata::get_function_names_size(){
 
 		uint32	size=1;	//	size of the vector
 		for(uint32	i=0;i<function_names.size();++i)
@@ -290,7 +290,7 @@ namespace	r_comp{
 			objects.push_back(data[i]);
 	}
 
-	uint32	ObjectMap::getSize()	const{
+	uint32	ObjectMap::get_size()	const{
 
 		return	objects.size();
 	}
@@ -309,7 +309,7 @@ namespace	r_comp{
 		for(uint32	i=0;i<objects.size();++i){
 
 			objects[i]->write(data+offset);
-			offset+=objects[i]->getSize();
+			offset+=objects[i]->get_size();
 		}
 	}
 
@@ -321,15 +321,15 @@ namespace	r_comp{
 			SysObject	*o=new	SysObject();
 			o->read(data+offset);
 			objects.push_back(o);
-			offset+=o->getSize();
+			offset+=o->get_size();
 		}
 	}
 
-	uint32	CodeSegment::getSize(){
+	uint32	CodeSegment::get_size(){
 
 		uint32	size=0;
 		for(uint32	i=0;i<objects.size();++i)
-			size+=objects[i]->getSize();
+			size+=objects[i]->get_size();
 		return	size;
 	}
 
@@ -381,7 +381,7 @@ namespace	r_comp{
 		}
 	}
 
-	uint32	ObjectNames::getSize(){
+	uint32	ObjectNames::get_size(){
 
 		uint32	size=1;	//	size of symbols.
 
@@ -408,46 +408,58 @@ namespace	r_comp{
 	Image::~Image(){
 	}
 
-	void	Image::addSysObject(SysObject	*object,std::string	name){
+	void	Image::add_sys_object(SysObject	*object,std::string	name){
 
-		addSysObject(object);
+		add_sys_object(object);
 		if(!name.empty())
 			object_names.symbols[object->oid]=name;
 	}
 
-	void	Image::addSysObject(SysObject	*object){
+	void	Image::add_sys_object(SysObject	*object){
 
 		code_segment.objects.push_back(object);
 		object_map.objects.push_back(map_offset);
-		map_offset+=object->getSize();
+		map_offset+=object->get_size();
 	}
 
-	void	Image::addObjects(std::list<r_code::Code	*>	&objects){
+	void	Image::add_objects(std::list<r_code::Code	*>	&objects){
 
 		std::list<r_code::Code	*>::const_iterator	o;
 		for(o=objects.begin();o!=objects.end();++o)
-			addObject(*o);
+			add_object(*o);
 
-		buildReferences();
+		build_references();
 	}
 
-	void	Image::addObject(Code	*object){
+	void	Image::add_object(Code	*object){
 
 		UNORDERED_MAP<Code	*,uint16>::iterator	it=ptrs_to_indices.find(object);
-		if(it!=ptrs_to_indices.end())	//	object already there.
+		if(it!=ptrs_to_indices.end())	// object already there.
 			return;
 
 		uint16	object_index;
 		ptrs_to_indices[object]=object_index=code_segment.objects.as_std()->size();
 		SysObject	*sys_object=new	SysObject(object);
-		addSysObject(sys_object);
-//std::cout<<"AddObject: "<<sys_object->oid<<std::endl;
-		for(uint16	i=0;i<object->references_size();++i){			//	follow reference pointers and recurse.
+		add_sys_object(sys_object);
+
+		uint16	reference_count;
+		switch(object->code(0).getDescriptor()){	// ignore the last reference as it is the unpacked version of the object.
+		case	Atom::MODEL:
+		case	Atom::COMPOSITE_STATE:
+			reference_count=object->references_size()-1;
+			break;
+		default:
+			reference_count=object->references_size();
+			break;
+
+		}
+
+		for(uint16	i=0;i<reference_count;++i){			// follow reference pointers and recurse.
 
 			Code	*reference=object->get_reference(i);
-			if(reference->getOID()==0xFFFFFFFF	||
+			if(reference->get_oid()==0xFFFFFFFF	||
 				reference->is_invalidated())
-				addObject(reference);
+				add_object(reference);
 		}
 		
 		uint32	_object=(uint32)object;
@@ -455,7 +467,7 @@ namespace	r_comp{
 		sys_object->references[1]=(_object	>>	16);
 	}
 
-	void	Image::buildReferences(){
+	void	Image::build_references(){
 
 		Code		*object;
 		SysObject	*sys_object;
@@ -466,16 +478,27 @@ namespace	r_comp{
 			_object|=(sys_object->references[1]<<16);
 			object=(Code	*)_object;
 			sys_object->references.as_std()->clear();
-			buildReferences(sys_object,object);
+			build_references(sys_object,object);
 		}
 	}
 
-	void	Image::buildReferences(SysObject	*sys_object,Code	*object){
+	void	Image::build_references(SysObject	*sys_object,Code	*object){
 
 		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references.
 		uint16	i;
 		uint16	referenced_object_index;
-		for(i=0;i<object->references_size();++i){
+		uint16	reference_count;
+		switch(object->code(0).getDescriptor()){	// ignore the last reference as it is the unpacked version of the object.
+		case	Atom::MODEL:
+		case	Atom::COMPOSITE_STATE:
+			reference_count=object->references_size()-1;
+			break;
+		default:
+			reference_count=object->references_size();
+			break;
+		}
+
+		for(i=0;i<reference_count;++i){
 
 			referenced_object_index=ptrs_to_indices.find(object->get_reference(i))->second;
 			sys_object->references.push_back(referenced_object_index);
@@ -488,19 +511,19 @@ namespace	r_comp{
 				if((*v)->references[j]){
 
 					referenced_object_index=ptrs_to_indices.find((*v)->references[j])->second;
-					sys_object->views[i]->references.push_back(referenced_object_index);
+					sys_object->views[i]->references[j]=(referenced_object_index);
 				}
 			}
 	}
 
-	void	Image::getObjects(Mem	*mem,r_code::vector<Code	*>	&ram_objects){
+	void	Image::get_objects(Mem	*mem,r_code::vector<Code	*>	&ram_objects){
 
 		for(uint16	i=0;i<code_segment.objects.size();++i)
 			ram_objects[i]=mem->build_object(code_segment.objects[i]);
-		unpackObjects(ram_objects);
+		unpack_objects(ram_objects);
 	}
 
-	void	Image::unpackObjects(r_code::vector<Code	*>	&ram_objects){
+	void	Image::unpack_objects(r_code::vector<Code	*>	&ram_objects){
 
 		//	For each object, translate its reference indices into pointers; build its views; for each view translate its reference indices into pointers.
 		for(uint16	i=0;i<code_segment.objects.size();++i){

@@ -33,46 +33,81 @@
 
 #include	"hlp_overlay.h"
 #include	"hlp_controller.h"
+#include	"factory.h"
 
 
 namespace	r_exec{
 
+	// All inputs are expected to be synchronized (within the time tolerance).
+	// The time value of each fact is therefore the same (within the time tolerance).
+	// Therefore, said time value is not listed in the argument list of the icst.
+	// It is held by the fact holding said icst.
+	// Inputs synchronized on state are treated as if they were produced continuously, i.e. Now().
+	// The confidence value for an icst is the lowest value taken from the matched inputs.
+	// No cmds or imdls in a cst.
+	//
+	// Forward chaining:
+	//	output a prediction of icst instead of icst if at least one input is a prediction.
+	//	output as many predictions of icst as we got simulated predictions for different goals.
 	class	CSTOverlay:
 	public	HLPOverlay{
 	protected:
-		uint64	birth_time;
+		uint64	match_deadline;	// before deadline after the last match.
+		float32	lowest_cfd;		// among the inputs (forward chaining).
 
-		std::vector<P<Code> >	inputs;
+		std::vector<P<_Fact> >	inputs;
+
+		UNORDERED_SET<P<_Fact>,PHash<_Fact> >	predictions;	// f0->pred->f1->obj.
+		UNORDERED_SET<P<Sim>,PHash<Sim> >		simulations;
 
 		void	inject_production();
+		CSTOverlay	*get_offspring(	BindingMap	*map,
+									_Fact		*input,
+									_Fact		*bound_pattern);
 
 		CSTOverlay(const	CSTOverlay	*original);
 	public:
-		CSTOverlay(Controller	*c,BindingMap	*bindings,uint8	reduction_mode);
+		CSTOverlay(Controller	*c,BindingMap	*bindings);
 		~CSTOverlay();
 
 		Overlay	*reduce(View	*input);
 
 		void	load_patterns();
 
-		uint64	get_birth_time()	const{	return	birth_time;	}
+		bool	can_match(uint64	now)	const;	// WRT window of time tolerance width.
 	};
 
+	// Backward chaining:
+	//	if there are requirements, do nothing: these requirements will get the goal and abduce.
+	//	else
+	//		bind all patterns and look in the cache for positive evidences; for all bound patterns not matched in the cache, output a sub-goal (simulated or not, depending on the super-goal).
 	class	CSTController:
 	public	HLPController{
 	private:
-		void	produce_goals(Code	*super_goal,Code	*pattern);
-		void	produce_goals(Code	*super_goal);
-		void	produce_goals(Code	*super_goal,BindingMap	*bm);
+		Group	*secondary_host;
+
+		void	abduce(BindingMap	*bm,Fact	*super_goal);	// super_goal is f->g->f->icst.
+		void	inject_goal(BindingMap	*bm,
+							Fact		*super_goal,		// f0->g->f1->icst.
+							_Fact		*sub_goal_target,	// f1.
+							Sim			*sim,
+							uint64		now,
+							float32		confidence,
+							Code		*group)	const;
 	public:
 		CSTController(r_code::View	*view);
 		~CSTController();
 
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
-		void	produce_goals(Code	*super_goal,BindingMap	*bm,Code	*excluded_pattern);
 
-		uint16	get_instance_opcode()	const;
+		Fact	*get_f_ihlp(const	BindingMap	*bindings,bool	wr_enabled)	const;
+		Fact	*get_f_icst(const	BindingMap	*bindings,std::vector<P<_Fact> >	*inputs)	const;
+
+		void	inject_icst(Fact	*production,float32	confidence,uint64	time_to_live)	const;	// here, resilience=time to live, in us.
+
+		void	set_secondary_host(Group	*host);
+		Group	*get_secondary_host()	const;
 	};
 }
 

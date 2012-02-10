@@ -54,12 +54,12 @@ namespace	r_comp{
 
 	class	dll_export	Metadata{
 	private:
-		uint32	getClassArraySize();
-		uint32	getClassesSize();
-		uint32	getSysClassesSize();
-		uint32	getClassNamesSize();
-		uint32	getOperatorNamesSize();
-		uint32	getFunctionNamesSize();
+		uint32	get_class_array_size();
+		uint32	get_classes_size();
+		uint32	get_sys_classes_size();
+		uint32	get_class_names_size();
+		uint32	get_operator_names_size();
+		uint32	get_function_names_size();
 	public:
 		Metadata();
 
@@ -71,12 +71,12 @@ namespace	r_comp{
 		r_code::vector<std::string>	function_names;
 		r_code::vector<Class>		classes_by_opcodes;	//	classes indexed by opcodes; used to retrieve member names; registers all classes (incl. set classes).
 
-		Class	*getClass(std::string	&class_name);
-		Class	*getClass(uint16	opcode);
+		Class	*get_class(std::string	&class_name);
+		Class	*get_class(uint16	opcode);
 
 		void	write(word32	*data);
 		void	read(word32		*data,uint32	size);
-		uint32	getSize();
+		uint32	get_size();
 	};
 
 	class	dll_export	ObjectMap{
@@ -87,7 +87,7 @@ namespace	r_comp{
 
 		void	write(word32	*data);
 		void	read(word32		*data,uint32	size);
-		uint32	getSize()	const;
+		uint32	get_size()	const;
 	};
 
 	class	dll_export	CodeSegment{
@@ -98,7 +98,7 @@ namespace	r_comp{
 		
 		void	write(word32	*data);
 		void	read(word32		*data,uint16	object_count);
-		uint32	getSize();
+		uint32	get_size();
 	};
 
 	class	dll_export	ObjectNames{
@@ -109,16 +109,17 @@ namespace	r_comp{
 
 		void	write(word32	*data);
 		void	read(word32		*data);
-		uint32	getSize();
+		uint32	get_size();
 	};
 
 	class	dll_export	Image{
 	private:
 		uint32	map_offset;
 		UNORDERED_MAP<r_code::Code	*,uint16>	ptrs_to_indices;	//	used for injection in memory.
-		void	buildReferences();
-		void	buildReferences(SysObject	*sys_object,r_code::Code	*object);
-		void	unpackObjects(r_code::vector<Code	*>	&ram_objects);
+
+		void	build_references();
+		void	build_references(SysObject	*sys_object,r_code::Code	*object);
+		void	unpack_objects(r_code::vector<Code	*>	&ram_objects);
 	public:
 		ObjectMap	object_map;
 		CodeSegment	code_segment;
@@ -129,26 +130,26 @@ namespace	r_comp{
 		Image();
 		~Image();
 
-		void	addSysObject(SysObject	*object,std::string	name);	//	called by the compiler.
-		void	addSysObject(SysObject	*object);					//	called by addObject().
+		void	add_sys_object(SysObject	*object,std::string	name);	//	called by the compiler.
+		void	add_sys_object(SysObject	*object);					//	called by add_object().
 
-		void	getObjects(Mem	*mem,r_code::vector<r_code::Code	*>	&ram_objects);
-		template<class	O>	void	getObjects(r_code::vector<Code	*>	&ram_objects){
+		void	get_objects(Mem	*mem,r_code::vector<r_code::Code	*>	&ram_objects);
+		template<class	O>	void	get_objects(r_code::vector<Code	*>	&ram_objects){
 
 			for(uint32	i=0;i<code_segment.objects.size();++i){
 
 				uint16	opcode=code_segment.objects[i]->code[0].asOpcode();
 				ram_objects[i]=new	O(code_segment.objects[i]);
 			}
-			unpackObjects(ram_objects);
+			unpack_objects(ram_objects);
 		}
 
-		void	addObjects(std::list<r_code::Code	*>	&objects);	//	called by the rMem.
-		void	addObject(r_code::Code	*object);
+		void	add_objects(std::list<r_code::Code	*>	&objects);	//	called by the rMem.
+		void	add_object(r_code::Code	*object);
 
 		template<class	I>	I	*serialize(){
 
-			I	*image=(I	*)I::Build(timestamp,object_map.getSize(),code_segment.getSize(),object_names.getSize());
+			I	*image=(I	*)I::Build(timestamp,object_map.get_size(),code_segment.get_size(),object_names.get_size());
 
 			object_map.shift(image->map_size());
 			object_map.write(image->data());

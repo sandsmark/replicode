@@ -91,6 +91,11 @@ namespace	r_comp{
 		void	addLocalReference(const	std::string	reference_name,const	uint16	index,const	Class	&p);												//	detect cast.
 		bool	getGlobalReferenceIndex(const	std::string	reference_name,const	ReturnType	t,ImageObject	*object,uint16	&index,Class	*&_class);	//	index points to the reference set.
 																																							//	return false when not found.
+		bool	in_hlp;
+		std::vector<std::string>	hlp_references;
+		uint8	add_hlp_reference(std::string	reference_name);
+		uint8	get_hlp_reference(std::string	reference_name);
+
 		//	Utility.
 		bool	read_nil(uint16	write_index,uint16	&extent_index,bool	write);
 		bool	read_nil_set(uint16	write_index,uint16	&extent_index,bool	write);
@@ -145,6 +150,7 @@ namespace	r_comp{
 		bool	this_();
 		bool	local_reference(uint16	&index,const	ReturnType	t);										//	must conform to t; indicates if the ref is to ba valuated in the value array (in_pattern set to true).
 		bool	global_reference(uint16	&index,const	ReturnType	t);										//	no conformance: return type==ANY.
+		bool	hlp_reference(uint16	&index);
 		bool	this_indirection(std::vector<int16>	&v,const	ReturnType	t);								//	ex: this.res.
 		bool	local_indirection(std::vector<int16>	&v,const	ReturnType	t,uint16	&cast_opcode);	//	ex: p.res where p is a label/variable declared within the object; cast_opcode=0x0FFF if no cast.
 		bool	global_indirection(std::vector<int16>	&v,const	ReturnType	t);							//	ex: p.res where p is a label/variable declared outside the object.

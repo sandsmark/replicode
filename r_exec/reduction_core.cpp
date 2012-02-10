@@ -45,7 +45,7 @@ namespace	r_exec{
 			P<_ReductionJob>	j=_Mem::Get()->popReductionJob();
 			if(j==NULL)
 				break;
-			run=j->update();
+			run=j->update(Now());
 			j=NULL;
 		}
 

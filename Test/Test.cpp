@@ -129,19 +129,25 @@ int32	main(int	argc,char	**argv){
 		r_exec::Mem<r_exec::LObject>	*mem=new	r_exec::Mem<r_exec::LObject>();
 
 		r_code::vector<r_code::Code	*>	ram_objects;
-		r_exec::Seed.getObjects(mem,ram_objects);
+		r_exec::Seed.get_objects(mem,ram_objects);
 
 		mem->init(	settings.base_period,
 					settings.reduction_core_count,
 					settings.time_core_count,
-					settings.probe_level,
-					settings.notification_resilience,
-					settings.goal_resilience,
-					settings.assumption_resilience,
-					settings.simulation_resilience,
+					settings.mdl_inertia_sr_thr,
+					settings.mdl_inertia_cnt_thr,
+					settings.tpx_dsr_thr,
+					settings.min_sim_time_horizon,
+					settings.max_sim_time_horizon,
+					settings.sim_time_horizon,
+					settings.tpx_time_horizon,
+					settings.perf_sampling_period,
 					settings.float_tolerance,
 					settings.time_tolerance,
-					settings.goal_record_resilience);
+					settings.probe_level,
+					settings.debug,
+					settings.ntf_mk_resilience,
+					settings.goal_pred_success_resilience);
 
 		uint32	stdin_oid;
 		std::string	stdin_symbol("stdin");
@@ -170,9 +176,7 @@ int32	main(int	argc,char	**argv){
 		//TimeProbe	probe;
 		//probe.set();
 
-		mem->suspend();
 		image=mem->get_image();
-		mem->resume();
 
 		std::cout<<"\nShutting rMem down...\n";
 		mem->stop();

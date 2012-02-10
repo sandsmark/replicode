@@ -62,23 +62,24 @@ namespace	r_exec{
 		static	uint16	ICmd;
 		static	uint16	Cmd;
 
-		static	uint16	Var;
 		static	uint16	Fact;
 		static	uint16	AntiFact;
 
-		static	uint16	ICST;
-		static	uint16	IMDL;
+		static	uint16	Mdl;
+		static	uint16	Cst;
 
-		static	uint16	MkPred;
-		static	uint16	MkGoal;
-		static	uint16	MkHyp;
-		static	uint16	MkSim;
-		static	uint16	MkAsmp;
+		static	uint16	ICst;
+		static	uint16	IMdl;
+
+		static	uint16	Pred;
+		static	uint16	Goal;
+
+		static	uint16	Success;
+
+		static	uint16	MkGrpPair;
 
 		static	uint16	MkRdx;
-		static	uint16	MkAntiRdx;
-
-		static	uint16	MkSuccess;
+		static	uint16	Perf;
 
 		static	uint16	MkNew;
 
@@ -98,10 +99,7 @@ namespace	r_exec{
 		static	uint16	DelClass;
 		static	uint16	LDC;
 		static	uint16	Swap;
-		static	uint16	NewDev;
-		static	uint16	DelDev;
 		static	uint16	Prb;
-		static	uint16	Suspend;
 		static	uint16	Stop;
 	};
 }

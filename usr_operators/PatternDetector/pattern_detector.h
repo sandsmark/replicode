@@ -27,11 +27,12 @@
 //	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+/*DEPRECATED.
 #ifndef	pattern_detector_proxy_h
 #define	pattern_detector_proxy_h
 
 #include	"../types.h"
+#include	"../../r_exec/overlay.h"
 
 
 extern	"C"{
@@ -39,4 +40,4 @@ r_exec::Controller	dll_export	*pattern_detector(r_code::View	*view);
 }
 
 
-#endif
+#endif*/

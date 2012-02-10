@@ -355,7 +355,7 @@ namespace	r_exec{
 				void	update_stats();	//	at the end of an update; may produce notifcations.
 				bool	load(View	*view,Code	*object);
 		virtual	void	inject(View	*view,uint64	t);
-		virtual	void	injectGroup(View	*view,uint64	t);
+		virtual	void	inject_group(View	*view,uint64	t);
 				void	inject_notification(View	*view);
 				void	cov(uint64	t);
 
@@ -374,6 +374,12 @@ namespace	r_exec{
 		};
 
 		void	delete_view(View	*v);
+
+		Group	*get_secondary_group();
+		void	load_secondary_mdl_controller(View	*view);
+		void	inject_secondary_mdl_controller(View	*view);
+
+		uint64	get_time_at_next_upr(uint64	now)	const;
 	};
 }
 

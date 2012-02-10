@@ -31,6 +31,7 @@
 #include	"view.h"
 #include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 #include	"group.h"
+#include	"mem.h"
 
 #include <limits>
 
@@ -254,16 +255,16 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	NotificationView::NotificationView(Group	*origin,Group	*destination,Code	*marker):View(){
+	NotificationView::NotificationView(Code	*origin,Code	*destination,Code	*marker):View(){
 
-		code(VIEW_OPCODE)=r_code::Atom::SSet(ViewOpcode,VIEW_ARITY);	//	Structured Set.
-		code(VIEW_SYNC)=r_code::Atom::Boolean(true);			//	sync on front.
-		code(VIEW_IJT)=r_code::Atom::IPointer(VIEW_ARITY+1);	//	iptr to ijt.
-		code(VIEW_SLN)=r_code::Atom::Float(1);				//	sln.
-		code(VIEW_RES)=r_code::Atom::Float(1);				//	res.
-		code(VIEW_HOST)=r_code::Atom::RPointer(0);			//	destination.
-		code(VIEW_ORG)=r_code::Atom::RPointer(1);			//	origin.
-		code(VIEW_ARITY+1)=r_code::Atom::Timestamp();		//	ijt will be set at injection time.
+		code(VIEW_OPCODE)=r_code::Atom::SSet(ViewOpcode,VIEW_ARITY);		//	Structured Set.
+		code(VIEW_SYNC)=r_code::Atom::Boolean(true);						//	sync on front.
+		code(VIEW_IJT)=r_code::Atom::IPointer(VIEW_ARITY+1);				//	iptr to ijt.
+		code(VIEW_SLN)=r_code::Atom::Float(1);								//	sln.
+		code(VIEW_RES)=r_code::Atom::Float(_Mem::Get()->get_ntf_mk_res());	//	res.
+		code(VIEW_HOST)=r_code::Atom::RPointer(0);							//	destination.
+		code(VIEW_ORG)=r_code::Atom::RPointer(1);							//	origin.
+		code(VIEW_ARITY+1)=r_code::Atom::Timestamp();						//	ijt will be set at injection time.
 		code(VIEW_ARITY+2)=0;
 		code(VIEW_ARITY+3)=0;
 		references[0]=destination;

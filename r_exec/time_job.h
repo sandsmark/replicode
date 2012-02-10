@@ -42,8 +42,8 @@ namespace	r_exec{
 	protected:
 		TimeJob(uint64	ijt);
 	public:
-		int64			target_time;		//	0 means ASAP.
-		virtual	bool	update()=0;	//	return false to shutdown the time core.
+		int64			target_time;	// absolute deadline; 0 means ASAP.
+		virtual	bool	update(uint64	&next_target)=0;	// next_target: absolute deadline; 0 means no more waiting; return false to shutdown the time core.
 		virtual	bool	is_alive()	const;
 	};
 
@@ -52,30 +52,30 @@ namespace	r_exec{
 	public:
 		P<Group>	group;
 		UpdateJob(Group	*g,uint64	ijt);
-		bool	update();
+		bool	update(uint64	&next_target);
 	};
 
 	class	r_exec_dll	SignalingJob:
 	public	TimeJob{
 	protected:
-		SignalingJob(Controller	*o,uint64	ijt);
+		SignalingJob(View	*v,uint64	ijt);
 	public:
-		P<Controller>	controller;
+		P<View>	view;
 		bool	is_alive()	const;
 	};
 
 	class	r_exec_dll	AntiPGMSignalingJob:
 	public	SignalingJob{
 	public:
-		AntiPGMSignalingJob(AntiPGMController	*o,uint64	ijt);
-		bool	update();
+		AntiPGMSignalingJob(View	*v,uint64	ijt);
+		bool	update(uint64	&next_target);
 	};
 
 	class	r_exec_dll	InputLessPGMSignalingJob:
 	public	SignalingJob{
 	public:
-		InputLessPGMSignalingJob(InputLessPGMController	*o,uint64	ijt);
-		bool	update();
+		InputLessPGMSignalingJob(View	*v,uint64	ijt);
+		bool	update(uint64	&next_target);
 	};
 
 	class	r_exec_dll	InjectionJob:
@@ -83,7 +83,7 @@ namespace	r_exec{
 	public:
 		P<View>	view;
 		InjectionJob(View	*v,uint64	ijt);
-		bool	update();
+		bool	update(uint64	&next_target);
 	};
 
 	class	r_exec_dll	EInjectionJob:
@@ -91,7 +91,7 @@ namespace	r_exec{
 	public:
 		P<View>	view;
 		EInjectionJob(View	*v,uint64	ijt);
-		bool	update();
+		bool	update(uint64	&next_target);
 	};
 
 	class	r_exec_dll	SaliencyPropagationJob:
@@ -101,21 +101,14 @@ namespace	r_exec{
 		float32		sln_change;
 		float32		source_sln_thr;
 		SaliencyPropagationJob(Code	*o,float32	sln_change,float32	source_sln_thr,uint64	ijt);
-		bool	update();
+		bool	update(uint64	&next_target);
 	};
 
 	class	r_exec_dll	ShutdownTimeCore:
 	public	TimeJob{
 	public:
 		ShutdownTimeCore();
-		bool	update();
-	};
-
-	class	r_exec_dll	SuspendTimeCore:
-	public	TimeJob{
-	public:
-		SuspendTimeCore();
-		bool	update();
+		bool	update(uint64	&next_target);
 	};
 
 	template<class	M>	class	MonitoringJob:
@@ -123,15 +116,24 @@ namespace	r_exec{
 	public:
 		P<M>	monitor;
 		MonitoringJob(M	*monitor,uint64	deadline):TimeJob(deadline),monitor(monitor){}
-		bool	update(){
+		bool	update(uint64	&next_target){
 
-			monitor->update();
+			monitor->update(next_target);
 			return	true;
 		}
 		bool	is_alive()	const{
 
 			return	monitor->is_alive();
 		}
+	};
+
+	class	r_exec_dll	PerfSamplingJob:
+	public	TimeJob{
+	public:
+		uint32	period;
+		PerfSamplingJob(uint32	period);
+		bool	is_alive()	const;
+		bool	update(uint64	&next_target);
 	};
 }
 

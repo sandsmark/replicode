@@ -43,6 +43,8 @@ namespace	r_exec{
 
 		_PGMController(r_code::View	*ipgm_view);
 		virtual	~_PGMController();
+	public:
+		Code	*get_core_object()	const{	return	getObject()->get_reference(0);	}
 	};
 
 	//	TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
@@ -59,8 +61,6 @@ namespace	r_exec{
 	// Controller for programs with inputs.
 	class	r_exec_dll	PGMController:
 	public	_PGMController{
-	protected:
-		bool	can_sim;	//	true for pgm that contain only injection commands.
 	public:
 		PGMController(r_code::View	*ipgm_view);
 		virtual	~PGMController();

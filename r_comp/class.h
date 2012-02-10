@@ -51,6 +51,7 @@ namespace	r_comp{
 			std::vector<StructureMember>	r,
 			ReturnType						t=ANY);
 		bool	is_pattern(Metadata	*metadata)	const;
+		bool	is_fact(Metadata	*metadata)	const;
 		bool	get_member_index(Metadata	*metadata,std::string	&name,uint16	&index,Class	*&p)	const;
 		std::string	get_member_name(uint32	index);	//	for decompilation
 		ReturnType	get_member_type(const	uint16	index);
@@ -63,7 +64,7 @@ namespace	r_comp{
 
 		void	write(word32	*storage);
 		void	read(word32		*storage);
-		uint32	getSize();
+		uint32	get_size();
 	};
 }
 

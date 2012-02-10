@@ -113,7 +113,7 @@ struct Candidate {
 				ss << ", ";
 			else
 				comma = true;
-			ss << it->second->getOID() /*<< it->first*/;
+			ss << it->second->get_oid() /*<< it->first*/;
 		}
 #ifdef WINEPI_SERIAL
 		for(std::multimap<int,int>::const_iterator it = R.begin(); it != R.end(); ++it)
@@ -185,7 +185,7 @@ struct Sequence {
 				ss << ", ";
 			else
 				comma = true;
-			ss << it->first << ":" << it->second->getOID();
+			ss << it->first << ":" << it->second->get_oid();
 		}
 		ss << "}, s:" << start << ", e:" << end << ">";
 		return ss.str();

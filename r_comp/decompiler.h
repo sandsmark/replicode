@@ -44,7 +44,10 @@ namespace	r_comp{
 	private:
 		OutStream	*out_stream;
 		uint16		indents;		//	in chars.
-		bool		closing_set;	//	set after writing the last element of a set: any element in an expression finding closeing_set will indent and set closing_set to false.
+		bool		closing_set;	//	set after writing the last element of a set: any element in an expression finding closing_set will indent and set closing_set to false.
+		bool		in_hlp;
+		bool		hlp_postfix;
+		bool		horizontal_set;
 		
 		ImageObject	*current_object;
 
@@ -54,7 +57,9 @@ namespace	r_comp{
 		uint64	time_offset;	//	0 means no offset.
 
 		UNORDERED_MAP<uint16,std::string>	variable_names;				//	in the form vxxx where xxx is an integer representing the order of referencing of the variable/label in the code.
+		uint16	last_variable_id;
 		std::string	get_variable_name(uint16	index,bool	postfix);	//	associates iptr/vptr indexes to names; inserts them in out_stream if necessary; when postfix==true, a trailing ':' is added.
+		std::string	get_hlp_variable_name(uint16	index);
 
 		UNORDERED_MAP<uint16,std::string>	object_names;				//	in the form class_namexxx where xxx is an integer representing the order of appearence of the object in the image; or: user-defined names when they are provided.
 		UNORDERED_MAP<std::string,uint16>	object_indices;				//	inverted version of the object_names.
@@ -76,7 +81,10 @@ namespace	r_comp{
 		void	write_pgm(uint16	read_index);
 		void	write_ipgm(uint16	read_index);
 		void	write_icmd(uint16	read_index);
-
+		void	write_cmd(uint16	read_index);
+		void	write_fact(uint16	read_index);
+		void	write_hlp(uint16	read_index);
+		void	write_ihlp(uint16	read_index);
 		void	write_view(uint16	read_index,uint16	arity);
 
 		bool	ignore_ontology;

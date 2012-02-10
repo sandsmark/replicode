@@ -37,24 +37,32 @@
 
 namespace	r_exec{
 
+	class	HLPContext;
+
 	//	HLP: high-level patterns.
 	class	HLPOverlay:
 	public	Overlay{
+	friend	class	HLPContext;
 	protected:
 		P<BindingMap>	bindings;
 
-		uint8	reduction_mode;
+		std::list<P<_Fact>	>	patterns;
 
-		std::list<Code	*>	patterns;
-
-		Code	*get_mk_sim(Code	*object)	const;
-		Code	*get_mk_asmp(Code	*object)	const;
-
-		HLPOverlay(Controller	*c,const	BindingMap	*bindings,uint8	reduction_mode);
+		bool	evaluate_guards(uint16	guard_set_iptr_index);
+		bool	evaluate_fwd_guards();
+		bool	evaluate(uint16	index);
 	public:
+		HLPOverlay(Controller	*c,const	BindingMap	*bindings,bool	load_code=false);
 		virtual	~HLPOverlay();
 
 		BindingMap	*get_bindings()	const{	return	bindings;	}
+
+		Atom	*get_value_code(uint16	id)	const;
+		uint16	get_value_code_size(uint16	id)	const;
+
+		Code	*get_unpacked_object()	const;
+
+		bool	evaluate_bwd_guards();
 	};
 }
 

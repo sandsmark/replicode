@@ -89,7 +89,7 @@ void	GetOperatorName(char	*op_name){
 
 uint16	GetProgramCount(){
 
-	return	3;
+	return	2;
 }
 
 void	GetProgramName(char	*pgm_name){
@@ -103,7 +103,7 @@ void	GetProgramName(char	*pgm_name){
 		++pgm_index;
 		return;
 	}
-
+/*
 	if(pgm_index==1){
 
 		std::string	s="correlator";
@@ -111,10 +111,10 @@ void	GetProgramName(char	*pgm_name){
 		++pgm_index;
 		return;
 	}
+*/
+	if(pgm_index==1){
 
-	if(pgm_index==2){
-
-		std::string	s="pattern_detector";
+		std::string	s="auto_focus";
 		memcpy(pgm_name,s.c_str(),s.length());
 		++pgm_index;
 		return;

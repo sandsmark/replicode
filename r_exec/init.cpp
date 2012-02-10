@@ -142,23 +142,24 @@ namespace	r_exec{
 		Opcodes::ICmd=_Opcodes.find("icmd")->second;
 		Opcodes::Cmd=_Opcodes.find("cmd")->second;
 
-		Opcodes::Var=_Opcodes.find("var")->second;
 		Opcodes::Fact=_Opcodes.find("fact")->second;
 		Opcodes::AntiFact=_Opcodes.find("|fact")->second;
 
-		Opcodes::ICST=_Opcodes.find("icst")->second;
-		Opcodes::IMDL=_Opcodes.find("imdl")->second;
+		Opcodes::Cst=_Opcodes.find("cst")->second;
+		Opcodes::Mdl=_Opcodes.find("mdl")->second;
 
-		Opcodes::MkPred=_Opcodes.find("mk.pred")->second;
-		Opcodes::MkGoal=_Opcodes.find("mk.goal")->second;
-		Opcodes::MkHyp=_Opcodes.find("mk.hyp")->second;
-		Opcodes::MkSim=_Opcodes.find("mk.sim")->second;
-		Opcodes::MkAsmp=_Opcodes.find("mk.asmp")->second;
+		Opcodes::ICst=_Opcodes.find("icst")->second;
+		Opcodes::IMdl=_Opcodes.find("imdl")->second;
+
+		Opcodes::Pred=_Opcodes.find("pred")->second;
+		Opcodes::Goal=_Opcodes.find("goal")->second;
+
+		Opcodes::Success=_Opcodes.find("success")->second;
+
+		Opcodes::MkGrpPair=_Opcodes.find("mk.grp_pair")->second;
 
 		Opcodes::MkRdx=_Opcodes.find("mk.rdx")->second;
-		Opcodes::MkAntiRdx=_Opcodes.find("mk.|rdx")->second;
-		
-		Opcodes::MkSuccess=_Opcodes.find("mk.success")->second;
+		Opcodes::Perf=_Opcodes.find("perf")->second;
 
 		Opcodes::MkNew=_Opcodes.find("mk.new")->second;
 
@@ -179,10 +180,7 @@ namespace	r_exec{
 		Opcodes::DelClass=_Opcodes.find("_del_class")->second;
 		Opcodes::LDC=_Opcodes.find("_ldc")->second;
 		Opcodes::Swap=_Opcodes.find("_swp")->second;
-		Opcodes::NewDev=_Opcodes.find("_new_dev")->second;
-		Opcodes::DelDev=_Opcodes.find("_del_dev")->second;
 		Opcodes::Prb=_Opcodes.find("_prb")->second;
-		Opcodes::Suspend=_Opcodes.find("_suspend")->second;
 		Opcodes::Stop=_Opcodes.find("_stop")->second;
 
 		//	load std operators.

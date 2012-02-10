@@ -28,11 +28,14 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
+// DOOMED FOR REMOVAL.
+
+/*
 #ifndef	cst_g_monitor_h
 #define	cst_g_monitor_h
 
-#include	"binding_map.h"
-#include	"g_monitor.h"
+#include	"monitor.h"
 
 
 namespace	r_exec{
@@ -40,21 +43,24 @@ namespace	r_exec{
 	class	CSTController;
 
 	class	CSTGMonitor:
-	public	GMonitor{
+	public	Monitor{
+	private:
+		P<Code>	super_goal;
 	public:
 		CSTGMonitor(HLPController	*controller,
 					BindingMap		*bindings,
-					Code			*goal,
+					Code			*goal,	// Monitor::target.
 					Code			*super_goal,
-					Code			*matched_pattern,
-					uint64			expected_time_high,
-					uint64			expected_time_low);
+					uint64			before,
+					uint64			after);
 		~CSTGMonitor();
 
-		bool	is_alive();
 		bool	reduce(Code	*input);
+		void	update();
 	};
 }
 
 
 #endif
+
+*/

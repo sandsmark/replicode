@@ -138,7 +138,7 @@ namespace	r_comp{
 		r_code::Read(storage+offset,name);
 	}
 
-	uint32	StructureMember::getSize(){	//	see segments.cpp for the RAM layout
+	uint32	StructureMember::get_size(){	//	see segments.cpp for the RAM layout
 
 		uint32	size=3;	//	read ID, return type, iteration
 		size+=r_code::GetSize(_class);

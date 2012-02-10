@@ -110,7 +110,7 @@ namespace	r_exec{
 	inline	View::~View(){
 
 		if(controller!=NULL)
-			controller->kill();
+			controller->invalidate();
 	}
 
 	inline	void	View::reset(){
@@ -120,7 +120,7 @@ namespace	r_exec{
 		reset_init_act();
 	}
 
-	inline	uint32	View::getOID()	const{
+	inline	uint32	View::get_oid()	const{
 
 		return	_code[VIEW_OID].atom;
 	}

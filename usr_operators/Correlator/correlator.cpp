@@ -26,13 +26,15 @@ public:
 		delete	correlator;
 	}
 
+	Code	*get_core_object()	const{	return	getObject()->get_reference(0);	}
+
 	void	take_input(r_exec::View	*input){
 static	bool	once=false;if(once)return;
 		//	Inputs are all types of objects - salient or that have become salient depending on their view's sync member.
 		//	Manual filtering is needed instead of pattern-matching.
 		//	Here we take all inputs until we get an episode notification.
 		std::string	episode_end="episode_end";
-		if(input->object->code(0).asOpcode()==r_exec::Metadata.getClass(episode_end)->atom.asOpcode()){
+		if(input->object->code(0).asOpcode()==r_exec::Metadata.get_class(episode_end)->atom.asOpcode()){
 
 			//r_exec::ReductionJob<CorrelatorController>	*j=new	r_exec::ReductionJob<CorrelatorController>(input,this);
 			//r_exec::_Mem::Get()->pushReductionJob(j);once=true;
@@ -58,9 +60,7 @@ static	bool	once=false;if(once)return;
 
 	void	decompile(uint64	time_offset){
 
-		r_exec::_Mem::Get()->suspend();
 		r_comp::Image	*image=((r_exec::Mem<r_exec::LObject>	*)r_exec::_Mem::Get())->get_image();
-		r_exec::_Mem::Get()->resume();
 
 		uint32	object_count=decompiler.decompile_references(image);
 
@@ -141,7 +141,7 @@ r_exec::Controller	*correlator(r_code::View	*view){
 #ifdef USE_WINEPI
 
 bool operator< (const P<r_code::Code>& x, const P<r_code::Code>& y) {
-	return x->getOID() < y->getOID();
+	return x->get_oid() < y->get_oid();
 }
 
 Correlator::Correlator() : episode(), episode_start(0), winepi() {
@@ -189,7 +189,7 @@ CorrelatorOutput* Correlator::get_output(bool useEntireHistory) {
 		// LHS and RHS of rules are sorted by OID
 		std::map<int,event_t>::iterator lit = rule.lhs.G.begin(), rit = rule.rhs.G.begin();
 		while(lit != rule.lhs.G.end()) {
-			if(lit->second->getOID() == rit->second->getOID()) {
+			if(lit->second->get_oid() == rit->second->get_oid()) {
 				p->left.push_back(lit->second);
 				++lit;
 				++rit;
@@ -345,7 +345,7 @@ static Correlations::iterator swm2corr(
 	}
 	// context found; recurse on it
 	else {
-		Context* con = new Context();
+		IPGMContext* con = new IPGMContext();
 		con->objects.assign(first->begin(), first->end());
 		con->states.resize(std::distance(next, contextEnd));
 		Correlations::iterator subEnd = swm2corr(next, contextEnd, con->states.begin());
@@ -371,7 +371,7 @@ static void dump(const Episode& episode, const Table_Enc2Obj& enc2obj, std::ostr
 	
 	for(Episode::const_iterator it = episode.begin(); it != episode.end(); ++it) {
 		enc_t code = *it;
-		OID_t id = enc2obj.find(code)->second->getOID();
+		OID_t id = enc2obj.find(code)->second->get_oid();
 		out << id << "\t";
 		for(enc_t b = 1 << 31; b; b >>= 1)
 			out << (code & b ? 1 : 0);
@@ -396,7 +396,7 @@ void Correlator::take_input(r_code::View* input){
 		return;
 
 //	OID_t id = input->code(VIEW_OID).atom;
-	OID_t id = input->object->getOID();
+	OID_t id = input->object->get_oid();
 	bool is_new;
 	enc_t code = encode(id, is_new);
 	episode.push_back(code);
@@ -616,7 +616,7 @@ r_code::Code* Correlator::findBestMatch(InputIterator first, float64& bestMatch)
 	}
 
 	/* DEBUG //
-	enc_t code = oid2enc.find(object->getOID())->second;
+	enc_t code = oid2enc.find(object->get_oid())->second;
 	std::cout << "Best match found: ";
 	for(enc_t b = 1 << 31; b; b >>= 1)
 		std::cout << (code & b ? 1 : 0);

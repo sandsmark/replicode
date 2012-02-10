@@ -33,7 +33,7 @@
 
 
 namespace	r_exec{
-
+/*
 	class	Any{
 	public:
 		static	bool	Equal(const	Code	*lhs,const	Code	*rhs){
@@ -87,7 +87,7 @@ namespace	r_exec{
 				return	false;
 			return	Any::Equal(lhs->get_reference(0),rhs->get_reference(0));	//	compare the pointed objects; ignore time.
 		}
-	};
+	};*/
 }
 
 

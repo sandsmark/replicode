@@ -30,7 +30,7 @@
 
 #ifndef	pattern_detector_h
 #define	pattern_detector_h
-
+/* DEPRECATED.
 #include	"../../CoreLibrary/trunk/CoreLibrary/base.h"
 #include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 #include	"../r_code/object.h"
@@ -92,6 +92,6 @@ namespace	r_exec{
 		virtual	void	take_input(Code	*input)=0;
 	};
 }
-
+*/
 
 #endif

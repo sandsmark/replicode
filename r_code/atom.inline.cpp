@@ -55,9 +55,6 @@ namespace	r_code{
 
 	inline	Atom	Atom::VLPointer(uint16	index,uint16	cast_opcode){
 		
-		uint32	a=(VL_PTR<<24);
-		a+=cast_opcode<<16;
-		a+=index;
 		return	Atom((VL_PTR<<24)+((cast_opcode	&	0x0FFF)<<12)+(index	&	0x0FFF));
 	}
 
@@ -94,6 +91,11 @@ namespace	r_code{
 	inline	Atom	Atom::ProductionPointer(uint16	index){
 		
 		return	Atom((PROD_PTR<<24)+(index	&	0x0FFF));
+	}
+
+	inline	Atom	Atom::AssignmentPointer(uint8	variable_index,uint16 index){
+
+		return	Atom((ASSIGN_PTR<<24)+(variable_index<<16)+(index	&	0x0FFF));
 	}
 
 	inline	Atom	Atom::This(){
@@ -214,21 +216,6 @@ namespace	r_code{
 		return	Atom((INSTANTIATED_CPP_PROGRAM<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
-	inline	Atom	Atom::NumericalVariable(uint16	variableID,uint8	tolerance){
-
-		return	Atom((NUMERICAL_VARIABLE<<24)+((variableID	&	0x0FFF)<<8)+tolerance);
-	}
-
-	inline	Atom	Atom::BooleanVariable(uint16	variableID){
-
-		return	Atom((BOOLEAN_VARIABLE<<24)+((variableID	&	0x0FFF)<<8));
-	}
-	
-	inline	Atom	Atom::StructuralVariable(uint16	variableID,uint8	tolerance){
-
-		return	Atom((STRUCTURAL_VARIABLE<<24)+((variableID	&	0x0FFF)<<8)+tolerance);
-	}
-
 	inline	Atom	Atom::InstantiatedAntiProgram(uint16 opcode,uint8 arity){
 
 		return	Atom((INSTANTIATED_ANTI_PROGRAM<<24)+((opcode	&	0x0FFF)<<8)+arity);
@@ -247,6 +234,11 @@ namespace	r_code{
 	inline	Atom	Atom::Model(uint16 opcode,uint8 arity){
 
 		return	Atom((MODEL<<24)+((opcode	&	0x0FFF)<<8)+arity);
+	}
+
+	inline	Atom	Atom::RawPointer(void	*pointer){
+
+		return	Atom((uint32)pointer);
 	}
 
 	inline	Atom::Atom(uint32	a):atom(a){
@@ -344,9 +336,9 @@ namespace	r_code{
 		return	(atom>>8)	&	0x00000FFF;
 	}
 
-	inline	uint8	Atom::asCastOpcode()	const{
+	inline	uint16	Atom::asCastOpcode()	const{
 
-		return	(uint8)((atom	&	0x00FFF000)>>12);
+		return	(uint16)((atom	&	0x00FFF000)>>12);
 	}
 
 	inline	uint8	Atom::getNodeID()	const{
@@ -364,24 +356,9 @@ namespace	r_code{
 		return	atom	&	0x000000FF;
 	}
 
-	inline	uint16	Atom::getVariableID()	const{
+	inline	uint8	Atom::asAssignmentIndex()	const{
 
-		return	(atom	&	0x000FFF00)>>8;
-	}
-
-	inline	uint8	Atom::getFloatTolerance()	const{
-
-		return	atom	&	0x000000FF;
-	}
-
-	inline	uint32	Atom::getTimeTolerance()	const{
-
-		return	atom	&	0x00FFFFFF;
-	}
-
-	inline	void	Atom::setTimeTolerance(uint32	t){
-
-		atom=(atom	&	0xFF000000)	|	(t	&	0x00FFFFFF);
+		return	(atom	&	0x00FF0000)>>16;
 	}
 
 	inline	uint8	Atom::getAtomCount()	const{

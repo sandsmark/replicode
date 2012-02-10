@@ -37,6 +37,8 @@
 #include	<math.h>
 
 
+#define		ACTIVE_PGM(view)	view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()	// active ipgm/icpp_pgm/cst/mdl in a c-salient and c-active group.
+
 namespace	r_exec{
 
 	View	*Group::get_view(uint32	OID){
@@ -145,7 +147,7 @@ namespace	r_exec{
 
 					uint16	ntf_grp_count=get_ntf_grp_count();
 					for(uint16	i=1;i<=ntf_grp_count;++i)
-						_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	factory::MkSlnChg(_Mem::Get(),v->second->object,change)),false);
+						_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	MkSlnChg(_Mem::Get(),v->second->object,change)),false);
 				}
 
 			FOR_ALL_NON_NTF_VIEWS_END
@@ -160,7 +162,7 @@ namespace	r_exec{
 
 					uint16	ntf_grp_count=get_ntf_grp_count();
 					for(uint16	i=1;i<=ntf_grp_count;++i)
-						_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	factory::MkActChg(_Mem::Get(),v->second->object,change)),false);
+						_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	MkActChg(_Mem::Get(),v->second->object,change)),false);
 				}
 
 			FOR_ALL_NON_NTF_VIEWS_END
@@ -326,7 +328,7 @@ namespace	r_exec{
 
 			uint16	ntf_grp_count=get_ntf_grp_count();
 			for(uint16	i=1;i<=ntf_grp_count;++i)
-				_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowRes(_Mem::Get(),v->object)),false);
+				_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	MkLowRes(_Mem::Get(),v->object)),false);
 		}
 		return	res;
 	}
@@ -350,13 +352,13 @@ namespace	r_exec{
 				v->periods_at_high_sln=0;
 				uint16	ntf_grp_count=get_ntf_grp_count();
 				for(uint16	i=1;i<=ntf_grp_count;++i)
-					_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	factory::MkHighSln(_Mem::Get(),v->object)),false);
+					_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	MkHighSln(_Mem::Get(),v->object)),false);
 			}else	if(v->periods_at_low_sln==get_sln_ntf_prd()){
 
 				v->periods_at_low_sln=0;
 				uint16	ntf_grp_count=get_ntf_grp_count();
 				for(uint16	i=1;i<=ntf_grp_count;++i)
-					_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowSln(_Mem::Get(),v->object)),false);
+					_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	MkLowSln(_Mem::Get(),v->object)),false);
 			}
 		}
 		return	sln;
@@ -378,13 +380,13 @@ namespace	r_exec{
 				v->periods_at_high_act=0;
 				uint16	ntf_grp_count=get_ntf_grp_count();
 				for(uint16	i=1;i<=ntf_grp_count;++i)
-					_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	factory::MkHighAct(_Mem::Get(),v->object)),false);
+					_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	MkHighAct(_Mem::Get(),v->object)),false);
 			}else	if(v->periods_at_low_act==get_act_ntf_prd()){
 
 				v->periods_at_low_act=0;
 				uint16	ntf_grp_count=get_ntf_grp_count();
 				for(uint16	i=1;i<=ntf_grp_count;++i)
-					_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	factory::MkLowAct(_Mem::Get(),v->object)),false);
+					_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	MkLowAct(_Mem::Get(),v->object)),false);
 			}
 		}
 		return	act;
@@ -396,7 +398,7 @@ namespace	r_exec{
 
 		switch(object->code(0).getDescriptor()){
 		case	Atom::GROUP:{
-			group_views[view->getOID()]=view;
+			group_views[view->get_oid()]=view;
 
 			//	init viewing_group.
 			bool	viewing_c_active=get_c_act()>get_c_act_thr();
@@ -405,115 +407,121 @@ namespace	r_exec{
 			if(viewing_c_active	&&	viewing_c_salient	&&	viewed_visible)	//	visible group in a c-salient, c-active group.
 				((Group	*)object)->viewing_groups[this]=view->get_cov();	//	init the group's viewing groups.
 			break;
-		}case	Atom::INSTANTIATED_PROGRAM:
-			ipgm_views[view->getOID()]=view;
-			if(view->get_act()>get_act_thr()){	//	active ipgm.
-
-				PGMController	*o=new	PGMController(view);	//	now will be added to the deadline at start time.
-				view->controller=o;
-			}
+		}case	Atom::INSTANTIATED_PROGRAM:{
+			ipgm_views[view->get_oid()]=view;
+			PGMController	*c=new	PGMController(view);	//	now will be added to the deadline at start time.
+			view->controller=c;
+			if(ACTIVE_PGM(view))
+				c->gain_activation();
 			break;
-		case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
-			input_less_ipgm_views[view->getOID()]=view;
-			if(view->get_act()>get_act_thr()){	//	active ipgm.
-
-				InputLessPGMController	*o=new	InputLessPGMController(view);	//	now will be added to the deadline at start time.
-				view->controller=o;
-			}
+		}case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:{
+			input_less_ipgm_views[view->get_oid()]=view;
+			InputLessPGMController	*c=new	InputLessPGMController(view);	//	now will be added to the deadline at start time.
+			view->controller=c;
+			if(ACTIVE_PGM(view))
+				c->gain_activation();
 			break;
-		case	Atom::INSTANTIATED_ANTI_PROGRAM:
-			anti_ipgm_views[view->getOID()]=view;
-			if(view->get_act()>get_act_thr()){	//	active ipgm.
-
-				AntiPGMController	*o=new	AntiPGMController(view);	//	now will be added to the deadline at start time.
-				view->controller=o;
-			}
+		}case	Atom::INSTANTIATED_ANTI_PROGRAM:{
+			anti_ipgm_views[view->get_oid()]=view;
+			AntiPGMController	*c=new	AntiPGMController(view);	//	now will be added to the deadline at start time.
+			view->controller=c;
+			if(ACTIVE_PGM(view))
+				c->gain_activation();
 			break;
-		case	Atom::INSTANTIATED_CPP_PROGRAM:
-			ipgm_views[view->getOID()]=view;
-			if(view->get_act()>get_act_thr()){	//	active icpp_pgm.
-
-				Controller	*o=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),view);	//	now will be added to the deadline at start time.
-				if(!o)
-					return	false;
-				view->controller=o;
-			}
+		}case	Atom::INSTANTIATED_CPP_PROGRAM:{
+			ipgm_views[view->get_oid()]=view;
+			Controller	*c=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),view);	//	now will be added to the deadline at start time.
+			if(!c)
+				return	false;
+			view->controller=c;
+			if(ACTIVE_PGM(view))
+				c->gain_activation();
 			break;
-		case	Atom::COMPOSITE_STATE:
-			ipgm_views[view->getOID()]=view;
-			if(view->get_act()>get_act_thr()){	//	active cst.
-
-				CSTController	*o=new	CSTController(view);	//	now will be added to the deadline at start time.
-				view->controller=o;
-			}
+		}case	Atom::COMPOSITE_STATE:{
+			ipgm_views[view->get_oid()]=view;
+			CSTController	*c=new	CSTController(view);
+			view->controller=c;
+			c->set_secondary_host(get_secondary_group());
+			if(ACTIVE_PGM(view))
+				c->gain_activation();
 			break;
-		case	Atom::MODEL:
-			ipgm_views[view->getOID()]=view;
-			if(view->get_act()>get_act_thr()){	//	active mdl.
-
-				MDLController	*o=new	MDLController(view);	//	now will be added to the deadline at start time.
-				view->controller=o;
-			}
+		}case	Atom::MODEL:{
+			ipgm_views[view->get_oid()]=view;
+			bool			inject_in_secondary_group;
+			MDLController	*c=MDLController::New(view,inject_in_secondary_group);
+			view->controller=c;
+			if(inject_in_secondary_group)
+				get_secondary_group()->load_secondary_mdl_controller(view);
+			if(ACTIVE_PGM(view))
+				c->gain_activation();
 			break;
-		case	Atom::MARKER:	//	populate the marker set of the referenced objects.
+		}case	Atom::MARKER:	//	populate the marker set of the referenced objects.
 			for(uint32	i=0;i<object->references_size();++i)
 				object->get_reference(i)->markers.push_back(object);
+			other_views[view->get_oid()]=view;
+			break;
 		case	Atom::OBJECT:
-			other_views[view->getOID()]=view;
+			Code	*f=view->object;
+			other_views[view->get_oid()]=view;
 			break;
 		}
 
 		return	true;
 	}
 
-	void	Group::inject(View	*view,uint64	t){	//	the view can hold anything but groups, r-groups and notifications.
+	void	Group::inject(View	*view,uint64	t){	// the view can hold anything but groups and notifications.
 
 		switch(view->object->code(0).getDescriptor()){
 		case	Atom::INSTANTIATED_PROGRAM:{
-			ipgm_views[view->getOID()]=view;
-			PGMController	*o=new	PGMController(view);
-			view->controller=o;
-			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
+			ipgm_views[view->get_oid()]=view;
+			PGMController	*c=new	PGMController(view);
+			view->controller=c;
+			if(ACTIVE_PGM(view)){
 
+				c->gain_activation();
 				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
-					o->take_input(*v);	//	view will be copied.
+					c->_take_input(*v);	//	view will be copied.
 			}
 			break;
 		}case	Atom::INSTANTIATED_CPP_PROGRAM:{
-			ipgm_views[view->getOID()]=view;
-			Controller	*o=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),view);
-			if(!o)
+			ipgm_views[view->get_oid()]=view;
+			Controller	*c=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),view);
+			if(!c)
 				break;
-			view->controller=o;
-			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active icpp_pgm in a c-salient and c-active group.
+			view->controller=c;
+			if(ACTIVE_PGM(view)){
 
+				c->gain_activation();
 				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
-					o->take_input(*v);	//	view will be copied.
+					c->_take_input(*v);	//	view will be copied.
 			}
 			break;
 		}case	Atom::INSTANTIATED_ANTI_PROGRAM:{
-			anti_ipgm_views[view->getOID()]=view;
-			AntiPGMController	*o=new	AntiPGMController(view);
-			view->controller=o;
-			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
+			anti_ipgm_views[view->get_oid()]=view;
+			AntiPGMController	*c=new	AntiPGMController(view);
+			view->controller=c;
+			if(ACTIVE_PGM(view)){
 
+				c->gain_activation();
 				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
-					o->take_input(*v);	//	view will be copied.
+					c->_take_input(*v);	//	view will be copied.
 
-				_Mem::Get()->pushTimeJob(new	AntiPGMSignalingJob(o,t+Utils::GetTimestamp<Code>(o->getObject(),IPGM_TSC)));
+				_Mem::Get()->pushTimeJob(new	AntiPGMSignalingJob(view,t+Utils::GetTimestamp<Code>(c->getObject(),IPGM_TSC)));
 			}
 			break;
 		}case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:{
-			input_less_ipgm_views[view->getOID()]=view;
-			InputLessPGMController	*o=new	InputLessPGMController(view);
-			view->controller=o;
-			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr())	//	active ipgm in a c-salient and c-active group.
-				_Mem::Get()->pushTimeJob(new	InputLessPGMSignalingJob(o,t+Utils::GetTimestamp<Code>(view->object,IPGM_TSC)));
-			break;
+			input_less_ipgm_views[view->get_oid()]=view;
+			InputLessPGMController	*c=new	InputLessPGMController(view);
+			view->controller=c;
+			if(ACTIVE_PGM(view)){
 
+				c->gain_activation();
+				_Mem::Get()->pushTimeJob(new	InputLessPGMSignalingJob(view,t+Utils::GetTimestamp<Code>(view->object,IPGM_TSC)));
+			}
+			break;
 		}case	Atom::MARKER:	//	the marker does not exist yet: add it to the mks of its references.
 			for(uint32	i=0;i<view->object->references_size();++i){
 
@@ -522,31 +530,39 @@ namespace	r_exec{
 				ref->markers.push_back(view->object);
 				ref->rel_markers();
 			}
+			other_views[view->get_oid()]=view;
+			cov(view,t);
+			break;
 		case	Atom::OBJECT:
-			other_views[view->getOID()]=view;
+			other_views[view->get_oid()]=view;
 			cov(view,t);
 			break;
 		case	Atom::COMPOSITE_STATE:{
-			ipgm_views[view->getOID()]=view;
-			CSTController	*o=new	CSTController(view);
-			view->controller=o;
-			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
+			ipgm_views[view->get_oid()]=view;
+			CSTController	*c=new	CSTController(view);
+			view->controller=c;
+			c->set_secondary_host(get_secondary_group());
+			if(ACTIVE_PGM(view)){
 
+				c->gain_activation();
 				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
-					o->take_input(*v);	//	view will be copied.
+					c->_take_input(*v);	//	view will be copied.
 			}
 			break;
 		}case	Atom::MODEL:{
-			ipgm_views[view->getOID()]=view;
-			MDLController	*o=new	MDLController(view);
-			view->controller=o;
-			if(view->get_act()>get_act_thr()	&&	get_c_sln()>get_c_sln_thr()	&&	get_c_act()>get_c_act_thr()){	//	active ipgm in a c-salient and c-active group.
+			ipgm_views[view->get_oid()]=view;
+			bool			inject_in_secondary_group;
+			MDLController	*c=MDLController::New(view->object,inject_in_secondary_group);
+			view->controller=c;
+			if(inject_in_secondary_group)
+				get_secondary_group()->inject_secondary_mdl_controller(view);
+			if(ACTIVE_PGM(view)){
 
-				o->gain_activation();
+				c->gain_activation();
 				std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 				for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
-					o->take_input(*v);	//	view will be copied.
+					c->Controller::_take_input(*v);	//	view will be copied.
 			}
 			break;
 		}
@@ -561,9 +577,9 @@ namespace	r_exec{
 		notifyNew(view);
 	}
 
-	void	Group::injectGroup(View	*view,uint64	t){	//	the view can hold a group or an r-group.
+	void	Group::inject_group(View	*view,uint64	t){	//	the view can hold a group or an r-group.
 
-		group_views[view->getOID()]=view;
+		group_views[view->get_oid()]=view;
 
 		if(get_c_sln()>get_c_sln_thr()	&&	view->get_sln()>get_sln_thr()){	//	group is c-salient and view is salient.
 
@@ -582,7 +598,7 @@ namespace	r_exec{
 
 	void	Group::inject_notification(View	*view){
 
-		notification_views[view->getOID()]=view;
+		notification_views[view->get_oid()]=view;
 		for(uint32	i=0;i<view->object->references_size();++i){
 
 			Code	*ref=view->object->get_reference(i);
@@ -601,7 +617,7 @@ namespace	r_exec{
 
 			uint16	ntf_grp_count=get_ntf_grp_count();
 			for(uint16	i=1;i<=ntf_grp_count;++i)
-				_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	factory::MkNew(_Mem::Get(),view->object)),get_ntf_grp(i)!=this);	//	the object appears for the first time in the group: notify.
+				_Mem::Get()->inject_notification(new	NotificationView(this,get_ntf_grp(i),new	MkNew(_Mem::Get(),view->object)),get_ntf_grp(i)!=this);	//	the object appears for the first time in the group: notify.
 		}
 	}
 
@@ -650,28 +666,92 @@ namespace	r_exec{
 	void	Group::delete_view(View	*v){
 
 		if(v->isNotification())
-			notification_views.erase(v->getOID());
+			notification_views.erase(v->get_oid());
 		else	switch(v->object->code(0).getDescriptor()){
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
 		case	Atom::COMPOSITE_STATE:
 		case	Atom::MODEL:
-			ipgm_views.erase(v->getOID());
+			ipgm_views.erase(v->get_oid());
 			break;
 		case	Atom::INSTANTIATED_ANTI_PROGRAM:
-			anti_ipgm_views.erase(v->getOID());
+			anti_ipgm_views.erase(v->get_oid());
 			break;
 		case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
-			input_less_ipgm_views.erase(v->getOID());
+			input_less_ipgm_views.erase(v->get_oid());
 			break;
 		case	Atom::OBJECT:
 		case	Atom::MARKER:
-			other_views.erase(v->getOID());
+			other_views.erase(v->get_oid());
 			break;
 		case	Atom::GROUP:
-			group_views.erase(v->getOID());
+			group_views.erase(v->get_oid());
 			break;
 		}
 	}
 
+	Group	*Group::get_secondary_group(){
+
+		Group	*secondary=NULL;
+		std::list<Code	*>::const_iterator	m;
+		acq_markers();
+		for(m=markers.begin();m!=markers.end();++m){
+
+			if((*m)->code(0).asOpcode()==Opcodes::MkGrpPair){
+
+				secondary=(Group	*)(*m)->get_reference((*m)->code(GRP_PAIR_SECOND).asIndex());
+				break;
+			}
+		}
+		rel_markers();
+		return	secondary;
+	}
+
+	void	Group::load_secondary_mdl_controller(View	*view){
+
+		PrimaryMDLController	*p=(PrimaryMDLController	*)view->controller;
+		View	*_view=new	View(view,true);
+		_view->code(VIEW_ACT)=Atom::Float(0);
+		_view->references[0]=this;
+		ipgm_views[_view->get_oid()]=_view;
+		SecondaryMDLController	*s=new	SecondaryMDLController(_view);
+		_view->controller=s;
+		view->object->views.insert(_view);
+		p->set_secondary(s);
+		s->set_primary(p);
+
+		if(ACTIVE_PGM(_view))
+			s->gain_activation();
+	}
+	void	Group::inject_secondary_mdl_controller(View	*view){
+
+		PrimaryMDLController	*p=(PrimaryMDLController	*)view->controller;
+		View	*_view=new	View(view,true);
+		_view->code(VIEW_ACT)=Atom::Float(0);
+		_view->references[0]=this;
+		ipgm_views[_view->get_oid()]=_view;
+		SecondaryMDLController	*s=new	SecondaryMDLController(_view);
+		_view->controller=s;
+		view->object->views.insert(_view);
+		p->set_secondary(s);
+		s->set_primary(p);
+		
+		if(ACTIVE_PGM(_view)){
+
+			s->gain_activation();
+			std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
+			for(v=newly_salient_views.begin();v!=newly_salient_views.end();++v)
+				s->take_input(*v);	//	view will be copied.
+		}
+	}
+
+	uint64	Group::get_time_at_next_upr(uint64	now)	const{
+
+		uint32	__upr=get_upr();
+		if(__upr==0)
+			return	Utils::MaxTime;
+		uint64	_upr=__upr*_Mem::Get()->get_base_period();
+		uint64	delta=now%_upr;
+		return	now-delta+_upr;
+	}
 }

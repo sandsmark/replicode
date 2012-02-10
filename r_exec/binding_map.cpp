@@ -30,621 +30,932 @@
 
 #include	"mem.h"
 #include	"binding_map.h"
+#include	"factory.h"
 
 
 namespace	r_exec{
 
-	typedef	UNORDERED_MAP<Code	*,P<Code> >			Objects;
-	typedef	UNORDERED_MAP<Atom,Atom>				Atoms;
-	typedef	UNORDERED_MAP<Atom,std::vector<Atom> >	Structures;
+	Value::Value(BindingMap	*map):_Object(),map(map){
+	}
 
-	BindingMap::BindingMap():_Object(){
+	void	Value::trace(){
+
+		Atom	*code=get_code();
+		for(uint16	i=0;i<get_code_size();++i){
+
+			code[i].trace();
+			std::cout<<endl;
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	BoundValue::BoundValue(BindingMap	*map):Value(map){
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	UnboundValue::UnboundValue(BindingMap	*map,uint8	index):Value(map),index(index){
+	}
+
+	Value	*UnboundValue::copy(BindingMap	*map)	const{
+
+		return	new	UnboundValue(map,index);
+	}
+
+	void	UnboundValue::valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const{
+
+		destination->code(write_index)=Atom::VLPointer(index);
+	}
+
+	bool	UnboundValue::match(const	Code	*object,uint16	index){
+
+		Atom	o_atom=object->code(index);
+		switch(o_atom.getDescriptor()){
+		case	Atom::I_PTR:
+			map->bind_variable(new	StructureValue(map,object,o_atom.asIndex()),this->index);
+			break;
+		case	Atom::R_PTR:
+			map->bind_variable(new	ObjectValue(map,object->get_reference(o_atom.asIndex())),this->index);
+			break;
+		case	Atom::WILDCARD:
+			break;
+		default:
+			map->bind_variable(new	AtomValue(map,o_atom),this->index);
+			break;
+		}
+
+		return	true;
+	}
+
+	Atom	*UnboundValue::get_code(){
+
+		return	NULL;
+	}
+
+	uint16	UnboundValue::get_code_size(){
+
+		return	0;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	AtomValue::AtomValue(BindingMap	*map,Atom	atom):BoundValue(map),atom(atom){
+	}
+
+	Value	*AtomValue::copy(BindingMap	*map)	const{
+
+		return	new	AtomValue(map,atom);
+	}
+
+	void	AtomValue::valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const{
+
+		destination->code(write_index)=atom;
+	}
+
+	bool	AtomValue::match(const	Code	*object,uint16	index){
+
+		return	map->match_atom(object->code(index),atom);
+	}
+
+	Atom	*AtomValue::get_code(){
+
+		return	&atom;
+	}
+
+	uint16	AtomValue::get_code_size(){
+
+		return	1;
+	}
+
+	bool	AtomValue::intersect(const	Value	*v)	const{
+
+		return	v->_intersect(this);
+	}
+
+	bool	AtomValue::_intersect(const	AtomValue	*v)	const{
+
+		if(atom==v->atom)
+			return	true;
+
+		if(atom.isFloat()	&&	v->atom.isFloat()){
+
+			if(abs(atom.asFloat()-v->atom.asFloat())<=_Mem::Get()->get_float_tolerance())
+				return	true;
+		}
+		return	false;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	StructureValue::StructureValue(BindingMap	*map,const	Code	*structure):BoundValue(map){
+
+		this->structure=new	r_code::LObject();
+		for(uint16	i=0;i<structure->code_size();++i)
+			this->structure->code(i)=structure->code(i);
+	}
+
+	StructureValue::StructureValue(BindingMap	*map,const	Code	*source,uint16	structure_index):BoundValue(map){
+
+		structure=new	r_code::LObject();
+		for(uint16	i=0;i<=source->code(structure_index).getAtomCount();++i)
+			structure->code(i)=source->code(structure_index+i);
+	}
+
+	StructureValue::StructureValue(BindingMap	*map,Atom	*source,uint16	structure_index):BoundValue(map){
+
+		structure=new	r_code::LObject();
+		for(uint16	i=0;i<=source[structure_index].getAtomCount();++i)
+			structure->code(i)=source[structure_index+i];
+	}
+
+	StructureValue::StructureValue(BindingMap	*map,uint64	time):BoundValue(map){
+
+		structure=new	r_code::LObject();
+		structure->resize_code(3);
+		Utils::SetTimestamp(&structure->code(0),time);
+	}
+
+	Value	*StructureValue::copy(BindingMap	*map)	const{
+
+		return	new	StructureValue(map,structure);
+	}
+
+	void	StructureValue::valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const{
+
+		destination->code(write_index)=Atom::IPointer(extent_index);
+		for(uint16	i=0;i<=structure->code(0).getAtomCount();++i)
+			destination->code(extent_index++)=structure->code(i);
+	}
+
+	bool	StructureValue::match(const	Code	*object,uint16	index){
+
+		return	map->match_structure(object,object->code(index).asIndex(),0,structure,0);
+	}
+
+	Atom	*StructureValue::get_code(){
+
+		return	&structure->code(0);
+	}
+
+	uint16	StructureValue::get_code_size(){
+
+		return	structure->code_size();
+	}
+
+	bool	StructureValue::intersect(const	Value	*v)	const{
+
+		return	v->_intersect(this);
+	}
+
+	bool	StructureValue::_intersect(const	StructureValue	*v)	const{
+
+		if(structure->code(0)!=v->structure->code(0))
+			return	false;
+		if(structure->code(0).getDescriptor()==Atom::TIMESTAMP)
+			return	abs((int32)(Utils::GetTimestamp(&structure->code(0))-Utils::GetTimestamp(&v->structure->code(0))))<=_Mem::Get()->get_time_tolerance();
+		for(uint16	i=1;i<structure->code_size();++i){
+
+			Atom	a=structure->code(i);
+			Atom	_a=v->structure->code(i);
+			if(a==_a)
+				continue;
+
+			if(a.isFloat()	&&	_a.isFloat()){
+
+				if(abs(a.asFloat()-_a.asFloat())>_Mem::Get()->get_float_tolerance())
+					return	false;
+			}
+
+			return	false;
+		}
+
+		return	true;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	ObjectValue::ObjectValue(BindingMap	*map,Code	*object):BoundValue(map),object(object){
+	}
+
+	Value	*ObjectValue::copy(BindingMap	*map)	const{
+
+		return	new	ObjectValue(map,object);
+	}
+
+	void	ObjectValue::valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const{
+
+		destination->code(write_index)=Atom::RPointer(destination->references_size());
+		destination->add_reference(object);
+	}
+
+	bool	ObjectValue::match(const	Code	*object,uint16	index){
+
+		return	map->match_object(object->get_reference(object->code(index).asIndex()),this->object);
+	}
+
+	Atom	*ObjectValue::get_code(){
+
+		return	&object->code(0);
+	}
+
+	uint16	ObjectValue::get_code_size(){
+
+		return	object->code_size();
+	}
+
+	bool	ObjectValue::intersect(const	Value	*v)	const{
+
+		return	v->_intersect(this);
+	}
+
+	bool	ObjectValue::_intersect(const	ObjectValue	*v)	const{
+
+		return	object==v->object;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Code	*BindingMap::Abstract(Code	*object,BindingMap	*&bindings){	// builds a binding map holding the original values.
+
+		bindings=new	BindingMap();
+		return	bindings->abstract_object(object);
+	}
+
+	_Fact	*BindingMap::abstract_f_ihlp(_Fact	*f_ihlp)	const{	// bindings are set already (coming from a mk.rdx caught by auto-focus).
+
+		uint16	opcode;
+		Code	*ihlp=f_ihlp->get_reference(0);
+		if(ihlp->code(0).asOpcode()==Opcodes::ICst)
+			opcode=Opcodes::ICst;
+		else
+			opcode=Opcodes::IMdl;
+
+		_Fact	*_f_ihlp=new	Fact();
+		for(uint16	i=0;i<f_ihlp->code_size();++i)
+			_f_ihlp->code(i)=f_ihlp->code(i);
+
+		Code	*_ihlp=_Mem::Get()->build_object(Atom::Object(opcode,I_HLP_ARITY));
+		_ihlp->code(I_HLP_OBJ)=Atom::RPointer(0);
+
+		uint16	extent_index=I_HLP_ARITY+1;
+
+		uint32	map_index=0;
+
+		uint16	tpl_arg_set_index=ihlp->code(I_HLP_TPL_ARGS).asIndex();
+		uint16	tpl_arg_count=ihlp->code(tpl_arg_set_index).getAtomCount();
+		
+		_ihlp->code(I_HLP_TPL_ARGS)=Atom::IPointer(extent_index);
+		_ihlp->code(extent_index)=Atom::Set(tpl_arg_count);
+		for(uint16	i=1;i<=tpl_arg_count;++i)
+			_ihlp->code(extent_index+i)=Atom::VLPointer(map_index++);
+		extent_index+=tpl_arg_count;
+
+		uint16	arg_set_index=ihlp->code(I_HLP_ARGS).asIndex();
+		uint16	arg_count=ihlp->code(arg_set_index).getAtomCount();
+		_ihlp->code(I_HLP_ARGS)=Atom::IPointer(extent_index);
+		_ihlp->code(extent_index)=Atom::Set(arg_count);
+		for(uint16	i=1;i<=arg_count;++i)
+			_ihlp->code(extent_index+i)=Atom::VLPointer(map_index++);
+
+		_ihlp->code(I_HLP_ARITY)=ihlp->code(I_HLP_ARITY);
+
+		_ihlp->add_reference(f_ihlp->get_reference(f_ihlp->code(I_HLP_OBJ).asIndex()));
+
+		_f_ihlp->add_reference(_ihlp);
+		return	_f_ihlp;
+	}
+
+	_Fact	*BindingMap::abstract_fact(_Fact	*fact,_Fact	*original){	// abstract values as they are encountered.
+		
+		if(after_index==-1)
+			first_index=map.size();
+
+		abstract_member(original,fact,FACT_OBJ);
+		abstract_member(original,fact,FACT_AFTER);
+		abstract_member(original,fact,FACT_BEFORE);
+		fact->code(FACT_CFD)=Atom::Wildcard();
+		fact->code(FACT_ARITY)=Atom::Wildcard();
+
+		if(after_index==-1)
+			after_index=map.size()-2;
+
+		return	fact;
+	}
+
+	Code	*BindingMap::abstract_object(Code	*object){	// abstract values as they are encountered.
+		
+		Code	*abstracted_object=NULL;
+
+		uint16	opcode=object->code(0).asOpcode();
+		if(opcode==Opcodes::Fact)
+			return	abstract_fact(new	Fact(),(_Fact	*)object);
+		else	if(opcode==Opcodes::AntiFact)
+			return	abstract_fact(new	AntiFact(),(_Fact	*)object);
+		else	if(opcode==Opcodes::Cmd){
+
+			abstracted_object=_Mem::Get()->build_object(object->code(0));
+			abstracted_object->code(CMD_FUNCTION)=object->code(CMD_FUNCTION);
+			abstract_member(object,abstracted_object,CMD_ARGS);
+			abstracted_object->code(CMD_ARITY)=Atom::Wildcard();
+		}else	if(opcode==Opcodes::MkVal){
+
+			abstracted_object=_Mem::Get()->build_object(object->code(0));
+			abstract_member(object,abstracted_object,MK_VAL_OBJ);
+			abstracted_object->code(MK_VAL_ATTR)=object->code(MK_VAL_ATTR);
+			abstracted_object->add_reference(object->get_reference(MK_VAL_ATTR_REF));	// attribute is not abstracted.
+			abstract_member(object,abstracted_object,MK_VAL_VALUE);
+			abstracted_object->code(MK_VAL_ARITY)=Atom::Wildcard();
+		}else
+			return	object;
+		return	abstracted_object;
+	}
+
+	void	BindingMap::abstract_member(Code	*object,Code	*abstracted_object,uint16	index){
+
+		Atom	a=object->code(index);
+		uint16	ai=a.asIndex();
+		switch(a.getDescriptor()){
+		case	Atom::R_PTR:{
+			Code	*reference=object->get_reference(ai);
+			if(reference->code(0).asOpcode()==Opcodes::Ont){
+
+				abstracted_object->code(index)=a;
+				abstracted_object->add_reference(reference);
+			}else	if(reference->code(0).asOpcode()==Opcodes::Ent)
+				abstracted_object->code(index)=get_object_variable(reference);
+			else	if(reference->code(0).asOpcode()==Opcodes::Ont){
+
+				abstracted_object->code(index)=a;
+				abstracted_object->add_reference(reference);
+			}else{
+
+				abstracted_object->code(index)=a;
+				abstracted_object->add_reference(abstract_object(reference));
+			}
+			break;
+		}case	Atom::I_PTR:
+			if(object->code(ai).getDescriptor()==Atom::SET){
+
+				uint16	element_count=object->code(ai).getAtomCount();
+				abstracted_object->code(ai)=Atom::Set(element_count);
+				for(uint16	i=1;i<=element_count;++i)
+					abstract_member(object,abstracted_object,ai+i);
+			}else
+				abstracted_object->code(ai+1)=get_structure_variable(object,ai);
+			break;
+		default:
+			abstracted_object->code(index)=get_atom_variable(a);
+			break;
+		}
+	}
+
+	Atom	BindingMap::get_atom_variable(Atom	a){
+
+		uint32	size=map.size();
+		map.push_back(new	AtomValue(this,a));
+		return	Atom::VLPointer(size);
+	}
+
+	Atom	BindingMap::get_structure_variable(Code	*object,uint16	index){
+
+		uint32	size=map.size();
+		map.push_back(new	StructureValue(this,object,index));
+		return	Atom::VLPointer(size);
+	}
+
+	Atom	BindingMap::get_object_variable(Code	*object){
+
+		uint32	size=map.size();
+		map.push_back(new	ObjectValue(this,object));
+		return	Atom::VLPointer(size);
+	}
+
+	BindingMap::BindingMap():_Object(),after_index(-1){
 	}
 
 	BindingMap::BindingMap(const	BindingMap	*source):_Object(){
 
-		init(source);
+		*this=*source;
+	}
+
+	BindingMap::BindingMap(const	BindingMap	&source):_Object(){
+
+		*this=source;
 	}
 
 	void	BindingMap::clear(){
 
-		objects.clear();
-		atoms.clear();
-		structures.clear();
+		map.clear();
+		after_index=-1;
 	}
 
-	void	BindingMap::init(const	BindingMap	*source){
+	BindingMap	&BindingMap::operator	=(const	BindingMap	&source){
 
-		atoms=source->atoms;
-		structures=source->structures;
-		objects=source->objects;
+		clear();
+		for(uint8	i=0;i<source.map.size();++i)
+			map.push_back(source.map[i]->copy(this));
+		first_index=source.first_index;
+		after_index=source.after_index;
+		return	*this;
 	}
 
-	void	BindingMap::init(Code	*source){	//	source is abstracted.
+	void	BindingMap::load(const	BindingMap	*source){
 
-		if(source->code(0).asOpcode()==Opcodes::Var)
-			objects.insert(Objects::value_type(source,source));
-		else{
+		*this=*source;
+	}
+
+	void	BindingMap::add_unbound_value(uint8	id){
+
+		if(id>=map.size())
+			map.resize(id+1);
+		map[id]=new	UnboundValue(this,id);
+	}
+
+	void	BindingMap::init_from_hlp(const	Code	*hlp){	// hlp is cst or mdl.
+
+		uint16	tpl_arg_set_index=hlp->code(HLP_TPL_ARGS).asIndex();
+		uint16	tpl_arg_count=hlp->code(tpl_arg_set_index).getAtomCount();
+		for(uint16	i=1;i<=tpl_arg_count;++i){
+
+			Atom	a=hlp->code(tpl_arg_set_index+i);
+			if(a.getDescriptor()==Atom::VL_PTR)
+				add_unbound_value(a.asIndex());
+		}
+
+		first_index=map.size();
 		
-			for(uint16	i=0;i<source->code_size();++i){
+		uint16	obj_set_index=hlp->code(HLP_OBJS).asIndex();
+		uint16	obj_count=hlp->code(obj_set_index).getAtomCount();
+		for(uint16	i=1;i<=obj_count;++i){
 
-				switch(source->code(i).getDescriptor()){
-				case	Atom::NUMERICAL_VARIABLE:
-				case	Atom::BOOLEAN_VARIABLE:
-					atoms.insert(Atoms::value_type(source->code(i),source->code(i)));
-					break;
-				case	Atom::STRUCTURAL_VARIABLE:{
-					std::vector<Atom>	v;
-					for(uint16	j=0;j<=source->code(i-1).getAtomCount();++j)
-						v.push_back(source->code(i-1+j));
-					structures.insert(Structures::value_type(source->code(i),v));
-					break;
-				}
-				}
-			}
-
-			for(uint16	i=0;i<source->references_size();++i)
-				init(source->get_reference(i));
+			_Fact	*pattern=(_Fact	*)hlp->get_reference(hlp->code(obj_set_index+i).asIndex());
+			init_from_pattern(pattern);
 		}
 	}
 
-	Code	*BindingMap::bind_object(Code	*original)	const{
+	void	BindingMap::init_from_pattern(const	Code	*source){	// source is abstracted.
 
-		if(original->code(0).asOpcode()==Opcodes::Var){
+		bool	set_timing_index=(source->code(0).asOpcode()==Opcodes::Fact	||	source->code(0).asOpcode()==Opcodes::AntiFact)	&&	after_index==-1;
+		for(uint16	i=1;i<source->code_size();++i){
 
-			Objects::const_iterator	o=objects.find(original);
-			if(o!=objects.end()	&&	o->second!=NULL)
-				return	o->second;
-			else
-				return	original;	//	no registered value; original is left unbound.
-		}
+			Atom	s=source->code(i);
+			switch(s.getDescriptor()){
+			case	Atom::VL_PTR:{
+				uint8	value_index=source->code(i).asIndex();
+				add_unbound_value(value_index);
+				if(set_timing_index	&&	i==FACT_AFTER){
 
-		Code	*bound_object=_Mem::Get()->build_object(original->code(0));
-		for(uint16	i=0;i<original->code_size();){	//	patch code containing variables with actual values when they exist.
-			
-			Atom	o=original->code(i);
-			switch(o.getDescriptor()){
-			case	Atom::NUMERICAL_VARIABLE:
-			case	Atom::BOOLEAN_VARIABLE:{
-				
-				Atoms::const_iterator	_a=atoms.find(o);
-				if(_a==atoms.end())	//	no registered value; original is left unbound.
-					bound_object->code(i++)=o;
-				else
-					bound_object->code(i++)=_a->second;
-				break;
-			}case	Atom::STRUCTURAL_VARIABLE:{
-
-				Structures::const_iterator	_s=structures.find(o);
-				if(_s==structures.end())	//	no registered value; original is left unbound.
-					bound_object->code(i++)=o;
-				else{
-					
-					if(bound_object->code(i-1).getDescriptor()==Atom::TIMESTAMP)	//	store the tolerance in the timestamp (used to create monitoring jobs for goals).
-						bound_object->code(i-1).setTimeTolerance(original->code(i-1).getTimeTolerance());
-					for(uint16	j=1;j<_s->second.size();++j)
-						bound_object->code(i++)=_s->second[j];
+					after_index=value_index;
+					set_timing_index=false;
 				}
 				break;
 			}default:
-				bound_object->code(i++)=o;
 				break;
 			}
 		}
-		
-		for(uint16	i=0;i<original->references_size();++i)	//	bind references when needed.
-			if(needs_binding(original->get_reference(i)))
-				bound_object->set_reference(i,bind_object(original->get_reference(i)));
-			else
-				bound_object->set_reference(i,original->get_reference(i));
 
-		return	bound_object;
+		for(uint16	i=0;i<source->references_size();++i)
+			init_from_pattern(source->get_reference(i));
 	}
 
-	bool	BindingMap::needs_binding(Code	*original)	const{
+	void	BindingMap::init_from_f_ihlp(const	_Fact	*f_ihlp){	// source is f->icst or f->imdl; map already initialized with values from hlp.
 
-		switch(original->code(0).getDescriptor()){
-		case	Atom::COMPOSITE_STATE:
-		case	Atom::MODEL:
-			return	false;
-		}
+		Code	*ihlp=f_ihlp->get_reference(0);
 
-		if(original->code(0).asOpcode()==Opcodes::Var){
+		uint16	tpl_val_set_index=ihlp->code(I_HLP_TPL_ARGS).asIndex();
+		uint16	tpl_val_count=ihlp->code(tpl_val_set_index++).getAtomCount();
+		for(uint16	i=0;i<tpl_val_count;++i){	// valuate tpl args.
 
-			Objects::const_iterator	b=objects.find(original);
-			if(b!=objects.end())
-				return	true;
-			else
-				return	false;
-		}
-
-		for(uint16	i=0;i<original->code_size();++i){		//	find code containing variables.
-
-			switch(original->code(i).getDescriptor()){
-			case	Atom::NUMERICAL_VARIABLE:
-			case	Atom::STRUCTURAL_VARIABLE:
-				return	true;
+			Atom	atom=ihlp->code(tpl_val_set_index+i);
+			switch(atom.getDescriptor()){
+			case	Atom::R_PTR:
+				map[i]=new	ObjectValue(this,ihlp->get_reference(atom.asIndex()));
+				break;
+			case	Atom::I_PTR:
+				map[i]=new	StructureValue(this,ihlp,atom.asIndex());
+				break;
+			default:
+				map[i]=new	AtomValue(this,atom);
+				break;
 			}
 		}
 
-		for(uint16	i=0;i<original->references_size();++i){
+		uint16	val_set_index=ihlp->code(I_HLP_ARGS).asIndex()+1;
+		uint32	i=0;
+		for(uint32	j=first_index;j<map.size();++j){	// valuate args.
 
-			if(needs_binding(original->get_reference(i)))
+			if(j==after_index	||	j==after_index+1)
+				continue;
+
+			Atom	atom=ihlp->code(val_set_index+i);
+			switch(atom.getDescriptor()){
+			case	Atom::R_PTR:
+				map[j]=new	ObjectValue(this,ihlp->get_reference(atom.asIndex()));
+				break;
+			case	Atom::I_PTR:
+				map[j]=new	StructureValue(this,ihlp,atom.asIndex());
+				break;
+			case	Atom::WILDCARD:
+			case	Atom::T_WILDCARD:
+			case	Atom::VL_PTR:
+				break;
+			default:
+				map[j]=new	AtomValue(this,atom);
+				break;
+			}
+		}
+
+		map[after_index]=new	StructureValue(this,f_ihlp,FACT_AFTER);	// valuate timings; after_index is already known.
+		map[after_index+1]=new	StructureValue(this,f_ihlp,FACT_BEFORE);
+	}
+
+	Fact	*BindingMap::build_f_ihlp(Code	*hlp,uint16	opcode,bool	wr_enabled)	const{
+
+		Code	*ihlp=_Mem::Get()->build_object(Atom::Object(opcode,I_HLP_ARITY));
+		ihlp->code(I_HLP_OBJ)=Atom::RPointer(0);
+		ihlp->add_reference(hlp);
+
+		uint16	tpl_arg_index=I_HLP_ARITY+1;
+		ihlp->code(I_HLP_TPL_ARGS)=Atom::IPointer(tpl_arg_index);
+		ihlp->code(tpl_arg_index)=Atom::Set(first_index);
+		uint16	write_index=tpl_arg_index+1;
+		uint16	extent_index=write_index+first_index;
+		for(uint16	i=0;i<first_index;++i){	// valuate tpl args.
+
+			map[i]->valuate(ihlp,write_index,extent_index);
+			++write_index;
+		}
+
+		ihlp->code(I_HLP_ARGS)=Atom::IPointer(extent_index);
+		uint16	exposed_arg_start=first_index;
+		uint16	exposed_arg_count=map.size()-exposed_arg_start-2;	// -2: do not expose the first after/before timestamps.
+		ihlp->code(extent_index)=Atom::Set(exposed_arg_count);
+
+		uint32	before_index=after_index+1;
+		write_index=extent_index+1;
+		extent_index=write_index+exposed_arg_count;
+		for(uint16	i=exposed_arg_start;i<map.size();++i){	// valuate args.
+
+			if(i==after_index)
+				continue;
+			if(i==before_index)
+				continue;
+			map[i]->valuate(ihlp,write_index,extent_index);
+			++write_index;
+		}
+
+		ihlp->code(I_HLP_WR_E)=Atom::Boolean(wr_enabled);
+		ihlp->code(I_HLP_ARITY)=Atom::Float(1);	// psln_thr.
+
+		Fact	*f_ihlp=new	Fact(ihlp,0,0,1,1);
+		extent_index=FACT_ARITY+1;
+		map[after_index]->valuate(f_ihlp,FACT_AFTER,extent_index);
+		map[after_index+1]->valuate(f_ihlp,FACT_BEFORE,extent_index);
+		return	f_ihlp;
+	}
+
+	bool	BindingMap::match(const	Code	*object,uint16	o_base_index,uint16	o_index,const	Code	*pattern,uint16	p_index,uint16	o_arity){
+
+		uint16	o_full_index=o_base_index+o_index;
+		Atom	o_atom=object->code(o_full_index);
+		Atom	p_atom=pattern->code(p_index);
+		switch(o_atom.getDescriptor()){
+		case	Atom::T_WILDCARD:
+		case	Atom::WILDCARD:
+		case	Atom::VL_PTR:
+			break;
+		case	Atom::I_PTR:
+			switch(p_atom.getDescriptor()){
+			case	Atom::VL_PTR:
+				if(!map[p_atom.asIndex()]->match(object,o_full_index))
+					return	false;
+				break;
+			case	Atom::I_PTR:
+				if(!match_structure(object,o_atom.asIndex(),0,pattern,p_atom.asIndex()))
+					return	false;
+				break;
+			case	Atom::T_WILDCARD:
+			case	Atom::WILDCARD:
+				break;
+			default:
+				return	false;
+			}
+			break;
+		case	Atom::R_PTR:
+			switch(p_atom.getDescriptor()){
+			case	Atom::VL_PTR:
+				if(!map[p_atom.asIndex()]->match(object,o_full_index))
+					return	false;
+				break;
+			case	Atom::R_PTR:
+				if(!match_object(object->get_reference(o_atom.asIndex()),pattern->get_reference(p_atom.asIndex())))
+					return	false;
+				break;
+			case	Atom::T_WILDCARD:
+			case	Atom::WILDCARD:
+				break;
+			default:
+				return	false;
+			}
+			break;
+		default:
+			switch(p_atom.getDescriptor()){
+			case	Atom::VL_PTR:
+				if(!map[p_atom.asIndex()]->match(object,o_full_index))
+					return	false;
+				break;
+			case	Atom::T_WILDCARD:
+			case	Atom::WILDCARD:
+				break;
+			default:
+				if(!match_atom(o_atom,p_atom))
+					return	false;
+				break;
+			}
+			break;
+		}
+
+		if(o_index==o_arity)
+			return	true;
+		return	match(object,o_base_index,o_index+1,pattern,p_index+1,o_arity);
+	}
+
+	bool	BindingMap::match_atom(Atom	o_atom,Atom	p_atom){
+
+		if(p_atom==o_atom)
+			return	true;
+
+		if(p_atom.isFloat()	&&	o_atom.isFloat()){
+
+			if(abs(o_atom.asFloat()-p_atom.asFloat())<=_Mem::Get()->get_float_tolerance())
 				return	true;
+		}
+		return	false;
+	}
+
+	bool	BindingMap::match_structure(const	Code	*object,uint16	o_base_index,uint16	o_index,const	Code	*pattern,uint16	p_index){
+
+		uint16	o_full_index=o_base_index+o_index;
+		Atom	o_atom=object->code(o_full_index);
+		Atom	p_atom=pattern->code(p_index);
+		if(o_atom!=p_atom)
+			return	false;
+		uint16	arity=o_atom.getAtomCount();
+		if(arity==0)	// empty sets.
+			return	true;
+		if(o_atom.getDescriptor()==Atom::TIMESTAMP)
+			return	abs((int32)(Utils::GetTimestamp(&object->code(o_full_index))-Utils::GetTimestamp(&pattern->code(p_index))))<=_Mem::Get()->get_time_tolerance();
+		return	match(object,o_base_index,o_index+1,pattern,p_index+1,arity);
+	}
+
+	bool	BindingMap::match_timings(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d){
+
+		uint64	after=f_object->get_after();
+		uint64	before=f_object->get_before();
+
+		uint64	stored_after;
+		uint64	stored_before;
+		uint32	after_index;
+		switch(d){
+		case	MATCH_FORWARD:
+			stored_after=get_fwd_after();
+			stored_before=get_fwd_before();
+			after_index=this->after_index;
+			break;
+		case	MATCH_BACKWARD:
+			stored_after=get_bwd_after();
+			stored_before=get_bwd_before();
+			after_index=map.size()-2;
+			break;
+		}
+
+		if(stored_after<=after){
+
+			if(stored_before>=before){			// sa a b sb
+
+				Utils::SetTimestamp(map[after_index]->get_code(),after);
+				Utils::SetTimestamp(map[after_index+1]->get_code(),before);
+				return	true;
+			}else{
+
+				if(stored_before>=after){		// sa a sb b
+
+					Utils::SetTimestamp(map[after_index]->get_code(),after);
+					return	true;
+				}
+				return	false;
+			}
+		}else{
+
+			if(stored_before<before)			// a sa sb b
+				return	true;
+			else	if(stored_after<=before){	// a sa b sb
+
+				Utils::SetTimestamp(map[after_index+1]->get_code(),before);
+				return	true;
+			}
+			return	false;
+		}
+	}
+
+	bool	BindingMap::match_strict(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d){
+
+		if(match_object(f_object->get_reference(0),f_pattern->get_reference(0))){
+
+			if(f_object->code(0)!=f_pattern->code(0))
+				return	false;
+
+			return	match_timings(f_object,f_pattern,d);
+		}else
+			return	false;
+	}
+
+	MatchResult	BindingMap::match_lenient(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d){
+
+		if(match_object(f_object->get_reference(0),f_pattern->get_reference(0))){
+
+			MatchResult	r;
+			if(f_pattern->code(0)==f_object->code(0))
+				r=MATCH_SUCCESS_POSITIVE;
+			else
+				r=MATCH_SUCCESS_NEGATIVE;
+
+			if(match_timings(f_object,f_pattern,d))
+				return	r;
+			return	MATCH_FAILURE;
+		}else
+			return	MATCH_FAILURE;
+	}
+
+	bool	BindingMap::match_object(const	Code	*object,const	Code	*pattern){
+
+		if(object->code(0)!=pattern->code(0))
+			return	false;
+		uint16	pattern_opcode=pattern->code(0).asOpcode();
+		if(	pattern_opcode==Opcodes::Ent	||
+			pattern_opcode==Opcodes::Ont	||
+			pattern_opcode==Opcodes::Mdl	||
+			pattern_opcode==Opcodes::Cst)
+			return	object==pattern;
+		return	match(object,0,1,pattern,1,object->code(0).getAtomCount());
+	}
+
+	void	BindingMap::bind_variable(BoundValue	*value,uint8	id){
+
+		map[id]=value;
+	}
+
+	void	BindingMap::bind_variable(Atom	*code,uint8	id,uint16	value_index,Atom	*intermediate_results){	// assigment.
+
+		Atom	v_atom=code[value_index];
+		if(v_atom.isFloat())
+			bind_variable(new	AtomValue(this,v_atom),id);
+		else	switch(v_atom.getDescriptor()){
+		case	Atom::VALUE_PTR:	
+			bind_variable(new	StructureValue(this,intermediate_results,v_atom.asIndex()),id);
+			break;
+		}
+	}
+
+	Code	*BindingMap::bind_pattern(Code	*pattern)	const{
+
+		if(!need_binding(pattern))
+			return	pattern;
+
+		Code	*bound_pattern=_Mem::Get()->build_object(pattern->code(0));
+
+		for(uint16	i=0;i<pattern->references_size();++i){	// bind references when needed. must be done before binding the code as this may add references.
+
+			Code	*reference=pattern->get_reference(i);
+			if(need_binding(reference))
+				bound_pattern->set_reference(i,bind_pattern(reference));
+			else
+				bound_pattern->set_reference(i,reference);
+		}
+
+		uint16	extent_index=pattern->code_size();
+		for(uint16	i=1;i<pattern->code_size();++i){	// transform code containing variables into actual values when they exist: objects -> r_ptr, structures -> i_ptr, atoms -> atoms.
+			
+			Atom	p_atom=pattern->code(i);
+			switch(p_atom.getDescriptor()){
+			case	Atom::VL_PTR:
+				map[p_atom.asIndex()]->valuate(bound_pattern,i,extent_index);
+				break;
+			default:
+				bound_pattern->code(i)=p_atom;
+				break;
+			}
+		}
+
+		return	bound_pattern;
+	}
+
+	bool	BindingMap::need_binding(Code	*pattern)	const{
+
+		if(	pattern->code(0).asOpcode()==Opcodes::Ont	||
+			pattern->code(0).asOpcode()==Opcodes::Ent	||
+			pattern->code(0).asOpcode()==Opcodes::Mdl	||
+			pattern->code(0).asOpcode()==Opcodes::Cst)
+			return	false;
+		
+		for(uint16	i=0;i<pattern->references_size();++i){
+
+			if(need_binding(pattern->get_reference(i)))
+				return	true;
+		}
+
+		for(uint16	i=1;i<pattern->code_size();++i){
+			
+			Atom	p_atom=pattern->code(i);
+			switch(p_atom.getDescriptor()){
+			case	Atom::VL_PTR:
+				return	true;
+			}
 		}
 
 		return	false;
 	}
 
-	Atom	BindingMap::get_atomic_variable(const	Code	*object,uint16	index){
+	Atom	*BindingMap::get_value_code(uint16	id){
 
-		Atom	var;
-		Atom	val=object->code(index);
+		return	map[id]->get_code();
+	}
 
-		if(val.isFloat()){
+	uint16	BindingMap::get_value_code_size(uint16	id){
 
-			float32	tolerance=_Mem::Get()->get_float_tolerance();
-			float32	min=val.asFloat()*(1-tolerance);
-			float32	max=val.asFloat()*(1+tolerance);
+		return	map[id]->get_code_size();
+	}
 
-			Atoms::const_iterator	a;
-			for(a=atoms.begin();a!=atoms.end();++a)
-				if(a->second.asFloat()>=min	&&
-					a->second.asFloat()<=max){	//	variable already exists for the value.
+	void	BindingMap::reset_fwd_timings(_Fact	*reference_fact){	// valuate at after_index and after_index+1 from the timings of the reference object.
 
-					var=a->first;
-					break;
+		map[after_index]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_AFTER).asIndex());
+		map[after_index+1]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_BEFORE).asIndex());
+	}
+
+	void	BindingMap::reset_bwd_timings(_Fact	*reference_fact){	// valuate at after_index and after_index+1 from the timings of the reference fact.
+
+		map[map.size()-2]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_AFTER).asIndex());
+		map[map.size()-1]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_BEFORE).asIndex());
+	}
+
+	uint64	BindingMap::get_fwd_after()		const{
+
+		return	Utils::GetTimestamp(map[after_index]->get_code());
+	}
+
+	uint64	BindingMap::get_fwd_before()	const{
+
+		return	Utils::GetTimestamp(map[after_index+1]->get_code());
+	}
+
+	uint64	BindingMap::get_bwd_after()		const{
+
+		return	Utils::GetTimestamp(map[map.size()-2]->get_code());
+	}
+
+	uint64	BindingMap::get_bwd_before()	const{
+
+		return	Utils::GetTimestamp(map[map.size()-1]->get_code());
+	}
+
+	bool	BindingMap::intersect(BindingMap	*bm){
+
+		for(uint32	i=0;i<map.size();){
+
+			if(i==after_index){	// ignore fact timings.
+
+				i+=2;
+				continue;
+			}
+
+			for(uint32	j=0;j<bm->map.size();){
+
+				if(j==bm->after_index){	// ignore fact timings.
+
+					j+=2;
+					continue;
 				}
-			
-			if(!var){
 
-				var=Atom::NumericalVariable(atoms.size(),Atom::GetFloatTolerance(tolerance));
-				atoms.insert(Atoms::value_type(var,val));
+				if(map[i]->intersect(bm->map[j]))
+					return	true;
+
+				++j;
 			}
-		}else	if(val.getDescriptor()==Atom::BOOLEAN_){
 
-			Atoms::const_iterator	a;
-			for(a=atoms.begin();a!=atoms.end();++a)
-				if(a->second.asBoolean()==val.asBoolean()){	//	variable already exists for the value.
-
-					var=a->first;
-					break;
-				}
-
-			if(!var){
-
-				var=Atom::BooleanVariable(atoms.size());
-				atoms.insert(Atoms::value_type(var,val));
-			}
+			++i;
 		}
 
-		return	var;
+		return	false;
 	}
 
-	Atom	BindingMap::get_structural_variable(const	Code	*object,uint16	index){
+	void	BindingMap::trace(){
 
-		Atom	var;
-		Atom	*val=&object->code(index);
+		std::cout<<"Binding Map"<<std::endl;
+		for(uint16	i=0;i<map.size();++i){
 
-		switch(val[0].getDescriptor()){
-		case	Atom::TIMESTAMP:{	//	tolerance (ms) is used.
-			
-			uint32	tolerance_ms=_Mem::Get()->get_time_tolerance();
-			uint64	tolerance_us=tolerance_ms<<10;
-			uint64	t=Utils::GetTimestamp(val);
-			uint64	min;
-			uint64	max;
-			if(t>0){
-
-				min=t>tolerance_us?t-tolerance_us:0;
-				max=t+tolerance_us;
-			}else
-				min=max=0;
-
-			Structures::const_iterator	s;
-			for(s=structures.begin();s!=structures.end();++s){
-
-				if(s->second[0].getDescriptor()==Atom::TIMESTAMP){
-
-					int64	_t=Utils::GetTimestamp(&s->second[0]);
-					if(_t<0)
-						_t=-_t;
-					if(_t>=min	&&	_t<=max){	//	variable already exists for the value.
-
-						object->code(index).setTimeTolerance(tolerance_ms);
-						var=s->first;
-						break;
-					}
-				}
-			}
-
-			if(!var){
-
-				object->code(index).setTimeTolerance(tolerance_ms);
-				var=Atom::StructuralVariable(structures.size(),0);
-				std::vector<Atom>	_value;
-				for(uint16	i=0;i<=val[0].getAtomCount();++i)
-					_value.push_back(val[i]);
-				_value[0].setTimeTolerance(tolerance_ms);
-				structures.insert(Structures::value_type(var,_value));
-			}
-			break;
-		}case	Atom::STRING:{	//	tolerance is not used.
-
-			Structures::const_iterator	s;
-			for(s=structures.begin();s!=structures.end();++s){
-
-				if(val[0]==s->second[0]){
-
-					uint16	i;
-					for(i=1;i<=val[0].getAtomCount();++i)
-						if(val[i]!=s->second[i])
-							break;
-					if(i==val[0].getAtomCount()+1){
-
-						var=s->first;
-						break;
-					}
-				}
-			}
-
-			if(!var){
-
-				var=Atom::StructuralVariable(structures.size(),0);
-				std::vector<Atom>	_value;
-				for(uint16	i=0;i<=val[0].getAtomCount();++i)
-					_value.push_back(val[i]);
-				structures.insert(Structures::value_type(var,_value));
-			}
-			break;
-		}case	Atom::OBJECT:{	//	tolerance is used to compare numerical structure members.
-
-			float32	tolerance=_Mem::Get()->get_float_tolerance();
-
-			Structures::const_iterator	s;
-			for(s=structures.begin();s!=structures.end();++s){
-
-				if(val[0]==s->second[0]){
-
-					uint16	i;
-					for(i=1;i<=val[0].getAtomCount();++i){
-
-						if(val[i].isFloat()){
-
-							float32	min=val[i].asFloat()*(1-tolerance);
-							float32	max=val[i].asFloat()*(1+tolerance);
-							if(s->second[i].asFloat()<min	||	s->second[i].asFloat()>max)
-								break;
-						}else	if(val[i]!=s->second[i])
-							break;
-					}
-					if(i==val[0].getAtomCount()+1){
-
-						var=s->first;
-						break;
-					}
-				}
-			}
-
-			if(!var){
-
-				var=Atom::StructuralVariable(structures.size(),Atom::GetFloatTolerance(tolerance));
-				std::vector<Atom>	_value;
-				for(uint16	i=0;i<=val[0].getAtomCount();++i)
-					_value.push_back(val[i]);
-				structures.insert(Structures::value_type(var,_value));
-			}
-			break;
-		}
-		}
-
-		return	var;
-	}
-
-	Code	*BindingMap::get_variable_object(Code	*object){
-
-		Code	*var=NULL;
-		bool	exists=false;
-
-		Objects::const_iterator	o;
-		for(o=objects.begin();o!=objects.end();++o)
-			if(o->second==object){	//	variable already exists for the value.
-
-				var=o->first;
-				break;
-			}
-		
-		if(!var){
-
-			var=factory::Object::Var(1);
-			P<Code>	p=object;
-			objects.insert(Objects::value_type(var,p));
-		}
-
-		return	var;
-	}
-
-	void	BindingMap::set_variable_object(Code	*object){
-
-		P<Code>	original=_Mem::Get()->clone_object(object);
-		object->code(0)=Atom::Object(Opcodes::Var,VAR_ARITY);	//	object is an entity. var and ent have the same size.
-		objects.insert(Objects::value_type(object,original));
-	}
-
-	bool	BindingMap::match_atom(Atom	o,Atom	p){
-
-		switch(p.getDescriptor()){
-		case	Atom::NUMERICAL_VARIABLE:
-			if(!o.isFloat())
-				return	false;
-			if(!bind_float_variable(o,p))
-				return	false;
-			break;
-		case	Atom::BOOLEAN_VARIABLE:
-			if(o.getDescriptor()!=Atom::BOOLEAN_)
-				return	false;
-			if(!bind_boolean_variable(o,p))
-				return	false;
-			break;
-		default:
-			if(o!=p){
-			
-				if(o.isFloat()	&&	p.isFloat()){
-
-					if(abs(o.asFloat()-p.asFloat())>_Mem::Get()->get_float_tolerance())
-						return	false;
-				}else
-					return	false;
-			}
-			break;
-		}
-		return	true;
-	}
-
-	bool	BindingMap::match_timestamp(Atom	*o,Atom	*p){
-
-		if((p+1)->getDescriptor()==Atom::STRUCTURAL_VARIABLE){
-
-			if(!bind_structural_variable(o,p+1))
-				return	false;
-		}else{
-
-			uint64	object_time=Utils::GetTimestamp(o);
-			uint64	pattern_time=Utils::GetTimestamp(p);
-			uint64	time_tolerance_us=p->getTimeTolerance()<<10;
-			if(object_time<pattern_time-time_tolerance_us	||	object_time>pattern_time+time_tolerance_us)
-				return	false;
-		}
-		return	true;
-	}
-
-	bool	BindingMap::match_structure(Atom	*o,Atom	*p){
-
-		if((p+1)->getDescriptor()==Atom::STRUCTURAL_VARIABLE){
-
-			if(!bind_structural_variable(o,p+1))
-				return	false;
-		}else{
-
-			for(uint16	i=1;i<=p->getAtomCount();++i){
-
-				if(!match_atom(o[i],p[i]))
-					return	false;
-			}
-		}
-		return	true;
-	}
-
-	bool	BindingMap::match(Code	*object,Code	*pattern){
-
-		if(pattern->code(0).asOpcode()==Opcodes::Var){
-
-			if(!bind_object_variable(object,pattern))
-				return	false;
-		}else	if(	pattern->code(0).asOpcode()==Opcodes::Ent	||
-					pattern->code(0).asOpcode()==Opcodes::Ont)
-			return	object==pattern;	
-		else{
-
-			if(object->code(0)!=pattern->code(0))
-				return	false;
-			if(object->code_size()!=pattern->code_size())
-				return	false;
-			if(object->references_size()!=pattern->references_size())
-				return	false;
-			for(uint16	i=1;i<pattern->code_size();++i){
-
-				switch(pattern->code(i).getDescriptor()){
-				case	Atom::TIMESTAMP:
-					if(!match_timestamp(&object->code(i),&pattern->code(i)))
-						return	false;
-					i+=2;	//	skip the rest of the structure.
-					break;
-				case	Atom::OBJECT:
-					if(!match_structure(&object->code(i),&pattern->code(i)))
-						return	false;
-					i+=pattern->code(i).getAtomCount();	//	skip the rest of the structure.
-					break;
-				default:
-					if(!match_atom(object->code(i),pattern->code(i)))
-						return	false;
-					break;
-				}
-			}
-
-			for(uint16	i=0;i<pattern->references_size();++i){
-
-				Code	*object_reference=object->get_reference(i);
-				Code	*pattern_reference=pattern->get_reference(i);
-				if(pattern_reference!=object_reference){
-
-					if(!match(object_reference,pattern_reference))
-						return	false;
-				}
-			}
-
-			return	true;
-		}
-	}
-
-	bool	BindingMap::bind_float_variable(Atom	val,Atom	var){
-
-		Atoms::const_iterator	a=atoms.find(var);
-		if(a==atoms.end())
-			return	true;
-		if(a->second.getDescriptor()==Atom::NUMERICAL_VARIABLE){
-
-			atoms[var]=val;
-			return	true;
-		}
-
-		float32	multiplier=var.getFloatMultiplier();
-		float32	min=a->second.asFloat()*(1-multiplier);
-		float32	max=a->second.asFloat()*(1+multiplier);
-		if(val.asFloat()<min	||	val.asFloat()>max)	//	at least one value differs from an existing binding.
-			return	false;
-		return	true;
-	}
-
-	bool	BindingMap::bind_boolean_variable(Atom	val,Atom	var){
-
-		Atoms::const_iterator	a=atoms.find(var);
-		if(a==atoms.end())
-			return	true;
-		if(a->second.getDescriptor()==Atom::BOOLEAN_VARIABLE){
-
-			atoms[var]=val;
-			return	true;
-		}
-
-		if(val.asBoolean()!=a->second.asBoolean())	//	at least one value differs from an existing binding.
-			return	false;
-		return	true;
-	}
-
-	bool	BindingMap::bind_structural_variable(Atom	*val,Atom	*var){
-
-		uint16	val_size=val->getAtomCount();
-		Structures::iterator	s=structures.find(*var);
-		if(s==structures.end())
-			return	true;
-		if(s->second[1].getDescriptor()==Atom::STRUCTURAL_VARIABLE){
-
-			for(uint16	i=0;i<=val_size;++i)
-				s->second[i]=val[i];
-			return	true;
-		}
-		
-		switch(s->second[0].getDescriptor()){
-		case	Atom::TIMESTAMP:{	//	tolerance is used.
-
-			uint64	tolerance_us=(var-1)->getTimeTolerance()<<10;
-			uint64	vt=Utils::GetTimestamp(&s->second[0]);
-			uint64	min=vt-tolerance_us;
-			uint64	max=vt+tolerance_us;
-			uint64	t=Utils::GetTimestamp(val);
-			if(t<min	||	t>max)	//	the value differs from an existing binding.
-				return	false;
-			return	true;
-		}case	Atom::STRING:	//	tolerance is not used.
-			for(uint16	i=1;i<=val_size;++i){
-
-				if(val[i]!=s->second[i])	//	part of the value differs from an existing binding.
-					return	false;
-			}
-			return	true;
-		case	Atom::OBJECT:	//	tolerance is used to compare numerical structure members.
-			for(uint16	i=1;i<=val_size;++i){
-
-				float32	multiplier=var->getFloatMultiplier();
-				if(val[i].isFloat()){
-
-					float32	min=s->second[i].asFloat()*(1-multiplier);
-					float32	max=s->second[i].asFloat()*(1+multiplier);
-					float	v=val[i].asFloat();
-					if(v<min	||	v>max)	//	at least one value differs from an existing binding.
-						return	false;
-				}else	if(val[i]!=s->second[i])	//	at least one value differs from an existing binding.
-					return	false;
-			}
-			return	true;
-		}
-	}
-
-	bool	BindingMap::bind_object_variable(Code	*val,Code	*var){
-
-		Objects::const_iterator	o=objects.find(var);
-		if(o==objects.end())
-			return	true;
-		if(o->second->code(0).asOpcode()==Opcodes::Var){
-
-			objects[var]=val;
-			return	true;
-		}
-
-		if(o->second!=val)	//	at least one value differs from an existing binding.
-			return	false;
-		return	true;
-	}
-
-	void	BindingMap::copy(Code	*object,uint16	index)	const{
-
-		uint16	args_size=objects.size()+atoms.size()+structures.size();
-		object->code(index)=Atom::Set(args_size);
-
-		uint16	code_index=index+1;
-		uint16	ref_index=1;
-		Objects::const_iterator	o;
-		for(o=objects.begin();o!=objects.end();++o,++ref_index,++code_index){
-
-			object->code(code_index)=Atom::RPointer(ref_index);
-			object->set_reference(ref_index,o->second);
-		}
-
-		uint16	extent_index=index+args_size+1;
-		Structures::const_iterator	s;
-		for(s=structures.begin();s!=structures.end();++s,++code_index){
-
-			object->code(code_index)=Atom::IPointer(extent_index);
-			for(uint16	j=0;j<=s->second[0].getAtomCount();++j,++extent_index)
-				object->code(extent_index)=s->second[j];
-		}
-
-		Atoms::const_iterator	a;
-		for(a=atoms.begin();a!=atoms.end();++a,++code_index)
-			object->code(code_index)=a->second;
-	}
-
-	void	BindingMap::load(const	Code	*object){	//	source is icst or imdl.
-
-		uint16	var_set_index=object->code(I_HLP_ARGS).asIndex();
-		uint16	var_count=object->code(var_set_index).getAtomCount();
-
-		Objects::iterator		o=objects.begin();
-		Structures::iterator	s=structures.begin();
-		Atoms::iterator			a=atoms.begin();
-		
-		for(uint16	i=1;i<var_count;++i){
-
-			Atom	atom=object->code(var_set_index+i);
-			switch(atom.getDescriptor()){
-			case	Atom::R_PTR:
-				o->second=object->get_reference(atom.asIndex());
-				++o;
-				break;
-			case	Atom::I_PTR:{
-				std::vector<Atom>	val;
-				uint16	s_index=atom.asIndex();
-				for(uint16	j=0;j<=object->code(s_index).getAtomCount();++j)
-					val.push_back(object->code(s_index+j));
-				s->second=val;
-				break;
-			}case	Atom::NUMERICAL_VARIABLE:
-			case	Atom::BOOLEAN_VARIABLE:
-				a->second=atom;
-				++a;
-				break;
-			}
+			std::cout<<"["<<i<<"]\n";
+			map[i]->trace();
 		}
 	}
 }

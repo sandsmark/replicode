@@ -103,7 +103,7 @@ namespace	r_code{
 		Image();
 		~Image();
 
-		uint32	getSize()	const;				//	size of data in word32
+		uint32	get_size()	const;				//	size of data in word32
 		uint32	getObjectCount()	const;
 		word32	*getObject(uint32	i);			//	points to the code size of the object; the first atom is at getObject()+2
 		word32	*getCodeSegment();				//	equals getObject(0)

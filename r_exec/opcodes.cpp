@@ -53,23 +53,24 @@ namespace	r_exec{
 	uint16	Opcodes::ICmd;
 	uint16	Opcodes::Cmd;
 
-	uint16	Opcodes::Var;
 	uint16	Opcodes::Fact;
 	uint16	Opcodes::AntiFact;
 
-	uint16	Opcodes::ICST;
-	uint16	Opcodes::IMDL;
+	uint16	Opcodes::Cst;
+	uint16	Opcodes::Mdl;
 
-	uint16	Opcodes::MkPred;
-	uint16	Opcodes::MkGoal;
-	uint16	Opcodes::MkHyp;
-	uint16	Opcodes::MkSim;
-	uint16	Opcodes::MkAsmp;
+	uint16	Opcodes::ICst;
+	uint16	Opcodes::IMdl;
+
+	uint16	Opcodes::Pred;
+	uint16	Opcodes::Goal;
+
+	uint16	Opcodes::Success;
+
+	uint16	Opcodes::MkGrpPair;
 
 	uint16	Opcodes::MkRdx;
-	uint16	Opcodes::MkAntiRdx;
-
-	uint16	Opcodes::MkSuccess;
+	uint16	Opcodes::Perf;
 
 	uint16	Opcodes::MkNew;
 
@@ -89,9 +90,6 @@ namespace	r_exec{
 	uint16	Opcodes::DelClass;
 	uint16	Opcodes::LDC;
 	uint16	Opcodes::Swap;
-	uint16	Opcodes::NewDev;
-	uint16	Opcodes::DelDev;
 	uint16	Opcodes::Prb;
-	uint16	Opcodes::Suspend;
 	uint16	Opcodes::Stop;
 }

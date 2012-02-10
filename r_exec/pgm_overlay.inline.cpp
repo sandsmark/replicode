@@ -30,27 +30,6 @@
 
 namespace	r_exec{
 
-	inline	void	InputLessPGMOverlay::patch_code(uint16	index,Atom	value){
-
-		pgm_code[index]=value;
-		patch_indices.push_back(index);
-	}
-
-	inline	uint16	InputLessPGMOverlay::get_last_patch_index(){
-
-		return	patch_indices.size();
-	}
-
-	inline	void	InputLessPGMOverlay::unpatch_code(uint16	patch_index){
-
-		Atom	*original_code=&getObject()->get_reference(0)->code(0);
-		for(uint16	i=patch_index;i<patch_indices.size();++i)
-			pgm_code[patch_indices[i]]=original_code[patch_indices[i]];
-		patch_indices.resize(patch_index);
-	}
-
-	////////////////////////////////////////////////////////////////
-	
 	inline	r_code::Code	*PGMOverlay::getInputObject(uint16	i)	const{	
 		
 		return	input_views[i]->object;

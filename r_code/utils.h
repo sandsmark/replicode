@@ -32,16 +32,29 @@
 #define	r_code_utils_h
 
 #include	"atom.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/base.h"
 
 
 namespace	r_code{
+
+	// For use in STL containers.
+	template<class	C>	class	PHash{
+	public:
+		size_t	operator	()(P<C>	c)	const{
+			return	(size_t)(C	*)c;
+		}
+	};
+
+	class	Code;
 
 	class	dll_export	Utils{
 	public:
 		static	uint64	GetTimestamp(const	Atom	*iptr);
 		static	void	SetTimestamp(Atom	*iptr,uint64	t);
 
-		template<class	O>	static	uint64	GetTimestamp(O	*object,uint16	index){
+		static	const	uint64	MaxTime=0xFFFFFFFFFFFFFFFF;
+
+		template<class	O>	static	uint64	GetTimestamp(const	O	*object,uint16	index){
 
 			uint16	t_index=object->code(index).asIndex();
 			uint64	high=object->code(t_index+1).atom;
@@ -59,7 +72,7 @@ namespace	r_code{
 		static	std::string	GetString(const	Atom	*iptr);
 		static	void	SetString(Atom	*iptr,const	std::string	&s);
 
-		template<class	O>	static	std::string	GetString(O	*object,uint16	index){
+		template<class	O>	static	std::string	GetString(const	O	*object,uint16	index){
 
 			uint16	s_index=object->code(index).asIndex();
 			std::string	s;

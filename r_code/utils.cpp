@@ -81,6 +81,8 @@ namespace	r_code{
 
 	int32	Utils::GetResilience(uint64	time_to_live,uint64	upr){
 
+		if(time_to_live==0	||	upr==0)
+			return	1;
 		uint64	r=time_to_live/upr;
 		if(time_to_live%upr>1)
 			++r;

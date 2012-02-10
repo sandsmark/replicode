@@ -42,42 +42,15 @@ using	namespace	r_code;
 namespace	r_exec{
 
 	class	View;
-	class	Controller;
-
-	class	r_exec_dll	Overlay:
-	public	_Object{
-	protected:
-		bool			alive;
-		Controller		*controller;
-
-		Overlay();
-		Overlay(Controller	*c);
-	public:
-		virtual	~Overlay();
-
-		virtual	void	reset();							//	reset to original state.
-		virtual	Overlay	*reduce(r_exec::View	*input);	//	returns an offspring in case of a match.
-
-		void	kill();
-		bool	is_alive();
-
-		// Delegated to the controller.
-		r_code::Code	*getObject()	const;
-		r_exec::View	*getView()		const;
-		r_code::Code	*build_object(Atom	head)	const;
-	};
-
-	//	Upon invocation of take_input() the overlays older than tsc are killed, assuming stc>0; otherwise, overlays live unitl the ipgm dies.
-	//	Shared resources:
-	//	- alive: written by TimeCores (via UpdateJob::update() and _Mem::update()), read by TimeCores (via SignalingJob::update()).
-	//	- overlays: modified by take_input, executed by TimeCores (via UpdateJob::update() and _Mem::update()) and ReductionCore::Run() (via ReductionJob::update(), PGMOverlay::reduce(), _Mem::inject() and add()/remove()/restart()).
-	//	Controllers are built at loading time and at the view's injection time.
-	//	Derived classes must expose a function: void	reduce(r_code::View*input);	(called by reduction jobs).
+	
+	// Upon invocation of take_input() the overlays older than tsc are killed, assuming stc>0; otherwise, overlays live unitl the ipgm dies.
+	// Controllers are built at loading time and at the view's injection time.
+	// Derived classes must expose a function: void	reduce(r_code::View*input);	(called by reduction jobs).
 	class	r_exec_dll	Controller:
 	public	_Object{
 	protected:
-		bool			alive;
-		CriticalSection	aliveCS;
+		volatile	uint32	invalidated;	// 32 bit alignment.
+		volatile	uint32	activated;		// 32 bit alignment.
 
 		uint64	tsc;
 
@@ -85,27 +58,86 @@ namespace	r_exec{
 
 		CriticalSection	reductionCS;
 
+		virtual	void	take_input(r_exec::View	*input){}
+		template<class	C>	void	__take_input(r_exec::View	*input){	// utility: to be called by sub-classes.
+
+			ReductionJob<C>	*j=new	ReductionJob<C>(new	View(input),(C	*)this);
+			_Mem::Get()->pushReductionJob(j);
+		}
+
 		Controller(r_code::View	*view);
 	public:
 		virtual	~Controller();
 
 		uint64	get_tsc(){	return	tsc;	}
 
-		void	kill();
-		bool	is_alive();
+		void	invalidate()			{	invalidated=1;	}
+		bool	is_invalidated()		{	return	invalidated==1;	};
+		void	activate(bool	a)		{	activated=1;	}
+		bool	is_activated()	const	{	return	activated==1;	}
+		bool	is_alive()	const		{	return	invalidated==0	&&	activated==1;	}
 
-		r_code::Code	*getObject()	const;	// return the reduction object (e.g. ipgm, r-grp, icpp_pgm). The object must have a tsc.
-		r_exec::View	*getView()		const;	// return the reduction object's view.
+		virtual	Code	*get_core_object()	const=0;
 
-		virtual	void	take_input(r_exec::View	*input){}	// called by the rMem at update time and at injection time.
-		template<class	C>	void	_take_input(r_exec::View	*input){	//	utility: to be called by sub-classes.
+		r_code::Code	*getObject()	const	{	return	view->object;			}	// return the reduction object (e.g. ipgm, icpp_pgm, cst, mdl).
+		r_exec::View	*getView()		const	{	return	(r_exec::View	*)view;	}	// return the reduction object's view.
 
-			ReductionJob<C>	*j=new	ReductionJob<C>(new	View(input),(C	*)this);
-			_Mem::Get()->pushReductionJob(j);
-		}
+		void	_take_input(r_exec::View	*input);	// called by the rMem at update time and at injection time.
 
-		virtual	void	gain_activation()	const{}
-		virtual	void	lose_activation()	const{}
+		virtual	void	gain_activation(){	activate(true);	 }
+		virtual	void	lose_activation(){	activate(false); }
+	};
+
+	class	_Context;
+	class	IPGMContext;
+	class	HLPContext;
+
+	class	r_exec_dll	Overlay:
+	public	_Object{
+	friend	class	_Context;
+	friend	class	IPGMContext;
+	friend	class	HLPContext;
+	protected:
+		volatile	uint32	invalidated;
+
+		Controller	*controller;
+
+		r_code::vector<Atom>	values;	// value array: stores the results of computations.
+		// Copy of the pgm/hlp code. Will be patched during matching and evaluation:
+		// any area indexed by a vl_ptr will be overwritten with:
+		// 		the evaluation result if it fits in a single atom,
+		//		a ptr to the value array if the result is larger than a single atom,
+		//		a ptr to an input if the result is a pattern input.
+		Atom				*code;
+		uint16				code_size;
+		std::vector<uint16>	patch_indices;		// indices where patches are applied; used for rollbacks.
+		uint16				value_commit_index;	// index of the last computed value+1; used for rollbacks.
+
+		void				load_code();
+		void				patch_code(uint16	index,Atom	value);
+		uint16				get_last_patch_index();
+		void				unpatch_code(uint16	patch_index);
+
+		void	rollback();	// reset the overlay to the last commited state: unpatch code and values.
+		void	commit();	// empty the patch_indices and set value_commit_index to values.size().
+
+		Code	*get_core_object()	const;	// pgm, mdl, cst.
+
+		Overlay();
+		Overlay(Controller	*c,bool	load_code=true);
+	public:
+		virtual	~Overlay();
+
+		virtual	void	reset();							// reset to original state.
+		virtual	Overlay	*reduce(r_exec::View	*input);	// returns an offspring in case of a match.
+
+		void	invalidate()		{	invalidated=1;	}
+		bool	is_invalidated()	{	return	invalidated==1;	}
+
+		r_code::Code	*getObject()	const	{	return	((Controller	*)controller)->getObject();	}
+		r_exec::View	*getView()		const	{	return	((Controller	*)controller)->getView();	}
+
+		r_code::Code	*build_object(Atom	head)	const;
 	};
 
 	class	r_exec_dll	OController:
@@ -118,9 +150,6 @@ namespace	r_exec{
 		virtual	~OController();
 	};
 }
-
-
-#include	"overlay.inline.cpp"
 
 
 #endif

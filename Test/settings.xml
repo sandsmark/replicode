@@ -1,64 +1,66 @@
 <TestConfiguration>
-
-  <Parameters
-    base_period="100000"
-	  
-    reduction_core_count="3"
-	  time_core_count="1"
-  	
-    notification_resilience="1000"
-    
-    goal_resilience="100000"
-    assumption_resilience="100000"
-    simulation_resilience="100000"
-    goal_record_resilience="1000000"
-    
-    float_tolerance="0.1"
-    time_tolerance="50"
-    
-	  run_time="1000"
-    
-    probe_level="2"
-
+  <Load
     usr_operator_path="./usr_operators.dll"
-    usr_class_path="../Test/Demo1/user.classes.replicode"
-    source_file_name="../Test/Demo1/main.replicode"
-
+    usr_class_path="../../V1.2/user.classes.replicode"
+    source_file_name="../../V1.2/test.1.replicode"
+  />
+  <Init
+    base_period="50000"
+    reduction_core_count="3"
+    time_core_count="1"
+  />
+  <System
+    mdl_inertia_sr_thr="0.9"
+    mdl_inertia_cnt_thr="10"
+    tpx_dsr_thr="0.1"
+    min_sim_time_horizon="25000"
+    max_sim_time_horizon="100000"
+    sim_time_horizon="0.3"
+    tpx_time_horizon="500000"
+    perf_sampling_period="250000"
+    float_tolerance="0.1"
+    time_tolerance="10000"
+  />
+  <Debug debug="yes">
+    <Resilience
+      ntf_mk_resilience="2000"
+      goal_pred_success_resilience="1000"
+    />
+  </Debug>
+  <Run
+    run_time="1000"
+    probe_level="2"
     decompile_image="yes"
     ignore_ontology="yes"
     write_image="no"
-    image_path="../Test/Correlator.Data.Generation/motor.babbling.episodes.replicode.image"
+    image_path="../Test/test.replicode.image"
     test_image="no"
-    />
-
-  </TestConfiguration>
+  />
+</TestConfiguration>
 
 <!--Usage
-
-base_period: in us.
-
-reduction_core_count: number of threads processing reduction jobs.
-
-time_core_count: number of thread processing update jobs.
-
-notification_resilience: in upr (i.e. relative to the ntf group). For debugging only - otherwise shall be 1.
-goal_resilience, assumption_resilience and simulation_resilience: in us.
-
-goal_record_resilience: in us.
-
-float_tolerance: in [0,1].
-time_tolerance: in us/1024 (24 bits).
-
-run_time: in ms.
-
-decompile_timestamps: either "relative" or "absolute". When "relative", timestamps are displayed as offsets from mem->start().
-
-probe_level: any probe set to a level >= this level will not be executed. 0 means no probe will be executed.
-
-decompile_image: yes or no.
-
-write_image: yes or no.
-
-test_image: yes or no (yes: reads back and decompiles).
-
+Init
+  base_period: in us.
+  reduction_core_count: number of threads processing reduction jobs.
+  time_core_count: number of thread processing update jobs.
+System
+  mdl_inertia_sr_thr: in [0,1].
+  mdl_inertia_cnt_thr: in instance count.
+  tpx_dsr_thr: in [0,1].
+  min_sim_time_horizon: in us.
+  max_sim_time_horizon: in us.
+  sim_time_horizon: in [0,1]: percentage of (before-now) allocated to simulation.
+  tpx_time_horizon: in us.
+  perf_sampling_prd: in us.
+  float_tolerance: in [0,1].
+  time_tolerance: in us.
+Debug
+  ntf_mk_resilience: in upr (i.e. relative to the ntf group).
+  goal_pred_success_resilience: in upr (i.e. relative to the ntf group).
+Run
+  run_time: in ms.
+  probe_level: any probe set to a level >= this level will not be executed. 0 means no probe will be executed.
+  decompile_image: yes or no.
+  write_image: yes or no.
+  test_image: yes or no (yes: reads back and decompiles).
 -->

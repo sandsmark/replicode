@@ -118,6 +118,7 @@ namespace	r_comp{
 	bool	Compiler::read_sys_object(){
 
 		local_references.clear();
+		hlp_references.clear();
 		bool	indented=false;
 		bool	lbl=false;
 
@@ -130,6 +131,9 @@ namespace	r_comp{
 			in_stream->putback(c);
 		else
 			return	true;
+
+		in_hlp=false;
+
 		if(label(l))
 			lbl=true;
 		if(!expression_begin(indented)){
@@ -148,6 +152,8 @@ namespace	r_comp{
 			return	false;
 		}else{
 
+			if(current_class.str_opcode=="mdl"	||	current_class.str_opcode=="cst")
+				in_hlp=true;
 			current_object=new	SysObject();
 			if(lbl)
 				global_references[l]=Reference(_image->code_segment.objects.size(),current_class,Class());	
@@ -255,7 +261,7 @@ namespace	r_comp{
 		if(trace)
 			sys_object->trace();
 
-		_image->addSysObject(sys_object,l);
+		_image->add_sys_object(sys_object,l);
 		return	true;
 	}
 
@@ -304,6 +310,23 @@ namespace	r_comp{
 				set_error(" error: cast to "+class_name+": unknown class");
 		}else
 			local_references[reference_name]=Reference(index,p,Class());
+	}
+
+	uint8	Compiler::add_hlp_reference(std::string	reference_name){
+
+		for(uint8	i=0;i<hlp_references.size();++i)
+			if(reference_name==hlp_references[i])
+				return	i;
+		hlp_references.push_back(reference_name);
+		return	hlp_references.size()-1;
+	}
+
+	uint8	Compiler::get_hlp_reference(std::string	reference_name){
+
+		for(uint8	i=0;i<hlp_references.size();++i)
+			if(reference_name==hlp_references[i])
+				return	i;
+		return	0xFF;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -847,6 +870,31 @@ return_false:
 			Class	*unused;
 			if(getGlobalReferenceIndex(r,t,current_object,index,unused))
 				return	true;
+		}
+		in_stream->clear();
+		in_stream->seekg(i);
+		return	false;
+	}
+
+	bool	Compiler::hlp_reference(uint16	&index){
+
+		std::string	r;
+		std::streampos	i=in_stream->tellg();
+		if(label(r)){
+
+			in_stream->clear();
+			in_stream->seekg(i);
+			return	false;
+		}
+		r="";
+		if(symbol_expr(r)){
+
+			for(uint8	i=0;i<hlp_references.size();++i)
+				if(r==hlp_references[i]){
+
+					index=i;
+					return	true;
+				}
 		}
 		in_stream->clear();
 		in_stream->seekg(i);
@@ -1420,7 +1468,17 @@ return_false:
 
 		uint16	count=0;
 		bool	_indented=false;
-		bool	entered_pattern=p.is_pattern(_metadata);
+		bool	entered_pattern;
+		uint16	pattern_end_index;
+		if(in_hlp){
+
+			entered_pattern=true;//p.is_fact(_metadata);
+			pattern_end_index=p.atom.getAtomCount()-1;
+		}else{
+
+			entered_pattern=p.is_pattern(_metadata);
+			pattern_end_index=0;
+		}
 		if(write	&&	state.pattern_lvl)	//	fill up with wildcards that will be overwritten up to ::.
 			for(uint16	j=write_index;j<write_index+p.atom.getAtomCount();++j)
 				current_object->code[j]=Atom::Wildcard();
@@ -1459,14 +1517,14 @@ return_false:
 				}else
 					_indented=false;
 			}
-			if(entered_pattern	&&	count==0)	//	pattern skeleton begin.
+			if(entered_pattern	&&	count==0)	//	pattern begin.
 				++state.pattern_lvl;
 			if(!read(p.things_to_read[count],_indented,true,write_index+count,extent_index,write)){
 
 				set_error(" error: parsing element in expression");
 				return	false;
 			}
-			if(entered_pattern	&&	count==0)	//	pattern skeleton end.
+			if(entered_pattern	&&	count==pattern_end_index)	//	pattern end.
 				--state.pattern_lvl;
 			++count;
 		}
@@ -1494,12 +1552,22 @@ return_false:
 			in_stream->seekg(i);
 			return	false;
 		}
-		if(lbl)
+		if(lbl	&&	!in_hlp)
 			addLocalReference(l,write_index,p);
 		uint16	tail_write_index=0;
 		if(write){
 
-			current_object->code[write_index]=Atom::IPointer(extent_index);
+			if(lbl	&&	in_hlp){
+
+				uint8	variable_index=get_hlp_reference(l);
+				if(variable_index==0xFF){
+
+					set_error(" error: undeclared variable");
+					return	false;
+				}
+				current_object->code[write_index]=Atom::AssignmentPointer(variable_index,extent_index);
+			}else
+				current_object->code[write_index]=Atom::IPointer(extent_index);
 			current_object->code[extent_index++]=p.atom;
 			tail_write_index=extent_index;
 			extent_index+=p.atom.getAtomCount();
@@ -1532,7 +1600,17 @@ return_false:
 		uint16	tail_write_index=0;
 		if(write){
 
-			current_object->code[write_index]=Atom::IPointer(extent_index);
+			if(lbl	&&	in_hlp){
+
+				uint8	variable_index=get_hlp_reference(l);
+				if(variable_index==0xFF){
+
+					set_error(" error: undeclared variable");
+					return	false;
+				}
+				current_object->code[write_index]=Atom::AssignmentPointer(variable_index,extent_index);
+			}else
+				current_object->code[write_index]=Atom::IPointer(extent_index);
 			current_object->code[extent_index++]=p.atom;
 			tail_write_index=extent_index;
 			extent_index+=p.atom.getAtomCount();
@@ -2276,9 +2354,17 @@ return_false:
 
 			if(state.pattern_lvl){
 			
-				addLocalReference(v,write_index,p);
-				if(write)
-					current_object->code[write_index]=Atom::Wildcard(p.atom.asOpcode());	//	useless in skeleton expressions (already filled up in expression_head); usefull when the skeleton itself is a variable
+				if(in_hlp){
+					
+					uint8	variable_index=add_hlp_reference(v);
+					if(write)
+						current_object->code[write_index]=Atom::VLPointer(variable_index);
+				}else{
+				
+					addLocalReference(v,write_index,p);
+					if(write)
+						current_object->code[write_index]=Atom::Wildcard(p.atom.asOpcode());	//	useless in skeleton expressions (already filled up in expression_head); usefull when the skeleton itself is a variable
+				}
 				return	true;
 			}else{
 
@@ -2388,6 +2474,12 @@ return_false:
 					}
 				}
 			}
+			return	true;
+		}
+		if(hlp_reference(index)){
+
+			if(write)
+				current_object->code[write_index]=Atom::VLPointer(index);
 			return	true;
 		}
 		return	false;

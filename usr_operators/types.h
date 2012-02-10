@@ -31,7 +31,7 @@
 #ifndef	usr_operators_types_h
 #define	usr_operators_types_h
 
-#include	"../r_exec/context.h"
+#include	"../r_exec/operator.h"
 
 
 typedef	bool	(*Operator)(const	r_exec::Context	&,uint16	&);

@@ -106,7 +106,7 @@ int32	main(int	argc,char	**argv){
 	r_code::vector<Code	*>	objects;
 	r_comp::Image			*_i=new	r_comp::Image();
 	_i->load(img);
-	_i->getObjects<r_code::LObject>(objects);
+	_i->get_objects<r_code::LObject>(objects);
 
 	decompile(decompiler,_i,0);
 	delete	_i;
@@ -137,7 +137,7 @@ int32	main(int	argc,char	**argv){
 			if(!(*v)->references[0])
 				continue;
 
-			if((*v)->references[0]->getOID()==stdin_oid){
+			if((*v)->references[0]->get_oid()==stdin_oid){
 
 				correlator_inputs.insert(*v);
 				break;
@@ -148,7 +148,7 @@ int32	main(int	argc,char	**argv){
 	//	Third, feed the Correlator with the episodes, one by one.
 	//	Episodes are delimited with an object of the class episode_end (See user.classes.replicode).
 	std::string	episode_end_class_name="episode_end";
-	uint16		episode_end_opcode=r_exec::Metadata.getClass(episode_end_class_name)->atom.asOpcode();
+	uint16		episode_end_opcode=r_exec::Metadata.get_class(episode_end_class_name)->atom.asOpcode();
 	uint16		episode_count=0;
 
 	std::set<r_code::View	*,r_code::View::Less>::const_iterator	v;

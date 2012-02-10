@@ -31,12 +31,49 @@
 #ifndef	operator_h
 #define	operator_h
 
-#include	"context.h"
+#include	"../r_code/object.h"
+
+#include	"_context.h"
 
 
 namespace	r_exec{
 
-	bool	red(const	Context	&context,uint16	&index);
+	//	Wrapper class for evaluation contexts.
+	//	Template operator functions is not an option since some operators are defined in usr_operators.dll.
+	class	dll_export	Context{
+	private:
+		_Context	*implementation;
+	public:
+		Context(_Context	*implementation):implementation(implementation){}
+		~Context(){	delete	implementation;	}
+
+		_Context	*get_implementation()	const{	return	implementation;	}
+
+		uint16	getChildrenCount()		const{	return	implementation->getChildrenCount();	}
+		Context	getChild(uint16	index)	const{	return	Context(implementation->_getChild(index));	}
+
+		Context	operator	*()	const{	return	Context(implementation->dereference());	}
+		Context	&operator	=(const	Context	&c){
+
+			delete	implementation;
+			implementation=implementation->assign(c.get_implementation());
+			return	*this;
+		}
+
+		bool	operator	==(const	Context	&c)	const{	return	implementation->equal(c.get_implementation());	}
+		bool	operator	!=(const	Context	&c)	const{	return	!implementation->equal(c.get_implementation());	}
+
+		Atom	&operator	[](uint16	i)	const{	return	implementation->get_atom(i);	}
+
+		uint16	setAtomicResult(Atom	a)		const{	return	implementation->setAtomicResult(a);	}
+		uint16	setTimestampResult(uint64	t)	const{	return	implementation->setTimestampResult(t);	}
+		uint16	setCompoundResultHead(Atom	a)	const{	return	implementation->setCompoundResultHead(a);	}
+		uint16	addCompoundResultPart(Atom	a)	const{	return	implementation->addCompoundResultPart(a);	}
+
+		void	trace()	const{	return	implementation->trace();	}
+	};
+
+	bool	red(const	Context	&context,uint16	&index);	//	executive-dependent.
 
 	bool	syn(const	Context	&context,uint16	&index);
 
@@ -92,9 +129,9 @@ namespace	r_exec{
 	bool	log(const	Context	&context,uint16	&index);
 	bool	e10(const	Context	&context,uint16	&index);
 
-	bool	ins(const	Context	&context,uint16	&index);
+	bool	ins(const	Context	&context,uint16	&index);	//	executive-dependent.
 	
-	bool	fvw(const	Context	&context,uint16	&index);
+	bool	fvw(const	Context	&context,uint16	&index);	//	executive-dependent.
 }
 
 

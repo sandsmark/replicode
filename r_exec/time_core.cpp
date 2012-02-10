@@ -40,7 +40,7 @@ namespace	r_exec{
 		TimeCore	*_this=((TimeCore	*)args);
 
 		bool	run=true;
-		while(run){	//	enter a wait state when the rMem is suspended.
+		while(run){
 
 			P<TimeJob>	j=_Mem::Get()->popTimeJob();
 			if(j==NULL)
@@ -52,25 +52,46 @@ namespace	r_exec{
 			}
 
 			uint64	target=j->target_time;
-			if(target==0)	//	0 means ASAP. Control jobs (shutdown and suspend) are caught here.
-				run=j->update();
+			uint64	next_target=0;
+			if(target==0)	// 0 means ASAP. Control jobs (shutdown) are caught here.
+				run=j->update(next_target);
 			else{
 
-				uint64	now=Now();
-				int64	deadline=target-now;
-				if(deadline==0)	//	right on time: do the job.
-					run=j->update();
-				else	if(deadline>0){	//	on time: spawn a delegate to wait for the due time; delegate will die when done.
+				int64	time_to_wait=target-Now();
+				if(time_to_wait==0)	// right on time: do the job.
+					run=j->update(next_target);
+				else	if(time_to_wait>0){	// early: spawn a delegate to wait for the due time; delegate will die when done.
 
-					DelegatedCore	*d=new	DelegatedCore(deadline,j);
+					DelegatedCore	*d=new	DelegatedCore(time_to_wait,j);
 					d->start(DelegatedCore::Wait);
-				}else{	//	we are late: do the job and report.
+					_Mem::Get()->register_time_job_latency(time_to_wait);
+					next_target=0;
+				}else{	// late: do the job and report.
 
-					run=j->update();
-					std::cout<<"Time Core report: late on target: "<<-deadline<<" us behind."<<std::endl;
+					run=j->update(next_target);
+					std::cout<<"Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
 				}
 			}
 
+			while(next_target	&&	run){
+
+				if(!j->is_alive())
+					break;
+
+				uint64	time_to_wait=next_target-Now();
+				next_target=0;
+				if(time_to_wait==0)	// right on time: do the job.
+					run=j->update(next_target);
+				else	if(time_to_wait>0){	// early: spawn a delegate to wait for the due time; delegate will die when done.
+											// the delegate will handle the next target when it is known (call to update()).
+					DelegatedCore	*d=new	DelegatedCore(time_to_wait,j);
+					d->start(DelegatedCore::Wait);
+				}else{	// late: do the job and report.
+
+					run=j->update(next_target);
+					std::cout<<"Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
+				}
+			}
 			j=NULL;
 		}
 
@@ -87,39 +108,52 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	//	The rMem has to wait for delegates to be actually suspended before doing anything else (ex: getImage()) when they are executing update(_this->mem).
-	//	When suspending the rMem, we do not want to have to wait for delegates caught in timer.wait().
 	thread_ret thread_function_call	DelegatedCore::Wait(void	*args){
 
 		_Mem::Get()->start_core();
 		DelegatedCore	*_this=((DelegatedCore	*)args);
 
-		_this->timer.start(_this->deadline);
+		uint64	time_to_wait=_this->time_to_wait;
+
+wait:	_this->timer.start(time_to_wait);
 		_this->timer.wait();
 
-		_Mem::DState	s=_Mem::Get()->check_state();	//	checks for shutdown or suspension that could have happened during the wait on timer.
-		switch(s){
-		case	_Mem::D_RUNNING_AFTER_SUSPENSION:
-			_this->job->update();
-			break;
-		case	_Mem::D_RUNNING:	//	suspension might occur now or during update(): the rMem has to wait for completion.
-			_Mem::Get()->wait_for_delegate();
-			_this->job->update();
-			_Mem::Get()->delegate_done();
-			break;
-		case	_Mem::D_STOPPED:
-		case	_Mem::D_STOPPED_AFTER_SUSPENSION:
-			break;
+		if(!_this->job->is_alive())
+			goto	end;
+
+		uint64	next_target=0;
+		if(_Mem::Get()->check_state()==_Mem::RUNNING)	// checks for shutdown that could have happened during the wait on timer.
+			_this->job->update(next_target);
+
+redo:	if(next_target){
+
+			if(!_this->job->is_alive())
+				goto	end;
+			if(_Mem::Get()->check_state()!=_Mem::RUNNING)	// checks for shutdown that could have happened during the last update().
+				goto	end;
+
+			next_target=0;
+			if(time_to_wait==0){	// right on time: do the job.
+
+				_this->job->update(next_target);
+				goto	redo;
+			}else	if(time_to_wait<0){
+
+				_this->job->update(next_target);
+				std::cout<<"Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
+				goto	redo;
+			}else
+				goto	wait;
 		}
 
-		_Mem::Get()->shutdown_core();
+end:	_Mem::Get()->shutdown_core();
 		delete	_this;
 		thread_ret_val(0);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	DelegatedCore::DelegatedCore(uint64	deadline,TimeJob	*j):Thread(),deadline(deadline),job(j){
+	DelegatedCore::DelegatedCore(uint64	time_to_wait,TimeJob	*j):Thread(),time_to_wait(time_to_wait),job(j){
 	}
 
 	DelegatedCore::~DelegatedCore(){

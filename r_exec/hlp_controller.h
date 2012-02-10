@@ -34,133 +34,112 @@
 #include	"overlay.h"
 #include	"binding_map.h"
 #include	"g_monitor.h"
+#include	"group.h"
 
 
 namespace	r_exec{
 
-	class	NullMonitor{};
+	typedef	enum{
+		WR_DISABLED=0,
+		SR_DISABLED_NO_WR=1,
+		SR_DISABLED_WR=2,
+		WR_ENABLED=3,
+		NO_R=4
+	}ChainingStatus;
 
 	class	HLPController:
 	public	OController{
+	private:
+		uint32	strong_requirement_count;	// number of active strong requirements in the same group; updated dynamically.
+		uint32	weak_requirement_count;		// number of active weak requirements in the same group; updated dynamically.
+		uint32	requirement_count;			// sum of the two above.
 	protected:
+		class	EEntry{	// evidences.
+		private:
+			void	load_data(_Fact	*evidence);
+		public:
+			P<_Fact>	evidence;
+			uint64		after;
+			uint64		before;
+			float32		confidence;
+
+			EEntry(_Fact	*evidence);
+			EEntry(_Fact	*evidence,_Fact	*payload);
+
+			bool	is_too_old(uint64	now)	const{	return	(evidence->is_invalidated()	||	before<now);	}
+		};
+
+		class	PEEntry:	// predicted evidences.
+		public	EEntry{
+		public:
+			PEEntry(_Fact	*evidence);
+		};
+
+		template<class	E>	class	Cache{
+		public:
+			CriticalSection	CS;
+			std::list<E>	evidences;
+		};
+
+		Cache<EEntry>	evidences;
+		Cache<PEEntry>	predicted_evidences;
+
+		template<class	E>	void	_store_evidence(Cache<E>	*cache,_Fact	*evidence){
+
+			E	e(evidence);
+			cache->CS.enter();
+			uint64	now=Now();
+			std::list<E>::const_iterator	_e;
+			for(_e=cache->evidences.begin();_e!=cache->evidences.end();){
+
+				if((*_e).evidence->is_invalidated()	||	(*_e).before<now)	// garbage collection.
+					_e=cache->evidences.erase(_e);
+				else
+					++_e;
+			}
+			cache->evidences.push_front(e);
+			cache->CS.leave();
+		}
+
 		P<BindingMap>	bindings;
 
-		uint32	requirement_count;
+		bool	evaluate_bwd_guards(BindingMap	*bm);
 
-		CriticalSection			g_monitorsCS;
-		std::list<P<GMonitor> >	g_monitors;
+		void	set_opposite(_Fact	*fact)	const;
 
-		void	inject_sub_goal(uint64	now,
-								uint64	deadline,
-								Code	*super_goal,
-								Code	*sub_goal,
-								Code	*ntf_instance);
-		void	notify_existing_sub_goal(	uint64	now,
-											uint64	deadline,
-											Code	*super_goal,
-											Code	*sub_goal,
-											Code	*ntf_instance);
+		_Fact	*get_absentee(_Fact	*fact)	const;
 
-		template<class	C>	class	PHash{	public:	size_t	operator	()(P<C>	p)	const{	return	(size_t)p.operator	->();	}	};
-		typedef	UNORDERED_MAP<P<Code>,P<BindingMap>,PHash<Code> >	GoalRecords;
-		GoalRecords	goal_records;	//	<fact->mk.goal,bm>.
-									//	used to prevent recursion on goal injection (WRT requirements).
-		template<class	C>	void	_take_input(r_exec::View	*input){
-
-			if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
-				input->object->code(0).asOpcode()!=Opcodes::AntiFact)	//	discard everything but facts and |facts.
-				return;
-			Controller::_take_input<C>(input);
-		}
-
-		Code	*get_sub_goal(	BindingMap	*bm,
-								Code		*super_goal,
-								Code		*sub_goal_target,
-								Code		*instance,
-								uint64		&now,
-								uint64		&deadline_high,
-								uint64		&deadline_low,
-								Code		*&matched_pattern);
-
-		template<class	M>	void	add_monitor(BindingMap	*bindings,
-												Code		*goal,			//	fact.
-												Code		*super_goal,	//	fact.
-												Code		*matched_pattern,
-												uint64		expected_time_high,
-												uint64		expected_time_low){
-
-			M	*m=new	M(	this,
-							bindings,
-							goal->get_reference(0),
-							super_goal,
-							matched_pattern,
-							expected_time_high,
-							expected_time_low);
-			g_monitorsCS.enter();
-			g_monitors.push_front(m);
-			g_monitorsCS.leave();
-			_Mem::Get()->pushTimeJob(new	MonitoringJob<M>(m,expected_time_high));
-		}
-		template<>	void	add_monitor<NullMonitor>(	BindingMap	*bindings,
-														Code		*goal,
-														Code		*super_goal,
-														Code		*matched_pattern,
-														uint64		expected_time_high,
-														uint64		expected_time_low){}
+		MatchResult	check_evidences(_Fact	*target,_Fact	*&evidence);			// evidence with the match (positive or negative), get_absentee(target) otherwise.
+		MatchResult	check_predicted_evidences(_Fact	*target,_Fact	*&evidence);	// evidence with the match (positive or negative), NULL otherwise.
 
 		HLPController(r_code::View	*view);
 	public:
 		virtual	~HLPController();
 
-		bool	monitor(Code	*input);
-		void	add_outcome(Code	*target,bool	success,float32	confidence)	const;	//	target: mk.pred or mk.goal.
+		Code	*get_core_object()	const{	return	getObject();	}	// cst or mdl.
+		Code	*get_unpacked_object()	const{	// the unpacked version of the core object.
+			
+			Code	*core_object=get_core_object();
+			return	core_object->get_reference(core_object->references_size()-1);
+		}
 
-		void	remove_monitor(GMonitor	*m);
+		void	add_requirement(bool	strong);
+		void	remove_requirement(bool	strong);
 
-		void	add_requirement();
-		void	remove_requirement();
+		uint32	get_requirement_count(uint32	&weak_requirement_count,uint32	&strong_requirement_count);
+		uint32	get_requirement_count();
 
-		Code	*get_instance(const	BindingMap	*bm,uint16	opcode)	const;
-		Code	*get_instance(uint16	opcode)	const;
-		virtual	uint16	get_instance_opcode()	const=0;
+		void	store_evidence(_Fact	*evidence){			_store_evidence<EEntry>(&evidences,evidence);	}
+		void	store_predicted_evidence(_Fact	*evidence){	_store_evidence <PEEntry>(&predicted_evidences,evidence);	}
+		
+		virtual	Fact	*get_f_ihlp(const	BindingMap	*bindings,bool	wr_enabled)	const=0;
 
 		uint16	get_out_group_count()	const;
-		Code	*get_out_group(uint16	i)	const;	//	i starts at 1.
+		Code	*get_out_group(uint16	i)	const;	// i starts at 1.
+		Group	*get_host()	const;
 
-		template<class	M>	void	produce_sub_goal(	BindingMap	*bm,
-														Code		*super_goal,		//	fact->mk.goal->fact; its time may be a variable.
-														Code		*sub_goal_target,	//	fact; its time may be a variable.
-														Code		*instance){
-
-			uint64	now;
-			uint64	deadline_high;
-			uint64	deadline_low;
-			Code	*matched_pattern;
-			Code	*sub_goal_fact=get_sub_goal(bm,
-												super_goal,
-												sub_goal_target,
-												instance,
-												now,
-												deadline_high,
-												deadline_low,
-												matched_pattern);
-			if(!sub_goal_fact)
-				return;
-
-			if(sub_goal_fact->get_reference(0)->get_reference(0)->get_reference(0)->code(0).asOpcode()!=Opcodes::Cmd)	//	no monitoring for I/O device commands.
-				add_monitor<M>(	bm,
-								sub_goal_fact,
-								super_goal,
-								matched_pattern,
-								deadline_high,
-								deadline_low);
-			
-			inject_sub_goal(now,
-							deadline_high,
-							super_goal,
-							sub_goal_fact,
-							get_instance(get_instance_opcode()));
-		}
+		bool	inject_prediction(Fact	*prediction,Fact	*f_ihlp,float32	confidence,uint64	time_to_live,Code	*mk_rdx)	const;	// here, resilience=time to live, in us; returns true if the prediction has actually been injected.
+		void	inject_prediction(Fact	*prediction,float32	confidence)	const;	// for simulated predictions.
 	};
 }
 

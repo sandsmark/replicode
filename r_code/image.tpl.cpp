@@ -51,7 +51,7 @@ namespace	r_code{
 		stream.read((char	*)&code_size,sizeof(uint32));
 		stream.read((char	*)&names_size,sizeof(uint32));
 		Image	*image=Build(timestamp,map_size,code_size,names_size);
-		stream.read((char	*)image->data(),image->getSize()*sizeof(word32));
+		stream.read((char	*)image->data(),image->get_size()*sizeof(word32));
 		return	image;
 	}
 
@@ -65,7 +65,7 @@ namespace	r_code{
 		stream.write((char	*)&map_size,sizeof(uint32));
 		stream.write((char	*)&code_size,sizeof(uint32));
 		stream.write((char	*)&names_size,sizeof(uint32));
-		stream.write((char	*)image->data(),image->getSize()*sizeof(word32));
+		stream.write((char	*)image->data(),image->get_size()*sizeof(word32));
 	}
 
 	template<class	I>	Image<I>::Image():I(){
@@ -74,7 +74,7 @@ namespace	r_code{
 	template<class	I>	Image<I>::~Image(){
 	}
 
-	template<class	I>	uint32	Image<I>::getSize()	const{
+	template<class	I>	uint32	Image<I>::get_size()	const{
 
 		return	map_size()+code_size()+names_size();
 	}
@@ -102,7 +102,7 @@ namespace	r_code{
 	template<class	I>	void	Image<I>::trace()	const{
 
 		std::cout<<"---Image---\n";
-		std::cout<<"Size: "<<getSize()<<std::endl;
+		std::cout<<"Size: "<<get_size()<<std::endl;
 		std::cout<<"Object Map Size: "<<map_size()<<std::endl;
 		std::cout<<"Code Segment Size: "<<code_size()<<std::endl;
 		std::cout<<"Names Size: "<<names_size()<<std::endl;

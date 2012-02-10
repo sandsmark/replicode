@@ -258,6 +258,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\_context.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\auto_focus.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\binding_map.cpp"
 				>
 			</File>
@@ -322,6 +330,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\hlp_context.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\hlp_controller.cpp"
 				>
 			</File>
@@ -368,6 +380,10 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\monitor.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\object.cpp"
@@ -439,6 +455,10 @@
 			</File>
 			<File
 				RelativePath=".\pattern_detector.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pattern_extractor.cpp"
 				>
 			</File>
 			<File
@@ -552,6 +572,14 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\_context.h"
+				>
+			</File>
+			<File
+				RelativePath=".\auto_focus.h"
+				>
+			</File>
+			<File
 				RelativePath=".\binding_map.h"
 				>
 			</File>
@@ -596,6 +624,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\hlp_context.h"
+				>
+			</File>
+			<File
 				RelativePath=".\hlp_controller.h"
 				>
 			</File>
@@ -613,6 +645,10 @@
 			</File>
 			<File
 				RelativePath=".\mem.h"
+				>
+			</File>
+			<File
+				RelativePath=".\monitor.h"
 				>
 			</File>
 			<File
@@ -637,6 +673,10 @@
 			</File>
 			<File
 				RelativePath=".\pattern_detector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pattern_extractor.h"
 				>
 			</File>
 			<File

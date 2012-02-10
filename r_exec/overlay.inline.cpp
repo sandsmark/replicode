@@ -29,44 +29,4 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace	r_exec{
-
-	inline	void	Overlay::kill(){
-		
-		alive=false;
-	}
-
-	inline	bool	Overlay::is_alive(){
-
-		return	alive;
-	}
-
-	inline	r_code::Code	*Overlay::getObject()	const{	
-		
-		return	((Controller	*)controller)->getObject();
-	}
-	
-	inline	r_exec::View	*Overlay::getView()	const{	
-		
-		return	((Controller	*)controller)->getView();
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	inline	bool	Controller::is_alive(){
-		
-		aliveCS.enter();
-		bool	_alive=alive;
-		aliveCS.leave();
-		return	_alive;
-	}
-
-	inline	r_code::Code	*Controller::getObject()	const{
-		
-		return	view->object;
-	}
-
-	inline	r_exec::View	*Controller::getView()	const{
-		
-		return	(r_exec::View	*)view;
-	}
 }

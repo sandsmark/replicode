@@ -57,6 +57,8 @@ public:
 	~TestController(){
 	}
 
+	Code	*get_core_object()	const{	return	getObject()->get_reference(0);	}
+
 	void	take_input(r_exec::View	*input){
 
 		//	Inputs are all types of objects - salient or that have become salient depending on their view's sync member.

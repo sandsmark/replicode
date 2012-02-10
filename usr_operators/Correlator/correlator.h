@@ -2,6 +2,7 @@
 #define	correlator_h
 
 #include	"../types.h"
+#include	"../../r_exec/overlay.h"
 
 // switch to use WinEpi instead of LSTM for finding correlations
 #define USE_WINEPI
@@ -40,7 +41,7 @@ public:
 
 //	Set of time-invariant objects.
 //	reads as "if objects then states hold".
-class	Context:
+class	IPGMContext:
 public	State{
 public:
 	std::vector<P<r_code::Code> >	objects;
@@ -48,7 +49,7 @@ public:
 
 	void	trace(){
 
-		std::cout<<"Context\n";
+		std::cout<<"IPGMContext\n";
 		std::cout<<"Objects\n";
 		for(uint32	i=0;i<objects.size();++i)
 			objects[i]->trace();
@@ -80,7 +81,7 @@ public:
 
 class	CorrelatorOutput{
 public:
-	std::vector<P<State> >	states; // changed from vector<P<Context>>
+	std::vector<P<State> >	states; // changed from vector<P<IPGMContext>>
 
 	void	trace(){
 

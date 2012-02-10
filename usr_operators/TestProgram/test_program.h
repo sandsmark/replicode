@@ -32,6 +32,7 @@
 #define	test_program_h
 
 #include	"../types.h"
+#include	"../../r_exec/overlay.h"
 
 
 extern	"C"{

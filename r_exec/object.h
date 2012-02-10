@@ -52,7 +52,7 @@ namespace	r_exec{
 	private:
 		size_t	hash_value;
 
-		bool	invalidated;
+		volatile	uint32	invalidated;	// must be aligned on 32 bits.
 
 		CriticalSection	psln_thr_sem;
 		CriticalSection	views_sem;
@@ -70,10 +70,10 @@ namespace	r_exec{
 
 		void	bind(r_code::Mem	*mem){
 			
-			setOID(mem->get_oid());
+			set_oid(mem->get_oid());
 		}
 
-		bool	is_invalidated()	const;
+		virtual	bool	is_invalidated();
 		virtual	bool	invalidate();	//	return false when was not invalidated, true otherwise.
 
 		void	compute_hash_value();
@@ -90,12 +90,6 @@ namespace	r_exec{
 		void	mod(uint16	member_index,float32	value);
 
 		View	*find_view(Code	*group,bool	lock);	//	returns a copy of the found view if any, NULL otherwise.
-
-		Code	*get_pred();
-		Code	*get_goal();
-		Code	*get_hyp();
-		Code	*get_sim();
-		Code	*get_asmp();
 
 		void	kill();
 
@@ -122,20 +116,6 @@ namespace	r_exec{
 						return	false;
 				for(i=0;i<lhs->code_size();++i){
 
-					switch(lhs->code(i).getDescriptor()){
-					case	Atom::NUMERICAL_VARIABLE:
-						if(rhs->code(i).getDescriptor()!=Atom::NUMERICAL_VARIABLE)
-							return	false;
-						break;
-					case	Atom::BOOLEAN_VARIABLE:
-						if(rhs->code(i).getDescriptor()!=Atom::BOOLEAN_VARIABLE)
-							return	false;
-						break;
-					case	Atom::STRUCTURAL_VARIABLE:
-						if(rhs->code(i).getDescriptor()!=Atom::STRUCTURAL_VARIABLE)
-							return	false;
-						break;
-					}
 					if(lhs->code(i)!=rhs->code(i))
 						return	false;
 				}

@@ -39,15 +39,8 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////
 
-	bool	ShutdownReductionCore::update(){
+	bool	ShutdownReductionCore::update(uint64	now){
 
 		return	false;
-	}
-
-	////////////////////////////////////////////////////////////
-
-	bool	SuspendReductionCore::update(){
-
-		return	_Mem::Get()->suspend_core();
 	}
 }

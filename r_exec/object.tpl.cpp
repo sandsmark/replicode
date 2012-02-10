@@ -33,15 +33,15 @@
 
 namespace	r_exec{
 
-	template<class	C,class	U>	Object<C,U>::Object():C(),hash_value(0),invalidated(false){
+	template<class	C,class	U>	Object<C,U>::Object():C(),hash_value(0),invalidated(0){
 	}
 
-	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),hash_value(0),invalidated(false){
+	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),hash_value(0),invalidated(0){
 
 		if(mem)
-			setOID(mem->get_oid());
+			set_oid(mem->get_oid());
 		else
-			setOID(UNDEFINED_OID);
+			set_oid(UNDEFINED_OID);
 	}
 
 	template<class	C,class	U>	Object<C,U>::~Object(){
@@ -49,16 +49,16 @@ namespace	r_exec{
 		invalidate();
 	}
 
-	template<class	C,class	U>	bool	Object<C,U>::is_invalidated()	const{
+	template<class	C,class	U>	bool	Object<C,U>::is_invalidated(){
 
-		return	invalidated;
+		return	invalidated==1;
 	}
 
 	template<class	C,class	U>	bool	Object<C,U>::invalidate(){
 
 		if(invalidated)
 			return	true;
-		invalidated=true;
+		invalidated=1;
 
 		if(is_registered){
 
@@ -133,81 +133,6 @@ namespace	r_exec{
 		if(lock)
 			rel_views();
 		return	NULL;
-	}
-
-	template<class	C,class	U>	Code	*Object<C,U>::get_pred(){
-
-		Code	*mk=NULL;
-		acq_markers();
-		std::list<Code	*>::const_iterator	m;
-		for(m=markers.begin();m!=markers.end();++m)
-			if((*m)->code(0).asOpcode()==Opcodes::MkPred){
-
-				mk=*m;
-				break;
-			}
-		rel_markers();
-		return	mk;
-	}
-
-	template<class	C,class	U>	Code	*Object<C,U>::get_goal(){
-
-		Code	*mk=NULL;
-		acq_markers();
-		std::list<Code	*>::const_iterator	m;
-		for(m=markers.begin();m!=markers.end();++m)
-			if((*m)->code(0).asOpcode()==Opcodes::MkGoal){
-
-				mk=*m;
-				break;
-			}
-		rel_markers();
-		return	mk;
-	}
-
-	template<class	C,class	U>	Code	*Object<C,U>::get_hyp(){
-
-		Code	*mk=NULL;
-		acq_markers();
-		std::list<Code	*>::const_iterator	m;
-		for(m=markers.begin();m!=markers.end();++m)
-			if((*m)->code(0).asOpcode()==Opcodes::MkHyp){
-
-				mk=*m;
-				break;
-			}
-		rel_markers();
-		return	mk;
-	}
-
-	template<class	C,class	U>	Code	*Object<C,U>::get_sim(){
-
-		Code	*mk=NULL;
-		acq_markers();
-		std::list<Code	*>::const_iterator	m;
-		for(m=markers.begin();m!=markers.end();++m)
-			if((*m)->code(0).asOpcode()==Opcodes::MkSim){
-
-				mk=*m;
-				break;
-			}
-		rel_markers();
-		return	mk;
-	}
-
-	template<class	C,class	U>	Code	*Object<C,U>::get_asmp(){
-
-		Code	*mk=NULL;
-		acq_markers();
-		std::list<Code	*>::const_iterator	m;
-		for(m=markers.begin();m!=markers.end();++m)
-			if((*m)->code(0).asOpcode()==Opcodes::MkAsmp){
-
-				mk=*m;
-				break;
-			}
-		rel_markers();
-		return	mk;
 	}
 
 	template<class	C,class	U>	void	Object<C,U>::kill(){

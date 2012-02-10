@@ -50,7 +50,7 @@ namespace	r_exec{
 		group=g;
 	}
 
-	bool	UpdateJob::update(){
+	bool	UpdateJob::update(uint64	&next_target){
 
 		_Mem::Get()->update(group);
 		return	true;
@@ -58,37 +58,37 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////
 
-	SignalingJob::SignalingJob(Controller	*o,uint64	ijt):TimeJob(ijt){
+	SignalingJob::SignalingJob(View	*v,uint64	ijt):TimeJob(ijt){
 
-		controller=o;
+		view=v;
 	}
 
 	bool	SignalingJob::is_alive()	const{
 
-		return	controller->is_alive();
+		return	view->controller->is_alive();
 	}
 
 	////////////////////////////////////////////////////////////
 
-	AntiPGMSignalingJob::AntiPGMSignalingJob(AntiPGMController	*o,uint64	ijt):SignalingJob(o,ijt){
+	AntiPGMSignalingJob::AntiPGMSignalingJob(View	*v,uint64	ijt):SignalingJob(v,ijt){
 	}
 
-	bool	AntiPGMSignalingJob::update(){
+	bool	AntiPGMSignalingJob::update(uint64	&next_target){
 
-		if(controller->is_alive())
-			((AntiPGMController	*)controller)->signal_anti_pgm();
+		if(is_alive())
+			((AntiPGMController	*)view->controller)->signal_anti_pgm();
 		return	true;
 	}
 
 	////////////////////////////////////////////////////////////
 
-	InputLessPGMSignalingJob::InputLessPGMSignalingJob(InputLessPGMController	*o,uint64	ijt):SignalingJob(o,ijt){
+	InputLessPGMSignalingJob::InputLessPGMSignalingJob(View	*v,uint64	ijt):SignalingJob(v,ijt){
 	}
 
-	bool	InputLessPGMSignalingJob::update(){
+	bool	InputLessPGMSignalingJob::update(uint64	&next_target){
 
-		if(controller->is_alive())
-			((InputLessPGMController	*)controller)->signal_input_less_pgm();
+		if(is_alive())
+			((InputLessPGMController	*)view->controller)->signal_input_less_pgm();
 		return	true;
 	}
 
@@ -99,7 +99,7 @@ namespace	r_exec{
 		view=v;
 	}
 
-	bool	InjectionJob::update(){
+	bool	InjectionJob::update(uint64	&next_target){
 
 		_Mem::Get()->inject(view);
 		return	true;
@@ -112,7 +112,7 @@ namespace	r_exec{
 		view=v;
 	}
 
-	bool	EInjectionJob::update(){
+	bool	EInjectionJob::update(uint64	&next_target){
 
 		_Mem::Get()->inject_existing_object(view,view->object,view->get_host(),true);
 		return	true;
@@ -125,7 +125,7 @@ namespace	r_exec{
 		object=o;
 	}
 	
-	bool	SaliencyPropagationJob::update(){
+	bool	SaliencyPropagationJob::update(uint64	&next_target){
 
 		if(!object->is_invalidated())
 			_Mem::Get()->propagate_sln(object,sln_change,source_sln_thr);
@@ -137,18 +137,25 @@ namespace	r_exec{
 	ShutdownTimeCore::ShutdownTimeCore():TimeJob(0){
 	}
 
-	bool	ShutdownTimeCore::update(){
+	bool	ShutdownTimeCore::update(uint64	&next_target){
 
 		return	false;
 	}
 
 	////////////////////////////////////////////////////////////
 
-	SuspendTimeCore::SuspendTimeCore():TimeJob(0){
+	PerfSamplingJob::PerfSamplingJob(uint32	period):TimeJob(0),period(period){
 	}
 
-	bool	SuspendTimeCore::update(){
+	bool	PerfSamplingJob::update(uint64	&next_target){
 
-		return	_Mem::Get()->suspend_core();
+		_Mem::Get()->inject_perf_stats();
+		next_target=Now()+period;
+		return	true;
+	}
+
+	bool	PerfSamplingJob::is_alive()	const{
+
+		return	true;
 	}
 }

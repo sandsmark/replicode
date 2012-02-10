@@ -31,8 +31,7 @@
 #ifndef	p_monitor_h
 #define	p_monitor_h
 
-#include	"binding_map.h"
-#include	"overlay.h"
+#include	"monitor.h"
 
 
 namespace	r_exec{
@@ -40,28 +39,19 @@ namespace	r_exec{
 	class	MDLController;
 
 	class	PMonitor:
-	public	_Object{
+	public	Monitor{
 	private:
-		P<BindingMap>	bindings;
-		P<Code>	prediction;	//	mk.pred.
-		uint64	expected_time_high;
-		uint64	expected_time_low;
-
-		CriticalSection	matchCS;
-		bool			match;
-
-		MDLController	*controller;
+		bool	rate_failures;
+		_Fact	*prediction_target;	// f1 as in f0->pred->f1->object.
 	public:
 		PMonitor(	MDLController	*controller,
 					BindingMap		*bindings,
-					Code			*prediction,
-					uint64			expected_time_high,
-					uint64			expected_time_low);
+					Fact			*prediction,	// f0->pred->f1->object.
+					bool			rate_failures);
 		~PMonitor();
 
-		bool	is_alive();
-		bool	reduce(Code	*input);
-		void	update();
+		bool	reduce(_Fact	*input);
+		void	update(uint64	&next_target);
 	};
 }
 

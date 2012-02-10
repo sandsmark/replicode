@@ -66,7 +66,7 @@ namespace	r_code{
 
 		void	write(word32	*data);
 		void	read(word32		*data);
-		uint32	getSize()	const;
+		uint32	get_size()	const;
 		void	trace();
 	};
 
@@ -88,7 +88,7 @@ namespace	r_code{
 
 		void	write(word32	*data);
 		void	read(word32		*data);
-		uint32	getSize();
+		uint32	get_size();
 		void	trace();
 	};
 
@@ -156,25 +156,28 @@ namespace	r_code{
 
 			for(uint16	i=0;i<source->code.size();++i)
 				code(i)=source->code[i];
-			setOID(source->oid);
+			set_oid(source->oid);
 		}
 		template<class	V>	View	*build_view(SysView	*source){
 
 			return	new	V(source,this);
 		}
 	public:
-		virtual	uint32	getOID()	const=0;
-		virtual	void	setOID(uint32	oid)=0;
+		virtual	uint32	get_oid()	const=0;
+		virtual	void	set_oid(uint32	oid)=0;
 
 		virtual	Atom	&code(uint16	i)=0;
 		virtual	Atom	&code(uint16	i)	const=0;
 		virtual	uint16	code_size()	const=0;
+		virtual	void	resize_code(uint16	new_size)=0;
 		virtual	void	set_reference(uint16	i,Code	*object)=0;
 		virtual	Code	*get_reference(uint16	i)	const=0;
 		virtual	uint16	references_size()	const=0;
+		virtual	void	clear_references()=0;
+		virtual	void	set_references(std::vector<P<Code>	>	&new_references)=0;
 
-		virtual	bool	is_compact()		const{	return	false;	}
-		virtual	bool	is_invalidated()	const{	return	false;	}
+		virtual	bool	is_compact()	const{	return	false;	}
+		virtual	bool	is_invalidated()	{	return	false;	}
 		virtual	bool	invalidate()	{ return	false;	}
 
 		std::list<Code	*>								markers;
@@ -204,11 +207,6 @@ namespace	r_code{
 			markers.remove(m);
 			rel_markers();
 		}
-		virtual	Code	*get_pred(){	return	NULL;	}
-		virtual	Code	*get_goal(){	return	NULL;	}
-		virtual	Code	*get_hyp(){		return	NULL;	}
-		virtual	Code	*get_sim(){		return	NULL;	}
-		virtual	Code	*get_asmp(){	return	NULL;	}
 
 		bool								is_registered;
 		std::list<Code	*>::const_iterator	position_in_objects;
@@ -222,7 +220,7 @@ namespace	r_code{
 				code(i).trace();
 				std::cout<<std::endl;
 			}
-			std::cout<<"OID: "<<getOID()<<std::endl;
+			std::cout<<"OID: "<<get_oid()<<std::endl;
 		}
 	};
 
@@ -246,15 +244,18 @@ namespace	r_code{
 			return	Code::build_view<View>(source);
 		}
 
-		uint32	getOID()	const{	return	_oid;	}
-		void	setOID(uint32	oid)	{	_oid=oid;	}
+		uint32	get_oid()	const{	return	_oid;	}
+		void	set_oid(uint32	oid)	{	_oid=oid;	}
 
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	&code(uint16	i)	const{	return	(*_code.as_std())[i];	}
 		uint16	code_size()	const{	return	_code.size();	}
+		void	resize_code(uint16	new_size){	_code.as_std()->resize(new_size);	}
 		void	set_reference(uint16	i,Code	*object){	_references[i]=object;	}
 		Code	*get_reference(uint16	i)	const{	return	(*_references.as_std())[i];	}
 		uint16	references_size()	const{	return	_references.size();	}
+		void	clear_references(){	_references.as_std()->clear();	}
+		void	set_references(std::vector<P<Code>	>	&new_references){	(*_references.as_std())=new_references;	}
 		void	add_reference(Code	*object)	const{	_references.as_std()->push_back(object);	}
 	};
 
@@ -266,7 +267,7 @@ namespace	r_code{
 	public:
 		static	Mem	*Get();
 
-		virtual	Code	*build_object(SysObject	*source)=0;
+		virtual	Code	*build_object(SysObject	*source)	const=0;
 		virtual	void	delete_object(Code	*object)=0;
 		virtual	uint32	get_oid()=0;
 	};

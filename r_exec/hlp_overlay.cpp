@@ -30,12 +30,13 @@
 
 #include	"hlp_overlay.h"
 #include	"hlp_controller.h"
+#include	"hlp_context.h"
 #include	"mem.h"
 
 
 namespace	r_exec{
 
-	HLPOverlay::HLPOverlay(Controller	*c,const	BindingMap	*bindings,uint8	reduction_mode):Overlay(c),reduction_mode(reduction_mode){
+	HLPOverlay::HLPOverlay(Controller	*c,const	BindingMap	*bindings,bool	load_code):Overlay(c,load_code){
 
 		this->bindings=(BindingMap	*)bindings;
 	}
@@ -43,17 +44,47 @@ namespace	r_exec{
 	HLPOverlay::~HLPOverlay(){
 	}
 
-	Code	*HLPOverlay::get_mk_sim(Code	*object)	const{
+	Atom	*HLPOverlay::get_value_code(uint16	id)	const{
 
-		if(reduction_mode	&	RDX_MODE_SIMULATION)
-			return	factory::Object::MkSim(object,getObject(),1);
-		return	NULL;
+		return	bindings->get_value_code(id);
 	}
 
-	Code	*HLPOverlay::get_mk_asmp(Code	*object)	const{
+	uint16	HLPOverlay::get_value_code_size(uint16	id)	const{
 
-		if(reduction_mode	&	RDX_MODE_ASSUMPTION)
-			return	factory::Object::MkAsmp(object,getObject(),1,1);	//	TODO: put the right value (from where?) for the confidence member.
-		return	NULL;
+		return	bindings->get_value_code_size(id);
+	}
+
+	inline	bool	HLPOverlay::evaluate_guards(uint16	guard_set_iptr_index){
+
+		uint16	guard_set_index=code[guard_set_iptr_index].asIndex();
+		uint16	guard_count=code[guard_set_index].getAtomCount();
+		for(uint16	i=1;i<=guard_count;++i){
+
+			if(!evaluate(guard_set_index+i))
+				return	false;
+		}
+		return	true;
+	}
+
+	bool	HLPOverlay::evaluate_fwd_guards(){
+
+		return	evaluate_guards(HLP_FWD_GUARDS);
+	}
+
+	bool	HLPOverlay::evaluate_bwd_guards(){
+
+		return	evaluate_guards(HLP_BWD_GUARDS);
+	}
+
+	bool	HLPOverlay::evaluate(uint16	index){
+
+		HLPContext	c(code,index,this);
+		uint16	result_index;
+		return	c.evaluate(result_index);
+	}
+
+	Code	*HLPOverlay::get_unpacked_object()	const{
+		
+		return	((HLPController	*)controller)->get_unpacked_object();
 	}
 }

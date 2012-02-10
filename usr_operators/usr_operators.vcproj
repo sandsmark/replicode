@@ -411,11 +411,15 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="PatternDetector"
+			Name="AutoFocus"
 			>
 			<Filter
 				Name="Header Files"
 				>
+				<File
+					RelativePath=".\auto_focus.h"
+					>
+				</File>
 				<File
 					RelativePath=".\PatternDetector\pattern_detector.h"
 					>
@@ -424,6 +428,10 @@
 			<Filter
 				Name="Source Files"
 				>
+				<File
+					RelativePath=".\auto_focus.cpp"
+					>
+				</File>
 				<File
 					RelativePath=".\PatternDetector\pattern_detector.cpp"
 					>

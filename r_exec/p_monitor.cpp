@@ -30,7 +30,6 @@
 
 #include	"p_monitor.h"
 #include	"mem.h"
-#include	"fact.h"
 #include	"mdl_controller.h"
 
 
@@ -38,58 +37,73 @@ namespace	r_exec{
 
 	PMonitor::PMonitor(	MDLController	*controller,
 						BindingMap		*bindings,
-						Code			*prediction,
-						uint64			expected_time_high,
-						uint64			expected_time_low):_Object(),controller(controller),expected_time_high(expected_time_high),expected_time_low(expected_time_low),match(false){
+						Fact			*prediction,
+						bool			rate_failures):Monitor(controller,bindings,prediction),rate_failures(rate_failures){	// prediction is f0->pred->f1->obj; not simulated.
 
-		this->bindings=bindings;
-		this->prediction=prediction;
+		prediction_target=prediction->get_pred()->get_target();	// f1.
+		uint64	now=Now();
+		std::cout<<"PMon: "<<now-_Mem::Get()->get_starting_time()<<":"<<Utils::GetTimestamp<Code>(prediction_target,FACT_BEFORE)-_Mem::Get()->get_starting_time()<<std::endl;
 
-		if(expected_time_high>>56==Atom::STRUCTURAL_VARIABLE)
-			expected_time_high=Now()+500000;
-		MonitoringJob<PMonitor>	*j=new	MonitoringJob<PMonitor>(this,expected_time_high);
+		bindings->reset_fwd_timings(prediction_target);
+
+		MonitoringJob<PMonitor>	*j=new	MonitoringJob<PMonitor>(this,prediction_target->get_before());
 		_Mem::Get()->pushTimeJob(j);
 	}
 
 	PMonitor::~PMonitor(){
 	}
 
-	bool	PMonitor::is_alive(){
+	bool	PMonitor::reduce(_Fact	*input){	// input is always an actual fact.
 
-		return	controller->is_alive();
-	}
+		if(target->is_invalidated())
+			return	true;
 
-	bool	PMonitor::reduce(Code	*input){
+		if(target->get_pred()->grounds_invalidated(input)){	// input is a counter-evidence for one of the antecedents: abort.
 
-		matchCS.enter();
-		if(bindings->match(input->get_reference(0),prediction->get_reference(0)->get_reference(0))){	//	first, check the objects pointed to by the facts.
+			target->invalidate();
+			return	true;
+		}
 
-			uint64	occurrence_time=Utils::GetTimestamp<Code>(input,FACT_TIME);	//	input is either a fact or a |fact.
-			if(expected_time_low>>56==Atom::STRUCTURAL_VARIABLE)
-				controller->add_outcome(prediction,true,input->code(FACT_CFD).asFloat());
-			else	if(expected_time_low<=occurrence_time	&&	expected_time_high>=occurrence_time){
+		Pred	*prediction=input->get_pred();
+		if(prediction){
 
-				if(input->code(0)==prediction->get_reference(0)->code(0))	//	positive match: expected a fact or |fact and got a fact or a |fact.
-					controller->add_outcome(prediction,true,input->code(FACT_CFD).asFloat());
-				else														//	negative match: expected a fact or |fact and got a |fact or a fact.
-					controller->add_outcome(prediction,false,input->code(FACT_CFD).asFloat());
+			switch(prediction->get_target()->is_evidence(prediction_target)){
+			case	MATCH_SUCCESS_POSITIVE:	// predicted confirmation, skip.
+				return	false;
+			case	MATCH_SUCCESS_NEGATIVE:
+				if(prediction->get_target()->get_cfd()>prediction_target->get_cfd()){	// a predicted counter evidence is stronger than the target, invalidate and abort.
+
+					target->invalidate();
+					return	true;
+				}else
+					return	false;
+			case	MATCH_FAILURE:
+				return	false;
 			}
-			match=true;
+		}else{
+			//uint32	oid=input->get_oid();
+			switch(((Fact	*)input)->is_evidence(prediction_target)){
+			case	MATCH_SUCCESS_POSITIVE:
+				controller->register_pred_outcome(target,true,input,input->get_cfd(),rate_failures);
+				return	true;
+			case	MATCH_SUCCESS_NEGATIVE:
+				if(rate_failures)
+					controller->register_pred_outcome(target,false,input,input->get_cfd(),rate_failures);
+				return	true;
+			case	MATCH_FAILURE:
+				return	false;
+			}
 		}
-		matchCS.leave();
-		return	match;
 	}
 
-	void	PMonitor::update(){	//	executed by a time core, upon reaching the expected time of occurrence of the target of the prediction.
+	void	PMonitor::update(uint64	&next_target){	// executed by a time core, upon reaching the expected time of occurrence of the target of the prediction.
 
-		matchCS.enter();
-		bool	m=match;
-		matchCS.leave();
+		if(!target->is_invalidated()){	// received nothing matching the target's object so far (neither positively nor negatively).
 
-		if(!m){	//	received nothing matching the target's object so far (neither positively nor negatively).
-
-			controller->add_outcome(prediction,false,1);
-			controller->remove_monitor(this);
+			if(rate_failures)
+				controller->register_pred_outcome(target,false,NULL,1,rate_failures);
 		}
+		controller->remove_monitor(this);
+		next_target=0;
 	}
 }

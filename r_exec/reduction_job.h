@@ -42,7 +42,8 @@ namespace	r_exec{
 	protected:
 		_ReductionJob();
 	public:
-		virtual	bool	update()=0;	//	return false to shutdown the reduction core.
+		uint64	ijt;	// time of injection of the job in the pipe.
+		virtual	bool	update(uint64	now)=0;	//	return false to shutdown the reduction core.
 	};
 
 	template<class	T>	class	ReductionJob:
@@ -51,8 +52,9 @@ namespace	r_exec{
 		P<View>	input;
 		P<T>	target;
 		ReductionJob(View	*input,T	*target):_ReductionJob(),input(input),target(target){}
-		bool	update(){
+		bool	update(uint64	now){
 			
+			_Mem::Get()->register_reduction_job_latency(now-ijt);
 			target->reduce(input);
 			return	true;
 		}
@@ -61,13 +63,7 @@ namespace	r_exec{
 	class	r_exec_dll	ShutdownReductionCore:
 	public	_ReductionJob{
 	public:
-		bool	update();
-	};
-
-	class	r_exec_dll	SuspendReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update();
+		bool	update(uint64	now);
 	};
 }
 

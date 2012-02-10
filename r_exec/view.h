@@ -112,7 +112,7 @@ namespace	r_exec{
 		void	reset();
 		void	set_object(r_code::Code	*object);
 
-		uint32	getOID()	const;
+		uint32	get_oid()	const;
 
 		virtual	bool	isNotification()	const;
 
@@ -153,7 +153,7 @@ namespace	r_exec{
 	class	r_exec_dll	NotificationView:
 	public	View{
 	public:
-		NotificationView(Group	*origin,Group	*destination,Code	*marker);	//	res=1, sln=1.
+		NotificationView(Code	*origin,Code	*destination,Code	*marker);	//	res=1, sln=1.
 
 		bool	isNotification()	const;
 	};

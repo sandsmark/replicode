@@ -28,6 +28,10 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
+// DOOMED FOR REMOVAL.
+
+/*
 #include	"cst_g_monitor.h"
 #include	"mem.h"
 #include	"cst_controller.h"
@@ -37,55 +41,46 @@ namespace	r_exec{
 
 	CSTGMonitor::CSTGMonitor(	HLPController	*controller,
 								BindingMap		*bindings,
-								Code			*goal,				//	(mk.goal (fact (icst controller->getObject() [args] ...)...)...)
-								Code			*super_goal,		//	(fact (mk.goal ...) ...).
-								Code			*matched_pattern,	//	the pattern the matching of which triggered the need for ensuring requirements; never NULL.
-								uint64			expected_time_high,
-								uint64			expected_time_low):GMonitor(	controller,
-																	bindings,
-																	goal,
-																	super_goal,
-																	matched_pattern,
-																	expected_time_high,
-																	expected_time_low){
+								Code			*goal,			// f->g->f->(picst controller->getObject() [args])
+								Code			*super_goal,	// f->g->f->(icst controller->getObject() [args])
+								uint64			before,
+								uint64			after):Monitor(controller,bindings,goal,before,after){
+
+		this->super_goal=super_goal;
 	}
 
 	CSTGMonitor::~CSTGMonitor(){
 	}
 
-	bool	CSTGMonitor::is_alive(){
+	bool	CSTGMonitor::reduce(Code	*input){	// catches fact (or |fact) -> (picst controller->getObject() [args]).
 
-		return	controller->is_alive();
-	}
-
-	bool	CSTGMonitor::reduce(Code	*input){	//	catches fact (or |fact) -> (icst controller->getObject() [args] ...).
-
-		Code	*_input=input;
-		Code	*_input_fact_object=_input->get_reference(0);
-		Code	*goal_icst=goal->get_reference(0)->get_reference(0);
-		/*if(	_input_fact_object->code(0).asOpcode()==Opcodes::MkPred){	//	we may have got fact or |fact -> pred -> fact -> icst referring to this cst.
-
-			Code	*pred_fact_object=_input_fact_object->get_reference(0)->get_reference(0);
-			if(	pred_fact_object->code(0).asOpcode()==goal_icst->code(0).asOpcode()	&&
-				pred_fact_object->get_reference(0)==controller->getObject())
-			_input_fact_object=pred_fact_object;
-		}*/
+		Code	*f_picst=target;	// deviation from the standard where f_g is f->g->f->picst; here we only need f->picst: passed directly to the constructor; the goal is omitted.
 		matchCS.enter();
-		if(bindings->match(_input_fact_object,goal_icst)){	//	first, check the objects pointed to by the facts.
+		if(bindings->match(input->get_reference(0),f_picst->get_reference(0))){	// first, check the objects pointed by the facts.
 
-			uint64	occurrence_time=Utils::GetTimestamp<Code>(input,FACT_TIME);	//	input is either a fact or a |fact.
-			if(expected_time_low<=occurrence_time	&&	expected_time_high>=occurrence_time){
+			uint64	occurrence_time=Utils::GetTimestamp<Code>(input,FACT_AFTER);	// input is either a fact or a |fact; after==before.
+			if(check_time(occurrence_time)){
 
-				if(_input->code(0)==goal->get_reference(0)->code(0)){	//	positive match: expected a fact or |fact and got a fact or a |fact.
+				if(input->code(0)==f_picst->code(0)){	// positive match: expected a fact and got a fact.
 
-					((CSTController	*)controller)->produce_goals(super_goal,bindings,matched_pattern);
-					controller->add_outcome(goal,true,_input->code(FACT_CFD).asFloat());
-				}else													//	negative match: expected a fact or |fact and got a |fact or a fact.
-					controller->add_outcome(goal,false,_input->code(FACT_CFD).asFloat());
-				match=true;
+					((CSTController	*)controller)->produce_cmd_goals(bindings,super_goal);
+					match=1;
+				}
 			}
 		}
 		matchCS.leave();
 		return	match;
 	}
+
+	void	CSTGMonitor::update(){	// executed by a time core, upon reaching the expected time of occurrence of the goal target.
+
+		matchCS.enter();
+		bool	m=match;
+		matchCS.leave();
+
+		if(!m)	// received nothing matching the f->picst so far.
+			controller->remove_monitor(this);
+	}
 }
+
+*/

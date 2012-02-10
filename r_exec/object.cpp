@@ -40,7 +40,6 @@ namespace	r_exec{
 		switch(object->code(0).getDescriptor()){
 		case	Atom::MARKER:
 			return	object->code(0).asOpcode()==Opcodes::MkActChg	||
-					object->code(0).asOpcode()==Opcodes::MkAntiRdx	||
 					object->code(0).asOpcode()==Opcodes::MkHighAct	||
 					object->code(0).asOpcode()==Opcodes::MkHighSln	||
 					object->code(0).asOpcode()==Opcodes::MkLowAct	||
@@ -48,8 +47,7 @@ namespace	r_exec{
 					object->code(0).asOpcode()==Opcodes::MkLowSln	||
 					object->code(0).asOpcode()==Opcodes::MkNew		||
 					object->code(0).asOpcode()==Opcodes::MkRdx		||
-					object->code(0).asOpcode()==Opcodes::MkSlnChg	||
-					object->code(0).asOpcode()==Opcodes::MkSuccess;
+					object->code(0).asOpcode()==Opcodes::MkSlnChg;
 		default:
 			return	false;
 		}

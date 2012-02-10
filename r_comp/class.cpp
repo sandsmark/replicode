@@ -67,6 +67,11 @@ namespace	r_comp{
 		
 		return	(metadata->classes.find("ptn")->second.atom==atom)	||	(metadata->classes.find("|ptn")->second.atom==atom);
 	}
+
+	bool	Class::is_fact(Metadata	*metadata)	const{
+		
+		return	(metadata->classes.find("fact")->second.atom==atom)	||	(metadata->classes.find("|fact")->second.atom==atom);
+	}
 		
 	bool	Class::get_member_index(Metadata	*metadata,std::string	&name,uint16	&index,Class	*&p)	const{
 			
@@ -112,7 +117,7 @@ namespace	r_comp{
 		for(uint32	i=0;i<things_to_read.size();++i){
 
 			things_to_read[i].write(storage+offset);
-			offset+=things_to_read[i].getSize();
+			offset+=things_to_read[i].get_size();
 		}
 	}
 
@@ -129,16 +134,16 @@ namespace	r_comp{
 			StructureMember	m;
 			m.read(storage+offset);
 			things_to_read.push_back(m);
-			offset+=m.getSize();
+			offset+=m.get_size();
 		}
 	}
 
-	uint32	Class::getSize(){	//	see segments.cpp for the RAM layout
+	uint32	Class::get_size(){	//	see segments.cpp for the RAM layout
 
 		uint32	size=4;	//	atom, return type, usage, number of members
 		size+=r_code::GetSize(str_opcode);
 		for(uint32	i=0;i<things_to_read.size();++i)
-			size+=things_to_read[i].getSize();
+			size+=things_to_read[i].get_size();
 		return	size;
 	}
 }

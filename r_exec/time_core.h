@@ -43,12 +43,12 @@ namespace	r_exec{
 	public	Thread{
 	private:
 		Timer		timer;
-		uint64		deadline;
+		uint64		time_to_wait;
 		P<TimeJob>	job;
 	public:
 		static	thread_ret thread_function_call	Wait(void	*args);
 
-		DelegatedCore(uint64	deadline,TimeJob	*j);
+		DelegatedCore(uint64	time_to_wait,TimeJob	*j);
 		~DelegatedCore();
 	};
 

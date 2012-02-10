@@ -52,7 +52,7 @@ namespace	r_exec{
 	InputLessPGMController::~InputLessPGMController(){
 	}
 
-	void	InputLessPGMController::signal_input_less_pgm(){	//	next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
+	void	InputLessPGMController::signal_input_less_pgm(){	// next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
 
 		reductionCS.enter();
 		if(overlays.size()){
@@ -63,22 +63,24 @@ namespace	r_exec{
 
 			if(!run_once){
 
-				Group	*host=getView()->get_host();
-				host->enter();
-				if(getView()->get_act()>host->get_act_thr()		&&	//	active ipgm.
-					host->get_c_act()>host->get_c_act_thr()		&&	//	c-active group.
-					host->get_c_sln()>host->get_c_sln_thr()){		//	c-salient group.
+				if(is_alive()){
 
-					TimeJob	*next_job=new	InputLessPGMSignalingJob(this,Now()+tsc);
-					_Mem::Get()->pushTimeJob(next_job);
+					Group	*host=getView()->get_host();
+					host->enter();
+					if(	host->get_c_act()>host->get_c_act_thr()		&&	// c-active group.
+						host->get_c_sln()>host->get_c_sln_thr()){		// c-salient group.
+
+						TimeJob	*next_job=new	InputLessPGMSignalingJob((r_exec::View*)view,Now()+tsc);
+						_Mem::Get()->pushTimeJob(next_job);
+					}
+					host->leave();
 				}
-				host->leave();
 			}
 		}
 		reductionCS.leave();
 
 		if(run_once)
-			kill();
+			invalidate();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,17 +88,6 @@ namespace	r_exec{
 	PGMController::PGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view){
 
 		overlays.push_back(new	PGMOverlay(this));
-
-		Code	*pgm=getObject()->get_reference(0);
-		uint16	prod_index=pgm->code(PGM_PRODS).asIndex();
-		uint16	command_count=pgm->code(prod_index).getAtomCount();
-		can_sim=true;
-		for(uint16	i=1;i<=command_count;++i)
-			if(pgm->code(pgm->code(prod_index+i).asIndex()+1).asOpcode()!=Opcodes::Inject){
-
-				can_sim=false;
-				break;
-			}
 	}
 
 	PGMController::~PGMController(){
@@ -105,39 +96,32 @@ namespace	r_exec{
 	void	PGMController::notify_reduction(){
 
 		if(run_once)
-			kill();
+			invalidate();
 	}
 
 	void	PGMController::take_input(r_exec::View	*input){
 
-		if(!is_alive())
-			return;
-		if(input->object->get_pred()	||	input->object->get_goal())
-			return;
-		if(!can_sim	&&	(input->object->get_hyp()	||	input->object->get_sim()	||	input->object->get_asmp()))
-			return;
-		Controller::_take_input<PGMController>(input);
+		Controller::__take_input<PGMController>(input);
 	}
 
 	void	PGMController::reduce(r_exec::View	*input){
-
-		if(!is_alive())
-			return;
 
 		reductionCS.enter();
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();){
 
-			if(tsc>0	&&	Now()-((PGMOverlay	*)*o)->get_birth_time()>tsc)
+			if((tsc>0	&&	Now()-((PGMOverlay	*)*o)->get_birth_time()>tsc)	||	(*o)->is_invalidated())
 				o=overlays.erase(o);
-			else	if((*o)->is_alive()){
+			else{
 
 				Overlay	*offspring=(*o)->reduce(input);
 				++o;
+				if(!is_alive())
+					break;
 				if(offspring)
 					overlays.push_front(offspring);
-			}else
-				o=overlays.erase(o);
+			}
+				
 		}
 		reductionCS.leave();
 	}
@@ -154,23 +138,18 @@ namespace	r_exec{
 
 	void	AntiPGMController::take_input(r_exec::View	*input){
 
-		if(!is_alive())
-			return;
-		if(input->object->get_pred()	||	input->object->get_goal())
-			return;
-		Controller::_take_input<AntiPGMController>(input);
+		Controller::__take_input<AntiPGMController>(input);
 	}
 
 	void	AntiPGMController::reduce(r_exec::View	*input){
-
-		if(!is_alive())
-			return;
 
 		reductionCS.enter();
 		std::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();){
 
-			if((*o)->is_alive()){
+			if((*o)->is_invalidated())
+				o=overlays.erase(o);
+			else{
 
 				Overlay	*offspring=(*o)->reduce(input);
 				if(successful_match){	//	the controller has been restarted: reset the overlay and kill all others
@@ -185,8 +164,7 @@ namespace	r_exec{
 				++o;
 				if(offspring)
 					overlays.push_front(offspring);
-			}else
-				o=overlays.erase(o);
+			}
 		}
 		reductionCS.leave();
 	}
@@ -201,7 +179,7 @@ namespace	r_exec{
 			Overlay	*overlay=*overlays.begin();
 			((AntiPGMOverlay	*)overlay)->inject_productions();
 			overlay->reset();	//	reset the first overlay and kill all others.
-			if(!run_once){
+			if(!run_once	&&	is_alive()){
 
 				overlays.clear();
 				overlays.push_back(overlay);
@@ -210,7 +188,7 @@ namespace	r_exec{
 		reductionCS.leave();
 
 		if(run_once)
-			kill();
+			invalidate();
 	}
 
 	void	AntiPGMController::restart(){	//	one anti overlay matched all its inputs, timings and guards. 
@@ -228,7 +206,7 @@ namespace	r_exec{
 			host->get_c_sln()>host->get_c_sln_thr()){	//	c-salient group.
 
 			host->leave();
-			TimeJob	*next_job=new	AntiPGMSignalingJob(this,Now()+Utils::GetTimestamp<Code>(getObject(),IPGM_TSC));
+			TimeJob	*next_job=new	AntiPGMSignalingJob((r_exec::View*)view,Now()+Utils::GetTimestamp<Code>(getObject(),IPGM_TSC));
 			_Mem::Get()->pushTimeJob(next_job);
 		}else
 			host->leave();

@@ -101,7 +101,7 @@ namespace	r_comp{
 
 		void	write(word32	*storage)	const;
 		void	read(word32		*storage);
-		uint32	getSize();
+		uint32	get_size();
 	};
 }
 

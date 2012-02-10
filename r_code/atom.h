@@ -65,6 +65,7 @@ namespace	r_code{
 			PROD_PTR=0x8A,		// r_exec internal: index of data held by the overlay's production array.
 			OUT_OBJ_PTR=0x8B,	// r_exec internal: index of data held by a newly produced object.
 			D_IN_OBJ_PTR=0x8C,	// r_exec internal: index of data held by an object referenced by an input object.
+			ASSIGN_PTR=0x8D,	// r_exec internal: index of a hlp variable and to be assigned index of an expression that produces the value.
 			THIS=0x90,			// this pointer.
 			VIEW=0x91,
 			MKS=0x92,
@@ -72,9 +73,6 @@ namespace	r_code{
 			NODE=0xA0,
 			DEVICE=0xA1,
 			DEVICE_FUNCTION=0xA2,
-			NUMERICAL_VARIABLE=0xB0,
-			BOOLEAN_VARIABLE=0xB1,
-			STRUCTURAL_VARIABLE=0xB2,
 			C_PTR =0xC0,		// chain pointer.
 			SET=0xC1,
 			S_SET=0xC2,			// structured set.
@@ -91,6 +89,7 @@ namespace	r_code{
 			COMPOSITE_STATE=0xCD,
 			MODEL=0xCE
 		}Type;
+
 		// encoders
 		static	Atom	Float(float32 f);	//	IEEE 754 32 bits encoding; shifted by 1 to the right (loss of precison).
 		static	Atom	PlusInfinity();
@@ -110,6 +109,7 @@ namespace	r_code{
 		static	Atom	OutObjPointer(uint16 index);
 		static	Atom	ValuePointer(uint16 index);
 		static	Atom	ProductionPointer(uint16 index);
+		static	Atom	AssignmentPointer(uint8	variable_index,uint16 index);
 		static	Atom	This();
 		static	Atom	View();
 		static	Atom	Mks();
@@ -133,13 +133,12 @@ namespace	r_code{
 		static	Atom	InstantiatedProgram(uint16 opcode,uint8 arity);
 		static	Atom	Group(uint16 opcode,uint8 arity);
 		static	Atom	InstantiatedCPPProgram(uint16 opcode,uint8 arity);
-		static	Atom	NumericalVariable(uint16	variableID,uint8	tolerance);
-		static	Atom	BooleanVariable(uint16	variableID);
-		static	Atom	StructuralVariable(uint16	variableID,uint8	tolerance);
 		static	Atom	InstantiatedAntiProgram(uint16 opcode,uint8 arity);
 		static	Atom	InstantiatedInputLessProgram(uint16 opcode,uint8 arity);
 		static	Atom	CompositeState(uint16 opcode,uint8 arity);
 		static	Atom	Model(uint16 opcode,uint8 arity);
+
+		static	Atom	RawPointer(void	*pointer);
 
 		Atom(uint32	a=0xFFFFFFFF);
 		~Atom();
@@ -165,7 +164,7 @@ namespace	r_code{
 		uint8	asInputIndex()		const;	// applicable to IN_OBJ_PTR.
 		uint8	asRelativeIndex()	const;	// applicable to D_IN_OBJ_PTR.
 		uint16	asOpcode()			const;
-		uint8	asCastOpcode()		const;	// applicable to VL_PTR.
+		uint16	asCastOpcode()		const;	// applicable to VL_PTR.
 		uint8	getAtomCount()		const;	// arity of operators and
 											// objects/markers/structured sets,
 											// number of atoms in pointers chains,
@@ -174,13 +173,9 @@ namespace	r_code{
 		uint8	getNodeID()			const;	// applicable to nodes and devices.
 		uint8	getClassID()		const;	// applicable to devices.
 		uint8	getDeviceID()		const;	// applicable to devices.
-		uint16	getVariableID()		const;	// applicable to variables.
-		uint8	getFloatTolerance()	const;	// applicable to numerical variables: returns the entry in the lookup table (7 bits used).
-		float32	getFloatMultiplier()const;	// applicable to numerical variables: lookup table (even distribution): returns the multiplier to apply to a number to get the tolerance.
-		uint32	getTimeTolerance()	const;	// applicable to timestamps; returns a time value in ms.
-		void	setTimeTolerance(uint32	t);	// stores the tolerance (in ms); used for timestamps.
+		uint8	asAssignmentIndex()	const;
 
-		static	uint8	GetFloatTolerance(float32	t);	//	converts a tolerance into an entry in the lookup table.
+		template<class	C>	C	*asRawPointer()	const{	return	(C	*)atom;	}
 
 		void	trace()	const;
 		static	void	Trace(Atom	*base,uint16	count);

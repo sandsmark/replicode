@@ -29,6 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"operator.h"
+#include	"context.h"
 #include	"mem.h"
 #include	"init.h"
 #include	"opcodes.h"
@@ -582,259 +583,20 @@ namespace	r_exec{
 
 	bool	ins(const	Context	&context,uint16	&index){
 
-		Context	object=*context.getChild(1);
-		Context	args=*context.getChild(2);
-		Context	run=*context.getChild(3);
-		Context	tsc=*context.getChild(4);
-		Context	nfr=*context.getChild(5);
-
-		Code	*_object=object.getObject();
-		if(_object->code(0).asOpcode()!=Opcodes::Pgm	&&	_object->code(0).asOpcode()!=Opcodes::AntiPgm){
-
-			context.setAtomicResult(Atom::Nil());
-			return	false;
-		}
-
-		if(_object	&&	args[0].getDescriptor()==Atom::SET){
-
-			uint16	pattern_set_index=_object->code(PGM_TPL_ARGS).asIndex();	//	same index for goals.
-			uint16	arg_count=args[0].getAtomCount();
-			if(_object->code(pattern_set_index).getAtomCount()!=arg_count){
-
-				context.setAtomicResult(Atom::Nil());
-				return	false;
-			}
-			
-			//	match args with the tpl patterns in _object.
-			Context	pattern_set(_object,pattern_set_index);
-			for(uint16	i=1;i<=arg_count;++i){
-
-				Context	arg=*args.getChild(i);
-				Context	skel=*(*pattern_set.getChild(i)).getChild(1);
-				if(!skel.match(arg)){
-
-					context.setAtomicResult(Atom::Nil());
-					return	false;
-				}
-			}
-
-			//	create an ipgm in the production array.
-			Code	*ipgm=context.build_object(_object->code(0));
-
-			ipgm->code(0)=Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY);
-			ipgm->code(IPGM_PGM)=Atom::RPointer(0);				//	points to the pgm object.
-
-			uint16	extent_index=0;
-			ipgm->code(IPGM_ARGS)=Atom::IPointer(IPGM_ARITY+1);	//	points to the arg set.
-			args.copy(ipgm,IPGM_ARITY+1,extent_index);			//	writes the args after psln_thr.
-			
-			ipgm->code(IPGM_RUN)=run[0];
-			ipgm->code(IPGM_TSC)=Atom::IPointer(extent_index);	//	points to the tsc.
-
-			ipgm->code(extent_index++)=tsc[0];					//	writes the tsc after the args.
-			ipgm->code(extent_index++)=tsc[1];
-			ipgm->code(extent_index++)=tsc[2];
-
-			ipgm->code(IPGM_NFR)=nfr[0];						//	nfr.
-			ipgm->code(IPGM_ARITY)=Atom::Float(1);				//	psln_thr.
-
-			ipgm->set_reference(0,_object);
-			
-			context.setAtomicResult(Atom::ProductionPointer(context.addProduction(ipgm,true)));	// object may be new: we don't know at this point, therefore check=true.
-			return	true;
-		}
-		
-		context.setAtomicResult(Atom::Nil());
-		return	false;
+		return	IPGMContext::Ins(*(IPGMContext	*)context.get_implementation(),index);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	bool	match(const	Context	&input,const	Context	&pattern){	//	in red, patterns like (ptn object: [guards]) are allowed.
-
-		//	patch the pattern with a ptr to the input.
-		if(input.is_reference()){
-
-			uint16	ptr=pattern.addProduction(input.getObject(),false);	//	the object obviously is not new.
-			pattern.patch_code(pattern.getIndex()+1,Atom::ProductionPointer(ptr));
-		}else
-			pattern.patch_code(pattern.getIndex()+1,Atom::IPointer(input.getIndex()));
-
-		//	evaluate the set of guards.
-		Context	guard_set=*pattern.getChild(2);
-		uint16	guard_count=guard_set.getChildrenCount();
-		uint16	unused_index;
-		for(uint16	i=1;i<=guard_count;++i){
-
-			if(!(*guard_set.getChild(i)).evaluate_no_dereference(unused_index))	//	WARNING: no check for duplicates.
-				return	false;
-		}
-
-		return	true;
-	}
-
-	bool	match(const	Context	&input,const	Context	&pattern,const	Context	&productions,std::vector<uint16>	&production_indices){
-
-		Context	&skeleton=Context();
-		uint16	last_patch_index;
-		if(pattern[0].asOpcode()==Opcodes::Ptn){
-			
-			skeleton=*pattern.getChild(1);
-			if(!skeleton.match(input))
-				return	false;
-			last_patch_index=pattern.get_last_patch_index();
-			if(!match(input,pattern))
-				return	false;
-
-			goto	build_productions;
-		}
-
-		if(pattern[0].asOpcode()==Opcodes::AntiPtn){
-			
-			skeleton=*pattern.getChild(1);
-			if(skeleton.match(input))
-				return	false;
-			last_patch_index=pattern.get_last_patch_index();
-			if(match(input,pattern))
-				return	false;
-
-			goto	build_productions;
-		}
-
-		return	false;
-
-build_productions:
-		//	compute all productions for this input.
-		uint16	production_count=productions.getChildrenCount();
-		uint16	unused_index;
-		uint16	production_index;
-		for(uint16	i=1;i<=production_count;++i){
-
-			Context	prod=productions.getChild(i);
-//prod.trace();
-			prod.evaluate(unused_index);
-			prod.copy_to_value_array(production_index);
-			production_indices.push_back(production_index);
-		}
-
-		pattern.unpatch_code(last_patch_index);
-		return	true;
-	}
-
-	void	reduce(const	Context	&context,const	Context	&input_set,const	Context	&section,std::vector<uint16>	&input_indices,std::vector<uint16>	&production_indices){
-
-		Context	pattern=*section.getChild(1);
-		if(pattern[0].asOpcode()!=Opcodes::Ptn	&&	pattern[0].asOpcode()!=Opcodes::AntiPtn)
-			return;
-
-		Context	productions=*section.getChild(2);
-		if(productions[0].getDescriptor()!=Atom::SET)
-			return;
-
-		uint16	production_count=productions.getChildrenCount();
-		if(!production_count)
-			return;
-
-		std::vector<uint16>::iterator	i;
-		for(i=input_indices.begin();i!=input_indices.end();){	//	to be successful, at least one input must match the pattern.
-
-			Context	c=*input_set.getChild(*i);
-			if(c.is_undefined()){
-
-				i=input_indices.erase(i);
-				continue;
-			}
-
-			bool	failure=false;
-			if(!match(c,pattern,productions,production_indices)){
-
-				failure=true;
-				break;
-			}
-
-			if(failure)
-				++i;
-			else	//	pattern matched: remove the input from the todo list.
-				i=input_indices.erase(i);
-		}
-	}
-
 	bool	red(const	Context	&context,uint16	&index){
-//context.trace();
-		uint16	unused_result_index;
-		Context	input_set=*context.getChild(1);
-		if(!input_set.evaluate_no_dereference(unused_result_index))
-			return	false;
 
-		//	a section is a set of one pattern and a set of productions.
-		Context	positive_section=*context.getChild(2);
-		if(!(*positive_section.getChild(1)).evaluate_no_dereference(unused_result_index))	//	evaluate the pattern only.
-			return	false;
-
-		Context	negative_section=*context.getChild(3);
-		if(!(*negative_section.getChild(1)).evaluate_no_dereference(unused_result_index))	//	evaluate the pattern only.
-			return	false;
-
-		std::vector<uint16>	input_indices;		//	todo list of inputs to match.
-		for(uint16	i=1;i<=input_set.getChildrenCount();++i)
-			input_indices.push_back(i);
-
-		std::vector<uint16>	production_indices;	//	list of productions built upon successful matches.
-
-		if(input_set[0].getDescriptor()!=Atom::SET	&&
-			input_set[0].getDescriptor()!=Atom::S_SET	&&
-			positive_section[0].getDescriptor()!=Atom::SET	&&
-			negative_section[0].getDescriptor()!=Atom::SET)
-			goto	failure;
-
-		uint16	input_count=input_set.getChildrenCount();
-		if(!input_count)
-			goto	failure;
-
-		reduce(context,input_set,positive_section,input_indices,production_indices);	//	input_indices now filled only with the inputs that did not match the positive pattern.
-		reduce(context,input_set,negative_section,input_indices,production_indices);	//	input_indices now filled only with the inputs that did not match the positive nor the negative pattern.
-		if(production_indices.size()){
-
-			//	build the set of all productions in the value array.
-			index=context.setCompoundResultHead(Atom::Set(production_indices.size()));
-			for(uint16	i=0;i<production_indices.size();++i)	//	fill the set with iptrs to productions: the latter are copied in the value array.
-				context.addCompoundResultPart(Atom::IPointer(production_indices[i]));
-			//(*context).trace();
-			return	true;
-		}
-failure:
-		index=context.setCompoundResultHead(Atom::Set(0));
-		return	false;
+		return	IPGMContext::Red(*(IPGMContext	*)context.get_implementation(),index);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
 
 	bool	fvw(const	Context	&context,uint16	&index){
 
-		Context	object=*context.getChild(1);
-		Context	group=*context.getChild(2);
-
-		Code	*_object=object.getObject();
-		Group	*_group=(Group	*)group.getObject();
-		if(!_object	||	!_group){
-
-			context.setAtomicResult(Atom::Nil());
-			return	false;
-		}
-
-		View	*v=(View	*)_object->find_view(_group,true);	//	returns a copy of the view, if any.
-		if(v){	//	copy the view in the value array: code on VIEW_CODE_MAX_SIZE followed by 2 atoms holding raw pointers to grp and org.
-
-			index=context.setCompoundResultHead(v->code(0));
-			for(uint16	i=1;i<VIEW_CODE_MAX_SIZE;++i)
-				context.addCompoundResultPart(v->code(i));
-			context.addCompoundResultPart(Atom((uint32)v->references[0]));
-			context.addCompoundResultPart(Atom((uint32)v->references[1]));
-			delete	v;
-			return	true;
-		}
-
-		index=context.setAtomicResult(Atom::Nil());
-		return	false;
+		return	IPGMContext::Fvw(*(IPGMContext	*)context.get_implementation(),index);
 	}
 }

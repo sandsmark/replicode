@@ -34,6 +34,7 @@
 
 #define	EXECUTIVE_DEVICE	0xA1000000
 
+
 #define	VIEW_CODE_MAX_SIZE	13	//	size of the code of the largest view (grp view) + 1 (oid used by rMems); view set opcode's index is 0.
 
 #define	VIEW_OPCODE		0
@@ -51,7 +52,9 @@
 #define	VIEW_ARITY		6
 #define	PGM_VIEW_ARITY	7
 
+
 #define	OBJECT_CLASS	0
+
 
 #define	GRP_UPR				1
 #define	GRP_SLN_THR			2
@@ -86,10 +89,13 @@
 #define	GRP_NTF_GRPS		31
 #define	GRP_ARITY			32
 
+
 #define	PGM_TPL_ARGS	1
 #define	PGM_INPUTS		2
-#define	PGM_PRODS		3
-#define	PGM_ARITY		4
+#define	PGM_GUARDS		3
+#define	PGM_PRODS		4
+#define	PGM_ARITY		5
+
 
 #define	IPGM_PGM	1
 #define	IPGM_ARGS	2
@@ -98,6 +104,7 @@
 #define	IPGM_NFR	5
 #define	IPGM_ARITY	6
 
+
 #define	ICPP_PGM_NAME	1
 #define	ICPP_PGM_ARGS	2
 #define	ICPP_PGM_RUN	3
@@ -105,72 +112,106 @@
 #define	ICPP_PGM_NFR	5
 #define	ICPP_PGM_ARITY	6
 
-#define	MK_RDX_CODE			1
-#define	MK_RDX_INPUTS		2
-#define	MK_RDX_PRODS		3
-#define	MK_RDX_ARITY		4
-#define	MK_ANTI_RDX_ARITY	3
+
+#define	MK_RDX_CODE					1
+#define	MK_RDX_INPUTS				2
+#define	MK_RDX_PRODS				3
+#define	MK_RDX_ARITY				4
+
+#define	MK_RDX_IHLP_REF				0
+#define	MK_RDX_MDL_INPUT_REF		1
+#define	MK_RDX_MDL_PRODUCTION_REF	2
+
 
 #define	CMD_FUNCTION	1
 #define	CMD_ARGS		2
+#define	CMD_ARITY		3
 
-#define	VAR_ARITY		1
 
 #define	VAL_HLD_ARITY	2
 
-#define	MK_VAL_OBJ		1
-#define	MK_VAL_ATTR		2
-#define	MK_VAL_VALUE	3
-#define	MK_VAL_ARITY	4
 
-#define	HLP_OBJS		1
-#define	HLP_OUT_GRPS	2
-#define	HLP_TSC			3
-#define	HLP_ARITY		4
+#define	MK_VAL_OBJ		 1
+#define	MK_VAL_ATTR		 2
+#define	MK_VAL_VALUE	 3
+#define	MK_VAL_ARITY	 4
 
-#define	CST_OBJS		1
-#define	CST_OUT_GRPS	2
-#define	CST_TSC			3
-#define	CST_ARITY		4
+#define	MK_VAL_OBJ_REF	 0
+#define	MK_VAL_ATTR_REF	 1
+#define	MK_VAL_VALUE_REF 2
 
-#define	MDL_OBJS		1
-#define	MDL_OUT_GRPS	2
-#define	MDL_TSC			3
-#define	MDL_ARITY		4
 
-#define	HLP_OBJS		1
+#define	CST_TPL_ARGS	1
+#define	CST_OBJS		2
+#define	CST_FWD_GUARDS	3
+#define	CST_BWD_GUARDS	4
+#define	CST_OUT_GRPS	5
+#define	CST_ARITY		6
+
+
+#define	MDL_TPL_ARGS	1
+#define	MDL_OBJS		2
+#define	MDL_FWD_GUARDS	3
+#define	MDL_BWD_GUARDS	4
+#define	MDL_OUT_GRPS	5
+#define	MDL_STRENGTH	6
+#define	MDL_CNT			7
+#define	MDL_SR			8
+#define	MDL_DSR			9
+#define	MDL_ARITY		10
+
+
+#define	HLP_TPL_ARGS	1
+#define	HLP_OBJS		2
+#define	HLP_FWD_GUARDS	3
+#define	HLP_BWD_GUARDS	4
+#define	HLP_OUT_GRPS	5
+
 
 #define	I_HLP_OBJ		1
-#define	I_HLP_ARGS		2
-#define	I_HLP_ARITY		3
+#define	I_HLP_TPL_ARGS	2
+#define	I_HLP_ARGS		3
+#define	I_HLP_WR_E		4
+#define	I_HLP_ARITY		5
+
 
 #define	FACT_OBJ		1
-#define	FACT_TIME		2
-#define	FACT_CFD		3
-#define	FACT_ARITY		4
+#define	FACT_AFTER		2
+#define	FACT_BEFORE		3
+#define	FACT_CFD		4
+#define	FACT_ARITY		5
 
-#define	MK_PRED_OBJ		1
-#define	MK_PRED_CFD		2
-#define	MK_PRED_ARITY	3
+#define	FACT_OBJ_REF	0
 
-#define	MK_ASMP_OBJ		1
-#define	MK_ASMP_SRC		2
-#define	MK_ASMP_CFD		3
-#define	MK_ASMP_ARITY	4
 
-#define	MK_GOAL_OBJ		1
-#define	MK_GOAL_ACTR	2
-#define	MK_GOAL_ARITY	3
+#define	PRED_TARGET		1
+#define	PRED_ARITY		2
 
-#define	MK_HYP_OBJ		1
-#define	MK_HYP_ARITY	2
+#define	PRED_TARGET_REF	0
 
-#define	MK_SIM_OBJ		1
-#define	MK_SIM_SRC		2
-#define	MK_SIM_ARITY	3
 
-#define	MK_SUCCESS_OBJ		1
-#define	MK_SUCCESS_ARITY	2
+#define	GOAL_TARGET		1
+#define	GOAL_ACTR		2
+#define	GOAL_ARITY		3
 
+#define	GOAL_TARGET_REF	0
+#define	GOAL_ACTR_REF	1
+
+
+#define	SUCCESS_OBJ		1
+#define	SUCCESS_EVD		2
+#define	SUCCESS_ARITY	3
+
+
+#define	GRP_PAIR_FIRST	1
+#define	GRP_PAIR_SECOND	2
+#define	GRP_PAIR_ARITY	3
+
+
+#define	PERF_RDX_LTCY		1
+#define	PERF_D_RDX_LTCY		2
+#define	PERF_TIME_LTCY		3
+#define	PERF_D_TIME_LTCY	4
+#define	PERF_ARITY			5
 
 #endif

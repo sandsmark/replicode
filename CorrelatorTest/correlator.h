@@ -13,7 +13,7 @@ public:
 
 //	Set of time-invariant views.
 //	reads as "if views then states hold".
-class	Context:
+class	IPGMContext:
 public	State{
 public:
 	std::vector<P<r_code::View> >	views;
@@ -21,7 +21,7 @@ public:
 
 	void	trace(){
 
-		std::cout<<"Context\n";
+		std::cout<<"IPGMContext\n";
 		std::cout<<"Views\n";
 		for(uint32	i=0;i<views.size();++i)
 			views[i]->object->trace();
@@ -53,7 +53,7 @@ public:
 
 class	CorrelatorOutput{
 public:
-	std::vector<P<Context> >	contexts;
+	std::vector<P<IPGMContext> >	contexts;
 
 	void	trace(){
 
