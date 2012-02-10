@@ -378,17 +378,13 @@ namespace	r_exec{
 		switch(a.getDescriptor()){
 		case	Atom::R_PTR:{
 			Code	*reference=object->get_reference(ai);
-			if(reference->code(0).asOpcode()==Opcodes::Ont){
+			if(reference->code(0).asOpcode()==Opcodes::Ont){	// ontologies resist abstraction.
 
 				abstracted_object->code(index)=a;
 				abstracted_object->add_reference(reference);
 			}else	if(reference->code(0).asOpcode()==Opcodes::Ent)
 				abstracted_object->code(index)=get_object_variable(reference);
-			else	if(reference->code(0).asOpcode()==Opcodes::Ont){
-
-				abstracted_object->code(index)=a;
-				abstracted_object->add_reference(reference);
-			}else{
+			else{
 
 				abstracted_object->code(index)=a;
 				abstracted_object->add_reference(abstract_object(reference));
