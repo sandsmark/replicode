@@ -42,7 +42,7 @@ namespace	r_exec{
 
 		prediction_target=prediction->get_pred()->get_target();	// f1.
 		uint64	now=Now();
-		std::cout<<"PMon: "<<now-_Mem::Get()->get_starting_time()<<":"<<Utils::GetTimestamp<Code>(prediction_target,FACT_BEFORE)-_Mem::Get()->get_starting_time()<<std::endl;
+		//std::cout<<"PMon: "<<now-_Mem::Get()->get_starting_time()<<":"<<Utils::GetTimestamp<Code>(prediction_target,FACT_BEFORE)-_Mem::Get()->get_starting_time()<<std::endl;
 
 		bindings->reset_fwd_timings(prediction_target);
 

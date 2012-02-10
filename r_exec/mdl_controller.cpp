@@ -134,7 +134,7 @@ namespace	r_exec{
 
 				if(!simulation)
 					((PrimaryMDLController	*)controller)->store_predicted_evidence(input->object);
-			}else{std::cout<<"CACHED: "<<Now()<<" : "<<Utils::GetTimestamp<Code>(input->object,FACT_BEFORE)<<std::endl;
+			}else{//std::cout<<"CACHED: "<<Now()<<" : "<<Utils::GetTimestamp<Code>(input->object,FACT_BEFORE)<<std::endl;
 				((PrimaryMDLController	*)controller)->store_evidence(input->object);}
 			return	o;
 		}case	MATCH_SUCCESS_NEGATIVE:
