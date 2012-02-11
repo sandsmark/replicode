@@ -71,9 +71,9 @@ namespace	r_exec{
 			case	MATCH_SUCCESS_POSITIVE:	// predicted confirmation, skip.
 				return	false;
 			case	MATCH_SUCCESS_NEGATIVE:
-				if(prediction->get_target()->get_cfd()>prediction_target->get_cfd()){	// a predicted counter evidence is stronger than the target, invalidate and abort.
+				if(prediction->get_target()->get_cfd()>prediction_target->get_cfd()){
 
-					target->invalidate();
+					target->invalidate();	// a predicted counter evidence is stronger than the target, invalidate and abort: don't rate the model.
 					return	true;
 				}else
 					return	false;

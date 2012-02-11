@@ -80,7 +80,8 @@ namespace	r_exec{
 			Overlay				*o;
 			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,true);//bm->trace();f_imdl->get_reference(0)->trace();
 			RequirementsPair	r_p;
-			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p);
+			Fact				*ground;
+			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground);
 			bool				c_a=(c_s>=WR_ENABLED);
 			switch(c_s){
 			case	WR_DISABLED:
@@ -118,7 +119,7 @@ namespace	r_exec{
 //std::cout<<" match\n";
 					f_imdl->set_reference(0,bm->bind_pattern(f_imdl->get_reference(0)));	// valuate f_imdl from updated bm.
 					//f_imdl->get_reference(0)->trace();
-					((PrimaryMDLController	*)controller)->predict(bindings,input_object,f_imdl,c_a,r_p);
+					((PrimaryMDLController	*)controller)->predict(bindings,input_object,f_imdl,c_a,r_p,ground);
 					o=this;
 				}else{
 //std::cout<<" guards failed\n";
@@ -189,7 +190,8 @@ namespace	r_exec{
 			Overlay				*o;
 			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,true);
 			RequirementsPair	r_p;
-			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p);
+			Fact				*ground;
+			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground);
 			bool				c_a=(c_s>=NO_R);
 			switch(c_s){
 			case	WR_DISABLED:
@@ -206,7 +208,7 @@ namespace	r_exec{
 				if(evaluate_fwd_guards()){	// may update bindings.
 //std::cout<<" match\n";
 					f_imdl->set_reference(0,bm->bind_pattern(f_imdl->get_reference(0)));	// valuate f_imdl from updated bm.
-					((SecondaryMDLController	*)controller)->predict(bindings,input->object,NULL,true,r_p);
+					((SecondaryMDLController	*)controller)->predict(bindings,input->object,NULL,true,r_p,ground);
 					o=this;
 				}else{
 //std::cout<<" guards failed\n";
@@ -280,6 +282,10 @@ namespace	r_exec{
 
 	void	MDLController::monitor_predictions(_Fact	*input){	// predictions are admissible inputs (for checking predicted counter-evidences).
 		
+		Pred	*pred=input->get_pred();
+		if(pred	&&	pred->is_simulation())	// discard simulations.
+			return;
+
 		std::list<P<PMonitor> >::const_iterator	m;
 		p_monitorsCS.enter();
 		for(m=p_monitors.begin();m!=p_monitors.end();){
@@ -337,7 +343,7 @@ namespace	r_exec{
 		requirements.CS.leave();
 	}
 
-	ChainingStatus	MDLController::retrieve_simulated_imdl_fwd(BindingMap	*bm,_Fact	*f_imdl,Controller	*root){
+	ChainingStatus	MDLController::retrieve_simulated_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,Controller	*root){
 
 		uint32	wr_count;
 		uint32	sr_count;
@@ -467,7 +473,7 @@ namespace	r_exec{
 		}
 	}
 
-	ChainingStatus	MDLController::retrieve_simulated_imdl_bwd(BindingMap	*bm,_Fact	*f_imdl,Controller	*root){
+	ChainingStatus	MDLController::retrieve_simulated_imdl_bwd(BindingMap	*bm,Fact	*f_imdl,Controller	*root){
 
 		uint32	wr_count;
 		uint32	sr_count;
@@ -589,11 +595,12 @@ namespace	r_exec{
 		}
 	}
 
-	ChainingStatus	MDLController::retrieve_imdl_fwd(BindingMap	*bm,_Fact	*f_imdl,RequirementsPair	&r_p){
+	ChainingStatus	MDLController::retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground){
 
 		uint32	wr_count;
 		uint32	sr_count;
 		uint32	r_count=get_requirement_count(wr_count,sr_count);
+		ground=NULL;
 		if(!r_count)
 			return	NO_R;
 		ChainingStatus	r;
@@ -622,6 +629,7 @@ namespace	r_exec{
 
 							r=WR_ENABLED;
 							bm->load(&_original);
+							ground=(*e).evidence;
 						}
 						
 						r_p.first.controllers.push_back((*e).controller);
@@ -715,9 +723,11 @@ namespace	r_exec{
 
 							if(r!=WR_ENABLED	&&	(*e).chaining_was_allowed){	// first siginificant match.
 								
-								if((*e).confidence>=negative_cfd)
+								if((*e).confidence>=negative_cfd){
+
 									r=WR_ENABLED;
-								else
+									ground=(*e).evidence;
+								}else
 									r=SR_DISABLED_WR;
 								bm->load(&_original);
 							}
@@ -735,17 +745,14 @@ namespace	r_exec{
 		}
 	}
 
-	ChainingStatus	MDLController::retrieve_imdl_bwd(BindingMap	*bm,_Fact	*f_imdl,Fact	*&ground){
+	ChainingStatus	MDLController::retrieve_imdl_bwd(BindingMap	*bm,Fact	*f_imdl,Fact	*&ground){
 
 		uint32	wr_count;
 		uint32	sr_count;
 		uint32	r_count=get_requirement_count(wr_count,sr_count);
-		if(!r_count){
-
-			ground=NULL;
+		ground=NULL;
+		if(!r_count)
 			return	NO_R;
-		}
-
 		ChainingStatus	r;
 		if(!sr_count){	// no strong req., some weak req.: true if there is one f->imdl complying with timings and bindings.
 
@@ -995,9 +1002,14 @@ namespace	r_exec{
 
 		uint32	min_sim_thz=_Mem::Get()->get_min_sim_time_horizon()>>1;	// time allowance for the simulated predictions to flow upward.
 		uint64	sim_thz=_Mem::Get()->get_sim_time_horizon(deadline-now)>>1;
-		if(sim_thz>min_sim_thz)
-			return	sim_thz-min_sim_thz;
-		else	// no time to simulate.
+		if(sim_thz>min_sim_thz){
+
+			sim_thz-=min_sim_thz;
+			uint32	max_sim_thz=_Mem::Get()->get_max_sim_time_horizon();
+			if(sim_thz>max_sim_thz)
+				sim_thz=max_sim_thz;
+			return	sim_thz;
+		}else	// no time to simulate.
 			return	0;
 	}
 
@@ -1111,7 +1123,7 @@ namespace	r_exec{
 			inject_goal(bm,f_sub_goal,f_imdl);
 	}
 
-	void	TopLevelMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p){	// no prediction here.
+	void	TopLevelMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// no prediction here.
 	}
 
 	void	TopLevelMDLController::register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures){
@@ -1276,7 +1288,7 @@ namespace	r_exec{
 		Controller::__take_input<PrimaryMDLController>(input);
 	}
 
-	void	PrimaryMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p){
+	void	PrimaryMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){
 
 		//rhs->get_reference(0)->trace();//bindings->trace();
 		_Fact	*bound_rhs=(_Fact	*)bm->bind_pattern(rhs);	// fact or |fact.
@@ -1306,8 +1318,12 @@ namespace	r_exec{
 		uint64	now=Now();
 		Fact	*production=new	Fact(pred,now,now,1,1);
 
-		if(prediction	&&	!simulation)	// store the antecedent.
+		if(prediction	&&	!simulation){	// store the antecedents.
+
 			pred->grounds.push_back(input);
+			if(ground)
+				pred->grounds.push_back(ground);
+		}
 
 		if(_is_requirement){
 
@@ -1404,9 +1420,9 @@ namespace	r_exec{
 	void	PrimaryMDLController::abduce(BindingMap	*bm,Fact	*super_goal,bool	opposite,float32	confidence){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
 
 		P<Fact>	f_imdl=get_f_ihlp(bm,false);
-		Sim			*sim=super_goal->get_goal()->sim;
-		uint64		sim_thz=sim->thz>>1;	// 0 if super-goal had not time for simulation.
-		uint32		min_sim_thz=_Mem::Get()->get_min_sim_time_horizon()>>1;	// time allowance for the simulated predictions to flow upward.
+		Sim		*sim=super_goal->get_goal()->sim;
+		uint64	sim_thz=sim->thz>>1;	// 0 if super-goal had not time for simulation.
+		uint32	min_sim_thz=_Mem::Get()->get_min_sim_time_horizon()>>1;	// time allowance for the simulated predictions to flow upward.
 
 		Sim	*sub_sim;
 		if(sim_thz>min_sim_thz){
@@ -1867,7 +1883,7 @@ namespace	r_exec{
 			monitor_predictions(input->object);
 	}
 
-	void	SecondaryMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p){	// predicitons are not injected: they are silently produced for rating purposes.
+	void	SecondaryMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// predicitons are not injected: they are silently produced for rating purposes.
 
 		//rhs->trace();rhs->get_reference(0)->trace();bindings->trace();
 		_Fact	*bound_rhs=(_Fact	*)bm->bind_pattern(rhs);	// fact or |fact.

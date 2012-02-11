@@ -147,12 +147,12 @@ namespace	r_exec{
 		Fact	*get_f_ihlp(const	BindingMap	*bindings,bool	wr_enabled)	const;
 
 		virtual	void	store_requirement(_Fact	*f_p_f_imdl,bool	chaining_was_allowed,bool	simulation)=0;
-		ChainingStatus	retrieve_imdl_fwd(BindingMap	*bm,_Fact	*f_imdl,RequirementsPair	&r_p);	// checks the requirement instances during fwd; all wrs in first, all srs in second.
-		ChainingStatus	retrieve_imdl_bwd(BindingMap	*bm,_Fact	*f_imdl,Fact	*&ground);	// checks the requirement instances during bwd; ground is set to the best weak requirement if chaining allowed, NULL otherwise.
-		ChainingStatus	retrieve_simulated_imdl_fwd(BindingMap	*bm,_Fact	*f_imdl,Controller	*root);
-		ChainingStatus	retrieve_simulated_imdl_bwd(BindingMap	*bm,_Fact	*f_imdl,Controller	*root);
+		ChainingStatus	retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground);	// checks the requirement instances during fwd; r_p: all wrs in first, all srs in second.
+		ChainingStatus	retrieve_imdl_bwd(BindingMap	*bm,Fact	*f_imdl,Fact	*&ground);	// checks the requirement instances during bwd; ground is set to the best weak requirement if chaining allowed, NULL otherwise.
+		ChainingStatus	retrieve_simulated_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,Controller	*root);
+		ChainingStatus	retrieve_simulated_imdl_bwd(BindingMap	*bm,Fact	*f_imdl,Controller	*root);
 
-		virtual	void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p)=0;
+		virtual	void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground)=0;
 		virtual	void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures)=0;
 		virtual	void	register_req_outcome(Fact	*f_pred,bool	success,bool	rate_failures){}
 
@@ -218,7 +218,7 @@ namespace	r_exec{
 
 		void	store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation);	// never called.
 
-		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p);
+		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
 		void	register_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
 		void	register_simulated_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
@@ -268,7 +268,7 @@ namespace	r_exec{
 
 		void	store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation);
 
-		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p);
+		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
 
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
 		void	register_req_outcome(_Fact	*f_imdl,bool	success,bool	rate_failures);
@@ -301,7 +301,7 @@ namespace	r_exec{
 
 		void	store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation);
 
-		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p);
+		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
 		void	register_req_outcome(_Fact	*f_pred,bool	success,bool	rate_failures);
 	};
