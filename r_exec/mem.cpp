@@ -844,10 +844,10 @@ namespace	r_exec{
 					250000,	// perf sampling period
 					0.1,	// float tolerance.
 					10000,	// time tolerance.
-					2,		// probe level.
 					false,	// debug.
 					1000,	// ntf marker resilience.
-					1000);	// goal pred success resilience.
+					1000,	// goal pred success resilience.
+					2);		// probe level.
 
 		uint32	stdin_oid;
 		std::string	stdin_symbol("stdin");

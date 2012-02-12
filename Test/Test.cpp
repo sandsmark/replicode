@@ -144,10 +144,10 @@ int32	main(int	argc,char	**argv){
 					settings.perf_sampling_period,
 					settings.float_tolerance,
 					settings.time_tolerance,
-					settings.probe_level,
 					settings.debug,
 					settings.ntf_mk_resilience,
-					settings.goal_pred_success_resilience);
+					settings.goal_pred_success_resilience,
+					settings.probe_level);
 
 		uint32	stdin_oid;
 		std::string	stdin_symbol("stdin");

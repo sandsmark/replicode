@@ -1000,8 +1000,8 @@ namespace	r_exec{
 
 	inline	uint64	PMDLController::get_sim_thz(uint64	now,uint64 deadline)	const{
 
-		uint32	min_sim_thz=_Mem::Get()->get_min_sim_time_horizon()>>1;	// time allowance for the simulated predictions to flow upward.
-		uint64	sim_thz=_Mem::Get()->get_sim_time_horizon(deadline-now)>>1;
+		uint32	min_sim_thz=_Mem::Get()->get_min_sim_time_horizon();	// time allowance for the simulated predictions to flow upward.
+		uint64	sim_thz=_Mem::Get()->get_sim_time_horizon(deadline-now);
 		if(sim_thz>min_sim_thz){
 
 			sim_thz-=min_sim_thz;
