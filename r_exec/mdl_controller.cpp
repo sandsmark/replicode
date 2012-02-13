@@ -1145,7 +1145,7 @@ namespace	r_exec{
 			Code	*success_object;
 			if(!evidence){	// assert absence of the goal target.
 
-				absentee=get_absentee(goal);
+				absentee=get_absentee(goal->get_goal()->get_target());
 				success_object=new	Success(goal,absentee,1);
 			}else
 				success_object=new	Success(goal,evidence,1);
@@ -1700,7 +1700,7 @@ namespace	r_exec{
 
 		_Fact	*f_evidence=evidence;
 		if(!f_evidence)	// failure: assert absence of the pred target.
-			f_evidence=get_absentee(f_pred);
+			f_evidence=get_absentee(f_pred->get_pred()->get_target());
 
 		Success	*success_object=new	Success(f_pred,f_evidence,1);
 		Code	*f_success_object;
@@ -1760,7 +1760,7 @@ namespace	r_exec{
 			Code	*success_object;
 			if(!evidence){	// assert absence of the goal target.
 
-				absentee=get_absentee(goal);
+				absentee=get_absentee(goal->get_goal()->get_target());
 				success_object=new	Success(goal,absentee,1);
 			}else
 				success_object=new	Success(goal,evidence,1);

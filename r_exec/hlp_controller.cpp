@@ -159,14 +159,13 @@ namespace	r_exec{
 		}
 	}
 
-	inline	_Fact	*HLPController::get_absentee(_Fact	*fact)	const{	// fact->g/p->f->obj.
+	inline	_Fact	*HLPController::get_absentee(_Fact	*fact)	const{	// fact: f->obj.
 
 		_Fact	*absentee;
-		_Fact	*target=(_Fact	*)fact->get_reference(0)->get_reference(0);
-		if(target->code(0).asOpcode()==Opcodes::Fact)
-			absentee=new	AntiFact(target->get_reference(0),target->get_after(),target->get_before(),1,1);
+		if(fact->code(0).asOpcode()==Opcodes::Fact)
+			absentee=new	AntiFact(fact->get_reference(0),fact->get_after(),fact->get_before(),1,1);
 		else
-			absentee=new	Fact(target->get_reference(0),target->get_after(),target->get_before(),1,1);
+			absentee=new	Fact(fact->get_reference(0),fact->get_after(),fact->get_before(),1,1);
 
 		return	absentee;
 	}

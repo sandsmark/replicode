@@ -77,6 +77,12 @@ namespace	r_exec{
 		TPXMap::const_iterator	m=map.find(target);
 		if(m!=map.end()){	// shall always be the case.
 
+			if(m->first->is_invalidated()){
+
+				map.erase(m);
+				return;
+			}
+
 			m->second->signal(input);	// will spawn a ReductionJob holding a P<> on m->second.
 			map.erase(m);
 		}
@@ -90,7 +96,9 @@ namespace	r_exec{
 		TPXMap::const_iterator	m;
 		for(m=predictions.begin();m!=predictions.end();){
 
-			if(m->first==target){
+			if(m->first->is_invalidated())
+				m=predictions.erase(m);
+			else	if(m->first==target){
 
 				m->second->signal(input);	// will spawn a ReductionJob holding a P<> on m->second.
 				m=predictions.erase(m);
@@ -110,14 +118,20 @@ namespace	r_exec{
 		TPXMap::const_iterator	m;
 		for(m=map.begin();m!=map.end();++m){
 
-			Input	*_input=new	Input((_Fact	*)input->object,abstract_input,bm);
-			if(m->second->take_input(_input)){
+			if(m->first->is_invalidated())
+				m=map.erase(m);
+			else{
 
-				if(!injected){
+				Input	*_input=new	Input((_Fact	*)input->object,abstract_input,bm);
+				if(m->second->take_input(_input)){
 
-					inject_input(input,0);
-					injected=true;
+					if(!injected){
+
+						inject_input(input,0);
+						injected=true;
+					}
 				}
+				++m;
 			}
 		}
 	}
@@ -125,10 +139,16 @@ namespace	r_exec{
 	inline	void	AutoFocusController::dispatch_no_inject(_Fact	*input,_Fact	*abstract_input,BindingMap	*bm,TPXMap	&map){
 
 		TPXMap::const_iterator	m;
-		for(m=map.begin();m!=map.end();++m){
+		for(m=map.begin();m!=map.end();){
 
-			Input	*_input=new	Input(input,abstract_input,bm);
-			m->second->take_input(_input);
+			if(m->first->is_invalidated())
+				m=map.erase(m);
+			else{
+
+				Input	*_input=new	Input(input,abstract_input,bm);
+				m->second->take_input(_input);
+				++m;
+			}
 		}
 	}
 
@@ -142,6 +162,12 @@ namespace	r_exec{
 
 		TPXMap::iterator	m=map.find(target);
 		if(m!=map.end()){	// shall always be the case.
+
+			if(m->first->is_invalidated()){
+
+				map.erase(m);
+				return;
+			}
 
 			_Fact	*pattern=m->second->get_pattern();
 			RatingMap::iterator	r=ratings.find(pattern);
