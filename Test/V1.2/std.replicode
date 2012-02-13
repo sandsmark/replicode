@@ -83,8 +83,8 @@
 !def <> neq
 !def > gtr
 !def < lsr
-!def <= gte
-!def >= lse
+!def >= gte
+!def <= lse
 !def + add
 !def - sub
 !def * mul
