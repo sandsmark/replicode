@@ -1117,7 +1117,7 @@ namespace	r_exec{
 
 		sub_goal->sim=sub_sim;
 
-		add_monitor(new	GMonitor(this,bm,deadline,sim_thz,f_sub_goal,f_imdl,evidence));
+		add_monitor(new	GMonitor(this,bm,deadline,now+sim_thz,f_sub_goal,f_imdl,evidence));
 
 		if(!evidence)
 			inject_goal(bm,f_sub_goal,f_imdl);
@@ -1140,6 +1140,7 @@ namespace	r_exec{
 
 			Code	*success_object=new	Success(goal,evidence,1);
 			f_success_object=new	Fact(success_object,now,now,1,1);
+			absentee=NULL;
 		}else{
 
 			Code	*success_object;
@@ -1147,26 +1148,29 @@ namespace	r_exec{
 
 				absentee=get_absentee(goal->get_goal()->get_target());
 				success_object=new	Success(goal,absentee,1);
-			}else
+			}else{
+
+				absentee=NULL;
 				success_object=new	Success(goal,evidence,1);
+			}
 			f_success_object=new	AntiFact(success_object,now,now,1,1);
 		}
 		
 		Group	*primary_host=get_host();
 		uint16	out_group_count=get_out_group_count();
-		Group	*drives_host=(Group	*)get_out_group(out_group_count-1);	// the drives group is the last of the output groups.
-		int32	resilience=_Mem::Get()->get_goal_pred_success_res(drives_host,0);
-		View	*view=new	View(true,now,1,resilience,drives_host,primary_host,f_success_object);
-		_Mem::Get()->inject(view);	// inject in the drives group (will be caught by the drive injectors).
+		//Group	*drives_host=(Group	*)get_out_group(out_group_count-1);	// the drives group is the last of the output groups.
+		//int32	resilience=_Mem::Get()->get_goal_pred_success_res(drives_host,0);
+		//View	*view=new	View(true,now,1,resilience,drives_host,primary_host,f_success_object);
+		//_Mem::Get()->inject(view);	// inject in the drives group (will be caught by the drive injectors).
 
-		resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
-		view=new	View(true,now,1,resilience,primary_host,primary_host,f_success_object);
+		//resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
+		//view=new	View(true,now,1,resilience,primary_host,primary_host,f_success_object);
 
 		for(uint16	i=0;i<out_group_count;++i){	// inject notification in out groups.
 
 			Group	*out_group=(Group	*)get_out_group(i);
-			resilience=_Mem::Get()->get_goal_pred_success_res(out_group,0);
-			view=new	View(true,now,1,resilience,out_group,primary_host,f_success_object);
+			int32	resilience=_Mem::Get()->get_goal_pred_success_res(out_group,0);
+			View	*view=new	View(true,now,1,resilience,out_group,primary_host,f_success_object);
 			_Mem::Get()->inject(view);
 
 			if(absentee){
@@ -1434,11 +1438,11 @@ namespace	r_exec{
 			uint64	now=Now();
 			switch(sim->mode){
 			case	SIM_ROOT:
-				sub_sim=new	Sim(opposite?SIM_MANDATORY:SIM_OPTIONAL,now+sim_thz,super_goal,opposite,sim->root,this,confidence,0);
+				sub_sim=new	Sim(opposite?SIM_MANDATORY:SIM_OPTIONAL,sim_thz,super_goal,opposite,sim->root,this,confidence,0);
 				break;
 			case	SIM_OPTIONAL:
 			case	SIM_MANDATORY:
-				sub_sim=new	Sim(sim->mode,now+sim_thz,sim->super_goal,opposite,sim->root,sim->sol,sim->sol_cfd,sim->sol_before);
+				sub_sim=new	Sim(sim->mode,sim_thz,sim->super_goal,opposite,sim->root,sim->sol,sim->sol_cfd,sim->sol_before);
 				break;
 			}
 
@@ -1750,11 +1754,11 @@ namespace	r_exec{
 		uint64	now=Now();
 		_Fact	*f_success_object;
 		_Fact	*absentee;
-
 		if(success){
 
 			Code	*success_object=new	Success(goal,evidence,1);
 			f_success_object=new	Fact(success_object,now,now,1,1);
+			absentee=NULL;
 		}else{
 
 			Code	*success_object;
@@ -1762,21 +1766,24 @@ namespace	r_exec{
 
 				absentee=get_absentee(goal->get_goal()->get_target());
 				success_object=new	Success(goal,absentee,1);
-			}else
+			}else{
+
+				absentee=NULL;
 				success_object=new	Success(goal,evidence,1);
+			}
 			f_success_object=new	AntiFact(success_object,now,now,1,1);
 		}
 
 		Group	*primary_host=get_host();
-		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
-		View	*view=new	View(true,now,1,resilience,primary_host,primary_host,f_success_object);
+		//int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
+		//View	*view=new	View(true,now,1,resilience,primary_host,primary_host,f_success_object);
 
 		uint16	out_group_count=get_out_group_count();
 		for(uint16	i=0;i<out_group_count;++i){	// inject notification in out groups.
 
 			Group	*out_group=(Group	*)get_out_group(i);
-			resilience=_Mem::Get()->get_goal_pred_success_res(out_group,0);
-			view=new	View(true,now,1,resilience,out_group,primary_host,f_success_object);
+			int32	resilience=_Mem::Get()->get_goal_pred_success_res(out_group,0);
+			View	*view=new	View(true,now,1,resilience,out_group,primary_host,f_success_object);
 			_Mem::Get()->inject(view);
 
 			if(absentee){

@@ -315,6 +315,9 @@ namespace	r_exec{
 
 	bool	RMonitor::signal(){
 
+		if(target->is_invalidated())
+			return	true;
+
 		if(((PrimaryMDLController	*)controller)->check_imdl(target,bindings))
 			return	true;
 		return	false;
@@ -443,6 +446,9 @@ namespace	r_exec{
 	}
 
 	bool	SRMonitor::signal(bool	simulation){
+
+		if(target->is_invalidated())
+			return	true;
 
 		if(simulation){
 
