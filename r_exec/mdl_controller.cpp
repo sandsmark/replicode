@@ -880,45 +880,31 @@ namespace	r_exec{
 		overlays.push_back(o);
 	}
 
-	void	PMDLController::add_monitor(_GMonitor	*m){
+	void	PMDLController::add_g_monitor(_GMonitor	*m){
 
 		g_monitorsCS.enter();
 		g_monitors.push_front(m);
 		g_monitorsCS.leave();
 	}
 
-	void	PMDLController::remove_monitor(_GMonitor	*m){
+	void	PMDLController::remove_g_monitor(_GMonitor	*m){
 
 		g_monitorsCS.enter();
 		g_monitors.remove(m);
 		g_monitorsCS.leave();
 	}
 
-	void	PMDLController::add_monitor(RMonitor	*m){
+	void	PMDLController::add_r_monitor(_GMonitor	*m){
 
 		g_monitorsCS.enter();
 		r_monitors.push_front(m);
 		g_monitorsCS.leave();
 	}
 
-	void	PMDLController::remove_monitor(RMonitor	*m){
+	void	PMDLController::remove_r_monitor(_GMonitor	*m){
 
 		g_monitorsCS.enter();
 		r_monitors.remove(m);
-		g_monitorsCS.leave();
-	}
-
-	void	PMDLController::add_monitor(SRMonitor	*m){
-
-		g_monitorsCS.enter();
-		sr_monitors.push_front(m);
-		g_monitorsCS.leave();
-	}
-
-	void	PMDLController::remove_monitor(SRMonitor	*m){
-
-		g_monitorsCS.enter();
-		sr_monitors.remove(m);
 		g_monitorsCS.leave();
 	}
 
@@ -990,7 +976,7 @@ namespace	r_exec{
 
 					g->sim=new_sim;
 
-					add_monitor(new	GMonitor(this,bm,deadline,sim_thz,new_goal,f_imdl,NULL));
+					add_g_monitor(new	GMonitor(this,bm,deadline,sim_thz,new_goal,f_imdl,NULL));
 
 					inject_goal(bm,new_goal,f_imdl);
 				}
@@ -1117,7 +1103,7 @@ namespace	r_exec{
 
 		sub_goal->sim=sub_sim;
 
-		add_monitor(new	GMonitor(this,bm,deadline,now+sim_thz,f_sub_goal,f_imdl,evidence));
+		add_g_monitor(new	GMonitor(this,bm,deadline,now+sim_thz,f_sub_goal,f_imdl,evidence));
 
 		if(!evidence)
 			inject_goal(bm,f_sub_goal,f_imdl);
@@ -1242,44 +1228,29 @@ namespace	r_exec{
 		REntry	e(f_p_f_imdl,this,chaining_was_allowed);
 		if(f_imdl->is_fact()){	// in case of a positive requirement tell monitors they can check for chaining again.
 
-			std::list<P<SRMonitor> >::const_iterator	m;
+			std::list<P<_GMonitor> >::const_iterator	m;
 			g_monitorsCS.enter();
-			for(m=sr_monitors.begin();m!=sr_monitors.end();){	// signal sr-monitors.
+			for(m=r_monitors.begin();m!=r_monitors.end();){	// signal r-monitors.
 
 				if((*m)->is_alive())
-					m=sr_monitors.erase(m);
+					m=r_monitors.erase(m);
 				else{
 
 					if((*m)->signal(simulation))
-						m=sr_monitors.erase(m);
+						m=r_monitors.erase(m);
 					else
 						++m;
 				}
 			}
 			g_monitorsCS.leave();
-			_store_requirement(&simulated_requirements.positive_evidences,e);
 
-			if(!simulation){	// r-monitors are never signaled for simulated f_imdl.
-
-				std::list<P<RMonitor> >::const_iterator	m;
-				g_monitorsCS.enter();
-				for(m=r_monitors.begin();m!=r_monitors.end();){	// signal r-monitors.
-
-					if((*m)->is_alive())
-						m=r_monitors.erase(m);
-					else{
-
-						if((*m)->signal())
-							m=r_monitors.erase(m);
-						else
-							++m;
-					}
-				}
-				g_monitorsCS.leave();
+			if(simulation)
+				_store_requirement(&simulated_requirements.positive_evidences,e);
+			else
 				_store_requirement(&requirements.positive_evidences,e);
-			}
 		}else	if(!simulation)
 			_store_requirement(&requirements.negative_evidences,e);
+		
 		if(!simulation)
 			secondary->store_requirement(f_p_f_imdl,chaining_was_allowed,false);
 	}
@@ -1541,7 +1512,7 @@ namespace	r_exec{
 				uint64	now=Now();
 				Fact	*f_sub_goal=new	Fact(sub_goal,now,now,1,1);
 
-				add_monitor(new	GMonitor(this,bm,bound_lhs->get_before(),0,f_sub_goal,f_imdl,evidence));
+				add_g_monitor(new	GMonitor(this,bm,bound_lhs->get_before(),0,f_sub_goal,f_imdl,evidence));
 				
 				if(!evidence)
 					inject_goal(bm,f_sub_goal,f_imdl);
@@ -1560,7 +1531,7 @@ namespace	r_exec{
 		
 		uint64	now=Now();
 		Fact	*f_sub_goal=new	Fact(sub_goal,now,now,1,1);
-		add_monitor(new	RMonitor(this,bm,super_goal->get_goal()->get_target()->get_before(),f_sub_goal,f_imdl));	// the monitor will wait until the deadline of the super-goal.
+		add_r_monitor(new	RMonitor(this,bm,super_goal->get_goal()->get_target()->get_before(),sim->thz,f_sub_goal,f_imdl));	// the monitor will wait until the deadline of the super-goal.
 		inject_goal(bm,f_sub_goal,f_imdl);
 	}
 
@@ -1600,7 +1571,7 @@ namespace	r_exec{
 					uint64	now=Now();
 					Fact	*f_sub_goal=new	Fact(sub_goal,now,now,1,1);
 
-					add_monitor(new	SGMonitor(this,bm,sim->thz,f_sub_goal,f_imdl));
+					add_g_monitor(new	SGMonitor(this,bm,sim->thz,f_sub_goal,f_imdl));
 					inject_simulation(f_sub_goal);
 					break;
 				}
@@ -1619,7 +1590,7 @@ namespace	r_exec{
 		
 		uint64	now=Now();
 		Fact	*f_sub_goal=new	Fact(sub_goal,now,now,1,1);
-		add_monitor(new	SRMonitor(this,bm,sim->thz,f_sub_goal,f_imdl));
+		add_r_monitor(new	SRMonitor(this,bm,sim->thz,f_sub_goal,f_imdl));
 		inject_simulation(f_sub_goal);
 	}
 
@@ -1638,14 +1609,15 @@ namespace	r_exec{
 
 				f_imdl->set_reference(0,bm->bind_pattern(f_imdl->get_reference(0)));	// valuate f_imdl from updated bm.
 				abduce_lhs(bm,sim->super_goal,f_imdl,sim->opposite,f_imdl->get_cfd(),new	Sim(SIM_ROOT,0,sim->super_goal,sim->opposite,this),ground,false);
+				return	true;
 			}
-			return	true;
+			return	false;
 		default:	// WR_DISABLED, SR_DISABLED_NO_WR or SR_DISABLED_WR.
 			return	false;
 		}
 	}
 
-	bool	PrimaryMDLController::check_imdl(Fact	*goal,BindingMap	*bm,Controller	*root){	// goal is f->g->f->imdl; called by sr-monitors.
+	bool	PrimaryMDLController::check_simulated_imdl(Fact	*goal,BindingMap	*bm,Controller	*root){	// goal is f->g->f->imdl; called by sr-monitors.
 
 		Goal	*g=goal->get_goal();
 		Fact	*f_imdl=(Fact	*)g->get_target();
@@ -1667,8 +1639,9 @@ namespace	r_exec{
 
 				f_imdl->set_reference(0,bm->bind_pattern(f_imdl->get_reference(0)));	// valuate f_imdl from updated bm.
 				abduce_simulated_lhs(bm,sim->super_goal,f_imdl,sim->opposite,f_imdl->get_cfd(),new	Sim(sim));
+				return	true;
 			}
-			return	true;
+			return	false;
 		default:	// WR_DISABLED, SR_DISABLED_NO_WR or SR_DISABLED_WR.
 			return	false;
 		}

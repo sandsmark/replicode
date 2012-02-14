@@ -176,6 +176,9 @@ namespace	r_exec{
 
 	bool	GMonitor::reduce(_Fact	*input){	// executed by a reduction core; invalidation check performed in Monitor::is_alive().
 
+		if(target->is_invalidated())
+			return	true;
+
 		if(!injected_goal){
 			
 			if(predicted_evidence->is_invalidated()){	// the predicted evidence was wrong.
@@ -266,7 +269,7 @@ namespace	r_exec{
 		
 		if(target->is_invalidated()){
 
-			((PMDLController	*)controller)->remove_monitor(this);
+			((PMDLController	*)controller)->remove_g_monitor(this);
 			next_target=0;
 		}else	if(simulating){
 
@@ -276,24 +279,9 @@ namespace	r_exec{
 		}else{
 
 			((PMDLController	*)controller)->register_goal_outcome(target,false,NULL);
-			((PMDLController	*)controller)->remove_monitor(this);
+			((PMDLController	*)controller)->remove_g_monitor(this);
 			next_target=0;
 		}
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	_RMonitor::_RMonitor(	PrimaryMDLController	*controller,
-							BindingMap				*bindings,
-							uint64					deadline,
-							uint64					sim_thz,
-							Fact					*goal,
-							Fact					*f_imdl):Monitor(	controller,
-																		bindings,
-																		goal),
-																		deadline(deadline),
-																		sim_thz(sim_thz),
-																		f_imdl(f_imdl){	// goal is f0->g->f1->imdl.
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -301,39 +289,86 @@ namespace	r_exec{
 	RMonitor::RMonitor(	PrimaryMDLController	*controller,
 						BindingMap				*bindings,
 						uint64					deadline,
+						uint64					sim_thz,
 						Fact					*goal,
-						Fact					*f_imdl):_RMonitor(	controller,
+						Fact					*f_imdl):GMonitor(	controller,
 																	bindings,
 																	deadline,
 																	sim_thz,
 																	goal,
-																	f_imdl){	// goal is f0->g->f1->object.
+																	f_imdl,
+																	NULL){	// goal is f0->g->f1->object.
 
 		MonitoringJob<RMonitor>	*j=new	MonitoringJob<RMonitor>(this,deadline);
 		_Mem::Get()->pushTimeJob(j);
 	}
 
-	bool	RMonitor::signal(){
+	bool	RMonitor::signal(bool	simulation){
 
 		if(target->is_invalidated())
 			return	true;
 
-		if(((PrimaryMDLController	*)controller)->check_imdl(target,bindings))
+		if(simulating	&&	simulation){	// report the simulated outcome: this will inject a simulated prediction of the outcome, to allow any g-monitor deciding on this ground.
+
+			if(((PrimaryMDLController	*)controller)->check_simulated_imdl(target,bindings,target->get_goal()->sim->root))
+				((PMDLController	*)controller)->register_simulated_goal_outcome(target,true,target);		// report a simulated success.
+			else
+				((PMDLController	*)controller)->register_simulated_goal_outcome(target,false,NULL);	// report a simulated failure.
+			return	false;
+		}else	if(((PrimaryMDLController	*)controller)->check_imdl(target,bindings))
 			return	true;
 		return	false;
 	}
 
-	bool	RMonitor::reduce(_Fact	*input){
+	bool	RMonitor::reduce(_Fact	*input){	// catch simulated predictions only; requirements are observable in signal().
+
+		if(target->is_invalidated())
+			return	true;
+
+		Pred	*prediction=input->get_pred();
+		if(prediction){	// input is f0->pred->f1->object.
+
+			_Fact	*_input=prediction->get_target();	// _input is f1->obj.
+			if(simulating){	// injected_goal==true.
+
+				Sim		*sim=prediction->get_simulation(target);
+				if(sim){
+
+					Code	*outcome=_input->get_reference(0);
+					if(outcome->code(0).asOpcode()==Opcodes::Success){	// _input is f1->success or |f1->success.
+
+						_Fact	*f_success=(_Fact	*)outcome->get_reference(SUCCESS_OBJ);
+						Goal	*affected_goal=f_success->get_goal();
+						if(affected_goal){
+
+							store_simulated_outcome(affected_goal,sim,_input->is_fact());
+							return	false;
+						}
+					}
+				}
+			}
+		}
 
 		return	false;
 	}
 
 	void	RMonitor::update(uint64	&next_target){
 
-		if(!target->is_invalidated())
-			((PrimaryMDLController	*)controller)->register_goal_outcome(target,false,NULL);
-		((PrimaryMDLController	*)controller)->remove_monitor(this);
-		next_target=0;
+		if(target->is_invalidated()){
+
+			((PMDLController	*)controller)->remove_r_monitor(this);
+			next_target=0;
+		}else	if(simulating){
+
+			simulating=0;
+			commit();
+			next_target=deadline;
+		}else{
+
+			((PMDLController	*)controller)->register_goal_outcome(target,false,NULL);
+			((PMDLController	*)controller)->remove_r_monitor(this);
+			next_target=0;
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -383,6 +418,9 @@ namespace	r_exec{
 
 	bool	SGMonitor::reduce(_Fact	*input){
 
+		if(target->is_invalidated())
+			return	true;
+
 		_Fact	*_input;
 		Pred	*prediction=input->get_pred();
 		if(prediction){	// input is f0->pred->f1->object.
@@ -410,7 +448,7 @@ namespace	r_exec{
 		// Non-simulated input (can be actual or predicted): report the simulated outcome: this will inject a simulated prediction of the outcome, to allow any g-monitor deciding on this ground.
 		switch(_input->is_evidence(goal_target)){
 		case	MATCH_SUCCESS_POSITIVE:
-			((PMDLController	*)controller)->register_simulated_goal_outcome(target,true,_input);	// report a simulated success.
+			((PMDLController	*)controller)->register_simulated_goal_outcome(target,true,_input);		// report a simulated success.
 			return	false;
 		case	MATCH_SUCCESS_NEGATIVE:
 			((PMDLController	*)controller)->register_simulated_goal_outcome(target,false,_input);	// report a simulated failure.
@@ -424,7 +462,7 @@ namespace	r_exec{
 		
 		if(!target->is_invalidated())
 			commit();
-		((PMDLController	*)controller)->remove_monitor(this);
+		((PMDLController	*)controller)->remove_g_monitor(this);
 		next_target=0;
 	}
 
@@ -434,9 +472,8 @@ namespace	r_exec{
 							BindingMap				*bindings,
 							uint64					sim_thz,
 							Fact					*goal,
-							Fact					*f_imdl):_RMonitor(controller,
+							Fact					*f_imdl):SGMonitor(controller,
 																		bindings,
-																		0,
 																		sim_thz,
 																		goal,
 																		f_imdl){	// goal is f0->g->f1->object.
@@ -452,24 +489,51 @@ namespace	r_exec{
 
 		if(simulation){
 
-			if(((PrimaryMDLController	*)controller)->check_imdl(target,bindings,target->get_goal()->sim->root))
-				return	true;
-		}else
-			if(((PrimaryMDLController	*)controller)->check_imdl(target,bindings,NULL))
-				return	true;
+			if(((PrimaryMDLController	*)controller)->check_simulated_imdl(target,bindings,target->get_goal()->sim->root))
+				((PMDLController	*)controller)->register_simulated_goal_outcome(target,true,target);	// report a simulated success.
+		}else{
+
+			if(((PrimaryMDLController	*)controller)->check_simulated_imdl(target,bindings,NULL))
+				((PMDLController	*)controller)->register_simulated_goal_outcome(target,false,NULL);	// report a simulated failure.
+		}
 		return	false;
 	}
 
 	bool	SRMonitor::reduce(_Fact	*input){
 
+		if(target->is_invalidated())
+			return	true;
+
+		Pred	*prediction=input->get_pred();
+		if(prediction){	// input is f0->pred->f1->object.
+
+			_Fact	*_input=prediction->get_target();	// _input is f1->obj.
+
+			Sim		*sim=prediction->get_simulation(target);
+			if(sim){
+
+				Code	*outcome=_input->get_reference(0);
+				if(outcome->code(0).asOpcode()==Opcodes::Success){	// _input is f1->success or |f1->success.
+
+					_Fact	*f_success=(_Fact	*)outcome->get_reference(SUCCESS_OBJ);
+					Goal	*affected_goal=f_success->get_goal();
+					if(affected_goal){
+
+						store_simulated_outcome(affected_goal,sim,_input->is_fact());
+						return	false;
+					}
+				}
+			}
+		}
+		
 		return	false;
 	}
 
 	void	SRMonitor::update(uint64	&next_target){
 
 		if(!target->is_invalidated())
-			((PrimaryMDLController	*)controller)->register_simulated_goal_outcome(target,false,NULL);
-		((PrimaryMDLController	*)controller)->remove_monitor(this);
+			commit();
+		((PMDLController	*)controller)->remove_r_monitor(this);
 		next_target=0;
 	}
 }

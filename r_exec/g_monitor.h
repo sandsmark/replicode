@@ -48,7 +48,7 @@ namespace	r_exec{
 		P<Fact>	f_imdl;
 		SimMode	sim_mode;
 
-		uint32	volatile	simulating;			// 32 bits alignment.
+		uint32	volatile	simulating;	// 32 bits alignment.
 
 		typedef	std::list<std::pair<P<Goal>,P<Sim> > >	SolutionList;
 
@@ -71,6 +71,8 @@ namespace	r_exec{
 					uint64			sim_thz,
 					Fact			*goal,
 					Fact			*f_imdl);	// goal is f0->g->f1->object.
+	public:
+		virtual	bool	signal(bool	simulation){	return	false;	}
 	};
 
 	// Monitors goals (other than requirements).
@@ -114,23 +116,8 @@ namespace	r_exec{
 					Fact			*f_imdl,
 					_Fact			*predicted_evidence);	// goal is f0->g->f1->object.
 
-		bool	reduce(_Fact	*input);	// returning true will remove the monitor form the controller.
-		void	update(uint64	&next_target);
-	};
-
-	class	_RMonitor:
-	public	Monitor{
-	protected:
-		uint64	deadline;	// of the goal.
-		uint64	sim_thz;
-		P<Fact>	f_imdl;		// goal target.
-
-		_RMonitor(	PrimaryMDLController	*controller,
-					BindingMap				*bindings,
-					uint64					deadline,
-					uint64					sim_thz,
-					Fact					*goal,	// f->goal->f->imdl.
-					Fact					*f_imdl);
+		virtual	bool	reduce(_Fact	*input);	// returning true will remove the monitor form the controller.
+		virtual	void	update(uint64	&next_target);
 	};
 
 	// Monitors actual requirements.
@@ -142,23 +129,24 @@ namespace	r_exec{
 	//			if yes: assert success and abort: the model will bind its rhs with the bm retrieved from the pred->f_imdl; this will kill the monitor and a new one will be built for the bound rhs sub-goal.
 	//	At the deadline, assert failure.
 	class	RMonitor:
-	public	_RMonitor{
+	public	GMonitor{
 	public:
 		RMonitor(	PrimaryMDLController	*controller,
 					BindingMap				*bindings,
 					uint64					deadline,
+					uint64					sim_thz,
 					Fact					*goal,
 					Fact					*f_imdl);
 
 		bool	reduce(_Fact	*input);
 		void	update(uint64	&next_target);
-		bool	signal();
+		bool	signal(bool	simulation);
 	};
 
 	// Monitors simulated goals.
 	class	SGMonitor:
 	public	_GMonitor{
-	private:
+	protected:
 		void	commit();
 	public:
 		SGMonitor(	PrimaryMDLController	*controller,
@@ -172,9 +160,9 @@ namespace	r_exec{
 	};
 
 	// Monitors simulated requirements.
-	// Use for SIM_ROOT, SIM_OPTIONAL and SIM_MANDATORY.
+	// Use for SIM_OPTIONAL and SIM_MANDATORY.
 	class	SRMonitor:
-	public	_RMonitor{
+	public	SGMonitor{
 	public:
 		SRMonitor(	PrimaryMDLController	*controller,
 					BindingMap				*bindings,

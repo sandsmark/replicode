@@ -165,8 +165,7 @@ namespace	r_exec{
 	protected:
 		CriticalSection				g_monitorsCS;
 		std::list<P<_GMonitor> >	g_monitors;
-		std::list<P<RMonitor> >		r_monitors;
-		std::list<P<SRMonitor> >	sr_monitors;
+		std::list<P<_GMonitor> >	r_monitors;
 
 		void	inject_goal(BindingMap	*bm,Fact	*goal,Fact	*f_imdl)	const;
 		void	inject_simulation(Fact	*simulation)	const;
@@ -177,12 +176,10 @@ namespace	r_exec{
 
 		PMDLController(r_code::View	*view);
 	public:
-		void	add_monitor(_GMonitor	*m);
-		void	remove_monitor(_GMonitor	*m);
-		void	add_monitor(RMonitor	*m);
-		void	remove_monitor(RMonitor	*m);
-		void	add_monitor(SRMonitor	*m);
-		void	remove_monitor(SRMonitor	*m);
+		void	add_g_monitor(_GMonitor	*m);
+		void	remove_g_monitor(_GMonitor	*m);
+		void	add_r_monitor(_GMonitor	*m);
+		void	remove_r_monitor(_GMonitor	*m);
 
 		virtual	void	register_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const=0;
 				void	register_predicted_goal_outcome(Fact	*goal,BindingMap	*bm,Fact	*f_imdl,bool	success,bool	injected_goal);
@@ -277,7 +274,7 @@ namespace	r_exec{
 		void	register_simulated_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
 
 		bool	check_imdl(Fact	*goal,BindingMap	*bm);
-		bool	check_imdl(Fact	*goal,BindingMap	*bm,Controller	*root);
+		bool	check_simulated_imdl(Fact	*goal,BindingMap	*bm,Controller	*root);
 		void	abduce(BindingMap	*bm,Fact	*super_goal,bool	opposite,float32	confidence);
 	};
 
