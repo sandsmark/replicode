@@ -189,8 +189,21 @@ int32	main(int	argc,char	**argv){
 		if(settings.write_image)
 			write_to_file(image,settings.image_path,settings.test_image?&decompiler:NULL,starting_time);
 
-		if(settings.decompile_image	&&	(!settings.write_image	||	!settings.test_image))
-			decompile(decompiler,image,starting_time,settings.ignore_ontology);
+		if(settings.decompile_image	&&	(!settings.write_image	||	!settings.test_image)){
+            
+			if(argc>2){	// argv[2] is a file to redirect the decompiled code to.
+
+				std::ofstream	outfile;
+				outfile.open(argv[2],std::ios_base::trunc);
+				std::streambuf	*coutbuf=std::cout.rdbuf(outfile.rdbuf()); 
+
+				decompile(decompiler,image,starting_time,settings.ignore_ontology);
+				
+				std::cout.rdbuf(coutbuf);
+                outfile.close(); 
+			}else
+				decompile(decompiler,image,starting_time,settings.ignore_ontology);
+        }
 		//uint32	w;std::cin>>w;
 		delete	image;
 
