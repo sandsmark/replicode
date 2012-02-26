@@ -54,22 +54,31 @@ namespace	r_exec{
 
 	inline	void	AutoFocusController::inject_input(View	*input,uint32	start)	const{
 
+		Code	*input_fact=input->object;
+		//input_fact->acq_views();
+
+		//uint64	now=Now();
+
 		for(uint16	i=start;i<output_groups.size();++i){
 
 			Group	*output_group=output_groups[i];
 			View	*_view=new	View(input,true);
 			if(!_view->get_sync()){	// SYNC_STATE: inject with sync_front, res=1, fact::before=next upr.
 
-				//uint64	now=Now();
-				//Code	*input_fact=_view->object;
 				//Utils::SetTimestamp<Code>(input_fact,FACT_BEFORE,output_group->get_time_at_next_upr(now));
 				_view->code(VIEW_SYNC)=Atom::Boolean(true);
 			}
 			_view->code(VIEW_RES)=Atom::Float(1);
 			_view->references[0]=output_group;
-			input->object->views.insert(_view);
-			output_groups[i]->inject(_view,0);
+			
+			_Mem::Get()->inject(_view);
+			//input_fact->views.insert(_view);
+			//output_group->enter();
+			//output_group->inject(_view,now);
+			//output_group->leave();
 		}
+
+		//input_fact->rel_views();
 	}
 
 	inline	void	AutoFocusController::notify(_Fact	*target,View	*input,TPXMap	&map){

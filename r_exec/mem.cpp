@@ -444,7 +444,8 @@ namespace	r_exec{
 		group->reset_stats();
 
 		FOR_ALL_VIEWS_BEGIN_NO_INC(group,v)
-
+			//if(v->second==NULL)
+			//	continue;
 			//	update resilience.
 			float32	res=group->update_res(v->second);	//	will decrement res by 1 in addition to the accumulated changes.
 			if(res>0){
