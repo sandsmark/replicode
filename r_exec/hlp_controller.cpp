@@ -159,7 +159,7 @@ namespace	r_exec{
 		}
 	}
 
-	inline	_Fact	*HLPController::get_absentee(_Fact	*fact)	const{	// fact: f->obj.
+	_Fact	*HLPController::get_absentee(_Fact	*fact)	const{	// fact: f->obj.
 
 		_Fact	*absentee;
 		if(fact->code(0).asOpcode()==Opcodes::Fact)
@@ -185,12 +185,13 @@ namespace	r_exec{
 				if((r=(*e).evidence->is_evidence(target))!=MATCH_FAILURE){
 
 					evidence=(*e).evidence;
-					break;
+					evidences.CS.leave();
+					return	r;
 				}
 				++e;
 			}
 		}
-		evidence=get_absentee(target);
+		evidence=NULL;
 		evidences.CS.leave();
 		return	r;
 	}
@@ -209,11 +210,13 @@ namespace	r_exec{
 
 				if((r=(*e).evidence->is_evidence(target))!=MATCH_FAILURE){
 
-					if(target->get_cfd()<evidence->get_cfd()){
+					if(target->get_cfd()<(*e).evidence->get_cfd()){
 
 						evidence=(*e).evidence;
-						break;
-					}
+						predicted_evidences.CS.leave();
+						return	r;
+					}else
+						r=MATCH_FAILURE;
 				}
 				++e;
 			}

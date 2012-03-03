@@ -1120,16 +1120,17 @@ namespace	r_exec{
 		goal->invalidate();
 
 		uint64	now=Now();
+		Code	*success_object;
 		Code	*f_success_object;
 		_Fact	*absentee;
+		
 		if(success){
 
-			Code	*success_object=new	Success(goal,evidence,1);
+			success_object=new	Success(goal,evidence,1);
 			f_success_object=new	Fact(success_object,now,now,1,1);
 			absentee=NULL;
 		}else{
 
-			Code	*success_object;
 			if(!evidence){	// assert absence of the goal target.
 
 				absentee=get_absentee(goal->get_goal()->get_target());
