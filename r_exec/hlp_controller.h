@@ -132,7 +132,7 @@ namespace	r_exec{
 		void	store_evidence(_Fact	*evidence){			_store_evidence<EEntry>(&evidences,evidence);	}
 		void	store_predicted_evidence(_Fact	*evidence){	_store_evidence <PEEntry>(&predicted_evidences,evidence);	}
 		
-		virtual	Fact	*get_f_ihlp(const	BindingMap	*bindings,bool	wr_enabled)	const=0;
+		virtual	Fact	*get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const=0;
 
 		uint16	get_out_group_count()	const;
 		Code	*get_out_group(uint16	i)	const;	// i starts at 1.

@@ -30,12 +30,12 @@
 
 root:(std_grp 0 0 0 0 [nil]) [[SYNC_FRONT now 0 forever nil nil COV_OFF 0]]
 stdout:(std_grp 0 0 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]
-stdin:(std_grp 0 0 0 0 [stdout]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]
+stdin:(std_grp 1 0 0 0 [stdout]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]
 
 primary:(std_grp 2 0 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]; ensure upr>0.
 secondary:(std_grp 2 0 0 0 |[]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]; ensure upr>0.
 grp_pair:(mk.grp_pair primary secondary 1) [[SYNC_FRONT now 0 forever root nil]]
-drives:(std_grp 0 0 0 0 [stdout]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]; holds pgm that inject drives periodically; drive priority=pgm.act; be sure that the pgm tsc is larger than the primary's upr.
+drives:(std_grp 2 0 0 0 [stdout]) [[SYNC_FRONT now 0 forever root nil COV_OFF 0]]; holds pgm that inject drives periodically; drive priority=pgm.act; be sure that the pgm tsc is larger than the primary's upr.
 
 
 ; extensions.

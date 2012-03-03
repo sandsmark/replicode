@@ -101,8 +101,8 @@ namespace	r_exec{
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
 
-		Fact	*get_f_ihlp(const	BindingMap	*bindings,bool	wr_enabled)	const;
-		Fact	*get_f_icst(const	BindingMap	*bindings,std::vector<P<_Fact> >	*inputs)	const;
+		Fact	*get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const;
+		Fact	*get_f_icst(BindingMap	*bindings,std::vector<P<_Fact> >	*inputs)	const;
 
 		void	inject_icst(Fact	*production,float32	confidence,uint64	time_to_live)	const;	// here, resilience=time to live, in us.
 

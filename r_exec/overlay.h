@@ -61,7 +61,8 @@ namespace	r_exec{
 		virtual	void	take_input(r_exec::View	*input){}
 		template<class	C>	void	__take_input(r_exec::View	*input){	// utility: to be called by sub-classes.
 
-			ReductionJob<C>	*j=new	ReductionJob<C>(new	View(input),(C	*)this);
+			View	*_view=new	View(input);
+			ReductionJob<C>	*j=new	ReductionJob<C>(_view,(C	*)this);
 			_Mem::Get()->pushReductionJob(j);
 		}
 

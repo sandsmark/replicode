@@ -322,7 +322,7 @@ namespace	r_exec{
 		return	rhs;
 	}
 
-	inline	Fact	*MDLController::get_f_ihlp(const	BindingMap	*bindings,bool	wr_enabled)	const{
+	inline	Fact	*MDLController::get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const{
 
 		return	bindings->build_f_ihlp(getObject(),Opcodes::IMdl,wr_enabled);
 	}

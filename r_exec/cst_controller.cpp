@@ -79,7 +79,7 @@ namespace	r_exec{
 			uint64	before=bindings->get_fwd_before();
 			uint64	time_to_live;
 			if(now>=before)
-				time_to_live=1;
+				time_to_live=0;
 			else
 				time_to_live=before-now;
 			if(predictions.size()){
@@ -333,14 +333,15 @@ namespace	r_exec{
 		}
 	}
 
-	Fact	*CSTController::get_f_ihlp(const	BindingMap	*bindings,bool	wr_enabled)	const{
+	Fact	*CSTController::get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const{
 
 		return	bindings->build_f_ihlp(getObject(),Opcodes::ICst,false);
 	}
 
-	Fact	*CSTController::get_f_icst(const	BindingMap	*bindings,std::vector<P<_Fact> >	*inputs)	const{
+	Fact	*CSTController::get_f_icst(BindingMap	*bindings,std::vector<P<_Fact> >	*inputs)	const{
 
 		Fact	*f_icst=get_f_ihlp(bindings,false);
+		((ICST	*)f_icst->get_reference(0))->bindings=bindings;
 		((ICST	*)f_icst->get_reference(0))->components=*inputs;
 		return	f_icst;
 	}
@@ -353,9 +354,10 @@ namespace	r_exec{
 		float32	sln_thr=primary_host->code(GRP_SLN_THR).asFloat();
 		if(confidence>sln_thr){
 		
-			View	*view=new	View(true,now,1,Utils::GetResilience(time_to_live,primary_host->get_upr()),primary_host,primary_host,production);
+			View	*view=new	View(true,now,1,Utils::GetResilience(time_to_live,primary_host->get_upr()*_Mem::Get()->get_base_period()),primary_host,primary_host,production);
 			_Mem::Get()->inject(view);	// inject f->icst in the primary group: needed for hlps like M[icst -> X] and S[icst X Y].
-
+			uint32	res=view->get_res();
+			//std::cout<<"res: "<<res<<std::endl;
 			uint16	out_group_count=get_out_group_count();
 			for(uint16	i=0;i<out_group_count;++i){
 
@@ -368,7 +370,7 @@ namespace	r_exec{
 		sln_thr=secondary_host->code(GRP_SLN_THR).asFloat();
 		if(confidence>sln_thr){
 
-			View	*view=new	View(true,now,1,Utils::GetResilience(time_to_live,secondary_host->get_upr()),secondary_host,primary_host,production);
+			View	*view=new	View(true,now,1,Utils::GetResilience(time_to_live,secondary_host->get_upr()*_Mem::Get()->get_base_period()),secondary_host,primary_host,production);
 			_Mem::Get()->inject(view);	// inject f->icst in the secondary group: same reason as above.
 		}
 	}

@@ -144,7 +144,7 @@ namespace	r_exec{
 
 		_Fact	*get_lhs()	const;
 		_Fact	*get_rhs()	const;
-		Fact	*get_f_ihlp(const	BindingMap	*bindings,bool	wr_enabled)	const;
+		Fact	*get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const;
 
 		virtual	void	store_requirement(_Fact	*f_p_f_imdl,bool	chaining_was_allowed,bool	simulation)=0;
 		ChainingStatus	retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground);	// checks the requirement instances during fwd; r_p: all wrs in first, all srs in second.

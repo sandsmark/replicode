@@ -57,7 +57,7 @@ namespace	r_exec{
 		Code	*input_fact=input->object;
 		//input_fact->acq_views();
 
-		//uint64	now=Now();
+		uint64	now=Now();
 
 		for(uint16	i=start;i<output_groups.size();++i){
 
@@ -65,20 +65,25 @@ namespace	r_exec{
 			View	*_view=new	View(input,true);
 			if(!_view->get_sync()){	// SYNC_STATE: inject with sync_front, res=1, fact::before=next upr.
 
-				//Utils::SetTimestamp<Code>(input_fact,FACT_BEFORE,output_group->get_time_at_next_upr(now));
+				Utils::SetTimestamp<Code>(input_fact,FACT_BEFORE,output_group->get_time_at_next_upr(now));
 				_view->code(VIEW_SYNC)=Atom::Boolean(true);
 			}
 			_view->code(VIEW_RES)=Atom::Float(1);
 			_view->references[0]=output_group;
-			
+			//uint64	now=Now();
 			_Mem::Get()->inject(_view);
+			//std::cout<<"AF inject in grp["<<i<<"]: "<<Now()-now<<std::endl;
 			//input_fact->views.insert(_view);
 			//output_group->enter();
 			//output_group->inject(_view,now);
 			//output_group->leave();
+
+			//std::cout<<"output grp["<<i<<"]: "<<output_group->other_views.size()<<std::endl;
 		}
 
 		//input_fact->rel_views();
+
+		//std::cout<<"AF inject: "<<Now()-now<<std::endl;
 	}
 
 	inline	void	AutoFocusController::notify(_Fact	*target,View	*input,TPXMap	&map){
@@ -260,8 +265,8 @@ namespace	r_exec{
 						dispatch_no_inject((_Fact	*)input_object,abstract_f_ihlp,bm,predictions);
 					}else{
 
-						P<_Fact>		abstract_input=(_Fact	*)BindingMap::Abstract(input_object,bm);
-						bool			injected=false;
+						P<_Fact>	abstract_input=(_Fact	*)BindingMap::Abstract(input_object,bm);
+						bool		injected=false;
 						dispatch(input,abstract_input,bm,injected,goals);
 						dispatch(input,abstract_input,bm,injected,predictions);
 					}
@@ -273,7 +278,9 @@ namespace	r_exec{
 	void	AutoFocusController::inject_hlp(Code	*hlp)	const{	// inject in the primary group; models will be injected in the secondary group automatically.
 
 		View	*view=new	View(true,Now(),0,-1,output_groups[0],NULL,hlp,1);	// SYNC_FRONT,sln=0,res=forever,act=1.
-		hlp->views.insert(view);
-		output_groups[0]->inject(view,0);
+		view->references[0]=output_groups[0];
+		_Mem::Get()->inject(view);
+		//hlp->views.insert(view);
+		//output_groups[0]->inject(view,0);
 	}
 }

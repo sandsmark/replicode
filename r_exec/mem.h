@@ -204,8 +204,7 @@ namespace	r_exec{
 				return	goal_pred_success_res;
 			if(time_to_live=0)
 				return	1;
-			uint64	base=base_period*host->get_upr();
-			return	Utils::GetResilience(time_to_live,base);	
+			return	Utils::GetResilience(time_to_live,host->get_upr());	
 		}
 
 		Code	*get_root()		const;
