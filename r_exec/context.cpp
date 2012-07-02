@@ -687,8 +687,8 @@ failure:
 			return	false;
 		}
 
-		View	*v=(View	*)_object->find_view(_group,true);	//	returns a copy of the view, if any.
-		if(v){	//	copy the view in the value array: code on VIEW_CODE_MAX_SIZE followed by 2 atoms holding raw pointers to grp and org.
+		View	*v=(View	*)_object->get_view(_group,true);	// returns (a copy of: deprecated) of the view, if any.
+		if(v){	// copy the view in the value array: code on VIEW_CODE_MAX_SIZE followed by 2 atoms holding raw pointers to grp and org.
 
 			index=context.setCompoundResultHead(v->code(0));
 			for(uint16	i=1;i<VIEW_CODE_MAX_SIZE;++i)

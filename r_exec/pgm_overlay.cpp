@@ -203,7 +203,7 @@ namespace	r_exec{
 					IPGMContext	arg1=args.getChild(1);
 					uint16	index=arg1.getIndex();
 					arg1=*arg1;
-					//arg1.trace();
+//					arg1.trace();
 					if(arg1.is_reference())
 						productions.push_back(arg1.getObject());
 					else{
@@ -386,7 +386,7 @@ namespace	r_exec{
 									objects[i-1]=(*_objects.getChild(i)).getObject();
 							}
 
-							callback(now-_Mem::Get()->get_starting_time(),false,msg.c_str(),object_count,objects);
+							callback(now-Utils::GetTimeReference(),false,msg.c_str(),object_count,objects);
 							if(object_count)
 								delete[]	objects;
 						}
@@ -408,7 +408,7 @@ namespace	r_exec{
 				_Mem::Get()->eject(command);
 				
 				Code	*fact=new	Fact(command,now,now,1,1);	// build a fact of the command and inject it in stdin.
-				View	*view=new	View(true,now,1,1,_Mem::Get()->get_stdin(),getView()->get_host(),fact);	//	SYNC_FRONT, sln=1, res=1,
+				View	*view=new	View(View::SYNC_ONCE,now,1,1,_Mem::Get()->get_stdin(),getView()->get_host(),fact);	//	SYNC_ONCE, sln=1, res=1,
 				_Mem::Get()->inject(view);
 
 				if(mk_rdx){
@@ -454,6 +454,7 @@ namespace	r_exec{
 
 	PGMOverlay::PGMOverlay(Controller	*c):InputLessPGMOverlay(c){
 
+		is_volatile=c->getObject()->code(IPGM_RES).asBoolean();
 		init();
 	}
 
@@ -478,7 +479,8 @@ namespace	r_exec{
 		for(uint16	i=0;i<value_commit_index;++i)	// copy values up to the last commit index.
 			values.push_back(original->values[i]);
 
-		birth_time=Now();
+		is_volatile=original->is_volatile;
+		birth_time=original->birth_time;
 	}
 
 	inline	PGMOverlay::~PGMOverlay(){
@@ -492,7 +494,7 @@ namespace	r_exec{
 		for(uint16	i=1;i<=pattern_count;++i)
 			input_pattern_indices.push_back(code[pattern_set_index+i].asIndex());
 
-		birth_time=Now();
+		birth_time=0;
 	}
 
 	inline	void	PGMOverlay::reset(){
@@ -502,6 +504,20 @@ namespace	r_exec{
 		input_views.clear();
 		input_pattern_indices.clear();
 		init();
+	}
+
+	bool	PGMOverlay::is_invalidated(){	
+	
+		if(is_volatile){
+
+			for(uint32	i=0;i<input_views.size();++i){
+
+				if(input_views[i]->object->is_invalidated())
+					return	true;
+			}
+		}
+
+		return	invalidated==1;
 	}
 
 	Code	*PGMOverlay::dereference_in_ptr(Atom	a){
@@ -592,6 +608,8 @@ namespace	r_exec{
 
 				PGMOverlay	*offspring=new	PGMOverlay(this,input_index,value_commit_index);
 				commit();
+				if(birth_time==0)
+					birth_time=Now();
 				return	offspring;
 			}
 		case	FAILURE:	// just rollback: let the overlay match other inputs.

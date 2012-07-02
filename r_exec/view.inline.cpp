@@ -49,14 +49,14 @@ namespace	r_exec{
 	inline	View::View(const	View	*view,bool	new_OID):r_code::View(),controller(NULL){
 
 		object=view->object;
-		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom)+2*sizeof(Code	*));	//	reference_set is contiguous to code; memcpy in one go.
+		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom)+2*sizeof(Code	*));	// reference_set is contiguous to code; memcpy in one go.
 		if(new_OID)
 			_code[VIEW_OID].atom=GetOID();
-		controller=view->controller;
+		controller=NULL;	// deprecated: controller=view->controller;
 		reset();
 	}
 
-	inline	View::View(bool		sync,
+	inline	View::View(SyncMode	sync,
 						uint64	ijt,
 						float32	sln,
 						int32	res,
@@ -68,7 +68,7 @@ namespace	r_exec{
 		init(sync,ijt,sln,res,destination,origin,object);
 	}
 
-	inline	View::View(bool		sync,
+	inline	View::View(SyncMode	sync,
 						uint64	ijt,
 						float32	sln,
 						int32	res,
@@ -82,7 +82,7 @@ namespace	r_exec{
 		code(VIEW_ACT)=Atom::Float(act);
 	}
 
-	inline	void	View::init(bool		sync,
+	inline	void	View::init(SyncMode	sync,
 								uint64	ijt,
 								float32	sln,
 								int32	res,
@@ -93,7 +93,7 @@ namespace	r_exec{
 		_code[VIEW_OID].atom=GetOID();
 		reset_ctrl_values();
 		
-		code(VIEW_SYNC)=Atom::Boolean(sync);
+		code(VIEW_SYNC)=Atom::Float(sync);
 		code(VIEW_IJT)=Atom::IPointer(code(VIEW_OPCODE).getAtomCount()+1);
 		Utils::SetTimestamp<View>(this,VIEW_IJT,ijt);
 		code(VIEW_SLN)=Atom::Float(sln);
@@ -109,7 +109,7 @@ namespace	r_exec{
 
 	inline	View::~View(){
 
-		if(controller!=NULL)
+		if(!!controller)
 			controller->invalidate();
 	}
 
@@ -136,9 +136,9 @@ namespace	r_exec{
 		return	(Group	*)references[host_reference];
 	}
 
-	inline	bool	View::get_sync(){
+	inline	View::SyncMode	View::get_sync(){
 
-		return	code(VIEW_SYNC).asBoolean();
+		return	(SyncMode)(uint32)code(VIEW_SYNC).asFloat();
 	}
 
 	inline	float32	View::get_res(){
@@ -233,6 +233,11 @@ namespace	r_exec{
 		float32	delta=act-initial_act;
 		initial_act=act;
 		return	delta;
+	}
+
+	inline	void	View::force_res(float32	value){
+
+		code(VIEW_RES)=Atom::Float(value);
 	}
 
 	inline	void	View::mod(uint16	member_index,float32	value){

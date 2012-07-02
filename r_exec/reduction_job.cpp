@@ -43,4 +43,12 @@ namespace	r_exec{
 
 		return	false;
 	}
+
+	////////////////////////////////////////////////////////////
+
+	bool	AsyncInjectionJob::update(uint64	now){
+
+		_Mem::Get()->inject(input);
+		return	true;
+	}
 }

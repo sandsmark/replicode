@@ -42,7 +42,9 @@ namespace	r_exec{
 	class	r_exec_dll	AutoFocusController:
 	public	Controller{
 	private:
-		bool					pass_through;
+		bool					_pass_through;
+		bool					_acquire_models;
+		bool					_decompile_models;
 		std::vector<Group	*>	output_groups;	// 1st is the primary, 2nd the secondary, followed by other groups if any.
 
 		typedef	UNORDERED_MAP<P<_Fact>,P<TPX>,PHash<_Fact> >	TPXMap;
@@ -89,6 +91,9 @@ namespace	r_exec{
 		void	dispatch_no_inject(_Fact	*input,_Fact	*abstract_input,BindingMap	*bm,TPXMap	&map);
 		template<class	T>	TPX	*build_tpx(_Fact	*target,_Fact	*pattern,BindingMap	*bm,RatingMap	&map,bool	wr_enabled)	const{
 
+			if(!_acquire_models)
+				return	new	TPX(this,target,pattern,bm);
+
 			if(wr_enabled)
 				return	new	TPX(this,target,pattern,bm);
 
@@ -111,7 +116,10 @@ namespace	r_exec{
 		
 		void	take_input(r_exec::View	*input);
 
-		void	inject_hlp(Code	*mdl)	const;	// called by TPX; hlp is a mdl or a cst.
+		void	inject_hlps(std::list<P<Code> >	&hlps)	const;	// called by TPX; hlp is a mdl or a cst.
+		bool	decompile_models()	const	{	return	_decompile_models;	}
+
+		Group	*get_primary_group()	const{	return	output_groups[0];	}
 	};
 }
 

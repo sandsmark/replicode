@@ -125,15 +125,25 @@ namespace	r_exec{
 		P<Code>	lhs;
 		P<Code>	rhs;
 
-		bool	_is_requirement;
+		static	const	uint32	LHSController=0;
+		static	const	uint32	RHSController=1;
 
-		HLPController	*get_rhs_controller(bool	&strong)	const;
+		typedef	enum{
+			NaR=0,
+			WR=1,
+			SR=2
+		}RType;
+
+		RType	_is_requirement;
+		bool	_is_reuse;
+		bool	_is_cmd;
+
 		float32	get_cfd()	const;
 
 		CriticalSection	active_requirementsCS;
 		UNORDERED_MAP<P<_Fact>,RequirementsPair,PHash<_Fact> >	active_requirements;	// P<_Fact>: f1 as in f0->pred->f1->imdl; requirements having allowed the production of prediction; first: wr, second: sr.		
 
-		void	monitor_predictions(_Fact	*input);
+		bool	monitor_predictions(_Fact	*input);
 
 		MDLController(r_code::View	*view);
 	public:
@@ -156,7 +166,13 @@ namespace	r_exec{
 		virtual	void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures)=0;
 		virtual	void	register_req_outcome(Fact	*f_pred,bool	success,bool	rate_failures){}
 
-		bool	is_requirement()	const{	return	_is_requirement;	}
+		void	add_requirement_to_rhs();
+		void	remove_requirement_from_rhs();
+
+		RType	is_requirement()	const{	return	_is_requirement;	}
+		bool	is_reuse()			const{	return	_is_reuse;	}
+		bool	is_cmd()			const{	return	_is_cmd;	}
+
 		void	register_requirement(_Fact	*f_pred,RequirementsPair	&r_p);
 	};
 
@@ -170,7 +186,7 @@ namespace	r_exec{
 		void	inject_goal(BindingMap	*bm,Fact	*goal,Fact	*f_imdl)	const;
 		void	inject_simulation(Fact	*simulation)	const;
 
-		void	monitor_goals(_Fact	*input);
+		bool	monitor_goals(_Fact	*input);
 
 		uint64	get_sim_thz(uint64	now,uint64 deadline)	const;
 
@@ -205,8 +221,11 @@ namespace	r_exec{
 	//	else commit to the sub-goal; this will trigger the simulation of sub-sub-goals; N.B.: commands are not simulated, commands with unbound values are not injected.
 	class	TopLevelMDLController:
 	public	PMDLController{
+	private:
 		void	abduce(BindingMap	*bm,Fact	*super_goal,float32	confidence);
 		void	abduce_lhs(	BindingMap	*bm,Fact	*super_goal,_Fact	*sub_goal_target,Fact	*f_imdl,_Fact	*evidence);
+
+		void	check_last_match_time(bool	match){}
 	public:
 		TopLevelMDLController(r_code::View	*view);
 
@@ -244,7 +263,11 @@ namespace	r_exec{
 	private:
 		SecondaryMDLController	*secondary;
 
+		std::list<P<Code> >	assumptions;	// produced by the model; garbage collection at reduce(9 time..
+
 		void	rate_model(bool	success);
+		void	kill_views();	// force res in both primary/secondary to 0.
+		void	check_last_match_time(bool	match);	// activate secondary controller if no match after primary_thz;
 
 		void	abduce_lhs(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim,Fact	*ground,bool	set_before);
 		void	abduce_imdl(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim);
@@ -252,6 +275,8 @@ namespace	r_exec{
 		void	abduce_simulated_imdl(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim);
 		void	predict_simulated_lhs(BindingMap	*bm,bool	opposite,float32	confidence,Sim	*sim);
 		void	predict_simulated_evidence(_Fact	*evidence,Sim	*sim);
+		void	assume(_Fact	*input);
+		void	assume_lhs(BindingMap	*bm,bool	opposite,_Fact	*input,float32	confidence);
 	public:
 		PrimaryMDLController(r_code::View	*view);
 
@@ -260,12 +285,10 @@ namespace	r_exec{
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
 
-		void	gain_activation();
-		void	lose_activation();
-
 		void	store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation);
 
 		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
+		bool	inject_prediction(Fact	*prediction,Fact	*f_imdl,float32	confidence,uint64	time_to_live,Code	*mk_rdx)	const;	// here, resilience=time to live, in us; returns true if the prediction has actually been injected.
 
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
 		void	register_req_outcome(_Fact	*f_imdl,bool	success,bool	rate_failures);
@@ -287,7 +310,9 @@ namespace	r_exec{
 	private:
 		PrimaryMDLController	*primary;
 
-		void	rate_model()	const;	// record successes only.
+		void	rate_model();	// record successes only.
+		void	kill_views();	// force res in both primary/secondary to 0.
+		void	check_last_match_time(bool	match);	// kill if no match after secondary_thz;
 	public:
 		SecondaryMDLController(r_code::View	*view);
 

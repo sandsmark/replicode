@@ -61,20 +61,19 @@ namespace	r_exec{
 		UNORDERED_SET<P<Sim>,PHash<Sim> >		simulations;
 
 		void	inject_production();
-		CSTOverlay	*get_offspring(	BindingMap	*map,
-									_Fact		*input,
-									_Fact		*bound_pattern);
+		void	update(BindingMap	*map,_Fact	*input,_Fact	*bound_pattern);
+		CSTOverlay	*get_offspring(BindingMap	*map,_Fact	*input,_Fact	*bound_pattern);
 
 		CSTOverlay(const	CSTOverlay	*original);
 	public:
 		CSTOverlay(Controller	*c,BindingMap	*bindings);
 		~CSTOverlay();
 
-		Overlay	*reduce(View	*input);
+		bool	reduce(View	*input,CSTOverlay	*&offspring);
 
 		void	load_patterns();
 
-		bool	can_match(uint64	now)	const;	// WRT window of time tolerance width.
+		bool	can_match(uint64	now)	const;
 	};
 
 	// Backward chaining:
@@ -94,6 +93,9 @@ namespace	r_exec{
 							uint64		now,
 							float32		confidence,
 							Code		*group)	const;
+
+		void	kill_views();
+		void	check_last_match_time(bool	match);	// kill if no match after primary_thz;
 	public:
 		CSTController(r_code::View	*view);
 		~CSTController();
@@ -105,6 +107,7 @@ namespace	r_exec{
 		Fact	*get_f_icst(BindingMap	*bindings,std::vector<P<_Fact> >	*inputs)	const;
 
 		void	inject_icst(Fact	*production,float32	confidence,uint64	time_to_live)	const;	// here, resilience=time to live, in us.
+		bool	inject_prediction(Fact	*prediction,float32	confidence,uint64	time_to_live)	const;	// here, resilience=time to live, in us; returns true if the prediction has actually been injected.
 
 		void	set_secondary_host(Group	*host);
 		Group	*get_secondary_host()	const;

@@ -262,11 +262,39 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ast_controller.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ast_controller.tpl.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\auto_focus.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\binding_map.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\black_list.cpp"
 				>
 			</File>
 			<File
@@ -283,6 +311,10 @@
 			</File>
 			<File
 				RelativePath=".\cst_controller.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\domain.cpp"
 				>
 			</File>
 			<File
@@ -324,6 +356,10 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\guard_builder.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\hlp_context.cpp"
@@ -568,11 +604,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ast_controller.h"
+				>
+			</File>
+			<File
 				RelativePath=".\auto_focus.h"
 				>
 			</File>
 			<File
 				RelativePath=".\binding_map.h"
+				>
+			</File>
+			<File
+				RelativePath=".\black_list.h"
 				>
 			</File>
 			<File
@@ -596,6 +640,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\domain.h"
+				>
+			</File>
+			<File
 				RelativePath=".\factory.h"
 				>
 			</File>
@@ -605,6 +653,10 @@
 			</File>
 			<File
 				RelativePath=".\group.h"
+				>
+			</File>
+			<File
+				RelativePath=".\guard_builder.h"
 				>
 			</File>
 			<File

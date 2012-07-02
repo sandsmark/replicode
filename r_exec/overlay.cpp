@@ -134,6 +134,9 @@ namespace	r_exec{
 
 	Controller::Controller(r_code::View	*view):_Object(),invalidated(0),activated(0),view(view){
 
+		if(!view)
+			return;
+
 		switch(getObject()->code(0).getDescriptor()){
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
@@ -147,6 +150,11 @@ namespace	r_exec{
 	}
 
 	Controller::~Controller(){
+	}
+
+	void	Controller::set_view(View	*view){
+
+		this->view=view;
 	}
 
 	void	Controller::_take_input(r_exec::View	*input){	// called by the rMem at update time and at injection time.

@@ -98,8 +98,6 @@ namespace	r_exec{
 	class	r_exec_dll	_Fact:
 	public	LObject{
 	private:
-		bool	match_timings_overlap(const	_Fact	*evidence)	const;
-		bool	match_timings_inclusive(const	_Fact	*evidence)	const;
 		static	bool	MatchAtom(Atom	lhs,Atom	rhs);
 		static	bool	MatchStructure(const	Code	*lhs,uint16	lhs_base_index,uint16	lhs_index,const	Code	*rhs,uint16	rhs_index);
 		static	bool	MatchObject(const	Code	*lhs,const	Code	*rhs);
@@ -115,8 +113,15 @@ namespace	r_exec{
 
 		bool	is_fact()		const;
 		bool	is_anti_fact()	const;
+		void	set_opposite()	const;
+		_Fact	*get_absentee()	const;
+
+		bool	match_timings_sync(const	_Fact	*evidence)	const;
+		bool	match_timings_overlap(const	_Fact	*evidence)	const;
+		bool	match_timings_inclusive(const	_Fact	*evidence)	const;
 
 		MatchResult	is_evidence(const	_Fact	*target)	const;
+		MatchResult	is_timeless_evidence(const	_Fact	*target)	const;
 
 		uint64	get_after()		const;
 		uint64	get_before()	const;
@@ -126,6 +131,8 @@ namespace	r_exec{
 
 		Pred	*get_pred()	const;
 		Goal	*get_goal()	const;
+
+		void	trace()	const;
 	};
 
 	typedef	enum{
@@ -166,6 +173,7 @@ namespace	r_exec{
 	class	r_exec_dll	Fact:
 	public	_Fact{
 	public:
+		void	*operator	new(size_t	s);
 		Fact();
 		Fact(SysObject	*source);
 		Fact(Fact	*f);
@@ -238,7 +246,7 @@ namespace	r_exec{
 		P<Sim>		sim;
 		P<_Fact>	ground;	// f->p->f->imdl (weak requirement) that allowed backward chaining, if any.
 
-		float32	get_strength(uint64	now)	const;	// goal->target->cfd*/(before-now).
+		float32	get_strength(uint64	now)	const;	// goal->target->cfd/(before-now).
 	};
 
 	class	r_exec_dll	MkRdx:
@@ -270,6 +278,8 @@ namespace	r_exec{
 	public:
 		ICST();
 		ICST(SysObject	*source);
+
+		bool	is_invalidated();
 
 		P<BindingMap>			bindings;
 		std::vector<P<_Fact> >	components;	// the inputs that triggered the building of the icst.

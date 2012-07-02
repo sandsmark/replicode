@@ -66,7 +66,7 @@ namespace	r_exec{
 
 		if(match_deadline==0)
 			return	true;
-		return	now-_Mem::Get()->get_time_tolerance()<=match_deadline;
+		return	now/*-Utils::GetTimeTolerance()*/<=match_deadline;
 	}
 
 	void	CSTOverlay::inject_production(){
@@ -89,7 +89,7 @@ namespace	r_exec{
 				UNORDERED_SET<P<_Fact>,PHash<_Fact>	>::const_iterator	pred;
 				for(pred=predictions.begin();pred!=predictions.end();++pred) // add antecedents to the prediction.
 					prediction->grounds.push_back(*pred);
-				((HLPController	*)controller)->inject_prediction(f_p_f_icst,f_icst,lowest_cfd,time_to_live,NULL);	// inject a f->pred->icst in the primary group, no rdx.
+				((CSTController	*)controller)->inject_prediction(f_p_f_icst,lowest_cfd,time_to_live);	// inject a f->pred->icst in the primary group, no rdx.
 			}else
 				((CSTController	*)controller)->inject_icst(f_icst,lowest_cfd,time_to_live);	// inject f->icst in the primary and secondary groups, and in the output groups.
 		}else{	// there are simulations; the production is therefore a prediction; add the simulations to the latter.
@@ -106,11 +106,18 @@ namespace	r_exec{
 	CSTOverlay	*CSTOverlay::get_offspring(BindingMap	*map,_Fact	*input,_Fact	*bound_pattern){
 
 		CSTOverlay	*offspring=new	CSTOverlay(this);
-		bindings=map;
 		patterns.remove(bound_pattern);
-		inputs.push_back(input);
 		if(match_deadline==0)
-			match_deadline=bindings->get_fwd_before();
+			match_deadline=map->get_fwd_before();
+		update(map,input,bound_pattern);
+//std::cout<<std::hex<<this<<std::dec<<" produced: "<<std::hex<<offspring<<std::dec<<std::endl;
+		return	offspring;
+	}
+
+	void	CSTOverlay::update(BindingMap	*map,_Fact	*input,_Fact	*bound_pattern){
+
+		bindings=map;
+		inputs.push_back(input);
 		float32	last_cfd;
 		Pred	*prediction=input->get_pred();
 		if(prediction){
@@ -122,7 +129,9 @@ namespace	r_exec{
 					simulations.insert(prediction->simulations[i]);
 			}else{
 
-				for(uint16	i=0;i<prediction->grounds.size();++i)
+				if(prediction->grounds.size()==0)
+					predictions.insert(prediction->get_target());
+				else	for(uint16	i=0;i<prediction->grounds.size();++i)
 					predictions.insert(prediction->grounds[i]);
 			}
 		}else
@@ -130,19 +139,31 @@ namespace	r_exec{
 		
 		if(lowest_cfd>last_cfd)
 			lowest_cfd=last_cfd;
-		
-		return	offspring;
 	}
 
-	Overlay	*CSTOverlay::reduce(View	*input){
-//std::cout<<std::hex<<this<<std::dec<<" "<<input->object->get_oid()<<std::endl;
-//input->object->get_reference(0)->trace();
+	bool	CSTOverlay::reduce(View	*input,CSTOverlay	*&offspring){
+
+		if(input->object->is_invalidated()){
+
+			offspring=NULL;
+			return	false;
+		}
+
 		for(uint16	i=0;i<inputs.size();++i){	// discard inputs that already matched.
 
-			if(((_Fact	*)input->object)==inputs[i])
-				return	NULL;
+			if(((_Fact	*)input->object)==inputs[i]){
+
+				offspring=NULL;
+				return	false;
+			}
 		}
-		
+		uint64	now=Now();
+//		uint64	st=_Mem::Get()->get_starting_time();
+//		if(match_deadline==0)
+//			std::cout<<Time::ToString_seconds(Now()-st)<<" "<<std::hex<<this<<std::dec<<" (0) "<<input->object->get_oid()<<std::endl;
+//		else
+//			std::cout<<Time::ToString_seconds(Now()-st)<<" "<<std::hex<<this<<std::dec<<" ("<<Time::ToString_seconds(match_deadline-st)<<") "<<input->object->get_oid()<<std::endl;
+//input->object->get_reference(0)->trace();
 		_Fact	*input_object;
 		Pred	*prediction=((_Fact	*)input->object)->get_pred();
 		if(prediction)
@@ -156,7 +177,8 @@ namespace	r_exec{
 		for(p=patterns.begin();p!=patterns.end();++p){
 
 			bm->load(bindings);
-			bm->reset_fwd_timings(input_object);
+			if(inputs.size()==0)
+				bm->reset_fwd_timings(input_object);
 			if(bm->match_strict(input_object,*p,MATCH_FORWARD)){
 
 				bound_pattern=*p;
@@ -165,7 +187,11 @@ namespace	r_exec{
 		}
 
 		if(bound_pattern){
-
+//if(match_deadline==0){
+//	std::cout<<Time::ToString_seconds(now-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" (0) ";
+//}else{
+//	std::cout<<Time::ToString_seconds(now-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" ("<<Time::ToString_seconds(match_deadline-Utils::GetTimeReference())<<") ";
+//}
 			if(patterns.size()==1){	// last match.
 
 				if(!code){
@@ -173,34 +199,37 @@ namespace	r_exec{
 					load_code();
 					P<BindingMap>	original_bindings=bindings;
 					bindings=bm;
-					if(evaluate_fwd_guards()){	// may update bindings.
-//std::cout<<" full match\n";
-						bindings=original_bindings;
-						CSTOverlay	*offspring=get_offspring(bm,(_Fact	*)input->object,bound_pattern);
+					if(evaluate_fwd_guards()){	// may update bindings; full match.
+//std::cout<<Time::ToString_seconds(now-Utils::GetTimeReference())<<" full match\n";
+						update(bm,(_Fact	*)input->object,bound_pattern);
+						inject_production();
 						invalidate();
-						inject_production();	// full match.
-						return	offspring;
+						offspring=NULL;
+						return	true;
 					}else{
 //std::cout<<" guards failed\n";
 						delete[]	code;
 						code=NULL;
-						bindings=original_bindings;
-						return	NULL;
+						offspring=NULL;
+						return	false;
 					}
-				}else{	// guards already evaluated.
-//std::cout<<" full match\n";
-					CSTOverlay	*offspring=get_offspring(bm,(_Fact	*)input->object,bound_pattern);
+				}else{	// guards already evaluated, full match.
+//std::cout<<Time::ToString_seconds(now-Utils::GetTimeReference())<<" full match\n";
+					update(bm,(_Fact	*)input->object,bound_pattern);
+					inject_production();
 					invalidate();
-					inject_production();	// full match.
-					return	offspring;
+					offspring=NULL;
+					return	true;
 				}
 			}else{
 //std::cout<<" match\n";
-				return	get_offspring(bm,(_Fact	*)input->object,bound_pattern);
+				offspring=get_offspring(bm,(_Fact	*)input->object,bound_pattern);
+				return	true;
 			}
 		}else{
 //std::cout<<" no match\n";
-			return	NULL;
+			offspring=NULL;
+			return	false;
 		}
 	}
 
@@ -211,12 +240,34 @@ namespace	r_exec{
 		CSTOverlay	*o=new	CSTOverlay(this,bindings);	// master overlay.
 		o->load_patterns();
 		overlays.push_back(o);
+
+		Group	*host=get_host();
+		Code	*object=get_unpacked_object();
+		uint16	obj_set_index=object->code(CST_OBJS).asIndex();
+		uint16	obj_count=object->code(obj_set_index).getAtomCount();
+		for(uint16	i=0;i<obj_count;++i){
+
+			Code	*pattern=object->get_reference(object->code(obj_set_index+1).asIndex());
+			Code	*pattern_ihlp=pattern->get_reference(0);
+			uint16	opcode=pattern_ihlp->code(0).asOpcode();
+			if( opcode==Opcodes::ICst	||
+				opcode==Opcodes::IMdl){
+
+				Code			*pattern_hlp=pattern_ihlp->get_reference(0);
+				r_exec::View	*pattern_hlp_v=(r_exec::View*)pattern_hlp->get_view(host,true);
+				if(pattern_hlp_v)
+					controllers.push_back((HLPController	*)pattern_hlp_v->controller);
+			}
+		}
 	}
 
 	CSTController::~CSTController(){
 	}
 
 	void	CSTController::take_input(r_exec::View	*input){
+
+		if(become_invalidated())
+			return;
 
 		if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
 			input->object->code(0).asOpcode()!=Opcodes::AntiFact)	// discard everything but facts and |facts.
@@ -225,6 +276,9 @@ namespace	r_exec{
 	}
 
 	void	CSTController::reduce(r_exec::View	*input){
+
+		if(_has_tpl_args	&&	get_requirement_count()==0)
+			return;
 
 		_Fact	*input_object=input->object;
 		if(input_object->is_invalidated())
@@ -246,7 +300,8 @@ namespace	r_exec{
 			}
 		}else{
 			// std::cout<<"CTRL: "<<get_host()->get_oid()<<" > "<<input->object->get_oid()<<std::endl;
-			Overlay	*offspring;
+			bool	match=false;
+			CSTOverlay	*offspring;
 			std::list<P<Overlay> >::const_iterator	o;
 			reductionCS.enter();
 			uint64	now=Now();
@@ -258,13 +313,18 @@ namespace	r_exec{
 					o=overlays.erase(o);
 				else{
 
-					offspring=((CSTOverlay	*)*o)->reduce(input);
-					++o;
+					match=((CSTOverlay	*)*o)->reduce(input,offspring);
 					if(offspring)
 						overlays.push_front(offspring);
+					else	if(match)	// full match: no offspring.
+						o=overlays.erase(o);
+					else
+						++o;
 				}
 			}
 			reductionCS.leave();
+
+			check_last_match_time(match);
 		}
 	}
 
@@ -281,6 +341,7 @@ namespace	r_exec{
 		Code	*cst=get_unpacked_object();
 		uint16	obj_set_index=cst->code(CST_OBJS).asIndex();
 		uint16	obj_count=cst->code(obj_set_index).getAtomCount();
+		Group	*host=get_host();
 		uint64	now=Now();
 		for(uint16	i=1;i<=obj_count;++i){
 
@@ -288,14 +349,14 @@ namespace	r_exec{
 			_Fact	*bound_pattern=(_Fact	*)bm->bind_pattern(pattern);
 			_Fact	*evidence;
 			if(opposite)
-				set_opposite(bound_pattern);
+				bound_pattern->set_opposite();
 			switch(check_evidences(bound_pattern,evidence)){
 			case	MATCH_SUCCESS_POSITIVE:	// positive evidence, no need to produce a sub-goal: skip.
 				break;
-			case	MATCH_SUCCESS_NEGATIVE:	// negative evidence, no need to produce a sub-goal, the super-goal will probably fail: skip.
+			case	MATCH_SUCCESS_NEGATIVE:	// negative evidence, no need to produce a sub-goal, the super-goal will probably fail within the target time frame: skip.
 				break;
-			case	MATCH_FAILURE:	// ignore predicted evidences.
-				inject_goal(bm,super_goal,bound_pattern,sim,now,confidence,get_host());	// all sub-goals share the same sim.
+			case	MATCH_FAILURE:			// inject a sub-goal for the missing evidence.
+				inject_goal(bm,super_goal,bound_pattern,sim,now,confidence,host);	// all sub-goals share the same sim.
 				break;
 			}
 		}
@@ -317,7 +378,7 @@ namespace	r_exec{
 		_Fact	*f_icst=super_goal->get_goal()->get_target();
 		_Fact	*sub_goal_f=new	Fact(sub_goal,now,now,1,1);
 
-		View	*view=new	View(true,now,confidence,1,group,group,sub_goal_f);	// SYNC_FRONT,res=1.
+		View	*view=new	View(View::SYNC_ONCE,now,confidence,1,group,group,sub_goal_f);	// SYNC_ONCE,res=1.
 		_Mem::Get()->inject(view);
 
 		if(sim->mode==SIM_ROOT){	// no rdx for SIM_OPTIONAL or SIM_MANDATORY.
@@ -346,15 +407,30 @@ namespace	r_exec{
 		return	f_icst;
 	}
 
+	bool	CSTController::inject_prediction(Fact	*prediction,float32	confidence,uint64	time_to_live)	const{	// prediction: f->pred->f->target.
+
+		uint64	now=Now();
+		Group	*primary_host=get_host();
+		float32	sln_thr=primary_host->code(GRP_SLN_THR).asFloat();
+		if(confidence>sln_thr){	// do not inject if cfd is too low.
+
+			int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,now,time_to_live);
+			View	*view=new	View(View::SYNC_ONCE,now,confidence,resilience,primary_host,primary_host,prediction);	// SYNC_ONCE,res=resilience.
+			_Mem::Get()->inject(view);
+			return	true;
+		}else
+			return	false;
+	}
+
 	void	CSTController::inject_icst(Fact	*production,float32	confidence,uint64	time_to_live)	const{	// production: f->icst.
-		
+
 		uint64	now=Now();
 		
 		Group	*primary_host=get_host();
 		float32	sln_thr=primary_host->code(GRP_SLN_THR).asFloat();
 		if(confidence>sln_thr){
 		
-			View	*view=new	View(true,now,1,Utils::GetResilience(time_to_live,primary_host->get_upr()*_Mem::Get()->get_base_period()),primary_host,primary_host,production);
+			View	*view=new	View(View::SYNC_ONCE,now,1,Utils::GetResilience(now,time_to_live,primary_host->get_upr()*Utils::GetBasePeriod()),primary_host,primary_host,production);
 			_Mem::Get()->inject(view);	// inject f->icst in the primary group: needed for hlps like M[icst -> X] and S[icst X Y].
 			uint32	res=view->get_res();
 			//std::cout<<"res: "<<res<<std::endl;
@@ -362,15 +438,15 @@ namespace	r_exec{
 			for(uint16	i=0;i<out_group_count;++i){
 
 				Group	*out_group=(Group	*)get_out_group(i);
-				View	*view=new	NotificationView(primary_host,out_group,production);
-				_Mem::Get()->inject_notification(view,true);
+				View	*view=new	View(View::SYNC_ONCE,now,1,1,out_group,primary_host,production);
+				_Mem::Get()->inject(view);
 			}
 		}
 		
 		sln_thr=secondary_host->code(GRP_SLN_THR).asFloat();
 		if(confidence>sln_thr){
 
-			View	*view=new	View(true,now,1,Utils::GetResilience(time_to_live,secondary_host->get_upr()*_Mem::Get()->get_base_period()),secondary_host,primary_host,production);
+			View	*view=new	View(View::SYNC_ONCE,now,1,Utils::GetResilience(now,time_to_live,secondary_host->get_upr()*Utils::GetBasePeriod()),secondary_host,primary_host,production);
 			_Mem::Get()->inject(view);	// inject f->icst in the secondary group: same reason as above.
 		}
 	}
@@ -383,5 +459,20 @@ namespace	r_exec{
 	Group	*CSTController::get_secondary_host()	const{
 
 		return	secondary_host;
+	}
+
+	void	CSTController::kill_views(){
+
+		invalidate();
+		getView()->force_res(0);
+	}
+
+	void	CSTController::check_last_match_time(bool	match){
+
+		uint64	now=Now();
+		if(match)
+			last_match_time=now;
+		else	if(now-last_match_time>_Mem::Get()->get_primary_thz())
+			kill_views();
 	}
 }

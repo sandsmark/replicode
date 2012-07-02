@@ -106,24 +106,57 @@ namespace	r_exec{
 
 	void	PGMController::reduce(r_exec::View	*input){
 
-		reductionCS.enter();
 		std::list<P<Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();){
 
-			if((tsc>0	&&	Now()-((PGMOverlay	*)*o)->get_birth_time()>tsc)	||	(*o)->is_invalidated())
-				o=overlays.erase(o);
-			else{
+		if(tsc>0){
 
-				Overlay	*offspring=(*o)->reduce(input);
-				++o;
-				if(!is_alive())
-					break;
-				if(offspring)
-					overlays.push_front(offspring);
+			reductionCS.enter();
+			uint64	now=Now();	// call must be located after the CS.enter() since (*o)->reduce() may update (*o)->birth_time.
+			//uint64	t=now-st;
+			for(o=overlays.begin();o!=overlays.end();){
+
+				if((*o)->is_invalidated())
+					o=overlays.erase(o);
+				else{
+
+					uint64	birth_time=((PGMOverlay	*)*o)->get_birth_time();
+					if(birth_time>0	&&	now-birth_time>tsc){
+						//std::cout<<Time::ToString_seconds(t)<<" kill "<<std::hex<<(void	*)*o<<std::dec<<" born: "<<Time::ToString_seconds(birth_time-st)<<" after "<<Time::ToString_seconds(now-birth_time)<<std::endl;
+						o=overlays.erase(o);
+					}else{
+						//void	*oo=*o;
+						Overlay	*offspring=(*o)->reduce(input);
+						if(!is_alive())
+							break;
+						++o;
+						if(offspring){
+							overlays.push_front(offspring);
+							//std::cout<<Time::ToString_seconds(t)<<" "<<std::hex<<oo<<std::dec<<" born: "<<Time::ToString_seconds(((PGMOverlay	*)oo)->get_birth_time()-st)<<" reduced "<<input->object->get_oid()<<" "<<input->get_sync()<<" offspring: "<<std::hex<<offspring<<std::dec<<std::endl;
+						}
+					}
+				}
 			}
-				
+			reductionCS.leave();
+		}else{
+
+			reductionCS.enter();
+			for(o=overlays.begin();o!=overlays.end();){
+
+				if((*o)->is_invalidated())
+					o=overlays.erase(o);
+				else{
+
+					Overlay	*offspring=(*o)->reduce(input);
+					if(!is_alive())
+						break;
+					++o;
+					if(offspring)
+						overlays.push_front(offspring);
+				}
+					
+			}
+			reductionCS.leave();
 		}
-		reductionCS.leave();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

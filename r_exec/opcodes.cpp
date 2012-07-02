@@ -92,4 +92,9 @@ namespace	r_exec{
 	uint16	Opcodes::Swap;
 	uint16	Opcodes::Prb;
 	uint16	Opcodes::Stop;
+
+	uint16	Opcodes::Add;
+	uint16	Opcodes::Sub;
+	uint16	Opcodes::Mul;
+	uint16	Opcodes::Div;
 }

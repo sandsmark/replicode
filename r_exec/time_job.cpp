@@ -114,7 +114,7 @@ namespace	r_exec{
 
 	bool	EInjectionJob::update(uint64	&next_target){
 
-		_Mem::Get()->inject_existing_object(view,view->object,view->get_host(),true);
+		_Mem::Get()->inject_existing_object(view,view->object,view->get_host());
 		return	true;
 	}
 

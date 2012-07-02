@@ -41,9 +41,19 @@ namespace	r_exec{
 
 		Code	*object=get_unpacked_object();
 		bindings->init_from_hlp(object);	// init a binding map from the patterns.
+
+		_has_tpl_args=object->code(object->code(HLP_TPL_ARGS).asIndex()).getAtomCount()>0;
+		ref_count=0;
+		last_match_time=Now();
 	}
 
 	HLPController::~HLPController(){
+	}
+
+	void	HLPController::invalidate(){
+
+		invalidated=1;
+		controllers.clear();
 	}
 
 	void	HLPController::add_requirement(bool	strong){
@@ -88,24 +98,16 @@ namespace	r_exec{
 		return	r_c;
 	}
 
-	inline	uint16	HLPController::get_out_group_count()	const{
+	uint16	HLPController::get_out_group_count()	const{
 
 		return	getObject()->code(getObject()->code(HLP_OUT_GRPS).asIndex()).getAtomCount();
 	}
 
-	inline	Code	*HLPController::get_out_group(uint16	i)	const{
+	Code	*HLPController::get_out_group(uint16	i)	const{
 
 		Code	*hlp=getObject();
 		uint16	out_groups_index=hlp->code(HLP_OUT_GRPS).asIndex()+1;	// first output group index.
 		return	hlp->get_reference(hlp->code(out_groups_index+i).asIndex());
-	}
-
-	void	HLPController::set_opposite(_Fact	*fact)	const{
-
-		if(fact->is_fact())
-			fact->code(0)=Atom::Object(Opcodes::AntiFact,FACT_ARITY);
-		else
-			fact->code(0)=Atom::Object(Opcodes::Fact,FACT_ARITY);
 	}
 
 	bool	HLPController::evaluate_bwd_guards(BindingMap	*bm){
@@ -119,55 +121,15 @@ namespace	r_exec{
 		return	(Group	*)getView()->get_host();
 	}
 
-	bool	HLPController::inject_prediction(Fact	*prediction,Fact	*f_ihlp,float32	confidence,uint64	time_to_live,Code	*mk_rdx)	const{	// prediction: f->pred->f->target.
-		
-		uint64	now=Now();
-		Group	*primary_host=get_host();
-		float32	sln_thr=primary_host->code(GRP_SLN_THR).asFloat();
-		if(confidence>sln_thr){	// do not inject if cfd is too low.
-
-			int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,time_to_live);
-			View	*view=new	View(true,now,confidence,resilience,primary_host,primary_host,prediction);	// SYNC_FRONT,res=resilience.
-			_Mem::Get()->inject(view);
-
-			view=new	View(true,now,1,1,primary_host,primary_host,f_ihlp);	// SYNC_FRONT,res=resilience.
-			_Mem::Get()->inject(view);
-
-			if(mk_rdx){
-
-				uint16	out_group_count=get_out_group_count();
-				for(uint16	i=0;i<out_group_count;++i){
-
-					Group	*out_group=(Group	*)get_out_group(i);
-					View	*view=new	NotificationView(primary_host,out_group,mk_rdx);
-					_Mem::Get()->inject(view);
-				}
-			}
-			return	true;
-		}else
-			return	false;
-	}
-
 	void	HLPController::inject_prediction(Fact	*prediction,float32	confidence)	const{	// prediction is simulated: f->pred->f->target.
 		
 		Code	*primary_host=get_host();
 		float32	sln_thr=primary_host->code(GRP_SLN_THR).asFloat();
 		if(confidence>sln_thr){	// do not inject if cfd is too low.
 
-			View	*view=new	View(true,Now(),confidence,1,primary_host,primary_host,prediction);	//	SYNC_FRONT,res=1.
+			View	*view=new	View(View::SYNC_ONCE,Now(),confidence,1,primary_host,primary_host,prediction);	//	SYNC_ONCE,res=1.
 			_Mem::Get()->inject(view);
 		}
-	}
-
-	_Fact	*HLPController::get_absentee(_Fact	*fact)	const{	// fact: f->obj.
-
-		_Fact	*absentee;
-		if(fact->code(0).asOpcode()==Opcodes::Fact)
-			absentee=new	AntiFact(fact->get_reference(0),fact->get_after(),fact->get_before(),1,1);
-		else
-			absentee=new	Fact(fact->get_reference(0),fact->get_after(),fact->get_before(),1,1);
-
-		return	absentee;
 	}
 
 	MatchResult	HLPController::check_evidences(_Fact *target,_Fact	*&evidence){
@@ -224,6 +186,33 @@ namespace	r_exec{
 		evidence=NULL;
 		predicted_evidences.CS.leave();
 		return	r;
+	}
+
+	bool	HLPController::become_invalidated(){
+
+		if(is_invalidated())
+			return	true;
+
+		for(uint16	i=0;i<controllers.size();++i){
+
+			if(controllers[i]!=NULL	&&	controllers[i]->is_invalidated()){
+
+				kill_views();
+				return	true;
+			}
+		}
+
+		if(has_tpl_args()){
+
+			if(refCount==1	&&	ref_count>1){	// the ctrler was referenced by others, is no longer and has tpl args: it will not be able to predict: kill.
+				
+				kill_views();
+				return	true;
+			}else
+				ref_count=refCount;
+		}
+
+		return	false;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

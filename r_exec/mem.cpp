@@ -30,11 +30,14 @@
 
 #include	"mem.h"
 #include	"mdl_controller.h"
+#include	"black_list.h"
 
 
 namespace	r_exec{
 
 	_Mem::_Mem():r_code::Mem(),state(NOT_STARTED){
+
+		new	BlackList();
 	}
 
 	_Mem::~_Mem(){
@@ -57,12 +60,15 @@ namespace	r_exec{
 						uint32	perf_sampling_period,
 						float32	float_tolerance,
 						uint32	time_tolerance,
+						uint32	primary_thz,
+						uint32	secondary_thz,
 						bool	debug,
 						uint32	ntf_mk_res,
 						uint32	goal_pred_success_res,
 						uint32	probe_level){
 
 		this->base_period=base_period;
+
 		this->reduction_core_count=reduction_core_count;
 		this->time_core_count=time_core_count;
 
@@ -76,6 +82,8 @@ namespace	r_exec{
 		this->perf_sampling_period=perf_sampling_period;
 		this->float_tolerance=float_tolerance;
 		this->time_tolerance=time_tolerance;
+		this->primary_thz=primary_thz*1000000;
+		this->secondary_thz=secondary_thz*1000000;
 
 		this->debug=debug;
 		this->ntf_mk_res=ntf_mk_res;
@@ -177,7 +185,8 @@ namespace	r_exec{
 		std::vector<std::pair<View	*,Group	*>	>	initial_reduction_jobs;
 
 		uint32	i;
-		uint64	now=starting_time=Now();
+		uint64	now=Now();
+		Utils::SetReferenceValues(now,base_period,float_tolerance,time_tolerance);
 
 		init_timings(now);
 
@@ -233,7 +242,7 @@ namespace	r_exec{
 			// inject the next update job for the group.
 			if(g->get_upr()>0){
 
-				P<TimeJob>	j=new	UpdateJob(g,now+g->get_upr()*base_period);
+				P<TimeJob>	j=new	UpdateJob(g,now+g->get_upr()*Utils::GetBasePeriod());
 				time_job_queue->push(j);
 			}
 		}
@@ -282,7 +291,7 @@ namespace	r_exec{
 		for(i=0;i<reduction_core_count;++i)
 			Thread::Wait(reduction_cores[i]);
 
-		stop_sem->acquire();	//	wait for delegates.
+		stop_sem->acquire();	// wait for delegates.
 
 		reset();
 	}
@@ -332,83 +341,35 @@ namespace	r_exec{
 
 	void	_Mem::inject_copy(View	*view,Group	*destination,uint64	now){
 
-		View	*copied_view=new	View(view,destination);	//	ctrl values are morphed.
+		View	*copied_view=new	View(view,destination);	// ctrl values are morphed.
 		Utils::SetTimestamp<View>(copied_view,VIEW_IJT,now);
-		inject_existing_object(copied_view,view->object,destination,true);
+		inject_existing_object(copied_view,view->object,destination);
 	}
 
-	void	_Mem::inject_existing_object(View	*view,Code	*object,Group	*host,bool	lock){
+	void	_Mem::inject_existing_object(View	*view,Code	*object,Group	*host){
 
-		view->set_object(object);	//	the object already exists (content-wise): have the view point to the existing one.
+		view->set_object(object);	// the object already exists (content-wise): have the view point to the existing one.
 
-		if(lock)
-			host->enter();
+		host->enter();
+		host->inject_existing_object(view,Now());
+		host->leave();
+	}
 
-		bool	reduce_view=false;
+	void	_Mem::inject_null_program(Controller	*c,Group *group,uint64	time_to_live,bool	take_past_inputs){
 
-		object->acq_views();
-		View	*existing_view=(View	*)object->find_view(host,false);
-		if(!existing_view){	//	no existing view: add the view to the group and to the object's view_map.
+		uint64	now=Now();
 
-			switch(object->code(0).getDescriptor()){
-			case	Atom::INSTANTIATED_PROGRAM:
-			case	Atom::INSTANTIATED_CPP_PROGRAM:
-			case	Atom::COMPOSITE_STATE:
-			case	Atom::MODEL:
-				host->ipgm_views[view->get_oid()]=view;
-				break;
-			case	Atom::INSTANTIATED_ANTI_PROGRAM:
-				host->anti_ipgm_views[view->get_oid()]=view;
-				break;
-			case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
-				host->input_less_ipgm_views[view->get_oid()]=view;
-				break;
-			case	Atom::OBJECT:
-			case	Atom::MARKER:
-				host->other_views[view->get_oid()]=view;
-				break;
-			}
+		Code	*null_pgm=new	LObject();
+		null_pgm->code(0)=Atom::NullProgram(take_past_inputs);
 
-			object->views.insert(view);
-			object->rel_views();
+		uint32	res=Utils::GetResilience(now,time_to_live,group->get_upr()*Utils::GetBasePeriod());
 
-			reduce_view=view->get_sln()>host->get_sln_thr();
-		}else{	//	call set on the ctrl values of the existing view with the new view's ctrl values, including sync. NB: org left unchanged.
+		View	*view=new	View(View::SYNC_ONCE,now,0,res,group,NULL,null_pgm,1);
+		view->controller=c;
 
-			object->rel_views();
+		c->set_view(view);
 
-			host->pending_operations.push_back(new	Group::Set(existing_view->get_oid(),VIEW_RES,view->get_res()));
-			host->pending_operations.push_back(new	Group::Set(existing_view->get_oid(),VIEW_SLN,view->get_sln()));
-			switch(object->code(0).getDescriptor()){
-			case	Atom::INSTANTIATED_PROGRAM:
-			case	Atom::INSTANTIATED_ANTI_PROGRAM:
-			case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
-			case	Atom::INSTANTIATED_CPP_PROGRAM:
-			case	Atom::COMPOSITE_STATE:
-			case	Atom::MODEL:
-				host->pending_operations.push_back(new	Group::Set(existing_view->get_oid(),VIEW_ACT,view->get_act()));
-				break;
-			}
-
-			existing_view->code(VIEW_SYNC)=view->code(VIEW_SYNC);
-			bool	wiew_is_salient=view->get_sln()>host->get_sln_thr();
-			if(existing_view->synced_on_front()){	// sync on front.
-
-				bool	wiew_was_salient=existing_view->get_sln()>host->get_sln_thr();
-			
-				reduce_view=(!wiew_was_salient	&&	wiew_is_salient);
-			}else	// sync on state.
-				reduce_view=wiew_is_salient;
-		}
-
-		//	give a chance to ipgms to reduce the new view.
-		bool	group_is_c_active=host->update_c_act()>host->get_c_act_thr();
-		bool	group_is_c_salient=host->update_c_sln()>host->get_c_sln_thr();
-		if(group_is_c_active	&&	group_is_c_salient	&&	reduce_view)
-			inject_reduction_jobs(view,host);
-
-		if(lock)
-			host->leave();
+		inject_async(view);
 	}
 
 	void	_Mem::update(Group	*group){		
@@ -426,7 +387,7 @@ namespace	r_exec{
 
 		group->newly_salient_views.clear();
 
-		//	execute pending operations.
+		// execute pending operations.
 		for(uint32	i=0;i<group->pending_operations.size();++i){
 
 			group->pending_operations[i]->execute(group);
@@ -434,68 +395,46 @@ namespace	r_exec{
 		}
 		group->pending_operations.clear();
 
-		//	update group's ctrl values.
-		group->update_sln_thr();	//	applies decay on sln thr. 
+		// update group's ctrl values.
+		group->update_sln_thr();	// applies decay on sln thr. 
 		group->update_act_thr();
 		group->update_vis_thr();
 
 		GroupState	group_state(group->get_sln_thr(),group->get_c_act()>group->get_c_act_thr(),group->update_c_act()>group->get_c_act_thr(),group->get_c_sln()>group->get_c_sln_thr(),group->update_c_sln()>group->get_c_sln_thr());
 
 		group->reset_stats();
-
+		//if(group->get_secondary_group()!=NULL)
+		//	std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" UPR\n";
 		FOR_ALL_VIEWS_BEGIN_NO_INC(group,v)
-			//if(v->second==NULL)
-			//	continue;
-			//	update resilience.
-			float32	res=group->update_res(v->second);	//	will decrement res by 1 in addition to the accumulated changes.
-			if(res>0){
+			
+			if(v->second->object->is_invalidated())	// no need to update the view set.
+				group->delete_view(v);
+			else{
+				// update resilience.
+				float32	res=group->update_res(v->second);	// will decrement res by 1 in addition to the accumulated changes.
+				if(res>0){
 
-				_update_saliency(group,&group_state,v->second);	//	(apply decay).
+					_update_saliency(group,&group_state,v->second);	// apply decay.
 
-				switch(v->second->object->code(0).getDescriptor()){
-				case	Atom::GROUP:
-					_update_visibility(group,&group_state,v->second);
-					break;
-				case	Atom::INSTANTIATED_PROGRAM:
-				case	Atom::INSTANTIATED_ANTI_PROGRAM:
-				case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
-				case	Atom::INSTANTIATED_CPP_PROGRAM:
-				case	Atom::COMPOSITE_STATE:
-				case	Atom::MODEL:
-					_update_activation(group,&group_state,v->second);
-					break;
-				}
-				++v;
-			}else{	//	view has no resilience.
-
-				v->second->delete_from_object();
-
-				//	delete the view from the group.
-				if(v->second->isNotification())
-					v=group->notification_views.erase(v);
-				else	switch(v->second->object->code(0).getDescriptor()){
-				case	Atom::INSTANTIATED_PROGRAM:
-				case	Atom::INSTANTIATED_CPP_PROGRAM:
-				case	Atom::COMPOSITE_STATE:
-				case	Atom::MODEL:
-					v->second->controller->invalidate();
-					v=group->ipgm_views.erase(v);
-					break;
-				case	Atom::INSTANTIATED_ANTI_PROGRAM:
-					v->second->controller->invalidate();
-					v=group->anti_ipgm_views.erase(v);
-					break;
-				case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
-					v->second->controller->invalidate();
-					v=group->input_less_ipgm_views.erase(v);
-					break;
-				case	Atom::OBJECT:
-				case	Atom::MARKER:
-					v=group->other_views.erase(v);
-					break;
-				case	Atom::GROUP:
-					v=group->group_views.erase(v);
-					break;
+					switch(v->second->object->code(0).getDescriptor()){
+					case	Atom::GROUP:
+						_update_visibility(group,&group_state,v->second);
+						break;
+					case	Atom::NULL_PROGRAM:
+					case	Atom::INSTANTIATED_PROGRAM:
+					case	Atom::INSTANTIATED_ANTI_PROGRAM:
+					case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
+					case	Atom::INSTANTIATED_CPP_PROGRAM:
+					case	Atom::COMPOSITE_STATE:
+					case	Atom::MODEL:
+						_update_activation(group,&group_state,v->second);
+						break;
+					}
+					++v;
+				}else{	// view has no resilience: delete it from the group.
+					
+					v->second->delete_from_object();
+					group->delete_view(v);
 				}
 			}
 		FOR_ALL_VIEWS_END
@@ -503,22 +442,22 @@ namespace	r_exec{
 		if(group_state.is_c_salient)
 			group->cov(now);
 
-		//	build reduction jobs.
+		// build reduction jobs.
 		std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
 		for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
 			inject_reduction_jobs(*v,group);
 
-		if(group_state.is_c_active	&&	group_state.is_c_salient){	//	build signaling jobs for new ipgms.
+		if(group_state.is_c_active	&&	group_state.is_c_salient){	// build signaling jobs for new ipgms.
 
 			for(uint32	i=0;i<group->new_controllers.size();++i){
 
 				switch(group->new_controllers[i]->getObject()->code(0).getDescriptor()){
-				case	Atom::INSTANTIATED_ANTI_PROGRAM:{	//	inject signaling jobs for |ipgm (tsc).
+				case	Atom::INSTANTIATED_ANTI_PROGRAM:{	// inject signaling jobs for |ipgm (tsc).
 
 					P<TimeJob>	j=new	AntiPGMSignalingJob((r_exec::View	*)group->new_controllers[i]->getView(),now+Utils::GetTimestamp<Code>(group->new_controllers[i]->getObject(),IPGM_TSC));
 					time_job_queue->push(j);
 					break;
-				}case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:{	//	inject a signaling job for an input-less pgm.
+				}case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:{	// inject a signaling job for an input-less pgm.
 
 					P<TimeJob>	j=new	InputLessPGMSignalingJob((r_exec::View	*)group->new_controllers[i]->getView(),now+Utils::GetTimestamp<Code>(group->new_controllers[i]->getObject(),IPGM_TSC));
 					time_job_queue->push(j);
@@ -530,12 +469,11 @@ namespace	r_exec{
 			group->new_controllers.clear();
 		}
 
-		group->update_stats();	//	triggers notifications.
+		group->update_stats();	// triggers notifications.
 
-		//	inject the next update job for the group.
-		if(group->get_upr()>0){
+		if(group->get_upr()>0){	// inject the next update job for the group.
 
-			P<TimeJob>	j=new	UpdateJob(group,now+group->get_upr()*base_period);
+			P<TimeJob>	j=new	UpdateJob(group,now+group->get_upr()*Utils::GetBasePeriod());
 			time_job_queue->push(j);
 		}
 
@@ -553,19 +491,24 @@ namespace	r_exec{
 			
 			if(wiew_is_salient){
 
-				if(view->synced_on_front()){
-					
+				switch(view->get_sync()){
+				case	View::SYNC_ONCE:
+				case	View::SYNC_PERIODIC:
 					if(!wiew_was_salient)	// sync on front: crosses the threshold upward: record as a newly salient view.
 						group->newly_salient_views.insert(view);
-				}else						// sync on state.
+					break;
+				case	View::SYNC_HOLD:
+				case	View::SYNC_AXIOM:	// sync on state.
 					group->newly_salient_views.insert(view);
+					break;
+				}
 			}
 
-			//	inject sln propagation jobs.
-			//	the idea is to propagate sln changes when a view "occurs to the mind", i.e. becomes more salient in a group and is eligible for reduction in that group.
-			//		- when a view is now salient because the group becomes c-salient, no propagation;
-			//		- when a view is now salient because the group's sln_thr gets lower, no propagation;
-			//		- propagation can occur only if the group is c_active. For efficiency reasons, no propagation occurs even if some of the group's viewing groups are c-active and c-salient.
+			// inject sln propagation jobs.
+			// the idea is to propagate sln changes when a view "occurs to the mind", i.e. becomes more salient in a group and is eligible for reduction in that group.
+			//	- when a view is now salient because the group becomes c-salient, no propagation;
+			//	- when a view is now salient because the group's sln_thr gets lower, no propagation;
+			//	- propagation can occur only if the group is c_active. For efficiency reasons, no propagation occurs even if some of the group's viewing groups are c-active and c-salient.
 			if(state->is_c_active)
 				_initiate_sln_propagation(view->object,view_new_sln-view_old_sln,group->get_sln_thr());
 		}
@@ -642,7 +585,7 @@ namespace	r_exec{
 
 		if(host->get_c_act()>host->get_c_act_thr()){	// host is c-active.
 
-			//	build reduction jobs from host's own inputs and own overlays.
+			// build reduction jobs from host's own inputs and own overlays.
 			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(host,v)
 
 				if(v->second->get_act()>host->get_act_thr())	// active ipgm/icpp_pgm/rgrp view.
@@ -707,12 +650,7 @@ namespace	r_exec{
 		}else
 			time_job_avg_latency=d_time_job_avg_latency=0;
 
-		// inject f->perf in stdin.
 		Code	*perf=new	Perf(reduction_job_avg_latency,d_reduction_job_avg_latency,time_job_avg_latency,d_time_job_avg_latency);
-		uint64	now=Now();
-		Code	*f_perf=new	Fact(perf,now,now+perf_sampling_period,1,1);
-		View	*view=new	View(true,now,1,1,_stdin,NULL,f_perf);	// sync front, sln=1, res=1.
-		inject(view);
 
 		// reset stats.
 		reduction_job_count=time_job_count=0;
@@ -721,6 +659,12 @@ namespace	r_exec{
 
 		time_jobCS.leave();
 		reduction_jobCS.leave();
+
+		// inject f->perf in stdin.
+		uint64	now=Now();
+		Code	*f_perf=new	Fact(perf,now,now+perf_sampling_period,1,1);
+		View	*view=new	View(View::SYNC_ONCE,now,1,1,_stdin,NULL,f_perf);	// sync front, sln=1, res=1.
+		inject(view);
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -845,6 +789,8 @@ namespace	r_exec{
 					250000,	// perf sampling period
 					0.1,	// float tolerance.
 					10000,	// time tolerance.
+					3600000,// primary thz.
+					7200000,// secondary thz.
 					false,	// debug.
 					1000,	// ntf marker resilience.
 					1000,	// goal pred success resilience.
@@ -880,8 +826,8 @@ namespace	r_exec{
 			unpacked_hlp->code(i)=hlp->code(i);
 
 		uint16	pattern_set_index=hlp->code(HLP_OBJS).asIndex();
-		uint16	pattern_count=hlp->code(pattern_set_index++).getAtomCount();
-		for(uint16	i=0;i<pattern_count;++i){	// init the new references with the facts; turn the exisitng i-ptrs into r-ptrs.
+		uint16	pattern_count=hlp->code(pattern_set_index).getAtomCount();
+		for(uint16	i=1;i<=pattern_count;++i){	// init the new references with the facts; turn the exisitng i-ptrs into r-ptrs.
 
 			Code	*fact=unpack_fact(hlp,hlp->code(pattern_set_index+i).asIndex());
 			unpacked_hlp->add_reference(fact);
@@ -899,7 +845,7 @@ namespace	r_exec{
 		uint16	invalid_point=pattern_set_index+pattern_count+1;	// index of what is after set of the patterns.
 		uint16	valid_point=hlp->code(HLP_FWD_GUARDS).asIndex();	// index of the first atom that does not belong to the patterns.
 		uint16	invalid_zone_length=valid_point-invalid_point;
-		for(uint16	i=valid_point;i<hlp->code_size();++i){	//	shift the valid code downward; adjust i-ptrs.
+		for(uint16	i=valid_point;i<hlp->code_size();++i){	//	shift the valid code upward; adjust i-ptrs.
 
 			Atom	h_atom=hlp->code(i);
 			switch(h_atom.getDescriptor()){
@@ -986,9 +932,9 @@ namespace	r_exec{
 
 	void	_Mem::pack_hlp(Code	*hlp)	const{	// produces a new object where a set of pattern objects is transformed into a packed set of pattern code.
 
-		Code	*hlp_clone=clone(hlp);
+		Code	*unpacked_hlp=clone(hlp);
 
-		std::vector<Atom>	trailing_code;	//	copy of the original code (which will be overwritten by packed facts).
+		std::vector<Atom>	trailing_code;	//	copy of the original code (the latter will be overwritten by packed facts).
 		uint16	trailing_code_index=hlp->code(HLP_FWD_GUARDS).asIndex();
 		for(uint16	i=trailing_code_index;i<hlp->code_size();++i)
 			trailing_code.push_back(hlp->code(i));
@@ -1011,7 +957,7 @@ namespace	r_exec{
 
 		uint16	inserted_zone_length=extent_index-insertion_point;
 
-		for(uint16	i=0;i<trailing_code.size();++i){	// shift the trailing code upward; adjust i-ptrs.
+		for(uint16	i=0;i<trailing_code.size();++i){	// shift the trailing code downward; adjust i-ptrs.
 
 			Atom	t_atom=trailing_code[i];
 			switch(t_atom.getDescriptor()){
@@ -1033,15 +979,15 @@ namespace	r_exec{
 		hlp->code(CST_OUT_GRPS)=Atom::IPointer(hlp->code(HLP_OUT_GRPS).asIndex()+inserted_zone_length);
 
 		group_set_index+=inserted_zone_length;
-		for(uint16	i=0;i<group_count;++i){	//	append the out_groups to the new references; adjust the exisitng r-ptrs.
+		for(uint16	i=1;i<=group_count;++i){	//	append the out_groups to the new references; adjust the exisitng r-ptrs.
 
-			references.push_back(hlp->get_reference(hlp->code(group_set_index+i+1).asIndex()));
-			hlp->code(group_set_index+i+1)=Atom::RPointer(references.size()-1);
+			references.push_back(hlp->get_reference(hlp->code(group_set_index+i).asIndex()));
+			hlp->code(group_set_index+i)=Atom::RPointer(references.size()-1);
 		}
 
 		hlp->set_references(references);
 
-		hlp->add_reference(hlp_clone);
+		hlp->add_reference(unpacked_hlp);
 	}
 
 	void	_Mem::pack_fact(Code	*fact,Code	*hlp,uint16	&write_index,std::vector<P<Code>	>	*references)	const{
@@ -1104,7 +1050,7 @@ namespace	r_exec{
 		}
 	}
 
-	Code	*_Mem::clone(Code	*original)	const{
+	Code	*_Mem::clone(Code	*original)	const{	// shallow copy; oid not copied.
 
 		Code	*_clone=build_object(original->code(0));
 		uint16	opcode=original->code(0).asOpcode();
@@ -1114,7 +1060,7 @@ namespace	r_exec{
 		for(uint16	i=0;i<original->code_size();++i)
 			_clone->code(i)=original->code(i);
 		for(uint16	i=0;i<original->references_size();++i)
-			_clone->add_reference(clone(original->get_reference(i)));
+			_clone->add_reference(original->get_reference(i));
 		return	_clone;
 	}
 }

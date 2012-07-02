@@ -100,6 +100,7 @@ namespace	r_exec{
 		case	Atom::GROUP:
 			code(GRP_VIEW_VIS)=Atom::Float(MorphValue(view->code(GRP_VIEW_VIS).asFloat(),source->get_vis_thr(),group->get_vis_thr()));
 			break;
+		case	Atom::NULL_PROGRAM:
 		case	Atom::INSTANTIATED_PROGRAM:
 		case	Atom::INSTANTIATED_CPP_PROGRAM:
 		case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
@@ -258,7 +259,7 @@ namespace	r_exec{
 	NotificationView::NotificationView(Code	*origin,Code	*destination,Code	*marker):View(){
 
 		code(VIEW_OPCODE)=r_code::Atom::SSet(ViewOpcode,VIEW_ARITY);		//	Structured Set.
-		code(VIEW_SYNC)=r_code::Atom::Boolean(true);						//	sync on front.
+		code(VIEW_SYNC)=r_code::Atom::Float(View::SYNC_ONCE);				//	sync once.
 		code(VIEW_IJT)=r_code::Atom::IPointer(VIEW_ARITY+1);				//	iptr to ijt.
 		code(VIEW_SLN)=r_code::Atom::Float(1);								//	sln.
 		code(VIEW_RES)=r_code::Atom::Float(_Mem::Get()->get_ntf_mk_res());	//	res.

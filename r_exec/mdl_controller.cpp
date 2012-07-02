@@ -97,7 +97,7 @@ namespace	r_exec{
 					}
 				}
 			case	NO_R:
-				if(f_imdl->get_reference(0)->code(f_imdl->get_reference(0)->code(I_HLP_TPL_ARGS).asIndex()).getAtomCount()>0){	// there are tpl args, abort.
+				if(((MDLController	*)controller)->has_tpl_args()){	// there are tpl args, abort.
 
 					o=NULL;
 					break;
@@ -197,7 +197,7 @@ namespace	r_exec{
 			case	WR_DISABLED:
 			case	SR_DISABLED_NO_WR:	// silent monitoring of a prediction that will not be injected.
 			case	NO_R:
-				if(f_imdl->get_reference(0)->code(f_imdl->get_reference(0)->code(I_HLP_TPL_ARGS).asIndex()).getAtomCount()>0){	// there are tpl args, abort.
+				if(((MDLController	*)controller)->has_tpl_args()){	// there are tpl args, abort.
 
 					o=NULL;
 					break;
@@ -232,7 +232,7 @@ namespace	r_exec{
 
 	MDLController	*MDLController::New(View	*view,bool	&inject_in_secondary_group){
 
-		Code	*unpacked_mdl=view->object->get_reference(view->object->references_size()-1);
+		Code	*unpacked_mdl=view->object->get_reference(view->object->references_size()-MDL_HIDDEN_REFS);
 		uint16	obj_set_index=unpacked_mdl->code(MDL_OBJS).asIndex();
 		Code	*rhs=unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index+2).asIndex());
 
@@ -253,26 +253,44 @@ namespace	r_exec{
 		lhs=object->get_reference(object->code(obj_set_index+1).asIndex());
 		rhs=object->get_reference(object->code(obj_set_index+2).asIndex());
 
-		_is_requirement=(rhs->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl);
-	}
-
-	HLPController	*MDLController::get_rhs_controller(bool	&strong)	const{
+		Group	*host=get_host();
+		controllers.resize(2);
 
 		Code	*rhs_ihlp=rhs->get_reference(0);
+		_is_requirement=NaR;
+		controllers[RHSController]=NULL;
 		uint16	opcode=rhs_ihlp->code(0).asOpcode();
 		if(	opcode==Opcodes::ICst	||
 			opcode==Opcodes::IMdl){
 
 			Code			*rhs_hlp=rhs_ihlp->get_reference(0);
-			Group			*host=getView()->get_host();
-			r_exec::View	*rhs_hlp_v=(r_exec::View*)rhs_hlp->find_view(host,true);
+			r_exec::View	*rhs_hlp_v=(r_exec::View*)rhs_hlp->get_view(host,true);
 			if(rhs_hlp_v){
 
-				strong=rhs->code(0).asOpcode()==Opcodes::AntiFact;
-				return	(HLPController	*)rhs_hlp_v->controller;
+				if(opcode==Opcodes::IMdl)
+					_is_requirement=(rhs->code(0).asOpcode()==Opcodes::AntiFact?SR:WR);
+				controllers[RHSController]=(HLPController	*)rhs_hlp_v->controller;
 			}
 		}
-		return	NULL;
+
+		Code	*lhs_ihlp=lhs->get_reference(0);
+		_is_reuse=false;
+		controllers[LHSController]=NULL;
+		opcode=lhs_ihlp->code(0).asOpcode();
+		if(	opcode==Opcodes::ICst	||
+			opcode==Opcodes::IMdl){
+
+			Code			*lhs_hlp=lhs_ihlp->get_reference(0);
+			r_exec::View	*lhs_hlp_v=(r_exec::View*)lhs_hlp->get_view(host,true);
+			if(lhs_hlp_v){
+
+				if(opcode==Opcodes::IMdl)
+					_is_reuse=true;
+				controllers[LHSController]=(HLPController	*)lhs_hlp_v->controller;
+			}
+		}
+
+		_is_cmd=(lhs_ihlp->code(0).asOpcode()==Opcodes::Cmd);
 	}
 
 	float32	MDLController::get_cfd()	const{
@@ -280,22 +298,27 @@ namespace	r_exec{
 		return	get_core_object()->code(MDL_SR).asFloat();
 	}
 
-	void	MDLController::monitor_predictions(_Fact	*input){	// predictions are admissible inputs (for checking predicted counter-evidences).
+	bool	MDLController::monitor_predictions(_Fact	*input){	// predictions are admissible inputs (for checking predicted counter-evidences).
 		
 		Pred	*pred=input->get_pred();
 		if(pred	&&	pred->is_simulation())	// discard simulations.
-			return;
+			return	false;
 
+		bool	r=false;
 		std::list<P<PMonitor> >::const_iterator	m;
 		p_monitorsCS.enter();
 		for(m=p_monitors.begin();m!=p_monitors.end();){
 
-			if((*m)->reduce(input))
+			if((*m)->reduce(input)){
+
 				m=p_monitors.erase(m);
-			else
+				r=true;
+			}else
 				++m;
 		}
 		p_monitorsCS.leave();
+
+		return	r;
 	}
 
 	void	MDLController::add_monitor(PMonitor	*m){
@@ -325,6 +348,26 @@ namespace	r_exec{
 	inline	Fact	*MDLController::get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const{
 
 		return	bindings->build_f_ihlp(getObject(),Opcodes::IMdl,wr_enabled);
+	}
+
+	void	MDLController::add_requirement_to_rhs(){
+
+		if(_is_requirement!=NaR){
+
+			HLPController	*c=controllers[RHSController];
+			if(c)
+				c->add_requirement(_is_requirement==SR);
+		}
+	}
+
+	void	MDLController::remove_requirement_from_rhs(){
+
+		if(_is_requirement!=NaR){
+
+			HLPController	*c=controllers[RHSController];
+			if(c)
+				c->remove_requirement(_is_requirement==SR);
+		}
 	}
 
 	void	MDLController::_store_requirement(std::list<REntry>	*cache,REntry	&e){
@@ -913,9 +956,9 @@ namespace	r_exec{
 		Group	*primary_grp=get_host();
 		uint64	before=goal->get_before();
 		uint64	now=Now();
-		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_grp,before-now);
+		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_grp,now,before-now);
 		
-		View	*view=new	View(true,now,1,resilience,primary_grp,primary_grp,goal);	// SYNC_FRONT,res=resilience.
+		View	*view=new	View(View::SYNC_ONCE,now,1,resilience,primary_grp,primary_grp,goal);	// SYNC_ONCE,res=resilience.
 		_Mem::Get()->inject(view);
 
 		MkRdx	*mk_rdx=new	MkRdx(f_imdl,goal->get_goal()->get_super_goal(),goal,1,bm);
@@ -934,24 +977,27 @@ namespace	r_exec{
 		Group	*primary_grp=get_host();
 		uint64	before=((_Fact	*)goal_pred->get_reference(0)->get_reference(0))->get_before();
 		uint64	now=Now();
-		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_grp,before-now);
+		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_grp,now,before-now);
 		
-		View	*view=new	View(true,now,1,resilience,primary_grp,primary_grp,goal_pred);	// SYNC_FRONT,res=resilience.
+		View	*view=new	View(View::SYNC_ONCE,now,1,resilience,primary_grp,primary_grp,goal_pred);	// SYNC_ONCE,res=resilience.
 		_Mem::Get()->inject(view);
 	}
 
-	void	PMDLController::monitor_goals(_Fact	*input){
+	bool	PMDLController::monitor_goals(_Fact	*input){
 
 		std::list<P<_GMonitor> >::const_iterator	m;
 		g_monitorsCS.enter();
 		for(m=g_monitors.begin();m!=g_monitors.end();){
 
-			if((*m)->reduce(input))
+			if((*m)->reduce(input)){
+
 				m=g_monitors.erase(m);
-			else
+				return	true;
+			}else
 				++m;
 		}
 		g_monitorsCS.leave();
+		return	false;
 	}
 
 	void	PMDLController::register_predicted_goal_outcome(Fact	*goal,BindingMap	*bm,Fact	*f_imdl,bool	success,bool	injected_goal){	// called only for SIM_COMMITTED mode.
@@ -1092,7 +1138,7 @@ namespace	r_exec{
 												Fact		*f_imdl,
 												_Fact		*evidence){
 
-		Goal	*sub_goal=new	Goal(sub_goal_target,super_goal->get_goal()->get_reference(GOAL_ACTR_REF),1);
+		Goal	*sub_goal=new	Goal(sub_goal_target,super_goal->get_goal()->get_actor(),1);
 		uint64	now=Now();
 		Fact	*f_sub_goal=new	Fact(sub_goal,now,now,1,1);
 
@@ -1133,7 +1179,7 @@ namespace	r_exec{
 
 			if(!evidence){	// assert absence of the goal target.
 
-				absentee=get_absentee(goal->get_goal()->get_target());
+				absentee=goal->get_goal()->get_target()->get_absentee();
 				success_object=new	Success(goal,absentee,1);
 			}else{
 
@@ -1156,13 +1202,13 @@ namespace	r_exec{
 		for(uint16	i=0;i<out_group_count;++i){	// inject notification in out groups.
 
 			Group	*out_group=(Group	*)get_out_group(i);
-			int32	resilience=_Mem::Get()->get_goal_pred_success_res(out_group,0);
-			View	*view=new	View(true,now,1,resilience,out_group,primary_host,f_success_object);
+			int32	resilience=_Mem::Get()->get_goal_pred_success_res(out_group,now,0);
+			View	*view=new	View(View::SYNC_ONCE,now,1,resilience,out_group,primary_host,f_success_object);
 			_Mem::Get()->inject(view);
 
 			if(absentee){
 
-				view=new	View(true,now,1,1,out_group,primary_host,absentee);
+				view=new	View(View::SYNC_ONCE,now,1,1,out_group,primary_host,absentee);
 				_Mem::Get()->inject(view);
 			}
 		}
@@ -1188,8 +1234,8 @@ namespace	r_exec{
 
 		Group	*primary_host=get_host();
 		uint16	out_group_count=get_out_group_count();
-		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
-		View	*view=new	View(true,now,1,resilience,primary_host,primary_host,f_pred);
+		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,now,0);
+		View	*view=new	View(View::SYNC_ONCE,now,1,resilience,primary_host,primary_host,f_pred);
 		_Mem::Get()->inject(view);	// inject in the primary group.
 	}
 
@@ -1201,25 +1247,8 @@ namespace	r_exec{
 	void	PrimaryMDLController::set_secondary(SecondaryMDLController	*secondary){
 
 		this->secondary=secondary;
-	}
-
-	void	PrimaryMDLController::gain_activation(){
-
-		bool	strong;
-		HLPController	*c=get_rhs_controller(strong);
-		if(c)
-			c->add_requirement(strong);
-		HLPController::gain_activation();
-	}
-
-	void	PrimaryMDLController::lose_activation(){
-
-		HLPController::lose_activation();
-		secondary->getView()->set_act(getView()->get_act());	// activate the secondary controller in its own group g: will be performed at the next g->upr.
-		bool	strong;											// will trigger secondary->gain_activation() at the next g->upr.
-		HLPController	*c=get_rhs_controller(strong);
-		if(c)
-			c->remove_requirement(strong);
+		add_requirement_to_rhs();
+		secondary->add_requirement_to_rhs();
 	}
 
 	void	PrimaryMDLController::store_requirement(_Fact	*f_p_f_imdl,bool	chaining_was_allowed,bool	simulation){
@@ -1258,8 +1287,11 @@ namespace	r_exec{
 
 	void	PrimaryMDLController::take_input(r_exec::View	*input){
 
+		if(become_invalidated())
+			return;
+
 		if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
-			input->object->code(0).asOpcode()!=Opcodes::AntiFact)	//	discard everything but facts and |facts.
+			input->object->code(0).asOpcode()!=Opcodes::AntiFact)	// discard everything but facts and |facts.
 			return;
 		Controller::__take_input<PrimaryMDLController>(input);
 	}
@@ -1268,7 +1300,7 @@ namespace	r_exec{
 
 		//rhs->get_reference(0)->trace();//bindings->trace();
 		_Fact	*bound_rhs=(_Fact	*)bm->bind_pattern(rhs);	// fact or |fact.
-		
+
 		bool	simulation;
 		float32	confidence;
 		Pred	*prediction=input->get_pred();
@@ -1301,11 +1333,11 @@ namespace	r_exec{
 				pred->grounds.push_back(ground);
 		}
 
-		if(_is_requirement){
+		if(is_requirement()!=NaR){
 
-			bool	strong;
-			PrimaryMDLController	*c=((PrimaryMDLController	*)get_rhs_controller(strong));	// rhs controller: in the same view.
+			PrimaryMDLController	*c=(PrimaryMDLController	*)controllers[RHSController];	// rhs controller: in the same view.
 			c->store_requirement(production,chaining_was_allowed,simulation);					// if not simulation, stores also in the secondary controller.
+			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" m1 predicts im0 from "<<input->get_oid()<<"\n";
 			return;
 		}
 
@@ -1320,6 +1352,8 @@ namespace	r_exec{
 			}else{	// try to inject the prediction: if cfd too low, the prediction is not injected.
 
 				uint64	before=bound_rhs->get_before();
+				if(before<=now)	// can happen if the input comes from the past and the predicted time is still in the past.
+					return;
 				if(prediction){	// no rdx nor monitoring if the input was a prediction; case of a reuse: f_imdl becomes f->p->f_imdl.
 
 					Fact	*pred_f_imdl=new	Fact(new	Pred(f_imdl,1),now,now,1,1);
@@ -1330,9 +1364,9 @@ namespace	r_exec{
 					bool		rate_failures=inject_prediction(production,f_imdl,confidence,before-now,mk_rdx);
 					PMonitor	*m=new	PMonitor(this,bm,production,rate_failures);	// not-injected predictions are monitored for rating the model that produced them (successes only).
 					MDLController::add_monitor(m);
-					
+					//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" m0 predicts: "<<bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" from "<<input->get_oid()<<"\n";
 					Group	*secondary_host=secondary->getView()->get_host();	// inject f_imdl in secondary group.
-					View	*view=new	View(true,now,confidence,1,getView()->get_host(),secondary_host,f_imdl);	// SYNC_FRONT,res=resilience.
+					View	*view=new	View(View::SYNC_ONCE,now,confidence,1,getView()->get_host(),secondary_host,f_imdl);	// SYNC_ONCE,res=resilience.
 					_Mem::Get()->inject(view);
 				}
 			}
@@ -1340,13 +1374,68 @@ namespace	r_exec{
 
 			for(uint16	i=0;i<prediction->simulations.size();++i)
 				pred->simulations.push_back(prediction->simulations[i]);
-			inject_prediction(production,confidence);	// inject a simulated prediction in the primary group.
+			HLPController::inject_prediction(production,confidence);	// inject a simulated prediction in the primary group.
 		}
+	}
+
+	bool	PrimaryMDLController::inject_prediction(Fact	*prediction,Fact	*f_imdl,float32	confidence,uint64	time_to_live,Code	*mk_rdx)	const{	// prediction: f->pred->f->target.
+		
+		uint64	now=Now();
+		Group	*primary_host=get_host();
+		float32	sln_thr=primary_host->code(GRP_SLN_THR).asFloat();
+		if(confidence>sln_thr){	// do not inject if cfd is too low.
+
+			int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,now,time_to_live);
+			View	*view=new	View(View::SYNC_ONCE,now,confidence,resilience,primary_host,primary_host,prediction);	// SYNC_ONCE,res=resilience.
+			_Mem::Get()->inject(view);
+
+			view=new	View(View::SYNC_ONCE,now,1,1,primary_host,primary_host,f_imdl);	// SYNC_ONCE,res=resilience.
+			_Mem::Get()->inject(view);
+
+			if(mk_rdx){
+
+				uint16	out_group_count=get_out_group_count();
+				for(uint16	i=0;i<out_group_count;++i){
+
+					Group	*out_group=(Group	*)get_out_group(i);
+					View	*view=new	NotificationView(primary_host,out_group,mk_rdx);
+					_Mem::Get()->inject_notification(view,true);
+				}
+			}
+			return	true;
+		}else
+			return	false;
 	}
 
 	void	PrimaryMDLController::reduce(r_exec::View	*input){
 
+		if(_has_tpl_args	&&	get_requirement_count()==0){
+
+			kill_views();
+			return;
+		}
+
 		_Fact	*input_object=(_Fact	*)input->object;	// input_object is f->obj.
+
+		bool	ignore_input=false;
+		std::list<P<Code> >::const_iterator	a;
+		reductionCS.enter();
+		for(a=assumptions.begin();a!=assumptions.end();){	// ignore home-made assumptions and perform some garbage collection.
+
+			if((*a)->is_invalidated())
+				a=assumptions.erase(a);
+			else	if(((Code	*)*a)==input_object){
+
+				a=assumptions.erase(a);
+				ignore_input=true;
+			}else
+				++a;
+		}
+		reductionCS.leave();
+
+		if(ignore_input)
+			return;
+
 		if(input_object->is_invalidated())
 			return;
 
@@ -1385,11 +1474,14 @@ namespace	r_exec{
 			}
 		}else{
 
+			bool	match;
 			reductionCS.enter();
-			((MDLOverlay	*)*overlays.begin())->reduce(input);
-			monitor_predictions(input_object);
-			monitor_goals(input_object);
+			match=(((MDLOverlay	*)*overlays.begin())->reduce(input))!=NULL;
+			if(!match	&&	!monitor_predictions(input_object)	&&	!monitor_goals(input_object))
+				assume(input_object);
 			reductionCS.leave();
+
+			check_last_match_time(match);
 		}
 	}
 
@@ -1482,7 +1574,7 @@ namespace	r_exec{
 
 			P<_Fact>	bound_lhs=(_Fact	*)bm->bind_pattern(get_lhs());
 			if(opposite)
-				set_opposite(bound_lhs);
+				bound_lhs->set_opposite();
 			bound_lhs->set_cfd(confidence);
 
 			_Fact	*evidence;
@@ -1504,7 +1596,7 @@ namespace	r_exec{
 					break;
 				}
 
-				Goal	*sub_goal=new	Goal(bound_lhs,super_goal->get_goal()->get_reference(GOAL_ACTR_REF),1);
+				Goal	*sub_goal=new	Goal(bound_lhs,super_goal->get_goal()->get_actor(),1);
 				sub_goal->ground=ground;
 				sub_goal->sim=sim;
 				if(set_before)
@@ -1527,7 +1619,7 @@ namespace	r_exec{
 
 		f_imdl->set_cfd(confidence);
 
-		Goal	*sub_goal=new	Goal(f_imdl,super_goal->get_goal()->get_reference(GOAL_ACTR_REF),1);
+		Goal	*sub_goal=new	Goal(f_imdl,super_goal->get_goal()->get_actor(),1);
 		sub_goal->sim=sim;
 		
 		uint64	now=Now();
@@ -1542,7 +1634,7 @@ namespace	r_exec{
 
 			P<_Fact>	bound_lhs=(_Fact	*)bm->bind_pattern(get_lhs());
 			if(opposite)
-				set_opposite(bound_lhs);
+				bound_lhs->set_opposite();
 			bound_lhs->set_cfd(confidence);
 
 			_Fact	*evidence;
@@ -1565,7 +1657,7 @@ namespace	r_exec{
 
 					f_imdl->set_reference(0,bm->bind_pattern(f_imdl->get_reference(0)));	// valuate f_imdl from updated bm.
 
-					Goal	*sub_goal=new	Goal(bound_lhs,super_goal->get_goal()->get_reference(GOAL_ACTR_REF),1);
+					Goal	*sub_goal=new	Goal(bound_lhs,super_goal->get_goal()->get_actor(),1);
 					
 					sub_goal->sim=sim;
 					
@@ -1586,7 +1678,7 @@ namespace	r_exec{
 
 		f_imdl->set_cfd(confidence);
 
-		Goal	*sub_goal=new	Goal(f_imdl,super_goal->get_goal()->get_reference(GOAL_ACTR_REF),1);
+		Goal	*sub_goal=new	Goal(f_imdl,super_goal->get_goal()->get_actor(),1);
 		sub_goal->sim=sim;
 		
 		uint64	now=Now();
@@ -1652,7 +1744,7 @@ namespace	r_exec{
 
 		_Fact	*bound_lhs=(_Fact	*)bm->bind_pattern(get_lhs());
 		if(opposite)
-			set_opposite(bound_lhs);
+			bound_lhs->set_opposite();
 		bound_lhs->set_cfd(confidence);
 
 		predict_simulated_evidence(bound_lhs,sim);
@@ -1671,14 +1763,15 @@ namespace	r_exec{
 
 		f_pred->invalidate();
 
-		register_req_outcome(f_pred->get_pred()->get_target(),success,rate_failures);
+		if(confidence==1)	// else, evidence is an assumption: no rating.
+			register_req_outcome(f_pred->get_pred()->get_target(),success,rate_failures);
 
 		if(_is_requirement)
 			return;
 
 		_Fact	*f_evidence=evidence;
 		if(!f_evidence)	// failure: assert absence of the pred target.
-			f_evidence=get_absentee(f_pred->get_pred()->get_target());
+			f_evidence=f_pred->get_pred()->get_target()->get_absentee();
 
 		Success	*success_object=new	Success(f_pred,f_evidence,1);
 		Code	*f_success_object;
@@ -1693,11 +1786,11 @@ namespace	r_exec{
 		for(uint16	i=0;i<out_group_count;++i){	// inject notification in out groups.
 
 			Group	*out_group=(Group	*)get_out_group(i);
-			int32	resilience=_Mem::Get()->get_goal_pred_success_res(out_group,0);
-			View	*view=new	View(true,now,1,resilience,out_group,primary_host,f_success_object);
+			int32	resilience=_Mem::Get()->get_goal_pred_success_res(out_group,now,0);
+			View	*view=new	View(View::SYNC_ONCE,now,1,resilience,out_group,primary_host,f_success_object);
 			_Mem::Get()->inject(view);
 
-			view=new	View(true,now,1,1,out_group,primary_host,f_evidence);
+			view=new	View(View::SYNC_ONCE,now,1,1,out_group,primary_host,f_evidence);
 			_Mem::Get()->inject(view);
 		}
 	}
@@ -1713,10 +1806,17 @@ namespace	r_exec{
 		UNORDERED_MAP<P<_Fact>,RequirementsPair,PHash<_Fact>	>::const_iterator	r=active_requirements.find(f_imdl);
 		if(r!=active_requirements.end()){	// some requirements were controlling the prediction: give feedback.
 
-			for(uint32	i=0;i<r->second.first.controllers.size();++i)
-				r->second.first.controllers[i]->register_req_outcome(r->second.first.f_imdl,success,r->second.first.chaining_was_allowed);
-			for(uint32	i=0;i<r->second.second.controllers.size();++i)
-				r->second.second.controllers[i]->register_req_outcome(r->second.second.f_imdl,!success,r->second.second.chaining_was_allowed);
+			for(uint32	i=0;i<r->second.first.controllers.size();++i){
+
+				if(!r->second.first.controllers[i]->is_invalidated())
+					r->second.first.controllers[i]->register_req_outcome(r->second.first.f_imdl,success,r->second.first.chaining_was_allowed);
+			}
+			for(uint32	i=0;i<r->second.second.controllers.size();++i){
+
+				if(!r->second.second.controllers[i]->is_invalidated())
+					r->second.second.controllers[i]->register_req_outcome(r->second.second.f_imdl,!success,r->second.second.chaining_was_allowed);
+			}
+			active_requirements.erase(r);
 		}
 		active_requirementsCS.leave();
 	}
@@ -1738,7 +1838,7 @@ namespace	r_exec{
 			Code	*success_object;
 			if(!evidence){	// assert absence of the goal target.
 
-				absentee=get_absentee(goal->get_goal()->get_target());
+				absentee=goal->get_goal()->get_target()->get_absentee();
 				success_object=new	Success(goal,absentee,1);
 			}else{
 
@@ -1756,13 +1856,13 @@ namespace	r_exec{
 		for(uint16	i=0;i<out_group_count;++i){	// inject notification in out groups.
 
 			Group	*out_group=(Group	*)get_out_group(i);
-			int32	resilience=_Mem::Get()->get_goal_pred_success_res(out_group,0);
-			View	*view=new	View(true,now,1,resilience,out_group,primary_host,f_success_object);
+			int32	resilience=_Mem::Get()->get_goal_pred_success_res(out_group,now,0);
+			View	*view=new	View(View::SYNC_ONCE,now,1,resilience,out_group,primary_host,f_success_object);
 			_Mem::Get()->inject(view);
 
 			if(absentee){
 
-				view=new	View(true,now,1,1,out_group,primary_host,absentee);
+				view=new	View(View::SYNC_ONCE,now,1,1,out_group,primary_host,absentee);
 				_Mem::Get()->inject(view);
 			}
 		}
@@ -1783,8 +1883,8 @@ namespace	r_exec{
 		Fact	*f_pred=new	Fact(pred,now,now,1,1);
 
 		Group	*primary_host=get_host();
-		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
-		View	*view=new	View(true,now,1,resilience,primary_host,primary_host,f_pred);
+		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,now,0);
+		View	*view=new	View(View::SYNC_ONCE,now,1,resilience,primary_host,primary_host,f_pred);
 	}
 
 	void	PrimaryMDLController::rate_model(bool	success){
@@ -1794,38 +1894,130 @@ namespace	r_exec{
 		reductionCS.enter();	// protects the model's data.
 
 		float32	strength=model->code(MDL_STRENGTH).asFloat();
-		uint32	instance_count=model->code(MDL_CNT).asFloat();
-		uint32	success_count=model->code(MDL_SR).asFloat()*instance_count;
+		float32	instance_count=model->code(MDL_CNT).asFloat();
+		float32	success_count=model->code(MDL_SR).asFloat()*instance_count;
 
+		++instance_count;
 		model->code(MDL_DSR)=model->code(MDL_SR);
-		model->code(MDL_CNT)=Atom::Float(++instance_count);
-
+		
 		float32	success_rate;
-		if(success){
+		if(success){	// leave the model active in the primary group.
 
 			++success_count;
 			success_rate=success_count/instance_count;
 			uint32	instance_count_base=_Mem::Get()->get_mdl_inertia_cnt_thr();
-			if(success_rate>=_Mem::Get()->get_mdl_inertia_sr_thr()	&&	instance_count>=instance_count_base){	// trim the instance count to reduce the rating's inertia.
+			if(success_rate>=_Mem::Get()->get_mdl_inertia_sr_thr()	&&	instance_count>=instance_count_base){	// make the model strong if not already; trim the instance count to reduce the rating's inertia.
 
-				instance_count-=instance_count_base;
-				if(instance_count==0)
-					instance_count=1;
-				success_count=instance_count;
+				instance_count=1/success_rate;
 				success_rate=1;
 				model->code(MDL_STRENGTH)=Atom::Float(1);
 			}
+			
+			model->code(MDL_CNT)=Atom::Float(instance_count);
+			model->code(MDL_SR)=Atom::Float(success_rate);
+			getView()->set_act(success_rate);
 		}else{
 
-			++instance_count;
 			success_rate=success_count/instance_count;
+			if(success_rate>get_host()->get_act_thr()){	// model still good enough to remain in the primary group.
+
+				model->code(MDL_CNT)=Atom::Float(instance_count);
+				model->code(MDL_SR)=Atom::Float(success_rate);
+				getView()->set_act(success_rate);
+			}else	if(strength==1){	// activate out-of-context strong models in the secondary group, deactivate from the primary.
+
+				getView()->set_act(0);
+				secondary->getView()->set_act(success_rate);	// may trigger secondary->gain_activation().
+			}else	// no weak models live in the secondary group.
+				kill_views();
 		}
-
-		model->code(MDL_SR)=Atom::Float(success_rate);
-
-		getView()->set_act(success_rate);
-
+		
 		reductionCS.leave();
+		std::cout<<std::hex<<this<<std::dec<<" cnt:"<<instance_count<<" sr:"<<success_rate<<std::endl;
+	}
+
+	void	PrimaryMDLController::assume(_Fact	*input){
+
+		if(is_requirement()	||	is_reuse()	||	is_cmd())
+			return;
+
+		Code	*model=get_core_object();
+		if(model->code(MDL_STRENGTH).asFloat()==0)	// only strong models compute assumptions.
+			return;
+
+		if(input->get_pred())	// discard predictions.
+			return;
+
+		float32	confidence=get_cfd()*input->get_cfd();	// reading SR is atomic.
+		Code	*host=get_host();
+		if(confidence<=host->code(GRP_SLN_THR).asFloat())	// cfd is too low for any assumption to be injected.
+			return;
+
+		P<BindingMap>	bm=new	BindingMap(bindings);
+		bm->reset_bwd_timings(input);
+		bool	opposite=false;
+		MatchResult	match_result=bm->match_lenient(input,rhs,MATCH_BACKWARD);
+		switch(match_result){
+		case	MATCH_SUCCESS_NEGATIVE:
+			opposite=true;
+		case	MATCH_SUCCESS_POSITIVE:
+			assume_lhs(bm,opposite,input,confidence);
+			break;
+		default:
+			break;
+		}
+	}
+
+	void	PrimaryMDLController::assume_lhs(BindingMap	*bm,bool	opposite,_Fact	*input,float32	confidence){	// produce an assumption and inject in primary; no rdx.
+
+		P<Fact>	f_imdl=get_f_ihlp(bm,false);
+		Fact	*ground;
+		switch(retrieve_imdl_bwd(bm,f_imdl,ground)){
+		case	WR_ENABLED:
+		case	NO_R:
+			if(evaluate_bwd_guards(bm))	// bm may be updated.
+				break;
+			return;
+		default:	// WR_DISABLED, SR_DISABLED_NO_WR or SR_DISABLED_WR.
+			return;
+		}
+		
+		_Fact	*bound_lhs=(_Fact	*)bm->bind_pattern(lhs);	// fact or |fact.
+		bound_lhs->set_cfd(confidence);
+		if(opposite)
+			bound_lhs->set_opposite();
+
+		assumptions.push_back(bound_lhs);
+
+		uint64	now=Now();
+		uint64	before=bound_lhs->get_before();
+		Group	*primary_host=get_host();
+		uint64	time_to_live;
+		if(before>now)
+			time_to_live=before-now;
+		else
+			time_to_live=0;
+		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,now,time_to_live);
+		View	*view=new	View(View::SYNC_ONCE,now,confidence,resilience,primary_host,primary_host,bound_lhs);	// SYNC_ONCE,res=resilience.
+		_Mem::Get()->inject(view);
+	}
+
+	void	PrimaryMDLController::kill_views(){
+
+		remove_requirement_from_rhs();
+		secondary->remove_requirement_from_rhs();
+		invalidate();
+		getView()->force_res(0);
+		secondary->getView()->force_res(0);
+	}
+
+	void	PrimaryMDLController::check_last_match_time(bool	match){
+
+		uint64	now=Now();
+		if(match)
+			last_match_time=now;
+		else	if(now-last_match_time>_Mem::Get()->get_primary_thz())
+			getView()->set_act(0);	// will trigger lose_activation(), which will activate the model in the secondary group.
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1844,6 +2036,9 @@ namespace	r_exec{
 
 	void	SecondaryMDLController::take_input(r_exec::View	*input){
 
+		if(become_invalidated())
+			return;
+
 		if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
 			input->object->code(0).asOpcode()!=Opcodes::AntiFact)	//	discard everything but facts and |facts.
 			return;
@@ -1851,6 +2046,12 @@ namespace	r_exec{
 	}
 
 	void	SecondaryMDLController::reduce(r_exec::View	*input){
+
+		if(_has_tpl_args	&&	get_requirement_count()==0){
+
+			kill_views();
+			return;
+		}
 
 		if(input->object->is_invalidated())
 			return;
@@ -1862,6 +2063,8 @@ namespace	r_exec{
 
 		if(!match)
 			monitor_predictions(input->object);
+		
+		check_last_match_time(match);
 	}
 
 	void	SecondaryMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// predicitons are not injected: they are silently produced for rating purposes.
@@ -1874,10 +2077,9 @@ namespace	r_exec{
 		
 		register_requirement(production,r_p);
 		
-		if(_is_requirement){	// store in the rhs controller, even if primary (to allow rating in any case).
+		if(is_requirement()!=NaR){	// store in the rhs controller, even if primary (to allow rating in any case).
 
-			bool	strong;
-			((MDLController	*)get_rhs_controller(strong))->store_requirement(bound_rhs,chaining_was_allowed,false);
+			((MDLController	*)controllers[RHSController])->store_requirement(bound_rhs,chaining_was_allowed,false);
 			return;
 		}
 
@@ -1895,27 +2097,28 @@ namespace	r_exec{
 			_store_requirement(&requirements.negative_evidences,e);
 	}
 
-	void	SecondaryMDLController::rate_model()	const{	// acknowledge successes only.
+	void	SecondaryMDLController::rate_model(){	// acknowledge successes only; the purpose is to wake strong models up upon a context switch.
 
 		Code	*model=get_core_object();
 		uint32	instance_count=model->code(MDL_CNT).asFloat();
 		uint32	success_count=model->code(MDL_SR).asFloat()*instance_count;
 
-		model->code(MDL_DSR)=Atom::Float(model->code(MDL_SR).asFloat());
-		model->code(MDL_CNT)=Atom::Float(++instance_count);
+		++instance_count;
+		model->code(MDL_DSR)=model->code(MDL_SR);
+		model->code(MDL_CNT)=Atom::Float(instance_count);
 
 		++success_count;
 		float32		success_rate=success_count/instance_count;	// no trimming.
 		model->code(MDL_SR)=Atom::Float(success_rate);
 
-		if(success_rate>primary->getView()->get_host()->get_act_thr())
+		if(success_rate>primary->getView()->get_host()->get_act_thr()){
+
+			getView()->set_act(0);
 			primary->getView()->set_act(success_rate);	// activate the primary controller in its own group g: will be performmed at the nex g->upr.
-		else{											// will trigger primary->gain_activation at the next g->upr.
+		}else{											// will trigger primary->gain_activation() at the next g->upr.
 			
-			if(success_rate>getView()->get_host()->get_act_thr())
+			if(success_rate>getView()->get_host()->get_act_thr())	// else: leave the model in the secondary group.
 				getView()->set_act(success_rate);
-			else	// delete the model.
-				getView()->set_res(0);
 		}
 	}
 
@@ -1934,10 +2137,32 @@ namespace	r_exec{
 			UNORDERED_MAP<P<_Fact>,RequirementsPair,PHash<_Fact>	>::const_iterator	r=active_requirements.find(f_imdl);
 			if(r!=active_requirements.end()){	// some requirements were controlling the prediction: give feedback.
 
-				for(uint32	i=0;i<r->second.first.controllers.size();++i)
-					r->second.first.controllers[i]->register_req_outcome(r->second.first.f_imdl,success,r->second.first.chaining_was_allowed);
+				for(uint32	i=0;i<r->second.first.controllers.size();++i){
+
+					if(!r->second.first.controllers[i]->is_invalidated())
+						r->second.first.controllers[i]->register_req_outcome(r->second.first.f_imdl,success,r->second.first.chaining_was_allowed);
+				}
+				active_requirements.erase(r);
 			}
 			active_requirementsCS.leave();
 		}
+	}
+
+	void	SecondaryMDLController::kill_views(){
+
+		remove_requirement_from_rhs();
+		primary->remove_requirement_from_rhs();
+		invalidate();
+		getView()->force_res(0);
+		primary->getView()->force_res(0);
+	}
+
+	void	SecondaryMDLController::check_last_match_time(bool	match){
+
+		uint64	now=Now();
+		if(match)
+			last_match_time=now;
+		else	if(now-last_match_time>_Mem::Get()->get_secondary_thz())
+			kill_views();
 	}
 }

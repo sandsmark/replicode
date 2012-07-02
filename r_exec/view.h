@@ -65,7 +65,7 @@ namespace	r_exec{
 		float32	initial_sln;
 		float32	initial_act;
 
-		void	init(bool		sync,
+		void	init(SyncMode	sync,
 					 uint64		ijt,
 					 float32	sln,
 					 int32		res,
@@ -78,7 +78,7 @@ namespace	r_exec{
 	public:
 		static	uint16	ViewOpcode;
 
-		P<Controller>	controller;	//	built upon injection of the view (if the object is an ipgm/icpp_pgm/rgrp).
+		P<Controller>	controller;	//	built upon injection of the view (if the object is an ipgm/icpp_pgm/cst/mdl).
 
 		static	float32	MorphValue(float32	value,float32	source_thr,float32	destination_thr);
 		static	float32	MorphChange(float32	change,float32	source_thr,float32	destination_thr);
@@ -92,14 +92,14 @@ namespace	r_exec{
 		View(r_code::SysView	*source,r_code::Code	*object);
 		View(View	*view,Group	*group);	//	copy the view and assigns it to the group (used for cov); morph ctrl values.
 		View(const	View	*view,bool	new_OID=false);	//	simple copy.
-		View(bool		sync,
+		View(SyncMode	sync,
 			 uint64		ijt,
 			 float32	sln,
 			 int32		res,
 			 Code		*host,
 			 Code		*origin,
 			 Code		*object);	//	regular view; res set to -1 means forever.
-		View(bool		sync,
+		View(SyncMode	sync,
 			 uint64		ijt,
 			 float32	sln,
 			 int32		res,
@@ -118,12 +118,12 @@ namespace	r_exec{
 
 		Group	*get_host();
 
-		bool	get_sync();
-		float32	get_res();
-		float32	get_sln();
-		float32	get_act();
-		bool	get_cov();
-		float32	get_vis();
+		SyncMode	get_sync();
+		float32		get_res();
+		float32		get_sln();
+		float32		get_act();
+		bool		get_cov();
+		float32		get_vis();
 
 		void	mod_res(float32	value);
 		void	set_res(float32	value);
@@ -141,6 +141,8 @@ namespace	r_exec{
 
 		float32	update_sln_delta();
 		float32	update_act_delta();
+
+		void	force_res(float32	value);	// unmediated.
 
 		//	Target res, sln, act, vis.
 		void	mod(uint16	member_index,float32	value);

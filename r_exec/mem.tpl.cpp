@@ -40,10 +40,12 @@
 
 namespace	r_exec{
 
-	template<class	O>	Mem<O>::Mem():_Mem(){
+	template<class	O>	Mem<O>::Mem():_Mem(),deleted(false){
 	}
 
 	template<class	O>	Mem<O>::~Mem(){
+
+		deleted=true;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -140,15 +142,29 @@ namespace	r_exec{
 
 	template<class	O>	void	Mem<O>::delete_object(Code	*object){
 
-		if(!IsNotification(object)	&&	object->code(0).getDescriptor()!=Atom::GROUP){
+		if(deleted)
+			return;
 
+		if(!IsNotification(object)	&&	object->code(0).getDescriptor()!=Atom::GROUP){
+/*
 			object_registerCS.enter();
-			object_register.erase(((O	*)object)->position_in_object_register);
-			object_registerCS.leave();
+			UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>::const_iterator	o=object_register.find((O	*)object);
+			if(o!=object_register.end())
+				object_register.erase(o);
+			object_registerCS.leave();*/
 		}
 
+		std::list<P<Code> >::const_iterator	o;
 		objectsCS.enter();
-		objects.erase(object->position_in_objects);
+		for(o=objects.begin();o!=objects.end();++o){
+
+			if((*o)==object){
+
+				object->is_registered=false;
+				objects.erase(o);
+				break;
+			}
+		}
 		objectsCS.leave();
 	}
 
@@ -169,13 +185,10 @@ namespace	r_exec{
 
 		last_oid=objects->size();
 
-		//	load root (always comes first).
+		// load root (always comes first).
 		_root=(Group	*)(*objects)[0];
-		this->objects.push_back(_root);
+		this->objects.push_back((Code	*)_root);
 		initial_groups.push_back(_root);
-
-		typedef	UNORDERED_MAP<Code	*,P<BindingMap> >	Abstraction;
-		UNORDERED_MAP<Code	*,P<BindingMap> >			abstraction_map;
 
 		for(uint32	i=1;i<objects->size();++i){	// skip root as it has no initial views.
 
@@ -189,6 +202,9 @@ namespace	r_exec{
 
 			switch(object->code(0).getDescriptor()){
 			case	Atom::MODEL:
+				unpack_hlp(object);
+				//object->add_reference(NULL);	// classifier.
+				break;
 			case	Atom::COMPOSITE_STATE:
 				unpack_hlp(object);
 				break;
@@ -214,10 +230,10 @@ namespace	r_exec{
 					return	false;
 			}
 
-			object->position_in_objects=this->objects.insert(this->objects.end(),object);
+			this->objects.insert(this->objects.end(),object);
 			object->is_registered=true;
 			if(object->code(0).getDescriptor()!=Atom::GROUP)	// load non-group object in register.
-				((O	*)object)->position_in_object_register=object_register.insert((O	*)object).first;
+				object_register.insert((O	*)object).first;
 			else
 				initial_groups.push_back((Group	*)object);	// convenience to create initial update jobs - see start().
 		}
@@ -227,8 +243,8 @@ namespace	r_exec{
 
 	template<class	O>	void	Mem<O>::init_timings(uint64	now){	// called at the beginning of _Mem::start(); use initial user-supplied facts' times as offsets from now.
 
-		uint64	time_tolerance=_Mem::Get()->get_time_tolerance()*2;
-		std::list<Code	*>::const_iterator	o;
+		uint64	time_tolerance=Utils::GetTimeTolerance()*2;
+		std::list<P<Code> >::const_iterator	o;
 		for(o=objects.begin();o!=objects.end();++o){
 
 			uint16	opcode=(*o)->code(0).asOpcode();
@@ -254,13 +270,10 @@ namespace	r_exec{
 		r_comp::Image	*image=new	r_comp::Image();
 		image->timestamp=Now();
 		
-		std::list<Code	*>	buffer;
-
 		objectsCS.enter();
-		buffer=objects;
+		image->add_objects(objects);
 		objectsCS.leave();
 
-		image->add_objects(buffer);
 		return	image;
 	}
 
@@ -268,7 +281,7 @@ namespace	r_exec{
 
 	template<class	O>	Code	*Mem<O>::check_existence(Code	*object){
 
-		if(object->code(0).getDescriptor()==Atom::GROUP)	// groups are always new.
+	//	if(object->code(0).getDescriptor()==Atom::GROUP)	// groups are always new.
 			return	object;
 
 		O	*_object;
@@ -296,6 +309,9 @@ namespace	r_exec{
 
 	template<class	O>	void	Mem<O>::inject(View	*view){
 
+		if(view->object->is_invalidated())
+			return;
+
 		Group	*host=view->get_host();
 
 		if(host->is_invalidated())
@@ -307,7 +323,7 @@ namespace	r_exec{
 		if(view->object->is_registered){	// existing object.
 
 			if(ijt<=now)
-				inject_existing_object(view,view->object,host,true);
+				inject_existing_object(view,view->object,host);
 			else{
 				
 				P<TimeJob>	j=new	EInjectionJob(view,ijt);
@@ -319,6 +335,37 @@ namespace	r_exec{
 				inject_new_object(view);
 			else{
 				
+				P<TimeJob>	j=new	InjectionJob(view,ijt);
+				time_job_queue->push(j);
+			}
+		}
+	}
+
+	template<class	O>	void	Mem<O>::inject_async(View	*view){
+
+		if(view->object->is_invalidated())
+			return;
+
+		Group	*host=view->get_host();
+
+		if(host->is_invalidated())
+			return;
+
+		uint64	now=Now();
+		uint64	ijt=view->get_ijt();
+
+		if(ijt<=now){
+
+			P<_ReductionJob>	j=new	AsyncInjectionJob(view);
+			reduction_job_queue->push(j);
+		}else{
+		
+			if(view->object->is_registered){	// existing object.
+
+				P<TimeJob>	j=new	EInjectionJob(view,ijt);
+				time_job_queue->push(j);
+			}else{
+
 				P<TimeJob>	j=new	InjectionJob(view,ijt);
 				time_job_queue->push(j);
 			}
@@ -342,17 +389,28 @@ namespace	r_exec{
 			host->leave();
 			break;
 		default:
-			object_registerCS.enter();
-			((O	*)view->object)->position_in_object_register=object_register.insert((O	*)view->object).first;
-			object_registerCS.leave();
+			/*object_registerCS.enter();
+			object_register.insert((O	*)view->object).first;
+			object_registerCS.leave();*/
 
 			bind<O>(view,now);
 
 			host->enter();
-			host->inject(view,now);
+			host->inject_new_object(view,now);
 			host->leave();
 			break;
 		}
+	}
+
+	template<class	O>	void	Mem<O>::inject_hlps(std::list<View	*>	views,uint64	t,Group	*destination){
+
+		std::list<View	*>::const_iterator	view;
+		for(view=views.begin();view!=views.end();++view)
+			bind<O>(*view,t);
+
+		destination->enter();
+		destination->inject_hlps(views);
+		destination->leave();
 	}
 
 	template<class	O>	void	Mem<O>::inject_notification(View	*view,bool	lock){	// no notification for notifications; no registration either (object_register and object_io_map) and no cov.

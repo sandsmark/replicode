@@ -93,6 +93,11 @@ namespace	r_exec{
 		return	NULL;
 	}
 
+	Code	*UnboundValue::get_object(){
+
+		return	NULL;
+	}
+
 	uint16	UnboundValue::get_code_size(){
 
 		return	0;
@@ -123,6 +128,11 @@ namespace	r_exec{
 		return	&atom;
 	}
 
+	Code	*AtomValue::get_object(){
+
+		return	NULL;
+	}
+
 	uint16	AtomValue::get_code_size(){
 
 		return	1;
@@ -135,14 +145,17 @@ namespace	r_exec{
 
 	bool	AtomValue::_intersect(const	AtomValue	*v)	const{
 
-		if(atom==v->atom)
+		return	contains(v->atom);
+	}
+
+	bool	AtomValue::contains(const	Atom	a)	const{	
+		
+		if(atom==a)
 			return	true;
 
-		if(atom.isFloat()	&&	v->atom.isFloat()){
+		if(atom.isFloat()	&&	a.isFloat())
+			return	Utils::Equal(atom.asFloat(),a.asFloat());
 
-			if(abs(atom.asFloat()-v->atom.asFloat())<=_Mem::Get()->get_float_tolerance())
-				return	true;
-		}
 		return	false;
 	}
 
@@ -190,12 +203,19 @@ namespace	r_exec{
 
 	bool	StructureValue::match(const	Code	*object,uint16	index){
 
+		if(object->code(index).getDescriptor()!=Atom::I_PTR)
+			return	false;
 		return	map->match_structure(object,object->code(index).asIndex(),0,structure,0);
 	}
 
 	Atom	*StructureValue::get_code(){
 
 		return	&structure->code(0);
+	}
+
+	Code	*StructureValue::get_object(){
+
+		return	NULL;
 	}
 
 	uint16	StructureValue::get_code_size(){
@@ -210,22 +230,24 @@ namespace	r_exec{
 
 	bool	StructureValue::_intersect(const	StructureValue	*v)	const{
 
-		if(structure->code(0)!=v->structure->code(0))
+		return	contains(&v->structure->code(0));
+	}
+
+	bool	StructureValue::contains(const	Atom	*s)	const{
+
+		if(structure->code(0)!=s[0])
 			return	false;
 		if(structure->code(0).getDescriptor()==Atom::TIMESTAMP)
-			return	abs((int32)(Utils::GetTimestamp(&structure->code(0))-Utils::GetTimestamp(&v->structure->code(0))))<=_Mem::Get()->get_time_tolerance();
+			return	abs((int32)(Utils::GetTimestamp(&structure->code(0))-Utils::GetTimestamp(s)))<=Utils::GetTimeTolerance();
 		for(uint16	i=1;i<structure->code_size();++i){
 
 			Atom	a=structure->code(i);
-			Atom	_a=v->structure->code(i);
+			Atom	_a=s[i];
 			if(a==_a)
 				continue;
 
-			if(a.isFloat()	&&	_a.isFloat()){
-
-				if(abs(a.asFloat()-_a.asFloat())>_Mem::Get()->get_float_tolerance())
-					return	false;
-			}
+			if(a.isFloat()	&&	_a.isFloat())
+				return	Utils::Equal(a.asFloat(),_a.asFloat());
 
 			return	false;
 		}
@@ -259,6 +281,11 @@ namespace	r_exec{
 		return	&object->code(0);
 	}
 
+	Code	*ObjectValue::get_object(){
+
+		return	object;
+	}
+
 	uint16	ObjectValue::get_code_size(){
 
 		return	object->code_size();
@@ -271,7 +298,12 @@ namespace	r_exec{
 
 	bool	ObjectValue::_intersect(const	ObjectValue	*v)	const{
 
-		return	object==v->object;
+		return	contains(v->object);
+	}
+
+	bool	ObjectValue::contains(const	Code	*o)	const{
+		
+		return	object==o;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -331,9 +363,10 @@ namespace	r_exec{
 		if(after_index==-1)
 			first_index=map.size();
 
-		abstract_member(original,fact,FACT_OBJ);
-		abstract_member(original,fact,FACT_AFTER);
-		abstract_member(original,fact,FACT_BEFORE);
+		uint16	extent_index=FACT_ARITY+1;
+		abstract_member(original,FACT_OBJ,fact,FACT_OBJ,extent_index);
+		abstract_member(original,FACT_AFTER,fact,FACT_AFTER,extent_index);
+		abstract_member(original,FACT_BEFORE,fact,FACT_BEFORE,extent_index);
 		fact->code(FACT_CFD)=Atom::Wildcard();
 		fact->code(FACT_ARITY)=Atom::Wildcard();
 
@@ -354,24 +387,34 @@ namespace	r_exec{
 			return	abstract_fact(new	AntiFact(),(_Fact	*)object);
 		else	if(opcode==Opcodes::Cmd){
 
+			uint16	extent_index=CMD_ARITY+1;
 			abstracted_object=_Mem::Get()->build_object(object->code(0));
 			abstracted_object->code(CMD_FUNCTION)=object->code(CMD_FUNCTION);
-			abstract_member(object,abstracted_object,CMD_ARGS);
+			abstract_member(object,CMD_ARGS,abstracted_object,CMD_ARGS,extent_index);
 			abstracted_object->code(CMD_ARITY)=Atom::Wildcard();
 		}else	if(opcode==Opcodes::MkVal){
 
+			uint16	extent_index=MK_VAL_ARITY+1;
 			abstracted_object=_Mem::Get()->build_object(object->code(0));
-			abstract_member(object,abstracted_object,MK_VAL_OBJ);
-			abstracted_object->code(MK_VAL_ATTR)=object->code(MK_VAL_ATTR);
-			abstracted_object->add_reference(object->get_reference(MK_VAL_ATTR_REF));	// attribute is not abstracted.
-			abstract_member(object,abstracted_object,MK_VAL_VALUE);
+			abstract_member(object,MK_VAL_OBJ,abstracted_object,MK_VAL_OBJ,extent_index);
+			abstract_member(object,MK_VAL_ATTR,abstracted_object,MK_VAL_ATTR,extent_index);
+			abstract_member(object,MK_VAL_VALUE,abstracted_object,MK_VAL_VALUE,extent_index);
 			abstracted_object->code(MK_VAL_ARITY)=Atom::Wildcard();
+		}else	if(opcode==Opcodes::IMdl	||	opcode==Opcodes::ICst){
+
+			uint16	extent_index=I_HLP_ARITY+1;
+			abstracted_object=_Mem::Get()->build_object(object->code(0));
+			abstract_member(object,I_HLP_OBJ,abstracted_object,I_HLP_OBJ,extent_index);
+			abstract_member(object,I_HLP_TPL_ARGS,abstracted_object,I_HLP_TPL_ARGS,extent_index);
+			abstract_member(object,I_HLP_ARGS,abstracted_object,I_HLP_ARGS,extent_index);
+			abstracted_object->code(I_HLP_WR_E)=Atom::Wildcard();
+			abstracted_object->code(I_HLP_ARITY)=Atom::Wildcard();
 		}else
 			return	object;
 		return	abstracted_object;
 	}
 
-	void	BindingMap::abstract_member(Code	*object,Code	*abstracted_object,uint16	index){
+	void	BindingMap::abstract_member(Code	*object,uint16	index,Code	*abstracted_object,uint16	write_index,uint16	&extent_index){
 
 		Atom	a=object->code(index);
 		uint16	ai=a.asIndex();
@@ -380,33 +423,59 @@ namespace	r_exec{
 			Code	*reference=object->get_reference(ai);
 			if(reference->code(0).asOpcode()==Opcodes::Ont){	// ontologies resist abstraction.
 
-				abstracted_object->code(index)=a;
+				abstracted_object->code(write_index)=Atom::RPointer(abstracted_object->references_size());
 				abstracted_object->add_reference(reference);
-			}else	if(reference->code(0).asOpcode()==Opcodes::Ent)
-				abstracted_object->code(index)=get_object_variable(reference);
-			else{
+			}else	if(reference->code(0).asOpcode()==Opcodes::Ent)	// entities are always abstracted.
+				abstracted_object->code(write_index)=get_object_variable(reference);
+			else{	// abstract the reference.
 
-				abstracted_object->code(index)=a;
+				abstracted_object->code(write_index)=Atom::RPointer(abstracted_object->references_size());
 				abstracted_object->add_reference(abstract_object(reference));
 			}
 			break;
 		}case	Atom::I_PTR:
 			if(object->code(ai).getDescriptor()==Atom::SET){
 
+				abstracted_object->code(write_index)=Atom::IPointer(extent_index);
+
 				uint16	element_count=object->code(ai).getAtomCount();
-				abstracted_object->code(ai)=Atom::Set(element_count);
+				abstracted_object->code(extent_index)=Atom::Set(element_count);
+				uint16	_write_index=extent_index;
+				extent_index+=element_count+1;
 				for(uint16	i=1;i<=element_count;++i)
-					abstract_member(object,abstracted_object,ai+i);
+					abstract_member(object,ai+i,abstracted_object,_write_index+i,extent_index);
 			}else
-				abstracted_object->code(ai+1)=get_structure_variable(object,ai);
+				abstracted_object->code(write_index)=get_structure_variable(object,ai);
 			break;
 		default:
-			abstracted_object->code(index)=get_atom_variable(a);
+			abstracted_object->code(write_index)=get_atom_variable(a);
+			break;
+		}
+	}
+
+	void	BindingMap::init(Code	*object,uint16	index){
+
+		Atom	a=object->code(index);
+		switch(a.getDescriptor()){
+		case	Atom::R_PTR:
+			get_object_variable(object->get_reference(a.asIndex()));
+			break;
+		case	Atom::I_PTR:
+			get_structure_variable(object,a.asIndex());
+			break;
+		default:
+			get_atom_variable(a);
 			break;
 		}
 	}
 
 	Atom	BindingMap::get_atom_variable(Atom	a){
+
+		for(uint32	i=0;i<map.size();++i){
+
+			if(map[i]->contains(a))
+				return	Atom::VLPointer(i);
+		}
 
 		uint32	size=map.size();
 		map.push_back(new	AtomValue(this,a));
@@ -415,12 +484,24 @@ namespace	r_exec{
 
 	Atom	BindingMap::get_structure_variable(Code	*object,uint16	index){
 
+		for(uint32	i=0;i<map.size();++i){
+
+			if(map[i]->contains(&object->code(index)))
+				return	Atom::VLPointer(i);
+		}
+
 		uint32	size=map.size();
 		map.push_back(new	StructureValue(this,object,index));
 		return	Atom::VLPointer(size);
 	}
 
 	Atom	BindingMap::get_object_variable(Code	*object){
+
+		for(uint32	i=0;i<map.size();++i){
+
+			if(map[i]->contains(object))
+				return	Atom::VLPointer(i);
+		}
 
 		uint32	size=map.size();
 		map.push_back(new	ObjectValue(this,object));
@@ -682,11 +763,9 @@ namespace	r_exec{
 		if(p_atom==o_atom)
 			return	true;
 
-		if(p_atom.isFloat()	&&	o_atom.isFloat()){
+		if(p_atom.isFloat()	&&	o_atom.isFloat())
+			return	Utils::Equal(o_atom.asFloat(),p_atom.asFloat());
 
-			if(abs(o_atom.asFloat()-p_atom.asFloat())<=_Mem::Get()->get_float_tolerance())
-				return	true;
-		}
 		return	false;
 	}
 
@@ -701,7 +780,7 @@ namespace	r_exec{
 		if(arity==0)	// empty sets.
 			return	true;
 		if(o_atom.getDescriptor()==Atom::TIMESTAMP)
-			return	abs((int32)(Utils::GetTimestamp(&object->code(o_full_index))-Utils::GetTimestamp(&pattern->code(p_index))))<=_Mem::Get()->get_time_tolerance();
+			return	abs((int32)(Utils::GetTimestamp(&object->code(o_full_index))-Utils::GetTimestamp(&pattern->code(p_index))))<=Utils::GetTimeTolerance();
 		return	match(object,o_base_index,o_index+1,pattern,p_index+1,arity);
 	}
 

@@ -162,6 +162,25 @@ namespace	r_exec{
 		return	(code(0).asOpcode()==Opcodes::AntiFact);
 	}
 
+	inline	void	_Fact::set_opposite()	const{
+
+		if(is_fact())
+			code(0)=Atom::Object(Opcodes::AntiFact,FACT_ARITY);
+		else
+			code(0)=Atom::Object(Opcodes::Fact,FACT_ARITY);
+	}
+
+	_Fact	*_Fact::get_absentee()	const{
+
+		_Fact	*absentee;
+		if(is_fact())
+			absentee=new	AntiFact(get_reference(0),get_after(),get_before(),1,1);
+		else
+			absentee=new	Fact(get_reference(0),get_after(),get_before(),1,1);
+
+		return	absentee;
+	}
+
 	bool	_Fact::is_invalidated(){
 
 		if(LObject::is_invalidated())
@@ -174,17 +193,26 @@ namespace	r_exec{
 		return	false;
 	}
 
-	bool	_Fact::match_timings_overlap(const	_Fact	*evidence)	const{
+	bool	_Fact::match_timings_sync(const	_Fact	*evidence)	const{	// intervals of the form [after,before[.
+
+		uint64	after=get_after();
+		uint64	e_after=evidence->get_after();
+		uint64	e_before=evidence->get_before();
+
+		return	!(e_after>after+Utils::GetTimeTolerance()	||	e_before<=after);
+	}
+
+	bool	_Fact::match_timings_overlap(const	_Fact	*evidence)	const{	// intervals of the form [after,before[.
 
 		uint64	after=get_after();
 		uint64	before=get_before();
 		uint64	e_after=evidence->get_after();
 		uint64	e_before=evidence->get_before();
 
-		return	!(e_after>before	||	e_before<after);
+		return	!(e_after>=before	||	e_before<=after);
 	}
 
-	bool	_Fact::match_timings_inclusive(const	_Fact	*evidence)	const{
+	bool	_Fact::match_timings_inclusive(const	_Fact	*evidence)	const{	// intervals of the form [after,before[.
 
 		uint64	after=get_after();
 		uint64	before=get_before();
@@ -253,11 +281,9 @@ namespace	r_exec{
 		if(lhs==rhs)
 			return	true;
 
-		if(lhs.isFloat()	&&	rhs.isFloat()){
-
-			if(abs(lhs.asFloat()-rhs.asFloat())<=_Mem::Get()->get_float_tolerance())
-				return	true;
-		}
+		if(lhs.isFloat()	&&	rhs.isFloat())
+			return	Utils::Equal(lhs.asFloat(),rhs.asFloat());
+			
 		return	false;
 	}
 
@@ -272,7 +298,7 @@ namespace	r_exec{
 		if(arity==0)	// empty sets.
 			return	true;
 		if(lhs_atom.getDescriptor()==Atom::TIMESTAMP)
-			return	abs((int32)(Utils::GetTimestamp(&lhs->code(lhs_full_index))-Utils::GetTimestamp(&rhs->code(rhs_index))))<=_Mem::Get()->get_time_tolerance();
+			return	abs((int32)(Utils::GetTimestamp(&lhs->code(lhs_full_index))-Utils::GetTimestamp(&rhs->code(rhs_index))))<=Utils::GetTimeTolerance();
 		return	Match(lhs,lhs_base_index,lhs_index+1,rhs,rhs_index+1,arity);
 	}
 
@@ -300,23 +326,34 @@ namespace	r_exec{
 			return	false;
 		if(opcode==Opcodes::MkVal){
 
-			if(	lhs->get_reference(MK_VAL_OBJ_REF)==rhs->get_reference(MK_VAL_OBJ_REF)	&&
-				lhs->get_reference(MK_VAL_ATTR_REF)==rhs->get_reference(MK_VAL_ATTR_REF)){	// same attribute for the same object; value: r_ptr, atomic value or structure.
+			if(	lhs->get_reference(lhs->code(MK_VAL_OBJ).asIndex())==rhs->get_reference(rhs->code(MK_VAL_OBJ).asIndex())	&&
+				lhs->get_reference(lhs->code(MK_VAL_ATTR).asIndex())==rhs->get_reference(rhs->code(MK_VAL_ATTR).asIndex())){	// same attribute for the same object; value: r_ptr, atomic value or structure.
 				
-				Atom	atom=lhs->code(MK_VAL_VALUE);
-				uint16	desc=atom.getDescriptor();
-				if(desc!=rhs->code(MK_VAL_VALUE).getDescriptor())	// values of different types.
+				Atom	lhs_atom=lhs->code(MK_VAL_VALUE);
+				Atom	rhs_atom=rhs->code(MK_VAL_VALUE);
+
+				if(lhs_atom.isFloat()){
+
+					if(rhs_atom.isFloat())
+						return	!MatchAtom(lhs_atom,rhs_atom);
+					else
+						return	false;
+				}else	if(rhs_atom.isFloat())
+						return	false;
+
+				uint16	lhs_desc=lhs_atom.getDescriptor();
+				if(lhs_desc!=rhs_atom.getDescriptor())	// values of different types.
 					return	false;
-				switch(desc){
+				switch(lhs_desc){
 				case	Atom::T_WILDCARD:
 				case	Atom::WILDCARD:
 					return	false;
 				case	Atom::R_PTR:
-					return	!MatchObject(lhs->get_reference(MK_VAL_VALUE_REF),rhs->get_reference(MK_VAL_VALUE_REF));
+					return	!MatchObject(lhs->get_reference(lhs->code(MK_VAL_VALUE).asIndex()),rhs->get_reference(rhs->code(MK_VAL_VALUE).asIndex()));
 				case	Atom::I_PTR:
-					return	!MatchStructure(lhs,MK_VAL_VALUE,atom.asIndex(),rhs,rhs->code(MK_VAL_VALUE).asIndex());
+					return	!MatchStructure(lhs,MK_VAL_VALUE,lhs_atom.asIndex(),rhs,rhs_atom.asIndex());
 				default:
-					return	!MatchAtom(atom,rhs->code(MK_VAL_VALUE));
+					return	!MatchAtom(lhs_atom,rhs_atom);
 				}
 			}
 		}else	if(opcode==Opcodes::ICst){
@@ -346,13 +383,32 @@ namespace	r_exec{
 
 			if(target->match_timings_overlap(this))
 				return	r;
-		}else	if(target->code(0)==code(0)){	// check for a counter-evidence only if bothe lhs and rhs are of the same kind of fact.
+		}else	if(target->code(0)==code(0)){	// check for a counter-evidence only if both the lhs and rhs are of the same kind of fact.
 				
-			if(target->match_timings_inclusive(this)){	// check timings first as this is less expensive that the counter-evidence check.
+			if(target->match_timings_inclusive(this)){	// check timings first as this is less expensive than the counter-evidence check.
 			
 				if(CounterEvidence(get_reference(0),target->get_reference(0)))
 					return	MATCH_SUCCESS_NEGATIVE;
 			}
+		}
+		return	MATCH_FAILURE;
+	}
+
+	MatchResult	_Fact::is_timeless_evidence(const	_Fact *target) const{
+
+		if(MatchObject(get_reference(0),target->get_reference(0))){
+
+			MatchResult	r;
+			if(target->code(0)==code(0))
+				r=MATCH_SUCCESS_POSITIVE;
+			else
+				r=MATCH_SUCCESS_NEGATIVE;
+
+			return	r;
+		}else	if(target->code(0)==code(0)){	// check for a counter-evidence only if both the lhs and rhs are of the same kind of fact.
+				
+			if(CounterEvidence(get_reference(0),target->get_reference(0)))
+				return	MATCH_SUCCESS_NEGATIVE;
 		}
 		return	MATCH_FAILURE;
 	}
@@ -393,9 +449,21 @@ namespace	r_exec{
 		return	Utils::GetTimestamp<Code>(this,FACT_BEFORE);
 	}
 
+	void	_Fact::trace()	const{
+
+		std::cout<<"<"<<get_oid()<<" "<<Time::ToString_seconds(get_after()-Utils::GetTimeReference())<<" "<<Time::ToString_seconds(get_before()-Utils::GetTimeReference())<<">"<<std::endl;
+	}
+
 	////////////////////////////////////////////////////////////////
 
+	void	*Fact::operator	new(size_t	s){
+
+		return	_Mem::Get()->_build_object(Atom::Object(Opcodes::Fact,FACT_ARITY));
+	}
+
 	Fact::Fact():_Fact(){
+
+		code(0)=Atom::Object(Opcodes::Fact,FACT_ARITY);
 	}
 
 	Fact::Fact(SysObject	*source):_Fact(source){
@@ -415,6 +483,8 @@ namespace	r_exec{
 	}
 
 	AntiFact::AntiFact():_Fact(){
+
+		code(0)=Atom::Object(Opcodes::AntiFact,FACT_ARITY);
 	}
 
 	AntiFact::AntiFact(SysObject	*source):_Fact(source){
@@ -573,7 +643,7 @@ namespace	r_exec{
 
 	inline	Code	*Goal::get_actor()	const{
 
-		return	get_reference(GOAL_ACTR_REF);
+		return	get_reference(code(GOAL_ACTR).asIndex());
 	}
 
 	inline	float32	Goal::get_strength(uint64	now)	const{
@@ -674,5 +744,20 @@ namespace	r_exec{
 	}
 
 	ICST::ICST(SysObject	*source):LObject(source){
+	}
+
+	bool	ICST::is_invalidated(){
+
+		if(LObject::is_invalidated())
+			return	true;
+		for(uint32	i=0;i<components.size();++i){
+
+			if(components[i]->is_invalidated()){
+
+				invalidate();
+				return	true;
+			}
+		}
+		return	false;
 	}
 }

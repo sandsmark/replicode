@@ -57,8 +57,64 @@ namespace	r_exec{
 	bool	r_exec_dll	Compile(const	char	*filename,std::string	&error);
 	bool	r_exec_dll	Compile(std::istream	&source_code,std::string	&error);
 	
-	//	Initialize Now, compile user.classes.replicode and builds the Seed and loads the user-defined operators.
-	//	Return false in case of a problem (e.g. file not found).
+	//	Threaded decompiler, for decompiling on the fly asynchronously.
+	//	Named objects are referenced but not decompiled.
+	class	r_exec_dll	TDecompiler:
+	public	_Object{
+	private:
+		static	thread_ret thread_function_call	Decompile(void	*args);
+
+		class	_Thread:
+		public	Thread{
+		};
+
+					_Thread	*_thread;
+		volatile	uint32	spawned;
+
+		std::list<P<Code> >	objects;
+
+		uint32	ostream_id;	// 0 is std::cout.
+
+		std::string	header;
+	public:
+		TDecompiler(uint32	ostream_id,std::string	header);
+		~TDecompiler();
+
+		void	add_object(Code	*object);
+		void	add_objects(std::list<P<Code> >	&objects);
+		void	decompile();
+	};
+
+	// Spawns an instance of output_window.exe (see output_window project) and opens a pipe between the main process and output_window.
+	// Temporary solution:
+	// (a) not portable,
+	// (b) shall be defined in CoreLibrary instead of here,
+	// (c) the stream pool management (PipeOStream::Open(), PipeOStream::Close() and PipeOStream::Get()) shall be decoupled from this implementation (it's an IDE feature),
+	// (d) PipeOStream shall be based on std::ostringstream instead of std::ostream with a refined std::stringbuf (override sync() to write in the pipe).
+	class	r_exec_dll	PipeOStream:
+	public	std::ostream{
+	private:
+		static	std::vector<PipeOStream	*>	Streams;
+		static	PipeOStream					NullStream;
+
+		HANDLE	pipe_read;
+		HANDLE	pipe_write;
+
+		void	init();	// create one child process and a pipe.
+		PipeOStream();
+	public:
+		static	void	Open(uint8	count);		// open count streams.
+		static	void	Close();				// close all streams.
+		static	PipeOStream	&Get(uint8	id);	// return NullStream if id is out of range.
+
+		~PipeOStream();
+
+		PipeOStream	&operator	<<(std::string	&s);
+		PipeOStream	&operator	<<(const	char	*s);
+	};
+
+	//	Initialize Now, compile user.classes.replicode, builds the Seed and loads the user-defined operators.
+	//	Return false in case of a problem (e.g. file not found, operator not found, etc.).
 	bool	r_exec_dll	Init(const	char	*user_operator_library_path,
 							uint64			(*time_base)(),
 							const	char	*seed_path);

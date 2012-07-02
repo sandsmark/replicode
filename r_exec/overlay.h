@@ -72,9 +72,9 @@ namespace	r_exec{
 
 		uint64	get_tsc(){	return	tsc;	}
 
-		void	invalidate()			{	invalidated=1;	}
+		virtual	void	invalidate()	{	invalidated=1;	}
 		bool	is_invalidated()		{	return	invalidated==1;	};
-		void	activate(bool	a)		{	activated=1;	}
+		void	activate(bool	a)		{	activated=(a?1:0);	}
 		bool	is_activated()	const	{	return	activated==1;	}
 		bool	is_alive()	const		{	return	invalidated==0	&&	activated==1;	}
 
@@ -87,6 +87,8 @@ namespace	r_exec{
 
 		virtual	void	gain_activation(){	activate(true);	 }
 		virtual	void	lose_activation(){	activate(false); }
+
+		void	set_view(View	*view);
 	};
 
 	class	_Context;
@@ -132,8 +134,8 @@ namespace	r_exec{
 		virtual	void	reset();							// reset to original state.
 		virtual	Overlay	*reduce(r_exec::View	*input);	// returns an offspring in case of a match.
 
-		void	invalidate()		{	invalidated=1;	}
-		bool	is_invalidated()	{	return	invalidated==1;	}
+				void	invalidate()		{	invalidated=1;	}
+		virtual	bool	is_invalidated()	{	return	invalidated==1;	}
 
 		r_code::Code	*getObject()	const	{	return	((Controller	*)controller)->getObject();	}
 		r_exec::View	*getView()		const	{	return	((Controller	*)controller)->getView();	}

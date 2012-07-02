@@ -46,8 +46,9 @@ namespace	r_exec{
 
 		bindings->reset_fwd_timings(prediction_target);
 
-		MonitoringJob<PMonitor>	*j=new	MonitoringJob<PMonitor>(this,prediction_target->get_before());
+		MonitoringJob<PMonitor>	*j=new	MonitoringJob<PMonitor>(this,prediction_target->get_before()+Utils::GetTimeTolerance());
 		_Mem::Get()->pushTimeJob(j);
+		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<prediction_target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" created\n";
 	}
 
 	PMonitor::~PMonitor(){
@@ -55,8 +56,8 @@ namespace	r_exec{
 
 	bool	PMonitor::reduce(_Fact	*input){	// input is always an actual fact.
 
-		if(target->is_invalidated())
-			return	true;
+		if(target->is_invalidated()){std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target has been invalidated\n";
+		return	true;}
 
 		if(target->get_pred()->grounds_invalidated(input)){	// input is a counter-evidence for one of the antecedents: abort.
 
@@ -84,13 +85,16 @@ namespace	r_exec{
 			//uint32	oid=input->get_oid();
 			switch(((Fact	*)input)->is_evidence(prediction_target)){
 			case	MATCH_SUCCESS_POSITIVE:
+				//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<prediction_target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" positive\n";
 				controller->register_pred_outcome(target,true,input,input->get_cfd(),rate_failures);
 				return	true;
 			case	MATCH_SUCCESS_NEGATIVE:
+				//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<prediction_target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" negative\n";
 				if(rate_failures)
 					controller->register_pred_outcome(target,false,input,input->get_cfd(),rate_failures);
 				return	true;
 			case	MATCH_FAILURE:
+				//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<prediction_target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" failure\n";
 				return	false;
 			}
 		}

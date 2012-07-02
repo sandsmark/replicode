@@ -97,7 +97,12 @@ namespace	r_exec{
 		void	_set_0_plus1(uint16	member_index,float32	value);
 		void	_set_minus1_plus1(uint16	member_index,float32	value);
 		void	_set_0_1(uint16	member_index,float32	value);
-	protected:
+
+		bool	is_active_pgm(View	*view);
+		bool	is_eligible_input(View	*view);
+
+		void	inject(View	*view,uint64	t);
+
 		void	notifyNew(View	*view);
 		void	cov(View	*view,uint64	t);
 	public:
@@ -351,13 +356,15 @@ namespace	r_exec{
 		void	set(uint16	member_index,float32	value);
 
 		//	These functions are called by the rMem.
-				void	reset_stats();	//	called at the begining of an update.
-				void	update_stats();	//	at the end of an update; may produce notifcations.
-				bool	load(View	*view,Code	*object);
-		virtual	void	inject(View	*view,uint64	t);
-		virtual	void	inject_group(View	*view,uint64	t);
-				void	inject_notification(View	*view);
-				void	cov(uint64	t);
+		void	reset_stats();	//	called at the begining of an update.
+		void	update_stats();	//	at the end of an update; may produce notifcations.
+		bool	load(View	*view,Code	*object);
+		void	inject_new_object(View	*view,uint64	t);
+		void	inject_existing_object(View	*view,uint64	t);
+		void	inject_group(View	*view,uint64	t);
+		void	inject_notification(View	*view);
+		void	inject_hlps(std::list<View	*>	&views);
+		void	cov(uint64	t);
 
 		class	Hash{
 		public:
@@ -374,12 +381,14 @@ namespace	r_exec{
 		};
 
 		void	delete_view(View	*v);
+		void	delete_view(UNORDERED_MAP<uint32,P<View> >::const_iterator	&v);
 
 		Group	*get_secondary_group();
 		void	load_secondary_mdl_controller(View	*view);
 		void	inject_secondary_mdl_controller(View	*view);
 
-		uint64	get_time_at_next_upr(uint64	now)	const;
+		uint64	get_next_upr_time(uint64	now)	const;
+		uint64	get_prev_upr_time(uint64	now)	const;
 	};
 }
 

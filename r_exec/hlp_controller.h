@@ -105,22 +105,29 @@ namespace	r_exec{
 
 		bool	evaluate_bwd_guards(BindingMap	*bm);
 
-		void	set_opposite(_Fact	*fact)	const;
-
-		_Fact	*get_absentee(_Fact	*fact)	const;
-
 		MatchResult	check_evidences(_Fact	*target,_Fact	*&evidence);			// evidence with the match (positive or negative), get_absentee(target) otherwise.
 		MatchResult	check_predicted_evidences(_Fact	*target,_Fact	*&evidence);	// evidence with the match (positive or negative), NULL otherwise.
+
+		bool	_has_tpl_args;
+		uint32	ref_count;	// used to detect _Object::refCount dropping down to 1 for hlp with tpl args.
+
+		std::vector<P<HLPController> >	controllers;			// all controllers for models/states instantiated in the patterns; case of models: [0]==lhs, [1]==rhs.
+		uint64							last_match_time;		// last time a match occurred (fwd), regardless of its outcome.
+		bool							become_invalidated();	// true if one controller is invalidated or if all controllers pointing to this are invalidated.
+		virtual	void	kill_views(){}
+		virtual	void	check_last_match_time(bool	match)=0;
 
 		HLPController(r_code::View	*view);
 	public:
 		virtual	~HLPController();
 
+		void	invalidate();
+
 		Code	*get_core_object()	const{	return	getObject();	}	// cst or mdl.
 		Code	*get_unpacked_object()	const{	// the unpacked version of the core object.
 			
 			Code	*core_object=get_core_object();
-			return	core_object->get_reference(core_object->references_size()-1);
+			return	core_object->get_reference(core_object->references_size()-MDL_HIDDEN_REFS);
 		}
 
 		void	add_requirement(bool	strong);
@@ -137,8 +144,8 @@ namespace	r_exec{
 		uint16	get_out_group_count()	const;
 		Code	*get_out_group(uint16	i)	const;	// i starts at 1.
 		Group	*get_host()	const;
+		bool	has_tpl_args()	const{	return	_has_tpl_args;	}
 
-		bool	inject_prediction(Fact	*prediction,Fact	*f_ihlp,float32	confidence,uint64	time_to_live,Code	*mk_rdx)	const;	// here, resilience=time to live, in us; returns true if the prediction has actually been injected.
 		void	inject_prediction(Fact	*prediction,float32	confidence)	const;	// for simulated predictions.
 	};
 }

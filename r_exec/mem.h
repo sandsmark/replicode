@@ -81,6 +81,8 @@ namespace	r_exec{
 		uint32	perf_sampling_period;
 		float32	float_tolerance;
 		uint32	time_tolerance;
+		uint64	primary_thz;
+		uint64	secondary_thz;
 
 		// Parameters::Debug.
 		bool	debug;
@@ -148,7 +150,6 @@ namespace	r_exec{
 		std::vector<Group	*>	initial_groups;	// convenience; cleared after start();
 
 		uint32	last_oid;
-		uint64	starting_time;
 
 		virtual	void	init_timings(uint64	now)=0;
 
@@ -178,16 +179,14 @@ namespace	r_exec{
 					uint32	perf_sampling_period,
 					float32	float_tolerance,
 					uint32	time_tolerance,
+					uint32	primary_thz,
+					uint32	secondary_thz,
 					bool	debug,
 					uint32	ntf_mk_res,
 					uint32	goal_pred_success_res,
 					uint32	probe_level);
 
-		uint64	get_base_period()						const{	return	base_period;	}
 		uint64	get_probe_level()						const{	return	probe_level;	}
-		uint64	get_starting_time()						const{	return	starting_time;	}
-		float32	get_float_tolerance()					const{	return	float_tolerance;	}
-		uint32	get_time_tolerance()					const{	return	time_tolerance;	}
 		float32	get_mdl_inertia_sr_thr()				const{	return	mdl_inertia_sr_thr;	}
 		uint32	get_mdl_inertia_cnt_thr()				const{	return	mdl_inertia_cnt_thr;	}
 		float32	get_tpx_dsr_thr()						const{	return	tpx_dsr_thr;	}
@@ -195,16 +194,18 @@ namespace	r_exec{
 		uint32	get_max_sim_time_horizon()				const{	return	max_sim_time_horizon;	}
 		uint64	get_sim_time_horizon(uint64	horizon)	const{	return	horizon*sim_time_horizon;	}
 		uint32	get_tpx_time_horizon()					const{	return	tpx_time_horizon;	}
+		uint64	get_primary_thz()						const{	return	primary_thz;	}
+		uint64	get_secondary_thz()						const{	return	secondary_thz;	}
 		
 		bool	get_debug()								const{	return	debug;	}
 		uint32	get_ntf_mk_res()						const{	return	debug?ntf_mk_res:1;	}
-		uint32	get_goal_pred_success_res(Group	*host,uint64	time_to_live)	const{
+		uint32	get_goal_pred_success_res(Group	*host,uint64	now,uint64	time_to_live)	const{
 			
 			if(debug)
 				return	goal_pred_success_res;
 			if(time_to_live=0)
 				return	1;
-			return	Utils::GetResilience(time_to_live,host->get_upr());	
+			return	Utils::GetResilience(now,time_to_live,host->get_upr());	
 		}
 
 		Code	*get_root()		const;
@@ -247,7 +248,8 @@ namespace	r_exec{
 
 		// Called upon successful reduction.
 		virtual	void	inject_new_object(View	*view)=0;
-				void	inject_existing_object(View	*view,Code	*object,Group	*host,bool	lock);
+				void	inject_existing_object(View	*view,Code	*object,Group	*host);
+				void	inject_null_program(Controller	*c,Group *group,uint64	time_to_live,bool	take_past_inputs);	// build a view v (ijt=now, act=1, sln=0, res according to time_to_live in the group), attach c to v, inject v in the group.
 
 		// Called as a result of a group update (sln change).
 		// Calls mod_sln on the object's view with morphed sln changes.
@@ -264,6 +266,8 @@ namespace	r_exec{
 
 		// Interface for overlays and I/O devices ////////////////////////////////////////////////////////////////
 		virtual	void	inject(View	*view)=0;
+		virtual	void	inject_async(View	*view)=0;
+		virtual	void	inject_hlps(std::list<View	*>	views,uint64	t,Group	*destination)=0;
 		virtual	Code	*check_existence(Code	*object)=0;	// returns the existing object if any, or object otherwise: in the latter case, packing may occur.
 
 		// rMem to rMem.
@@ -288,7 +292,7 @@ namespace	r_exec{
 		void	pack_fact(Code	*fact,Code	*hlp,uint16	&write_index,std::vector<P<Code>	>	*references)	const;
 		void	pack_fact_object(Code	*fact_object,Code	*hlp,uint16	&write_index,std::vector<P<Code>	>	*references)	const;
 
-		Code	*clone(Code	*original)	const;	// deep cloning.
+		Code	*clone(Code	*original)	const;	// shallow copy.
 	};
 
 	// O is the class of the objects held by the rMem (except groups and notifications):
@@ -301,7 +305,8 @@ namespace	r_exec{
 	template<class	O>	class	Mem:
 	public	_Mem{
 	protected:
-		std::list<Code	*>											objects;			// to insert in an image (getImage()); in order of injection.
+		bool														deleted;
+		std::list<P<Code> >											objects;			// to insert in an image (getImage()); in order of injection.
 		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>	object_register;	// to eliminate duplicates (content-wise); does not include groups.
 
 		template<class	_O>	void	bind(View	*view,uint64	t){
@@ -310,10 +315,12 @@ namespace	r_exec{
 			_O	*object=(_O	*)view->object;
 			object->views.insert(view);
 			object->bind(this);
+			if(object->code(0).getDescriptor()==Atom::NULL_PROGRAM)
+				return;
 			objectsCS.enter();
-			object->position_in_objects=objects.insert(objects.end(),object);
-			objectsCS.leave();
 			object->is_registered=true;
+			objects.insert(objects.end(),object);
+			objectsCS.leave();
 		}
 
 		void	init_timings(uint64	now);
@@ -346,6 +353,8 @@ namespace	r_exec{
 		
 		// Called by the reduction core.
 		void	inject(View	*view);
+		void	inject_async(View	*view);
+		void	inject_hlps(std::list<View	*>	views,uint64	t,Group	*destination);
 		Code	*check_existence(Code	*object);
 
 		// Called by the communication device (I/O).

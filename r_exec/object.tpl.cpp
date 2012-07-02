@@ -59,7 +59,14 @@ namespace	r_exec{
 		if(invalidated)
 			return	true;
 		invalidated=1;
-
+/*
+		std::list<Code	*>::const_iterator	m;
+		acq_markers();
+		for(m=markers.begin();m!=markers.end();++m)
+			(*m)->invalidate();
+		markers.clear();
+		rel_markers();
+*/
 		if(is_registered){
 
 			if(code(0).getDescriptor()==Atom::MARKER){
@@ -114,7 +121,7 @@ namespace	r_exec{
 		psln_thr_sem.leave();
 	}
 
-	template<class	C,class	U>	View	*Object<C,U>::find_view(Code	*group,bool	lock){
+	template<class	C,class	U>	View	*Object<C,U>::get_view(Code	*group,bool	lock){
 
 		if(lock)
 			acq_views();
@@ -127,22 +134,11 @@ namespace	r_exec{
 
 			if(lock)
 				rel_views();
-			return	new	View((r_exec::View	*)*v);
+			return	(r_exec::View	*)*v;
 		}
 
 		if(lock)
 			rel_views();
 		return	NULL;
-	}
-
-	template<class	C,class	U>	void	Object<C,U>::kill(){
-
-		acq_views();
-		UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v;
-		for(v=views.begin();v!=views.end();++v)
-			((r_exec::View	*)*v)->delete_from_group();
-		views.clear();
-		rel_views();
-		invalidate();
 	}
 }

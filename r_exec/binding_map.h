@@ -52,12 +52,17 @@ namespace	r_exec{
 		virtual	void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const=0;
 		virtual	bool	match(const	Code	*object,uint16	index)=0;
 		virtual	Atom	*get_code()=0;
+		virtual	Code	*get_object()=0;
 		virtual	uint16	get_code_size()=0;
 
-		virtual	bool	intersect(const	Value	*v)				const{	return	false;	};
-		virtual	bool	_intersect(const	AtomValue	*v)		const{	return	false;	};
-		virtual	bool	_intersect(const	StructureValue	*v)	const{	return	false;	};
-		virtual	bool	_intersect(const	ObjectValue	*v)		const{	return	false;	};
+		virtual	bool	intersect(const	Value	*v)				const{	return	false;	}
+		virtual	bool	_intersect(const	AtomValue	*v)		const{	return	false;	}
+		virtual	bool	_intersect(const	StructureValue	*v)	const{	return	false;	}
+		virtual	bool	_intersect(const	ObjectValue	*v)		const{	return	false;	}
+
+		virtual	bool	contains(const	Atom	a)	const{	return	false;	}
+		virtual	bool	contains(const	Atom	*s)	const{	return	false;	}
+		virtual	bool	contains(const	Code	*o)	const{	return	false;	}
 
 		void	trace();
 	};
@@ -80,6 +85,7 @@ namespace	r_exec{
 		void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const;
 		bool	match(const	Code	*object,uint16	index);
 		Atom	*get_code();
+		Code	*get_object();
 		uint16	get_code_size();
 	};
 
@@ -94,10 +100,13 @@ namespace	r_exec{
 		void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const;
 		bool	match(const	Code	*object,uint16	index);
 		Atom	*get_code();
+		Code	*get_object();
 		uint16	get_code_size();
 
 		bool	intersect(const	Value	*v)			const;
 		bool	_intersect(const	AtomValue	*v)	const;
+
+		bool	contains(const	Atom	a)	const;
 	};
 
 	class	r_exec_dll	StructureValue:
@@ -114,10 +123,13 @@ namespace	r_exec{
 		void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const;
 		bool	match(const	Code	*object,uint16	index);
 		Atom	*get_code();
+		Code	*get_object();
 		uint16	get_code_size();
 
 		bool	intersect(const	Value	*v)				const;
 		bool	_intersect(const	StructureValue	*v)	const;
+
+		bool	contains(const	Atom	*s)	const;
 	};
 
 	class	r_exec_dll	ObjectValue:
@@ -131,10 +143,13 @@ namespace	r_exec{
 		void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const;
 		bool	match(const	Code	*object,uint16	index);
 		Atom	*get_code();
+		Code	*get_object();
 		uint16	get_code_size();
 
 		bool	intersect(const	Value	*v)			const;
 		bool	_intersect(const	ObjectValue	*v)	const;
+
+		bool	contains(const	Code	*o)	const;
 	};
 
 	typedef	enum{
@@ -166,15 +181,15 @@ namespace	r_exec{
 		bool	match_timings(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d);
 		bool	match(const	Code	*object,uint16	o_base_index,uint16	o_index,const	Code	*pattern,uint16	p_index,uint16	o_arity);
 
-		Code	*abstract_object(Code	*object);
-		_Fact	*abstract_fact(_Fact	*fact,_Fact	*original);
-		void	abstract_member(Code	*object,Code	*abstracted_object,uint16	index);
+		void	abstract_member(Code	*object,uint16	index,Code	*abstracted_object,uint16	write_index,uint16	&extent_index);
 		Atom	get_atom_variable(Atom	a);
 		Atom	get_structure_variable(Code	*object,uint16	index);
 		Atom	get_object_variable(Code	*object);
 	public:
 		static	Code	*Abstract(Code	*object,BindingMap	*&bindings);
 				_Fact	*abstract_f_ihlp(_Fact	*fact)	const;	// for icst and imdl.
+				_Fact	*abstract_fact(_Fact	*fact,_Fact	*original);
+				Code	*abstract_object(Code	*object);
 
 		BindingMap();
 		BindingMap(const	BindingMap	*source);
@@ -185,6 +200,7 @@ namespace	r_exec{
 
 		void	clear();
 
+		void	init(Code	*object,uint16	index);
 		void	init_from_hlp(const	Code	*hlp);	// hlp is icst or imdl.
 		void	init_from_f_ihlp(const	_Fact	*f_ihlp);
 		Fact	*build_f_ihlp(Code	*hlp,uint16	opcode,bool	wr_enabled)	const;	// return f->ihlp.
@@ -211,8 +227,10 @@ namespace	r_exec{
 		uint64	get_bwd_after()		const;	// idem.
 		uint64	get_bwd_before()	const;	// idem.
 
-		bool	intersect(BindingMap	*bm);	// return true if at least one value is shared.
+		bool	intersect(BindingMap	*bm);
 
+		Atom	*get_code(uint16	i)	const{	return	map[i]->get_code();	}
+		Code	*get_object(uint16	i)	const{	return	map[i]->get_object();	}
 		void	trace();
 	};
 }

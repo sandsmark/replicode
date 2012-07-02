@@ -65,6 +65,14 @@ namespace	r_exec{
 	public:
 		bool	update(uint64	now);
 	};
+
+	class	r_exec_dll	AsyncInjectionJob:
+	public	_ReductionJob{
+	public:
+		P<View>	input;
+		AsyncInjectionJob(View	*input):_ReductionJob(),input(input){}
+		bool	update(uint64	now);
+	};
 }
 
 

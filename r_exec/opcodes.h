@@ -101,6 +101,11 @@ namespace	r_exec{
 		static	uint16	Swap;
 		static	uint16	Prb;
 		static	uint16	Stop;
+
+		static	uint16	Add;
+		static	uint16	Sub;
+		static	uint16	Mul;
+		static	uint16	Div;
 	};
 }
 

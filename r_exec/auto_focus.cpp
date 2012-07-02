@@ -29,19 +29,22 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"auto_focus.h"
+#include	"ast_controller.h"
 
 
 namespace	r_exec{
 
 	AutoFocusController::AutoFocusController(r_code::View	*view):Controller(view){
 
-		// Load arguments: pass_through, list of output groups: 1st must be the primary, 2nd the secondary, then other groups.
+		// Load arguments: pass_through, acquire_models, decompile_models, list of output groups: 1st must be the primary, 2nd the secondary, then other groups.
 		Code	*icpp_pgm=getObject();
 		uint16	arg_set_index=icpp_pgm->code(ICPP_PGM_ARGS).asIndex();
 		uint16	arg_count=icpp_pgm->code(arg_set_index).getAtomCount();
-		pass_through=icpp_pgm->code(arg_set_index+1).asBoolean();
-		for(uint16	i=1;i<arg_count;++i)
-			output_groups.push_back((Group	*)icpp_pgm->get_reference(i-1));
+		_pass_through=icpp_pgm->code(arg_set_index+1).asBoolean();
+		_acquire_models=icpp_pgm->code(arg_set_index+2).asBoolean();
+		_decompile_models=icpp_pgm->code(arg_set_index+3).asBoolean();
+		for(uint16	i=3;i<arg_count;++i)
+			output_groups.push_back((Group	*)icpp_pgm->get_reference(i-3));
 	}
 
 	AutoFocusController::~AutoFocusController(){
@@ -54,36 +57,79 @@ namespace	r_exec{
 
 	inline	void	AutoFocusController::inject_input(View	*input,uint32	start)	const{
 
-		Code	*input_fact=input->object;
-		//input_fact->acq_views();
+		_Fact	*input_fact=(_Fact	*)input->object;
+
+		Group	*origin=input->get_host();
+		Group	*ref_group=output_groups[0];
 
 		uint64	now=Now();
 
-		for(uint16	i=start;i<output_groups.size();++i){
+		_Fact	*copy;
+		switch(input->get_sync()){
+		case	View::SYNC_ONCE:		// no copy, morph res; N.B.: cmds are sync_once.
+			for(uint16	i=start;i<output_groups.size();++i){
 
-			Group	*output_group=output_groups[i];
-			View	*_view=new	View(input,true);
-			if(!_view->get_sync()){	// SYNC_STATE: inject with sync_front, res=1, fact::before=next upr.
-
-				Utils::SetTimestamp<Code>(input_fact,FACT_BEFORE,output_group->get_time_at_next_upr(now));
-				_view->code(VIEW_SYNC)=Atom::Boolean(true);
+				Group	*output_group=output_groups[i];
+				View	*view=new	View(input,true);
+				view->references[0]=output_group;
+				view->code(VIEW_RES)=Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr());
+				_Mem::Get()->inject_async(view);
 			}
-			_view->code(VIEW_RES)=Atom::Float(1);
-			_view->references[0]=output_group;
-			//uint64	now=Now();
-			_Mem::Get()->inject(_view);
-			//std::cout<<"AF inject in grp["<<i<<"]: "<<Now()-now<<std::endl;
-			//input_fact->views.insert(_view);
-			//output_group->enter();
-			//output_group->inject(_view,now);
-			//output_group->leave();
+			break;
+		case	View::SYNC_PERIODIC:	// inject a copy, morph res, add a controller.
+			if(input_fact->is_anti_fact())
+				copy=new	AntiFact(input_fact->get_reference(0),ref_group->get_prev_upr_time(now),ref_group->get_next_upr_time(now),1,1);
+			else
+				copy=new	Fact(input_fact->get_reference(0),ref_group->get_prev_upr_time(now),ref_group->get_next_upr_time(now),1,1);
+			for(uint16	i=start;i<output_groups.size();++i){
 
-			//std::cout<<"output grp["<<i<<"]: "<<output_group->other_views.size()<<std::endl;
+				Group	*output_group=output_groups[i];
+				View	*view=new	View(input,true);
+				view->references[0]=output_group;
+				view->code(VIEW_RES)=Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr());
+				view->object=copy;
+				_Mem::Get()->inject_async(view);
+				if(i==0)
+					_Mem::Get()->inject_null_program(new	PASTController(this,copy),output_group,output_group->get_upr()*Utils::GetBasePeriod(),true);
+			}
+			break;
+		case	View::SYNC_HOLD:{		// inject a copy, add a controller, sync_once, morph res, after=now+time_tolerance (de-sync as it can have the same effect as a cmd), before=now+output_grp.upr+time_tolerance.
+			uint64	offset=4*Utils::GetTimeTolerance();
+			if(input_fact->is_anti_fact())
+				copy=new	AntiFact(input_fact->get_reference(0),now+offset,now+offset+ref_group->get_upr()*Utils::GetBasePeriod(),1,1);
+			else
+				copy=new	Fact(input_fact->get_reference(0),now+offset,now+offset+ref_group->get_upr()*Utils::GetBasePeriod(),1,1);
+			for(uint16	i=start;i<output_groups.size();++i){
+
+				Group	*output_group=output_groups[i];
+				View	*view=new	View(input,true);
+				view->references[0]=output_group;
+				view->code(VIEW_SYNC)=Atom::Float(View::SYNC_ONCE);
+				view->code(VIEW_RES)=Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr());
+				Utils::SetTimestamp<View>(view,VIEW_IJT,now+offset);
+				view->object=copy;
+				_Mem::Get()->inject(view);	// delayed by offset.
+				//if(i==0)
+				//	_Mem::Get()->inject_null_program(new	HASTController(this,copy),output_group,output_group->get_upr()*Utils::GetBasePeriod(),true);
+			}
+			break;
+		}case	View::SYNC_AXIOM:		// inject a copy, sync_once, res=1, fact.before=next output_grp upr.
+			if(input_fact->is_anti_fact())
+				copy=new	AntiFact(input_fact->get_reference(0),ref_group->get_prev_upr_time(now),ref_group->get_next_upr_time(now),1,1);
+			else
+				copy=new	Fact(input_fact->get_reference(0),ref_group->get_prev_upr_time(now),ref_group->get_next_upr_time(now),1,1);
+			for(uint16	i=start;i<output_groups.size();++i){
+
+				Group	*output_group=output_groups[i];
+				View	*view=new	View(input,true);
+				view->references[0]=output_group;
+				view->code(VIEW_SYNC)=Atom::Float(View::SYNC_ONCE);
+				view->code(VIEW_RES)=Atom::Float(1);
+				view->object=copy;
+				_Mem::Get()->inject_async(view);
+			}
+			break;
 		}
-
-		//input_fact->rel_views();
-
-		//std::cout<<"AF inject: "<<Now()-now<<std::endl;
 	}
 
 	inline	void	AutoFocusController::notify(_Fact	*target,View	*input,TPXMap	&map){
@@ -168,7 +214,7 @@ namespace	r_exec{
 
 	inline	void	AutoFocusController::dispatch(_Fact	*input,_Fact	*abstract_input,BindingMap	*bm,bool	&injected,TPXMap	&map){
 
-		View	*view=new	View(true,Now(),1,1,NULL,NULL,input);	// groups are set in inject_input().
+		View	*view=new	View(View::SYNC_ONCE,Now(),1,1,NULL,NULL,input);	// groups are set in inject_input().
 		dispatch(view,abstract_input,bm,injected,map);
 	}
 
@@ -206,7 +252,7 @@ namespace	r_exec{
 			if(f_ihlp->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl){	// handle new goals/predictions as new targets.
 
 				Code	*mdl=f_ihlp->get_reference(0)->get_reference(0);
-				Code	*unpacked_mdl=mdl->get_reference(mdl->references_size()-1);
+				Code	*unpacked_mdl=mdl->get_reference(mdl->references_size()-MDL_HIDDEN_REFS);
 				uint16	obj_set_index=unpacked_mdl->code(MDL_OBJS).asIndex();
 
 				_Fact	*pattern;
@@ -252,7 +298,7 @@ namespace	r_exec{
 				inject_input(input,2);	// inject in all output groups but the primary and secondary.
 			else{	// filter according to targets: inject (once) when possible and pass to TPX if any.
 
-				if(pass_through)
+				if(_pass_through)
 					inject_input(input,0);
 				else{
 
@@ -275,12 +321,20 @@ namespace	r_exec{
 		}
 	}
 
-	void	AutoFocusController::inject_hlp(Code	*hlp)	const{	// inject in the primary group; models will be injected in the secondary group automatically.
+	void	AutoFocusController::inject_hlps(std::list<P<Code> >	&hlps)	const{	// inject in the primary group; models will be injected in the secondary group automatically.
 
-		View	*view=new	View(true,Now(),0,-1,output_groups[0],NULL,hlp,1);	// SYNC_FRONT,sln=0,res=forever,act=1.
-		view->references[0]=output_groups[0];
-		_Mem::Get()->inject(view);
-		//hlp->views.insert(view);
-		//output_groups[0]->inject(view,0);
+		std::list<View	*>	views;
+		
+		uint64	now=Now();
+
+		std::list<P<Code> >::const_iterator	hlp;
+		for(hlp=hlps.begin();hlp!=hlps.end();++hlp){
+
+			View	*view=new	View(View::SYNC_ONCE,now,0,-1,output_groups[0],NULL,*hlp,1);	// SYNC_ONCE,sln=0,res=forever,act=1.
+			view->references[0]=output_groups[0];
+			views.push_back(view);
+		}
+		
+		_Mem::Get()->inject_hlps(views,now,output_groups[0]);
 	}
 }

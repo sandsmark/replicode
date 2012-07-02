@@ -75,7 +75,8 @@ namespace	r_exec{
 	friend	class	PGMController;
 	friend	class	IPGMContext;
 	private:
-		uint64	birth_time;	// used for ipgms: overlays older than ipgm->tsc are killed.
+		bool	is_volatile;
+		uint64	birth_time;	// used for ipgms: overlays older than ipgm->tsc are killed; birth_time set to the time of the first match, 0 if no match occurred.
 	protected:
 		std::list<uint16>				input_pattern_indices;	//	stores the input patterns still waiting for a match: will be plucked upon each successful match.
 		std::vector<P<r_code::View> >	input_views;			//	copies of the inputs; vector updated at each successful match.
@@ -112,6 +113,8 @@ namespace	r_exec{
 		r_code::View	*getInputView(uint16	i)	const;
 
 		uint64	get_birth_time()	const{	return	birth_time;	}
+
+		bool	is_invalidated();
 	};
 
 	//	Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).

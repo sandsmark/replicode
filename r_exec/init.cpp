@@ -35,8 +35,12 @@
 #include	"callbacks.h"
 #include	"opcodes.h"
 #include	"overlay.h"
+#include	"mem.h"
 
+#include	"../r_comp/decompiler.h"
 #include	"../r_comp/preprocessor.h"
+
+#include	<process.h>
 
 
 namespace	r_exec{
@@ -52,6 +56,8 @@ namespace	r_exec{
 	r_exec_dll	r_comp::Preprocessor	Preprocessor;
 
 	SharedLibrary	userOperatorLibrary;
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	bool	Compile(std::istream	&source_code,std::string	&error,bool	compile_metadata){
 
@@ -96,6 +102,171 @@ namespace	r_exec{
 
 		return	Compile(source_code,error,false);
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
+
+	thread_ret TDecompiler::Decompile(void	*args){
+
+		P<TDecompiler>	_this=(TDecompiler	*)args;
+		_this->spawned=1;
+
+		r_comp::Decompiler	decompiler;
+		decompiler.init(&r_exec::Metadata);
+
+		std::vector<SysObject	*>	imported_objects;
+
+		r_comp::Image	*image=new	r_comp::Image();
+		image->add_objects(_this->objects,imported_objects);
+		image->object_names.symbols=r_exec::Seed.object_names.symbols;
+
+		std::ostringstream	decompiled_code;
+		decompiler.decompile(image,&decompiled_code,Utils::GetTimeReference(),imported_objects);
+
+		if(_this->ostream_id==0){
+
+			std::cout<<_this->header.c_str();
+			std::cout<<decompiled_code.str().c_str();
+		}else{
+
+			PipeOStream::Get(_this->ostream_id-1)<<_this->header.c_str();
+			PipeOStream::Get(_this->ostream_id-1)<<decompiled_code.str().c_str();
+		}
+
+		thread_ret_val(0);
+	}
+
+	TDecompiler::TDecompiler(uint32	ostream_id,std::string	header):_Object(),ostream_id(ostream_id),header(header),_thread(NULL),spawned(0){
+	}
+
+	TDecompiler::~TDecompiler(){
+
+		if(_thread)
+			delete	_thread;
+	}
+
+	void	TDecompiler::add_object(Code	*object){
+
+		objects.push_back(object);
+	}
+	
+	void	TDecompiler::add_objects(std::list<P<Code> >	&objects){
+
+		std::list<P<Code> >::const_iterator	o;
+		for(o=objects.begin();o!=objects.end();++o)
+			this->objects.push_back(*o);
+	}
+
+	void	TDecompiler::decompile(){
+
+		_thread=Thread::New<_Thread>(Decompile,this);
+		while(spawned==0);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
+
+	std::vector<PipeOStream	*>	PipeOStream::Streams;
+	
+	PipeOStream	PipeOStream::NullStream;
+
+	void	PipeOStream::Open(uint8	count){
+
+		for(uint8	i=0;i<count;++i){
+
+			PipeOStream	*p=new	PipeOStream();
+			p->init();
+
+			Streams.push_back(p);
+		}
+	}
+
+	void	PipeOStream::Close(){
+
+		for(uint8	i=0;i<Streams.size();++i)
+			delete	Streams[i];
+		Streams.clear();
+	}
+
+	PipeOStream	&PipeOStream::Get(uint8	id){
+
+		if(id<Streams.size())
+			return	*Streams[id];
+		return	NullStream;
+	}
+
+	PipeOStream::PipeOStream():std::ostream(NULL),pipe_read(0),pipe_write(0){
+	}
+
+	void	PipeOStream::init(){
+
+		SECURITY_ATTRIBUTES	saAttr;
+		saAttr.nLength=sizeof(saAttr); 
+		saAttr.bInheritHandle=true; 
+		saAttr.lpSecurityDescriptor=NULL;
+
+		CreatePipe(&pipe_read,&pipe_write,&saAttr,0);
+		
+		STARTUPINFO			si;
+		PROCESS_INFORMATION	pi;
+
+		ZeroMemory(&si,sizeof(si));
+		si.cb=sizeof(si);
+		ZeroMemory(&pi,sizeof(pi));
+
+		char	handle[255];
+		itoa((int)pipe_read,handle,10);
+		std::string	command("output_window.exe ");
+		command+=std::string(handle);
+
+		CreateProcess(	NULL,				// no module name (use command line)
+						const_cast<char	*>(command.c_str()),	// command line
+						NULL,				// process handle not inheritable
+						NULL,				// thread handle not inheritable
+						true,				// handle inheritance
+						CREATE_NEW_CONSOLE,	// creation flags
+						NULL,				// use parent's environment block
+						NULL,				// use parent's starting directory 
+						&si,				// pointer to STARTUPINFO structure
+						&pi);				// pointer to PROCESS_INFORMATION structure
+	}
+
+	PipeOStream::~PipeOStream(){
+
+		if(pipe_read==0)
+			return;
+
+		std::string	stop("close_output_window");
+		*this<<stop;
+		CloseHandle(pipe_read);
+		CloseHandle(pipe_write);
+	}
+
+	PipeOStream	&PipeOStream::operator	<<(std::string	&s){
+
+		if(pipe_read==0)
+			return	*this;
+
+		uint32	to_write=s.length();
+		uint32	written; 
+ 
+		WriteFile(pipe_write,s.c_str(),to_write,&written,NULL);
+	
+		return	*this;
+	}
+
+	PipeOStream&	PipeOStream::operator	<<(const	char	*s){
+
+		if(pipe_read==0)
+			return	*this;
+
+		uint32	to_write=strlen(s);
+		uint32	written; 
+ 
+		WriteFile(pipe_write,s,to_write,&written,NULL);
+	
+		return	*this;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	uint16	RetrieveOpcode(const	char	*name){
 
@@ -182,6 +353,11 @@ namespace	r_exec{
 		Opcodes::Swap=_Opcodes.find("_swp")->second;
 		Opcodes::Prb=_Opcodes.find("_prb")->second;
 		Opcodes::Stop=_Opcodes.find("_stop")->second;
+
+		Opcodes::Add=_Opcodes.find("add")->second;
+		Opcodes::Sub=_Opcodes.find("sub")->second;
+		Opcodes::Mul=_Opcodes.find("mul")->second;
+		Opcodes::Div=_Opcodes.find("div")->second;
 
 		//	load std operators.
 		uint16	operator_opcode=0;
@@ -313,7 +489,7 @@ namespace	r_exec{
 			Callbacks::Register(_callback_name,callback);
 		}
 
-		std::cout<<"> User-defined operator library "<<user_operator_library_path<<" loaded"<<std::endl;
+		std::cout<<"> user-defined operator library "<<user_operator_library_path<<" loaded"<<std::endl;
 
 		return	true;
 	}

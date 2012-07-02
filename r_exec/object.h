@@ -89,7 +89,7 @@ namespace	r_exec{
 		void	set(uint16	member_index,float32	value);
 		void	mod(uint16	member_index,float32	value);
 
-		View	*find_view(Code	*group,bool	lock);	//	returns a copy of the found view if any, NULL otherwise.
+		View	*get_view(Code	*group,bool	lock);		// returns the found view if any, NULL otherwise.
 
 		void	kill();
 
@@ -122,9 +122,6 @@ namespace	r_exec{
 				return	true;
 			}
 		};
-
-		//	for un-registering in the rMem upon deletion.
-		typename	UNORDERED_SET<U	*,typename	Object::Hash,typename	Object::Equal>::const_iterator	position_in_object_register;
 	};
 
 	//	Local object.
