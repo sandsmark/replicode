@@ -79,6 +79,7 @@ namespace	r_code{
 										std::cout<<"ipgm: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		case	COMPOSITE_STATE:		std::cout<<"cst: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
 		case	MODEL:					std::cout<<"mdl: "<<std::dec<<asOpcode()<<" "<<(uint16)getAtomCount();Members_to_go=getAtomCount();return;
+		case	NULL_PROGRAM:			std::cout<<"null pgm "<<takesPastInputs()?"all inputs":"new inputs";return;
 		default:
 			if(Timestamp_data){
 				

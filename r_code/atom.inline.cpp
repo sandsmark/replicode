@@ -236,6 +236,11 @@ namespace	r_code{
 		return	Atom((MODEL<<24)+((opcode	&	0x0FFF)<<8)+arity);
 	}
 
+	inline	Atom	Atom::NullProgram(bool	take_past_inputs){
+
+		return	Atom((NULL_PROGRAM<<24)+(take_past_inputs?1:0));
+	}
+
 	inline	Atom	Atom::RawPointer(void	*pointer){
 
 		return	Atom((uint32)pointer);
@@ -382,5 +387,10 @@ namespace	r_code{
 		default:
 			return	0;
 		}
+	}
+
+	inline	bool	Atom::takesPastInputs()	const{
+
+		return	atom	&	0x00000001;
 	}
 }

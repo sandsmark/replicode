@@ -87,7 +87,8 @@ namespace	r_code{
 			INSTANTIATED_INPUT_LESS_PROGRAM=0xCB,
 			INSTANTIATED_ANTI_PROGRAM=0xCC,
 			COMPOSITE_STATE=0xCD,
-			MODEL=0xCE
+			MODEL=0xCE,
+			NULL_PROGRAM=0xCF
 		}Type;
 
 		// encoders
@@ -137,7 +138,8 @@ namespace	r_code{
 		static	Atom	InstantiatedInputLessProgram(uint16 opcode,uint8 arity);
 		static	Atom	CompositeState(uint16 opcode,uint8 arity);
 		static	Atom	Model(uint16 opcode,uint8 arity);
-
+		
+		static	Atom	NullProgram(bool	take_past_inputs);
 		static	Atom	RawPointer(void	*pointer);
 
 		Atom(uint32	a=0xFFFFFFFF);
@@ -175,6 +177,7 @@ namespace	r_code{
 		uint8	getDeviceID()		const;	// applicable to devices.
 		uint8	asAssignmentIndex()	const;
 
+		bool	takesPastInputs()	const;	// applicable to NULL_PROGRAM.
 		template<class	C>	C	*asRawPointer()	const{	return	(C	*)atom;	}
 
 		void	trace()	const;

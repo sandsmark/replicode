@@ -106,8 +106,10 @@ namespace	r_code{
 			code[i]=source->code(i);
 
 		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
+		source->acq_views();
 		for(i=0,v=source->views.begin();v!=source->views.end();++i,++v)
 			views[i]=new	SysView(*v);
+		source->rel_views();
 
 		oid=source->get_oid();
 

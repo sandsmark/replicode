@@ -48,9 +48,23 @@ namespace	r_code{
 	class	Code;
 
 	class	dll_export	Utils{
+	private:
+		static	uint64	TimeReference;	// starting time.
+		static	uint32	BasePeriod;
+		static	float32	FloatTolerance;
+		static	uint32	TimeTolerance;
 	public:
+		static	uint64	GetTimeReference();
+		static	uint32	GetBasePeriod();
+		static	uint32	GetFloatTolerance();
+		static	uint32	GetTimeTolerance();
+		static	void	SetReferenceValues(uint64	time_reference,uint32	base_period,float32	float_tolerance,uint32	time_tolerance);
+
+		static	bool	Equal(float32	l,float32	r);
+
 		static	uint64	GetTimestamp(const	Atom	*iptr);
 		static	void	SetTimestamp(Atom	*iptr,uint64	t);
+		static	void	SetTimestamp(Code	*object,uint16	index,uint64	t);	// allocates atoms.
 
 		static	const	uint64	MaxTime=0xFFFFFFFFFFFFFFFF;
 
@@ -106,7 +120,8 @@ namespace	r_code{
 				object->code(++s_index)=_st;
 		}
 
-		static	int32	GetResilience(uint64	time_to_live,uint64	upr);	//	ttl: us, upr: us.
+		static	int32	GetResilience(uint64	now,uint64	time_to_live,uint64	upr);	// ttl: us, upr: us.
+		static	int32	GetResilience(float32	resilience,float32	origin_upr,float32	destination_upr);	// express the res in destination group, given the res in origin group.
 	};
 }
 

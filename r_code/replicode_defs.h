@@ -101,8 +101,9 @@
 #define	IPGM_ARGS	2
 #define	IPGM_RUN	3
 #define	IPGM_TSC	4
-#define	IPGM_NFR	5
-#define	IPGM_ARITY	6
+#define	IPGM_RES	5
+#define	IPGM_NFR	6
+#define	IPGM_ARITY	7
 
 
 #define	ICPP_PGM_NAME	1
@@ -136,10 +137,6 @@
 #define	MK_VAL_VALUE	 3
 #define	MK_VAL_ARITY	 4
 
-#define	MK_VAL_OBJ_REF	 0
-#define	MK_VAL_ATTR_REF	 1
-#define	MK_VAL_VALUE_REF 2
-
 
 #define	CST_TPL_ARGS	1
 #define	CST_OBJS		2
@@ -147,6 +144,8 @@
 #define	CST_BWD_GUARDS	4
 #define	CST_OUT_GRPS	5
 #define	CST_ARITY		6
+
+#define	CST_HIDDEN_REFS	1
 
 
 #define	MDL_TPL_ARGS	1
@@ -159,6 +158,10 @@
 #define	MDL_SR			8
 #define	MDL_DSR			9
 #define	MDL_ARITY		10
+
+#define	MDL_HIDDEN_REFS	1
+
+#define	HLP_HIDDEN_REFS	1
 
 
 #define	HLP_TPL_ARGS	1
@@ -193,9 +196,6 @@
 #define	GOAL_TARGET		1
 #define	GOAL_ACTR		2
 #define	GOAL_ARITY		3
-
-#define	GOAL_TARGET_REF	0
-#define	GOAL_ACTR_REF	1
 
 
 #define	SUCCESS_OBJ		1

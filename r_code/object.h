@@ -124,8 +124,16 @@ namespace	r_code{
 		Atom	&code(uint16	i){	return	_code[i];	}
 		Atom	code(uint16	i)	const{	return	_code[i];	}
 
-		bool	synced_on_front()	const{	return	_code[VIEW_SYNC].asBoolean();	}
-		uint64	get_ijt()			const{	return	Utils::GetTimestamp(_code+_code[VIEW_IJT].asIndex());	}
+		typedef	enum{
+			SYNC_ONCE=0,
+			SYNC_PERIODIC=1,
+			SYNC_HOLD=2,
+			SYNC_AXIOM=3
+		}SyncMode;
+
+		SyncMode	get_sync()	const{	return	(SyncMode)(uint32)_code[VIEW_SYNC].asFloat();	}
+		uint64		get_ijt()	const{	return	Utils::GetTimestamp(_code+_code[VIEW_IJT].asIndex());	}
+		void		set_ijt(uint64	ijt){	Utils::SetTimestamp(_code+_code[VIEW_IJT].asIndex(),ijt);	}
 
 		class	Hash{
 		public:
@@ -190,8 +198,6 @@ namespace	r_code{
 		virtual	void	acq_markers(){}
 		virtual	void	rel_markers(){}
 
-		virtual	void	kill(){}
-
 		virtual	float32	get_psln_thr(){	return	1;	}
 
 		Code():is_registered(false){}
@@ -199,7 +205,7 @@ namespace	r_code{
 
 		virtual	void	mod(uint16	member_index,float32	value){};
 		virtual	void	set(uint16	member_index,float32	value){};
-		virtual	View	*find_view(Code	*group,bool	lock){	return	NULL;	}
+		virtual	View	*get_view(Code	*group,bool	lock){	return	NULL;	}
 		virtual	void	add_reference(Code	*object)	const{}	//	called only on local objects.
 		void	remove_marker(Code	*m){
 			
@@ -208,8 +214,7 @@ namespace	r_code{
 			rel_markers();
 		}
 
-		bool								is_registered;
-		std::list<Code	*>::const_iterator	position_in_objects;
+		bool	is_registered;
 
 		void	trace()	const{
 
