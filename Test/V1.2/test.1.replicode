@@ -1,89 +1,114 @@
 ; debug
 
-!load c:/work/V1.2/drives.replicode
+; !load c:/work/Replicode/Test/V1.2/drives.replicode
+
+; objects.
+
+self_right_hand:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+self_right_hand_is_a_hand:(mk.val self_right_hand essence hand 1) |[]
+f_self_right_hand_is_a_hand:(fact self_right_hand_is_a_hand 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+; self_head:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; self_head_is_a_head(mk.val self_head essence head 1) [[SYNC_STATE now 1 forever stdin nil]]
+; f_self_head_is_a_head:(fact self_head_is_a_head 0us MAX_TIME 1 1) [[SYNC_STATE now 1 forever stdin nil]]
+
+; programmer:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+
+; human1:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human1 essence actor 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human1_right_hand:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human1_right_hand essence hand 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human1_head:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human1_head essence head 1) [[SYNC_STATE now 1 forever stdin nil]]
+
+; human2:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human2 essence actor 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human2_right_hand:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human2_right_hand essence hand 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human2_head:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human2_head essence head 1) [[SYNC_STATE now 1 forever stdin nil]]
 
 
 s0:(cst |[] []
-   (fact (mk.val h: position p0: :) t0: t1: ::)
+   (fact (mk.val h: position_z z0: :) t0: t1: ::)
    (fact (mk.val h: essence hand :) t0: t1: ::)
 |[]
 |[]
-[stdin] 1) [[SYNC_FRONT now 0 forever primary nil 1]]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 0]]
 
-m0:(mdl [p0: t0:] []
-   (fact (cmd lift_hand [h: delta_p:] :) t1: t2: ::)
-   (fact (mk.val h: position p1: 1) t3: t4: : 1)
+m0:(mdl [p0: t0: t1:] []
+   (fact (cmd lift_hand [h: delta_z:] :) t2: t3: ::)
+   (fact (mk.val h: position_z p1: 1) t4: t5: : 1)
 []
-   p1:(+ p0 delta_p)
-   t3:(+ t0 sampling_period)
-   t4:(+ t3 sampling_period)
+   p1:(+ p0 delta_z)
+   t4:(+ t0 sampling_period)
+   t5:(+ t1 sampling_period)
 []
-   delta_p:(- p1 p0)
-[stdin] 1 1 1 0 1) [[SYNC_FRONT now 0 forever primary nil 1]]
+   delta_z:(- p1 p0)
+[stdin] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 0]]
 
 m1:(mdl |[] []
    (fact (icst s0 |[] [h: p0:] ::) t0: t1: ::)
-   (fact (imdl m0 [p0: t0:] [h: delta_p: p1: : :] : 1) t0: t2: : 1)
+   (fact (imdl m0 [p0: t0: t1:] [h: delta_z: p1: : :] : 1) t0: t2: : 1)
 []
    t2:(+ t0 sampling_period); domain of validity of the lhs, as enforced by the input generators.
 []
    t0:(- t2 sampling_period)
-[stdin] 1 1 1 0 1) [[SYNC_FRONT now 0 forever primary nil 1]]
+[stdin] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 0]]
 
 
 ; top-level models.
 
 m_run_0:(mdl |[] []
-   (fact (mk.val self_right_hand position (vec3 10 20 30) :) t0: t1: ::)
+   (fact (mk.val self_right_hand position_z 10 :) t0: t1: ::)
    (fact run t2: t3: ::)
 |[]
 []
    t0:(now)
    t1:(+ t0 100000us)
-[stdin drives] 1 1 1 0 1) [[SYNC_FRONT now 0 forever primary nil 0]]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 0]]
 
 
 ; input generators.
 
 pgm0:(pgm |[] |[] |[] []
    (inj []
-      p:(mk.val self_right_hand position (vec3 10 20 30) 1)
+      p:(mk.val self_right_hand position_z 10 1)
       |[]
    )
    (inj []
       (fact p now (+ now sampling_period) 1 1)
-      [SYNC_FRONT now 1 1 stdin nil]
+      [SYNC_PERIODIC now 1 1 stdin nil]
    )
 1) |[]
 
-ipgm0:(ipgm pgm0 |[] RUN_ONCE sampling_period SILENT 1) [[SYNC_FRONT now 0 1 stdin nil 1]]
+ipgm0:(ipgm pgm0 |[] RUN_ONCE sampling_period VOLATILE SILENT 1) [[SYNC_ONCE now 0 1 stdin nil 1]]
 
 pgm1:(pgm |[] |[] |[] []
    (inj []
-      c:(cmd lift_hand [self_right_hand (vec3 2 2 2)] 1)
+      c:(cmd lift_hand [self_right_hand 2] 1)
       |[]
    )
    (inj []
-      (fact c now now 1 1)
-      [SYNC_FRONT now 1 1 stdin nil]
+      (fact c now 200000us 1 1)
+      [SYNC_ONCE now 1 1 stdin nil]
    )
 1) |[]
 
-ipgm1:(ipgm pgm1 |[] RUN_ONCE 150000us SILENT 1) [[SYNC_FRONT now 0 1 stdin nil 1]]
+ipgm1:(ipgm pgm1 |[] RUN_ONCE 150000us VOLATILE SILENT 1) [[SYNC_ONCE now 0 2 stdin nil 1]]
 
 pgm2:(pgm |[] []
-   (ptn (fact (cmd lift_hand [h: v#vec3:] :) t0: t1: ::) |[])
-   (ptn p:(fact (mk.val h: position old_p#vec3: :) ::) |[])
+   (ptn (fact (cmd lift_hand [h: z:] :) t0: t1: ::) |[])
+   (ptn p:(fact (mk.val h: position_z old_z: :) t2: t3: ::) |[])
 |[]
 []
    (inj []
-      new_p:(mk.val self_right_hand position (+ v old_p) 1)
+      new_p:(mk.val self_right_hand position_z (+ z old_z) 1)
       |[]
    )
    (inj []
-      (fact new_p t3:(+ p.vw.ijt sampling_period) (+ t3 sampling_period) 1 1)
-      [SYNC_FRONT t3 1 1 stdin nil]
+      (fact new_p (+ t2 sampling_period) (+ t3 sampling_period) 1 1)
+      [SYNC_PERIODIC t3 1 1 stdin nil]
    )
 1) |[]
 
-ipgm2:(ipgm pgm2 |[] RUN_ONCE 0us SILENT 1) [[SYNC_FRONT now 0 1 stdin nil 1]]
+ipgm2:(ipgm pgm2 |[] RUN_ONCE 0us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 2 stdin nil 1]]

@@ -12,9 +12,9 @@
 !class (ont (_obj nil))
 !class (dev (_obj nil))
 !class (nod (_obj id:nid))
-!class (view[] sync:bl ijt:us sln:nb res:nb grp:grp org:)
-!class (grp_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: cov:bl vis:nb)
-!class (pgm_view[] sync:bl ijt:us sln:nb res:nb grp:grp org: act:nb)
+!class (view[] sync:nb ijt:us sln:nb res:nb grp:grp org:)
+!class (grp_view[] sync:nb ijt:us sln:nb res:nb grp:grp org: cov:bl vis:nb)
+!class (pgm_view[] sync:nb ijt:us sln:nb res:nb grp:grp org: act:nb)
 !class (ptn skel:xpr guards:[::xpr])
 !class (|ptn skel:xpr guards:[::xpr])
 !class (pgm (_obj {tpl:[::ptn] inputs:[] guards:[::xpr] prods:}))
@@ -23,7 +23,7 @@
 !class (icmd function:fid args:[])
 !class (cmd (_obj {function:fid args:[]}))
 !class (cmd_arg (_obj {function:fid arg:ont}))
-!class (ipgm (_obj {code: args:[] run:bl tsc:us nfr:bl}))
+!class (ipgm (_obj {code: args:[] run:bl tsc:us res:bl nfr:bl}))
 !class (icpp_pgm (_obj {code:st args:[] run:bl tsc:us nfr:bl}))
 
 ; mapping low-level markers -> r-code.
@@ -65,8 +65,8 @@
 !op (lse : :):
 !op (add : :):
 !op (sub : :):
-!op (mul :nb :nb):nb
-!op (div :nb :nb):nb
+!op (mul : :):
+!op (div : :):
 !op (dis : :):nb
 !op (ln :nb):nb
 !op (exp :nb):nb
@@ -127,6 +127,8 @@
 ; member nfr.
 !def SILENT false ; no notification upon production
 !def NOTIFY true ; notification upon productions
+!def VOLATILE true
+!def STATIC false
 
 ; parameters for tuning the behavior of groups.
 !def DCY_SLN 0
@@ -134,9 +136,13 @@
 !def COV_ON true
 !def COV_OFF false
 
-!def SYNC_FRONT true
-!def SYNC_STATE false
+; view sync.
+!def SYNC_ONCE 0
+!def SYNC_PERIODIC 1
+!def SYNC_HOLD 2
+!def SYNC_AXIOM 3
 
+; ipgm run mode.
 !def RUN_ALWAYS true
 !def RUN_ONCE false
 
