@@ -1,0 +1,89 @@
+; debug
+; a ball bounces between two walls.
+
+; objects.
+
+b:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+ball:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+b_is_a_ball:(mk.val b essence ball 1) |[]
+f_b_is_a_ball:(fact b_is_a_ball 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+w_top:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+w_top_py:(mk.val w_top position_y 50 1) |[]
+f_w_top_py:(fact w_top_py 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+w_bottom:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+w_bottom_py:(mk.val w_bottom position_y 0 1) |[]
+f_w_bottom_py:(fact w_bottom_py 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+
+; same pos_y.
+
+s0:(cst |[] []
+   (fact (mk.val h: position_y py: :) t0: t1: ::)
+   (fact (mk.val w: position_y py: :) t0: t1: ::)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 0]]
+
+
+; input generators.
+
+start:(pgm |[] |[] |[] []
+   (inj []
+      p:(mk.val b position_y 0 1)
+      |[]
+   )
+   (inj []
+      (fact p after:(now) (+ after sampling_period) 1 1)
+      [SYNC_PERIODIC now 1 1 stdin nil]
+   )
+1) |[]
+
+istart:(ipgm start |[] RUN_ONCE sampling_period VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+
+pgm0:(pgm |[] []
+   (ptn f:(fact (mk.val b position_y py: :) after: before: ::) |[])
+   (ptn (fact (mk.val b speed_y sy: :) ::) |[])
+|[] []
+   (inj []
+      p:(mk.val b position_y (+ py (* sy sampling_period)) 1)
+      |[]
+   )
+   (inj []
+      (fact p (+ after sampling_period) (+ before sampling_period) 1 1)
+      [SYNC_PERIODIC (+ f.vw.ijt sampling_period) 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm0:(ipgm pgm0 |[] RUN_ALWAYS 50000us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+
+pgm1:(pgm |[] []
+   (ptn (fact (mk.val b position_y py: :) ::) [(< py 55) (> py 45)])
+|[] []
+   (inj []
+      s:(mk.val b speed_y -0.0001 1)
+      |[]
+   )
+   (inj []
+      (fact s now MAX_TIME 1 1)
+      [SYNC_HOLD now 1 forever stdin nil]
+   )
+1) |[]
+
+ipgm1:(ipgm pgm1 |[] RUN_ALWAYS 0us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 0]]
+
+pgm2:(pgm |[] []
+   (ptn (fact (mk.val b position_y 0 :) ::) |[])
+|[] []
+   (inj []
+      s:(mk.val b speed_y 0.0001 1)
+      |[]
+   )
+   (inj []
+      (fact s now MAX_TIME 1 1)
+      [SYNC_HOLD now 1 forever stdin nil]
+   )
+1) |[]
+
+ipgm2:(ipgm pgm2 |[] RUN_ALWAYS 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
