@@ -34,7 +34,7 @@
 
 namespace	r_comp{
 
-	Decompiler::Decompiler():out_stream(NULL),current_object(NULL),metadata(NULL),image(NULL){
+	Decompiler::Decompiler():out_stream(NULL),current_object(NULL),metadata(NULL),image(NULL),in_hlp(false){
 	}
 
 	Decompiler::~Decompiler(){
@@ -92,7 +92,8 @@ namespace	r_comp{
 		this->metadata=metadata;
 		this->time_offset=0;
 
-		ignore_ontology=false;
+		partial_decompilation=false;
+		ignore_named_objects=false;
 
 		//	Load the renderers;
 		for(uint16	i=0;i<metadata->classes_by_opcodes.size();++i){
@@ -123,9 +124,23 @@ namespace	r_comp{
 		}
 	}
 
-	uint32	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream,uint64	time_offset,bool	ignore_ontology){
+	uint32	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream,uint64	time_offset,bool	ignore_named_objects){
 
-		this->ignore_ontology=ignore_ontology;
+		this->ignore_named_objects=ignore_named_objects;
+
+		uint32	object_count=decompile_references(image);
+
+		for(uint16	i=0;i<image->code_segment.objects.size();++i)
+			decompile_object(i,stream,time_offset);
+
+		return	object_count;
+	}
+
+	uint32	Decompiler::decompile(r_comp::Image		*image,std::ostringstream	*stream,uint64	time_offset,std::vector<SysObject	*>	&imported_objects){
+
+		partial_decompilation=true;
+		ignore_named_objects=true;
+		this->imported_objects=imported_objects;
 
 		uint32	object_count=decompile_references(image);
 
@@ -154,9 +169,11 @@ namespace	r_comp{
 
 			SysObject	*sys_object=(SysObject	*)image->code_segment.objects[i];
 			UNORDERED_MAP<uint32,std::string>::const_iterator	n=image->object_names.symbols.find(sys_object->oid);
-			if(n!=image->object_names.symbols.end())
+			if(n!=image->object_names.symbols.end()){
+
 				s=n->second;
-			else{
+				named_objects.insert(sys_object->oid);
+			}else{
 			
 				c=metadata->get_class(sys_object->code[0].asOpcode());
 				last_object_ID=object_ID_per_class[c];
@@ -196,13 +213,30 @@ namespace	r_comp{
 		bool	after_tail_wildcard=false;
 		indents=0;
 
-		if(ignore_ontology){
+		if(!partial_decompilation	&&	ignore_named_objects){	// decompilation of the entire memory.
 
-			std::string	ent="ent";
-			std::string	ont="ont";
-			if(	current_object->code[0]==metadata->get_class(ent)->atom	||
-				current_object->code[0]==metadata->get_class(ont)->atom)
+			if(named_objects.find(sys_object->oid)!=named_objects.end())
 				return;
+		}else{	// decompiling on-the-fly: ignore named objects only if imported.
+
+			bool	imported=false;
+			for(uint32	i=0;i<imported_objects.size();++i){
+
+				if(sys_object==imported_objects[i]){
+
+					imported=true;
+					break;
+				}
+			}
+
+			if(imported){
+
+				if(named_objects.find(sys_object->oid)!=named_objects.end())
+					return;
+				else
+					*out_stream<<"imported ";
+			}else	if(sys_object->oid!=0xFFFFFFFF)
+				*out_stream<<sys_object->oid<<" ";
 		}
 
 		std::string	s=object_names[object_index];
@@ -554,7 +588,14 @@ namespace	r_comp{
 
 	void	Decompiler::write_view(uint16	read_index,uint16	arity){
 
+		if(arity>VIEW_CODE_MAX_SIZE	||	arity<=1){
+
+			*out_stream<<"nil";
+			return;
+		}
+
 		bool	after_tail_wildcard=false;
+
 		*out_stream<<"[";
 		for(uint16	j=1;j<=arity;++j){
 
@@ -700,7 +741,7 @@ namespace	r_comp{
 
 					Atom	first=current_object->code[index+1];
 					uint64	ts=Utils::GetTimestamp(&current_object->code[index]);
-					if(ts>0	&&	apply_time_offset)
+					if(!in_hlp	&&	ts>0	&&	apply_time_offset)
 						ts-=time_offset;
 					out_stream->push(Time::ToString_seconds(ts),read_index);
 				}

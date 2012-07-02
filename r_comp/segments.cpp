@@ -422,13 +422,40 @@ namespace	r_comp{
 		map_offset+=object->get_size();
 	}
 
-	void	Image::add_objects(std::list<r_code::Code	*>	&objects){
+	void	Image::add_objects(std::list<P<r_code::Code> >	&objects){
 
-		std::list<r_code::Code	*>::const_iterator	o;
-		for(o=objects.begin();o!=objects.end();++o)
-			add_object(*o);
+		std::list<P<r_code::Code> >::const_iterator	o;
+		for(o=objects.begin();o!=objects.end();++o){
+
+			if(!(*o)->is_invalidated())
+				add_object(*o);
+		}
 
 		build_references();
+	}
+
+	void	Image::add_objects(std::list<P<r_code::Code> >	&objects,std::vector<SysObject	*>	&imported_objects){
+
+		std::list<P<r_code::Code> >::const_iterator	o;
+		for(o=objects.begin();o!=objects.end();++o){
+
+			//if(!(*o)->is_invalidated())
+				add_object(*o,imported_objects);
+		}
+
+		build_references();
+	}
+
+	inline	uint32	Image::get_reference_count(Code	*object){
+
+		switch(object->code(0).getDescriptor()){	// ignore the last reference as it is the unpacked version of the object.
+		case	Atom::MODEL:
+			return	object->references_size()-MDL_HIDDEN_REFS;
+		case	Atom::COMPOSITE_STATE:
+			return	object->references_size()-CST_HIDDEN_REFS;
+		default:
+			return	object->references_size();
+		}
 	}
 
 	void	Image::add_object(Code	*object){
@@ -442,29 +469,72 @@ namespace	r_comp{
 		SysObject	*sys_object=new	SysObject(object);
 		add_sys_object(sys_object);
 
-		uint16	reference_count;
-		switch(object->code(0).getDescriptor()){	// ignore the last reference as it is the unpacked version of the object.
-		case	Atom::MODEL:
-		case	Atom::COMPOSITE_STATE:
-			reference_count=object->references_size()-1;
-			break;
-		default:
-			reference_count=object->references_size();
-			break;
-
-		}
-
+		uint16	reference_count=get_reference_count(object);
 		for(uint16	i=0;i<reference_count;++i){			// follow reference pointers and recurse.
 
 			Code	*reference=object->get_reference(i);
 			if(reference->get_oid()==0xFFFFFFFF	||
-				reference->is_invalidated())
+				reference->is_invalidated())	// the referenced object is not in the image and will not be added otherwise.
 				add_object(reference);
 		}
 		
 		uint32	_object=(uint32)object;
 		sys_object->references[0]=(_object	&	0x0000FFFF);
 		sys_object->references[1]=(_object	>>	16);
+	}
+
+	SysObject	*Image::add_object(Code	*object,std::vector<SysObject	*>	&imported_objects){
+
+		UNORDERED_MAP<Code	*,uint16>::iterator	it=ptrs_to_indices.find(object);
+		if(it!=ptrs_to_indices.end())	// object already there.
+			return	code_segment.objects[it->second];
+
+		uint16	object_index;
+		ptrs_to_indices[object]=object_index=code_segment.objects.as_std()->size();
+		SysObject	*sys_object=new	SysObject(object);
+		add_sys_object(sys_object);
+
+		uint16	reference_count=get_reference_count(object);
+		for(uint16	i=0;i<reference_count;++i){	// follow the object's reference pointers and recurse.
+
+			Code	*reference=object->get_reference(i);
+			if(reference->get_oid()==0xFFFFFFFF)	// the referenced object is not in the image and will not be added otherwise.
+				add_object(reference,imported_objects);
+			else{	// add the referenced object if not present in the list.
+
+				UNORDERED_MAP<Code	*,uint16>::iterator	it=ptrs_to_indices.find(reference);
+				if(it==ptrs_to_indices.end()){
+
+					SysObject	*sys_ref=add_object(reference,imported_objects);
+					imported_objects.push_back(sys_ref);
+				}
+			}
+		}
+
+		object->acq_views();
+		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
+		for(v=object->views.begin();v!=object->views.end();++v){	// follow the view's reference pointers and recurse.
+
+			for(uint8	j=0;j<2;++j){	// 2 refs maximum per view; may be NULL.
+
+				Code	*reference=(*v)->references[j];
+				if(reference){
+
+					UNORDERED_MAP<r_code::Code	*,uint16>::const_iterator	index=ptrs_to_indices.find(reference);
+					if(index==ptrs_to_indices.end()){
+
+						SysObject	*sys_ref=add_object(reference,imported_objects);
+						imported_objects.push_back(sys_ref);
+					}
+				}
+			}
+		}
+		object->rel_views();
+		
+		uint32	_object=(uint32)object;
+		sys_object->references[0]=(_object	&	0x0000FFFF);
+		sys_object->references[1]=(_object	>>	16);
+		return	sys_object;
 	}
 
 	void	Image::build_references(){
@@ -484,36 +554,37 @@ namespace	r_comp{
 
 	void	Image::build_references(SysObject	*sys_object,Code	*object){
 
-		//	Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references.
+		// Translate pointers into indices: valuate the sys_object's references to object, incl. sys_object's view references.
 		uint16	i;
 		uint16	referenced_object_index;
-		uint16	reference_count;
-		switch(object->code(0).getDescriptor()){	// ignore the last reference as it is the unpacked version of the object.
-		case	Atom::MODEL:
-		case	Atom::COMPOSITE_STATE:
-			reference_count=object->references_size()-1;
-			break;
-		default:
-			reference_count=object->references_size();
-			break;
-		}
-
+		uint16	reference_count=get_reference_count(object);
 		for(i=0;i<reference_count;++i){
 
-			referenced_object_index=ptrs_to_indices.find(object->get_reference(i))->second;
-			sys_object->references.push_back(referenced_object_index);
+			UNORDERED_MAP<r_code::Code	*,uint16>::const_iterator	index=ptrs_to_indices.find(object->get_reference(i));
+			if(index!=ptrs_to_indices.end()){
+
+				referenced_object_index=index->second;
+				sys_object->references.push_back(referenced_object_index);
+			}
 		}
 
 		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
-		for(i=0,v=object->views.begin();v!=object->views.end();++i,++v)
-			for(uint8	j=0;j<2;++j){	//	2 refs maximum; may be NULL.
+		for(i=0,v=object->views.begin();v!=object->views.end();++i,++v){
 
-				if((*v)->references[j]){
+			for(uint8	j=0;j<2;++j){	// 2 refs maximum per view; may be NULL.
 
-					referenced_object_index=ptrs_to_indices.find((*v)->references[j])->second;
-					sys_object->views[i]->references[j]=(referenced_object_index);
+				Code	*reference=(*v)->references[j];
+				if(reference){
+
+					UNORDERED_MAP<r_code::Code	*,uint16>::const_iterator	index=ptrs_to_indices.find(reference);
+					if(index!=ptrs_to_indices.end()){
+
+						referenced_object_index=index->second;
+						sys_object->views[i]->references[j]=referenced_object_index;
+					}
 				}
 			}
+		}
 	}
 
 	void	Image::get_objects(Mem	*mem,r_code::vector<Code	*>	&ram_objects){

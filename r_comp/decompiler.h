@@ -43,8 +43,8 @@ namespace	r_comp{
 	class	dll_export	Decompiler{
 	private:
 		OutStream	*out_stream;
-		uint16		indents;		//	in chars.
-		bool		closing_set;	//	set after writing the last element of a set: any element in an expression finding closing_set will indent and set closing_set to false.
+		uint16		indents;		// in chars.
+		bool		closing_set;	// set after writing the last element of a set: any element in an expression finding closing_set will indent and set closing_set to false.
 		bool		in_hlp;
 		bool		hlp_postfix;
 		bool		horizontal_set;
@@ -54,28 +54,28 @@ namespace	r_comp{
 		r_comp::Metadata	*metadata;
 		r_comp::Image		*image;
 
-		uint64	time_offset;	//	0 means no offset.
+		uint64	time_offset;	// 0 means no offset.
 
-		UNORDERED_MAP<uint16,std::string>	variable_names;				//	in the form vxxx where xxx is an integer representing the order of referencing of the variable/label in the code.
+		UNORDERED_MAP<uint16,std::string>	variable_names;				// in the form vxxx where xxx is an integer representing the order of referencing of the variable/label in the code.
 		uint16	last_variable_id;
-		std::string	get_variable_name(uint16	index,bool	postfix);	//	associates iptr/vptr indexes to names; inserts them in out_stream if necessary; when postfix==true, a trailing ':' is added.
+		std::string	get_variable_name(uint16	index,bool	postfix);	// associates iptr/vptr indexes to names; inserts them in out_stream if necessary; when postfix==true, a trailing ':' is added.
 		std::string	get_hlp_variable_name(uint16	index);
 
-		UNORDERED_MAP<uint16,std::string>	object_names;				//	in the form class_namexxx where xxx is an integer representing the order of appearence of the object in the image; or: user-defined names when they are provided.
-		UNORDERED_MAP<std::string,uint16>	object_indices;				//	inverted version of the object_names.
-		std::string	get_object_name(uint16	index);						//	retrieves the name of an object.
+		UNORDERED_MAP<uint16,std::string>	object_names;				// in the form class_namexxx where xxx is an integer representing the order of appearence of the object in the image; or: user-defined names when they are provided.
+		UNORDERED_MAP<std::string,uint16>	object_indices;				// inverted version of the object_names.
+		std::string	get_object_name(uint16	index);						// retrieves the name of an object.
 
 		void	write_indent(uint16	i);
-		void	write_expression_head(uint16	read_index);												//	decodes the leading atom of an expression.
-		void	write_expression_tail(uint16	read_index,bool	apply_time_offset,bool	vertical=false);	//	decodes the elements of an expression following the head.
+		void	write_expression_head(uint16	read_index);												// decodes the leading atom of an expression.
+		void	write_expression_tail(uint16	read_index,bool	apply_time_offset,bool	vertical=false);	// decodes the elements of an expression following the head.
 		void	write_set(uint16	read_index,bool	aply_time_offset,uint16	write_as_view_index=0);
-		void	write_any(uint16	read_index,bool	&after_tail_wildcard,bool	apply_time_offset,uint16	write_as_view_index=0);	//	decodes any element in an expression or a set.
+		void	write_any(uint16	read_index,bool	&after_tail_wildcard,bool	apply_time_offset,uint16	write_as_view_index=0);	// decodes any element in an expression or a set.
 
 		typedef	void	(Decompiler::*Renderer)(uint16);
-		r_code::vector<Renderer>	renderers;	//	indexed by opcodes; when not there, write_expression() is used.
+		r_code::vector<Renderer>	renderers;	// indexed by opcodes; when not there, write_expression() is used.
 
-		//	Renderers.
-		void	write_expression(uint16	read_index);	//	default renderer.
+		// Renderers.
+		void	write_expression(uint16	read_index);	// default renderer.
 		void	write_group(uint16	read_index);
 		void	write_marker(uint16	read_index);
 		void	write_pgm(uint16	read_index);
@@ -87,16 +87,26 @@ namespace	r_comp{
 		void	write_ihlp(uint16	read_index);
 		void	write_view(uint16	read_index,uint16	arity);
 
-		bool	ignore_ontology;
+		bool						partial_decompilation;	// used when decompiling on-the-fly.
+		bool						ignore_named_objects;
+		UNORDERED_SET<uint16>		named_objects;
+		std::vector<SysObject	*>	imported_objects;	// referenced objects added to the image that were not in the original list of objects to be decompiled.
 	public:
 		Decompiler();
 		~Decompiler();
 
 		void	init(r_comp::Metadata	*metadata);
-		uint32	decompile(r_comp::Image	*image,std::ostringstream	*stream,uint64	time_offset,bool	ignore_ontology);					//	decompiles the whole image; returns the number of objects.
-		uint32	decompile_references(r_comp::Image	*image);														//	initialize a reference table so that objects can be decompiled individually; returns the number of objects.
-		void	decompile_object(uint16	object_index,std::ostringstream	*stream,uint64	time_offset);				//	decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
-		void	decompile_object(const	std::string	object_name,std::ostringstream	*stream,uint64	time_offset);	//	decompiles a single object given its name: use this function to follow references.
+		uint32	decompile(	r_comp::Image		*image,
+							std::ostringstream	*stream,
+							uint64				time_offset,
+							bool				ignore_named_objects);		// decompiles the whole image; returns the number of objects.
+		uint32	decompile(	r_comp::Image				*image,
+							std::ostringstream			*stream,
+							uint64						time_offset,
+							std::vector<SysObject	*>	&imported_objects);	// idem, ignores named objects if in the imported object list.
+		uint32	decompile_references(r_comp::Image	*image);														// initialize a reference table so that objects can be decompiled individually; returns the number of objects.
+		void	decompile_object(uint16	object_index,std::ostringstream	*stream,uint64	time_offset);				// decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
+		void	decompile_object(const	std::string	object_name,std::ostringstream	*stream,uint64	time_offset);	// decompiles a single object given its name: use this function to follow references.
 	};
 }
 

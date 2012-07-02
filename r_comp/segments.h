@@ -48,9 +48,9 @@ namespace	r_comp{
 		Class	cast_class;
 	};
 
-	//	All classes below map components of r_code::Image into r_comp::Image.
-	//	Both images are equivalent, the latter being easier to work with (uses vectors instead of a contiguous structure, that is r_code::Image::data).
-	//	All read(word32*,uint32)/write(word32*) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
+	// All classes below map components of r_code::Image into r_comp::Image.
+	// Both images are equivalent, the latter being easier to work with (uses vectors instead of a contiguous structure, that is r_code::Image::data).
+	// All read(word32*,uint32)/write(word32*) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
 
 	class	dll_export	Metadata{
 	private:
@@ -63,13 +63,13 @@ namespace	r_comp{
 	public:
 		Metadata();
 
-		UNORDERED_MAP<std::string,Class>	classes;	//	non-sys classes, operators and device functions.
+		UNORDERED_MAP<std::string,Class>	classes;	// non-sys classes, operators and device functions.
 		UNORDERED_MAP<std::string,Class>	sys_classes;
 
-		r_code::vector<std::string>	class_names;		//	classes and sys-classes; does not include set classes.
+		r_code::vector<std::string>	class_names;		// classes and sys-classes; does not include set classes.
 		r_code::vector<std::string>	operator_names;
 		r_code::vector<std::string>	function_names;
-		r_code::vector<Class>		classes_by_opcodes;	//	classes indexed by opcodes; used to retrieve member names; registers all classes (incl. set classes).
+		r_code::vector<Class>		classes_by_opcodes;	// classes indexed by opcodes; used to retrieve member names; registers all classes (incl. set classes).
 
 		Class	*get_class(std::string	&class_name);
 		Class	*get_class(uint16	opcode);
@@ -103,7 +103,7 @@ namespace	r_comp{
 
 	class	dll_export	ObjectNames{
 	public:
-		UNORDERED_MAP<uint32,std::string>	symbols;	//	indexed by objects' OIDs.
+		UNORDERED_MAP<uint32,std::string>	symbols;	// indexed by objects' OIDs.
 
 		~ObjectNames();
 
@@ -115,11 +115,14 @@ namespace	r_comp{
 	class	dll_export	Image{
 	private:
 		uint32	map_offset;
-		UNORDERED_MAP<r_code::Code	*,uint16>	ptrs_to_indices;	//	used for injection in memory.
+		UNORDERED_MAP<r_code::Code	*,uint16>	ptrs_to_indices;	// used for injection in memory.
 
-		void	build_references();
-		void	build_references(SysObject	*sys_object,r_code::Code	*object);
-		void	unpack_objects(r_code::vector<Code	*>	&ram_objects);
+		void		add_object(r_code::Code	*object);
+		SysObject	*add_object(Code	*object,std::vector<SysObject	*>	&imported_objects);
+		uint32		get_reference_count(Code	*object);
+		void		build_references();
+		void		build_references(SysObject	*sys_object,r_code::Code	*object);
+		void		unpack_objects(r_code::vector<Code	*>	&ram_objects);
 	public:
 		ObjectMap	object_map;
 		CodeSegment	code_segment;
@@ -130,8 +133,8 @@ namespace	r_comp{
 		Image();
 		~Image();
 
-		void	add_sys_object(SysObject	*object,std::string	name);	//	called by the compiler.
-		void	add_sys_object(SysObject	*object);					//	called by add_object().
+		void	add_sys_object(SysObject	*object,std::string	name);	// called by the compiler.
+		void	add_sys_object(SysObject	*object);					// called by add_object().
 
 		void	get_objects(Mem	*mem,r_code::vector<r_code::Code	*>	&ram_objects);
 		template<class	O>	void	get_objects(r_code::vector<Code	*>	&ram_objects){
@@ -144,8 +147,8 @@ namespace	r_comp{
 			unpack_objects(ram_objects);
 		}
 
-		void	add_objects(std::list<r_code::Code	*>	&objects);	//	called by the rMem.
-		void	add_object(r_code::Code	*object);
+		void	add_objects(std::list<P<r_code::Code> >	&objects);												// called by the rMem.
+		void	add_objects(std::list<P<r_code::Code> >	&objects,std::vector<SysObject	*>	&imported_objects);	// called by any r_exec code for decompiling on the fly.
 
 		template<class	I>	I	*serialize(){
 
