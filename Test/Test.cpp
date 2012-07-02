@@ -39,33 +39,33 @@
 
 using	namespace	r_comp;
 
-void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset,bool	ignore_ontology){
+void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset,bool	ignore_named_objects){
 
 #ifdef	DECOMPILE_ONE_BY_ONE
 	uint32	object_count=decompiler.decompile_references(image);
 	std::cout<<object_count<<" objects in the image\n";
 	while(1){
 
-		std::cout<<"Which object (-1 to exit)?\n";
+		std::cout<<"> which object (-1 to exit)?\n";
 		int32	index;std::cin>>index;
 		if(index==-1)
 			break;
 		if(index>=object_count){
 
-			std::cout<<"there is only "<<object_count<<" objects\n";
+			std::cout<<"> there is only "<<object_count<<" objects\n";
 			continue;
 		}
 		std::ostringstream	decompiled_code;
 		decompiler.decompile_object(index,&decompiled_code,time_offset);
-		std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
+		std::cout<<"\n\n> DECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
 	}
 #else
 	std::ostringstream	decompiled_code;
-	uint32	object_count=decompiler.decompile(image,&decompiled_code,time_offset,ignore_ontology);
+	uint32	object_count=decompiler.decompile(image,&decompiled_code,time_offset,ignore_named_objects);
 	//uint32	object_count=image->code_segment.objects.size();
-	std::cout<<"\n\nDECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
-	std::cout<<"Image taken at: "<<Time::ToString_year(image->timestamp)<<std::endl<<std::endl;
-	std::cout<<object_count<<" objects\n";
+	std::cout<<"\n\n> DECOMPILATION\n\n"<<decompiled_code.str()<<std::endl;
+	std::cout<<"> image taken at: "<<Time::ToString_year(image->timestamp)<<std::endl;
+	std::cout<<"> "<<object_count<<" objects\n";
 #endif
 }
 
@@ -105,7 +105,7 @@ int32	main(int	argc,char	**argv){
 	if(!settings.load(argv[1]))
 		return	1;
 
-	std::cout<<"compiling ...\n";
+	std::cout<<"> compiling ...\n";
 	if(!r_exec::Init(settings.usr_operator_path.c_str(),Time::Get,settings.usr_class_path.c_str()))
 		return	2;
 
@@ -119,7 +119,9 @@ int32	main(int	argc,char	**argv){
 		return	3;
 	}else{
 
-		std::cout<<"... done\n";
+		std::cout<<"> ... done\n";
+
+		r_exec::PipeOStream::Open(1);
 
 		Decompiler	decompiler;
 		decompiler.init(&r_exec::Metadata);
@@ -144,6 +146,8 @@ int32	main(int	argc,char	**argv){
 					settings.perf_sampling_period,
 					settings.float_tolerance,
 					settings.time_tolerance,
+					settings.primary_thz,
+					settings.secondary_thz,
 					settings.debug,
 					settings.ntf_mk_resilience,
 					settings.goal_pred_success_resilience,
@@ -170,7 +174,7 @@ int32	main(int	argc,char	**argv){
 			return	4;
 		uint64	starting_time=mem->start();
 		
-		std::cout<<"\nRunning for "<<settings.run_time<<" ms"<<std::endl;
+		std::cout<<"> running for "<<settings.run_time<<" ms\n\n";
 		Thread::Sleep(settings.run_time);
 
 		//TimeProbe	probe;
@@ -178,7 +182,7 @@ int32	main(int	argc,char	**argv){
 
 		image=mem->get_image();
 
-		std::cout<<"\nShutting rMem down...\n";
+		std::cout<<"\n> shutting rMem down...\n";
 		mem->stop();
 		delete	mem;
 
@@ -197,17 +201,19 @@ int32	main(int	argc,char	**argv){
 				outfile.open(argv[2],std::ios_base::trunc);
 				std::streambuf	*coutbuf=std::cout.rdbuf(outfile.rdbuf()); 
 
-				decompile(decompiler,image,starting_time,settings.ignore_ontology);
+				decompile(decompiler,image,starting_time,settings.ignore_named_objects);
 				
 				std::cout.rdbuf(coutbuf);
                 outfile.close(); 
 			}else
-				decompile(decompiler,image,starting_time,settings.ignore_ontology);
+				decompile(decompiler,image,starting_time,settings.ignore_named_objects);
         }
 		//uint32	w;std::cin>>w;
 		delete	image;
 
 		//std::cout<<"getImage(): "<<probe.us()<<"us"<<std::endl;
+
+		r_exec::PipeOStream::Close();
 	}
 
 	return	0;

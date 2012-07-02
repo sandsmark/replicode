@@ -57,6 +57,8 @@ public:
 	core::uint32	perf_sampling_period;
 	core::float32	float_tolerance;
 	core::uint32	time_tolerance;
+	core::uint64	primary_thz;
+	core::uint64	secondary_thz;
 
 	// Debug.
 	bool			debug;
@@ -67,7 +69,7 @@ public:
 	core::uint32	run_time;
 	core::uint32	probe_level;
 	bool			decompile_image;
-	bool			ignore_ontology;
+	bool			ignore_named_objects;
 	bool			write_image;
 	std::string		image_path;
 	bool			test_image;
@@ -122,6 +124,8 @@ public:
 			const	char	*_perf_sampling_period=system.getAttribute("perf_sampling_period");
 			const	char	*_float_tolerance=system.getAttribute("float_tolerance");
 			const	char	*_time_tolerance=system.getAttribute("time_tolerance");
+			const	char	*_primary_thz=system.getAttribute("primary_thz");
+			const	char	*_secondary_thz=system.getAttribute("secondary_thz");
 
 			mdl_inertia_sr_thr=atof(_mdl_inertia_sr_thr);
 			mdl_inertia_cnt_thr=atoi(_mdl_inertia_cnt_thr);
@@ -133,6 +137,8 @@ public:
 			perf_sampling_period=atoi(_perf_sampling_period);
 			float_tolerance=atof(_float_tolerance);
 			time_tolerance=atoi(_time_tolerance);
+			primary_thz=atoi(_primary_thz);
+			secondary_thz=atoi(_secondary_thz);
 		}else{
 
 			std::cerr<<"> Error: System section is unreadable"<<std::endl;
@@ -170,14 +176,14 @@ public:
 			const	char	*_run_time=run.getAttribute("run_time");
 			const	char	*_probe_level=run.getAttribute("probe_level");
 			const	char	*_decompile_image=run.getAttribute("decompile_image");
-			const	char	*_ignore_ontology=run.getAttribute("ignore_ontology");
+			const	char	*_ignore_named_objects=run.getAttribute("ignore_named_objects");
 			const	char	*_write_image=run.getAttribute("write_image");
 			const	char	*_test_image=run.getAttribute("test_image");
 
 			run_time=atoi(_run_time);
 			probe_level=atoi(_probe_level);
 			decompile_image=(strcmp(_decompile_image,"yes")==0);
-			ignore_ontology=(strcmp(_ignore_ontology,"yes")==0);
+			ignore_named_objects=(strcmp(_ignore_named_objects,"yes")==0);
 			write_image=(strcmp(_write_image,"yes")==0);
 			if(write_image){
 
