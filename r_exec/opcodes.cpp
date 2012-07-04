@@ -47,6 +47,8 @@ namespace	r_exec{
 	uint16	Opcodes::AntiPtn;
 
 	uint16	Opcodes::IPgm;
+	uint16	Opcodes::ICppPgm;
+
 	uint16	Opcodes::Pgm;
 	uint16	Opcodes::AntiPgm;
 

@@ -311,7 +311,7 @@ namespace	r_exec{
 	Code	*BindingMap::Abstract(Code	*object,BindingMap	*&bindings){	// builds a binding map holding the original values.
 
 		bindings=new	BindingMap();
-		return	bindings->abstract_object(object);
+		return	bindings->abstract_object(object,false);
 	}
 
 	_Fact	*BindingMap::abstract_f_ihlp(_Fact	*f_ihlp)	const{	// bindings are set already (coming from a mk.rdx caught by auto-focus).
@@ -358,15 +358,22 @@ namespace	r_exec{
 		return	_f_ihlp;
 	}
 
-	_Fact	*BindingMap::abstract_fact(_Fact	*fact,_Fact	*original){	// abstract values as they are encountered.
+	_Fact	*BindingMap::abstract_fact(_Fact	*fact,_Fact	*original,bool	force_sync){	// abstract values as they are encountered.
 		
 		if(after_index==-1)
 			first_index=map.size();
 
 		uint16	extent_index=FACT_ARITY+1;
 		abstract_member(original,FACT_OBJ,fact,FACT_OBJ,extent_index);
-		abstract_member(original,FACT_AFTER,fact,FACT_AFTER,extent_index);
-		abstract_member(original,FACT_BEFORE,fact,FACT_BEFORE,extent_index);
+		if(after_index!=-1	&&	force_sync){
+			
+			fact->code(FACT_AFTER)=Atom::VLPointer(after_index);
+			fact->code(FACT_BEFORE)=Atom::VLPointer(after_index+1);
+		}else{
+			
+			abstract_member(original,FACT_AFTER,fact,FACT_AFTER,extent_index);
+			abstract_member(original,FACT_BEFORE,fact,FACT_BEFORE,extent_index);
+		}
 		fact->code(FACT_CFD)=Atom::Wildcard();
 		fact->code(FACT_ARITY)=Atom::Wildcard();
 
@@ -376,15 +383,15 @@ namespace	r_exec{
 		return	fact;
 	}
 
-	Code	*BindingMap::abstract_object(Code	*object){	// abstract values as they are encountered.
+	Code	*BindingMap::abstract_object(Code	*object,bool	force_sync){	// abstract values as they are encountered.
 		
 		Code	*abstracted_object=NULL;
 
 		uint16	opcode=object->code(0).asOpcode();
 		if(opcode==Opcodes::Fact)
-			return	abstract_fact(new	Fact(),(_Fact	*)object);
+			return	abstract_fact(new	Fact(),(_Fact	*)object,force_sync);
 		else	if(opcode==Opcodes::AntiFact)
-			return	abstract_fact(new	AntiFact(),(_Fact	*)object);
+			return	abstract_fact(new	AntiFact(),(_Fact	*)object,force_sync);
 		else	if(opcode==Opcodes::Cmd){
 
 			uint16	extent_index=CMD_ARITY+1;
@@ -430,7 +437,7 @@ namespace	r_exec{
 			else{	// abstract the reference.
 
 				abstracted_object->code(write_index)=Atom::RPointer(abstracted_object->references_size());
-				abstracted_object->add_reference(abstract_object(reference));
+				abstracted_object->add_reference(abstract_object(reference,false));
 			}
 			break;
 		}case	Atom::I_PTR:

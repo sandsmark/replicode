@@ -231,6 +231,12 @@ namespace	r_exec{
 
 			Input	cause=*i;
 
+			Code	*f_cause=cause.input->get_reference(0);
+			if(	f_cause->code(0).asOpcode()==Opcodes::MkVal	&&
+				f_cause->code(MK_VAL_VALUE).getDescriptor()==Atom::R_PTR	&&
+				f_cause->get_reference(f_cause->code(MK_VAL_VALUE).asIndex())->code(0).asOpcode()==Opcodes::Ont)	// (mk.val : : (ont :) :) cannot be a cause. TODO: we shall discard SYNC_AXIOM instead.
+				continue;
+
 			if(cause.input->get_after()<=premise->get_after()+time_tolerance)	// cause in sync with the premise: abort.
 				return;
 
@@ -295,9 +301,10 @@ namespace	r_exec{
 		}
 	}
 
-	// 2 forms:
-	// 0 - q1=q0+cmd_arg (if the cause is a cmd) or q1=q0*cmd_arg.
+	// 5 forms:
+	// 0 - q1=q0+cmd_arg (if the cause is a cmd) or q1=q0*cmd_arg with q0!=0.
 	// 1 - q1=q0+speed*period, with q1=consequent.value, q0=premise.value, speed=cause.value,
+	// 3 - q1=q0+constant or q1=q0*constant with q0!=0.
 	bool	CTPX::find_guard(_Fact	*cause,_Fact	*consequent,uint64	period,GuardBuilder	*&guard_builder){
 
 		Code	*cause_payload=cause->get_reference(0);
@@ -339,7 +346,7 @@ namespace	r_exec{
 					}
 				}
 			}
-		}else	if(opcode==Opcodes::MkVal){	// form 1.
+		}else	if(opcode==Opcodes::MkVal){
 
 			Atom	s=cause_payload->code(MK_VAL_VALUE);
 			if(s.isFloat()){
@@ -349,12 +356,23 @@ namespace	r_exec{
 				float32	q1=consequent->get_reference(0)->code(MK_VAL_VALUE).asFloat();
 
 				float32	searched_for=(q1-q0)/period;
-				if(Utils::Equal(_s,searched_for)){
+				if(Utils::Equal(_s,searched_for)){	// form 1.
 
 					uint64	offset=Utils::GetTimestamp<Code>(cause,FACT_AFTER)-Utils::GetTimestamp<Code>(premise,FACT_AFTER);
 					guard_builder=new	SGuardBuilder(period,period-offset);
 					return	true;
 				}
+
+				if(q0!=0){	// form 2.
+
+					uint64	offset=Utils::GetTimestamp<Code>(cause,FACT_AFTER)-Utils::GetTimestamp<Code>(premise,FACT_AFTER);
+					guard_builder=new	MGuardBuilder(period,q1/q0,offset);
+					return	true;
+				}
+
+				uint64	offset=Utils::GetTimestamp<Code>(cause,FACT_AFTER)-Utils::GetTimestamp<Code>(premise,FACT_AFTER);
+				guard_builder=new	AGuardBuilder(period,q1-q0,offset);
+				return	true;
 			}
 		}
 
@@ -506,8 +524,8 @@ namespace	r_exec{
 
 		Code	*mdl=_Mem::Get()->build_object(Atom::Model(Opcodes::Mdl,MDL_ARITY));
 
-		mdl->add_reference(bm->abstract_object(lhs));	// reference lhs.
-		mdl->add_reference(bm->abstract_object(rhs));	// reference rhs.
+		mdl->add_reference(bm->abstract_object(lhs,false));	// reference lhs.
+		mdl->add_reference(bm->abstract_object(rhs,false));	// reference rhs.
 
 		write_index=MDL_ARITY;
 
@@ -624,7 +642,7 @@ namespace	r_exec{
 		Code	*cst=_Mem::Get()->build_object(Atom::CompositeState(Opcodes::Cst,CST_ARITY));
 
 		for(uint16	i=0;i<icst->components.size();++i)	// reference patterns;
-			cst->add_reference(bm->abstract_object(icst->components[i]));
+			cst->add_reference(bm->abstract_object(icst->components[i],true));
 
 		uint16	extent_index=CST_ARITY;
 
@@ -643,11 +661,11 @@ namespace	r_exec{
 		cst->code(extent_index)=Atom::Set(0);	// no bwd guards.
 
 		cst->code(CST_OUT_GRPS)=Atom::IPointer(++extent_index);
-		cst->code(extent_index)=Atom::Set(1);	// only one group: the one the tpx lives in.
+		cst->code(extent_index)=Atom::Set(1);	// only one output group: the one the tpx lives in.
 		cst->code(++extent_index)=Atom::RPointer(cst->references_size());
 
 		cst->code(CST_ARITY)=Atom::Float(1);	// psln_thr.
-		
+
 		cst->add_reference(auto_focus->getView()->get_host());	// reference the output group.
 
 		return	cst;

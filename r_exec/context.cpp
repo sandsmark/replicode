@@ -612,27 +612,30 @@ failure:
 		IPGMContext	args=*context.getChild(2);
 		IPGMContext	run=*context.getChild(3);
 		IPGMContext	tsc=*context.getChild(4);
-		IPGMContext	nfr=*context.getChild(5);
+		IPGMContext	res=*context.getChild(5);
+		IPGMContext	nfr=*context.getChild(6);
 
-		Code	*_object=object.getObject();
-		if(_object->code(0).asOpcode()!=Opcodes::Pgm	&&	_object->code(0).asOpcode()!=Opcodes::AntiPgm){
+		Code	*pgm=object.getObject();
+		uint16	pgm_opcode=pgm->code(0).asOpcode();
+		if(	pgm_opcode!=Opcodes::Pgm	&&
+			pgm_opcode!=Opcodes::AntiPgm){
 
 			context.setAtomicResult(Atom::Nil());
 			return	false;
 		}
 
-		if(_object	&&	args[0].getDescriptor()==Atom::SET){
+		if(pgm	&&	args[0].getDescriptor()==Atom::SET){
 
-			uint16	pattern_set_index=_object->code(PGM_TPL_ARGS).asIndex();	//	same index for goals.
+			uint16	pattern_set_index=pgm->code(PGM_TPL_ARGS).asIndex();
 			uint16	arg_count=args[0].getAtomCount();
-			if(_object->code(pattern_set_index).getAtomCount()!=arg_count){
+			if(pgm->code(pattern_set_index).getAtomCount()!=arg_count){
 
 				context.setAtomicResult(Atom::Nil());
 				return	false;
 			}
 			
-			//	match args with the tpl patterns in _object.
-			IPGMContext	pattern_set(_object,pattern_set_index);
+			// match args with the tpl patterns in _object.
+			IPGMContext	pattern_set(pgm,pattern_set_index);
 			for(uint16	i=1;i<=arg_count;++i){
 
 				IPGMContext	arg=*args.getChild(i);
@@ -644,28 +647,37 @@ failure:
 				}
 			}
 
-			//	create an ipgm in the production array.
-			Code	*ipgm=context.build_object(_object->code(0));
+			Code	*ipgm;	// created in the production array.
+			if(pgm_opcode==Opcodes::AntiPgm)
+				ipgm=context.build_object(Atom::InstantiatedAntiProgram(Opcodes::IPgm,IPGM_ARITY));
+			else{
+			
+				uint16	input_index=pgm->code(PGM_INPUTS).asIndex();
+				uint16	input_count=pgm->code(input_index).getAtomCount();
+				if(input_count==0)
+					ipgm=context.build_object(Atom::InstantiatedInputLessProgram(Opcodes::IPgm,IPGM_ARITY));
+				else
+					ipgm=context.build_object(Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY));
+			}
 
-			ipgm->code(0)=Atom::InstantiatedProgram(Opcodes::IPgm,IPGM_ARITY);
-			ipgm->code(IPGM_PGM)=Atom::RPointer(0);				//	points to the pgm object.
+			ipgm->code(IPGM_PGM)=Atom::RPointer(0);				// points to the pgm object.
+			ipgm->add_reference(pgm);
 
 			uint16	extent_index=0;
-			ipgm->code(IPGM_ARGS)=Atom::IPointer(IPGM_ARITY+1);	//	points to the arg set.
-			args.copy(ipgm,IPGM_ARITY+1,extent_index);			//	writes the args after psln_thr.
+			ipgm->code(IPGM_ARGS)=Atom::IPointer(IPGM_ARITY+1);	// points to the arg set.
+			args.copy(ipgm,IPGM_ARITY+1,extent_index);			// writes the args after psln_thr.
 			
 			ipgm->code(IPGM_RUN)=run[0];
-			ipgm->code(IPGM_TSC)=Atom::IPointer(extent_index);	//	points to the tsc.
+			ipgm->code(IPGM_TSC)=Atom::IPointer(extent_index);	// points to the tsc.
 
-			ipgm->code(extent_index++)=tsc[0];					//	writes the tsc after the args.
+			ipgm->code(extent_index++)=tsc[0];					// writes the tsc after the args.
 			ipgm->code(extent_index++)=tsc[1];
 			ipgm->code(extent_index++)=tsc[2];
 
-			ipgm->code(IPGM_NFR)=nfr[0];						//	nfr.
-			ipgm->code(IPGM_ARITY)=Atom::Float(1);				//	psln_thr.
-
-			ipgm->set_reference(0,_object);
-			
+			ipgm->code(IPGM_RES)=res[0];						// res.
+			ipgm->code(IPGM_NFR)=nfr[0];						// nfr.
+			ipgm->code(IPGM_ARITY)=Atom::Float(1);				// psln_thr.
+				
 			context.setAtomicResult(Atom::ProductionPointer(context.addProduction(ipgm,true)));	// object may be new: we don't know at this point, therefore check=true.
 			return	true;
 		}

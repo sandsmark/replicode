@@ -77,7 +77,7 @@ namespace	r_exec{
 	};
 
 	// bwd: cmd.after=q1.after-period, cmd.before=q1.before-period.
-	class	CGuardBuilder:
+	class	CmdGuardBuilder:
 	public	TimingGuardBuilder{
 	protected:
 		uint16	cmd_arg_index;
@@ -85,15 +85,15 @@ namespace	r_exec{
 		void	_build(Code *mdl,uint16	fwd_opcode,uint16	bwd_opcode,uint16	q0,uint16	t0,uint16	t1,uint16 &write_index) const;
 		void	_build(Code	*mdl,uint16	fwd_opcode,uint16	bwd_opcode,_Fact	*premise_pattern,_Fact	*cause_pattern,uint16	&write_index)	const;
 
-		CGuardBuilder(uint64	period,uint16	cmd_arg_index);
+		CmdGuardBuilder(uint64	period,uint16	cmd_arg_index);
 	public:
-		virtual	~CGuardBuilder();
+		virtual	~CmdGuardBuilder();
 	};
 
 	// fwd: q1=q0*cmd_arg.
 	// bwd: cmd_arg=q1/q0.
 	class	MCGuardBuilder:
-	public	CGuardBuilder{
+	public	CmdGuardBuilder{
 	public:
 		MCGuardBuilder(uint64	period,float32	cmd_arg_index);
 		~MCGuardBuilder();
@@ -104,12 +104,49 @@ namespace	r_exec{
 	// fwd: q1=q0+cmd_arg.
 	// bwd: cmd_arg=q1-q0.
 	class	ACGuardBuilder:
-	public	CGuardBuilder{
+	public	CmdGuardBuilder{
 	private:
 		
 	public:
 		ACGuardBuilder(uint64	period,uint16	cmd_arg_index);
 		~ACGuardBuilder();
+
+		void	build(Code	*mdl,_Fact	*premise_pattern,_Fact	*cause_pattern,uint16	&write_index)	const;
+	};
+
+	// bwd: cause.after=t2-offset, cause.before=t3-offset.
+	class	ConstGuardBuilder:
+	public	TimingGuardBuilder{
+	protected:
+		float32	constant;
+		uint64	offset;
+
+		void	_build(Code *mdl,uint16	fwd_opcode,uint16	bwd_opcode,uint16	q0,uint16	t0,uint16	t1,uint16 &write_index) const;
+		void	_build(Code	*mdl,uint16	fwd_opcode,uint16	bwd_opcode,_Fact	*premise_pattern,_Fact	*cause_pattern,uint16	&write_index)	const;
+
+		ConstGuardBuilder(uint64	period,float32	constant,uint64	offset);
+	public:
+		~ConstGuardBuilder();
+	};
+
+	// fwd: q1=q0*constant.
+	// bwd: q0=q1/constant.
+	class	MGuardBuilder:
+	public	ConstGuardBuilder{
+	public:
+		MGuardBuilder(uint64	period,float32	constant,uint64	offset);
+		~MGuardBuilder();
+
+		void	build(Code	*mdl,_Fact	*premise_pattern,_Fact	*cause_pattern,uint16	&write_index)	const;
+	};
+
+	// fwd: q1=q0+constant.
+	// bwd: q0=q1-constant.
+	class	AGuardBuilder:
+	public	ConstGuardBuilder{
+	public:
+		AGuardBuilder(uint64	period,float32	constant,uint64	offset);
+		~AGuardBuilder();
 
 		void	build(Code	*mdl,_Fact	*premise_pattern,_Fact	*cause_pattern,uint16	&write_index)	const;
 	};

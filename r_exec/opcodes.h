@@ -56,6 +56,8 @@ namespace	r_exec{
 		static	uint16	AntiPtn;
 
 		static	uint16	IPgm;
+		static	uint16	ICppPgm;
+
 		static	uint16	Pgm;
 		static	uint16	AntiPgm;
 

@@ -307,6 +307,8 @@ namespace	r_exec{
 		Opcodes::AntiPtn=_Opcodes.find("|ptn")->second;
 
 		Opcodes::IPgm=_Opcodes.find("ipgm")->second;
+		Opcodes::ICppPgm=_Opcodes.find("icpp_pgm")->second;
+
 		Opcodes::Pgm=_Opcodes.find("pgm")->second;
 		Opcodes::AntiPgm=_Opcodes.find("|pgm")->second;
 

@@ -595,11 +595,13 @@ namespace	r_exec{
 			if(view->object->code(0).asOpcode()==Opcodes::Fact){
 				
 				if(view->object->get_reference(0)->code(0).asOpcode()==Opcodes::MkVal)
-					std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" hold target: "<<view->object->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<"|"<<view->object->get_oid()<<"\n";
+					std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" target: "<<view->object->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<"|"<<view->object->get_oid()<<"\n";
 				else	if(view->object->get_reference(0)->code(0).asOpcode()==Opcodes::ICst)
 					std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" icst: "<<view->object->get_oid()<<"\n";
 				else	if(view->object->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl)
 					std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" imdl: "<<view->object->get_oid()<<"\n";
+				else	if(view->object->get_reference(0)->code(0).asOpcode()==Opcodes::Cmd)
+				std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" cmd: "<<view->object->get_oid()<<"\n";
 			}*/
 			cov(view,t);
 			break;

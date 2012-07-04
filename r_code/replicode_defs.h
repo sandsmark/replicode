@@ -110,8 +110,9 @@
 #define	ICPP_PGM_ARGS	2
 #define	ICPP_PGM_RUN	3
 #define	ICPP_PGM_TSC	4
-#define	ICPP_PGM_NFR	5
-#define	ICPP_PGM_ARITY	6
+#define	ICPP_PGM_RES	5
+#define	ICPP_PGM_NFR	6
+#define	ICPP_PGM_ARITY	7
 
 
 #define	MK_RDX_CODE					1

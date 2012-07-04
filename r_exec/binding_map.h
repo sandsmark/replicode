@@ -188,8 +188,8 @@ namespace	r_exec{
 	public:
 		static	Code	*Abstract(Code	*object,BindingMap	*&bindings);
 				_Fact	*abstract_f_ihlp(_Fact	*fact)	const;	// for icst and imdl.
-				_Fact	*abstract_fact(_Fact	*fact,_Fact	*original);
-				Code	*abstract_object(Code	*object);
+				_Fact	*abstract_fact(_Fact	*fact,_Fact	*original,bool	force_sync);
+				Code	*abstract_object(Code	*object,bool	force_sync);
 
 		BindingMap();
 		BindingMap(const	BindingMap	*source);
