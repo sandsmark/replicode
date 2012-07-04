@@ -69,7 +69,7 @@ namespace	r_exec{
 				}else{	// late: do the job and report.
 
 					run=j->update(next_target);
-					std::cout<<"Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
+					std::cout<<"1 Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
 				}
 			}
 
@@ -89,7 +89,7 @@ namespace	r_exec{
 				}else{	// late: do the job and report.
 
 					run=j->update(next_target);
-					std::cout<<"Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
+					std::cout<<"2 Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
 				}
 			}
 			j=NULL;
@@ -140,7 +140,7 @@ redo:	if(next_target){
 			}else	if(time_to_wait<0){
 
 				_this->job->update(next_target);
-				std::cout<<"Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
+				std::cout<<"3 Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
 				goto	redo;
 			}else
 				goto	wait;

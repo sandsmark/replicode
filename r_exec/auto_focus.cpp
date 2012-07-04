@@ -94,7 +94,7 @@ namespace	r_exec{
 			}
 			break;
 		case	View::SYNC_HOLD:{		// inject a copy, add a controller, sync_once, morph res, after=now+time_tolerance (de-sync as it can have the same effect as a cmd), before=now+output_grp.upr+time_tolerance.
-			uint64	offset=Utils::GetTimeTolerance();
+			uint64	offset=3*Utils::GetTimeTolerance();
 			if(input_fact->is_anti_fact())
 				copy=new	AntiFact(input_fact->get_reference(0),now+offset,now+offset+ref_group->get_upr()*Utils::GetBasePeriod(),1,1);
 			else
