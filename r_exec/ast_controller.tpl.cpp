@@ -79,7 +79,7 @@ namespace	r_exec{
 			switch(prediction->get_target()->is_timeless_evidence(target)){
 			case	MATCH_SUCCESS_POSITIVE:
 			case	MATCH_SUCCESS_NEGATIVE:	// a model predicted the next value of the target.
-				std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" killed\n";
+				//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" killed\n";
 				kill();
 				break;
 			case	MATCH_FAILURE:

@@ -53,6 +53,53 @@ namespace	r_exec{
 	void	TPX::signal(View	*input)	const{
 	}
 
+	void	TPX::inject_hlps(uint64	analysis_starting_time){
+
+		if(auto_focus->decompile_models()){
+
+			std::string	header("> ");
+			header+=get_header()+std::string(":buffer -------------------\n\n");
+
+			P<TDecompiler>	td=new	TDecompiler(1,header);
+			td->add_objects(raw_inputs);
+			td->decompile();
+
+			uint64	analysis_end=Now();
+			uint32	d=analysis_end-analysis_starting_time;
+			char	_timing[255];
+			itoa(d,_timing,10);
+			header=Time::ToString_seconds(Now()-Utils::GetTimeReference());
+			std::string	s0=(" > ");
+			s0+=get_header()+std::string(":production [");
+			std::string	timing(_timing);
+			std::string	s1("us]-------------------\n\n");
+			header+=s0+timing+s1;
+			td=new	TDecompiler(1,header);
+
+			std::list<P<Code> >::const_iterator	hlp;
+			for(hlp=hlps.begin();hlp!=hlps.end();++hlp){
+
+				_Mem::Get()->pack_hlp(*hlp);
+				td->add_object(*hlp);
+			}
+
+			auto_focus->inject_hlps(hlps);
+			td->decompile();
+		}else{
+
+			std::list<P<Code> >::const_iterator	hlp;
+			for(hlp=hlps.begin();hlp!=hlps.end();++hlp)
+				_Mem::Get()->pack_hlp(*hlp);
+
+			auto_focus->inject_hlps(hlps);
+		}
+	}
+
+	std::string	TPX::get_header()	const{
+
+		return	std::string("TPX");
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	_TPX::_TPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings):TPX(auto_focus,target,pattern,bindings){
@@ -669,5 +716,10 @@ namespace	r_exec{
 		cst->add_reference(auto_focus->getView()->get_host());	// reference the output group.
 
 		return	cst;
+	}
+
+	std::string	CTPX::get_header()	const{
+
+		return	std::string("CTPX");
 	}
 }

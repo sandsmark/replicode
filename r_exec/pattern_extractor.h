@@ -58,6 +58,12 @@ namespace	r_exec{
 		const	AutoFocusController	*auto_focus;
 
 		Input	target;	// goal or prediction target; abstraction: lhs of a mdl for goals, rhs for predictions.
+
+		std::list<P<Code> >	raw_inputs;	// raw input buffer;
+		std::list<P<Code> >	hlps;	// induced csts and mdls.
+
+		virtual	std::string	get_header()	const;
+		void	inject_hlps(uint64	analysis_starting_time);
 	public:
 		TPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
 		TPX(const	TPX	*original);
@@ -74,8 +80,6 @@ namespace	r_exec{
 	public	TPX{
 	protected:
 		std::list<Input>	inputs;	// time-controlled buffer (inputs older than tpx_time_horizon from now are discarded).
-
-		std::list<P<Code> >	hlps;
 
 		virtual	void	build_hlps()=0;
 		
@@ -144,6 +148,8 @@ namespace	r_exec{
 		Code	*build_mdl(_Fact	*lhs_f_icst,_Fact	*cause_pattern,_Fact	*rhs,GuardBuilder	*guard_builder,BindingMap	*bm);
 		Code	*build_mdl(_Fact	*lhs,_Fact	*rhs,BindingMap	*bm,uint64	period);
 		Code	*build_mdl(_Fact	*lhs_f_icst,_Fact	*premise_pattern,_Fact	*rhs,BindingMap	*bm,uint64	period);
+
+		std::string	get_header()	const;
 	public:
 		CTPX(const	AutoFocusController	*auto_focus,_Fact	*premise);
 		~CTPX();

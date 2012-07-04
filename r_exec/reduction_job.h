@@ -60,6 +60,19 @@ namespace	r_exec{
 		}
 	};
 
+	template<class	T>	class	BatchReductionJob:
+	public	_ReductionJob{
+	public:
+		P<T>	target;
+		BatchReductionJob(T	*target):_ReductionJob(),target(target){}
+		bool	update(uint64	now){
+			
+			_Mem::Get()->register_reduction_job_latency(now-ijt);
+			target->reduce();
+			return	true;
+		}
+	};
+
 	class	r_exec_dll	ShutdownReductionCore:
 	public	_ReductionJob{
 	public:

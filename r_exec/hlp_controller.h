@@ -92,7 +92,7 @@ namespace	r_exec{
 			std::list<E>::const_iterator	_e;
 			for(_e=cache->evidences.begin();_e!=cache->evidences.end();){
 
-				if((*_e).evidence->is_invalidated()	||	(*_e).before<now)	// garbage collection.
+				if((*_e).is_too_old(now))	// garbage collection.
 					_e=cache->evidences.erase(_e);
 				else
 					++_e;

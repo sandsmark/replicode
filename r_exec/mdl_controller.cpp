@@ -53,10 +53,10 @@ namespace	r_exec{
 	PrimaryMDLOverlay::~PrimaryMDLOverlay(){
 	}
 
-	Overlay	*PrimaryMDLOverlay::reduce(r_exec::View *input){
+	Overlay	*PrimaryMDLOverlay::reduce(_Fact *input,bool	fill_cache){
 //std::cout<<std::hex<<this<<std::dec<<" "<<input->object->get_oid();
 		_Fact	*input_object;
-		Pred	*prediction=((Fact	*)input->object)->get_pred();
+		Pred	*prediction=input->get_pred();
 		bool	simulation;
 		if(prediction){
 
@@ -64,7 +64,7 @@ namespace	r_exec{
 			simulation=prediction->is_simulation();
 		}else{
 
-			input_object=(_Fact	*)input->object;
+			input_object=input;
 			simulation=false;
 		}
 
@@ -120,6 +120,7 @@ namespace	r_exec{
 					f_imdl->set_reference(0,bm->bind_pattern(f_imdl->get_reference(0)));	// valuate f_imdl from updated bm.
 					//f_imdl->get_reference(0)->trace();
 					((PrimaryMDLController	*)controller)->predict(bindings,input_object,f_imdl,c_a,r_p,ground);
+					//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" prediction\n";
 					o=this;
 				}else{
 //std::cout<<" guards failed\n";
@@ -131,20 +132,27 @@ namespace	r_exec{
 			delete[]	code;
 			code=NULL;
 			bindings=original_bindings;
-			if(prediction){
+			if(fill_cache){
+			
+				if(prediction){
 
-				if(!simulation)
-					((PrimaryMDLController	*)controller)->store_predicted_evidence(input->object);
-			}else{//std::cout<<"CACHED: "<<Now()<<" : "<<Utils::GetTimestamp<Code>(input->object,FACT_BEFORE)<<std::endl;
-				((PrimaryMDLController	*)controller)->store_evidence(input->object);}
+					if(!simulation)
+						((PrimaryMDLController	*)controller)->store_predicted_evidence(input);
+				}else{//std::cout<<"CACHED: "<<Now()<<" : "<<Utils::GetTimestamp<Code>(input,FACT_BEFORE)<<std::endl;
+					bool	tpl=((MDLController	*)controller)->has_tpl_args();
+					((PrimaryMDLController	*)controller)->store_evidence(input);}
+			}
 			return	o;
 		}case	MATCH_SUCCESS_NEGATIVE:
-			if(prediction){
+			if(fill_cache){
 
-				if(!simulation)
-					((PrimaryMDLController	*)controller)->store_predicted_evidence(input->object);
-			}else
-				((PrimaryMDLController	*)controller)->store_evidence(input->object);
+				if(prediction){
+
+					if(!simulation)
+						((PrimaryMDLController	*)controller)->store_predicted_evidence(input);
+				}else
+					((PrimaryMDLController	*)controller)->store_evidence(input);
+			}
 		case	MATCH_FAILURE:
 //std::cout<<" no match\n";
 			return	NULL;
@@ -175,13 +183,11 @@ namespace	r_exec{
 	SecondaryMDLOverlay::~SecondaryMDLOverlay(){
 	}
 
-	Overlay	*SecondaryMDLOverlay::reduce(r_exec::View *input){
+	Overlay	*SecondaryMDLOverlay::reduce(_Fact *input,bool	fill_cache){
 //std::cout<<std::hex<<this<<std::dec<<" "<<input->object->get_oid();
-		_Fact	*input_object=(_Fact	*)input->object;
-
 		P<BindingMap>	bm=new	BindingMap(bindings);
-		bm->reset_fwd_timings(input_object);
-		switch(bm->match_lenient(input_object,((MDLController	*)controller)->get_lhs(),MATCH_FORWARD)){
+		bm->reset_fwd_timings(input);
+		switch(bm->match_lenient(input,((MDLController	*)controller)->get_lhs(),MATCH_FORWARD)){
 		case	MATCH_SUCCESS_POSITIVE:{
 
 			load_code();
@@ -208,7 +214,7 @@ namespace	r_exec{
 				if(evaluate_fwd_guards()){	// may update bindings.
 //std::cout<<" match\n";
 					f_imdl->set_reference(0,bm->bind_pattern(f_imdl->get_reference(0)));	// valuate f_imdl from updated bm.
-					((SecondaryMDLController	*)controller)->predict(bindings,input->object,NULL,true,r_p,ground);
+					((SecondaryMDLController	*)controller)->predict(bindings,input,NULL,true,r_p,ground);
 					o=this;
 				}else{
 //std::cout<<" guards failed\n";
@@ -377,7 +383,7 @@ namespace	r_exec{
 		std::list<REntry>::const_iterator	_e;
 		for(_e=cache->begin();_e!=cache->end();){
 
-			if((*_e).evidence->is_invalidated()	||	(*_e).before<now)	// garbage collection.
+			if((*_e).is_too_old(now))	// garbage collection.
 				_e=cache->erase(_e);
 			else
 				++_e;
@@ -1093,7 +1099,7 @@ namespace	r_exec{
 		}else{
 
 			reductionCS.enter();
-			((MDLOverlay	*)*overlays.begin())->reduce(input);	// matching is used to fill up the cache.
+			((MDLOverlay	*)*overlays.begin())->reduce(input_object,true);	// matching is used to fill up the cache.
 			monitor_goals(input_object);
 			reductionCS.leave();
 		}
@@ -1278,6 +1284,7 @@ namespace	r_exec{
 				_store_requirement(&simulated_requirements.positive_evidences,e);
 			else
 				_store_requirement(&requirements.positive_evidences,e);
+			reduce_cache<PrimaryMDLController>();
 		}else	if(!simulation)
 			_store_requirement(&requirements.negative_evidences,e);
 		
@@ -1476,13 +1483,27 @@ namespace	r_exec{
 
 			bool	match;
 			reductionCS.enter();
-			match=(((MDLOverlay	*)*overlays.begin())->reduce(input))!=NULL;
+			match=(((MDLOverlay	*)*overlays.begin())->reduce(input_object,true))!=NULL;
 			if(!match	&&	!monitor_predictions(input_object)	&&	!monitor_goals(input_object))
 				assume(input_object);
 			reductionCS.leave();
 
 			check_last_match_time(match);
 		}
+	}
+
+	void	PrimaryMDLController::reduce(){
+
+		if(_has_tpl_args	&&	get_requirement_count()==0){
+
+			kill_views();
+			return;
+		}
+
+		reductionCS.enter();
+		reduce_cache<EEntry>(&evidences);
+		reduce_cache<PEEntry>(&predicted_evidences);
+		reductionCS.leave();
 	}
 
 	void	PrimaryMDLController::abduce(BindingMap	*bm,Fact	*super_goal,bool	opposite,float32	confidence){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
@@ -1933,7 +1954,7 @@ namespace	r_exec{
 		}
 		
 		reductionCS.leave();
-		std::cout<<std::hex<<this<<std::dec<<" cnt:"<<instance_count<<" sr:"<<success_rate<<std::endl;
+		//std::cout<<std::hex<<this<<std::dec<<" cnt:"<<instance_count<<" sr:"<<success_rate<<std::endl;
 	}
 
 	void	PrimaryMDLController::assume(_Fact	*input){
@@ -2053,18 +2074,33 @@ namespace	r_exec{
 			return;
 		}
 
-		if(input->object->is_invalidated())
+		_Fact	*input_object=(_Fact	*)input->object;
+		if(input_object->is_invalidated())
 			return;
 
 		bool	match;
 		reductionCS.enter();
-		match=(((MDLOverlay	*)*overlays.begin())->reduce(input)!=NULL);	// forward chaining.
+		match=(((MDLOverlay	*)*overlays.begin())->reduce(input_object,true)!=NULL);	// forward chaining.
 		reductionCS.leave();
 
 		if(!match)
-			monitor_predictions(input->object);
+			monitor_predictions(input_object);
 		
 		check_last_match_time(match);
+	}
+
+	void	SecondaryMDLController::reduce(){
+
+		if(_has_tpl_args	&&	get_requirement_count()==0){
+
+			kill_views();
+			return;
+		}
+
+		reductionCS.enter();
+		reduce_cache<EEntry>(&evidences);
+		reduce_cache<PEEntry>(&predicted_evidences);
+		reductionCS.leave();
 	}
 
 	void	SecondaryMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// predicitons are not injected: they are silently produced for rating purposes.
@@ -2091,9 +2127,11 @@ namespace	r_exec{
 
 		Code	*mdl=f_imdl->get_reference(0);
 		REntry	e(f_imdl,this,chaining_was_allowed);
-		if(f_imdl->is_fact())
+		if(f_imdl->is_fact()){
+
 			_store_requirement(&requirements.positive_evidences,e);
-		else
+			reduce_cache<SecondaryMDLController>();
+		}else
 			_store_requirement(&requirements.negative_evidences,e);
 	}
 

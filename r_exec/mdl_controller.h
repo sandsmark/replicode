@@ -47,6 +47,8 @@ namespace	r_exec{
 		~MDLOverlay();
 
 		void	load_patterns();
+
+		virtual	Overlay	*reduce(_Fact	*input,bool	fill_cache)=0;
 	};
 
 	class	PrimaryMDLOverlay:
@@ -59,7 +61,7 @@ namespace	r_exec{
 		PrimaryMDLOverlay(Controller	*c,const	BindingMap	*bindngs);
 		~PrimaryMDLOverlay();
 
-		Overlay	*reduce(View	*input);
+		Overlay	*reduce(_Fact	*input,bool	fill_cache);
 	};
 
 	class	SecondaryMDLOverlay:
@@ -68,7 +70,7 @@ namespace	r_exec{
 		SecondaryMDLOverlay(Controller	*c,const	BindingMap	*bindngs);
 		~SecondaryMDLOverlay();
 
-		Overlay	*reduce(View	*input);
+		Overlay	*reduce(_Fact	*input,bool	fill_cache);
 	};
 
 	class	MDLController;
@@ -142,6 +144,30 @@ namespace	r_exec{
 
 		CriticalSection	active_requirementsCS;
 		UNORDERED_MAP<P<_Fact>,RequirementsPair,PHash<_Fact> >	active_requirements;	// P<_Fact>: f1 as in f0->pred->f1->imdl; requirements having allowed the production of prediction; first: wr, second: sr.		
+
+		template<class	C>	void	reduce_cache(){	// fwd.
+
+			BatchReductionJob<C>	*j=new	BatchReductionJob<C>((C	*)this);
+			_Mem::Get()->pushReductionJob(j);
+		}
+
+		template<class	E>	void	reduce_cache(Cache<E>	*cache){
+
+			cache->CS.enter();
+			uint64	now=Now();
+			std::list<E>::const_iterator	_e;
+			for(_e=cache->evidences.begin();_e!=cache->evidences.end();){
+
+				if((*_e).is_too_old(now))	// garbage collection.
+					_e=cache->evidences.erase(_e);
+				else{
+					
+					((MDLOverlay	*)*overlays.begin())->reduce((*_e).evidence,false);
+					++_e;
+				}
+			}
+			cache->CS.leave();
+		}
 
 		bool	monitor_predictions(_Fact	*input);
 
@@ -284,6 +310,7 @@ namespace	r_exec{
 
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
+		void	reduce();
 
 		void	store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation);
 
@@ -320,6 +347,7 @@ namespace	r_exec{
 
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
+		void	reduce();
 
 		void	store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation);
 
