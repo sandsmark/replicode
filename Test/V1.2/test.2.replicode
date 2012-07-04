@@ -4,6 +4,7 @@
 ; !load c:/work/Replicode/Test/V1.2/drives.replicode
 
 
+
 s0:(cst |[] []
    (fact (mk.val h: position_z z0: :) t0: t1: ::)
    (fact (mk.val h: essence hand :) t0: t1: ::)
@@ -35,7 +36,7 @@ m1:(mdl |[] []
 ; top-level models.
 
 m_run_0:(mdl |[] []
-   (fact (mk.val self_right_hand position_z 10 :) t0: t1: ::)
+   (fact (mk.val self_right_hand attachment cube0 :) t0: t1: ::)
    (fact run t2: t3: ::)
 |[]
 []
@@ -48,43 +49,34 @@ m_run_0:(mdl |[] []
 
 pgm0:(pgm |[] |[] |[] []
    (inj []
-      p:(mk.val self_right_hand position_z 10 1)
+      p:(mk.val self_right_hand attachment cube0 1)
       |[]
    )
    (inj []
-      (fact p now (+ now sampling_period) 1 1)
-      [SYNC_PERIODIC now 1 1 stdin nil]
+      (fact p now MAX_TIME 1 1)
+      [SYNC_HOLD now 1 1 stdin nil]
    )
 1) |[]
 
-ipgm0:(ipgm pgm0 |[] RUN_ONCE sampling_period VOLATILE SILENT 1) [[SYNC_ONCE now 0 1 stdin nil 1]]
+ipgm0:(ipgm pgm0 |[] RUN_ONCE sampling_period VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 1 stdin nil 1]]
 
 pgm1:(pgm |[] |[] |[] []
    (inj []
-      c:(cmd lift_hand [self_right_hand 2] 1)
+      c:(cmd release_hand [self_right_hand] 1)
       |[]
    )
    (inj []
-      (fact c now 200000us 1 1)
+      (fact c now (+ now 20000us) 1 1)
       [SYNC_ONCE now 1 1 stdin nil]
    )
-1) |[]
-
-ipgm1:(ipgm pgm1 |[] RUN_ONCE 150000us VOLATILE SILENT 1) [[SYNC_ONCE now 0 2 stdin nil 1]]
-
-pgm2:(pgm |[] []
-   (ptn (fact (cmd lift_hand [h: z:] :) t0: t1: ::) |[])
-   (ptn p:(fact (mk.val h: position_z old_z: :) t2: t3: ::) |[])
-|[]
-[]
    (inj []
-      new_p:(mk.val self_right_hand position_z (+ z old_z) 1)
+      p:(mk.val self_right_hand attachment cube0 1)
       |[]
    )
    (inj []
-      (fact new_p (+ t2 sampling_period) (+ t3 sampling_period) 1 1)
-      [SYNC_PERIODIC t3 1 1 stdin nil]
+      (|fact p now MAX_TIME 1 1)
+      [SYNC_HOLD now 1 1 stdin nil]
    )
 1) |[]
 
-ipgm2:(ipgm pgm2 |[] RUN_ONCE 0us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 2 stdin nil 1]]
+ipgm1:(ipgm pgm1 |[] RUN_ONCE 160000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 2 stdin nil 1]]

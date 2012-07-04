@@ -22,6 +22,8 @@
 !dfn (point_at :); arg0: a hand, arg1: target position, arg2: deadline.
 
 !dfn (lift_hand :); arg0: a hand, arg1: a distance.
+!dfn (grab_hand :); arg0: a hand.
+!dfn (release_hand :); arg0: a hand.
 
 !def sampling_period 100000us
 
@@ -40,7 +42,7 @@ drives:(std_grp 40 0 0 0 [stdout]) [[SYNC_ONCE now 0 forever root nil COV_OFF 0]
 
 ; extensions.
 
-auto_focus:(icpp_pgm "auto_focus" [true false true primary secondary] RUN_ALWAYS 0us SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]; args: pass_through, acquire_models, decompile_models, primary group, secondary group, other output groups.
+auto_focus:(icpp_pgm "auto_focus" [true false true primary secondary] RUN_ALWAYS 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]; args: pass_through, acquire_models, decompile_models, primary group, secondary group, other output groups.
 
 
 ; application ontology.
@@ -74,6 +76,7 @@ interviewer:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 interviewee:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 hand:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 head:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+cube:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
 
 
 ; initial application objects.

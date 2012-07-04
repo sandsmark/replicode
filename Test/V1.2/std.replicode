@@ -24,7 +24,7 @@
 !class (cmd (_obj {function:fid args:[]}))
 !class (cmd_arg (_obj {function:fid arg:ont}))
 !class (ipgm (_obj {code: args:[] run:bl tsc:us res:bl nfr:bl}))
-!class (icpp_pgm (_obj {code:st args:[] run:bl tsc:us nfr:bl}))
+!class (icpp_pgm (_obj {code:st args:[] run:bl tsc:us res:bl nfr:bl}))
 
 ; mapping low-level markers -> r-code.
 !class (mk.rdx (_obj {code: inputs:[] prods:[]}))
@@ -73,7 +73,7 @@
 !op (log :nb):nb
 !op (e10 :nb):nb
 !op (syn :):
-!op (ins : :[] :bl :us :bl):
+!op (ins : :[] :bl :us :bl :bl):
 !op (red :[] :[] :[]):[]
 !op (fvw : :):
 
