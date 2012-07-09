@@ -8,13 +8,13 @@ ball:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 b_is_a_ball:(mk.val b essence ball 1) |[]
 f_b_is_a_ball:(fact b_is_a_ball 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
 
-w_top:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
-w_top_py:(mk.val w_top position_y 50 1) |[]
-f_w_top_py:(fact w_top_py 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+; w_top:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+; w_top_py:(mk.val w_top position_y 50 1) |[]
+; f_w_top_py:(fact w_top_py 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
 
-w_bottom:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
-w_bottom_py:(mk.val w_bottom position_y 0 1) |[]
-f_w_bottom_py:(fact w_bottom_py 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+; w_bottom:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+; w_bottom_py:(mk.val w_bottom position_y 0 1) |[]
+; f_w_bottom_py:(fact w_bottom_py 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
 
 
 ; same pos_y.
@@ -56,7 +56,7 @@ pgm0:(pgm |[] []
    )
 1) |[]
 
-ipgm0:(ipgm pgm0 |[] RUN_ALWAYS 50000us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+ipgm0:(ipgm pgm0 |[] RUN_ALWAYS 20000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
 
 pgm1:(pgm |[] []
    (ptn (fact (mk.val b position_y py: :) ::) [(< py 55) (> py 45)])
@@ -71,7 +71,7 @@ pgm1:(pgm |[] []
    )
 1) |[]
 
-ipgm1:(ipgm pgm1 |[] RUN_ALWAYS 0us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 0]]
+ipgm1:(ipgm pgm1 |[] RUN_ALWAYS 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 0]]
 
 pgm2:(pgm |[] []
    (ptn (fact (mk.val b position_y 0 :) ::) |[])
@@ -86,4 +86,4 @@ pgm2:(pgm |[] []
    )
 1) |[]
 
-ipgm2:(ipgm pgm2 |[] RUN_ALWAYS 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+ipgm2:(ipgm pgm2 |[] RUN_ONCE 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]

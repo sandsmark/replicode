@@ -18,7 +18,7 @@ init_run_pgm:(pgm |[] |[] |[] []
    )
 1) |[]
 
-init_run_ipgm:(ipgm init_run_pgm |[] RUN_ONCE 200000us NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 0]]
+init_run_ipgm:(ipgm init_run_pgm |[] RUN_ONCE 200000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 0]]
 
 success_run_pgm:(pgm |[] []
    (ptn (fact (success (fact (goal (fact run after: before: ::) ::) ::) ::) ::) |[])
@@ -38,7 +38,7 @@ success_run_pgm:(pgm |[] []
    )
 1) |[]
 
-success_run_ipgm:(ipgm success_run_pgm |[] RUN_ALWAYS 0us NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 0]]
+success_run_ipgm:(ipgm success_run_pgm |[] RUN_ALWAYS 0us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 0]]
 
 failure_0_run_pgm:(pgm |[] []
    (ptn (|fact (success (fact (goal (fact run after: before: ::) ::) ::) ::) ::) [(< 0 delta:(- (- before after) 50000us))])
@@ -58,7 +58,7 @@ failure_0_run_pgm:(pgm |[] []
    )
 1) |[]
 
-failure_0_run_ipgm:(ipgm failure_0_run_pgm |[] RUN_ALWAYS 0us NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 0]]
+failure_0_run_ipgm:(ipgm failure_0_run_pgm |[] RUN_ALWAYS 0us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 0]]
 
 failure_1_run_pgm:(pgm |[] []
    (ptn (|fact (success (fact (goal (fact run after: before: ::) ::) ::) ::) ::) [(>= 50000us (- before after))])
@@ -78,4 +78,4 @@ failure_1_run_pgm:(pgm |[] []
    )
 1) |[]
 
-failure_1_run_ipgm:(ipgm failure_1_run_pgm |[] RUN_ALWAYS 0us NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 0]]
+failure_1_run_ipgm:(ipgm failure_1_run_pgm |[] RUN_ALWAYS 0us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 0]]
