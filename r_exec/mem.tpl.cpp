@@ -154,17 +154,23 @@ namespace	r_exec{
 			object_registerCS.leave();*/
 		}
 
+		trigger_gc();
+	}
+
+	template<class	O>	void	Mem<O>::trim_objects(){
+
 		std::list<P<Code> >::const_iterator	o;
 		objectsCS.enter();
 		for(o=objects.begin();o!=objects.end();++o){
 
-			if((*o)==object){
+			if((*o)->is_invalidated()){
 
-				object->is_registered=false;
+				(*o)->is_registered=false;
 				objects.erase(o);
 				break;
 			}
 		}
+		registered_object_count=objects.size();
 		objectsCS.leave();
 	}
 
@@ -237,6 +243,7 @@ namespace	r_exec{
 			else
 				initial_groups.push_back((Group	*)object);	// convenience to create initial update jobs - see start().
 		}
+		registered_object_count=this->objects.size();
 
 		return	true;
 	}
@@ -378,39 +385,31 @@ namespace	r_exec{
 
 		Group	*host=view->get_host();
 
-		uint64	now=Now();
-
 		switch(view->object->code(0).getDescriptor()){
 		case	Atom::GROUP:
-			bind<Group>(view,now);
+			bind<Group>(view);
 
-			host->enter();
-			host->inject_group(view,now);
-			host->leave();
+			host->inject_group(view);
 			break;
 		default:
 			/*object_registerCS.enter();
 			object_register.insert((O	*)view->object).first;
 			object_registerCS.leave();*/
 
-			bind<O>(view,now);
+			bind<O>(view);
 
-			host->enter();
-			host->inject_new_object(view,now);
-			host->leave();
+			host->inject_new_object(view);
 			break;
 		}
 	}
 
-	template<class	O>	void	Mem<O>::inject_hlps(std::list<View	*>	views,uint64	t,Group	*destination){
+	template<class	O>	void	Mem<O>::inject_hlps(std::list<View	*>	views,Group	*destination){
 
 		std::list<View	*>::const_iterator	view;
 		for(view=views.begin();view!=views.end();++view)
-			bind<O>(*view,t);
+			bind<O>(*view);
 
-		destination->enter();
 		destination->inject_hlps(views);
-		destination->leave();
 	}
 
 	template<class	O>	void	Mem<O>::inject_notification(View	*view,bool	lock){	// no notification for notifications; no registration either (object_register and object_io_map) and no cov.
@@ -418,14 +417,8 @@ namespace	r_exec{
 		Group	*host=view->get_host();
 		LObject	*object=(LObject	*)view->object;
 
-		uint64	now=Now();
+		bind<LObject>(view);
 		
-		bind<LObject>(view,now);
-		
-		if(lock)
-			host->enter();
-		host->inject_notification(view);
-		if(lock)
-			host->leave();
+		host->inject_notification(view,lock);
 	}
 }

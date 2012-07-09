@@ -821,7 +821,7 @@ namespace	r_exec{
 				return	true;
 			}else{
 
-				if(stored_before>=after){		// sa a sb b
+				if(stored_before>after){		// sa a sb b
 
 					Utils::SetTimestamp(map[after_index]->get_code(),after);
 					return	true;
@@ -830,9 +830,9 @@ namespace	r_exec{
 			}
 		}else{
 
-			if(stored_before<before)			// a sa sb b
+			if(stored_before<=before)			// a sa sb b
 				return	true;
-			else	if(stored_after<=before){	// a sa b sb
+			else	if(stored_after<before){	// a sa b sb
 
 				Utils::SetTimestamp(map[after_index+1]->get_code(),before);
 				return	true;

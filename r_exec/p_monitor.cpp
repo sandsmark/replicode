@@ -56,7 +56,7 @@ namespace	r_exec{
 
 	bool	PMonitor::reduce(_Fact	*input){	// input is always an actual fact.
 
-		if(target->is_invalidated()){std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target has been invalidated\n";
+		if(target->is_invalidated()){//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target has been invalidated\n";
 		return	true;}
 
 		if(target->get_pred()->grounds_invalidated(input)){	// input is a counter-evidence for one of the antecedents: abort.

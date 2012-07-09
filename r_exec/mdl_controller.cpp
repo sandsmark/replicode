@@ -35,6 +35,8 @@
 namespace	r_exec{
 
 	MDLOverlay::MDLOverlay(Controller	*c,const	BindingMap	*bindings):HLPOverlay(c,bindings){
+
+		load_patterns();
 	}
 
 	MDLOverlay::~MDLOverlay(){
@@ -53,7 +55,7 @@ namespace	r_exec{
 	PrimaryMDLOverlay::~PrimaryMDLOverlay(){
 	}
 
-	Overlay	*PrimaryMDLOverlay::reduce(_Fact *input,bool	fill_cache){
+	Overlay	*PrimaryMDLOverlay::reduce(_Fact *input,Fact	*f_p_f_imdl,MDLController	*req_controller){
 //std::cout<<std::hex<<this<<std::dec<<" "<<input->object->get_oid();
 		_Fact	*input_object;
 		Pred	*prediction=input->get_pred();
@@ -80,8 +82,8 @@ namespace	r_exec{
 			Overlay				*o;
 			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,true);//bm->trace();f_imdl->get_reference(0)->trace();
 			RequirementsPair	r_p;
-			Fact				*ground;
-			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground);
+			Fact				*ground=f_p_f_imdl;
+			ChainingStatus		c_s=c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground,req_controller);
 			bool				c_a=(c_s>=WR_ENABLED);
 			switch(c_s){
 			case	WR_DISABLED:
@@ -119,7 +121,7 @@ namespace	r_exec{
 //std::cout<<" match\n";
 					f_imdl->set_reference(0,bm->bind_pattern(f_imdl->get_reference(0)));	// valuate f_imdl from updated bm.
 					//f_imdl->get_reference(0)->trace();
-					((PrimaryMDLController	*)controller)->predict(bindings,input_object,f_imdl,c_a,r_p,ground);
+					((PrimaryMDLController	*)controller)->predict(bindings,input,f_imdl,c_a,r_p,ground);
 					//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" prediction\n";
 					o=this;
 				}else{
@@ -132,7 +134,7 @@ namespace	r_exec{
 			delete[]	code;
 			code=NULL;
 			bindings=original_bindings;
-			if(fill_cache){
+			if(f_p_f_imdl==NULL){
 			
 				if(prediction){
 
@@ -144,7 +146,7 @@ namespace	r_exec{
 			}
 			return	o;
 		}case	MATCH_SUCCESS_NEGATIVE:
-			if(fill_cache){
+			if(f_p_f_imdl==NULL){
 
 				if(prediction){
 
@@ -183,7 +185,7 @@ namespace	r_exec{
 	SecondaryMDLOverlay::~SecondaryMDLOverlay(){
 	}
 
-	Overlay	*SecondaryMDLOverlay::reduce(_Fact *input,bool	fill_cache){
+	Overlay	*SecondaryMDLOverlay::reduce(_Fact *input,Fact	*f_p_f_imdl,MDLController	*req_controller){
 //std::cout<<std::hex<<this<<std::dec<<" "<<input->object->get_oid();
 		P<BindingMap>	bm=new	BindingMap(bindings);
 		bm->reset_fwd_timings(input);
@@ -196,8 +198,8 @@ namespace	r_exec{
 			Overlay				*o;
 			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,true);
 			RequirementsPair	r_p;
-			Fact				*ground;
-			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground);
+			Fact				*ground=f_p_f_imdl;
+			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground,req_controller);
 			bool				c_a=(c_s>=NO_R);
 			switch(c_s){
 			case	WR_DISABLED:
@@ -644,7 +646,7 @@ namespace	r_exec{
 		}
 	}
 
-	ChainingStatus	MDLController::retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground){
+	ChainingStatus	MDLController::retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground,MDLController	*req_controller){
 
 		uint32	wr_count;
 		uint32	sr_count;
@@ -656,11 +658,23 @@ namespace	r_exec{
 		BindingMap	original(bm);
 		if(!sr_count){	// no strong req., some weak req.: true if there is one f->imdl complying with timings and bindings.
 
+			if(ground!=NULL){	// an imdl triggered the reduction of the cache.
+
+				r_p.first.controllers.push_back(req_controller);
+				r_p.first.f_imdl=ground;
+				r_p.first.chaining_was_allowed=true;
+				return	WR_ENABLED;
+			}
+
 			r=WR_DISABLED;
 			requirements.CS.enter();
 			uint64	now=Now();
 			std::list<REntry>::const_iterator	e;
 			for(e=requirements.positive_evidences.begin();e!=requirements.positive_evidences.end();){
+
+				Code	*imdl=(*e).evidence->get_pred()->get_target()->get_reference(0);
+				uint16	tpl_index=imdl->code(I_HLP_TPL_ARGS).asIndex();
+				//std::cout<<"IMDL: "<<imdl->code(tpl_index+1).asFloat()<<" ["<<Time::ToString_seconds((*e).after-Utils::GetTimeReference())<<" "<<Time::ToString_seconds((*e).before-Utils::GetTimeReference())<<"["<<std::endl;
 
 				if((*e).is_too_old(now))	// garbage collection.
 					e=requirements.positive_evidences.erase(e);
@@ -679,6 +693,7 @@ namespace	r_exec{
 							r=WR_ENABLED;
 							bm->load(&_original);
 							ground=(*e).evidence;
+							//std::cout<<"Chosen IMDL: "<<imdl->code(tpl_index+1).asFloat()<<" ["<<Time::ToString_seconds((*e).after-Utils::GetTimeReference())<<" "<<Time::ToString_seconds((*e).before-Utils::GetTimeReference())<<"["<<std::endl;
 						}
 						
 						r_p.first.controllers.push_back((*e).controller);
@@ -758,7 +773,19 @@ namespace	r_exec{
 					}
 				}
 				
-				for(e=requirements.positive_evidences.begin();e!=requirements.positive_evidences.end();){
+				if(ground!=NULL){	// an imdl triggered the reduction of the cache.
+
+					requirements.CS.leave();
+					float32	confidence=ground->get_pred()->get_target()->get_cfd();
+					if(confidence>=negative_cfd){
+	
+						r=WR_ENABLED;
+						r_p.first.controllers.push_back(req_controller);
+						r_p.first.f_imdl=ground;
+						r_p.first.chaining_was_allowed=true;
+					}
+					return	r;
+				}else	for(e=requirements.positive_evidences.begin();e!=requirements.positive_evidences.end();){
 
 					if((*e).is_too_old(now))	// garbage collection.
 						e=requirements.positive_evidences.erase(e);
@@ -923,10 +950,6 @@ namespace	r_exec{
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	PMDLController::PMDLController(r_code::View	*view):MDLController(view){
-
-		PrimaryMDLOverlay	*o=new	PrimaryMDLOverlay(this,bindings);	// master overlay.
-		o->load_patterns();
-		overlays.push_back(o);
 	}
 
 	void	PMDLController::add_g_monitor(_GMonitor	*m){
@@ -1056,7 +1079,7 @@ namespace	r_exec{
 	TopLevelMDLController::TopLevelMDLController(r_code::View	*view):PMDLController(view){
 	}
 
-	void	TopLevelMDLController::store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation){
+	void	TopLevelMDLController::store_requirement(_Fact	*f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation){
 	}
 
 	void	TopLevelMDLController::take_input(r_exec::View	*input){
@@ -1098,10 +1121,10 @@ namespace	r_exec{
 			}
 		}else{
 
-			reductionCS.enter();
-			((MDLOverlay	*)*overlays.begin())->reduce(input_object,true);	// matching is used to fill up the cache.
+			P<MDLOverlay>	o=new	PrimaryMDLOverlay(this,bindings);
+			o->reduce(input_object,NULL,NULL);	// matching is used to fill up the cache (no predictions).
+
 			monitor_goals(input_object);
-			reductionCS.leave();
 		}
 	}
 
@@ -1257,7 +1280,7 @@ namespace	r_exec{
 		secondary->add_requirement_to_rhs();
 	}
 
-	void	PrimaryMDLController::store_requirement(_Fact	*f_p_f_imdl,bool	chaining_was_allowed,bool	simulation){
+	void	PrimaryMDLController::store_requirement(_Fact	*f_p_f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation){
 
 		_Fact	*f_imdl=f_p_f_imdl->get_pred()->get_target();
 		Code	*mdl=f_imdl->get_reference(0);
@@ -1284,12 +1307,12 @@ namespace	r_exec{
 				_store_requirement(&simulated_requirements.positive_evidences,e);
 			else
 				_store_requirement(&requirements.positive_evidences,e);
-			reduce_cache<PrimaryMDLController>();
+			reduce_cache<PrimaryMDLController>((Fact	*)f_p_f_imdl,controller);
 		}else	if(!simulation)
 			_store_requirement(&requirements.negative_evidences,e);
 		
 		if(!simulation)
-			secondary->store_requirement(f_p_f_imdl,chaining_was_allowed,false);
+			secondary->store_requirement(f_p_f_imdl,controller,chaining_was_allowed,false);
 	}
 
 	void	PrimaryMDLController::take_input(r_exec::View	*input){
@@ -1343,8 +1366,8 @@ namespace	r_exec{
 		if(is_requirement()!=NaR){
 
 			PrimaryMDLController	*c=(PrimaryMDLController	*)controllers[RHSController];	// rhs controller: in the same view.
-			c->store_requirement(production,chaining_was_allowed,simulation);					// if not simulation, stores also in the secondary controller.
 			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" m1 predicts im0 from "<<input->get_oid()<<"\n";
+			c->store_requirement(production,this,chaining_was_allowed,simulation);				// if not simulation, stores also in the secondary controller.
 			return;
 		}
 
@@ -1364,14 +1387,15 @@ namespace	r_exec{
 				if(prediction){	// no rdx nor monitoring if the input was a prediction; case of a reuse: f_imdl becomes f->p->f_imdl.
 
 					Fact	*pred_f_imdl=new	Fact(new	Pred(f_imdl,1),now,now,1,1);
+					//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" m0 predicts: "<<bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" from PRED "<<input->get_oid()<<"\n";
 					inject_prediction(production,pred_f_imdl,confidence,before-now,NULL);
 				}else{
 
 					Code		*mk_rdx=new	MkRdx(f_imdl,(Code	*)input,production,1,bindings);
+					//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<"                                                m0 predicts: "<<bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" from "<<input->get_oid()<<"\n";
 					bool		rate_failures=inject_prediction(production,f_imdl,confidence,before-now,mk_rdx);
 					PMonitor	*m=new	PMonitor(this,bm,production,rate_failures);	// not-injected predictions are monitored for rating the model that produced them (successes only).
 					MDLController::add_monitor(m);
-					//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" m0 predicts: "<<bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" from "<<input->get_oid()<<"\n";
 					Group	*secondary_host=secondary->getView()->get_host();	// inject f_imdl in secondary group.
 					View	*view=new	View(View::SYNC_ONCE,now,confidence,1,getView()->get_host(),secondary_host,f_imdl);	// SYNC_ONCE,res=resilience.
 					_Mem::Get()->inject(view);
@@ -1416,20 +1440,19 @@ namespace	r_exec{
 
 	void	PrimaryMDLController::reduce(r_exec::View	*input){
 
-		if(_has_tpl_args	&&	get_requirement_count()==0){
-
-			kill_views();
+		if(is_orphan())
 			return;
-		}
 
 		_Fact	*input_object=(_Fact	*)input->object;	// input_object is f->obj.
+		if(input_object->is_invalidated())
+			return;
 
 		bool	ignore_input=false;
 		std::list<P<Code> >::const_iterator	a;
-		reductionCS.enter();
+		assumptionsCS.enter();
 		for(a=assumptions.begin();a!=assumptions.end();){	// ignore home-made assumptions and perform some garbage collection.
 
-			if((*a)->is_invalidated())
+			if((*a)->is_invalidated())	// garbage collection.
 				a=assumptions.erase(a);
 			else	if(((Code	*)*a)==input_object){
 
@@ -1438,12 +1461,9 @@ namespace	r_exec{
 			}else
 				++a;
 		}
-		reductionCS.leave();
+		assumptionsCS.leave();
 
 		if(ignore_input)
-			return;
-
-		if(input_object->is_invalidated())
 			return;
 
 		Goal	*goal=input_object->get_goal();
@@ -1481,29 +1501,22 @@ namespace	r_exec{
 			}
 		}else{
 
-			bool	match;
-			reductionCS.enter();
-			match=(((MDLOverlay	*)*overlays.begin())->reduce(input_object,true))!=NULL;
+			P<MDLOverlay>	o=new	PrimaryMDLOverlay(this,bindings);
+			bool	match=(o->reduce(input_object,NULL,NULL)!=NULL);
 			if(!match	&&	!monitor_predictions(input_object)	&&	!monitor_goals(input_object))
 				assume(input_object);
-			reductionCS.leave();
 
 			check_last_match_time(match);
 		}
 	}
 
-	void	PrimaryMDLController::reduce(){
+	void	PrimaryMDLController::reduce_batch(Fact	*f_p_f_imdl,MDLController	*controller){
 
-		if(_has_tpl_args	&&	get_requirement_count()==0){
-
-			kill_views();
+		if(is_orphan())
 			return;
-		}
 
-		reductionCS.enter();
-		reduce_cache<EEntry>(&evidences);
-		reduce_cache<PEEntry>(&predicted_evidences);
-		reductionCS.leave();
+		reduce_cache<EEntry>(&evidences,f_p_f_imdl,controller);
+		reduce_cache<PEEntry>(&predicted_evidences,f_p_f_imdl,controller);
 	}
 
 	void	PrimaryMDLController::abduce(BindingMap	*bm,Fact	*super_goal,bool	opposite,float32	confidence){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
@@ -1783,7 +1796,7 @@ namespace	r_exec{
 	void	PrimaryMDLController::register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures){
 
 		f_pred->invalidate();
-
+		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" pred "<<f_pred->get_oid()<<" invalidated"<<std::endl;
 		if(confidence==1)	// else, evidence is an assumption: no rating.
 			register_req_outcome(f_pred->get_pred()->get_target(),success,rate_failures);
 
@@ -1811,8 +1824,11 @@ namespace	r_exec{
 			View	*view=new	View(View::SYNC_ONCE,now,1,resilience,out_group,primary_host,f_success_object);
 			_Mem::Get()->inject(view);
 
-			view=new	View(View::SYNC_ONCE,now,1,1,out_group,primary_host,f_evidence);
-			_Mem::Get()->inject(view);
+			if(!evidence){
+
+				view=new	View(View::SYNC_ONCE,now,1,1,out_group,primary_host,f_evidence);
+				_Mem::Get()->inject(view);
+			}
 		}
 	}
 
@@ -1912,7 +1928,12 @@ namespace	r_exec{
 
 		Code	*model=get_core_object();
 
-		reductionCS.enter();	// protects the model's data.
+		codeCS.enter();	// protects the model's data.
+		if(is_invalidated()){
+
+			codeCS.leave();
+			return;
+		}
 
 		float32	strength=model->code(MDL_STRENGTH).asFloat();
 		float32	instance_count=model->code(MDL_CNT).asFloat();
@@ -1929,7 +1950,7 @@ namespace	r_exec{
 			uint32	instance_count_base=_Mem::Get()->get_mdl_inertia_cnt_thr();
 			if(success_rate>=_Mem::Get()->get_mdl_inertia_sr_thr()	&&	instance_count>=instance_count_base){	// make the model strong if not already; trim the instance count to reduce the rating's inertia.
 
-				instance_count=1/success_rate;
+				instance_count=(uint32)(1/success_rate);
 				success_rate=1;
 				model->code(MDL_STRENGTH)=Atom::Float(1);
 			}
@@ -1937,6 +1958,7 @@ namespace	r_exec{
 			model->code(MDL_CNT)=Atom::Float(instance_count);
 			model->code(MDL_SR)=Atom::Float(success_rate);
 			getView()->set_act(success_rate);
+			codeCS.leave();
 		}else{
 
 			success_rate=success_count/instance_count;
@@ -1945,15 +1967,18 @@ namespace	r_exec{
 				model->code(MDL_CNT)=Atom::Float(instance_count);
 				model->code(MDL_SR)=Atom::Float(success_rate);
 				getView()->set_act(success_rate);
+				codeCS.leave();
 			}else	if(strength==1){	// activate out-of-context strong models in the secondary group, deactivate from the primary.
 
 				getView()->set_act(0);
 				secondary->getView()->set_act(success_rate);	// may trigger secondary->gain_activation().
-			}else	// no weak models live in the secondary group.
+				codeCS.leave();
+			}else{	// no weak models live in the secondary group.
+
+				codeCS.leave();
 				kill_views();
+			}
 		}
-		
-		reductionCS.leave();
 		//std::cout<<std::hex<<this<<std::dec<<" cnt:"<<instance_count<<" sr:"<<success_rate<<std::endl;
 	}
 
@@ -2008,7 +2033,9 @@ namespace	r_exec{
 		if(opposite)
 			bound_lhs->set_opposite();
 
+		assumptionsCS.enter();
 		assumptions.push_back(bound_lhs);
+		assumptionsCS.leave();
 
 		uint64	now=Now();
 		uint64	before=bound_lhs->get_before();
@@ -2025,29 +2052,41 @@ namespace	r_exec{
 
 	void	PrimaryMDLController::kill_views(){
 
+		reductionCS.enter();
+		if(is_invalidated()){
+
+			reductionCS.leave();
+			return;
+		}
+		
 		remove_requirement_from_rhs();
 		secondary->remove_requirement_from_rhs();
 		invalidate();
 		getView()->force_res(0);
 		secondary->getView()->force_res(0);
+		reductionCS.leave();
 	}
 
 	void	PrimaryMDLController::check_last_match_time(bool	match){
 
-		uint64	now=Now();
-		if(match)
+		uint64	now;
+		if(match){
+
+			last_match_timeCS.enter();
+			now=Now();
 			last_match_time=now;
-		else	if(now-last_match_time>_Mem::Get()->get_primary_thz())
-			getView()->set_act(0);	// will trigger lose_activation(), which will activate the model in the secondary group.
+			last_match_timeCS.leave();
+		}else{
+			
+			now=Now();
+			if(now-last_match_time>_Mem::Get()->get_primary_thz())
+				getView()->set_act(0);	// will trigger lose_activation(), which will activate the model in the secondary group.
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	SecondaryMDLController::SecondaryMDLController(r_code::View	*view):MDLController(view){
-
-		SecondaryMDLOverlay	*o=new	SecondaryMDLOverlay(this,bindings);	//	master overlay.
-		o->load_patterns();
-		overlays.push_back(o);
 	}
 
 	void	SecondaryMDLController::set_primary(PrimaryMDLController	*primary){
@@ -2068,20 +2107,15 @@ namespace	r_exec{
 
 	void	SecondaryMDLController::reduce(r_exec::View	*input){
 
-		if(_has_tpl_args	&&	get_requirement_count()==0){
-
-			kill_views();
+		if(is_orphan())
 			return;
-		}
 
 		_Fact	*input_object=(_Fact	*)input->object;
 		if(input_object->is_invalidated())
 			return;
 
-		bool	match;
-		reductionCS.enter();
-		match=(((MDLOverlay	*)*overlays.begin())->reduce(input_object,true)!=NULL);	// forward chaining.
-		reductionCS.leave();
+		P<MDLOverlay>	o=new	PrimaryMDLOverlay(this,bindings);
+		bool	match=(o->reduce(input_object,NULL,NULL)!=NULL);	// forward chaining.
 
 		if(!match)
 			monitor_predictions(input_object);
@@ -2089,18 +2123,13 @@ namespace	r_exec{
 		check_last_match_time(match);
 	}
 
-	void	SecondaryMDLController::reduce(){
+	void	SecondaryMDLController::reduce_batch(Fact	*f_p_f_imdl,MDLController	*controller){
 
-		if(_has_tpl_args	&&	get_requirement_count()==0){
-
-			kill_views();
+		if(is_orphan())
 			return;
-		}
 
-		reductionCS.enter();
-		reduce_cache<EEntry>(&evidences);
-		reduce_cache<PEEntry>(&predicted_evidences);
-		reductionCS.leave();
+		reduce_cache<EEntry>(&evidences,f_p_f_imdl,controller);
+		reduce_cache<PEEntry>(&predicted_evidences,f_p_f_imdl,controller);
 	}
 
 	void	SecondaryMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// predicitons are not injected: they are silently produced for rating purposes.
@@ -2115,7 +2144,7 @@ namespace	r_exec{
 		
 		if(is_requirement()!=NaR){	// store in the rhs controller, even if primary (to allow rating in any case).
 
-			((MDLController	*)controllers[RHSController])->store_requirement(bound_rhs,chaining_was_allowed,false);
+			((MDLController	*)controllers[RHSController])->store_requirement(production,this,chaining_was_allowed,false);
 			return;
 		}
 
@@ -2123,14 +2152,14 @@ namespace	r_exec{
 		add_monitor(m);
 	}
 
-	void	SecondaryMDLController::store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation){
+	void	SecondaryMDLController::store_requirement(_Fact	*f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation){
 
 		Code	*mdl=f_imdl->get_reference(0);
 		REntry	e(f_imdl,this,chaining_was_allowed);
 		if(f_imdl->is_fact()){
 
 			_store_requirement(&requirements.positive_evidences,e);
-			reduce_cache<SecondaryMDLController>();
+			reduce_cache<SecondaryMDLController>((Fact	*)f_imdl,controller);
 		}else
 			_store_requirement(&requirements.negative_evidences,e);
 	}
@@ -2138,6 +2167,14 @@ namespace	r_exec{
 	void	SecondaryMDLController::rate_model(){	// acknowledge successes only; the purpose is to wake strong models up upon a context switch.
 
 		Code	*model=get_core_object();
+		
+		codeCS.enter();	// protects the model's data.
+		if(is_invalidated()){
+
+			codeCS.leave();
+			return;
+		}
+
 		uint32	instance_count=model->code(MDL_CNT).asFloat();
 		uint32	success_count=model->code(MDL_SR).asFloat()*instance_count;
 
@@ -2158,6 +2195,8 @@ namespace	r_exec{
 			if(success_rate>getView()->get_host()->get_act_thr())	// else: leave the model in the secondary group.
 				getView()->set_act(success_rate);
 		}
+
+		codeCS.leave();
 	}
 
 	void	SecondaryMDLController::register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures){	// success==false means executed in the thread of a time core; otherwise, executed in the same thread as for Controller::reduce().
@@ -2197,10 +2236,18 @@ namespace	r_exec{
 
 	void	SecondaryMDLController::check_last_match_time(bool	match){
 
-		uint64	now=Now();
-		if(match)
+		uint64	now;
+		if(match){
+
+			last_match_timeCS.enter();
+			now=Now();
 			last_match_time=now;
-		else	if(now-last_match_time>_Mem::Get()->get_secondary_thz())
-			kill_views();
+			last_match_timeCS.leave();
+		}else{
+			
+			now=Now();
+			if(now-last_match_time>_Mem::Get()->get_secondary_thz())
+				kill_views();
+		}
 	}
 }

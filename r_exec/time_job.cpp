@@ -35,12 +35,17 @@
 
 namespace	r_exec{
 
-	TimeJob::TimeJob(uint64	ijt):_Object(),target_time(ijt){
+	TimeJob::TimeJob(uint64	target_time):_Object(),target_time(target_time){
 	}
 
 	bool	TimeJob::is_alive()	const{
 
 		return	true;
+	}
+
+	void	TimeJob::report(int64	lag)	const{
+
+		std::cout<<"> late generic: "<<lag<<" us behind."<<std::endl;
 	}
 
 	////////////////////////////////////////////////////////////
@@ -52,8 +57,13 @@ namespace	r_exec{
 
 	bool	UpdateJob::update(uint64	&next_target){
 
-		_Mem::Get()->update(group);
+		group->update(target_time);
 		return	true;
+	}
+
+	void	UpdateJob::report(int64	lag)	const{
+
+		std::cout<<"> late update: "<<lag<<" us behind."<<std::endl;
 	}
 
 	////////////////////////////////////////////////////////////
@@ -80,6 +90,11 @@ namespace	r_exec{
 		return	true;
 	}
 
+	void	AntiPGMSignalingJob::report(int64	lag)	const{
+
+		std::cout<<"> late |pgm signaling: "<<lag<<" us behind."<<std::endl;
+	}
+
 	////////////////////////////////////////////////////////////
 
 	InputLessPGMSignalingJob::InputLessPGMSignalingJob(View	*v,uint64	ijt):SignalingJob(v,ijt){
@@ -90,6 +105,11 @@ namespace	r_exec{
 		if(is_alive())
 			((InputLessPGMController	*)view->controller)->signal_input_less_pgm();
 		return	true;
+	}
+
+	void	InputLessPGMSignalingJob::report(int64	lag)	const{
+
+		std::cout<<"> late input-less pgm signaling: "<<lag<<" us behind."<<std::endl;
 	}
 
 	////////////////////////////////////////////////////////////
@@ -105,6 +125,11 @@ namespace	r_exec{
 		return	true;
 	}
 
+	void	InjectionJob::report(int64	lag)	const{
+
+		std::cout<<"> late injection: "<<lag<<" us behind."<<std::endl;
+	}
+
 	////////////////////////////////////////////////////////////
 
 	EInjectionJob::EInjectionJob(View	*v,uint64	ijt):TimeJob(ijt){
@@ -116,6 +141,11 @@ namespace	r_exec{
 
 		_Mem::Get()->inject_existing_object(view,view->object,view->get_host());
 		return	true;
+	}
+
+	void	EInjectionJob::report(int64	lag)	const{
+
+		std::cout<<"> late injection: "<<lag<<" us behind."<<std::endl;
 	}
 
 	////////////////////////////////////////////////////////////
@@ -144,13 +174,14 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////
 
-	PerfSamplingJob::PerfSamplingJob(uint32	period):TimeJob(0),period(period){
+	PerfSamplingJob::PerfSamplingJob(uint64	start,uint32	period):TimeJob(start),period(period){
 	}
 
 	bool	PerfSamplingJob::update(uint64	&next_target){
 
 		_Mem::Get()->inject_perf_stats();
-		next_target=Now()+period;
+		target_time+=period;
+		next_target=target_time;
 		return	true;
 	}
 

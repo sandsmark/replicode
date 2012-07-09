@@ -38,7 +38,7 @@ namespace	r_exec{
 
 	HLPOverlay::HLPOverlay(Controller	*c,const	BindingMap	*bindings,bool	load_code):Overlay(c,load_code){
 
-		this->bindings=(BindingMap	*)bindings;
+		this->bindings=new	BindingMap((BindingMap	*)bindings);
 	}
 
 	HLPOverlay::~HLPOverlay(){

@@ -437,16 +437,13 @@ namespace	r_comp{
 	void	Image::add_objects(std::list<P<r_code::Code> >	&objects,std::vector<SysObject	*>	&imported_objects){
 
 		std::list<P<r_code::Code> >::const_iterator	o;
-		for(o=objects.begin();o!=objects.end();++o){
-
-			//if(!(*o)->is_invalidated())
-				add_object(*o,imported_objects);
-		}
+		for(o=objects.begin();o!=objects.end();++o)
+			add_object(*o,imported_objects);
 
 		build_references();
 	}
 
-	inline	uint32	Image::get_reference_count(Code	*object){
+	inline	uint32	Image::get_reference_count(const	Code	*object)	const{
 
 		switch(object->code(0).getDescriptor()){	// ignore the last reference as it is the unpacked version of the object.
 		case	Atom::MODEL:
@@ -468,7 +465,7 @@ namespace	r_comp{
 		ptrs_to_indices[object]=object_index=code_segment.objects.as_std()->size();
 		SysObject	*sys_object=new	SysObject(object);
 		add_sys_object(sys_object);
-
+		
 		uint16	reference_count=get_reference_count(object);
 		for(uint16	i=0;i<reference_count;++i){			// follow reference pointers and recurse.
 
@@ -511,8 +508,7 @@ namespace	r_comp{
 			}
 		}
 
-		object->acq_views();
-		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
+		std::list<View	*>::const_iterator	v;
 		for(v=object->views.begin();v!=object->views.end();++v){	// follow the view's reference pointers and recurse.
 
 			for(uint8	j=0;j<2;++j){	// 2 refs maximum per view; may be NULL.
@@ -529,7 +525,6 @@ namespace	r_comp{
 				}
 			}
 		}
-		object->rel_views();
 		
 		uint32	_object=(uint32)object;
 		sys_object->references[0]=(_object	&	0x0000FFFF);
@@ -568,7 +563,7 @@ namespace	r_comp{
 			}
 		}
 
-		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
+		std::list<View	*>::const_iterator	v;
 		for(i=0,v=object->views.begin();v!=object->views.end();++i,++v){
 
 			for(uint8	j=0;j<2;++j){	// 2 refs maximum per view; may be NULL.

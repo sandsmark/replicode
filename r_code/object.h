@@ -77,7 +77,7 @@ namespace	r_code{
 	private:
 		static	uint32	LastOID;
 	public:
-		r_code::vector<uint32>		markers;	//	indexes in the relocation segment
+		r_code::vector<uint32>		markers;	// indexes in the relocation segment
 		r_code::vector<SysView	*>	views;
 
 		uint32	oid;
@@ -99,12 +99,12 @@ namespace	r_code{
 	class	dll_export	View:
 	public	_Object{
 	private:
-		uint16	index;						//	for unpacking: index is the index of the view in the SysObject.
+		uint16	index;						// for unpacking: index is the index of the view in the SysObject.
 	protected:
-		Atom	_code[VIEW_CODE_MAX_SIZE];	//	dimensioned to hold the largest view (group view): head atom, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp; oid is the last word32 (not an atom).
+		Atom	_code[VIEW_CODE_MAX_SIZE];	// dimensioned to hold the largest view (group view): head atom, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp; oid is the last word32 (not an atom).
 	public:
-		Code	*references[2];				//	does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group in references[0]).
-		P<Code>	object;						//	viewed object.
+		Code	*references[2];				// does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group in references[0]).
+		P<Code>	object;						// viewed object.
 
 		View():object(NULL){
 
@@ -138,7 +138,7 @@ namespace	r_code{
 		class	Hash{
 		public:
 			size_t	operator	()(View	*v)	const{
-				return	(size_t)(Code	*)v->references[0];	//	i.e. the group the view belongs to.
+				return	(size_t)(Code	*)v->references[0];	// i.e. the group the view belongs to.
 			}
 		};
 
@@ -189,7 +189,7 @@ namespace	r_code{
 		virtual	bool	invalidate()	{ return	false;	}
 
 		std::list<Code	*>								markers;
-		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	//	indexed by groups.
+		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	// indexed by groups.
 
 		virtual	View	*build_view(SysView	*source)=0;
 
@@ -206,7 +206,7 @@ namespace	r_code{
 		virtual	void	mod(uint16	member_index,float32	value){};
 		virtual	void	set(uint16	member_index,float32	value){};
 		virtual	View	*get_view(Code	*group,bool	lock){	return	NULL;	}
-		virtual	void	add_reference(Code	*object)	const{}	//	called only on local objects.
+		virtual	void	add_reference(Code	*object)	const{}	// called only on local objects.
 		void	remove_marker(Code	*m){
 			
 			acq_markers();

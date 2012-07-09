@@ -101,10 +101,32 @@ namespace	r_exec{
 		bool	is_active_pgm(View	*view);
 		bool	is_eligible_input(View	*view);
 
-		void	inject(View	*view,uint64	t);
+		void	inject(View	*view);
 
 		void	notifyNew(View	*view);
-		void	cov(View	*view,uint64	t);
+		void	cov(View	*view);
+
+		class	GroupState{
+		public:
+			float32	former_sln_thr;
+			bool	was_c_active;
+			bool	is_c_active;
+			bool	was_c_salient;
+			bool	is_c_salient;
+			GroupState(	float32	former_sln_thr,
+						bool	was_c_active,
+						bool	is_c_active,
+						bool	was_c_salient,
+						bool	is_c_salient):former_sln_thr(former_sln_thr),was_c_active(was_c_active),is_c_active(is_c_active),was_c_salient(was_c_salient),is_c_salient(is_c_salient){}
+		};
+
+		void	_update_saliency(GroupState	*state,View	*view);
+		void	_update_activation(GroupState	*state,View	*view);
+		void	_update_visibility(GroupState	*state,View	*view);
+
+		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr)	const;
+		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path)	const;
+		void	_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path)	const;
 	public:
 		//	xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
 		//	Active overlays are to be found in xxx_ipgm_views and rgroup_views.
@@ -355,16 +377,30 @@ namespace	r_exec{
 		void	mod(uint16	member_index,float32	value);
 		void	set(uint16	member_index,float32	value);
 
-		//	These functions are called by the rMem.
 		void	reset_stats();	//	called at the begining of an update.
 		void	update_stats();	//	at the end of an update; may produce notifcations.
+
 		bool	load(View	*view,Code	*object);
-		void	inject_new_object(View	*view,uint64	t);
-		void	inject_existing_object(View	*view,uint64	t);
-		void	inject_group(View	*view,uint64	t);
-		void	inject_notification(View	*view);
+		
+		// Called at each update period.
+		// - set the final resilience value, if 0, delete.
+		// - set the final saliency.
+		// - set the final activation.
+		// - set the final visibility, cov.
+		// - propagate saliency changes.
+		// - inject next update job for the group.
+		// - inject new signaling jobs if act pgm with no input or act |pgm.
+		// - notify high and low values.
+		void	update(uint64	planned_time);
+
+		void	inject_new_object(View	*view);
+		void	inject_existing_object(View	*view);
+		void	inject_group(View	*view);
+		void	inject_notification(View	*view,bool	lock);
 		void	inject_hlps(std::list<View	*>	&views);
-		void	cov(uint64	t);
+		void	inject_reduction_jobs(View	*view);
+
+		void	cov();
 
 		class	Hash{
 		public:

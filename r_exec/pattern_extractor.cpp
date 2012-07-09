@@ -595,7 +595,7 @@ namespace	r_exec{
 		mdl->code(write_index)=Atom::Set(1);	// only one group: the one the tpx lives in.
 		mdl->code(++write_index)=Atom::RPointer(2);
 
-		mdl->code(MDL_STRENGTH)=Atom::Float(1);
+		mdl->code(MDL_STRENGTH)=Atom::Float(0);
 		mdl->code(MDL_CNT)=Atom::Float(1);
 		mdl->code(MDL_SR)=Atom::Float(1);
 		mdl->code(MDL_DSR)=Atom::Float(1);

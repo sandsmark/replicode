@@ -58,7 +58,7 @@ namespace	r_exec{
 
 		if(invalidated)
 			return	true;
-		invalidated=1;
+		invalidated=1;//std::cout<<std::dec<<get_oid()<<" invalidated\n";
 /*
 		std::list<Code	*>::const_iterator	m;
 		acq_markers();
@@ -67,6 +67,9 @@ namespace	r_exec{
 		markers.clear();
 		rel_markers();
 */
+		acq_views();
+		views.clear();
+		rel_views();
 		if(is_registered){
 
 			if(code(0).getDescriptor()==Atom::MARKER){

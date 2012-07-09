@@ -513,7 +513,7 @@ namespace	r_exec{
 			for(uint32	i=0;i<input_views.size();++i){
 
 				if(input_views[i]->object->is_invalidated())
-					return	true;
+					return	(invalidated=1);
 			}
 		}
 
@@ -595,6 +595,10 @@ namespace	r_exec{
 				if(check_guards()	&&	inject_productions()){
 
 					((PGMController	*)controller)->notify_reduction();
+					/*std::cout<<std::hex<<this<<std::dec<<" full match:";
+					for(uint16	i=0;i<input_views.size();++i)
+						std::cout<<" "<<input_views[i]->object->get_oid();
+					std::cout<<std::endl;*/
 					PGMOverlay	*offspring=new	PGMOverlay(this,input_index,value_commit_index);
 					invalidate();
 					return	offspring;
@@ -606,6 +610,10 @@ namespace	r_exec{
 				}
 			}else{	// create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
 
+				/*std::cout<<std::hex<<this<<std::dec<<" partial match:";
+				for(uint16	i=0;i<input_views.size();++i)
+					std::cout<<" "<<input_views[i]->object->get_oid();
+				std::cout<<std::endl;*/
 				PGMOverlay	*offspring=new	PGMOverlay(this,input_index,value_commit_index);
 				commit();
 				if(birth_time==0)

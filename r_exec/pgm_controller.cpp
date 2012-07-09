@@ -70,10 +70,12 @@ namespace	r_exec{
 					if(	host->get_c_act()>host->get_c_act_thr()		&&	// c-active group.
 						host->get_c_sln()>host->get_c_sln_thr()){		// c-salient group.
 
+						host->leave();
+
 						TimeJob	*next_job=new	InputLessPGMSignalingJob((r_exec::View*)view,Now()+tsc);
 						_Mem::Get()->pushTimeJob(next_job);
-					}
-					host->leave();
+					}else
+						host->leave();
 				}
 			}
 		}
@@ -107,12 +109,14 @@ namespace	r_exec{
 	void	PGMController::reduce(r_exec::View	*input){
 
 		std::list<P<Overlay> >::const_iterator	o;
-
+		uint32	oid=input->object->get_oid();
+		//uint64	t=Now()-Utils::GetTimeReference();
+		//std::cout<<Time::ToString_seconds(t)<<" got "<<oid<<" "<<input->get_sync()<<std::endl;
 		if(tsc>0){
 
 			reductionCS.enter();
 			uint64	now=Now();	// call must be located after the CS.enter() since (*o)->reduce() may update (*o)->birth_time.
-			//uint64	t=now-st;
+			//uint64	t=now-Utils::GetTimeReference();
 			for(o=overlays.begin();o!=overlays.end();){
 
 				if((*o)->is_invalidated())
@@ -121,18 +125,20 @@ namespace	r_exec{
 
 					uint64	birth_time=((PGMOverlay	*)*o)->get_birth_time();
 					if(birth_time>0	&&	now-birth_time>tsc){
-						//std::cout<<Time::ToString_seconds(t)<<" kill "<<std::hex<<(void	*)*o<<std::dec<<" born: "<<Time::ToString_seconds(birth_time-st)<<" after "<<Time::ToString_seconds(now-birth_time)<<std::endl;
+						//std::cout<<Time::ToString_seconds(t)<<" kill "<<std::hex<<(void	*)*o<<std::dec<<" born: "<<Time::ToString_seconds(birth_time-Utils::GetTimeReference())<<" after "<<Time::ToString_seconds(now-birth_time)<<std::endl;
+						//std::cout<<std::hex<<(void	*)*o<<std::dec<<" ------------kill "<<input->object->get_oid()<<" ignored "<<std::endl;
 						o=overlays.erase(o);
 					}else{
 						//void	*oo=*o;
 						Overlay	*offspring=(*o)->reduce(input);
+						if(offspring){
+							overlays.push_front(offspring);
+							//std::cout<<Time::ToString_seconds(t)<<" "<<std::hex<<oo<<std::dec<<" born: "<<Time::ToString_seconds(((PGMOverlay	*)oo)->get_birth_time()-Utils::GetTimeReference())<<" reduced "<<input->object->get_oid()<<" "<<input->get_sync()<<" offspring: "<<std::hex<<offspring<<std::dec<<std::endl;
+							//std::cout<<std::hex<<(void	*)oo<<std::dec<<" --------------- reduced "<<input->object->get_oid()<<" "<<input->get_sync()<<std::endl;
+						}
 						if(!is_alive())
 							break;
 						++o;
-						if(offspring){
-							overlays.push_front(offspring);
-							//std::cout<<Time::ToString_seconds(t)<<" "<<std::hex<<oo<<std::dec<<" born: "<<Time::ToString_seconds(((PGMOverlay	*)oo)->get_birth_time()-st)<<" reduced "<<input->object->get_oid()<<" "<<input->get_sync()<<" offspring: "<<std::hex<<offspring<<std::dec<<std::endl;
-						}
 					}
 				}
 			}
@@ -147,11 +153,11 @@ namespace	r_exec{
 				else{
 
 					Overlay	*offspring=(*o)->reduce(input);
+					if(offspring)
+						overlays.push_front(offspring);
 					if(!is_alive())
 						break;
 					++o;
-					if(offspring)
-						overlays.push_front(offspring);
 				}
 					
 			}

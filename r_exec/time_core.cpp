@@ -62,14 +62,14 @@ namespace	r_exec{
 					run=j->update(next_target);
 				else	if(time_to_wait>0){	// early: spawn a delegate to wait for the due time; delegate will die when done.
 
-					DelegatedCore	*d=new	DelegatedCore(time_to_wait,j);
+					DelegatedCore	*d=new	DelegatedCore(j->target_time,time_to_wait,j);
 					d->start(DelegatedCore::Wait);
 					_Mem::Get()->register_time_job_latency(time_to_wait);
 					next_target=0;
 				}else{	// late: do the job and report.
 
 					run=j->update(next_target);
-					std::cout<<"1 Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
+					j->report(-time_to_wait);
 				}
 			}
 
@@ -84,12 +84,12 @@ namespace	r_exec{
 					run=j->update(next_target);
 				else	if(time_to_wait>0){	// early: spawn a delegate to wait for the due time; delegate will die when done.
 											// the delegate will handle the next target when it is known (call to update()).
-					DelegatedCore	*d=new	DelegatedCore(time_to_wait,j);
+					DelegatedCore	*d=new	DelegatedCore(next_target,time_to_wait,j);
 					d->start(DelegatedCore::Wait);
 				}else{	// late: do the job and report.
 
 					run=j->update(next_target);
-					std::cout<<"2 Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
+					j->report(-time_to_wait);
 				}
 			}
 			j=NULL;
@@ -113,34 +113,38 @@ namespace	r_exec{
 		_Mem::Get()->start_core();
 		DelegatedCore	*_this=((DelegatedCore	*)args);
 
-		uint64	time_to_wait=_this->time_to_wait;
+		int64	time_to_wait=_this->time_to_wait;
+		uint64	target_time=_this->target_time;
 
 wait:	_this->timer.start(time_to_wait);
 		_this->timer.wait();
-
+		
 		if(!_this->job->is_alive())
 			goto	end;
 
-		uint64	next_target=0;
-		if(_Mem::Get()->check_state()==_Mem::RUNNING)	// checks for shutdown that could have happened during the wait on timer.
-			_this->job->update(next_target);
+		if(_Mem::Get()->check_state()==_Mem::RUNNING){	// checks for shutdown that could have happened during the wait on timer.
 
-redo:	if(next_target){
+			while(Now()<target_time);	// early, we have to wait; on Windows: timers resolution in ms => poll.
+			target_time=0;
+			_this->job->update(target_time);
+		}
+
+redo:	if(target_time){
 
 			if(!_this->job->is_alive())
 				goto	end;
 			if(_Mem::Get()->check_state()!=_Mem::RUNNING)	// checks for shutdown that could have happened during the last update().
 				goto	end;
 
-			next_target=0;
+			time_to_wait=target_time-Now();
 			if(time_to_wait==0){	// right on time: do the job.
 
-				_this->job->update(next_target);
+				_this->job->update(target_time);
 				goto	redo;
-			}else	if(time_to_wait<0){
+			}else	if(time_to_wait<0){	// late.
 
-				_this->job->update(next_target);
-				std::cout<<"3 Time Core report: late on target: "<<-time_to_wait<<" us behind."<<std::endl;
+				_this->job->update(target_time);
+				_this->job->report(-time_to_wait);
 				goto	redo;
 			}else
 				goto	wait;
@@ -153,7 +157,7 @@ end:	_Mem::Get()->shutdown_core();
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	DelegatedCore::DelegatedCore(uint64	time_to_wait,TimeJob	*j):Thread(),time_to_wait(time_to_wait),job(j){
+	DelegatedCore::DelegatedCore(uint64		target_time,uint64	time_to_wait,TimeJob	*j):Thread(),target_time(target_time),time_to_wait(time_to_wait),job(j){
 	}
 
 	DelegatedCore::~DelegatedCore(){

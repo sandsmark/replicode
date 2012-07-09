@@ -60,15 +60,17 @@ namespace	r_exec{
 		}
 	};
 
-	template<class	T>	class	BatchReductionJob:
+	template<class	T,class	TR,class	C>	class	BatchReductionJob:
 	public	_ReductionJob{
 	public:
 		P<T>	target;
-		BatchReductionJob(T	*target):_ReductionJob(),target(target){}
+		P<TR>	trigger;
+		P<C>	controller;
+		BatchReductionJob(T	*target,TR	*trigger,C	*controller):_ReductionJob(),target(target),trigger(trigger),controller(controller){}
 		bool	update(uint64	now){
 			
 			_Mem::Get()->register_reduction_job_latency(now-ijt);
-			target->reduce();
+			target->reduce_batch(trigger,controller);
 			return	true;
 		}
 	};

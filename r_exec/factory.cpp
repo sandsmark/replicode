@@ -532,6 +532,11 @@ namespace	r_exec{
 				return	true;
 			}
 		}
+		if(get_reference(0)->is_invalidated()){
+
+			invalidate();
+			return	true;
+		}
 		return	false;
 	}
 
@@ -748,13 +753,15 @@ namespace	r_exec{
 
 	bool	ICST::is_invalidated(){
 
-		if(LObject::is_invalidated())
-			return	true;
+		if(LObject::is_invalidated()){
+			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" icst was invalidated"<<std::endl;
+			return	true;}
 		for(uint32	i=0;i<components.size();++i){
 
 			if(components[i]->is_invalidated()){
 
 				invalidate();
+				//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" icst invalidated"<<std::endl;
 				return	true;
 			}
 		}

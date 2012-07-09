@@ -48,20 +48,18 @@ namespace	r_exec{
 
 		void	load_patterns();
 
-		virtual	Overlay	*reduce(_Fact	*input,bool	fill_cache)=0;
+		virtual	Overlay	*reduce(_Fact	*input,Fact	*f_p_f_imdl,MDLController	*req_controller)=0;
 	};
 
 	class	PrimaryMDLOverlay:
 	public	MDLOverlay{
 	protected:
-		P<Code>	input;
-
 		bool	check_simulated_chaining(BindingMap	*bm,Fact	*f_imdl,Pred	*prediction);
 	public:
 		PrimaryMDLOverlay(Controller	*c,const	BindingMap	*bindngs);
 		~PrimaryMDLOverlay();
 
-		Overlay	*reduce(_Fact	*input,bool	fill_cache);
+		Overlay	*reduce(_Fact	*input,Fact	*f_p_f_imdl,MDLController	*req_controller);
 	};
 
 	class	SecondaryMDLOverlay:
@@ -70,7 +68,7 @@ namespace	r_exec{
 		SecondaryMDLOverlay(Controller	*c,const	BindingMap	*bindngs);
 		~SecondaryMDLOverlay();
 
-		Overlay	*reduce(_Fact	*input,bool	fill_cache);
+		Overlay	*reduce(_Fact	*input,Fact	*f_p_f_imdl,MDLController	*req_controller);
 	};
 
 	class	MDLController;
@@ -80,7 +78,7 @@ namespace	r_exec{
 		P<_Fact>							f_imdl;	// f1 as in f0->pred->f1->imdl.
 		bool								chaining_was_allowed;
 	};
-	typedef	std::pair<Requirements,Requirements>	RequirementsPair;
+	typedef	std::pair<Requirements,Requirements>	RequirementsPair;	// first: wr, second: sr.
 
 	// Requirements don't monitor their predictions: they don't inject any; instead, they store a f->imdl in the controlled model controllers (both primary and secondary), thus, no success injected for the productions of requirements.
 	// Models controlled by requirements maintain for each prediction they make, a list of all the controllers of the requirements having allowed/inhibited said prediction.
@@ -145,13 +143,13 @@ namespace	r_exec{
 		CriticalSection	active_requirementsCS;
 		UNORDERED_MAP<P<_Fact>,RequirementsPair,PHash<_Fact> >	active_requirements;	// P<_Fact>: f1 as in f0->pred->f1->imdl; requirements having allowed the production of prediction; first: wr, second: sr.		
 
-		template<class	C>	void	reduce_cache(){	// fwd.
+		template<class	C>	void	reduce_cache(Fact	*f_p_f_imdl,MDLController	*controller){	// fwd; controller is the controller of the requirement which produced f_p_f_imdl.
 
-			BatchReductionJob<C>	*j=new	BatchReductionJob<C>((C	*)this);
+			BatchReductionJob<C,Fact,MDLController>	*j=new	BatchReductionJob<C,Fact,MDLController>((C	*)this,f_p_f_imdl,controller);
 			_Mem::Get()->pushReductionJob(j);
 		}
 
-		template<class	E>	void	reduce_cache(Cache<E>	*cache){
+		template<class	E>	void	reduce_cache(Cache<E>	*cache,Fact	*f_p_f_imdl,MDLController	*controller){
 
 			cache->CS.enter();
 			uint64	now=Now();
@@ -162,7 +160,8 @@ namespace	r_exec{
 					_e=cache->evidences.erase(_e);
 				else{
 					
-					((MDLOverlay	*)*overlays.begin())->reduce((*_e).evidence,false);
+					P<MDLOverlay>	o=new	PrimaryMDLOverlay(this,bindings);
+					o->reduce((*_e).evidence,f_p_f_imdl,controller);
 					++_e;
 				}
 			}
@@ -182,8 +181,8 @@ namespace	r_exec{
 		_Fact	*get_rhs()	const;
 		Fact	*get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const;
 
-		virtual	void	store_requirement(_Fact	*f_p_f_imdl,bool	chaining_was_allowed,bool	simulation)=0;
-		ChainingStatus	retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground);	// checks the requirement instances during fwd; r_p: all wrs in first, all srs in second.
+		virtual	void	store_requirement(_Fact	*f_p_f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation)=0;
+		ChainingStatus	retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground,MDLController	*req_controller);	// checks the requirement instances during fwd; r_p: all wrs in first, all srs in second.
 		ChainingStatus	retrieve_imdl_bwd(BindingMap	*bm,Fact	*f_imdl,Fact	*&ground);	// checks the requirement instances during bwd; ground is set to the best weak requirement if chaining allowed, NULL otherwise.
 		ChainingStatus	retrieve_simulated_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,Controller	*root);
 		ChainingStatus	retrieve_simulated_imdl_bwd(BindingMap	*bm,Fact	*f_imdl,Controller	*root);
@@ -258,7 +257,7 @@ namespace	r_exec{
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
 
-		void	store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation);	// never called.
+		void	store_requirement(_Fact	*f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation);	// never called.
 
 		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
@@ -289,6 +288,10 @@ namespace	r_exec{
 	private:
 		SecondaryMDLController	*secondary;
 
+		CriticalSection		codeCS;
+		CriticalSection		last_match_timeCS;
+
+		CriticalSection		assumptionsCS;
 		std::list<P<Code> >	assumptions;	// produced by the model; garbage collection at reduce(9 time..
 
 		void	rate_model(bool	success);
@@ -310,9 +313,9 @@ namespace	r_exec{
 
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
-		void	reduce();
+		void	reduce_batch(Fact	*f_p_f_imdl,MDLController	*controller);
 
-		void	store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation);
+		void	store_requirement(_Fact	*f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation);
 
 		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
 		bool	inject_prediction(Fact	*prediction,Fact	*f_imdl,float32	confidence,uint64	time_to_live,Code	*mk_rdx)	const;	// here, resilience=time to live, in us; returns true if the prediction has actually been injected.
@@ -337,6 +340,9 @@ namespace	r_exec{
 	private:
 		PrimaryMDLController	*primary;
 
+		CriticalSection		codeCS;
+		CriticalSection		last_match_timeCS;
+
 		void	rate_model();	// record successes only.
 		void	kill_views();	// force res in both primary/secondary to 0.
 		void	check_last_match_time(bool	match);	// kill if no match after secondary_thz;
@@ -347,9 +353,9 @@ namespace	r_exec{
 
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
-		void	reduce();
+		void	reduce_batch(Fact	*f_p_f_imdl,MDLController	*controller);
 
-		void	store_requirement(_Fact	*f_imdl,bool	chaining_was_allowed,bool	simulation);
+		void	store_requirement(_Fact	*f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation);
 
 		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);

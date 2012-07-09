@@ -35,7 +35,7 @@
 
 namespace	r_exec{
 
-	_Mem::_Mem():r_code::Mem(),state(NOT_STARTED){
+	_Mem::_Mem():r_code::Mem(),state(NOT_STARTED),gc(NULL),invalidated_object_count(0),registered_object_count(0){
 
 		new	BlackList();
 	}
@@ -45,6 +45,8 @@ namespace	r_exec{
 		if(state==RUNNING)
 			stop();
 		_root=NULL;
+		if(gc!=NULL)
+			delete	gc;
 	}
 
 	void	_Mem::init(	uint32	base_period,
@@ -187,7 +189,6 @@ namespace	r_exec{
 		uint32	i;
 		uint64	now=Now();
 		Utils::SetReferenceValues(now,base_period,float_tolerance,time_tolerance);
-
 		init_timings(now);
 
 		for(i=0;i<initial_groups.size();++i){
@@ -238,11 +239,9 @@ namespace	r_exec{
 				FOR_ALL_VIEWS_END
 			}
 			
+			if(g->get_upr()>0){	// inject the next update job for the group.
 
-			// inject the next update job for the group.
-			if(g->get_upr()>0){
-
-				P<TimeJob>	j=new	UpdateJob(g,now+g->get_upr()*Utils::GetBasePeriod());
+				P<TimeJob>	j=new	UpdateJob(g,g->get_next_upr_time(now));
 				time_job_queue->push(j);
 			}
 		}
@@ -251,7 +250,7 @@ namespace	r_exec{
 
 		state=RUNNING;
 
-		P<TimeJob>	j=new	PerfSamplingJob(perf_sampling_period);
+		P<TimeJob>	j=new	PerfSamplingJob(now+perf_sampling_period,perf_sampling_period);
 		time_job_queue->push(j);
 
 		for(i=0;i<reduction_core_count;++i)
@@ -260,7 +259,10 @@ namespace	r_exec{
 			time_cores[i]->start(TimeCore::Run);
 
 		for(uint32	i=0;i<initial_reduction_jobs.size();++i)
-			inject_reduction_jobs(initial_reduction_jobs[i].first,initial_reduction_jobs[i].second);
+			initial_reduction_jobs[i].second->inject_reduction_jobs(initial_reduction_jobs[i].first);
+
+		gcCS.enter();
+		gc=Thread::New<GCThread>(GC,this);
 
 		return	now;
 	}
@@ -285,6 +287,8 @@ namespace	r_exec{
 		state=STOPPED;
 		stateCS.leave();
 
+		gcCS.leave();	// unlocks the garbage collector.
+
 		for(i=0;i<time_core_count;++i)
 			Thread::Wait(time_cores[i]);
 
@@ -294,6 +298,33 @@ namespace	r_exec{
 		stop_sem->acquire();	// wait for delegates.
 
 		reset();
+	}
+
+	void	_Mem::trigger_gc(){
+
+		if(registered_object_count>=200){	// unlock the garbage collector when 10% of the objects are invalidated.
+
+			uint32	initial_invalidated_object_count=Atomic::CompareAndSwap32(&invalidated_object_count,20,0);
+			if(initial_invalidated_object_count==20)
+				gcCS.leave();
+			else
+				Atomic::Increment32(&invalidated_object_count);
+		}
+	}
+
+	thread_ret	_Mem::GC(void	*args){
+
+		_Mem	*_this=(_Mem	*)args;
+		
+		while(1){
+
+			_this->gcCS.enter();
+			if(_this->check_state()==_Mem::STOPPED)
+				break;
+			_this->trim_objects();
+		}
+
+		thread_ret_val(0);
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -339,20 +370,16 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	void	_Mem::inject_copy(View	*view,Group	*destination,uint64	now){
+	void	_Mem::inject_copy(View	*view,Group	*destination){
 
 		View	*copied_view=new	View(view,destination);	// ctrl values are morphed.
-		Utils::SetTimestamp<View>(copied_view,VIEW_IJT,now);
 		inject_existing_object(copied_view,view->object,destination);
 	}
 
 	void	_Mem::inject_existing_object(View	*view,Code	*object,Group	*host){
 
 		view->set_object(object);	// the object already exists (content-wise): have the view point to the existing one.
-
-		host->enter();
-		host->inject_existing_object(view,Now());
-		host->leave();
+		host->inject_existing_object(view);
 	}
 
 	void	_Mem::inject_null_program(Controller	*c,Group *group,uint64	time_to_live,bool	take_past_inputs){
@@ -370,246 +397,6 @@ namespace	r_exec{
 		c->set_view(view);
 
 		inject_async(view);
-	}
-
-	void	_Mem::update(Group	*group){		
-			
-		uint64	now=Now();
-
-		group->enter();
-
-		if(group!=_root	&&	group->views.size()==0){
-
-			group->invalidate();
-			group->leave();
-			return;
-		}
-
-		group->newly_salient_views.clear();
-
-		// execute pending operations.
-		for(uint32	i=0;i<group->pending_operations.size();++i){
-
-			group->pending_operations[i]->execute(group);
-			delete	group->pending_operations[i];
-		}
-		group->pending_operations.clear();
-
-		// update group's ctrl values.
-		group->update_sln_thr();	// applies decay on sln thr. 
-		group->update_act_thr();
-		group->update_vis_thr();
-
-		GroupState	group_state(group->get_sln_thr(),group->get_c_act()>group->get_c_act_thr(),group->update_c_act()>group->get_c_act_thr(),group->get_c_sln()>group->get_c_sln_thr(),group->update_c_sln()>group->get_c_sln_thr());
-
-		group->reset_stats();
-		//if(group->get_secondary_group()!=NULL)
-		//	std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" UPR\n";
-		FOR_ALL_VIEWS_BEGIN_NO_INC(group,v)
-			
-			if(v->second->object->is_invalidated())	// no need to update the view set.
-				group->delete_view(v);
-			else{
-				// update resilience.
-				float32	res=group->update_res(v->second);	// will decrement res by 1 in addition to the accumulated changes.
-				if(res>0){
-
-					_update_saliency(group,&group_state,v->second);	// apply decay.
-
-					switch(v->second->object->code(0).getDescriptor()){
-					case	Atom::GROUP:
-						_update_visibility(group,&group_state,v->second);
-						break;
-					case	Atom::NULL_PROGRAM:
-					case	Atom::INSTANTIATED_PROGRAM:
-					case	Atom::INSTANTIATED_ANTI_PROGRAM:
-					case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
-					case	Atom::INSTANTIATED_CPP_PROGRAM:
-					case	Atom::COMPOSITE_STATE:
-					case	Atom::MODEL:
-						_update_activation(group,&group_state,v->second);
-						break;
-					}
-					++v;
-				}else{	// view has no resilience: delete it from the group.
-					
-					v->second->delete_from_object();
-					group->delete_view(v);
-				}
-			}
-		FOR_ALL_VIEWS_END
-
-		if(group_state.is_c_salient)
-			group->cov(now);
-
-		// build reduction jobs.
-		std::multiset<P<View>,r_code::View::Less>::const_iterator	v;
-		for(v=group->newly_salient_views.begin();v!=group->newly_salient_views.end();++v)
-			inject_reduction_jobs(*v,group);
-
-		if(group_state.is_c_active	&&	group_state.is_c_salient){	// build signaling jobs for new ipgms.
-
-			for(uint32	i=0;i<group->new_controllers.size();++i){
-
-				switch(group->new_controllers[i]->getObject()->code(0).getDescriptor()){
-				case	Atom::INSTANTIATED_ANTI_PROGRAM:{	// inject signaling jobs for |ipgm (tsc).
-
-					P<TimeJob>	j=new	AntiPGMSignalingJob((r_exec::View	*)group->new_controllers[i]->getView(),now+Utils::GetTimestamp<Code>(group->new_controllers[i]->getObject(),IPGM_TSC));
-					time_job_queue->push(j);
-					break;
-				}case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:{	// inject a signaling job for an input-less pgm.
-
-					P<TimeJob>	j=new	InputLessPGMSignalingJob((r_exec::View	*)group->new_controllers[i]->getView(),now+Utils::GetTimestamp<Code>(group->new_controllers[i]->getObject(),IPGM_TSC));
-					time_job_queue->push(j);
-					break;
-				}
-				}
-			}
-
-			group->new_controllers.clear();
-		}
-
-		group->update_stats();	// triggers notifications.
-
-		if(group->get_upr()>0){	// inject the next update job for the group.
-
-			P<TimeJob>	j=new	UpdateJob(group,now+group->get_upr()*Utils::GetBasePeriod());
-			time_job_queue->push(j);
-		}
-
-		group->leave();
-	}
-
-	void	_Mem::_update_saliency(Group	*group,GroupState	*state,View	*view){
-
-		float32	view_old_sln=view->get_sln();
-		bool	wiew_was_salient=view_old_sln>state->former_sln_thr;
-		float32	view_new_sln=group->update_sln(view);
-		bool	wiew_is_salient=view_new_sln>group->get_sln_thr();
-
-		if(state->is_c_salient){
-			
-			if(wiew_is_salient){
-
-				switch(view->get_sync()){
-				case	View::SYNC_ONCE:
-				case	View::SYNC_PERIODIC:
-					if(!wiew_was_salient)	// sync on front: crosses the threshold upward: record as a newly salient view.
-						group->newly_salient_views.insert(view);
-					break;
-				case	View::SYNC_HOLD:
-				case	View::SYNC_AXIOM:	// sync on state.
-					group->newly_salient_views.insert(view);
-					break;
-				}
-			}
-
-			// inject sln propagation jobs.
-			// the idea is to propagate sln changes when a view "occurs to the mind", i.e. becomes more salient in a group and is eligible for reduction in that group.
-			//	- when a view is now salient because the group becomes c-salient, no propagation;
-			//	- when a view is now salient because the group's sln_thr gets lower, no propagation;
-			//	- propagation can occur only if the group is c_active. For efficiency reasons, no propagation occurs even if some of the group's viewing groups are c-active and c-salient.
-			if(state->is_c_active)
-				_initiate_sln_propagation(view->object,view_new_sln-view_old_sln,group->get_sln_thr());
-		}
-	}
-
-	void	_Mem::_update_visibility(Group	*group,GroupState	*state,View	*view){
-
-		bool	view_was_visible=view->get_vis()>group->get_vis_thr();
-		bool	view_is_visible=view->update_vis()>group->get_vis_thr();
-		bool	cov=view->get_cov();
-
-		//	update viewing groups.
-		if(state->was_c_active	&&	state->was_c_salient){
-
-			if(!state->is_c_active	||	!state->is_c_salient)	//	group is not c-active and c-salient anymore: unregister as a viewing group.
-				((Group	*)view->object)->viewing_groups.erase(group);
-			else{	//	group remains c-active and c-salient.
-
-				if(!view_was_visible){
-					
-					if(view_is_visible)		//	newly visible view.
-						((Group	*)view->object)->viewing_groups[group]=cov;
-				}else{
-					
-					if(!view_is_visible)	//	the view is no longer visible.
-						((Group	*)view->object)->viewing_groups.erase(group);
-					else					//	the view is still visible, cov might have changed.
-						((Group	*)view->object)->viewing_groups[group]=cov;
-				}
-			}
-		}else	if(state->is_c_active	&&	state->is_c_salient){	//	group becomes c-active and c-salient.
-
-			if(view_is_visible)		//	update viewing groups for any visible group.
-				((Group	*)view->object)->viewing_groups[group]=cov;
-		}
-	}
-
-	void	_Mem::_update_activation(Group	*group,GroupState	*state,View	*view){
-
-		bool	view_was_active=view->get_act()>group->get_act_thr();
-		bool	view_is_active=group->update_act(view)>group->get_act_thr();
-
-		//	kill newly inactive controllers, register newly active ones.
-		if(state->was_c_active	&&	state->was_c_salient){
-
-			if(!state->is_c_active	||	!state->is_c_salient)	// group is not c-active and c-salient anymore: kill the view's controller.
-				view->controller->lose_activation();
-			else{	//	group remains c-active and c-salient.
-
-				if(!view_was_active){
-			
-					if(view_is_active){	// register the controller for the newly active ipgm view.
-
-						view->controller->gain_activation();
-						group->new_controllers.push_back(view->controller);
-					}
-				}else{
-					
-					if(!view_is_active)	// kill the newly inactive ipgm view's overlays.
-						view->controller->lose_activation();
-				}
-			}
-		}else	if(state->is_c_active	&&	state->is_c_salient){	// group becomes c-active and c-salient.
-
-			if(view_is_active){	// register the controller for any active ipgm view.
-
-				view->controller->gain_activation();
-				group->new_controllers.push_back(view->controller);
-			}
-		}
-	}
-
-	void	_Mem::inject_reduction_jobs(View	*view,Group	*host){	// host is assumed to be c-salient; host already protected.
-
-		if(host->get_c_act()>host->get_c_act_thr()){	// host is c-active.
-
-			// build reduction jobs from host's own inputs and own overlays.
-			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(host,v)
-
-				if(v->second->get_act()>host->get_act_thr())	// active ipgm/icpp_pgm/rgrp view.
-					v->second->controller->_take_input(view);	// view will be copied.
-
-			FOR_ALL_VIEWS_WITH_INPUTS_END
-		}
-
-		// build reduction jobs from host's own inputs and overlays from viewing groups, if no cov and view is not a notification.
-		// NB: visibility is not transitive;
-		// no shadowing: if a view alresady exists in the viewing group, there will be twice the reductions: all of the identicals will be trimmed down at injection time.
-		UNORDERED_MAP<Group	*,bool>::const_iterator	vg;
-		for(vg=host->viewing_groups.begin();vg!=host->viewing_groups.end();++vg){
-
-			if(vg->second	||	view->isNotification())	// no reduction jobs when cov==true or view is a notification.
-				continue;
-
-			FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(vg->first,v)
-
-				if(v->second->get_act()>vg->first->get_act_thr())	// active ipgm/icpp_pgm/rgrp view.
-					v->second->controller->_take_input(view);		// view will be copied.
-			
-			FOR_ALL_VIEWS_WITH_INPUTS_END
-		}
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -692,68 +479,6 @@ namespace	r_exec{
 				((r_exec::View*)*it)->get_host()->pending_operations.push_back(new	Group::Mod(((r_exec::View*)*it)->get_oid(),VIEW_SLN,morphed_sln_change));
 		}
 		object->rel_views();
-	}
-
-	void	_Mem::_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr){
-		
-		if(fabs(change)>object->get_psln_thr()){
-
-			std::vector<Code	*>	path;
-			path.push_back(object);
-
-			if(object->code(0).getDescriptor()==Atom::MARKER){	//	if marker, propagate to references.
-
-				for(uint16	i=0;i<object->references_size();++i)
-					_propagate_sln(object->get_reference(i),change,source_sln_thr,path);
-			}
-
-			//	propagate to markers
-			object->acq_markers();
-			std::list<Code	*>::const_iterator	m;
-			for(m=object->markers.begin();m!=object->markers.end();++m)
-				_propagate_sln(*m,change,source_sln_thr,path);
-			object->rel_markers();
-		}
-	}
-
-	void	_Mem::_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path){
-		
-		if(fabs(change)>object->get_psln_thr()){
-
-			//	prevent loops.
-			for(uint32	i=0;i<path.size();++i)
-				if(path[i]==object)
-					return;
-			path.push_back(object);
-
-			if(object->code(0).getDescriptor()==Atom::MARKER)	//	if marker, propagate to references.
-				for(uint16	i=0;i<object->references_size();++i)
-					_propagate_sln(object->get_reference(i),change,source_sln_thr,path);
-
-			//	propagate to markers
-			object->acq_markers();
-			std::list<Code	*>::const_iterator	m;
-			for(m=object->markers.begin();m!=object->markers.end();++m)
-				_propagate_sln(*m,change,source_sln_thr,path);
-			object->rel_markers();
-		}
-	}
-
-	void	_Mem::_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path){
-
-		if(object==_root)
-			return;
-
-		//	prevent loops.
-		for(uint32	i=0;i<path.size();++i)
-			if(path[i]==object)
-				return;
-		path.push_back(object);
-
-		P<TimeJob>	j=new	SaliencyPropagationJob(object,change,source_sln_thr,0);
-		time_job_queue->push(j);
-		
-		_initiate_sln_propagation(object,change,source_sln_thr,path);
 	}
 
 	////////////////////////////////////////////////////////////////

@@ -125,33 +125,24 @@ namespace	r_exec{
 		CriticalSection	object_registerCS;
 		CriticalSection	objectsCS;
 
-		// Utilities.
-		class	GroupState{
-		public:
-			float32	former_sln_thr;
-			bool	was_c_active;
-			bool	is_c_active;
-			bool	was_c_salient;
-			bool	is_c_salient;
-			GroupState(	float32	former_sln_thr,
-						bool	was_c_active,
-						bool	is_c_active,
-						bool	was_c_salient,
-						bool	is_c_salient):former_sln_thr(former_sln_thr),was_c_active(was_c_active),is_c_active(is_c_active),was_c_salient(was_c_salient),is_c_salient(is_c_salient){}
-		};
-
-		void	_update_visibility(Group	*group,GroupState	*state,View	*view);
-		void	_update_saliency(Group	*group,GroupState	*state,View	*view);
-		void	_update_activation(Group	*group,GroupState	*state,View	*view);
-		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr);
-		void	_initiate_sln_propagation(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
-		void	_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path);
-
 		std::vector<Group	*>	initial_groups;	// convenience; cleared after start();
 
 		uint32	last_oid;
 
 		virtual	void	init_timings(uint64	now)=0;
+		
+		class	GCThread:
+		public	Thread{
+		};
+		
+		GCThread		*gc;
+		CriticalSection	gcCS;	// controls the garbage collector.
+		volatile		int32	invalidated_object_count;
+		volatile		uint32	registered_object_count;
+
+		void	trigger_gc();
+		virtual	void	trim_objects()=0;
+		static	thread_ret	thread_function_call	GC(void	*args);
 
 		_Mem();
 
@@ -235,30 +226,16 @@ namespace	r_exec{
 		TimeJob			*popTimeJob();
 		void			pushTimeJob(TimeJob	*j);
 
-		// Called at each update period.
-		// - set the final resilience value, if 0, delete.
-		// - set the final saliency.
-		// - set the final activation.
-		// - set the final visibility, cov.
-		// - propagate saliency changes.
-		// - inject next update job for the group.
-		// - inject new signaling jobs if act pgm with no input or act |pgm.
-		// - notify high and low values.
-		void	update(Group	*group);
-
 		// Called upon successful reduction.
 		virtual	void	inject_new_object(View	*view)=0;
 				void	inject_existing_object(View	*view,Code	*object,Group	*host);
 				void	inject_null_program(Controller	*c,Group *group,uint64	time_to_live,bool	take_past_inputs);	// build a view v (ijt=now, act=1, sln=0, res according to time_to_live in the group), attach c to v, inject v in the group.
 
-		// Called as a result of a group update (sln change).
-		// Calls mod_sln on the object's view with morphed sln changes.
 		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);
 
 		// Called by groups.
-		void	inject_copy(View	*view,Group	*destination,uint64	now);	// for cov; NB: no cov for groups, r-groups, models, pgm or notifications.
-		void	inject_reduction_jobs(View	*view,Group	*host);				// builds reduction jobs from host's inputs and own overlay (assuming host is c-salient and the view is salient);
-																			// builds reduction jobs from host's inputs and viewing groups' overlays (assuming host is c-salient and the view is salient).
+		void	inject_copy(View	*view,Group	*destination);		// for cov; NB: no cov for groups, r-groups, models, pgm or notifications.
+
 		// Called by cores.
 		void	register_reduction_job_latency(uint64	latency);
 		void	register_time_job_latency(uint64	latency);
@@ -267,7 +244,7 @@ namespace	r_exec{
 		// Interface for overlays and I/O devices ////////////////////////////////////////////////////////////////
 		virtual	void	inject(View	*view)=0;
 		virtual	void	inject_async(View	*view)=0;
-		virtual	void	inject_hlps(std::list<View	*>	views,uint64	t,Group	*destination)=0;
+		virtual	void	inject_hlps(std::list<View	*>	views,Group	*destination)=0;
 		virtual	Code	*check_existence(Code	*object)=0;	// returns the existing object if any, or object otherwise: in the latter case, packing may occur.
 
 		// rMem to rMem.
@@ -309,21 +286,26 @@ namespace	r_exec{
 		std::list<P<Code> >											objects;			// to insert in an image (getImage()); in order of injection.
 		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>	object_register;	// to eliminate duplicates (content-wise); does not include groups.
 
-		template<class	_O>	void	bind(View	*view,uint64	t){
+		template<class	_O>	void	bind(View	*view){
 
-			Utils::SetTimestamp<View>(view,VIEW_IJT,t);
 			_O	*object=(_O	*)view->object;
 			object->views.insert(view);
-			object->bind(this);
-			if(object->code(0).getDescriptor()==Atom::NULL_PROGRAM)
-				return;
 			objectsCS.enter();
+			object->bind(this);
+			if(object->code(0).getDescriptor()==Atom::NULL_PROGRAM){
+
+				objectsCS.leave();
+				return;
+			}
 			object->is_registered=true;
 			objects.insert(objects.end(),object);
+			registered_object_count=objects.size();
 			objectsCS.leave();
 		}
 
 		void	init_timings(uint64	now);
+
+		void	trim_objects();
 
 		// Functions called by internal processing of jobs (see internal processing section below).
 		void	inject_new_object(View	*view);	// also called by inject() (see below).
@@ -354,7 +336,7 @@ namespace	r_exec{
 		// Called by the reduction core.
 		void	inject(View	*view);
 		void	inject_async(View	*view);
-		void	inject_hlps(std::list<View	*>	views,uint64	t,Group	*destination);
+		void	inject_hlps(std::list<View	*>	views,Group	*destination);
 		Code	*check_existence(Code	*object);
 
 		// Called by the communication device (I/O).

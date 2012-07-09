@@ -89,9 +89,22 @@ namespace	r_exec{
 				UNORDERED_SET<P<_Fact>,PHash<_Fact>	>::const_iterator	pred;
 				for(pred=predictions.begin();pred!=predictions.end();++pred) // add antecedents to the prediction.
 					prediction->grounds.push_back(*pred);
+				/*Code	*icst=f_icst->get_reference(0);
+				uint16	arg_index=icst->code(I_HLP_ARGS).asIndex();
+				std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<icst<<std::dec<<" pred cst "<<icst->code(arg_index+2).asFloat()<<" from";
+				for(uint32	i=0;i<inputs.size();++i)
+					std::cout<<" "<<inputs[i]->get_oid();
+				std::cout<<std::endl;*/
 				((CSTController	*)controller)->inject_prediction(f_p_f_icst,lowest_cfd,time_to_live);	// inject a f->pred->icst in the primary group, no rdx.
-			}else
+			}else{
+				/*Code	*icst=f_icst->get_reference(0);
+				uint16	arg_index=icst->code(I_HLP_ARGS).asIndex();
+				std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<icst<<std::dec<<" icst "<<icst->code(arg_index+2).asFloat()<<" from";
+				for(uint32	i=0;i<inputs.size();++i)
+					std::cout<<" "<<inputs[i]->get_oid();
+				std::cout<<std::endl;*/
 				((CSTController	*)controller)->inject_icst(f_icst,lowest_cfd,time_to_live);	// inject f->icst in the primary and secondary groups, and in the output groups.
+			}
 		}else{	// there are simulations; the production is therefore a prediction; add the simulations to the latter.
 
 			Pred	*prediction=new	Pred(f_icst,1);
@@ -277,7 +290,7 @@ namespace	r_exec{
 
 	void	CSTController::reduce(r_exec::View	*input){
 
-		if(_has_tpl_args	&&	get_requirement_count()==0)
+		if(is_orphan())
 			return;
 
 		_Fact	*input_object=input->object;
@@ -432,8 +445,6 @@ namespace	r_exec{
 		
 			View	*view=new	View(View::SYNC_ONCE,now,1,Utils::GetResilience(now,time_to_live,primary_host->get_upr()*Utils::GetBasePeriod()),primary_host,primary_host,production);
 			_Mem::Get()->inject(view);	// inject f->icst in the primary group: needed for hlps like M[icst -> X] and S[icst X Y].
-			uint32	res=view->get_res();
-			//std::cout<<"res: "<<res<<std::endl;
 			uint16	out_group_count=get_out_group_count();
 			for(uint16	i=0;i<out_group_count;++i){
 

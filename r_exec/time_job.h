@@ -40,11 +40,12 @@ namespace	r_exec{
 	class	r_exec_dll	TimeJob:
 	public	_Object{
 	protected:
-		TimeJob(uint64	ijt);
+		TimeJob(uint64	target_time);
 	public:
 		int64			target_time;	// absolute deadline; 0 means ASAP.
 		virtual	bool	update(uint64	&next_target)=0;	// next_target: absolute deadline; 0 means no more waiting; return false to shutdown the time core.
 		virtual	bool	is_alive()	const;
+		virtual	void	report(int64	lag)	const;
 	};
 
 	class	r_exec_dll	UpdateJob:
@@ -53,6 +54,7 @@ namespace	r_exec{
 		P<Group>	group;
 		UpdateJob(Group	*g,uint64	ijt);
 		bool	update(uint64	&next_target);
+		void	report(int64	lag)	const;
 	};
 
 	class	r_exec_dll	SignalingJob:
@@ -69,6 +71,7 @@ namespace	r_exec{
 	public:
 		AntiPGMSignalingJob(View	*v,uint64	ijt);
 		bool	update(uint64	&next_target);
+		void	report(int64	lag)	const;
 	};
 
 	class	r_exec_dll	InputLessPGMSignalingJob:
@@ -76,6 +79,7 @@ namespace	r_exec{
 	public:
 		InputLessPGMSignalingJob(View	*v,uint64	ijt);
 		bool	update(uint64	&next_target);
+		void	report(int64	lag)	const;
 	};
 
 	class	r_exec_dll	InjectionJob:
@@ -84,6 +88,7 @@ namespace	r_exec{
 		P<View>	view;
 		InjectionJob(View	*v,uint64	ijt);
 		bool	update(uint64	&next_target);
+		void	report(int64	lag)	const;
 	};
 
 	class	r_exec_dll	EInjectionJob:
@@ -92,6 +97,7 @@ namespace	r_exec{
 		P<View>	view;
 		EInjectionJob(View	*v,uint64	ijt);
 		bool	update(uint64	&next_target);
+		void	report(int64	lag)	const;
 	};
 
 	class	r_exec_dll	SaliencyPropagationJob:
@@ -125,13 +131,17 @@ namespace	r_exec{
 
 			return	monitor->is_alive();
 		}
+		void	report(int64	lag)	const{
+
+			std::cout<<"> late monitoring: "<<lag<<" us behind."<<std::endl;
+		}
 	};
 
 	class	r_exec_dll	PerfSamplingJob:
 	public	TimeJob{
 	public:
 		uint32	period;
-		PerfSamplingJob(uint32	period);
+		PerfSamplingJob(uint64	start,uint32	period);
 		bool	is_alive()	const;
 		bool	update(uint64	&next_target);
 	};

@@ -177,17 +177,13 @@ int32	main(int	argc,char	**argv){
 		std::cout<<"> running for "<<settings.run_time<<" ms\n\n";
 		Thread::Sleep(settings.run_time);
 
-		//TimeProbe	probe;
-		//probe.set();
-
-		image=mem->get_image();
-
 		std::cout<<"\n> shutting rMem down...\n";
 		mem->stop();
-		delete	mem;
 
+		//TimeProbe	probe;
+		//probe.set();
+		image=mem->get_image();
 		//probe.check();
-
 		image->object_names.symbols=r_exec::Seed.object_names.symbols;
 		
 		if(settings.write_image)
@@ -210,6 +206,7 @@ int32	main(int	argc,char	**argv){
         }
 		//uint32	w;std::cin>>w;
 		delete	image;
+		delete	mem;
 
 		//std::cout<<"getImage(): "<<probe.us()<<"us"<<std::endl;
 

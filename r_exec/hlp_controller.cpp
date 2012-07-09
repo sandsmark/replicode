@@ -215,6 +215,19 @@ namespace	r_exec{
 		return	false;
 	}
 
+	bool	HLPController::is_orphan(){
+
+		if(_has_tpl_args){
+			
+			if(get_requirement_count()==0){
+
+				kill_views();
+				return	true;
+			}
+		}
+		return	false;
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	HLPController::EEntry::EEntry(_Fact	*evidence):evidence(evidence){

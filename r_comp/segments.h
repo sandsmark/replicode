@@ -119,7 +119,7 @@ namespace	r_comp{
 
 		void		add_object(r_code::Code	*object);
 		SysObject	*add_object(Code	*object,std::vector<SysObject	*>	&imported_objects);
-		uint32		get_reference_count(Code	*object);
+		uint32		get_reference_count(const	Code	*object)	const;
 		void		build_references();
 		void		build_references(SysObject	*sys_object,r_code::Code	*object);
 		void		unpack_objects(r_code::vector<Code	*>	&ram_objects);

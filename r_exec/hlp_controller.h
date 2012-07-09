@@ -110,6 +110,7 @@ namespace	r_exec{
 
 		bool	_has_tpl_args;
 		uint32	ref_count;	// used to detect _Object::refCount dropping down to 1 for hlp with tpl args.
+		bool	is_orphan();	// true when there are tpl args and no requirements: the controller cannot execute anymore.
 
 		std::vector<P<HLPController> >	controllers;			// all controllers for models/states instantiated in the patterns; case of models: [0]==lhs, [1]==rhs.
 		uint64							last_match_time;		// last time a match occurred (fwd), regardless of its outcome.

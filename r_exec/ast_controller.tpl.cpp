@@ -75,11 +75,11 @@ namespace	r_exec{
 		
 		Pred	*prediction=input_object->get_pred();
 		if(prediction){
-
+			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got pred "<<prediction->get_target()->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
 			switch(prediction->get_target()->is_timeless_evidence(target)){
 			case	MATCH_SUCCESS_POSITIVE:
 			case	MATCH_SUCCESS_NEGATIVE:	// a model predicted the next value of the target.
-				//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" killed\n";
+				//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" killed\n";
 				kill();
 				break;
 			case	MATCH_FAILURE:
@@ -87,7 +87,7 @@ namespace	r_exec{
 			}
 			return;
 		}
-
+//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got "<<input->object->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
 		((U	*)this)->reduce(input,input_object);
 	}
 

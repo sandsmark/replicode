@@ -38,7 +38,7 @@ namespace	r_exec{
 
 	PASTController::PASTController(const	AutoFocusController	*auto_focus,_Fact	*target):ASTController<PASTController>(auto_focus,target){
 
-		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" created PERIODIC"<<std::endl;
+		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" created TPX PERIODIC"<<std::endl;
 	}
 
 	PASTController::~PASTController(){
@@ -53,10 +53,10 @@ namespace	r_exec{
 			target->invalidate();//std::cout<<Time::ToString_seconds(Now()-st)<<" "<<" ------------- "<<std::dec<<target->get_oid()<<std::endl;
 			break;
 		case	MATCH_SUCCESS_NEGATIVE:
-			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" counter-evidence: "<<input->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
+			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" counter-evidence: "<<input->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
 			kill();
 			tpx->signal(v);
-			target->invalidate();//std::cout<<Time::ToString_seconds(Now()-st)<<" "<<" ------------- "<<std::dec<<target->get_oid()<<std::endl;
+			target->invalidate();//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<"|"<<std::dec<<target->get_oid()<<" invalidated"<<std::endl;
 			break;
 		case	MATCH_FAILURE:
 			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" stored: "<<input->get_oid()<<std::endl;
@@ -83,7 +83,7 @@ namespace	r_exec{
 			kill();
 			break;
 		case	MATCH_SUCCESS_NEGATIVE:
-			std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" counter-evidence: "<<input->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
+			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" counter-evidence: "<<input->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
 			kill();
 			tpx->signal(v);
 			target->invalidate();//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<" ------------- "<<std::dec<<target->get_oid()<<std::endl;
