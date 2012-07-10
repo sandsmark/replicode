@@ -1,0 +1,58 @@
+; debug
+
+!load c:/work/Replicode/Test/V1.2/test.domain.replicode
+; !load c:/work/Replicode/Test/V1.2/drives.replicode
+
+
+
+; input generators.
+
+pgm0:(pgm |[] |[] |[] []
+   (inj []
+      a:(mk.val self_right_hand attachment cube0 1)
+      |[]
+   )
+   (inj []
+      (|fact a now MAX_TIME 1 1)
+      [SYNC_HOLD now 1 1 stdin nil]
+   )
+   (inj []
+      ph:(mk.val self_right_hand position_x 0 1)
+      |[]
+   )
+   (inj []
+      (fact ph now (+ now sampling_period) 1 1)
+      [SYNC_PERIODIC now 1 1 stdin nil]
+   )
+   (inj []
+      pc:(mk.val cube0 position_x 0 1)
+      |[]
+   )
+   (inj []
+      (fact pc now (+ now sampling_period) 1 1)
+      [SYNC_PERIODIC now 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm0:(ipgm pgm0 |[] RUN_ONCE sampling_period VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 1 stdin nil 1]]
+
+pgm1:(pgm |[] |[] |[] []
+   (inj []
+      c:(cmd grab_hand [self_right_hand] 1)
+      |[]
+   )
+   (inj []
+      (fact c now (+ now 20000us) 1 1)
+      [SYNC_ONCE now 1 1 stdin nil]
+   )
+   (inj []
+      p:(mk.val self_right_hand attachment cube0 1)
+      |[]
+   )
+   (inj []
+      (fact p now MAX_TIME 1 1)
+      [SYNC_HOLD now 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm1:(ipgm pgm1 |[] RUN_ONCE 160000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 2 stdin nil 1]]
