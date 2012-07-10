@@ -67,9 +67,12 @@ namespace	r_exec{
 		if(input_object->is_invalidated())
 			return;
 
+		reductionCS.enter();
+
 		if(input_object==target){
 
 			tpx->store_input(input_object);
+			reductionCS.leave();
 			return;
 		}
 		
@@ -85,10 +88,14 @@ namespace	r_exec{
 			case	MATCH_FAILURE:
 				break;
 			}
+
+			reductionCS.leave();
 			return;
 		}
 //std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got "<<input->object->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
 		((U	*)this)->reduce(input,input_object);
+
+		reductionCS.leave();
 	}
 
 	template<class	U>	void	ASTController<U>::kill(){

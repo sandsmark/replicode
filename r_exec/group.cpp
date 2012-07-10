@@ -930,10 +930,10 @@ namespace	r_exec{
 		if(is_eligible_input(view)){	// have existing programs reduce the new view.
 
 			newly_salient_views.insert(view);
-			leave();
 			inject_reduction_jobs(view);
-		}else
-			leave();
+		}
+		
+		leave();
 return;
 		if(a.getDescriptor()==Atom::OBJECT){/*
 			if(get_secondary_group()!=NULL){
@@ -1031,10 +1031,10 @@ return;
 			if(group_is_c_active	&&	group_is_c_salient	&&	reduce_view){
 
 				newly_salient_views.insert(view);
-				leave();
 				inject_reduction_jobs(view);
-			}else
-				leave();
+			}
+			
+			leave();
 		}
 	}
 
@@ -1049,10 +1049,10 @@ return;
 			if(view->get_vis()>get_vis_thr())	// new visible group in a c-active and c-salient host.
 				((Group	*)view->object)->viewing_groups[this]=view->get_cov();
 			
-			leave();
 			inject_reduction_jobs(view);
-		}else
-			leave();
+		}
+		
+		leave();
 
 		if(((Group	*)view->object)->get_upr()>0)	// inject the next update job for the group.
 			_Mem::Get()->pushTimeJob(new	UpdateJob((Group	*)view->object,((Group	*)view->object)->get_next_upr_time(Now())));
@@ -1064,9 +1064,9 @@ return;
 
 		if(lock)
 			enter();
+
 		notification_views[view->get_oid()]=view;
-		if(lock)
-			leave();
+		
 		for(uint32	i=0;i<view->object->references_size();++i){
 
 			Code	*ref=view->object->get_reference(i);
@@ -1079,6 +1079,9 @@ return;
 
 		if(get_c_sln()>get_c_sln_thr()	&&	view->get_sln()>get_sln_thr())	// group is c-salient and view is salient.
 			inject_reduction_jobs(view);
+
+		if(lock)
+			leave();
 	}
 
 	void	Group::inject_reduction_jobs(View	*view){	// group is assumed to be c-salient; already protected.
