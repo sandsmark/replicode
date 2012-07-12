@@ -62,6 +62,11 @@ namespace	r_code{
 		return	fabs(l-r)<FloatTolerance;
 	}
 
+	bool	Utils::Synchronous(uint64	l,uint64	r){
+
+		return	abs((int32)(l-r))<TimeTolerance;
+	}
+
 	uint64	Utils::GetTimestamp(const	Atom	*iptr){
 
 		uint64	high=iptr[1].atom;

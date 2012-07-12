@@ -61,6 +61,7 @@ namespace	r_code{
 		static	void	SetReferenceValues(uint64	time_reference,uint32	base_period,float32	float_tolerance,uint32	time_tolerance);
 
 		static	bool	Equal(float32	l,float32	r);
+		static	bool	Synchronous(uint64	l,uint64	r);
 
 		static	uint64	GetTimestamp(const	Atom	*iptr);
 		static	void	SetTimestamp(Atom	*iptr,uint64	t);
