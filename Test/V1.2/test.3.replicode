@@ -42,7 +42,7 @@ pgm1:(pgm |[] |[] |[] []
       |[]
    )
    (inj []
-      (fact c now (+ now 20000us) 1 1)
+      (fact c now (+ now 10000us) 1 1)
       [SYNC_ONCE now 1 1 stdin nil]
    )
    (inj []
