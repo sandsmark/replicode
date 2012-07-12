@@ -238,7 +238,7 @@ namespace	r_exec{
 		if(structure->code(0)!=s[0])
 			return	false;
 		if(structure->code(0).getDescriptor()==Atom::TIMESTAMP)
-			return	abs((int32)(Utils::GetTimestamp(&structure->code(0))-Utils::GetTimestamp(s)))<=Utils::GetTimeTolerance();
+			return	Utils::Synchronous(Utils::GetTimestamp(&structure->code(0)),Utils::GetTimestamp(s));
 		for(uint16	i=1;i<structure->code_size();++i){
 
 			Atom	a=structure->code(i);
@@ -787,7 +787,7 @@ namespace	r_exec{
 		if(arity==0)	// empty sets.
 			return	true;
 		if(o_atom.getDescriptor()==Atom::TIMESTAMP)
-			return	abs((int32)(Utils::GetTimestamp(&object->code(o_full_index))-Utils::GetTimestamp(&pattern->code(p_index))))<=Utils::GetTimeTolerance();
+			return	Utils::Synchronous(Utils::GetTimestamp(&object->code(o_full_index)),Utils::GetTimestamp(&pattern->code(p_index)));
 		return	match(object,o_base_index,o_index+1,pattern,p_index+1,arity);
 	}
 

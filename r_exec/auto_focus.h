@@ -116,7 +116,7 @@ namespace	r_exec{
 		
 		void	take_input(r_exec::View	*input);
 
-		void	inject_hlps(std::list<P<Code> >	&hlps)	const;	// called by TPX; hlp is a mdl or a cst.
+		void	inject_hlps(const	std::list<P<Code> >	&hlps)	const;	// called by TPX; hlp is a mdl or a cst.
 		bool	decompile_models()	const	{	return	_decompile_models;	}
 
 		Group	*get_primary_group()	const{	return	output_groups[0];	}

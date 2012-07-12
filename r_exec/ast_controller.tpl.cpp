@@ -65,7 +65,7 @@ namespace	r_exec{
 
 		_Fact	*input_object=input->object;
 		if(input_object->is_invalidated())
-			return;
+		return;
 
 		reductionCS.enter();
 

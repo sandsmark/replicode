@@ -823,10 +823,6 @@ namespace	r_exec{
 		switch(a.getDescriptor()){
 		case	Atom::NULL_PROGRAM:	// the view comes with a controller.
 			ipgm_views[view->get_oid()]=view;
-			/*if(get_secondary_group()!=NULL){
-			
-				std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<std::endl;
-			}*/
 			if(is_active_pgm(view)){
 
 				view->controller->gain_activation();
@@ -935,7 +931,7 @@ namespace	r_exec{
 		
 		leave();
 return;
-		if(a.getDescriptor()==Atom::OBJECT){/*
+		if(a.getDescriptor()==Atom::OBJECT){
 			if(get_secondary_group()!=NULL){
 
 				_Fact	*f=(_Fact	*)view->object;
@@ -952,7 +948,7 @@ return;
 					else	if(f->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl)
 						std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" ---------------pred imdl: "<<std::hex<<(void	*)f->get_reference(0)<<"\n";
 				}else{
-			}else*/	if(get_oid()==2){	// stdin.
+			}//else	if(get_oid()==2){	// stdin.
 				if(view->object->code(0).asOpcode()==Opcodes::Fact){
 
 					if(view->object->get_reference(0)->code(0).asOpcode()==Opcodes::MkVal)

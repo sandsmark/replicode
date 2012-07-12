@@ -298,7 +298,7 @@ namespace	r_exec{
 		if(arity==0)	// empty sets.
 			return	true;
 		if(lhs_atom.getDescriptor()==Atom::TIMESTAMP)
-			return	abs((int32)(Utils::GetTimestamp(&lhs->code(lhs_full_index))-Utils::GetTimestamp(&rhs->code(rhs_index))))<=Utils::GetTimeTolerance();
+			return	Utils::Synchronous(Utils::GetTimestamp(&lhs->code(lhs_full_index)),Utils::GetTimestamp(&rhs->code(rhs_index)));
 		return	Match(lhs,lhs_base_index,lhs_index+1,rhs,rhs_index+1,arity);
 	}
 

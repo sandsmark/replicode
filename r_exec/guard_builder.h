@@ -76,6 +76,21 @@ namespace	r_exec{
 		void	build(Code	*mdl,_Fact	*premise_pattern,_Fact	*cause_pattern,uint16	&write_index)	const;
 	};
 
+	// bwd: cmd.after=q1.after-offset, cmd.before=cmd.after+cmd_duration.
+	class	NoArgCmdGuardBuilder:
+	public	TimingGuardBuilder{
+	protected:
+		uint64	offset;
+		uint64	cmd_duration;
+
+		void	_build(Code *mdl,uint16	q0,uint16	t0,uint16	t1,uint16 &write_index)	const;
+	public:
+		NoArgCmdGuardBuilder(uint64	period,uint64	offset,uint64	cmd_duration);
+		~NoArgCmdGuardBuilder();
+
+		void	build(Code	*mdl,_Fact	*premise_pattern,_Fact	*cause_pattern,uint16	&write_index)	const;
+	};
+
 	// bwd: cmd.after=q1.after-period, cmd.before=q1.before-period.
 	class	CmdGuardBuilder:
 	public	TimingGuardBuilder{

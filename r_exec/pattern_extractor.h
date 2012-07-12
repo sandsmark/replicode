@@ -58,12 +58,7 @@ namespace	r_exec{
 		const	AutoFocusController	*auto_focus;
 
 		Input	target;	// goal or prediction target; abstraction: lhs of a mdl for goals, rhs for predictions.
-
-		std::list<P<Code> >	raw_inputs;	// raw input buffer;
-		std::list<P<Code> >	hlps;	// induced csts and mdls.
-
-		virtual	std::string	get_header()	const;
-		void	inject_hlps(uint64	analysis_starting_time);
+		TPX(const	AutoFocusController	*auto_focus,_Fact	*target);
 	public:
 		TPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
 		TPX(const	TPX	*original);
@@ -80,10 +75,13 @@ namespace	r_exec{
 	public	TPX{
 	protected:
 		std::list<Input>	inputs;	// time-controlled buffer (inputs older than tpx_time_horizon from now are discarded).
+		std::list<P<Code> >	hlps;	// new mdls/csts.
 
-		virtual	void	build_hlps()=0;
-		
+		void	inject_hlps(uint64	analysis_starting_time)	const;
+		virtual	std::string	get_header()	const;
+
 		_TPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
+		_TPX(const	AutoFocusController	*auto_focus,_Fact	*target);
 	public:
 		virtual	~_TPX();
 
@@ -124,30 +122,23 @@ namespace	r_exec{
 	// Guards on values (not only on timings) are computed: this is the only TPX that does so.
 	// Inputs with SYNC_HOLD: I/O devices are expected to send changes on such inputs as soon as available.
 	class	CTPX:
-	public	_Object{
+	public	_TPX{
 	private:
-		P<_Fact>					premise;
-		std::list<P<Code> >			raw_inputs;	// raw input buffer;
-		std::list<Input>			inputs;		// consequent first.
-		const	AutoFocusController	*auto_focus;
-
 		bool	stored_premise;
 
-		bool	find_guard(_Fact	*cause,_Fact	*consequent,uint64	period,GuardBuilder	*&guard_builder);
+		GuardBuilder	*get_default_guard_builder(_Fact	*cause,_Fact	*consequent,uint64	period);
+		GuardBuilder	*find_guard_builder(_Fact	*cause,_Fact	*consequent,uint64	period);
 		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index);
 		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index,Code	*&cst);
 
-		bool	build_mdl(_Fact	*cause,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period,std::list<P<Code> >	&hlps);
-		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period,std::list<P<Code> >	&hlps);
+		bool	build_mdl(_Fact	*cause,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
+		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
 
-		Code	*build_cst(ICST	*icst,BindingMap	*bm);
+		bool	build_requirement(BindingMap	*bm,Code	*m0,uint64	period);
+
+		Code	*build_cst(ICST	*icst,BindingMap	*bm,_Fact	*component);
 		Code	*build_mdl_head(BindingMap	*bm,uint16	tpl_arg_count,_Fact	*lhs,_Fact	*rhs,uint16	&write_index);
 		void	build_mdl_tail(Code	*mdl,uint16	write_index);
-
-		Code	*build_mdl(_Fact	*lhs,_Fact	*rhs,GuardBuilder	*guard_builder,BindingMap	*bm);
-		Code	*build_mdl(_Fact	*lhs_f_icst,_Fact	*cause_pattern,_Fact	*rhs,GuardBuilder	*guard_builder,BindingMap	*bm);
-		Code	*build_mdl(_Fact	*lhs,_Fact	*rhs,BindingMap	*bm,uint64	period);
-		Code	*build_mdl(_Fact	*lhs_f_icst,_Fact	*premise_pattern,_Fact	*rhs,BindingMap	*bm,uint64	period);
 
 		std::string	get_header()	const;
 	public:

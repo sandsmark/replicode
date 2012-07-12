@@ -197,6 +197,68 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	NoArgCmdGuardBuilder::NoArgCmdGuardBuilder(uint64	period,uint64	offset,uint64	cmd_duration):TimingGuardBuilder(period),offset(offset),cmd_duration(cmd_duration){
+	}
+	
+	NoArgCmdGuardBuilder::~NoArgCmdGuardBuilder(){
+	}
+
+	void	NoArgCmdGuardBuilder::_build(Code *mdl,uint16	q0,uint16	t0,uint16	t1,uint16 &write_index)	const{
+
+		Code	*rhs=mdl->get_reference(1);
+		uint16	t2=rhs->code(FACT_AFTER).asIndex();
+		uint16	t3=rhs->code(FACT_BEFORE).asIndex();
+
+		Code	*lhs=mdl->get_reference(0);
+		uint16	cmd_t0=lhs->code(FACT_AFTER).asIndex();
+		uint16	cmd_t1=lhs->code(FACT_BEFORE).asIndex();
+
+		mdl->code(MDL_FWD_GUARDS)=Atom::IPointer(++write_index);
+		mdl->code(write_index)=Atom::Set(2);
+
+		uint16	extent_index=write_index+2;
+		
+		write_guard(mdl,t2,t0,Opcodes::Add,period,write_index,extent_index);
+		write_guard(mdl,t3,t1,Opcodes::Add,period,write_index,extent_index);
+
+		write_index=extent_index;
+		mdl->code(MDL_BWD_GUARDS)=Atom::IPointer(++write_index);
+		mdl->code(write_index)=Atom::Set(4);
+		
+		extent_index=write_index+4;
+
+		write_guard(mdl,t0,t2,Opcodes::Sub,period,write_index,extent_index);
+		write_guard(mdl,t1,t3,Opcodes::Sub,period,write_index,extent_index);
+
+		write_guard(mdl,cmd_t0,t2,Opcodes::Sub,offset,write_index,extent_index);
+		write_guard(mdl,cmd_t1,cmd_t0,Opcodes::Add,cmd_duration,write_index,extent_index);
+		
+		write_index=extent_index;
+	}
+
+	void	NoArgCmdGuardBuilder::build(Code	*mdl,_Fact	*premise_pattern,_Fact	*cause_pattern,uint16	&write_index)	const{
+
+		uint16	q0;
+		uint16	t0;
+		uint16	t1;
+		uint16	tpl_arg_set_index=mdl->code(MDL_TPL_ARGS).asIndex();
+		if(mdl->code(tpl_arg_set_index).getAtomCount()==0){
+
+			q0=premise_pattern->get_reference(0)->code(MK_VAL_VALUE).asIndex();
+			t0=premise_pattern->code(FACT_AFTER).asIndex();
+			t1=premise_pattern->code(FACT_BEFORE).asIndex();
+		}else{	// use the tpl args.
+
+			q0=0;
+			t0=1;
+			t1=2;
+		}
+
+		_build(mdl,q0,t0,t1,write_index);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	CmdGuardBuilder::CmdGuardBuilder(uint64	period,uint16	cmd_arg_index):TimingGuardBuilder(period),cmd_arg_index(cmd_arg_index){
 	}
 
@@ -350,7 +412,7 @@ namespace	r_exec{
 		
 		write_index=extent_index;
 	}
-	
+
 	void	ConstGuardBuilder::_build(Code	*mdl,uint16	fwd_opcode,uint16	bwd_opcode,_Fact	*premise_pattern,_Fact	*cause_pattern,uint16	&write_index)	const{
 
 		uint16	q0;

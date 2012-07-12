@@ -72,7 +72,7 @@ namespace	r_exec{
 				Group	*output_group=output_groups[i];
 				View	*view=new	View(input,true);
 				view->references[0]=output_group;
-				view->code(VIEW_RES)=Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr());
+				view->code(VIEW_RES)=Atom::Float(Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr()));
 				_Mem::Get()->inject_async(view);
 				}
 			break;
@@ -86,15 +86,15 @@ namespace	r_exec{
 				Group	*output_group=output_groups[i];
 				View	*view=new	View(input,true);
 				view->references[0]=output_group;
-				view->code(VIEW_RES)=Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr());
+				view->code(VIEW_RES)=Atom::Float(Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr()));
 				view->object=copy;
 				_Mem::Get()->inject_async(view);
-				if(i==0)
+				if(i==0	&&	_acquire_models)
 					_Mem::Get()->inject_null_program(new	PASTController(this,copy),output_group,output_group->get_upr()*Utils::GetBasePeriod(),true);
 			}
 			break;
 		case	View::SYNC_HOLD:{		// inject a copy, add a controller, sync_once, morph res, after=now+time_tolerance (de-sync as it can have the same effect as a cmd), before=now+output_grp.upr+time_tolerance.
-			uint64	offset=Utils::GetTimeTolerance();
+			uint64	offset=2*Utils::GetTimeTolerance();
 			if(input_fact->is_anti_fact())
 				copy=new	AntiFact(input_fact->get_reference(0),now+offset,now+offset+ref_group->get_upr()*Utils::GetBasePeriod(),1,1);
 			else
@@ -105,11 +105,11 @@ namespace	r_exec{
 				View	*view=new	View(input,true);
 				view->references[0]=output_group;
 				view->code(VIEW_SYNC)=Atom::Float(View::SYNC_ONCE);
-				view->code(VIEW_RES)=Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr());
+				view->code(VIEW_RES)=Atom::Float(Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr()));
 				//Utils::SetTimestamp<View>(view,VIEW_IJT,now+offset);
 				view->object=copy;
-				_Mem::Get()->inject_async(view);	// delayed by offset.
-				if(i==0)
+				_Mem::Get()->inject_async(view);
+				if(i==0	&&	_acquire_models)
 					_Mem::Get()->inject_null_program(new	HASTController(this,copy),output_group,output_group->get_upr()*Utils::GetBasePeriod(),true);
 			}
 			break;
@@ -321,7 +321,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	AutoFocusController::inject_hlps(std::list<P<Code> >	&hlps)	const{	// inject in the primary group; models will be injected in the secondary group automatically.
+	void	AutoFocusController::inject_hlps(const	std::list<P<Code> >	&hlps)	const{	// inject in the primary group; models will be injected in the secondary group automatically.
 
 		std::list<View	*>	views;
 		
