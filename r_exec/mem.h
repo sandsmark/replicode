@@ -271,7 +271,7 @@ namespace	r_exec{
 
 		Code	*clone(Code	*original)	const;	// shallow copy.
 
-		std::vector<uint64>	timings_report;
+		//std::vector<uint64>	timings_report;
 	};
 
 	// O is the class of the objects held by the rMem (except groups and notifications):
