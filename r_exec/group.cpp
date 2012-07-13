@@ -965,7 +965,7 @@ return;
 	}
 
 	void	Group::inject_new_object(View	*view){	// the view can hold anything but groups and notifications.
-
+//uint64	t0=Now();
 		switch(view->object->code(0).getDescriptor()){
 		case	Atom::MARKER:	// the marker does not exist yet: add it to the mks of its references.
 			for(uint32	i=0;i<view->object->references_size();++i){
@@ -982,6 +982,8 @@ return;
 
 		inject(view);
 		notifyNew(view);
+//uint64	t1=Now();
+//std::cout<<"injection: "<<t1-t0<<std::endl;
 	}
 
 	void	Group::inject_existing_object(View	*view){	// the view can hold anything but groups and notifications.

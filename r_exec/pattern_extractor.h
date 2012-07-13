@@ -78,7 +78,8 @@ namespace	r_exec{
 		std::list<P<Code> >	hlps;	// new mdls/csts.
 
 		void	inject_hlps(uint64	analysis_starting_time)	const;
-		virtual	std::string	get_header()	const;
+
+		virtual	std::string	get_header()	const=0;
 
 		_TPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
 		_TPX(const	AutoFocusController	*auto_focus,_Fact	*target);
@@ -86,29 +87,40 @@ namespace	r_exec{
 		virtual	~_TPX();
 
 		bool	take_input(Input	*input);	// input->input is a fact.
-		void	reduce(View	*input);	// input is v->f->success(target,input) or v->|f->success(target,input).
 	};
 
+	// Pattern extractor targeted at goal successes.
+	// Possible causes are younger than the production of the goal.
+	// Models produced are of the form: M1[cause -> goal_target], where cause can be an imdl and goal_target can be an imdl.
+	// M1 does not have template arguments.
+	// Commands are ignored (CTPX' job).
 	class	r_exec_dll	GTPX:	// target is a goal.
 	public	_TPX{
 	private:
-		void	build_hlps();
+		std::string	get_header()	const;
 	public:
 		GTPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
 		~GTPX();
 
 		void	signal(View	*input)	const;
+		void	reduce(View	*input);	// input is v->f->success(target,input) or v->|f->success(target,input).
 	};
 
+	// Pattern extractor targeted at prediciton failures.
+	// Possible causes are older than the production of the prediction.
+	// Models produced are of the form: M1[cause -> |imdl M0] where M0 is the model that produced the failed prediction and cause can be an imdl.
+	// M1 does not have template arguments. As a general rule, requirements cannot have requirements.
+	// Commands are ignored (CTPX' job).
 	class	r_exec_dll	PTPX:	// target is a prediction.
 	public	_TPX{
 	private:
-		void	build_hlps();
+		std::string	get_header()	const;
 	public:
 		PTPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
 		~PTPX();
 
 		void	signal(View	*input)	const;
+		void	reduce(View	*input);	// input is v->f->success(target,input) or v->|f->success(target,input).
 	};
 
 	class	ICST;

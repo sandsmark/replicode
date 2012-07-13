@@ -270,6 +270,8 @@ namespace	r_exec{
 		void	pack_fact_object(Code	*fact_object,Code	*hlp,uint16	&write_index,std::vector<P<Code>	>	*references)	const;
 
 		Code	*clone(Code	*original)	const;	// shallow copy.
+
+		std::vector<uint64>	timings_report;
 	};
 
 	// O is the class of the objects held by the rMem (except groups and notifications):

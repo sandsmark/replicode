@@ -65,8 +65,8 @@ namespace	r_exec{
 
 		_Fact	*input_object=input->object;
 		if(input_object->is_invalidated())
-		return;
-
+			return;
+//uint64	t0=Now();
 		reductionCS.enter();
 
 		if(input_object==target){
@@ -96,6 +96,8 @@ namespace	r_exec{
 		((U	*)this)->reduce(input,input_object);
 
 		reductionCS.leave();
+//uint64	t1=Now();
+//std::cout<<"ASTC: "<<t1-t0<<std::endl;
 	}
 
 	template<class	U>	void	ASTController<U>::kill(){

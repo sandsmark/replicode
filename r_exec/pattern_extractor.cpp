@@ -97,27 +97,8 @@ namespace	r_exec{
 			}
 		}
 		inputs.push_back(*input);
-	}
 
-
-	void	_TPX::reduce(View	*input){
-/*
-		build_hlps();
-
-		std::list<P<Code> >::const_iterator	hlp;
-		for(hlp=hlps.begin();hlp!=hlps.end();++hlp){
-
-			_Mem::Get()->pack_hlp(*hlp);
-			//auto_focus->inject_hlp(*hlp);
-
-			if(auto_focus->decompile_models()){
-
-				std::string	header("> TPX:mdl -------------------\n\n");
-				P<TDecompiler>	td=new	TDecompiler(1,header);
-				td->add_object(*hlp);
-				td->decompile();
-			}
-		}*/
+		return	true;
 	}
 
 	void	_TPX::inject_hlps(uint64	analysis_starting_time)	const{
@@ -167,11 +148,6 @@ namespace	r_exec{
 		}
 	}
 
-	std::string	_TPX::get_header()	const{
-
-		return	std::string("_TPX");
-	}
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	GTPX::GTPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings):_TPX(auto_focus,target,pattern,bindings){
@@ -189,11 +165,15 @@ namespace	r_exec{
 		}
 	}
 
-	void	GTPX::build_hlps(){
+	void	GTPX::reduce(r_exec::View	*input){
 
-		// TODO. success->p->f and f==target, means that a mdl can solve the goal: abort.
-		// else: take the input before the goal success and build a model; in the process, identify new CST if LHS and inject.
-		// if selected input==success->f->pred->x by mdl M, use f->imdl M as the lhs of the new model.
+		// if a mdl predicted the success, abort.
+
+	}
+
+	std::string	GTPX::get_header()	const{
+
+		return	std::string("GTPX");
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -206,21 +186,86 @@ namespace	r_exec{
 
 	void	PTPX::signal(View	*input)	const{	// will be erased from the AF map upon return. P<> kept in reduction job.
 
-		if(input->object->code(0).asOpcode()==Opcodes::AntiFact){	// prediction failure.
+		if(((_Fact	*)input->object)->is_anti_fact()){	// prediction failure.
 
 			ReductionJob<PTPX>	*j=new	ReductionJob<PTPX>(new	View(input),(PTPX	*)this);
 			_Mem::Get()->pushReductionJob(j);
 		}
 	}
 
+	void	PTPX::reduce(r_exec::View	*input){
 
-	void	PTPX::build_hlps(){
+		// first pass: from the buffer from the future: if a mdl predicted the failure, abort.
+		// second pass: get a buffer from the past, if a mdl predicted the failure, abort.
+		// third pass: find causes (in the past) for the failure; rhs is an imdl and can have tpl args.
 
-		// TODO. success->p->f and f==target, means that a mdl can anticipate the failure of the pred: abort.
-		// else: take the input before the pred failure and build a model (s_r); in the process, identify new CST if LHS and inject.
-		// if selected input==success->f->pred->x by mdl M, use f->imdl M as the lhs of the new model.
+		uint64	analysis_starting_time=Now();
+/*
+		_Fact	*consequent=(_Fact	*)input->object;	// prediction failure.
+
+		BindingMap	*end_bm;
+		P<_Fact>	abstract_input=(_Fact	*)BindingMap::Abstract(consequent,end_bm);
+		std::list<Input>::const_iterator	i;
+		for(i=inputs.begin();i!=inputs.end();){
+
+			if(!i->bindings->intersect(end_bm))
+				i=inputs.erase(i);
+			else
+				++i;
+		}
+		inputs.push_front(Input(consequent,abstract_input,end_bm));
+
+		uint64			period=Utils::GetTimestamp<Code>(consequent,FACT_AFTER)-Utils::GetTimestamp<Code>(target.input,FACT_AFTER);	// sampling period.
+		P<GuardBuilder>	guard_builder;
+
+		i=inputs.begin();	// consequent.
+		for(++i;i!=inputs.end();++i){	// start from the input following the consequent; build all possible models.
+
+			if(target.input==(*i).input)
+				continue;
+
+			if((*i).input->get_after()>=consequent->get_after())	// exhaust inputs younger than the consequent.
+				continue;
+
+			if((*i).input->get_reference(0)->code(0).asOpcode()==Opcodes::ICst)
+				continue;	// components will be evaluated first, then the icst will be identified.
+
+			Input	cause=*i;
+
+			Code	*f_cause=cause.input->get_reference(0);
+			if(	f_cause->code(0).asOpcode()==Opcodes::MkVal	&&
+				f_cause->code(MK_VAL_VALUE).getDescriptor()==Atom::R_PTR	&&
+				f_cause->get_reference(f_cause->code(MK_VAL_VALUE).asIndex())->code(0).asOpcode()==Opcodes::Ont)	// (mk.val : : (ont :) :) cannot be a cause. TODO: we shall discard SYNC_AXIOM instead.
+				continue;
+
+			if(Utils::Synchronous(cause.input->get_after(),target.input->get_after()))	// cause in sync with the premise: abort.
+				return;
+
+			guard_builder=get_default_guard_builder(cause.input,consequent,period);
+
+			uint16	cause_index;
+			_Fact	*f_icst=find_f_icst(cause.input,cause_index);
+			if(f_icst==NULL){	// the cause can never be the premise; m0:[premise.value premise.after premise.before][cause->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
+
+				if(!build_mdl(cause.input,consequent,guard_builder,period))
+					return;
+			}else{
+
+				Code	*cst=f_icst->get_reference(0)->get_reference(0)->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retreive the pattern from the unpacked code.
+				_Fact	*cause_pattern=(_Fact	*)cst->get_reference(cause_index);
+				if(!build_mdl(f_icst,cause_pattern,consequent,guard_builder,period))	// m0:[premise.value premise.after premise.before][icst->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
+					return;
+			}
+
+			inject_hlps(analysis_starting_time);
+		}*/
 	}
 
+	std::string	PTPX::get_header()	const{
+
+		return	std::string("PTPX");
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	CTPX::CTPX(const	AutoFocusController		*auto_focus,_Fact	*premise):_TPX(auto_focus,premise),stored_premise(false){

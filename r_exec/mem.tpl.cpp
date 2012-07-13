@@ -384,7 +384,7 @@ namespace	r_exec{
 	template<class	O>	void	Mem<O>::inject_new_object(View	*view){
 
 		Group	*host=view->get_host();
-
+uint64	t0,t1,t2;
 		switch(view->object->code(0).getDescriptor()){
 		case	Atom::GROUP:
 			bind<Group>(view);
@@ -395,10 +395,12 @@ namespace	r_exec{
 			/*object_registerCS.enter();
 			object_register.insert((O	*)view->object).first;
 			object_registerCS.leave();*/
-
+t0=Now();
 			bind<O>(view);
-
+//t1=Now();
 			host->inject_new_object(view);
+t2=Now();
+timings_report.push_back(t2-t0);
 			break;
 		}
 	}

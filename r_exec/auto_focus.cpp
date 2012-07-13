@@ -73,8 +73,8 @@ namespace	r_exec{
 				View	*view=new	View(input,true);
 				view->references[0]=output_group;
 				view->code(VIEW_RES)=Atom::Float(Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr()));
-				_Mem::Get()->inject_async(view);
-				}
+				_Mem::Get()->inject(view);
+			}
 			break;
 		case	View::SYNC_PERIODIC:	// inject a copy, morph res, add a controller.
 			if(input_fact->is_anti_fact())
@@ -88,7 +88,7 @@ namespace	r_exec{
 				view->references[0]=output_group;
 				view->code(VIEW_RES)=Atom::Float(Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr()));
 				view->object=copy;
-				_Mem::Get()->inject_async(view);
+				_Mem::Get()->inject(view);
 				if(i==0	&&	_acquire_models)
 					_Mem::Get()->inject_null_program(new	PASTController(this,copy),output_group,output_group->get_upr()*Utils::GetBasePeriod(),true);
 			}
@@ -108,7 +108,7 @@ namespace	r_exec{
 				view->code(VIEW_RES)=Atom::Float(Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr()));
 				//Utils::SetTimestamp<View>(view,VIEW_IJT,now+offset);
 				view->object=copy;
-				_Mem::Get()->inject_async(view);
+				_Mem::Get()->inject(view);
 				if(i==0	&&	_acquire_models)
 					_Mem::Get()->inject_null_program(new	HASTController(this,copy),output_group,output_group->get_upr()*Utils::GetBasePeriod(),true);
 			}
@@ -126,7 +126,7 @@ namespace	r_exec{
 				view->code(VIEW_SYNC)=Atom::Float(View::SYNC_ONCE);
 				view->code(VIEW_RES)=Atom::Float(1);
 				view->object=copy;
-				_Mem::Get()->inject_async(view);
+				_Mem::Get()->inject(view);
 			}
 			break;
 		}
@@ -242,8 +242,21 @@ namespace	r_exec{
 
 	void	AutoFocusController::take_input(r_exec::View	*input){
 
+		if(is_invalidated())
+			return;
+
+		if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
+			input->object->code(0).asOpcode()!=Opcodes::AntiFact)	// discard everything but facts and |facts.
+			return;	// std::cout<<"A/F::TI: "<<get_host()->get_oid()<<" > "<<input->object->get_oid()<<std::endl;
+		Controller::__take_input<AutoFocusController>(input);
+	}
+	void	AutoFocusController::reduce(r_exec::View	*input){
+
 		Code	*input_object=input->object;
 		uint16	opcode=input_object->code(0).asOpcode();
+
+		reductionCS.enter();
+
 		if(opcode==Opcodes::MkRdx){
 			
 			Code	*production=input_object->get_reference(MK_RDX_MDL_PRODUCTION_REF);		// fact, if an ihlp was the producer.
@@ -319,6 +332,8 @@ namespace	r_exec{
 				}
 			}
 		}
+
+		reductionCS.leave();
 	}
 
 	void	AutoFocusController::inject_hlps(const	std::list<P<Code> >	&hlps)	const{	// inject in the primary group; models will be injected in the secondary group automatically.

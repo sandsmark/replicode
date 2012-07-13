@@ -115,6 +115,7 @@ namespace	r_exec{
 		Code	*get_core_object()	const;
 		
 		void	take_input(r_exec::View	*input);
+		void	reduce(r_exec::View	*input);
 
 		void	inject_hlps(const	std::list<P<Code> >	&hlps)	const;	// called by TPX; hlp is a mdl or a cst.
 		bool	decompile_models()	const	{	return	_decompile_models;	}
