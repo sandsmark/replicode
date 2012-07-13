@@ -39,6 +39,74 @@
 
 using	namespace	r_comp;
 
+r_exec::View	*build_view(uint64	time, Code* rstdin){	// this is application dependent WRT view->sync.
+
+	r_exec::View	*view=new	r_exec::View();
+	const	uint32	arity=VIEW_ARITY;	// reminder: opcode not included in the arity.
+	uint16	write_index=0;
+	uint16	extent_index=arity+1;
+
+	view->code(VIEW_OPCODE)=Atom::SSet(r_exec::View::ViewOpcode,arity);
+	view->code(VIEW_SYNC)=Atom::Float(View::SYNC_ONCE);		// sync on front.
+	view->code(VIEW_IJT)=Atom::IPointer(extent_index);		// iptr to injection time.
+	view->code(VIEW_SLN)=Atom::Float(1.0);					// sln.
+	view->code(VIEW_RES)=Atom::Float(1);					// res is set to 1 upr of the destination group.
+	view->code(VIEW_HOST)=Atom::RPointer(0);				// stdin/stdout is the only reference.
+	view->code(VIEW_ORG)=Atom::Nil();				// org.
+
+	Utils::SetTimestamp(&view->code(extent_index),time);
+
+	view->references[0]=rstdin;
+
+	return	view;
+}
+
+Code	*make_object(r_exec::Mem<r_exec::LObject>	*mem, Code* rstdin, float32 i){
+
+	Code	*object=new	r_exec::LObject(mem);
+	object->code(0)=Atom::Marker(r_exec::GetOpcode("mk.val"),4);	//	Caveat: arity does not include the opcode.
+	object->code(1)=Atom::RPointer(0);
+	object->code(2)=Atom::RPointer(1);
+	object->code(3)=Atom::Float(i);
+	object->code(4)=Atom::Float(1);		//	psln_thr.
+
+	object->set_reference(0,rstdin);
+	object->set_reference(1,rstdin);
+
+	return	object;
+}
+
+void test_injection(r_exec::Mem<r_exec::LObject>	*mem, float32 n) {
+
+	Code* rstdin = mem->get_stdin();
+
+	//uint64	t0=r_exec::Now();
+
+	for(float32 i = 0; i < n; ++i) {
+		Code* object = make_object(mem, rstdin, i);
+
+		uint64	now=r_exec::Now();
+
+		// Build a fact.
+		Code	*fact=new	r_exec::Fact(object,now,now,1,1);
+
+		// Build a default view for the fact.
+		r_exec::View	*view=build_view(now, rstdin);
+
+		// Inject the view.
+		view->set_object(fact);
+		mem->inject(view);
+	}
+
+	//uint64	t1=r_exec::Now();
+	uint32	samples=mem->timings_report.size();
+	uint64	acc=0;
+	for(uint32	i=0;i<samples;++i){
+		acc+=mem->timings_report[i];
+		std::cout<<mem->timings_report[i]<<std::endl;}
+	std::cout<<"total time: "<<acc<< std::endl;
+}
+
 void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset,bool	ignore_named_objects){
 
 #ifdef	DECOMPILE_ONE_BY_ONE
@@ -175,7 +243,11 @@ int32	main(int	argc,char	**argv){
 		uint64	starting_time=mem->start();
 		
 		std::cout<<"> running for "<<settings.run_time<<" ms\n\n";
-		Thread::Sleep(settings.run_time);
+		//Thread::Sleep(settings.run_time);
+
+		Thread::Sleep(settings.run_time/2);
+		test_injection(mem, 66);
+		Thread::Sleep(settings.run_time/2);
 
 		std::cout<<"\n> shutting rMem down...\n";
 		mem->stop();
