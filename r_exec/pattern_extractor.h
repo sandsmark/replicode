@@ -44,9 +44,14 @@ namespace	r_exec{
 		P<BindingMap>	bindings;	// contains the values for the abstraction.
 		P<_Fact>		abstraction;
 		P<_Fact>		input;
+		bool			eligible_cause;
 
-		Input(_Fact	*input,_Fact	*abstraction,BindingMap	*bindings):input(input),abstraction(abstraction),bindings(bindings){}
-		Input():input(NULL),abstraction(NULL),bindings(NULL){}
+		Input(_Fact	*input,bool	eligible_cause,_Fact	*abstraction,BindingMap	*bindings):input(input),eligible_cause(eligible_cause),abstraction(abstraction),bindings(bindings){}
+		Input():input(NULL),eligible_cause(false),abstraction(NULL),bindings(NULL){}
+		Input(const	Input	&original):input(original.input),eligible_cause(original.eligible_cause),abstraction(original.abstraction),bindings(original.bindings){}
+
+		static	bool	IsEligibleCause(r_exec::View	*view){	return	view->get_sync()!=View::SYNC_ONCE_AXIOM;	}
+		static	void	FillBuffer(std::list<Input>	&buffer,_Fact	*input,bool	eligible_cause,_Fact	*abstracted_input,BindingMap	*bm);
 	};
 
 	// Targeted Pattern eXtractor.
@@ -55,21 +60,23 @@ namespace	r_exec{
 	class	r_exec_dll	TPX:
 	public	_Object{
 	protected:
-		const	AutoFocusController	*auto_focus;
+		AutoFocusController	*auto_focus;
 
 		Input	target;	// goal or prediction target; abstraction: lhs of a mdl for goals, rhs for predictions.
-		TPX(const	AutoFocusController	*auto_focus,_Fact	*target);
+		TPX(AutoFocusController	*auto_focus,_Fact	*target);
 	public:
-		TPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
+		TPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
 		TPX(const	TPX	*original);
 		virtual	~TPX();
 
 		_Fact		*get_pattern()	const{	return	target.abstraction;	}
 		BindingMap	*get_bindings()	const{	return	target.bindings;	}
 
-		virtual	bool	take_input(Input	*input);	// input->input is a fact; return true if the input shares a value with the target.
+		virtual	bool	take_input(_Fact	*input,_Fact	*abstracted_input,BindingMap	*bm);	// input->input is a fact; return true if the input shares a value with the target.
 		virtual	void	signal(View	*input)	const;
 	};
+
+	class	ICST;
 
 	class	r_exec_dll	_TPX:
 	public	TPX{
@@ -77,16 +84,21 @@ namespace	r_exec{
 		std::list<Input>	inputs;	// time-controlled buffer (inputs older than tpx_time_horizon from now are discarded).
 		std::list<P<Code> >	hlps;	// new mdls/csts.
 
+		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index);
+		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index,Code	*&cst);
+		Code	*build_cst(ICST	*icst,BindingMap	*bm,_Fact	*component);
+
+		Code	*build_mdl_head(BindingMap	*bm,uint16	tpl_arg_count,_Fact	*lhs,_Fact	*rhs,uint16	&write_index);
+		void	build_mdl_tail(Code	*mdl,uint16	write_index);
+
 		void	inject_hlps(uint64	analysis_starting_time)	const;
 
 		virtual	std::string	get_header()	const=0;
 
-		_TPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
-		_TPX(const	AutoFocusController	*auto_focus,_Fact	*target);
+		_TPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
+		_TPX(AutoFocusController	*auto_focus,_Fact	*target);
 	public:
 		virtual	~_TPX();
-
-		bool	take_input(Input	*input);	// input->input is a fact.
 	};
 
 	// Pattern extractor targeted at goal successes.
@@ -97,11 +109,15 @@ namespace	r_exec{
 	class	r_exec_dll	GTPX:	// target is a goal.
 	public	_TPX{
 	private:
+		bool	build_mdl(_Fact	*cause,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
+		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
+
 		std::string	get_header()	const;
 	public:
-		GTPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
+		GTPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
 		~GTPX();
 
+		bool	take_input(_Fact	*input,bool	eligible_input,_Fact	*abstracted_input,BindingMap	*bm);	// input->input is a fact.
 		void	signal(View	*input)	const;
 		void	reduce(View	*input);	// input is v->f->success(target,input) or v->|f->success(target,input).
 	};
@@ -109,21 +125,24 @@ namespace	r_exec{
 	// Pattern extractor targeted at prediciton failures.
 	// Possible causes are older than the production of the prediction.
 	// Models produced are of the form: M1[cause -> |imdl M0] where M0 is the model that produced the failed prediction and cause can be an imdl.
-	// M1 does not have template arguments. As a general rule, requirements cannot have requirements.
+	// M1 does not have template arguments.
 	// Commands are ignored (CTPX' job).
 	class	r_exec_dll	PTPX:	// target is a prediction.
 	public	_TPX{
 	private:
+		P<Fact>	f_imdl;	// that produced the prediction (and for which the PTPX will find strong requirements).
+
+		bool	build_mdl(_Fact	*cause,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
+		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
+
 		std::string	get_header()	const;
 	public:
-		PTPX(const	AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
+		PTPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
 		~PTPX();
 
 		void	signal(View	*input)	const;
 		void	reduce(View	*input);	// input is v->f->success(target,input) or v->|f->success(target,input).
 	};
-
-	class	ICST;
 
 	// Pattern extractor targeted at changes of repeated input facts (SYMC_PERIODIC or SYNC_HOLD).
 	// Models produced are of the form: [premise -> [cause -> consequent]], i.e. M1:[premise -> imdl M0], M0:[cause -> consequent].
@@ -140,24 +159,18 @@ namespace	r_exec{
 
 		GuardBuilder	*get_default_guard_builder(_Fact	*cause,_Fact	*consequent,uint64	period);
 		GuardBuilder	*find_guard_builder(_Fact	*cause,_Fact	*consequent,uint64	period);
-		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index);
-		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index,Code	*&cst);
 
 		bool	build_mdl(_Fact	*cause,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
 		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
 
 		bool	build_requirement(BindingMap	*bm,Code	*m0,uint64	period);
 
-		Code	*build_cst(ICST	*icst,BindingMap	*bm,_Fact	*component);
-		Code	*build_mdl_head(BindingMap	*bm,uint16	tpl_arg_count,_Fact	*lhs,_Fact	*rhs,uint16	&write_index);
-		void	build_mdl_tail(Code	*mdl,uint16	write_index);
-
 		std::string	get_header()	const;
 	public:
-		CTPX(const	AutoFocusController	*auto_focus,_Fact	*premise);
+		CTPX(AutoFocusController	*auto_focus,_Fact	*premise);
 		~CTPX();
 
-		void	store_input(_Fact	*input);
+		void	store_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);	// asynchronous: build models of value change if not aborted asynchronously by ASTControllers.
 		void	signal(r_exec::View	*input);	// spawns mdl/cst building (reduce()).
 	};

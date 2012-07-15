@@ -240,6 +240,7 @@ namespace	r_exec{
 				break;
 			case	Atom::T_WILDCARD:
 			case	Atom::WILDCARD:
+			case	Atom::VL_PTR:
 				break;
 			default:
 				return	false;
@@ -253,6 +254,7 @@ namespace	r_exec{
 				break;
 			case	Atom::T_WILDCARD:
 			case	Atom::WILDCARD:
+			case	Atom::VL_PTR:
 				break;
 			default:
 				return	false;
@@ -262,6 +264,7 @@ namespace	r_exec{
 			switch(rhs_atom.getDescriptor()){
 			case	Atom::T_WILDCARD:
 			case	Atom::WILDCARD:
+			case	Atom::VL_PTR:
 				break;
 			default:
 				if(!MatchAtom(lhs_atom,rhs_atom))
@@ -599,7 +602,7 @@ namespace	r_exec{
 			sim->invalidate();
 		return	LObject::invalidate();
 	}
-	
+
 	bool	Goal::is_invalidated(){
 
 		if(LObject::is_invalidated())

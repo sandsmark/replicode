@@ -30,6 +30,7 @@
 
 #include	"mdl_controller.h"
 #include	"mem.h"
+#include	"model_base.h"
 
 
 namespace	r_exec{
@@ -80,10 +81,12 @@ namespace	r_exec{
 			bindings=bm;
 			bool	is_req=((MDLController	*)controller)->is_requirement();
 			Overlay				*o;
-			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,true);//bm->trace();f_imdl->get_reference(0)->trace();
+			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,false);//bm->trace();f_imdl->get_reference(0)->trace();
 			RequirementsPair	r_p;
 			Fact				*ground=f_p_f_imdl;
-			ChainingStatus		c_s=c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground,req_controller);
+			bool				wr_enabled;
+			ChainingStatus		c_s=c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground,req_controller,wr_enabled);
+			f_imdl->get_reference(0)->code(I_HLP_WR_E)=Atom::Boolean(wr_enabled);
 			bool				c_a=(c_s>=WR_ENABLED);
 			switch(c_s){
 			case	WR_DISABLED:
@@ -196,10 +199,12 @@ namespace	r_exec{
 			P<BindingMap>		original_bindings=bindings;
 			bindings=bm;
 			Overlay				*o;
-			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,true);
+			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,false);
 			RequirementsPair	r_p;
 			Fact				*ground=f_p_f_imdl;
-			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground,req_controller);
+			bool				wr_enabled;
+			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground,req_controller,wr_enabled);
+			f_imdl->get_reference(0)->code(I_HLP_WR_E)=Atom::Boolean(wr_enabled);
 			bool				c_a=(c_s>=NO_R);
 			switch(c_s){
 			case	WR_DISABLED:
@@ -646,7 +651,7 @@ namespace	r_exec{
 		}
 	}
 
-	ChainingStatus	MDLController::retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground,MDLController	*req_controller){
+	ChainingStatus	MDLController::retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground,MDLController	*req_controller,bool	&wr_enabled){	// wr_enabled: true if there is at least one wr stronger than at least one sr.
 
 		uint32	wr_count;
 		uint32	sr_count;
@@ -657,6 +662,8 @@ namespace	r_exec{
 		ChainingStatus	r;
 		BindingMap	original(bm);
 		if(!sr_count){	// no strong req., some weak req.: true if there is one f->imdl complying with timings and bindings.
+
+			wr_enabled=false;
 
 			if(ground!=NULL){	// an imdl triggered the reduction of the cache.
 
@@ -710,6 +717,7 @@ namespace	r_exec{
 
 			if(!wr_count){	// some strong req., no weak req.: true if there is no |f->imdl complying with timings and bindings.
 
+				wr_enabled=false;
 				r=WR_ENABLED;
 				requirements.CS.enter();
 				uint64	now=Now();
@@ -783,6 +791,7 @@ namespace	r_exec{
 						r_p.first.controllers.push_back(req_controller);
 						r_p.first.f_imdl=ground;
 						r_p.first.chaining_was_allowed=true;
+						wr_enabled=true;
 					}
 					return	r;
 				}else	for(e=requirements.positive_evidences.begin();e!=requirements.positive_evidences.end();){
@@ -803,8 +812,12 @@ namespace	r_exec{
 
 									r=WR_ENABLED;
 									ground=(*e).evidence;
-								}else
+									wr_enabled=true;
+								}else{
+
 									r=SR_DISABLED_WR;
+									wr_enabled=false;
+								}
 								bm->load(&_original);
 							}
 
@@ -1976,6 +1989,7 @@ namespace	r_exec{
 			}else{	// no weak models live in the secondary group.
 
 				codeCS.leave();
+				ModelBase::Get()->register_mdl_failure(model);
 				kill_views();
 			}
 		}

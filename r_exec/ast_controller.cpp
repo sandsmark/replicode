@@ -36,7 +36,7 @@
 
 namespace	r_exec{
 
-	PASTController::PASTController(const	AutoFocusController	*auto_focus,_Fact	*target):ASTController<PASTController>(auto_focus,target){
+	PASTController::PASTController(AutoFocusController	*auto_focus,_Fact	*target):ASTController<PASTController>(auto_focus,target){
 
 		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" created TPX PERIODIC"<<std::endl;
 	}
@@ -60,14 +60,14 @@ namespace	r_exec{
 			break;
 		case	MATCH_FAILURE:
 			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" stored: "<<input->get_oid()<<std::endl;
-			tpx->store_input(input);
+			tpx->store_input(v);
 			break;
 		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	HASTController::HASTController(const	AutoFocusController	*auto_focus,_Fact	*target):ASTController<HASTController>(auto_focus,target){
+	HASTController::HASTController(AutoFocusController	*auto_focus,_Fact	*target):ASTController<HASTController>(auto_focus,target){
 
 		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" created HOLD"<<std::endl;
 	}
@@ -90,7 +90,7 @@ namespace	r_exec{
 			break;
 		case	MATCH_FAILURE:
 			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" stored: "<<input->get_oid()<<std::endl;
-			tpx->store_input(input);
+			tpx->store_input(v);
 			break;
 		}
 	}

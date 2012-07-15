@@ -30,7 +30,7 @@
 
 #ifndef	black_list_h
 #define	black_list_h
-
+/* DERECATED
 #include	"factory.h"
 
 
@@ -62,6 +62,6 @@ namespace	r_exec{
 		void	clear(Code	*prediction);					// a strong (i.e. unsupsicious) model can make the prediction: clear the black list for said prediction (i.e. override suspicion).
 	};
 }
-
+*/
 
 #endif

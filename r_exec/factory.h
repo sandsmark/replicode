@@ -100,7 +100,6 @@ namespace	r_exec{
 	private:
 		static	bool	MatchAtom(Atom	lhs,Atom	rhs);
 		static	bool	MatchStructure(const	Code	*lhs,uint16	lhs_base_index,uint16	lhs_index,const	Code	*rhs,uint16	rhs_index);
-		static	bool	MatchObject(const	Code	*lhs,const	Code	*rhs);
 		static	bool	Match(const	Code	*lhs,uint16	lhs_base_index,uint16	lhs_index,const	Code	*rhs,uint16	rhs_index,uint16	lhs_arity);
 		static	bool	CounterEvidence(const	Code *lhs,const	Code	*rhs);
 	protected:
@@ -109,6 +108,8 @@ namespace	r_exec{
 		_Fact(_Fact	*f);
 		_Fact(uint16	opcode,Code	*object,uint64	after,uint64	before,float32	confidence,float32	psln_thr);
 	public:
+		static	bool	MatchObject(const	Code	*lhs,const	Code	*rhs);
+
 		virtual	bool	is_invalidated();
 
 		bool	is_fact()		const;

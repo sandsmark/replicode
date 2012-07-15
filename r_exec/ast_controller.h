@@ -54,7 +54,7 @@ namespace	r_exec{
 
 		void	kill();
 
-		ASTController(const	AutoFocusController	*auto_focus,_Fact	*target);
+		ASTController(AutoFocusController	*auto_focus,_Fact	*target);
 	public:
 		virtual	~ASTController();
 
@@ -68,7 +68,7 @@ namespace	r_exec{
 	class	PASTController:
 	public	ASTController<PASTController>{
 	public:
-		PASTController(const	AutoFocusController	*auto_focus,_Fact	*target);
+		PASTController(AutoFocusController	*auto_focus,_Fact	*target);
 		~PASTController();
 
 		void	reduce(View	*input){	this->ASTController<PASTController>::reduce(input);	}
@@ -79,7 +79,7 @@ namespace	r_exec{
 	class	HASTController:
 	public	ASTController<HASTController>{
 	public:
-		HASTController(const	AutoFocusController	*auto_focus,_Fact	*target);
+		HASTController(AutoFocusController	*auto_focus,_Fact	*target);
 		~HASTController();
 
 		void	reduce(View	*input){	this->ASTController<HASTController>::reduce(input);	}

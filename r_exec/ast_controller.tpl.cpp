@@ -36,7 +36,7 @@
 
 namespace	r_exec{
 
-	template<class	U>	ASTController<U>::ASTController(const	AutoFocusController	*auto_focus,_Fact	*target):OController(NULL){
+	template<class	U>	ASTController<U>::ASTController(AutoFocusController	*auto_focus,_Fact	*target):OController(NULL){
 		
 		this->target=target;
 		tpx=new	CTPX(auto_focus,(_Fact	*)target);	// target is the premise, i.e. the tpx' target to be defeated.
@@ -71,7 +71,7 @@ namespace	r_exec{
 
 		if(input_object==target){
 
-			tpx->store_input(input_object);
+			tpx->store_input(input);
 			reductionCS.leave();
 			return;
 		}

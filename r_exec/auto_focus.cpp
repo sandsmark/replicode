@@ -55,7 +55,7 @@ namespace	r_exec{
 		return	getObject();	// icpp_pgm.
 	}
 
-	inline	void	AutoFocusController::inject_input(View	*input,uint32	start)	const{
+	inline	void	AutoFocusController::inject_input(View	*input,uint32	start){
 
 		_Fact	*input_fact=(_Fact	*)input->object;
 
@@ -123,7 +123,7 @@ namespace	r_exec{
 				Group	*output_group=output_groups[i];
 				View	*view=new	View(input,true);
 				view->references[0]=output_group;
-				view->code(VIEW_SYNC)=Atom::Float(View::SYNC_ONCE);
+				view->code(VIEW_SYNC)=Atom::Float(View::SYNC_ONCE_AXIOM);
 				view->code(VIEW_RES)=Atom::Float(1);
 				view->object=copy;
 				_Mem::Get()->inject(view);
@@ -150,8 +150,8 @@ namespace	r_exec{
 
 	inline	void	AutoFocusController::notify_dispatch(_Fact	*target,View	*input){
 
-		BindingMap	*bm=NULL;
-		P<_Fact>	abstract_input=(_Fact	*)BindingMap::Abstract(input->object,bm);
+		P<BindingMap>	bm=new	BindingMap();
+		P<_Fact>	abstract_input=(_Fact	*)bm->abstract_object(input->object,false);
 
 		TPXMap::const_iterator	m;
 		for(m=predictions.begin();m!=predictions.end();){
@@ -164,8 +164,7 @@ namespace	r_exec{
 				m=predictions.erase(m);
 			}else{
 
-				Input	*_input=new	Input(input->object,abstract_input,bm);
-				m->second->take_input(_input);
+				m->second->take_input(input->object,abstract_input,bm);
 				++m;
 			}
 		}
@@ -182,8 +181,7 @@ namespace	r_exec{
 				m=map.erase(m);
 			else{
 
-				Input	*_input=new	Input((_Fact	*)input->object,abstract_input,bm);
-				if(m->second->take_input(_input)){
+				if(m->second->take_input((_Fact	*)input->object,abstract_input,bm)){
 
 					if(!injected){
 
@@ -205,8 +203,7 @@ namespace	r_exec{
 				m=map.erase(m);
 			else{
 
-				Input	*_input=new	Input(input,abstract_input,bm);
-				m->second->take_input(_input);
+				m->second->take_input(input,abstract_input,bm);
 				++m;
 			}
 		}
@@ -259,7 +256,7 @@ namespace	r_exec{
 
 		if(opcode==Opcodes::MkRdx){
 			
-			Code	*production=input_object->get_reference(MK_RDX_MDL_PRODUCTION_REF);		// fact, if an ihlp was the producer.
+			Code	*production=input_object->get_reference(MK_RDX_MDL_PRODUCTION_REF);	// fact, if an ihlp was the producer.
 			_Fact	*f_ihlp=(_Fact	*)input_object->get_reference(MK_RDX_IHLP_REF);
 			BindingMap	*bm=((MkRdx	*)input_object)->bindings;
 			if(f_ihlp->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl){	// handle new goals/predictions as new targets.
@@ -271,7 +268,7 @@ namespace	r_exec{
 				_Fact	*pattern;
 				TPX		*tpx;
 				Goal	*goal=((_Fact	*)production)->get_goal();
-				if(goal!=NULL){
+				if(goal!=NULL){	// build a tpx to find modles like M:[A -> B] where B is the goal target.
 
 					pattern=(_Fact	*)unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index+1).asIndex());	// lhs.
 					tpx=build_tpx<GTPX>((_Fact	*)production,pattern,bm,goal_ratings,f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
@@ -279,10 +276,10 @@ namespace	r_exec{
 				}else{	
 					
 					Pred	*pred=((_Fact	*)production)->get_pred();
-					if(pred!=NULL){
+					if(pred!=NULL){	// build a tpx to find models like M:[A -> |imdl M0] where M0 is the model that produced the prediction.
 
 						pattern=(_Fact	*)unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index+2).asIndex());	// rhs.
-						tpx=build_tpx<PTPX>((_Fact	*)production,pattern,bm,prediction_ratings,f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
+						tpx=build_tpx<PTPX>((_Fact	*)f_ihlp,pattern,bm,prediction_ratings,f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
 						predictions.insert(std::pair<P<Code>,P<TPX>	>((_Fact	*)production,tpx));
 					}
 				}
@@ -315,19 +312,22 @@ namespace	r_exec{
 					inject_input(input,0);
 				else{
 
-					BindingMap	*bm;
+					P<BindingMap>	bm=new	BindingMap();
 					if(opcode==Opcodes::ICst){	// dispatch but don't inject again (since it comes from inside).
 
 						bm=((ICST	*)payload)->bindings;
 						_Fact	*abstract_f_ihlp=bm->abstract_f_ihlp((_Fact	*)input_object);
 						dispatch_no_inject((_Fact	*)input_object,abstract_f_ihlp,bm,goals);
 						dispatch_no_inject((_Fact	*)input_object,abstract_f_ihlp,bm,predictions);
+						Input::FillBuffer(cross_buffer,(_Fact	*)input_object,Input::IsEligibleCause(input),abstract_f_ihlp,bm);
 					}else{
 
-						P<_Fact>	abstract_input=(_Fact	*)BindingMap::Abstract(input_object,bm);
+						P<_Fact>	abstract_input=(_Fact	*)bm->abstract_object(input_object,false);
 						bool		injected=false;
 						dispatch(input,abstract_input,bm,injected,goals);
 						dispatch(input,abstract_input,bm,injected,predictions);
+						if(injected)
+							Input::FillBuffer(cross_buffer,(_Fact	*)input_object,Input::IsEligibleCause(input),abstract_input,bm);
 					}
 				}
 			}
@@ -352,4 +352,12 @@ namespace	r_exec{
 		
 		_Mem::Get()->inject_hlps(views,output_groups[0]);
 	}
+
+	void	AutoFocusController::copy_cross_buffer(std::list<Input>	&destination){
+
+		reductionCS.enter();
+		destination=cross_buffer;
+		reductionCS.leave();
+	}
+
 }

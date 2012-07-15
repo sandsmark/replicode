@@ -414,6 +414,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\model_base.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\monitor.cpp"
 				>
 			</File>
@@ -681,6 +685,10 @@
 			</File>
 			<File
 				RelativePath=".\mem.h"
+				>
+			</File>
+			<File
+				RelativePath=".\model_base.h"
 				>
 			</File>
 			<File

@@ -617,6 +617,7 @@ namespace	r_exec{
 
 				switch(view->get_sync()){
 				case	View::SYNC_ONCE:
+				case	View::SYNC_ONCE_AXIOM:
 				case	View::SYNC_PERIODIC:
 					if(!wiew_was_salient)	// sync on front: crosses the threshold upward: record as a newly salient view.
 						newly_salient_views.insert(view);

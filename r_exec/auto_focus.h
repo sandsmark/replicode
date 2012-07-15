@@ -83,13 +83,15 @@ namespace	r_exec{
 		RatingMap	goal_ratings;
 		RatingMap	prediction_ratings;
 
-		void	inject_input(View	*input,uint32	start)	const;	// inject filtered input into the output groups.
+		std::list<Input>	cross_buffer;	// time-limited, contains all relevant inputs.
+
+		void	inject_input(View	*input,uint32	start);	// inject filtered input into the output groups.
 		void	notify(_Fact	*target,View	*input,TPXMap	&map);
 		void	notify_dispatch(_Fact	*target,View	*input);
 		void	dispatch(View	*input,_Fact	*abstract_input,BindingMap	*bm,bool	&injected,TPXMap	&map);
 		void	dispatch(_Fact	*input,_Fact	*abstract_input,BindingMap	*bm,bool	&injected,TPXMap	&map);
 		void	dispatch_no_inject(_Fact	*input,_Fact	*abstract_input,BindingMap	*bm,TPXMap	&map);
-		template<class	T>	TPX	*build_tpx(_Fact	*target,_Fact	*pattern,BindingMap	*bm,RatingMap	&map,bool	wr_enabled)	const{
+		template<class	T>	TPX	*build_tpx(_Fact	*target,_Fact	*pattern,BindingMap	*bm,RatingMap	&map,bool	wr_enabled){
 
 			if(!_acquire_models)
 				return	new	TPX(this,target,pattern,bm);
@@ -121,6 +123,8 @@ namespace	r_exec{
 		bool	decompile_models()	const	{	return	_decompile_models;	}
 
 		Group	*get_primary_group()	const{	return	output_groups[0];	}
+
+		void	copy_cross_buffer(std::list<Input>	&destination);
 	};
 }
 

@@ -30,14 +30,14 @@
 
 #include	"mem.h"
 #include	"mdl_controller.h"
-#include	"black_list.h"
+#include	"model_base.h"
 
 
 namespace	r_exec{
 
 	_Mem::_Mem():r_code::Mem(),state(NOT_STARTED),gc(NULL),invalidated_object_count(0),registered_object_count(0){
 
-		new	BlackList();
+		new	ModelBase();
 	}
 
 	_Mem::~_Mem(){
@@ -189,6 +189,7 @@ namespace	r_exec{
 		uint32	i;
 		uint64	now=Now();
 		Utils::SetReferenceValues(now,base_period,float_tolerance,time_tolerance);
+		ModelBase::Get()->set_thz(primary_thz,secondary_thz);
 		init_timings(now);
 
 		for(i=0;i<initial_groups.size();++i){
@@ -712,7 +713,7 @@ namespace	r_exec{
 
 		hlp->set_references(references);
 
-		hlp->add_reference(unpacked_hlp);
+		hlp->add_reference(unpacked_hlp);	// hidden reference.
 	}
 
 	void	_Mem::pack_fact(Code	*fact,Code	*hlp,uint16	&write_index,std::vector<P<Code>	>	*references)	const{
