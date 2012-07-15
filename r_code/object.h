@@ -128,7 +128,8 @@ namespace	r_code{
 			SYNC_ONCE=0,
 			SYNC_PERIODIC=1,
 			SYNC_HOLD=2,
-			SYNC_AXIOM=3
+			SYNC_AXIOM=3,
+			SYNC_ONCE_AXIOM=4
 		}SyncMode;
 
 		SyncMode	get_sync()	const{	return	(SyncMode)(uint32)_code[VIEW_SYNC].asFloat();	}
