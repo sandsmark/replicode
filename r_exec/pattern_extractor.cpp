@@ -99,7 +99,8 @@ namespace	r_exec{
 
 	_Fact	*_TPX::find_f_icst(_Fact	*component,uint16	&component_index){
 
-		if(component->get_reference(0)->code(0).asOpcode()==Opcodes::Cmd)	// cmd cannot be components of a cst.
+		uint16	opcode=component->get_reference(0)->code(0).asOpcode();
+		if(opcode==Opcodes::Cmd	||	opcode==Opcodes::IMdl)	// cmds/imdls cannot be components of a cst.
 			return	NULL;
 
 		std::list<Input>::const_iterator	i;
@@ -125,7 +126,8 @@ namespace	r_exec{
 
 	_Fact	*_TPX::find_f_icst(_Fact	*component,uint16	&component_index,Code	*&cst){
 
-		if(component->get_reference(0)->code(0).asOpcode()==Opcodes::Cmd){	// cmd cannot be components of a cst.
+		uint16	opcode=component->get_reference(0)->code(0).asOpcode();
+		if(opcode==Opcodes::Cmd	||	opcode==Opcodes::IMdl){	// cmds/imdls cannot be components of a cst.
 
 			cst=NULL;
 			return	NULL;
@@ -380,13 +382,15 @@ namespace	r_exec{
 		P<BindingMap>	bm=new	BindingMap();
 
 		uint16	write_index;
-		Code	*m0=build_mdl_head(bm,0,cause,consequent,write_index);
+		P<Code>	m0=build_mdl_head(bm,0,cause,consequent,write_index);
 		guard_builder->build(m0,NULL,cause,write_index);
 		build_mdl_tail(m0,write_index);
 
-		if(ModelBase::Get()->register_mdl(m0))
+		Code	*_m0=ModelBase::Get()->check_existence(m0);
+		if(_m0==NULL)
 			return	false;
-		hlps.push_back(m0);
+		else	if(_m0==m0)
+			hlps.push_back(m0);
 	}
 
 	bool	GTPX::build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period){
@@ -394,13 +398,15 @@ namespace	r_exec{
 		P<BindingMap>	bm=new	BindingMap();
 
 		uint16	write_index;
-		Code	*m0=build_mdl_head(bm,0,f_icst,consequent,write_index);
+		P<Code>	m0=build_mdl_head(bm,0,f_icst,consequent,write_index);
 		guard_builder->build(m0,NULL,cause_pattern,write_index);
 		build_mdl_tail(m0,write_index);
 
-		if(ModelBase::Get()->register_mdl(m0))
+		Code	*_m0=ModelBase::Get()->check_existence(m0);
+		if(_m0==NULL)
 			return	false;
-		hlps.push_back(m0);
+		else	if(_m0==m0)
+			hlps.push_back(m0);
 	}
 
 	std::string	GTPX::get_header()	const{
@@ -491,13 +497,15 @@ namespace	r_exec{
 		P<BindingMap>	bm=new	BindingMap();
 
 		uint16	write_index;
-		Code	*m0=build_mdl_head(bm,0,cause,consequent,write_index);
+		P<Code>	m0=build_mdl_head(bm,0,cause,consequent,write_index);
 		guard_builder->build(m0,NULL,cause,write_index);
 		build_mdl_tail(m0,write_index);
 
-		if(ModelBase::Get()->register_mdl(m0))
+		Code	*_m0=ModelBase::Get()->check_existence(m0);
+		if(_m0==NULL)
 			return	false;
-		hlps.push_back(m0);
+		else	if(_m0==m0)
+			hlps.push_back(m0);
 	}
 
 	bool	PTPX::build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period){
@@ -505,13 +513,15 @@ namespace	r_exec{
 		P<BindingMap>	bm=new	BindingMap();
 
 		uint16	write_index;
-		Code	*m0=build_mdl_head(bm,0,f_icst,consequent,write_index);
+		P<Code>	m0=build_mdl_head(bm,0,f_icst,consequent,write_index);
 		guard_builder->build(m0,NULL,cause_pattern,write_index);
 		build_mdl_tail(m0,write_index);
 
-		if(ModelBase::Get()->register_mdl(m0))
+		Code	*_m0=ModelBase::Get()->check_existence(m0);
+		if(_m0==NULL)
 			return	false;
-		hlps.push_back(m0);
+		else	if(_m0==m0)
+			hlps.push_back(m0);
 	}
 
 	std::string	PTPX::get_header()	const{
@@ -711,15 +721,11 @@ namespace	r_exec{
 		bm->init(target.input,FACT_BEFORE);
 
 		uint16	write_index;
-		Code	*m0=build_mdl_head(bm,3,cause,consequent,write_index);
+		P<Code>	m0=build_mdl_head(bm,3,cause,consequent,write_index);
 		guard_builder->build(m0,NULL,cause,write_index);
 		build_mdl_tail(m0,write_index);
 
-		if(ModelBase::Get()->register_mdl(m0))
-			return	false;
-		hlps.push_back(m0);
-
-		return	build_requirement(bm,m0,period);
+		return	build_requirement(bm,m0,period);	// existence checks performed there.
 	}
 
 	// m0:[premise.value premise.after premise.before][icst->consequent] with icst containing the cause.
@@ -736,14 +742,10 @@ namespace	r_exec{
 		guard_builder->build(m0,NULL,cause_pattern,write_index);
 		build_mdl_tail(m0,write_index);
 
-		if(ModelBase::Get()->register_mdl(m0))
-			return	false;
-		hlps.push_back(m0);
-
-		return	build_requirement(bm,m0,period);
+		return	build_requirement(bm,m0,period);	// existence checks performed there.
 	}
 
-	bool	CTPX::build_requirement(BindingMap	*bm,Code	*m0,uint64	period){
+	bool	CTPX::build_requirement(BindingMap	*bm,Code	*m0,uint64	period){	// check for mdl existence at the same time (ModelBase::mdlCS-wise).
 
 		uint16	premise_index;
 		Code	*new_cst;
@@ -767,17 +769,26 @@ namespace	r_exec{
 		P<BindingMap>	_bm=new	BindingMap();
 
 		uint16	write_index;
-		Code	*m1=build_mdl_head(_bm,0,f_icst,f_im0,write_index);
+		P<Code>	m1=build_mdl_head(_bm,0,f_icst,f_im0,write_index);
 		P<GuardBuilder>	guard_builder=new	GuardBuilder();
 		guard_builder->build(m1,premise_pattern,NULL,write_index);
 		build_mdl_tail(m1,write_index);
 
-		if(ModelBase::Get()->register_mdl(m1))
+		Code	*_m0;
+		Code	*_m1;
+		ModelBase::Get()->check_existence(m0,m1,_m0,_m1);
+		if(_m1==NULL)
 			return	false;
+		else	if(_m1==m1){
 
-		if(new_cst!=NULL)
-			hlps.push_front(new_cst);
-		hlps.push_back(m1);
+			if(_m0==NULL)
+				return	false;
+			else	if(_m0==m0)
+				hlps.push_back(m0);
+			if(new_cst!=NULL)
+				hlps.push_back(new_cst);
+			hlps.push_back(m1);
+		}
 		return	true;
 	}
 

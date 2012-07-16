@@ -40,9 +40,9 @@ namespace	r_exec{
 
 	// TPX guess models: this list is meant for TPXs to (a) avoid re-guessing known failed models and,
 	// (b) avoid producing the same models in case they run concurrently.
-	// The black list contains bad models (models that were killed). This list is trimmed down on a time basis (black_thz).
+	// The black list contains bad models (models that were killed). This list is trimmed down on a time basis (black_thz) by the garbage collector.
 	// Each bad model is tagged with the last time it was successfully compared to. GC is performed by comparing this time to the thz.
-	// The white list contains models that are still alive. As for the black list, the white list is trimmed down on a time basis (white_thz).
+	// The white list contains models that are still alive and is trimmed down when models time out.
 	class	ModelBase{
 	friend	class	_Mem;
 	private:
@@ -50,10 +50,11 @@ namespace	r_exec{
 
 		CriticalSection	mdlCS;
 
-		uint64	white_thz;	// set to primary_thz;
-		uint64	black_thz;	// set to secondary_thz;
-
+		uint64	thz;
+		
 		class	MEntry{
+		private:
+			static	uint32	_ComputeHashCode(_Fact	*component);	// use for lhs/rhs.
 		public:
 			static	uint32	ComputeHashCode(Code	*mdl);
 
@@ -63,7 +64,7 @@ namespace	r_exec{
 
 			P<Code>	mdl;
 			uint64	touch_time;	// last time the mdl was successfully compared to.
-			uint32	hash_code;	// 32 bits format: [number of tpl args (4)|lhs type(2)|rhs type (2)|sum of lhs and rhs opcodes(16)|number of lhs and rhs references(8)]. Type is fact (0) or anti fact (1) and imdl (1) or no imdl (0).
+			uint32	hash_code;
 
 			bool	match(const	MEntry	&e)	const;
 
@@ -83,7 +84,8 @@ namespace	r_exec{
 		MdlSet	black_list;
 		MdlSet	white_list;
 
-		void	set_thz(uint64	white_thz,uint64	black_thz){	this->white_thz=white_thz;	this->black_thz=black_thz;	}	// called by _Mem::start().
+		void	set_thz(uint64	thz){	this->thz=thz;	}	// called by _Mem::start(); set to secondary_thz.
+		void	trim_objects();	// called by _Mem::GC().
 
 		ModelBase();
 	public:
@@ -91,8 +93,10 @@ namespace	r_exec{
 
 		~ModelBase();
 
-		bool	register_mdl(Code	*mdl);	// return true if the model already exist.
+		Code	*check_existence(Code	*mdl);	// caveat: mdl is unpacked; return (a) NULL if the model is in the black list, (b) a model in the white list if the mdl has been registered there or (c) the mdl itself if not in the model base, in which case the mdl is added to the white list.
+		void	check_existence(Code	*m0,Code	*m1,Code	*&_m0,Code	*&_m1);	// m1 is a requirement on m0; _m0 and _m1 are the return values as defined above; m0 added only if m1 is not black listed.
 		void	register_mdl_failure(Code	*mdl);	// moves the mdl from the white to the black list; happens to bad models.
+		void	register_mdl_timeout(Code	*mdl);	// deletes the mdl from the white list; happen to models that have been unused for primary_thz.
 	};
 }
 

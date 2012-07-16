@@ -34,40 +34,49 @@
 
 namespace	r_exec{
 
+	uint32	ModelBase::MEntry::_ComputeHashCode(_Fact	*component){	// 14 bits: [fact or |fact (1)|type (3)|data (10)].
+
+		uint32	hash_code;
+		if(component->is_fact())
+			hash_code=0x00000000;
+		else
+			hash_code=0x00002000;
+		Code	*payload=component->get_reference(0);
+		Atom	head=payload->code(0);
+		uint16	opcode=head.asOpcode();
+		switch(head.getDescriptor()){
+		case	Atom::OBJECT:
+			if(opcode==Opcodes::Cmd){	// type: 2.
+			
+				hash_code|=0x00000800;
+				hash_code|=(payload->code(CMD_FUNCTION).asOpcode()	&	0x000003FF);	// data: function id.
+			}else	if(opcode==Opcodes::IMdl){	// type 3.
+			
+				hash_code|=0x00000C00;
+				hash_code|=(((uint32)payload->get_reference(0))	&	0x000003FF);	// data: address of the mdl.
+			}else	if(opcode==Opcodes::ICst){	// type 4.
+
+				hash_code|=0x00001000;
+				hash_code|=(((uint32)payload->get_reference(0))	&	0x000003FF);	// data: address of the cst.
+			}else	// type: 0.
+				hash_code|=(opcode	&	0x000003FF);	// data: class id.
+			break;
+		case	Atom::MARKER:	// type 1.
+			hash_code|=0x00000400;
+			hash_code|=(opcode	&	0x000003FF);	// data: class id.
+			break;
+		}
+		
+		return	hash_code;
+	}
+
 	uint32	ModelBase::MEntry::ComputeHashCode(Code	*mdl){
 
 		uint32	hash_code=(mdl->code(mdl->code(HLP_TPL_ARGS).asIndex()).getAtomCount()<<28);
 		_Fact	*lhs=(_Fact	*)mdl->get_reference(0);
+		hash_code|=(_ComputeHashCode(lhs)<<14);
 		_Fact	*rhs=(_Fact	*)mdl->get_reference(1);
-
-		if(lhs->is_fact()){
-
-			if(lhs->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl)
-				hash_code|=(1<<26);
-			else
-				hash_code|=(0<<26);
-		}else	if(lhs->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl)
-				hash_code|=(3<<26);
-			else
-				hash_code|=(2<<26);
-
-		if(rhs->is_fact()){
-
-			if(rhs->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl)
-				hash_code|=(1<<24);
-			else
-				hash_code|=(0<<24);
-		}else	if(rhs->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl)
-				hash_code|=(3<<24);
-			else
-				hash_code|=(2<<24);
-
-		uint16	opcodes=0;
-		for(uint16	i=0;i<lhs->code_size();++i)
-			opcodes+=lhs->code(i).getDescriptor();
-		for(uint16	i=0;i<rhs->code_size();++i)
-			opcodes+=rhs->code(i).getDescriptor();
-		hash_code+=opcodes;
+		hash_code|=_ComputeHashCode(rhs);
 		return	hash_code;
 	}
 
@@ -102,52 +111,105 @@ namespace	r_exec{
 	ModelBase::~ModelBase(){
 	}
 
-	bool	ModelBase::register_mdl(Code	*mdl){
+	void	ModelBase::trim_objects(){
+
+		mdlCS.enter();
+		uint64	now=Now();
+		MdlSet::iterator	m;
+		for(m=black_list.begin();m!=black_list.end();){
+
+			if(now-(*m).touch_time>=thz)
+				m=black_list.erase(m);
+			else
+				++m;
+		}
+		mdlCS.leave();
+	}
+
+	Code	*ModelBase::check_existence(Code	*mdl){
 
 		MEntry	e(mdl);
-
 		mdlCS.enter();
 		MdlSet::iterator	m=black_list.find(e);
 		if(m!=black_list.end()){
 
 			(*m).touch_time=Now();
 			mdlCS.leave();
-			return	true;
+			return	NULL;
 		}
 		m=white_list.find(e);
 		if(m!=white_list.end()){
 
 			(*m).touch_time=Now();
 			mdlCS.leave();
-			return	true;
+			return	(*m).mdl;
 		}
 		white_list.insert(e);
 		mdlCS.leave();
-		return	false;
+		return	mdl;
 	}
 
-	void	ModelBase::register_mdl_failure(Code	*mdl){	// GC performed here.
+	void	ModelBase::check_existence(Code	*m0,Code	*m1,Code	*&_m0,Code	*&_m1){
 
+		MEntry	e_m0(m0);
 		mdlCS.enter();
-		uint64	now=Now();
-		MdlSet::const_iterator	m;
-		for(m=white_list.begin();m!=white_list.end();){
+		MdlSet::iterator	m=black_list.find(e_m0);
+		if(m!=black_list.end()){
 
-			if((*m).mdl==mdl)
-				m=white_list.erase(m);
-			else	if(now-(*m).touch_time>=white_thz)
-				m=white_list.erase(m);
-			else
-				++m;
+			(*m).touch_time=Now();
+			mdlCS.leave();
+			_m0=_m1=NULL;
+			return;
 		}
-		for(m=black_list.begin();m!=black_list.end();){
+		m=white_list.find(e_m0);
+		if(m!=white_list.end()){
 
-			if(now-(*m).touch_time>=black_thz)
-				m=black_list.erase(m);
-			else
-				++m;
+			(*m).touch_time=Now();
+			_m0=(*m).mdl;
+			// change imdl m0 into imdl _m0.
+			Code	*rhs=m1->get_reference(m1->code(m1->code(MDL_OBJS).asIndex()+2).asIndex());
+			Code	*im0=rhs->get_reference(0);
+			im0->set_reference(0,_m0);
+		}else
+			_m0=m0;
+		MEntry	e_m1(m1);
+		m=black_list.find(e_m1);
+		if(m!=black_list.end()){
+
+			(*m).touch_time=Now();
+			mdlCS.leave();
+			_m1=NULL;
+			return;
 		}
-		black_list.insert(MEntry(mdl));
+		m=white_list.find(e_m1);
+		if(m!=white_list.end()){
+
+			(*m).touch_time=Now();
+			mdlCS.leave();
+			_m1=(*m).mdl;
+			return;
+		}
+		if(_m0==m0)
+			white_list.insert(e_m0);
+		white_list.insert(e_m1);
+		mdlCS.leave();
+		_m1=m1;
+	}
+
+	void	ModelBase::register_mdl_failure(Code	*mdl){
+
+		MEntry	e(mdl);
+		mdlCS.enter();
+		white_list.erase(e);
+		black_list.insert(e);
+		mdlCS.leave();
+	}
+
+	void	ModelBase::register_mdl_timeout(Code	*mdl){
+
+		MEntry	e(mdl);
+		mdlCS.enter();
+		white_list.erase(e);
 		mdlCS.leave();
 	}
 }

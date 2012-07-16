@@ -189,7 +189,7 @@ namespace	r_exec{
 		uint32	i;
 		uint64	now=Now();
 		Utils::SetReferenceValues(now,base_period,float_tolerance,time_tolerance);
-		ModelBase::Get()->set_thz(primary_thz,secondary_thz);
+		ModelBase::Get()->set_thz(secondary_thz);
 		init_timings(now);
 
 		for(i=0;i<initial_groups.size();++i){
@@ -323,6 +323,7 @@ namespace	r_exec{
 			if(_this->check_state()==_Mem::STOPPED)
 				break;
 			_this->trim_objects();
+			ModelBase::Get()->trim_objects();
 		}
 
 		thread_ret_val(0);
