@@ -82,7 +82,8 @@ namespace	r_exec{
 	public	TPX{
 	protected:
 		std::list<Input>	inputs;	// time-controlled buffer (inputs older than tpx_time_horizon from now are discarded).
-		std::list<P<Code> >	hlps;	// new mdls/csts.
+		std::list<P<Code> >	mdls;	// new mdls.
+		std::list<P<Code> >	csts;	// new csts.
 
 		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index);
 		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index,Code	*&cst);
@@ -133,7 +134,7 @@ namespace	r_exec{
 		P<Fact>	f_imdl;	// that produced the prediction (and for which the PTPX will find strong requirements).
 
 		bool	build_mdl(_Fact	*cause,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
-		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
+		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period,Code	*new_cst);
 
 		std::string	get_header()	const;
 	public:

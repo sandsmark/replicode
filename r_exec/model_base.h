@@ -43,6 +43,7 @@ namespace	r_exec{
 	// The black list contains bad models (models that were killed). This list is trimmed down on a time basis (black_thz) by the garbage collector.
 	// Each bad model is tagged with the last time it was successfully compared to. GC is performed by comparing this time to the thz.
 	// The white list contains models that are still alive and is trimmed down when models time out.
+	// Models are packed before insertion in the white list.
 	class	ModelBase{
 	friend	class	_Mem;
 	private:
@@ -54,6 +55,7 @@ namespace	r_exec{
 		
 		class	MEntry{
 		private:
+			static	bool	Match(Code	*lhs,Code	*rhs);
 			static	uint32	_ComputeHashCode(_Fact	*component);	// use for lhs/rhs.
 		public:
 			static	uint32	ComputeHashCode(Code	*mdl);

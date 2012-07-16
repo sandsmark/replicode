@@ -81,7 +81,7 @@ namespace	r_exec{
 		~TDecompiler();
 
 		void	add_object(Code	*object);
-		void	add_objects(std::list<P<Code> >	&objects);
+		void	add_objects(const	std::list<P<Code> >	&objects);
 		void	decompile();
 	};
 

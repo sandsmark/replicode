@@ -149,7 +149,7 @@ namespace	r_exec{
 		objects.push_back(object);
 	}
 	
-	void	TDecompiler::add_objects(std::list<P<Code> >	&objects){
+	void	TDecompiler::add_objects(const	std::list<P<Code> >	&objects){
 
 		std::list<P<Code> >::const_iterator	o;
 		for(o=objects.begin();o!=objects.end();++o)

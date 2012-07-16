@@ -283,23 +283,21 @@ namespace	r_exec{
 			std::string	s1("us]-------------------\n\n");
 			header+=s0+timing+s1;
 			td=new	TDecompiler(1,header);
-
-			std::list<P<Code> >::const_iterator	hlp;
-			for(hlp=hlps.begin();hlp!=hlps.end();++hlp){
-
-				_Mem::Get()->pack_hlp(*hlp);
-				td->add_object(*hlp);
-			}
-
-			auto_focus->inject_hlps(hlps);
+			td->add_objects(mdls);
+			std::list<P<Code> >::const_iterator	c;
+			for(c=csts.begin();c!=csts.end();++c)
+				_Mem::Get()->pack_hlp(*c);
+			td->add_objects(csts);
+			auto_focus->inject_hlps(csts);
+			auto_focus->inject_hlps(mdls);
 			td->decompile();
 		}else{
 
-			std::list<P<Code> >::const_iterator	hlp;
-			for(hlp=hlps.begin();hlp!=hlps.end();++hlp)
-				_Mem::Get()->pack_hlp(*hlp);
-
-			auto_focus->inject_hlps(hlps);
+			std::list<P<Code> >::const_iterator	c;
+			for(c=csts.begin();c!=csts.end();++c)
+				_Mem::Get()->pack_hlp(*c);
+			auto_focus->inject_hlps(csts);
+			auto_focus->inject_hlps(mdls);
 		}
 	}
 
@@ -390,7 +388,7 @@ namespace	r_exec{
 		if(_m0==NULL)
 			return	false;
 		else	if(_m0==m0)
-			hlps.push_back(m0);
+			mdls.push_back(m0);
 	}
 
 	bool	GTPX::build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period){
@@ -406,7 +404,7 @@ namespace	r_exec{
 		if(_m0==NULL)
 			return	false;
 		else	if(_m0==m0)
-			hlps.push_back(m0);
+			mdls.push_back(m0);
 	}
 
 	std::string	GTPX::get_header()	const{
@@ -445,7 +443,9 @@ namespace	r_exec{
 		std::list<Input>::const_iterator	i;
 		for(i=inputs.begin();i!=inputs.end();){	// filter out inputs irrelevant for the prediction.
 
-			if(!i->bindings->intersect(end_bm))
+			if(i->input->code(0).asOpcode()==Opcodes::Cmd)	// no cmds as req lhs; prefer: cmd->effect, effect->imdl.
+				i=inputs.erase(i);
+			else	if(!i->bindings->intersect(end_bm))
 				i=inputs.erase(i);
 			else
 				++i;
@@ -475,16 +475,24 @@ namespace	r_exec{
 			guard_builder=new	TimingGuardBuilder(period);	// TODO: use the durations.
 
 			uint16	cause_index;
-			_Fact	*f_icst=find_f_icst(cause.input,cause_index);
+			Code	*new_cst;
+			_Fact	*f_icst=find_f_icst(cause.input,cause_index,new_cst);
 			if(f_icst==NULL){
 
 				if(!build_mdl(cause.input,consequent,guard_builder,period))
 					return;
 			}else{
 
-				Code	*cst=f_icst->get_reference(0)->get_reference(0)->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retreive the pattern from the unpacked code.
-				_Fact	*cause_pattern=(_Fact	*)cst->get_reference(cause_index);
-				if(!build_mdl(f_icst,cause_pattern,consequent,guard_builder,period))
+				Code	*unpacked_cst;
+				if(new_cst==NULL){
+
+					Code	*cst=f_icst->get_reference(0)->get_reference(0);
+					unpacked_cst=cst->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retreive the pattern from the unpacked code.
+				}else
+					unpacked_cst=new_cst;
+
+				_Fact	*cause_pattern=(_Fact	*)unpacked_cst->get_reference(cause_index);
+				if(!build_mdl(f_icst,cause_pattern,consequent,guard_builder,period,new_cst))
 					return;
 			}
 
@@ -505,10 +513,10 @@ namespace	r_exec{
 		if(_m0==NULL)
 			return	false;
 		else	if(_m0==m0)
-			hlps.push_back(m0);
+			mdls.push_back(m0);
 	}
 
-	bool	PTPX::build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period){
+	bool	PTPX::build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period,Code	*new_cst){
 
 		P<BindingMap>	bm=new	BindingMap();
 
@@ -520,8 +528,12 @@ namespace	r_exec{
 		Code	*_m0=ModelBase::Get()->check_existence(m0);
 		if(_m0==NULL)
 			return	false;
-		else	if(_m0==m0)
-			hlps.push_back(m0);
+		else	if(_m0==m0){
+
+			if(new_cst)
+				csts.push_back(new_cst);
+			mdls.push_back(m0);
+		}	// if m0 already exist, so does the cst.
 	}
 
 	std::string	PTPX::get_header()	const{
@@ -784,10 +796,10 @@ namespace	r_exec{
 			if(_m0==NULL)
 				return	false;
 			else	if(_m0==m0)
-				hlps.push_back(m0);
+				mdls.push_back(m0);
 			if(new_cst!=NULL)
-				hlps.push_back(new_cst);
-			hlps.push_back(m1);
+				csts.push_back(new_cst);
+			mdls.push_back(m1);
 		}
 		return	true;
 	}

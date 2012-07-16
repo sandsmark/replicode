@@ -29,7 +29,7 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include	"model_base.h"
-#include	"init.h"
+#include	"mem.h"
 
 
 namespace	r_exec{
@@ -80,6 +80,28 @@ namespace	r_exec{
 		return	hash_code;
 	}
 
+	bool	ModelBase::MEntry::Match(Code	*lhs,Code	*rhs){
+
+		if(lhs->code(0).asOpcode()==Opcodes::Ent	||	rhs->code(0).asOpcode()==Opcodes::Ent)
+			return	lhs==rhs;
+		if(lhs->code(0).asOpcode()==Opcodes::Ont	||	rhs->code(0).asOpcode()==Opcodes::Ont)
+			return	lhs==rhs;
+		if(lhs->code_size()!=rhs->code_size())
+			return	false;
+		if(lhs->references_size()!=rhs->references_size())
+			return	false;
+		for(uint16	i=0;i<lhs->code_size();++i){
+
+			if(lhs->code(i)!=rhs->code(i))
+				return	false;
+		}
+		for(uint16	i=0;i<lhs->references_size();++i){
+
+			if(!Match(lhs->get_reference(i),rhs->get_reference(i)))
+				return	false;
+		}
+	}
+
 	ModelBase::MEntry::MEntry():mdl(NULL),touch_time(0),hash_code(0){
 	}
 
@@ -89,9 +111,29 @@ namespace	r_exec{
 	ModelBase::MEntry::~MEntry(){
 	}
 
-	bool	ModelBase::MEntry::match(const	MEntry	&e)	const{
+	bool	ModelBase::MEntry::match(const	MEntry	&e)	const{	// at this point both models have same hash code; this.mdl is packed, e.mdl is unpacked.
 
-		return	_Fact::MatchObject(mdl,e.mdl);
+		for(uint16	i=0;i<mdl->code_size();++i){	// first check the mdl code: this checks on tpl args and guards.
+
+			if(i==MDL_STRENGTH	||	i==MDL_CNT	||	i==MDL_SR	||	i==MDL_DSR	||	i==MDL_ARITY)	// ignore house keeping data.
+				continue;
+
+			if(mdl->code(i)!=e.mdl->code(i))
+				return	false;
+		}
+
+		Code	*lhs_0=mdl->get_reference(mdl->references_size()-1)->get_reference(0);	// payload of the fact.
+		Code	*lhs_1=e.mdl->get_reference(0)->get_reference(0);	// payload of the fact.
+		if(!Match(lhs_0,lhs_1))
+			return	false;
+
+		Code	*rhs_0=mdl->get_reference(mdl->references_size()-1)->get_reference(0);	// payload of the fact.
+		Code	*rhs_1=e.mdl->get_reference(1)->get_reference(0);	// payload of the fact.
+		if(!Match(rhs_0,rhs_1))
+			return	false;
+
+		
+		return	true;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,6 +186,7 @@ namespace	r_exec{
 			mdlCS.leave();
 			return	(*m).mdl;
 		}
+		_Mem::Get()->pack_hlp(e.mdl);
 		white_list.insert(e);
 		mdlCS.leave();
 		return	mdl;
@@ -189,8 +232,12 @@ namespace	r_exec{
 			_m1=(*m).mdl;
 			return;
 		}
-		if(_m0==m0)
+		if(_m0==m0){
+
+			_Mem::Get()->pack_hlp(m0);
 			white_list.insert(e_m0);
+		}
+		_Mem::Get()->pack_hlp(m1);
 		white_list.insert(e_m1);
 		mdlCS.leave();
 		_m1=m1;
