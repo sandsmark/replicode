@@ -92,6 +92,7 @@ namespace	r_exec{
 		Code	*build_mdl_head(BindingMap	*bm,uint16	tpl_arg_count,_Fact	*lhs,_Fact	*rhs,uint16	&write_index);
 		void	build_mdl_tail(Code	*mdl,uint16	write_index);
 
+		void	inject_hlps()	const;
 		void	inject_hlps(uint64	analysis_starting_time)	const;
 
 		virtual	std::string	get_header()	const=0;
@@ -111,7 +112,7 @@ namespace	r_exec{
 	public	_TPX{
 	private:
 		bool	build_mdl(_Fact	*cause,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
-		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
+		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period,Code	*new_cst);
 
 		std::string	get_header()	const;
 	public:
