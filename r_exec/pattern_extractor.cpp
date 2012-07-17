@@ -54,7 +54,7 @@ namespace	r_exec{
 					break;
 			}
 		}
-		buffer.push_back(Input(input,eligible_cause,abstracted_input,bm));
+		buffer.push_front(Input(input,eligible_cause,abstracted_input,bm));
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +171,16 @@ namespace	r_exec{
 			return	NULL;
 		}
 
+		std::list<Input>::iterator	_i;
+		for(_i=inputs.begin();_i!=inputs.end();++_i){	// flag the components so the tpx does not try them again.
+
+			for(uint32	j=0;j<icst->components.size();++j){
+
+				if((*_i).input==icst->components[j])
+					(*_i).eligible_cause=false;
+			}
+		}
+
 		P<BindingMap>	bm=new	BindingMap();
 		cst=build_cst(icst,bm,component);
 		uint32	rc=cst->references_size();
@@ -265,7 +275,7 @@ namespace	r_exec{
 		auto_focus->inject_hlps(mdls);
 	}
 
-	void	_TPX::inject_hlps(uint64	analysis_starting_time)	const{
+	void	_TPX::inject_hlps(uint64	analysis_starting_time){
 
 		if(auto_focus->decompile_models()){
 
@@ -297,6 +307,9 @@ namespace	r_exec{
 			td->decompile();
 		}else
 			inject_hlps();
+
+		csts.clear();
+		mdls.clear();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -368,7 +381,7 @@ namespace	r_exec{
 				if(new_cst==NULL){
 
 					Code	*cst=f_icst->get_reference(0)->get_reference(0);
-					unpacked_cst=cst->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retreive the pattern from the unpacked code.
+					unpacked_cst=cst->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retrieve the pattern from the unpacked code.
 				}else
 					unpacked_cst=new_cst;
 
@@ -497,7 +510,7 @@ namespace	r_exec{
 				if(new_cst==NULL){
 
 					Code	*cst=f_icst->get_reference(0)->get_reference(0);
-					unpacked_cst=cst->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retreive the pattern from the unpacked code.
+					unpacked_cst=cst->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retrieve the pattern from the unpacked code.
 				}else
 					unpacked_cst=new_cst;
 
@@ -565,7 +578,7 @@ namespace	r_exec{
 		BindingMap	*bm=new	BindingMap();
 		_Fact		*abstracted_input=(_Fact	*)BindingMap::Abstract(input_object,bm);
 		Input	i(input_object,Input::IsEligibleCause(input),abstracted_input,bm);
-		inputs.push_back(i);
+		inputs.push_front(i);
 		if(input_object==target.input)
 			stored_premise=true;
 	}
@@ -636,17 +649,21 @@ namespace	r_exec{
 			_Fact	*f_icst=find_f_icst(cause.input,cause_index);
 			if(f_icst==NULL){	// the cause can never be the premise; m0:[premise.value premise.after premise.before][cause->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
 
-				if(!build_mdl(cause.input,consequent,guard_builder,period))
+				if(build_mdl(cause.input,consequent,guard_builder,period)){
+
+					inject_hlps(analysis_starting_time);
 					return;
+				}
 			}else{
 
 				Code	*cst=f_icst->get_reference(0)->get_reference(0)->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retreive the pattern from the unpacked code.
 				_Fact	*cause_pattern=(_Fact	*)cst->get_reference(cause_index);
-				if(!build_mdl(f_icst,cause_pattern,consequent,guard_builder,period))	// m0:[premise.value premise.after premise.before][icst->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
-					return;
-			}
+				if(build_mdl(f_icst,cause_pattern,consequent,guard_builder,period)){	// m0:[premise.value premise.after premise.before][icst->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
 
-			inject_hlps(analysis_starting_time);
+					inject_hlps(analysis_starting_time);
+					return;
+				}
+			}
 		}
 	}
 
@@ -783,7 +800,7 @@ namespace	r_exec{
 		if(new_cst==NULL){
 
 			Code	*cst=f_icst->get_reference(0)->get_reference(0);
-			unpacked_cst=cst->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retreive the pattern from the unpacked code.
+			unpacked_cst=cst->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retrieve the pattern from the unpacked code.
 		}else
 			unpacked_cst=new_cst;
 		_Fact	*premise_pattern=(_Fact	*)unpacked_cst->get_reference(premise_index);

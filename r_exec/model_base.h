@@ -95,6 +95,8 @@ namespace	r_exec{
 
 		~ModelBase();
 
+		void	load(Code	*mdl);	// called by Group::load().
+
 		Code	*check_existence(Code	*mdl);	// caveat: mdl is unpacked; return (a) NULL if the model is in the black list, (b) a model in the white list if the mdl has been registered there or (c) the mdl itself if not in the model base, in which case the mdl is added to the white list.
 		void	check_existence(Code	*m0,Code	*m1,Code	*&_m0,Code	*&_m1);	// m1 is a requirement on m0; _m0 and _m1 are the return values as defined above; m0 added only if m1 is not black listed.
 		void	register_mdl_failure(Code	*mdl);	// moves the mdl from the white to the black list; happens to bad models.

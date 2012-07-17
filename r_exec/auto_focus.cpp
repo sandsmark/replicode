@@ -353,11 +353,12 @@ namespace	r_exec{
 		_Mem::Get()->inject_hlps(views,output_groups[0]);
 	}
 
-	void	AutoFocusController::copy_cross_buffer(std::list<Input>	&destination){
+	void	AutoFocusController::copy_cross_buffer(std::list<Input>	&destination){	// copy inputs so they can be flagged independently by the tpxs that share the cross buffer.
 
 		reductionCS.enter();
-		destination=cross_buffer;
+		std::list<Input>::const_iterator	i;
+		for(i=cross_buffer.begin();i!=cross_buffer.end();++i)
+			destination.push_back(Input(*i));
 		reductionCS.leave();
 	}
-
 }

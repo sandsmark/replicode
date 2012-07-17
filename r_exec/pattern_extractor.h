@@ -93,7 +93,7 @@ namespace	r_exec{
 		void	build_mdl_tail(Code	*mdl,uint16	write_index);
 
 		void	inject_hlps()	const;
-		void	inject_hlps(uint64	analysis_starting_time)	const;
+		void	inject_hlps(uint64	analysis_starting_time);
 
 		virtual	std::string	get_header()	const=0;
 
@@ -153,7 +153,7 @@ namespace	r_exec{
 	// The Consequent is a value different from the expected repetition of premise.
 	// The premise is an icst assembled from inputs synchronous with the input expected to repeat.
 	// Guards on values (not only on timings) are computed: this is the only TPX that does so.
-	// Inputs with SYNC_HOLD: I/O devices are expected to send changes on such inputs as soon as available.
+	// Inputs with SYNC_HOLD: I/O devices are expected to send changes on such inputs as soon as possible.
 	class	CTPX:
 	public	_TPX{
 	private:

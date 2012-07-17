@@ -168,6 +168,12 @@ namespace	r_exec{
 		mdlCS.leave();
 	}
 
+	void	ModelBase::load(Code	*mdl){
+
+		MEntry	e(mdl);
+		white_list.insert(e);
+	}
+
 	Code	*ModelBase::check_existence(Code	*mdl){
 
 		MEntry	e(mdl);
