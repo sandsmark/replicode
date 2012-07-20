@@ -40,12 +40,10 @@
 
 namespace	r_exec{
 
-	template<class	O>	Mem<O>::Mem():_Mem(),deleted(false){
+	template<class	O>	Mem<O>::Mem():_Mem(){
 	}
 
 	template<class	O>	Mem<O>::~Mem(){
-
-		deleted=true;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -140,42 +138,6 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O>	void	Mem<O>::delete_object(Code	*object){
-
-		if(deleted)
-			return;
-
-		if(!IsNotification(object)	&&	object->code(0).getDescriptor()!=Atom::GROUP){
-/*
-			object_registerCS.enter();
-			UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>::const_iterator	o=object_register.find((O	*)object);
-			if(o!=object_register.end())
-				object_register.erase(o);
-			object_registerCS.leave();*/
-		}
-
-		trigger_gc();
-	}
-
-	template<class	O>	void	Mem<O>::trim_objects(){
-
-		std::list<P<Code> >::const_iterator	o;
-		objectsCS.enter();
-		for(o=objects.begin();o!=objects.end();++o){
-
-			if((*o)->is_invalidated()){
-
-				(*o)->is_registered=false;
-				objects.erase(o);
-				break;
-			}
-		}
-		registered_object_count=objects.size();
-		objectsCS.leave();
-	}
-
-	////////////////////////////////////////////////////////////////
-
 	template<class	O>	bool	Mem<O>::load(std::vector<r_code::Code	*>	*objects,
 											uint32							stdin_oid,
 											uint32							stdout_oid,
@@ -236,11 +198,9 @@ namespace	r_exec{
 					return	false;
 			}
 
-			this->objects.insert(this->objects.end(),object);
+			this->objects.push_back(object);
 			object->is_registered=true;
-			if(object->code(0).getDescriptor()!=Atom::GROUP)	// load non-group object in register.
-				object_register.insert((O	*)object).first;
-			else
+			if(object->code(0).getDescriptor()==Atom::GROUP)
 				initial_groups.push_back((Group	*)object);	// convenience to create initial update jobs - see start().
 		}
 		registered_object_count=this->objects.size();
@@ -248,47 +208,11 @@ namespace	r_exec{
 		return	true;
 	}
 
-	template<class	O>	void	Mem<O>::init_timings(uint64	now){	// called at the beginning of _Mem::start(); use initial user-supplied facts' times as offsets from now.
-
-		uint64	time_tolerance=Utils::GetTimeTolerance()*2;
-		std::list<P<Code> >::const_iterator	o;
-		for(o=objects.begin();o!=objects.end();++o){
-
-			uint16	opcode=(*o)->code(0).asOpcode();
-			if(opcode==Opcodes::Fact	||	opcode==Opcodes::AntiFact){
-
-				uint64	after=Utils::GetTimestamp<Code>(*o,FACT_AFTER);
-				uint64	before=Utils::GetTimestamp<Code>(*o,FACT_BEFORE);
-
-				if(after<Utils::MaxTime-now)
-					Utils::SetTimestamp<Code>(*o,FACT_AFTER,after+now);
-				if(before<Utils::MaxTime-now-time_tolerance)
-					Utils::SetTimestamp<Code>(*o,FACT_BEFORE,before+now+time_tolerance);
-				else
-					Utils::SetTimestamp<Code>(*o,FACT_BEFORE,Utils::MaxTime);
-			}
-		}
-	}
-
-	////////////////////////////////////////////////////////////////
-
-	template<class	O>	r_comp::Image	*Mem<O>::get_image(){
-
-		r_comp::Image	*image=new	r_comp::Image();
-		image->timestamp=Now();
-		
-		objectsCS.enter();
-		image->add_objects(objects);
-		objectsCS.leave();
-
-		return	image;
-	}
-
 	////////////////////////////////////////////////////////////////
 
 	template<class	O>	Code	*Mem<O>::check_existence(Code	*object){
 
-	//	if(object->code(0).getDescriptor()==Atom::GROUP)	// groups are always new.
+		if(object->code(0).getDescriptor()==Atom::GROUP)	// groups are always new.
 			return	object;
 
 		O	*_object;
@@ -297,14 +221,6 @@ namespace	r_exec{
 		else
 			_object=(O	*)object;
 
-		object_registerCS.enter();
-		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>::const_iterator	it=object_register.find(_object);
-		if(it!=object_register.end()){
-
-			object_registerCS.leave();
-			return	*it;
-		}
-		object_registerCS.leave();
 		return	_object;
 	}
 
@@ -312,115 +228,5 @@ namespace	r_exec{
 
 		view->set_object(object);
 		inject_new_object(view);
-	}
-
-	template<class	O>	void	Mem<O>::inject(View	*view){
-
-		if(view->object->is_invalidated())
-			return;
-
-		Group	*host=view->get_host();
-
-		if(host->is_invalidated())
-			return;
-
-		uint64	now=Now();
-		uint64	ijt=view->get_ijt();
-
-		if(view->object->is_registered){	// existing object.
-
-			if(ijt<=now)
-				inject_existing_object(view,view->object,host);
-			else{
-				
-				P<TimeJob>	j=new	EInjectionJob(view,ijt);
-				time_job_queue->push(j);
-			}
-		}else{								// new object.
-
-			if(ijt<=now)
-				inject_new_object(view);
-			else{
-				
-				P<TimeJob>	j=new	InjectionJob(view,ijt);
-				time_job_queue->push(j);
-			}
-		}
-	}
-
-	template<class	O>	void	Mem<O>::inject_async(View	*view){
-
-		if(view->object->is_invalidated())
-			return;
-
-		Group	*host=view->get_host();
-
-		if(host->is_invalidated())
-			return;
-
-		uint64	now=Now();
-		uint64	ijt=view->get_ijt();
-
-		if(ijt<=now){
-
-			P<_ReductionJob>	j=new	AsyncInjectionJob(view);
-			reduction_job_queue->push(j);
-		}else{
-		
-			if(view->object->is_registered){	// existing object.
-
-				P<TimeJob>	j=new	EInjectionJob(view,ijt);
-				time_job_queue->push(j);
-			}else{
-
-				P<TimeJob>	j=new	InjectionJob(view,ijt);
-				time_job_queue->push(j);
-			}
-		}
-	}
-
-	////////////////////////////////////////////////////////////////
-
-	template<class	O>	void	Mem<O>::inject_new_object(View	*view){
-
-		Group	*host=view->get_host();
-//uint64	t0,t1,t2;
-		switch(view->object->code(0).getDescriptor()){
-		case	Atom::GROUP:
-			bind<Group>(view);
-
-			host->inject_group(view);
-			break;
-		default:
-			/*object_registerCS.enter();
-			object_register.insert((O	*)view->object).first;
-			object_registerCS.leave();*/
-//t0=Now();
-			bind<O>(view);
-//t1=Now();
-			host->inject_new_object(view);
-//t2=Now();
-//timings_report.push_back(t2-t0);
-			break;
-		}
-	}
-
-	template<class	O>	void	Mem<O>::inject_hlps(std::list<View	*>	views,Group	*destination){
-
-		std::list<View	*>::const_iterator	view;
-		for(view=views.begin();view!=views.end();++view)
-			bind<O>(*view);
-
-		destination->inject_hlps(views);
-	}
-
-	template<class	O>	void	Mem<O>::inject_notification(View	*view,bool	lock){	// no notification for notifications; no registration either (object_register and object_io_map) and no cov.
-																						// notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
-		Group	*host=view->get_host();
-		LObject	*object=(LObject	*)view->object;
-
-		bind<LObject>(view);
-		
-		host->inject_notification(view,lock);
 	}
 }

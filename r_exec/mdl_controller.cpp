@@ -2260,8 +2260,11 @@ namespace	r_exec{
 		}else{
 			
 			now=Now();
-			if(now-last_match_time>_Mem::Get()->get_secondary_thz())
+			if(now-last_match_time>_Mem::Get()->get_secondary_thz()){
+
+				ModelBase::Get()->register_mdl_timeout(get_core_object());
 				kill_views();
+			}
 		}
 	}
 }

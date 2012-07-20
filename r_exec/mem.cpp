@@ -35,13 +35,14 @@
 
 namespace	r_exec{
 
-	_Mem::_Mem():r_code::Mem(),state(NOT_STARTED),gc(NULL),invalidated_object_count(0),registered_object_count(0){
+	_Mem::_Mem():r_code::Mem(),state(NOT_STARTED),gc(NULL),invalidated_object_count(0),registered_object_count(0),deleted(false){
 
 		new	ModelBase();
 	}
 
 	_Mem::~_Mem(){
 
+		deleted=true;
 		if(state==RUNNING)
 			stop();
 		_root=NULL;
@@ -171,7 +172,46 @@ namespace	r_exec{
 		return	last_oid++;
 	}
 
+	void	_Mem::bind(View	*view){
+
+		Code	*object=view->object;
+		object->views.insert(view);
+		objectsCS.enter();
+		object->set_oid(get_oid());
+		if(object->code(0).getDescriptor()==Atom::NULL_PROGRAM){
+
+			objectsCS.leave();
+			return;
+		}
+		object->is_registered=true;
+		//objects.push_back(object);
+		registered_object_count=objects.size();
+		objectsCS.leave();
+	}
+
 	////////////////////////////////////////////////////////////////
+
+	void	_Mem::init_timings(uint64	now)	const{	// called at the beginning of _Mem::start(); use initial user-supplied facts' times as offsets from now.
+
+		uint64	time_tolerance=Utils::GetTimeTolerance()*2;
+		std::list<P<Code> >::const_iterator	o;
+		for(o=objects.begin();o!=objects.end();++o){
+
+			uint16	opcode=(*o)->code(0).asOpcode();
+			if(opcode==Opcodes::Fact	||	opcode==Opcodes::AntiFact){
+
+				uint64	after=Utils::GetTimestamp<Code>(*o,FACT_AFTER);
+				uint64	before=Utils::GetTimestamp<Code>(*o,FACT_BEFORE);
+
+				if(after<Utils::MaxTime-now)
+					Utils::SetTimestamp<Code>(*o,FACT_AFTER,after+now);
+				if(before<Utils::MaxTime-now-time_tolerance)
+					Utils::SetTimestamp<Code>(*o,FACT_BEFORE,before+now+time_tolerance);
+				else
+					Utils::SetTimestamp<Code>(*o,FACT_BEFORE,Utils::MaxTime);
+			}
+		}
+	}
 
 	uint64	_Mem::start(){
 
@@ -301,18 +341,6 @@ namespace	r_exec{
 		reset();
 	}
 
-	void	_Mem::trigger_gc(){
-
-		if(registered_object_count>=200){	// unlock the garbage collector when 10% of the objects are invalidated.
-
-			uint32	initial_invalidated_object_count=Atomic::CompareAndSwap32(&invalidated_object_count,20,0);
-			if(initial_invalidated_object_count==20)
-				gcCS.leave();
-			else
-				Atomic::Increment32(&invalidated_object_count);
-		}
-	}
-
 	thread_ret	_Mem::GC(void	*args){
 
 		_Mem	*_this=(_Mem	*)args;
@@ -327,6 +355,38 @@ namespace	r_exec{
 		}
 
 		thread_ret_val(0);
+	}
+
+	void	_Mem::trim_objects(){
+
+		std::list<P<Code> >::const_iterator	o;
+		objectsCS.enter();
+		for(o=objects.begin();o!=objects.end();++o){
+
+			if((*o)->is_invalidated()){
+
+				(*o)->is_registered=false;
+				objects.erase(o);
+				break;
+			}
+		}
+		registered_object_count=objects.size();
+		objectsCS.leave();
+	}
+
+	void	_Mem::delete_object(r_code::Code	*object){
+
+		if(deleted)
+			return;
+
+		if(registered_object_count>=200){	// unlock the garbage collector when 10% of the objects are invalidated.
+
+			uint32	initial_invalidated_object_count=Atomic::CompareAndSwap32(&invalidated_object_count,20,0);
+			if(initial_invalidated_object_count==20)
+				gcCS.leave();
+			else
+				Atomic::Increment32(&invalidated_object_count);
+		}
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -399,6 +459,111 @@ namespace	r_exec{
 		c->set_view(view);
 
 		inject_async(view);
+	}
+
+	void	_Mem::inject_new_object(View	*view){
+
+		Group	*host=view->get_host();
+//uint64	t0,t1,t2;
+		switch(view->object->code(0).getDescriptor()){
+		case	Atom::GROUP:
+			bind(view);
+
+			host->inject_group(view);
+			break;
+		default:
+//t0=Now();
+			bind(view);
+//t1=Now();
+			host->inject_new_object(view);
+//t2=Now();
+//timings_report.push_back(t2-t0);
+			break;
+		}
+	}
+
+	void	_Mem::inject(View	*view){
+
+		if(view->object->is_invalidated())
+			return;
+
+		Group	*host=view->get_host();
+
+		if(host->is_invalidated())
+			return;
+
+		uint64	now=Now();
+		uint64	ijt=view->get_ijt();
+
+		if(view->object->is_registered){	// existing object.
+
+			if(ijt<=now)
+				inject_existing_object(view,view->object,host);
+			else{
+				
+				P<TimeJob>	j=new	EInjectionJob(view,ijt);
+				time_job_queue->push(j);
+			}
+		}else{								// new object.
+
+			if(ijt<=now)
+				inject_new_object(view);
+			else{
+				
+				P<TimeJob>	j=new	InjectionJob(view,ijt);
+				time_job_queue->push(j);
+			}
+		}
+	}
+
+	void	_Mem::inject_async(View	*view){
+
+		if(view->object->is_invalidated())
+			return;
+
+		Group	*host=view->get_host();
+
+		if(host->is_invalidated())
+			return;
+
+		uint64	now=Now();
+		uint64	ijt=view->get_ijt();
+
+		if(ijt<=now){
+
+			P<_ReductionJob>	j=new	AsyncInjectionJob(view);
+			reduction_job_queue->push(j);
+		}else{
+		
+			if(view->object->is_registered){	// existing object.
+
+				P<TimeJob>	j=new	EInjectionJob(view,ijt);
+				time_job_queue->push(j);
+			}else{
+
+				P<TimeJob>	j=new	InjectionJob(view,ijt);
+				time_job_queue->push(j);
+			}
+		}
+	}
+
+	void	_Mem::inject_hlps(std::list<View	*>	views,Group	*destination){
+
+		std::list<View	*>::const_iterator	view;
+		for(view=views.begin();view!=views.end();++view)
+			bind(*view);
+
+		destination->inject_hlps(views);
+	}
+
+	void	_Mem::inject_notification(View	*view,bool	lock){	// no notification for notifications; no cov.
+																// notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
+		Group	*host=view->get_host();
+		LObject	*object=(LObject	*)view->object;
+
+		bind(view);
+		
+		host->inject_notification(view,lock);
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -789,5 +954,19 @@ namespace	r_exec{
 		for(uint16	i=0;i<original->references_size();++i)
 			_clone->add_reference(original->get_reference(i));
 		return	_clone;
+	}
+
+	////////////////////////////////////////////////////////////////
+
+	r_comp::Image	*_Mem::get_image(){
+
+		r_comp::Image	*image=new	r_comp::Image();
+		image->timestamp=Now();
+		
+		objectsCS.enter();
+		//image->add_objects(objects);
+		objectsCS.leave();
+
+		return	image;
 	}
 }

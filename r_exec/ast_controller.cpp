@@ -67,9 +67,9 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	HASTController::HASTController(AutoFocusController	*auto_focus,_Fact	*target):ASTController<HASTController>(auto_focus,target){
+	HASTController::HASTController(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*source):ASTController<HASTController>(auto_focus,target),source(source){
 
-		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" created HOLD"<<std::endl;
+		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" created HOLD "<<target->get_oid()<<std::endl;
 	}
 
 	HASTController::~HASTController(){
@@ -86,7 +86,8 @@ namespace	r_exec{
 			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" counter-evidence: "<<input->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
 			kill();
 			tpx->signal(v);
-			target->invalidate();//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<" ------------- "<<std::dec<<target->get_oid()<<std::endl;
+			target->invalidate();//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" ------------- "<<std::dec<<target->get_oid()<<std::endl;
+			source->invalidate();
 			break;
 		case	MATCH_FAILURE:
 			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" stored: "<<input->get_oid()<<std::endl;

@@ -129,7 +129,7 @@ namespace	r_exec{
 		void	_propagate_sln(Code	*object,float32	change,float32	source_sln_thr,std::vector<Code	*>	&path)	const;
 	public:
 		//	xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
-		//	Active overlays are to be found in xxx_ipgm_views and rgroup_views.
+		//	Active overlays are to be found in xxx_ipgm_views.
 		UNORDERED_MAP<uint32,P<View> >	ipgm_views;
 		UNORDERED_MAP<uint32,P<View> >	anti_ipgm_views;
 		UNORDERED_MAP<uint32,P<View> >	input_less_ipgm_views;

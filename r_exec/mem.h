@@ -122,14 +122,14 @@ namespace	r_exec{
 
 		void	reset();	// clear the content of the mem.
 
-		CriticalSection	object_registerCS;
 		CriticalSection	objectsCS;
 
 		std::vector<Group	*>	initial_groups;	// convenience; cleared after start();
 
 		uint32	last_oid;
 
-		virtual	void	init_timings(uint64	now)=0;
+		std::list<P<Code> >	objects;	// to insert in an image (getImage()); in order of injection.
+		void	bind(View	*view);
 		
 		class	GCThread:
 		public	Thread{
@@ -140,9 +140,12 @@ namespace	r_exec{
 		volatile		int32	invalidated_object_count;
 		volatile		uint32	registered_object_count;
 
-		void	trigger_gc();
-		virtual	void	trim_objects()=0;
+		void	trim_objects();
 		static	thread_ret	thread_function_call	GC(void	*args);
+
+		void	init_timings(uint64	now)	const;
+
+		bool	deleted;
 
 		_Mem();
 
@@ -213,11 +216,7 @@ namespace	r_exec{
 
 		uint32	get_oid();
 
-		// Called by groups at update time.
-		// Called by PGMOverlays at reduction time.
-		// Called by AntiPGMOverlays at signaling time and reduction time.
-		virtual	void	inject_notification(View	*view,bool	lock)=0;
-
+		void	delete_object(r_code::Code	*object);
 
 		// Internal core processing	////////////////////////////////////////////////////////////////
 
@@ -227,9 +226,14 @@ namespace	r_exec{
 		void			pushTimeJob(TimeJob	*j);
 
 		// Called upon successful reduction.
-		virtual	void	inject_new_object(View	*view)=0;
-				void	inject_existing_object(View	*view,Code	*object,Group	*host);
-				void	inject_null_program(Controller	*c,Group *group,uint64	time_to_live,bool	take_past_inputs);	// build a view v (ijt=now, act=1, sln=0, res according to time_to_live in the group), attach c to v, inject v in the group.
+		void	inject(View	*view);
+		void	inject_async(View	*view);
+		void	inject_new_object(View	*view);
+		void	inject_existing_object(View	*view,Code	*object,Group	*host);
+		void	inject_null_program(Controller	*c,Group *group,uint64	time_to_live,bool	take_past_inputs);	// build a view v (ijt=now, act=1, sln=0, res according to time_to_live in the group), attach c to v, inject v in the group.
+		void	inject_hlps(std::list<View	*>	views,Group	*destination);
+		void	inject_notification(View	*view,bool	lock);
+		virtual	Code	*check_existence(Code	*object)=0;	// returns the existing object if any, or object otherwise: in the latter case, packing may occur.
 
 		void	propagate_sln(Code	*object,float32	change,float32	source_sln_thr);
 
@@ -240,12 +244,6 @@ namespace	r_exec{
 		void	register_reduction_job_latency(uint64	latency);
 		void	register_time_job_latency(uint64	latency);
 		void	inject_perf_stats();
-
-		// Interface for overlays and I/O devices ////////////////////////////////////////////////////////////////
-		virtual	void	inject(View	*view)=0;
-		virtual	void	inject_async(View	*view)=0;
-		virtual	void	inject_hlps(std::list<View	*>	views,Group	*destination)=0;
-		virtual	Code	*check_existence(Code	*object)=0;	// returns the existing object if any, or object otherwise: in the latter case, packing may occur.
 
 		// rMem to rMem.
 		// The view must contain the destination group (either stdin or stdout) as its grp member.
@@ -271,6 +269,9 @@ namespace	r_exec{
 
 		Code	*clone(Code	*original)	const;	// shallow copy.
 
+		// External device I/O	////////////////////////////////////////////////////////////////
+		r_comp::Image	*get_image();	// create an image; fill with all objects; call only when stopped.
+
 		//std::vector<uint64>	timings_report;
 	};
 
@@ -279,37 +280,9 @@ namespace	r_exec{
 	// 	RObject (see the integration project) when network-aware.
 	// Notification objects and groups are instances of r_exec::LObject (they are not network-aware).
 	// Objects are built at reduction time as r_exec:LObjects and packed into instances of O when O is network-aware.
-	// Shared resources:
-	// 	Mem::object_register: accessed by Mem::update, Mem::injectNow and Mem::deleteObject (see above).
 	template<class	O>	class	Mem:
 	public	_Mem{
 	protected:
-		bool														deleted;
-		std::list<P<Code> >											objects;			// to insert in an image (getImage()); in order of injection.
-		UNORDERED_SET<O	*,typename	O::Hash,typename	O::Equal>	object_register;	// to eliminate duplicates (content-wise); does not include groups.
-
-		template<class	_O>	void	bind(View	*view){
-
-			_O	*object=(_O	*)view->object;
-			object->views.insert(view);
-			objectsCS.enter();
-			object->bind(this);
-			if(object->code(0).getDescriptor()==Atom::NULL_PROGRAM){
-
-				objectsCS.leave();
-				return;
-			}
-			object->is_registered=true;
-			objects.insert(objects.end(),object);
-			registered_object_count=objects.size();
-			objectsCS.leave();
-		}
-
-		void	init_timings(uint64	now);
-
-		void	trim_objects();
-
-		// Functions called by internal processing of jobs (see internal processing section below).
 		void	inject_new_object(View	*view);	// also called by inject() (see below).
 	public:
 		Mem();
@@ -328,27 +301,13 @@ namespace	r_exec{
 					uint32							self_oid);	// call before start; no mod/set/eje will be executed (only inj);
 																// ijt will be set at now=Time::Get() whatever the source code.
 																// return false on error.
-		void	delete_object(Code	*object);	// called by object destructors/Group::clear().
-
-		// External device I/O	////////////////////////////////////////////////////////////////
-		r_comp::Image	*get_image();	// create an image; fill with all objects; call only when stopped.
 
 		// Executive device functions	////////////////////////////////////////////////////////
 		
-		// Called by the reduction core.
-		void	inject(View	*view);
-		void	inject_async(View	*view);
-		void	inject_hlps(std::list<View	*>	views,Group	*destination);
 		Code	*check_existence(Code	*object);
 
 		// Called by the communication device (I/O).
 		void	inject(O	*object,View	*view);
-
-		// Variant of injectNow optimized for notifications.
-		void	inject_notification(View	*view,bool	lock);
-
-		// Called by time cores.	////////////////////////////////////////////////////////////////
-		void	update(SaliencyPropagationJob	*j);
 	};
 
 	r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const	char	*user_operator_library_path,

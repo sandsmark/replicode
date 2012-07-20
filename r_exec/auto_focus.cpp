@@ -106,12 +106,11 @@ namespace	r_exec{
 				view->references[0]=output_group;
 				view->code(VIEW_SYNC)=Atom::Float(View::SYNC_ONCE);
 				view->code(VIEW_RES)=Atom::Float(Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr()));
-				//Utils::SetTimestamp<View>(view,VIEW_IJT,now+offset);
 				view->object=copy;
 				_Mem::Get()->inject(view);
 				if(i==0	&&	_acquire_models)
-					_Mem::Get()->inject_null_program(new	HASTController(this,copy),output_group,output_group->get_upr()*Utils::GetBasePeriod(),true);
-			}
+					_Mem::Get()->inject_null_program(new	HASTController(this,copy,input_fact),output_group,output_group->get_upr()*Utils::GetBasePeriod(),true);
+				}//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" AF sync hold "<<input_fact->get_oid()<<std::endl;
 			break;
 		}case	View::SYNC_AXIOM:		// inject a copy, sync_once, res=1, fact.before=next output_grp upr.
 			if(input_fact->is_anti_fact())
@@ -247,6 +246,7 @@ namespace	r_exec{
 			return;	// std::cout<<"A/F::TI: "<<get_host()->get_oid()<<" > "<<input->object->get_oid()<<std::endl;
 		Controller::__take_input<AutoFocusController>(input);
 	}
+
 	void	AutoFocusController::reduce(r_exec::View	*input){
 
 		Code	*input_object=input->object;

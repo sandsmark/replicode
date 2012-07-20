@@ -625,6 +625,7 @@ namespace	r_exec{
 				case	View::SYNC_HOLD:
 				case	View::SYNC_AXIOM:	// sync on state.
 					newly_salient_views.insert(view);
+					//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" GRP sync hold "<<view->object->get_oid()<<std::endl;
 					break;
 				}
 			}

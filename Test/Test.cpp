@@ -39,7 +39,7 @@
 
 using	namespace	r_comp;
 
-/*r_exec::View	*build_view(uint64	time, Code* rstdin){	// this is application dependent WRT view->sync.
+r_exec::View	*build_view(uint64	time, Code* rstdin){	// this is application dependent WRT view->sync.
 
 	r_exec::View	*view=new	r_exec::View();
 	const	uint32	arity=VIEW_ARITY;	// reminder: opcode not included in the arity.
@@ -61,11 +61,11 @@ using	namespace	r_comp;
 	return	view;
 }
 
-Code	*make_object(r_exec::Mem<r_exec::LObject>	*mem, Code* rstdin, float32 i){
+Code	*make_object(r_exec::_Mem	*mem, Code* rstdin, float32 i){
 
 	Code	*object=new	r_exec::LObject(mem);
-	object->code(0)=Atom::Marker(r_exec::GetOpcode("mk.val"),4);	//	Caveat: arity does not include the opcode.
-	//object->code(0)=Atom::Marker(r_exec::Opcodes::MkVal,4);	//	Caveat: arity does not include the opcode.
+	//object->code(0)=Atom::Marker(r_exec::GetOpcode("mk.val"),4);	//	Caveat: arity does not include the opcode.
+	object->code(0)=Atom::Marker(r_exec::Opcodes::MkVal,4);	//	Caveat: arity does not include the opcode.
 	object->code(1)=Atom::RPointer(0);
 	object->code(2)=Atom::RPointer(1);
 	object->code(3)=Atom::Float(i);
@@ -77,55 +77,94 @@ Code	*make_object(r_exec::Mem<r_exec::LObject>	*mem, Code* rstdin, float32 i){
 	return	object;
 }
 
-void test_injection(r_exec::Mem<r_exec::LObject>	*mem, float32 n) {
+void test_injection(r_exec::_Mem	*mem, float32 n) {
 
 	Code* rstdin = mem->get_stdin();
 
-	int64 tt1 = 0;
-    int64 tt2 = 0;
-    int64 tt3 = 0;
-    int64 tt4 = 0;
+//	mem->timings_report.clear();
 
-    uint64    t0=r_exec::Now();
+//	uint64 tt1 = 0;
+//	uint64 tt2 = 0;
+//	uint64 tt3 = 0;
+//	uint64 tt4 = 0;
 
-    for(float32 i = 0; i < n; ++i) {
-        tt1 -= (int64) r_exec::Now();
-        Code* object = make_object(mem, rstdin, i);
-        tt1 += (int64) r_exec::Now();
+//	std::vector<uint64> v1, v2, v3, v4;
+//	v1.reserve(n);
+//	v2.reserve(n);
+//	v3.reserve(n);
+//	v4.reserve(n);
 
-        uint64    now=r_exec::Now();
+	uint64	t0=r_exec::Now();
 
-        // Build a fact.
-        tt2 -= (int64) r_exec::Now();
-        Code    *fact=new    r_exec::Fact(object,now,now,1,1);
-        tt2 += (int64) r_exec::Now();
+	for(float32 i = 0; i < n; ++i) {
+//		tt1 = r_exec::Now();
+		Code* object = make_object(mem, rstdin, i);
 
-        // Build a default view for the fact.
-        tt3 -= (int64) r_exec::Now();
-        r_exec::View    *view=build_view(now, rstdin);
-        tt3 += (int64) r_exec::Now();
+		uint64	now=r_exec::Now();
+//		v1.push_back(now - tt1);
 
-        // Inject the view.
-        tt4 -= (int64) r_exec::Now();
-        view->set_object(fact);
-        mem->inject(view);
-        tt4 += (int64) r_exec::Now();
-    }
+		// Build a fact.
+//		tt2 = now;
+		Code	*fact=new	r_exec::Fact(object,now,now,1,1);
+//		uint64 tt = r_exec::Now();
+//		v2.push_back(tt - tt2);
 
-    uint64  t1=r_exec::Now();
-    uint64	t2=t1-t0;
-    uint32  samples=mem->timings_report.size();
-    uint64  acc=0;
-    for(uint32    i=0;i<samples;++i){
-        acc+=mem->timings_report[i];
-std::cout<<mem->timings_report[i]<<std::endl;}
-    std::cout<<"total time: "<<acc<< std::endl;
-    std::cout<<"for-loop total time: "<<t2<< std::endl;
-    std::cout<<"for-loop accumelated time 1: "<<tt1<< std::endl;
-    std::cout<<"for-loop accumelated time 2: "<<tt2<< std::endl;
-    std::cout<<"for-loop accumelated time 3: "<<tt3<< std::endl;
-    std::cout<<"for-loop accumelated time 4: "<<tt4<< std::endl; 
-}*/
+		// Build a default view for the fact.
+//		tt3 = tt;
+		r_exec::View	*view=build_view(now, rstdin);
+//		tt = r_exec::Now();
+//		v3.push_back(tt - tt3);
+
+		// Inject the view.
+//		tt4 = tt;
+		view->set_object(fact);
+		mem->inject(view);
+//		v4.push_back(r_exec::Now() - tt4);
+	}
+
+	uint64	t1=r_exec::Now();
+	uint64 t2=t1-t0;
+	std::cout<<"for-loop total time: "<<t2<< std::endl;
+/*	uint64	acc=0;
+	for(uint32	i=0;i<n;++i){
+		acc+=v1[i];
+		std::cout<<v1[i]<<'\t';
+	}
+	std::cout<<"\nfor-loop accumulated time make_object: "<<acc<< std::endl;
+	acc=0;
+	for(uint32	i=0;i<n;++i){
+		acc+=v2[i];
+//		std::cout<<v2[i]<<'/'<<mem->timings_report[i]<<'\t';
+		std::cout<<v2[i]<<'\t';
+	}
+	std::cout<<"\nfor-loop accumulated time new Fact   : "<<acc<< std::endl;
+	acc=0;
+	for(uint32	i=0;i<n;++i){
+		acc+=v3[i];
+		std::cout<<v3[i]<<'\t';
+	}
+	std::cout<<"\nfor-loop accumulated time build_view : "<<acc<< std::endl;
+	acc=0;
+	for(uint32	i=0;i<n;++i){
+		acc+=v4[i];
+		std::cout<<v4[i]<<'\t';
+	}
+	std::cout<<"\nfor-loop accumulated time mem->inject: "<<acc<< std::endl;
+*/
+}
+
+void test_many_injections(r_exec::_Mem	*mem, uint32 sampling_period_ms, uint32 nRuns, float32 nObjects) {
+	for(; nRuns; --nRuns) {
+		uint64 start = r_exec::Now();
+		std::cout << nRuns << '\t';
+		test_injection(mem, nObjects);
+		uint64 taken_ms = (r_exec::Now() - start) / 1000;
+		if(taken_ms > sampling_period_ms)
+			std::cout << "Good grief! I exceeded the sampling period!" << std::endl;
+		else
+			Thread::Sleep(sampling_period_ms - taken_ms);
+	}
+}
 
 void	decompile(Decompiler	&decompiler,r_comp::Image	*image,uint64	time_offset,bool	ignore_named_objects){
 
@@ -264,11 +303,14 @@ int32	main(int	argc,char	**argv){
 		
 		std::cout<<"> running for "<<settings.run_time<<" ms\n\n";
 		Thread::Sleep(settings.run_time);
-
-		/*Thread::Sleep(settings.run_time/2);
-		test_injection(mem, 66);
-		Thread::Sleep(settings.run_time/2);*/
-
+/*
+		Thread::Sleep(settings.run_time/2);
+		test_many_injections(mem,
+			argc > 3 ? atoi(argv[3]) : 100,	// sampling period in ms
+			argc > 4 ? atoi(argv[4]) : 600,	// number of batches
+			argc > 5 ? atoi(argv[5]) : 66);	// number of objects per batch
+		Thread::Sleep(settings.run_time/2);
+*/
 		std::cout<<"\n> shutting rMem down...\n";
 		mem->stop();
 
@@ -296,7 +338,7 @@ int32	main(int	argc,char	**argv){
 			}else
 				decompile(decompiler,image,starting_time,settings.ignore_named_objects);
         }
-		//uint32	w;std::cin>>w;
+
 		delete	image;
 		delete	mem;
 

@@ -508,6 +508,7 @@ namespace	r_comp{
 			}
 		}
 
+		object->acq_views();
 		std::list<View	*>::const_iterator	v;
 		for(v=object->views.begin();v!=object->views.end();++v){	// follow the view's reference pointers and recurse.
 
@@ -525,6 +526,7 @@ namespace	r_comp{
 				}
 			}
 		}
+		object->rel_views();
 		
 		uint32	_object=(uint32)object;
 		sys_object->references[0]=(_object	&	0x0000FFFF);
@@ -563,6 +565,7 @@ namespace	r_comp{
 			}
 		}
 
+		object->acq_views();
 		std::list<View	*>::const_iterator	v;
 		for(i=0,v=object->views.begin();v!=object->views.end();++i,++v){
 
@@ -580,6 +583,7 @@ namespace	r_comp{
 				}
 			}
 		}
+		object->rel_views();
 	}
 
 	void	Image::get_objects(Mem	*mem,r_code::vector<Code	*>	&ram_objects){

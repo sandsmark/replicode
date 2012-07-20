@@ -81,13 +81,24 @@ namespace	r_exec{
 	class	r_exec_dll	_TPX:
 	public	TPX{
 	protected:
-		std::list<Input>	inputs;	// time-controlled buffer (inputs older than tpx_time_horizon from now are discarded).
-		std::list<P<Code> >	mdls;	// new mdls.
-		std::list<P<Code> >	csts;	// new csts.
+		class	Component{	// for building csts.
+		public:
+			_Fact	*object;
+			bool	discarded;
+			Component(){}
+			Component(_Fact	*object):object(object),discarded(false){}
+		};
 
+		std::list<Input>		inputs;	// time-controlled buffer (inputs older than tpx_time_horizon from now are discarded).
+		std::list<P<Code> >		mdls;	// new mdls.
+		std::list<P<Code> >		csts;	// new csts.
+		std::list<P<_Fact> >	icsts;	// new icsts.
+
+		void	filter_icst_components(ICST	*icst,uint32	icst_index,std::vector<Component>	&components);
+		_Fact	*_find_f_icst(_Fact	*component,uint16	&component_index);
 		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index);
 		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index,Code	*&cst);
-		Code	*build_cst(ICST	*icst,BindingMap	*bm,_Fact	*component);
+		Code	*build_cst(const	std::vector<Component>	&components,BindingMap	*bm,_Fact	*main_component);
 
 		Code	*build_mdl_head(BindingMap	*bm,uint16	tpl_arg_count,_Fact	*lhs,_Fact	*rhs,uint16	&write_index);
 		void	build_mdl_tail(Code	*mdl,uint16	write_index);

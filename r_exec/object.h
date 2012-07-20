@@ -68,11 +68,6 @@ namespace	r_exec{
 			return	Code::build_view<r_exec::View>(source);
 		}
 
-		void	bind(r_code::Mem	*mem){
-			
-			set_oid(mem->get_oid());
-		}
-
 		virtual	bool	is_invalidated();
 		virtual	bool	invalidate();	//	return false when was not invalidated, true otherwise.
 

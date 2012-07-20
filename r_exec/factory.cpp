@@ -770,4 +770,18 @@ namespace	r_exec{
 		}
 		return	false;
 	}
+
+	bool	ICST::contains(_Fact	*component,uint16	&component_index)	const{
+
+		for(uint32	i=0;i<components.size();++i){
+
+			if(components[i]==component){
+
+				component_index=i;
+				return	true;
+			}
+		}
+
+		return	false;
+	}
 }

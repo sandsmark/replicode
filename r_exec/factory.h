@@ -282,6 +282,8 @@ namespace	r_exec{
 
 		bool	is_invalidated();
 
+		bool	contains(_Fact	*component,uint16	&component_index)	const;
+
 		P<BindingMap>			bindings;
 		std::vector<P<_Fact> >	components;	// the inputs that triggered the building of the icst.
 	};

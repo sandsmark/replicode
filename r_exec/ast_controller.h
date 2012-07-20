@@ -78,8 +78,10 @@ namespace	r_exec{
 	// For SYNC_HOLD targets.
 	class	HASTController:
 	public	ASTController<HASTController>{
+	private:
+		P<_Fact>	source;	// to be invalidated if a counter-evidence is found.
 	public:
-		HASTController(AutoFocusController	*auto_focus,_Fact	*target);
+		HASTController(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*source);
 		~HASTController();
 
 		void	reduce(View	*input){	this->ASTController<HASTController>::reduce(input);	}

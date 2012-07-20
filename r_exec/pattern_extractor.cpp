@@ -54,7 +54,7 @@ namespace	r_exec{
 					break;
 			}
 		}
-		buffer.push_front(Input(input,eligible_cause,abstracted_input,bm));
+		buffer.push_back(Input(input,eligible_cause,abstracted_input,bm));
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,11 +97,35 @@ namespace	r_exec{
 	_TPX::~_TPX(){
 	}
 
-	_Fact	*_TPX::find_f_icst(_Fact	*component,uint16	&component_index){
+	void	_TPX::filter_icst_components(ICST	*icst,uint32	icst_index,std::vector<Component>	&components){
 
-		uint16	opcode=component->get_reference(0)->code(0).asOpcode();
-		if(opcode==Opcodes::Cmd	||	opcode==Opcodes::IMdl)	// cmds/imdls cannot be components of a cst.
-			return	NULL;
+		uint32	found_component_count=0;
+		uint32	*found=new	uint32[icst->components.size()];
+		for(uint32	j=0;j<components.size();++j){
+
+			for(uint32	i=0;i<icst->components.size();++i){
+
+				if(components[j].discarded)
+					continue;
+				if(components[j].object==icst->components[i]){
+
+					found[found_component_count]=j;
+					++found_component_count;
+				}
+			}
+		}
+
+		if(found_component_count>0){	// some of the icst components are already in the inputs: discard said components, keep the icst.
+
+			for(uint32	i=0;i<found_component_count;++i)
+				components[found[i]].discarded=true;
+		}else	// none of the icst components are in the inputs; this can only happen because the icst shares one timestamp with the TPX's target: discard the icst.
+			components[icst_index].discarded=true;
+
+		delete[]	found;
+	}
+
+	_Fact	*_TPX::_find_f_icst(_Fact	*component,uint16	&component_index){
 
 		std::list<Input>::const_iterator	i;
 		for(i=inputs.begin();i!=inputs.end();++i){
@@ -110,18 +134,29 @@ namespace	r_exec{
 			if(candidate->code(0).asOpcode()==Opcodes::ICst){
 
 				ICST	*icst=(ICST	*)candidate;
-				for(uint32	j=0;j<icst->components.size();++j){
-
-					if(icst->components[j]==component){
-
-						component_index=j;
-						return	(_Fact	*)candidate;
-					}
-				}
+				if(icst->contains(component,component_index))
+					return	(*i).input;
 			}
 		}
 
+		std::list<P<_Fact> >::const_iterator	f_icst;
+		for(f_icst=icsts.begin();f_icst!=icsts.end();++f_icst){
+
+			ICST	*icst=(ICST	*)(*f_icst)->get_reference(0);
+			if(icst->contains(component,component_index))
+				return	(*f_icst);
+		}
+
 		return	NULL;
+	}
+
+	_Fact	*_TPX::find_f_icst(_Fact	*component,uint16	&component_index){
+
+		uint16	opcode=component->get_reference(0)->code(0).asOpcode();
+		if(opcode==Opcodes::Cmd	||	opcode==Opcodes::IMdl)	// cmds/imdls cannot be components of a cst.
+			return	NULL;
+
+		return	_find_f_icst(component,component_index);
 	}
 
 	_Fact	*_TPX::find_f_icst(_Fact	*component,uint16	&component_index,Code	*&cst){
@@ -133,40 +168,49 @@ namespace	r_exec{
 			return	NULL;
 		}
 
-		std::list<Input>::const_iterator	i;
-		for(i=inputs.begin();i!=inputs.end();++i){
+		_Fact	*f_icst=_find_f_icst(component,component_index);
+		if(f_icst!=NULL){
 
-			Code	*candidate=(*i).input->get_reference(0);
-			if(candidate->code(0).asOpcode()==Opcodes::ICst){
-
-				ICST	*icst=(ICST	*)candidate;
-				for(uint32	j=0;j<icst->components.size();++j){
-
-					if(icst->components[j]==component){
-
-						component_index=j;
-						cst=NULL;
-						return	(*i).input;
-					}
-				}
-			}
+			cst=NULL;
+			return	f_icst;
 		}
 
-		ICST	*icst=new	ICST();	// no icst found, try to identify a cst.
+		std::vector<Component>	components;	// no icst found, try to identify components to assemble a cst.
+		std::vector<uint32>		icst_components;
 
+		std::list<Input>::const_iterator	i;
 		for(i=inputs.begin();i!=inputs.end();++i){
 
 			if(component==(*i).input){
 
-				component_index=icst->components.size();
-				icst->components.push_back(component);
-			}else	if(component->match_timings_sync((*i).input))
-				icst->components.push_back((*i).input);
+				component_index=components.size();
+				components.push_back(Component(component));
+			}else	if(component->match_timings_sync((*i).input)){
+
+				Code	*icst=(*i).input->get_reference(0);
+				if(icst->code(0).asOpcode()==Opcodes::ICst)
+					icst_components.push_back(components.size());
+				components.push_back(Component((*i).input));
+			}
 		}
 
-		if(icst->components.size()<=1){	// contains only the provided component.
+		for(uint32	j=0;j<icst_components.size();++j){
 
-			delete	icst;
+			ICST	*icst=(ICST	*)components[icst_components[j]].object->get_reference(0);
+			filter_icst_components(icst,j,components);
+		}
+
+		uint32	actual_size=0;
+		for(uint32	j=0;j<components.size();++j){
+
+			if(components[j].discarded)
+				continue;
+			else
+				++actual_size;
+		}
+		
+		if(actual_size<=1){	// contains at most only the provided component.
+
 			cst=NULL;
 			return	NULL;
 		}
@@ -174,32 +218,37 @@ namespace	r_exec{
 		std::list<Input>::iterator	_i;
 		for(_i=inputs.begin();_i!=inputs.end();++_i){	// flag the components so the tpx does not try them again.
 
-			for(uint32	j=0;j<icst->components.size();++j){
+			for(uint32	j=0;j<components.size();++j){
 
-				if((*_i).input==icst->components[j])
+				if((*_i).input==components[j].object)
 					(*_i).eligible_cause=false;
 			}
 		}
 
 		P<BindingMap>	bm=new	BindingMap();
-		cst=build_cst(icst,bm,component);
+		cst=build_cst(components,bm,component);
 		uint32	rc=cst->references_size();
-		Fact	*f_icst=bm->build_f_ihlp(cst,Opcodes::ICst,false);
+		f_icst=bm->build_f_ihlp(cst,Opcodes::ICst,false);
+		icsts.push_back(f_icst);	// the f_icst can be reused in subsequent model building attempts.
 		return	f_icst;
 	}
 
-	Code	*_TPX::build_cst(ICST	*icst,BindingMap	*bm,_Fact	*component){
+	Code	*_TPX::build_cst(const	std::vector<Component>	&components,BindingMap	*bm,_Fact	*main_component){
 
-		_Fact	*abstracted_component=(_Fact	*)bm->abstract_object(component,false);
+		_Fact	*abstracted_component=(_Fact	*)bm->abstract_object(main_component,false);
 
 		Code	*cst=_Mem::Get()->build_object(Atom::CompositeState(Opcodes::Cst,CST_ARITY));
 
-		for(uint16	i=0;i<icst->components.size();++i){	// reference patterns;
+		uint16	actual_component_count=0;
+		for(uint16	i=0;i<components.size();++i){	// reference patterns;
 
-			if(icst->components[i]==component)
+			if(components[i].discarded)
+				continue;
+			if(components[i].object==main_component)
 				cst->add_reference(abstracted_component);
 			else
-				cst->add_reference(bm->abstract_object(icst->components[i],true));
+				cst->add_reference(bm->abstract_object(components[i].object,true));
+			++actual_component_count;
 		}
 
 		uint16	extent_index=CST_ARITY;
@@ -208,8 +257,8 @@ namespace	r_exec{
 		cst->code(extent_index)=Atom::Set(0);	// no tpl args.
 		
 		cst->code(CST_OBJS)=Atom::IPointer(++extent_index);
-		cst->code(extent_index)=Atom::Set(icst->components.size());
-		for(uint16	i=0;i<icst->components.size();++i)
+		cst->code(extent_index)=Atom::Set(actual_component_count);
+		for(uint16	i=0;i<actual_component_count;++i)
 			cst->code(++extent_index)=Atom::RPointer(i);
 
 		cst->code(CST_FWD_GUARDS)=Atom::IPointer(++extent_index);
@@ -373,8 +422,8 @@ namespace	r_exec{
 			_Fact	*f_icst=find_f_icst(cause.input,cause_index);
 			if(f_icst==NULL){
 
-				if(!build_mdl(cause.input,consequent,guard_builder,period))
-					return;
+				if(build_mdl(cause.input,consequent,guard_builder,period))
+					inject_hlps(analysis_starting_time);
 			}else{
 
 				Code	*unpacked_cst;
@@ -386,11 +435,9 @@ namespace	r_exec{
 					unpacked_cst=new_cst;
 
 				_Fact	*cause_pattern=(_Fact	*)unpacked_cst->get_reference(cause_index);
-				if(!build_mdl(f_icst,cause_pattern,consequent,guard_builder,period,new_cst))
-					return;
+				if(build_mdl(f_icst,cause_pattern,consequent,guard_builder,period,new_cst))
+					inject_hlps(analysis_starting_time);
 			}
-
-			inject_hlps(analysis_starting_time);
 		}
 	}
 
@@ -502,8 +549,8 @@ namespace	r_exec{
 			_Fact	*f_icst=find_f_icst(cause.input,cause_index,new_cst);
 			if(f_icst==NULL){
 
-				if(!build_mdl(cause.input,consequent,guard_builder,period))
-					return;
+				if(build_mdl(cause.input,consequent,guard_builder,period))
+					inject_hlps(analysis_starting_time);
 			}else{
 
 				Code	*unpacked_cst;
@@ -515,11 +562,9 @@ namespace	r_exec{
 					unpacked_cst=new_cst;
 
 				_Fact	*cause_pattern=(_Fact	*)unpacked_cst->get_reference(cause_index);
-				if(!build_mdl(f_icst,cause_pattern,consequent,guard_builder,period,new_cst))
-					return;
+				if(build_mdl(f_icst,cause_pattern,consequent,guard_builder,period,new_cst))
+					inject_hlps(analysis_starting_time);
 			}
-
-			inject_hlps(analysis_starting_time);
 		}
 	}
 
@@ -649,20 +694,14 @@ namespace	r_exec{
 			_Fact	*f_icst=find_f_icst(cause.input,cause_index);
 			if(f_icst==NULL){	// the cause can never be the premise; m0:[premise.value premise.after premise.before][cause->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
 
-				if(build_mdl(cause.input,consequent,guard_builder,period)){
-
+				if(build_mdl(cause.input,consequent,guard_builder,period))
 					inject_hlps(analysis_starting_time);
-					return;
-				}
 			}else{
 
 				Code	*cst=f_icst->get_reference(0)->get_reference(0)->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// the cst is packed, retreive the pattern from the unpacked code.
 				_Fact	*cause_pattern=(_Fact	*)cst->get_reference(cause_index);
-				if(build_mdl(f_icst,cause_pattern,consequent,guard_builder,period)){	// m0:[premise.value premise.after premise.before][icst->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
-
+				if(build_mdl(f_icst,cause_pattern,consequent,guard_builder,period))	// m0:[premise.value premise.after premise.before][icst->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
 					inject_hlps(analysis_starting_time);
-					return;
-				}
 			}
 		}
 	}
