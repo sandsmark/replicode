@@ -14,7 +14,7 @@ pgm0:(pgm |[] |[] |[] []
    )
    (inj []
       (|fact a now MAX_TIME 1 1)
-      [SYNC_HOLD now 1 1 stdin nil]
+      [SYNC_HOLD now 1 forever stdin nil]
    )
    (inj []
       ph:(mk.val self_right_hand position_x 0 1)

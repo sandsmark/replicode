@@ -1,0 +1,125 @@
+; test 1,2 and 3 together.
+
+!load c:/work/Replicode/Test/V1.2/test.domain.replicode
+; !load c:/work/Replicode/Test/V1.2/drives.replicode
+
+
+; input generators.
+
+pgm0:(pgm |[] |[] |[] []
+   (inj []
+      p:(mk.val self_right_hand position_z 10 1)
+      |[]
+   )
+   (inj []
+      (fact p now (+ now sampling_period) 1 1)
+      [SYNC_PERIODIC now 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm0:(ipgm pgm0 |[] RUN_ONCE sampling_period VOLATILE SILENT 1) [[SYNC_ONCE now 0 1 stdin nil 1]]
+
+pgm1:(pgm |[] |[] |[] []
+   (inj []
+      c:(cmd lift_hand [self_right_hand 2] 1)
+      |[]
+   )
+   (inj []
+      (fact c now 200000us 1 1)
+      [SYNC_ONCE now 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm1:(ipgm pgm1 |[] RUN_ONCE 150000us VOLATILE SILENT 1) [[SYNC_ONCE now 0 2 stdin nil 1]]
+
+pgm2:(pgm |[] []
+   (ptn (fact (cmd lift_hand [h: z:] :) t0: t1: ::) |[])
+   (ptn p:(fact (mk.val h: position_z old_z: :) t2: t3: ::) |[])
+|[]
+[]
+   (inj []
+      new_p:(mk.val self_right_hand position_z (+ z old_z) 1)
+      |[]
+   )
+   (inj []
+      (fact new_p (+ t2 sampling_period) (+ t3 sampling_period) 1 1)
+      [SYNC_PERIODIC t3 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm2:(ipgm pgm2 |[] RUN_ONCE 0us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 2 stdin nil 1]]
+
+; ---------------------------------------
+
+pgm3:(pgm |[] |[] |[] []
+   (inj []
+      a:(mk.val self_right_hand attachment cube0 1)
+      |[]
+   )
+   (inj []
+      (|fact a now MAX_TIME 1 1)
+      [SYNC_HOLD now 1 forever stdin nil]
+   )
+   (inj []
+      ph:(mk.val self_right_hand position_x 0 1)
+      |[]
+   )
+   (inj []
+      (fact ph now (+ now sampling_period) 1 1)
+      [SYNC_PERIODIC now 1 1 stdin nil]
+   )
+   (inj []
+      pc:(mk.val cube0 position_x 0 1)
+      |[]
+   )
+   (inj []
+      (fact pc now (+ now sampling_period) 1 1)
+      [SYNC_PERIODIC now 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm3:(ipgm pgm3 |[] RUN_ONCE 200000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 1 stdin nil 1]]
+
+pgm4:(pgm |[] |[] |[] []
+   (inj []
+      c:(cmd grab_hand [self_right_hand] 1)
+      |[]
+   )
+   (inj []
+      (fact c now (+ now 10000us) 1 1)
+      [SYNC_ONCE now 1 1 stdin nil]
+   )
+   (inj []
+      p:(mk.val self_right_hand attachment cube0 1)
+      |[]
+   )
+   (inj []
+      (fact p now MAX_TIME 1 1)
+      [SYNC_HOLD now 1 forever stdin nil]
+   )
+1) |[]
+
+ipgm4:(ipgm pgm4 |[] RUN_ONCE 260000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 2 stdin nil 1]]
+
+; ---------------------------------------
+
+pgm6:(pgm |[] |[] |[] []
+   (inj []
+      c:(cmd release_hand [self_right_hand] 1)
+      |[]
+   )
+   (inj []
+      (fact c now (+ now 10000us) 1 1)
+      [SYNC_ONCE now 1 1 stdin nil]
+   )
+   (inj []
+      p:(mk.val self_right_hand attachment cube0 1)
+      |[]
+   )
+   (inj []
+      (|fact p now MAX_TIME 1 1)
+      [SYNC_HOLD now 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm6:(ipgm pgm6 |[] RUN_ONCE 360000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 2 stdin nil 1]]
