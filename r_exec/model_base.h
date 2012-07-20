@@ -58,11 +58,10 @@ namespace	r_exec{
 			static	bool	Match(Code	*lhs,Code	*rhs);
 			static	uint32	_ComputeHashCode(_Fact	*component);	// use for lhs/rhs.
 		public:
-			static	uint32	ComputeHashCode(Code	*mdl);
+			static	uint32	ComputeHashCode(Code	*mdl,bool	packed);
 
 			MEntry();
-			MEntry(Code	*mdl);
-			~MEntry();
+			MEntry(Code	*mdl,bool	packed);
 
 			P<Code>	mdl;
 			uint64	touch_time;	// last time the mdl was successfully compared to.
@@ -83,8 +82,8 @@ namespace	r_exec{
 
 		typedef	UNORDERED_SET<MEntry,typename	MEntry::Hash,typename	MEntry::Equal> MdlSet;
 
-		MdlSet	black_list;
-		MdlSet	white_list;
+		MdlSet	black_list;	// mdls are already packed when inserted (they come from the white list).
+		MdlSet	white_list;	// mdls are packed just before insertion.
 
 		void	set_thz(uint64	thz){	this->thz=thz;	}	// called by _Mem::start(); set to secondary_thz.
 		void	trim_objects();	// called by _Mem::GC().

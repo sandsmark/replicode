@@ -70,12 +70,22 @@ namespace	r_exec{
 		return	hash_code;
 	}
 
-	uint32	ModelBase::MEntry::ComputeHashCode(Code	*mdl){
+	uint32	ModelBase::MEntry::ComputeHashCode(Code	*mdl,bool	packed){
 
 		uint32	hash_code=(mdl->code(mdl->code(HLP_TPL_ARGS).asIndex()).getAtomCount()<<28);
-		_Fact	*lhs=(_Fact	*)mdl->get_reference(0);
+		_Fact	*lhs;
+		_Fact	*rhs;
+		if(packed){
+
+			Code	*unpacked_mdl=mdl->get_reference(mdl->references_size()-MDL_HIDDEN_REFS);
+			lhs=(_Fact	*)unpacked_mdl->get_reference(0);
+			rhs=(_Fact	*)unpacked_mdl->get_reference(1);
+		}else{
+
+			lhs=(_Fact	*)mdl->get_reference(0);
+			rhs=(_Fact	*)mdl->get_reference(1);
+		}
 		hash_code|=(_ComputeHashCode(lhs)<<14);
-		_Fact	*rhs=(_Fact	*)mdl->get_reference(1);
 		hash_code|=_ComputeHashCode(rhs);
 		return	hash_code;
 	}
@@ -105,13 +115,13 @@ namespace	r_exec{
 	ModelBase::MEntry::MEntry():mdl(NULL),touch_time(0),hash_code(0){
 	}
 
-	ModelBase::MEntry::MEntry(Code	*mdl):mdl(mdl),touch_time(Now()),hash_code(ComputeHashCode(mdl)){
-	}
-
-	ModelBase::MEntry::~MEntry(){
+	ModelBase::MEntry::MEntry(Code	*mdl,bool	packed):mdl(mdl),touch_time(Now()),hash_code(ComputeHashCode(mdl,packed)){
 	}
 
 	bool	ModelBase::MEntry::match(const	MEntry	&e)	const{	// at this point both models have same hash code; this.mdl is packed, e.mdl is unpacked.
+
+		if(mdl==e.mdl)
+			return	true;
 
 		for(uint16	i=0;i<mdl->code_size();++i){	// first check the mdl code: this checks on tpl args and guards.
 
@@ -132,7 +142,6 @@ namespace	r_exec{
 		if(!Match(rhs_0,rhs_1))
 			return	false;
 
-		
 		return	true;
 	}
 
@@ -168,15 +177,15 @@ namespace	r_exec{
 		mdlCS.leave();
 	}
 
-	void	ModelBase::load(Code	*mdl){
+	void	ModelBase::load(Code	*mdl){	// mdl is already packed.
 
-		MEntry	e(mdl);
+		MEntry	e(mdl,true);
 		white_list.insert(e);
 	}
 
 	Code	*ModelBase::check_existence(Code	*mdl){
 
-		MEntry	e(mdl);
+		MEntry	e(mdl,false);
 		mdlCS.enter();
 		MdlSet::iterator	m=black_list.find(e);
 		if(m!=black_list.end()){
@@ -198,9 +207,9 @@ namespace	r_exec{
 		return	mdl;
 	}
 
-	void	ModelBase::check_existence(Code	*m0,Code	*m1,Code	*&_m0,Code	*&_m1){
+	void	ModelBase::check_existence(Code	*m0,Code	*m1,Code	*&_m0,Code	*&_m1){	// m0 and m1 unpacked.
 
-		MEntry	e_m0(m0);
+		MEntry	e_m0(m0,false);
 		mdlCS.enter();
 		MdlSet::iterator	m=black_list.find(e_m0);
 		if(m!=black_list.end()){
@@ -215,13 +224,12 @@ namespace	r_exec{
 
 			(*m).touch_time=Now();
 			_m0=(*m).mdl;
-			// change imdl m0 into imdl _m0.
 			Code	*rhs=m1->get_reference(m1->code(m1->code(MDL_OBJS).asIndex()+2).asIndex());
 			Code	*im0=rhs->get_reference(0);
-			im0->set_reference(0,_m0);
+			im0->set_reference(0,_m0);	// change imdl m0 into imdl _m0.
 		}else
 			_m0=m0;
-		MEntry	e_m1(m1);
+		MEntry	e_m1(m1,false);
 		m=black_list.find(e_m1);
 		if(m!=black_list.end()){
 
@@ -249,18 +257,18 @@ namespace	r_exec{
 		_m1=m1;
 	}
 
-	void	ModelBase::register_mdl_failure(Code	*mdl){
+	void	ModelBase::register_mdl_failure(Code	*mdl){	// mdl is packed.
 
-		MEntry	e(mdl);
+		MEntry	e(mdl,true);
 		mdlCS.enter();
 		white_list.erase(e);
 		black_list.insert(e);
 		mdlCS.leave();
 	}
 
-	void	ModelBase::register_mdl_timeout(Code	*mdl){
+	void	ModelBase::register_mdl_timeout(Code	*mdl){	// mdl is packed.
 
-		MEntry	e(mdl);
+		MEntry	e(mdl,true);
 		mdlCS.enter();
 		white_list.erase(e);
 		mdlCS.leave();
