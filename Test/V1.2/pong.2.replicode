@@ -1,0 +1,104 @@
+; as pong, debug PTPX.
+
+; objects.
+
+b:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+ball:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+b_is_a_ball:(mk.val b essence ball 1) |[]
+f_b_is_a_ball:(fact b_is_a_ball 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+red_color:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
+blue_color:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
+
+b_is_blue:(mk.val b color blue_color 1) |[]
+f_b_is_blue:(fact b_is_blue 0us MAX_TIME 1 1) [[SYNC_HOLD now 1 forever stdin nil]]
+
+
+; top-level model and drive injector.
+
+m_run_0:(mdl |[] []
+   (fact (mk.val b: position_y : :) t0: t1: ::)
+   (fact run t2: t3: ::); drive.
+|[]
+[]
+   t0:(now)
+   t1:(+ t0 100000us)
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+
+init_run_pgm:(pgm |[] |[] |[] []
+   (inj []
+      f_run:(fact run t:(now) (+ t 100000us) 1 1)
+      |[]
+   )
+   (inj []
+      g:(goal f_run self 1)
+      |[]
+   )
+   (inj []
+      (fact g t t 1 1)
+      [SYNC_ONCE t 1 forever primary nil]
+   )
+1) |[]
+
+init_run_ipgm:(ipgm init_run_pgm |[] RUN_ONCE 50000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 1]]
+
+success_run_pgm:(pgm |[] []
+   (ptn (fact (success ::) ::) |[])
+|[] []
+   (inj []
+      f_run:(fact run t:(now) (+ t 100000us) 1 1)
+      |[]
+   )
+   (inj []
+      g:(goal f_run self 1)
+      |[]
+   )
+   (inj []
+      (fact g t t 1 1)
+      [SYNC_ONCE t 1 1 primary nil]
+   )
+   (prb [1 "print" "goal renewed" |[]])
+1) |[]
+
+success_run_ipgm:(ipgm success_run_pgm |[] RUN_ALWAYS 0us STATIC NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 1]]
+
+
+; input generators.
+
+start:(pgm |[] |[] |[] []
+   (inj []
+      p:(mk.val b position_y 0 1)
+      |[]
+   )
+   (inj []
+      (fact p after:(now) (+ after sampling_period) 1 1)
+      [SYNC_PERIODIC now 1 1 stdin nil]
+   )
+   (inj []
+      s:(mk.val b speed_y 0.0001 1)
+      |[]
+   )
+   (inj []
+      (fact s now MAX_TIME 1 1)
+      [SYNC_HOLD now 1 forever stdin nil]
+   )
+1) |[]
+
+istart:(ipgm start |[] RUN_ONCE sampling_period VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+
+pgm0:(pgm |[] []
+   (ptn f:(fact (mk.val b position_y py: :) after: before: ::) |[])
+   (ptn (fact (mk.val b speed_y sy: :) ::) |[])
+|[] []
+   (inj []
+      p:(mk.val b position_y (+ py (* sy sampling_period)) 1)
+      |[]
+   )
+   (inj []
+      (fact p (+ after sampling_period) (+ before sampling_period) 1 1)
+      [SYNC_PERIODIC (+ f.vw.ijt sampling_period) 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm0:(ipgm pgm0 |[] RUN_ONCE 20000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]

@@ -42,7 +42,7 @@ drives:(std_grp 40 0 0 0 [stdout]) [[SYNC_ONCE now 0 forever root nil COV_OFF 0]
 
 ; extensions.
 
-auto_focus:(icpp_pgm "auto_focus" [true true true primary secondary] RUN_ALWAYS 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]; args: pass_through, acquire_models, decompile_models, primary group, secondary group, other output groups.
+auto_focus:(icpp_pgm "auto_focus" [false true true primary] RUN_ALWAYS 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]; args: pass_through, acquire_models, decompile_models, primary group, other output groups.
 
 
 ; application ontology.
