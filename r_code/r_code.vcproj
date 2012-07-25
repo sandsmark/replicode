@@ -360,6 +360,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\list.h"
+				>
+			</File>
+			<File
 				RelativePath=".\object.h"
 				>
 			</File>
@@ -369,6 +373,10 @@
 			</File>
 			<File
 				RelativePath=".\replicode_defs.h"
+				>
+			</File>
+			<File
+				RelativePath=".\time_buffer.h"
 				>
 			</File>
 			<File

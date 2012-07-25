@@ -46,12 +46,16 @@ namespace	r_code{
 	uint32	Utils::GetFloatTolerance(){	return	FloatTolerance;	}
 	uint32	Utils::GetTimeTolerance(){	return	TimeTolerance;	}
 
-	void	Utils::SetReferenceValues(uint64	time_reference,uint32	base_period,float32	float_tolerance,uint32	time_tolerance){
+	void	Utils::SetReferenceValues(uint32	base_period,float32	float_tolerance,uint32	time_tolerance){
 
-		TimeReference=time_reference;
 		BasePeriod=base_period;
 		FloatTolerance=float_tolerance;
 		TimeTolerance=time_tolerance;
+	}
+
+	void	Utils::SetTimeReference(uint64	time_reference){
+
+		TimeReference=time_reference;
 	}
 
 	bool	Utils::Equal(float32	l,float32	r){

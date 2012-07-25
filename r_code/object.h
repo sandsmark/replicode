@@ -33,11 +33,11 @@
 
 #include	"atom.h"
 #include	"vector.h"
-#include	"../../CoreLibrary/trunk/CoreLibrary/base.h"
+#include	"list.h"
 #include	"replicode_defs.h"
-#include	"../r_code/utils.h"
 
-#include	<list>
+#include	"../../CoreLibrary/trunk/CoreLibrary/base.h"
+#include	"../r_code/utils.h"
 
 
 using	namespace	core;
@@ -160,7 +160,12 @@ namespace	r_code{
 
 	class	dll_export	Code:
 	public	_Object{
+	public:
+		static	const	int32	null_storage_index=-1;
+		static	const	uint32	CodeMarkersInitialSize=8;
 	protected:
+		int32	storage_index;	// -1: not sored; >0 index of the object in a vector-based container.
+
 		void	load(SysObject	*source){
 
 			for(uint16	i=0;i<source->code.size();++i)
@@ -172,6 +177,10 @@ namespace	r_code{
 			return	new	V(source,this);
 		}
 	public:
+		void	set_stroage_index(int32	i){	storage_index=i;	}
+		bool	is_registered()	const{	return	storage_index>null_storage_index;	}
+		int32	get_storage_index()	const{	return	storage_index;	}
+
 		virtual	uint32	get_oid()	const=0;
 		virtual	void	set_oid(uint32	oid)=0;
 
@@ -189,7 +198,7 @@ namespace	r_code{
 		virtual	bool	is_invalidated()	{	return	false;	}
 		virtual	bool	invalidate()	{ return	false;	}
 
-		std::list<Code	*>								markers;
+		r_code::list<Code	*>							markers;
 		UNORDERED_SET<View	*,View::Hash,View::Equal>	views;	// indexed by groups.
 
 		virtual	View	*build_view(SysView	*source)=0;
@@ -201,7 +210,7 @@ namespace	r_code{
 
 		virtual	float32	get_psln_thr(){	return	1;	}
 
-		Code():is_registered(false){}
+		Code():storage_index(null_storage_index){	markers.reserve(CodeMarkersInitialSize);	}
 		virtual	~Code(){}
 
 		virtual	void	mod(uint16	member_index,float32	value){};
@@ -214,8 +223,6 @@ namespace	r_code{
 			markers.remove(m);
 			rel_markers();
 		}
-
-		bool	is_registered;
 
 		void	trace()	const{
 
@@ -275,7 +282,6 @@ namespace	r_code{
 
 		virtual	Code	*build_object(SysObject	*source)	const=0;
 		virtual	void	delete_object(Code	*object)=0;
-		virtual	uint32	get_oid()=0;
 	};
 }
 

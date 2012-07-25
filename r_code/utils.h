@@ -58,7 +58,8 @@ namespace	r_code{
 		static	uint32	GetBasePeriod();
 		static	uint32	GetFloatTolerance();
 		static	uint32	GetTimeTolerance();
-		static	void	SetReferenceValues(uint64	time_reference,uint32	base_period,float32	float_tolerance,uint32	time_tolerance);
+		static	void	SetReferenceValues(uint32	base_period,float32	float_tolerance,uint32	time_tolerance);
+		static	void	SetTimeReference(uint64	time_reference);
 
 		static	bool	Equal(float32	l,float32	r);
 		static	bool	Synchronous(uint64	l,uint64	r);
@@ -68,6 +69,7 @@ namespace	r_code{
 		static	void	SetTimestamp(Code	*object,uint16	index,uint64	t);	// allocates atoms.
 
 		static	const	uint64	MaxTime=0xFFFFFFFFFFFFFFFF;
+		static	const	uint64	MaxTHZ=0xFFFFFFFF;
 
 		template<class	O>	static	uint64	GetTimestamp(const	O	*object,uint16	index){
 
