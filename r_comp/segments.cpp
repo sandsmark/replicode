@@ -422,9 +422,9 @@ namespace	r_comp{
 		map_offset+=object->get_size();
 	}
 
-	void	Image::add_objects(std::list<P<r_code::Code> >	&objects){
+	void	Image::add_objects(r_code::list<P<r_code::Code> >	&objects){
 
-		std::list<P<r_code::Code> >::const_iterator	o;
+		r_code::list<P<r_code::Code> >::const_iterator	o;
 		for(o=objects.begin();o!=objects.end();++o){
 
 			if(!(*o)->is_invalidated())
@@ -434,9 +434,9 @@ namespace	r_comp{
 		build_references();
 	}
 
-	void	Image::add_objects(std::list<P<r_code::Code> >	&objects,std::vector<SysObject	*>	&imported_objects){
+	void	Image::add_objects(r_code::list<P<r_code::Code> >	&objects,std::vector<SysObject	*>	&imported_objects){
 
-		std::list<P<r_code::Code> >::const_iterator	o;
+		r_code::list<P<r_code::Code> >::const_iterator	o;
 		for(o=objects.begin();o!=objects.end();++o)
 			add_object(*o,imported_objects);
 
@@ -509,7 +509,7 @@ namespace	r_comp{
 		}
 
 		object->acq_views();
-		std::list<View	*>::const_iterator	v;
+		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
 		for(v=object->views.begin();v!=object->views.end();++v){	// follow the view's reference pointers and recurse.
 
 			for(uint8	j=0;j<2;++j){	// 2 refs maximum per view; may be NULL.
@@ -566,7 +566,7 @@ namespace	r_comp{
 		}
 
 		object->acq_views();
-		std::list<View	*>::const_iterator	v;
+		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
 		for(i=0,v=object->views.begin();v!=object->views.end();++i,++v){
 
 			for(uint8	j=0;j<2;++j){	// 2 refs maximum per view; may be NULL.

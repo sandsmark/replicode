@@ -32,6 +32,8 @@
 #define	segments_h
 
 #include	"../r_code/object.h"
+#include	"../r_code/list.h"
+
 #include	"class.h"
 
 
@@ -147,8 +149,8 @@ namespace	r_comp{
 			unpack_objects(ram_objects);
 		}
 
-		void	add_objects(std::list<P<r_code::Code> >	&objects);												// called by the rMem.
-		void	add_objects(std::list<P<r_code::Code> >	&objects,std::vector<SysObject	*>	&imported_objects);	// called by any r_exec code for decompiling on the fly.
+		void	add_objects(r_code::list<P<r_code::Code> >	&objects);												// called by the rMem.
+		void	add_objects(r_code::list<P<r_code::Code> >	&objects,std::vector<SysObject	*>	&imported_objects);	// called by any r_exec code for decompiling on the fly.
 
 		template<class	I>	I	*serialize(){
 
