@@ -60,7 +60,7 @@ static	bool	once=false;if(once)return;
 
 	void	decompile(uint64	time_offset){
 
-		r_comp::Image	*image=((r_exec::Mem<r_exec::LObject>	*)r_exec::_Mem::Get())->get_image();
+		r_comp::Image	*image=r_exec::_Mem::Get()->get_objects();
 
 		uint32	object_count=decompiler.decompile_references(image);
 
