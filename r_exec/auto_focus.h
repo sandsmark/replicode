@@ -31,6 +31,8 @@
 #ifndef	auto_focus_h
 #define	auto_focus_h
 
+#include	"../r_code/time_buffer.h"
+
 #include	"overlay.h"
 #include	"group.h"
 #include	"pattern_extractor.h"
@@ -83,15 +85,14 @@ namespace	r_exec{
 		RatingMap	goal_ratings;
 		RatingMap	prediction_ratings;
 
-		std::list<Input>	cross_buffer;	// time-limited, contains all relevant inputs.
+		time_buffer<CInput>	cache;			// contains all inputs we don't no yet if they are relevant or not; thz==sampling period.
+		time_buffer<Input>	cross_buffer;	// contains all relevant inputs.
 
-		void	inject_input(View	*input,uint32	start);	// inject filtered input into the output groups.
 		void	notify(_Fact	*target,View	*input,TPXMap	&map);
-		void	notify_dispatch(_Fact	*target,View	*input);
+		void	dispatch_pred_success(_Fact	*predicted_f,TPXMap	&map);
 		void	dispatch(View	*input,_Fact	*abstract_input,BindingMap	*bm,bool	&injected,TPXMap	&map);
-		void	dispatch(_Fact	*input,_Fact	*abstract_input,BindingMap	*bm,bool	&injected,TPXMap	&map);
-		void	dispatch_no_inject(_Fact	*input,_Fact	*abstract_input,BindingMap	*bm,TPXMap	&map);
-		template<class	T>	TPX	*build_tpx(_Fact	*target,_Fact	*pattern,BindingMap	*bm,RatingMap	&map,bool	wr_enabled){
+		void	dispatch_no_inject(View	*input,_Fact	*abstract_input,BindingMap	*bm,TPXMap	&map);
+		template<class	T>	TPX	*build_tpx(_Fact	*target,_Fact	*pattern,BindingMap	*bm,RatingMap	&map,Fact	*f_imdl,bool	wr_enabled){
 
 			if(!_acquire_models)
 				return	new	TPX(this,target,pattern,bm);
@@ -105,9 +106,9 @@ namespace	r_exec{
 				if(Rating::DSR(r->second.dSR))	// target for which we don't see much improvement over time.
 					return	new	TPX(this,target,pattern,bm);
 				else
-					return	new	T(this,target,pattern,bm);
+					return	new	T(this,target,pattern,bm,f_imdl);
 			}else
-				return	new	T(this,target,pattern,bm);
+				return	new	T(this,target,pattern,bm,f_imdl);
 		}
 		void	rate(_Fact	*target,bool	success,TPXMap	&map,RatingMap	&ratings);
 	public:
@@ -119,12 +120,16 @@ namespace	r_exec{
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
 
-		void	inject_hlps(const	std::list<P<Code> >	&hlps)	const;	// called by TPX; hlp is a mdl or a cst.
+		View	*inject_input(View	*input);	// inject a filtered input into the output groups starting from 0; return the view injected in the primary group.
+		void	inject_input(View	*input,uint32	start);								// inject an unfiltered input into the output groups starting from start.
+		void	inject_input(View	*input,_Fact	*abstract_input,BindingMap	*bm);	// inject a filtered input into the output groups.
+		void	inject_hlps(const	std::vector<P<Code> >	&hlps)	const;	// called by TPX; hlp is a mdl or a cst.
 		bool	decompile_models()	const	{	return	_decompile_models;	}
 
 		Group	*get_primary_group()	const{	return	output_groups[0];	}
 
-		void	copy_cross_buffer(std::list<Input>	&destination);
+		void	copy_cross_buffer(r_code::list<Input>	&destination);
+		time_buffer<CInput>	&get_cache(){	return	cache;	}
 	};
 }
 

@@ -92,8 +92,6 @@ namespace	r_exec{
 	public:
 		static	ModelBase	*Get();
 
-		~ModelBase();
-
 		void	load(Code	*mdl);	// called by Group::load().
 
 		Code	*check_existence(Code	*mdl);	// caveat: mdl is unpacked; return (a) NULL if the model is in the black list, (b) a model in the white list if the mdl has been registered there or (c) the mdl itself if not in the model base, in which case the mdl is added to the white list.

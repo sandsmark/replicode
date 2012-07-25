@@ -63,6 +63,7 @@ namespace	r_exec{
 			uint64		before;
 			float32		confidence;
 
+			EEntry();
 			EEntry(_Fact	*evidence);
 			EEntry(_Fact	*evidence,_Fact	*payload);
 
@@ -72,13 +73,14 @@ namespace	r_exec{
 		class	PEEntry:	// predicted evidences.
 		public	EEntry{
 		public:
+			PEEntry();
 			PEEntry(_Fact	*evidence);
 		};
 
 		template<class	E>	class	Cache{
 		public:
 			CriticalSection	CS;
-			std::list<E>	evidences;
+			r_code::list<E>	evidences;
 		};
 
 		Cache<EEntry>	evidences;
@@ -89,7 +91,7 @@ namespace	r_exec{
 			E	e(evidence);
 			cache->CS.enter();
 			uint64	now=Now();
-			std::list<E>::const_iterator	_e;
+			r_code::list<E>::const_iterator	_e;
 			for(_e=cache->evidences.begin();_e!=cache->evidences.end();){
 
 				if((*_e).is_too_old(now))	// garbage collection.

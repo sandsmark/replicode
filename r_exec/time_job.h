@@ -108,6 +108,7 @@ namespace	r_exec{
 		float32		source_sln_thr;
 		SaliencyPropagationJob(Code	*o,float32	sln_change,float32	source_sln_thr,uint64	ijt);
 		bool	update(uint64	&next_target);
+		void	report(int64	lag)	const;
 	};
 
 	class	r_exec_dll	ShutdownTimeCore:

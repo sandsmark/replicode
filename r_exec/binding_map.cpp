@@ -56,6 +56,13 @@ namespace	r_exec{
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	UnboundValue::UnboundValue(BindingMap	*map,uint8	index):Value(map),index(index){
+
+		++map->unbound_values;
+	}
+
+	UnboundValue::~UnboundValue(){
+
+		--map->unbound_values;
 	}
 
 	Value	*UnboundValue::copy(BindingMap	*map)	const{
@@ -515,7 +522,7 @@ namespace	r_exec{
 		return	Atom::VLPointer(size);
 	}
 
-	BindingMap::BindingMap():_Object(),after_index(-1){
+	BindingMap::BindingMap():_Object(),after_index(-1),unbound_values(0){
 	}
 
 	BindingMap::BindingMap(const	BindingMap	*source):_Object(){
@@ -541,6 +548,7 @@ namespace	r_exec{
 			map.push_back(source.map[i]->copy(this));
 		first_index=source.first_index;
 		after_index=source.after_index;
+		unbound_values=source.unbound_values;
 		return	*this;
 	}
 
@@ -907,7 +915,7 @@ namespace	r_exec{
 
 		Code	*bound_pattern=_Mem::Get()->build_object(pattern->code(0));
 
-		for(uint16	i=0;i<pattern->references_size();++i){	// bind references when needed. must be done before binding the code as this may add references.
+		for(uint16	i=0;i<pattern->references_size();++i){	// bind references when needed; must be done before binding the code as this may add references.
 
 			Code	*reference=pattern->get_reference(i);
 			if(need_binding(reference))
@@ -923,6 +931,10 @@ namespace	r_exec{
 			switch(p_atom.getDescriptor()){
 			case	Atom::VL_PTR:
 				map[p_atom.asIndex()]->valuate(bound_pattern,i,extent_index);
+				break;
+			case	Atom::TIMESTAMP:
+			case	Atom::STRING:
+				i+=p_atom.getAtomCount();
 				break;
 			default:
 				bound_pattern->code(i)=p_atom;
@@ -953,6 +965,12 @@ namespace	r_exec{
 			switch(p_atom.getDescriptor()){
 			case	Atom::VL_PTR:
 				return	true;
+			case	Atom::TIMESTAMP:
+			case	Atom::STRING:
+				i+=p_atom.getAtomCount();
+				break;
+			default:
+				break;
 			}
 		}
 
@@ -1029,6 +1047,11 @@ namespace	r_exec{
 		}
 
 		return	false;
+	}
+
+	bool	BindingMap::is_fully_specified()	const{
+
+		return	unbound_values==0;
 	}
 
 	void	BindingMap::trace(){

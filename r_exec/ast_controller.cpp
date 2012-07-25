@@ -36,7 +36,7 @@
 
 namespace	r_exec{
 
-	PASTController::PASTController(AutoFocusController	*auto_focus,_Fact	*target):ASTController<PASTController>(auto_focus,target){
+	PASTController::PASTController(AutoFocusController	*auto_focus,View	*target):ASTController<PASTController>(auto_focus,target){
 
 		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" created TPX PERIODIC"<<std::endl;
 	}
@@ -67,7 +67,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	HASTController::HASTController(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*source):ASTController<HASTController>(auto_focus,target),source(source){
+	HASTController::HASTController(AutoFocusController	*auto_focus,View	*target,_Fact	*source):ASTController<HASTController>(auto_focus,target),source(source){
 
 		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" created HOLD "<<target->get_oid()<<std::endl;
 	}

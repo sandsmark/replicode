@@ -36,10 +36,10 @@
 
 namespace	r_exec{
 
-	template<class	U>	ASTController<U>::ASTController(AutoFocusController	*auto_focus,_Fact	*target):OController(NULL){
+	template<class	U>	ASTController<U>::ASTController(AutoFocusController	*auto_focus,View	*target):OController(NULL){
 		
-		this->target=target;
-		tpx=new	CTPX(auto_focus,(_Fact	*)target);	// target is the premise, i.e. the tpx' target to be defeated.
+		this->target=(_Fact	*)target->object;
+		tpx=new	CTPX(auto_focus,target);	// target is the premise, i.e. the tpx' target to be defeated.
 		thz=Now()-Utils::GetTimeTolerance();
 	}
 
@@ -50,12 +50,12 @@ namespace	r_exec{
 		
 		if(is_invalidated())
 			return;
-		if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
-			input->object->code(0).asOpcode()!=Opcodes::AntiFact)	// discard everything but facts and |facts.
-			return;
-		if(input->get_ijt()<thz)
-			return;
-		Controller::__take_input<U>(input);
+		if(	input->object->code(0).asOpcode()==Opcodes::Fact	||
+			input->object->code(0).asOpcode()==Opcodes::AntiFact){	// discard everything but facts and |facts.
+
+			if(input->get_ijt()>=thz)	// input is too old.
+				Controller::__take_input<U>(input);
+		}
 	}
 
 	template<class	U>	void	ASTController<U>::reduce(View	*input){
@@ -64,8 +64,8 @@ namespace	r_exec{
 			return;
 
 		_Fact	*input_object=input->object;
-		if(input_object->is_invalidated())
-			return;
+		if(input_object->is_invalidated()){std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got inv data "<<input->object->get_oid()<<std::endl;
+			return;}
 //uint64	t0=Now();
 		reductionCS.enter();
 

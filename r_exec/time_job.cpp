@@ -162,6 +162,11 @@ namespace	r_exec{
 		return	true;
 	}
 
+	void	SaliencyPropagationJob::report(int64	lag)	const{
+
+		std::cout<<"> late sln propagation: "<<lag<<" us behind."<<std::endl;
+	}
+
 	////////////////////////////////////////////////////////////
 
 	ShutdownTimeCore::ShutdownTimeCore():TimeJob(0){

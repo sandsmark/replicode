@@ -344,7 +344,7 @@ namespace	r_exec{
 			case	MKS:{
 
 				uint16	i=0;
-				std::list<Code	*>::const_iterator	m;
+				r_code::list<Code	*>::const_iterator	m;
 				object->acq_markers();
 				for(m=object->markers.begin();i<index-1;++i,++m){
 

@@ -38,10 +38,7 @@ namespace	r_exec{
 
 	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),hash_value(0),invalidated(0){
 
-		if(mem)
-			set_oid(mem->get_oid());
-		else
-			set_oid(UNDEFINED_OID);
+		set_oid(UNDEFINED_OID);
 	}
 
 	template<class	C,class	U>	Object<C,U>::~Object(){
@@ -59,27 +56,19 @@ namespace	r_exec{
 		if(invalidated)
 			return	true;
 		invalidated=1;//std::cout<<std::dec<<get_oid()<<" invalidated\n";
-/*
-		std::list<Code	*>::const_iterator	m;
-		acq_markers();
-		for(m=markers.begin();m!=markers.end();++m)
-			(*m)->invalidate();
-		markers.clear();
-		rel_markers();
-*/
+
 		acq_views();
 		views.clear();
 		rel_views();
-		if(is_registered){
-
-			if(code(0).getDescriptor()==Atom::MARKER){
-
-				for(uint16	i=0;i<references_size();++i)
-					get_reference(i)->remove_marker(this);
-			}
 		
-			r_code::Mem::Get()->delete_object(this);
+		if(code(0).getDescriptor()==Atom::MARKER){
+
+			for(uint16	i=0;i<references_size();++i)
+				get_reference(i)->remove_marker(this);
 		}
+		
+		if(is_registered())
+			r_code::Mem::Get()->delete_object(this);
 
 		return	false;
 	}

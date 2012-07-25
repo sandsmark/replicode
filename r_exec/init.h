@@ -33,6 +33,8 @@
 
 #include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 
+#include	"../r_code/list.h"
+
 #include	"../r_comp/segments.h"
 #include	"../r_comp/compiler.h"
 #include	"../r_comp/preprocessor.h"
@@ -62,6 +64,7 @@ namespace	r_exec{
 	class	r_exec_dll	TDecompiler:
 	public	_Object{
 	private:
+		static	const	uint32	ObjectsInitialSize=16;
 		static	thread_ret thread_function_call	Decompile(void	*args);
 
 		class	_Thread:
@@ -71,7 +74,7 @@ namespace	r_exec{
 					_Thread	*_thread;
 		volatile	uint32	spawned;
 
-		std::list<P<Code> >	objects;
+		r_code::list<P<Code> >	objects;
 
 		uint32	ostream_id;	// 0 is std::cout.
 
@@ -81,7 +84,8 @@ namespace	r_exec{
 		~TDecompiler();
 
 		void	add_object(Code	*object);
-		void	add_objects(const	std::list<P<Code> >	&objects);
+		void	add_objects(const	r_code::list<P<Code> >	&objects);
+		void	add_objects(const	std::vector<P<Code> >	&objects);
 		void	decompile();
 	};
 

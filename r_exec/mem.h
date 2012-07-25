@@ -39,6 +39,7 @@
 
 #include	<list>
 
+#include	"../r_code/list.h"
 #include	"../r_comp/segments.h"
 
 #include	"../../CoreLibrary/trunk/CoreLibrary/pipe.h"
@@ -115,6 +116,8 @@ namespace	r_exec{
 		CriticalSection	stateCS;
 		Semaphore		*stop_sem;	// blocks the rMem until all cores terminate.
 
+		r_code::list<P<Code> >	objects;	// store objects in order of injection: holds the initial objects (and dynamically created ones if MemStatic is used).
+
 		P<Group>	_root;	// holds everything.
 		Code		*_stdin;
 		Code		*_stdout;
@@ -122,28 +125,13 @@ namespace	r_exec{
 
 		void	reset();	// clear the content of the mem.
 
-		CriticalSection	objectsCS;
-
 		std::vector<Group	*>	initial_groups;	// convenience; cleared after start();
 
-		uint32	last_oid;
-
-		std::list<P<Code> >	objects;	// to insert in an image (getImage()); in order of injection.
-		void	bind(View	*view);
-		
-		class	GCThread:
-		public	Thread{
-		};
-		
-		GCThread		*gc;
-		CriticalSection	gcCS;	// controls the garbage collector.
-		volatile		int32	invalidated_object_count;
-		volatile		uint32	registered_object_count;
-
-		void	trim_objects();
-		static	thread_ret	thread_function_call	GC(void	*args);
-
 		void	init_timings(uint64	now)	const;
+
+		void	store(Code	*object);
+		virtual	void	set_last_oid(int32	oid)=0;
+		virtual	void	bind(View	*view)=0;
 
 		bool	deleted;
 
@@ -192,7 +180,7 @@ namespace	r_exec{
 		uint64	get_secondary_thz()						const{	return	secondary_thz;	}
 		
 		bool	get_debug()								const{	return	debug;	}
-		uint32	get_ntf_mk_res()						const{	return	debug?ntf_mk_res:1;	}
+		uint32	get_ntf_mk_res()						const{	return	ntf_mk_res;	}
 		uint32	get_goal_pred_success_res(Group	*host,uint64	now,uint64	time_to_live)	const{
 			
 			if(debug)
@@ -211,12 +199,10 @@ namespace	r_exec{
 		void	start_core();			// called upon creation of a delegate.
 		void	shutdown_core();		// called upon completion of a delegate's task.
 
+		bool	load(std::vector<r_code::Code	*>	*objects,uint32	stdin_oid,uint32	stdout_oid,uint32	self_oid);	// call before start; no mod/set/eje will be executed (only inj);
+																														// return false on error.
 		uint64	start();	// return the starting time.
 		void	stop();		// after stop() the content is cleared and one has to call load() and start() again.
-
-		uint32	get_oid();
-
-		void	delete_object(r_code::Code	*object);
 
 		// Internal core processing	////////////////////////////////////////////////////////////////
 
@@ -231,7 +217,7 @@ namespace	r_exec{
 		void	inject_new_object(View	*view);
 		void	inject_existing_object(View	*view,Code	*object,Group	*host);
 		void	inject_null_program(Controller	*c,Group *group,uint64	time_to_live,bool	take_past_inputs);	// build a view v (ijt=now, act=1, sln=0, res according to time_to_live in the group), attach c to v, inject v in the group.
-		void	inject_hlps(std::list<View	*>	views,Group	*destination);
+		void	inject_hlps(std::vector<View	*>	views,Group	*destination);
 		void	inject_notification(View	*view,bool	lock);
 		virtual	Code	*check_existence(Code	*object)=0;	// returns the existing object if any, or object otherwise: in the latter case, packing may occur.
 
@@ -270,9 +256,46 @@ namespace	r_exec{
 		Code	*clone(Code	*original)	const;	// shallow copy.
 
 		// External device I/O	////////////////////////////////////////////////////////////////
-		r_comp::Image	*get_image();	// create an image; fill with all objects; call only when stopped.
+		virtual	r_comp::Image	*get_objects()=0;	// create an image; fill with all objects; call only when stopped.
+		r_comp::Image	*get_models();				// create an image; fill with all models; call only when stopped.
 
-		//std::vector<uint64>	timings_report;
+		//std::vector<uint64>	timings_report;	// debug facility.
+	};
+
+	// _Mem that stores the objects as long as they are not invalidated.
+	class	r_exec_dll	MemStatic:
+	public	_Mem{
+	private:
+		CriticalSection	objectsCS;			// protects last_oid and objects.
+		uint32	last_oid;
+		void	bind(View	*view);			// assigns an oid, stores view->object in objects if needed.
+		void	set_last_oid(int32	oid);
+	protected:
+		MemStatic();
+	public:
+		virtual	~MemStatic();
+
+		void	delete_object(r_code::Code	*object);	// erase the object from objects if needed.
+
+		r_comp::Image	*get_objects();		// return an image containing valid objects.
+	};
+
+	// _Mem that does not store objects.
+	class	r_exec_dll	MemVolatile:
+	public	_Mem{
+	private:
+		volatile	int32	last_oid;
+		uint32	get_oid();
+		void	bind(View	*view);			// assigns an oid (atomic operation).
+		void	set_last_oid(int32	oid);
+	protected:
+		MemVolatile();
+	public:
+		virtual	~MemVolatile();
+
+		void	delete_object(r_code::Code	*object){}
+
+		r_comp::Image	*get_objects(){	return	NULL;	}
 	};
 
 	// O is the class of the objects held by the rMem (except groups and notifications):
@@ -280,10 +303,9 @@ namespace	r_exec{
 	// 	RObject (see the integration project) when network-aware.
 	// Notification objects and groups are instances of r_exec::LObject (they are not network-aware).
 	// Objects are built at reduction time as r_exec:LObjects and packed into instances of O when O is network-aware.
-	template<class	O>	class	Mem:
-	public	_Mem{
-	protected:
-		void	inject_new_object(View	*view);	// also called by inject() (see below).
+	// S is the super-class.
+	template<class	O,class	S>	class	Mem:
+	public	S{
 	public:
 		Mem();
 		virtual	~Mem();
@@ -295,13 +317,6 @@ namespace	r_exec{
 		r_code::Code	*_build_object(Atom	head)	const;
 		r_code::Code	*build_object(Atom	head)	const;
 
-		bool	load(std::vector<r_code::Code	*>	*objects,
-					uint32							stdin_oid,
-					uint32							stdout_oid,
-					uint32							self_oid);	// call before start; no mod/set/eje will be executed (only inj);
-																// ijt will be set at now=Time::Get() whatever the source code.
-																// return false on error.
-
 		// Executive device functions	////////////////////////////////////////////////////////
 		
 		Code	*check_existence(Code	*object);
@@ -310,10 +325,11 @@ namespace	r_exec{
 		void	inject(O	*object,View	*view);
 	};
 
+	/* DEPRECATED
 	r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const	char	*user_operator_library_path,
 												uint64			(*time_base)(),
 												const	char	*seed_path,
-												const	char	*source_file_name);
+												const	char	*source_file_name);*/
 }
 
 

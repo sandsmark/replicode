@@ -112,8 +112,7 @@ namespace	r_exec{
 
 	bool	HLPController::evaluate_bwd_guards(BindingMap	*bm){
 
-		HLPOverlay	o(this,bm,true);
-		return	o.evaluate_bwd_guards();
+		return	HLPOverlay::EvaluateBWDGuards(this,bm);
 	}
 
 	inline	Group	*HLPController::get_host()	const{
@@ -137,7 +136,7 @@ namespace	r_exec{
 		MatchResult	r=MATCH_FAILURE;
 		evidences.CS.enter();
 		uint64	now=Now();
-		std::list<EEntry>::const_iterator	e;
+		r_code::list<EEntry>::const_iterator	e;
 		for(e=evidences.evidences.begin();e!=evidences.evidences.end();){
 
 			if((*e).is_too_old(now))	// garbage collection.	// garbage collection.
@@ -163,7 +162,7 @@ namespace	r_exec{
 		MatchResult	r=MATCH_FAILURE;
 		predicted_evidences.CS.enter();
 		uint64	now=Now();
-		std::list<PEEntry>::const_iterator	e;
+		r_code::list<PEEntry>::const_iterator	e;
 		for(e=predicted_evidences.evidences.begin();e!=predicted_evidences.evidences.end();){
 
 			if((*e).is_too_old(now))	// garbage collection.	// garbage collection.
@@ -230,6 +229,9 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	HLPController::EEntry::EEntry():evidence(NULL){
+	}
+
 	HLPController::EEntry::EEntry(_Fact	*evidence):evidence(evidence){
 
 		load_data(evidence);
@@ -248,6 +250,9 @@ namespace	r_exec{
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	HLPController::PEEntry::PEEntry():EEntry(){
+	}
 
 	HLPController::PEEntry::PEEntry(_Fact	*evidence):EEntry(evidence,evidence->get_pred()->get_target()){
 	}

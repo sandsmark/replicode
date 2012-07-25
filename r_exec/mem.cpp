@@ -35,9 +35,10 @@
 
 namespace	r_exec{
 
-	_Mem::_Mem():r_code::Mem(),state(NOT_STARTED),gc(NULL),invalidated_object_count(0),registered_object_count(0),deleted(false){
+	_Mem::_Mem():r_code::Mem(),state(NOT_STARTED),deleted(false){
 
 		new	ModelBase();
+		objects.reserve(1024);
 	}
 
 	_Mem::~_Mem(){
@@ -46,8 +47,6 @@ namespace	r_exec{
 		if(state==RUNNING)
 			stop();
 		_root=NULL;
-		if(gc!=NULL)
-			delete	gc;
 	}
 
 	void	_Mem::init(	uint32	base_period,
@@ -89,7 +88,10 @@ namespace	r_exec{
 		this->secondary_thz=secondary_thz*1000000;
 
 		this->debug=debug;
-		this->ntf_mk_res=ntf_mk_res;
+		if(debug)
+			this->ntf_mk_res=ntf_mk_res;
+		else
+			this->ntf_mk_res=1;
 		this->goal_pred_success_res=goal_pred_success_res;
 
 		this->probe_level=probe_level;
@@ -167,34 +169,85 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	uint32	_Mem::get_oid(){
+	void	_Mem::store(Code	*object){
 
-		return	last_oid++;
+		int32	location;
+		objects.push_back(object,location);
+		object->set_stroage_index(location);
 	}
 
-	void	_Mem::bind(View	*view){
+	bool	_Mem::load(std::vector<r_code::Code	*>	*objects,uint32	stdin_oid,	uint32	stdout_oid,uint32	self_oid){	// no cov at init time.
 
-		Code	*object=view->object;
-		object->views.insert(view);
-		objectsCS.enter();
-		object->set_oid(get_oid());
-		if(object->code(0).getDescriptor()==Atom::NULL_PROGRAM){
+		uint32	i;
+		reduction_cores=new	ReductionCore	*[reduction_core_count];
+		for(i=0;i<reduction_core_count;++i)
+			reduction_cores[i]=new	ReductionCore();
+		time_cores=new	TimeCore	*[time_core_count];
+		for(i=0;i<time_core_count;++i)
+			time_cores[i]=new	TimeCore();
 
-			objectsCS.leave();
-			return;
+		Utils::SetReferenceValues(base_period,float_tolerance,time_tolerance);
+
+		// load root (always comes first).
+		_root=(Group	*)(*objects)[0];
+		store((Code	*)_root);
+		initial_groups.push_back(_root);
+
+		set_last_oid(objects->size()-1);
+
+		for(uint32	i=1;i<objects->size();++i){	// skip root as it has no initial views.
+
+			Code	*object=(*objects)[i];
+			store(object);
+			
+			if(object->get_oid()==stdin_oid)
+				_stdin=(Group	*)(*objects)[i];
+			else	if(object->get_oid()==stdout_oid)
+				_stdout=(Group	*)(*objects)[i];
+			else	if(object->get_oid()==self_oid)
+				_self=(*objects)[i];
+
+			switch(object->code(0).getDescriptor()){
+			case	Atom::MODEL:
+				unpack_hlp(object);
+				//object->add_reference(NULL);	// classifier.
+				break;
+			case	Atom::COMPOSITE_STATE:
+				unpack_hlp(object);
+				break;
+			case	Atom::INSTANTIATED_PROGRAM:	// refine the opcode depending on the inputs and the program type.
+				if(object->get_reference(0)->code(0).asOpcode()==Opcodes::Pgm){
+
+					if(object->get_reference(0)->code(object->get_reference(0)->code(PGM_INPUTS).asIndex()).getAtomCount()==0)
+						object->code(0)=Atom::InstantiatedInputLessProgram(object->code(0).asOpcode(),object->code(0).getAtomCount());
+				}else
+					object->code(0)=Atom::InstantiatedAntiProgram(object->code(0).asOpcode(),object->code(0).getAtomCount());
+				break;
+			}
+
+			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v;
+			for(v=object->views.begin();v!=object->views.end();++v){
+
+				//	init hosts' member_set.
+				View	*view=(r_exec::View	*)*v;
+				view->set_object(object);
+				Group	*host=view->get_host();
+
+				if(!host->load(view,object))
+					return	false;
+			}
+
+			if(object->code(0).getDescriptor()==Atom::GROUP)
+				initial_groups.push_back((Group	*)object);	// convenience to create initial update jobs - see start().
 		}
-		object->is_registered=true;
-		//objects.push_back(object);
-		registered_object_count=objects.size();
-		objectsCS.leave();
-	}
 
-	////////////////////////////////////////////////////////////////
+		return	true;
+	}
 
 	void	_Mem::init_timings(uint64	now)	const{	// called at the beginning of _Mem::start(); use initial user-supplied facts' times as offsets from now.
 
 		uint64	time_tolerance=Utils::GetTimeTolerance()*2;
-		std::list<P<Code> >::const_iterator	o;
+		r_code::list<P<Code> >::const_iterator	o;
 		for(o=objects.begin();o!=objects.end();++o){
 
 			uint16	opcode=(*o)->code(0).asOpcode();
@@ -228,7 +281,7 @@ namespace	r_exec{
 
 		uint32	i;
 		uint64	now=Now();
-		Utils::SetReferenceValues(now,base_period,float_tolerance,time_tolerance);
+		Utils::SetTimeReference(now);
 		ModelBase::Get()->set_thz(secondary_thz);
 		init_timings(now);
 
@@ -302,9 +355,6 @@ namespace	r_exec{
 		for(uint32	i=0;i<initial_reduction_jobs.size();++i)
 			initial_reduction_jobs[i].second->inject_reduction_jobs(initial_reduction_jobs[i].first);
 
-		gcCS.enter();
-		gc=Thread::New<GCThread>(GC,this);
-
 		return	now;
 	}
 
@@ -328,8 +378,6 @@ namespace	r_exec{
 		state=STOPPED;
 		stateCS.leave();
 
-		gcCS.leave();	// unlocks the garbage collector.
-
 		for(i=0;i<time_core_count;++i)
 			Thread::Wait(time_cores[i]);
 
@@ -339,54 +387,6 @@ namespace	r_exec{
 		stop_sem->acquire();	// wait for delegates.
 
 		reset();
-	}
-
-	thread_ret	_Mem::GC(void	*args){
-
-		_Mem	*_this=(_Mem	*)args;
-		
-		while(1){
-
-			_this->gcCS.enter();
-			if(_this->check_state()==_Mem::STOPPED)
-				break;
-			_this->trim_objects();
-			ModelBase::Get()->trim_objects();
-		}
-
-		thread_ret_val(0);
-	}
-
-	void	_Mem::trim_objects(){
-
-		std::list<P<Code> >::const_iterator	o;
-		objectsCS.enter();
-		for(o=objects.begin();o!=objects.end();++o){
-
-			if((*o)->is_invalidated()){
-
-				(*o)->is_registered=false;
-				objects.erase(o);
-				break;
-			}
-		}
-		registered_object_count=objects.size();
-		objectsCS.leave();
-	}
-
-	void	_Mem::delete_object(r_code::Code	*object){
-
-		if(deleted)
-			return;
-
-		if(registered_object_count>=200){	// unlock the garbage collector when 10% of the objects are invalidated.
-
-			uint32	initial_invalidated_object_count=Atomic::CompareAndSwap32(&invalidated_object_count,20,0);
-			if(initial_invalidated_object_count==20)
-				gcCS.leave();
-			else
-				Atomic::Increment32(&invalidated_object_count);
-		}
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -458,7 +458,7 @@ namespace	r_exec{
 
 		c->set_view(view);
 
-		inject_async(view);
+		inject(view);
 	}
 
 	void	_Mem::inject_new_object(View	*view){
@@ -495,7 +495,7 @@ namespace	r_exec{
 		uint64	now=Now();
 		uint64	ijt=view->get_ijt();
 
-		if(view->object->is_registered){	// existing object.
+		if(view->object->is_registered()){	// existing object.
 
 			if(ijt<=now)
 				inject_existing_object(view,view->object,host);
@@ -535,7 +535,7 @@ namespace	r_exec{
 			reduction_job_queue->push(j);
 		}else{
 		
-			if(view->object->is_registered){	// existing object.
+			if(view->object->is_registered()){	// existing object.
 
 				P<TimeJob>	j=new	EInjectionJob(view,ijt);
 				time_job_queue->push(j);
@@ -547,9 +547,9 @@ namespace	r_exec{
 		}
 	}
 
-	void	_Mem::inject_hlps(std::list<View	*>	views,Group	*destination){
+	void	_Mem::inject_hlps(std::vector<View	*>	views,Group	*destination){
 
-		std::list<View	*>::const_iterator	view;
+		std::vector<View	*>::const_iterator	view;
 		for(view=views.begin();view!=views.end();++view)
 			bind(*view);
 
@@ -559,7 +559,6 @@ namespace	r_exec{
 	void	_Mem::inject_notification(View	*view,bool	lock){	// no notification for notifications; no cov.
 																// notifications are ephemeral: they are not held by the marker sets of the object they refer to; this implies no propagation of saliency changes trough notifications.
 		Group	*host=view->get_host();
-		LObject	*object=(LObject	*)view->object;
 
 		bind(view);
 		
@@ -648,9 +647,9 @@ namespace	r_exec{
 		object->rel_views();
 	}
 
-	////////////////////////////////////////////////////////////////
-
-	r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const	char	*user_operator_library_path,
+	//DEPRECATED///////////////////////////////////////////////////
+	
+	/*r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const	char	*user_operator_library_path,
 												uint64			(*time_base)(),
 												const	char	*seed_path,
 												const	char	*source_file_name)
@@ -708,7 +707,8 @@ namespace	r_exec{
 		mem->load(ram_objects.as_std(),stdin_oid,stdout_oid,self_oid);
 
 		return mem;
-	}
+	}*/
+	////////////////////////////////////////////////////////////////
 
 	void	_Mem::unpack_hlp(Code	*hlp)	const{	// produces a new object (featuring a set of pattern objects instread of a set of embedded pattern expressions) and add it as a hidden reference to the original (still packed) hlp.
 
@@ -958,15 +958,89 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	r_comp::Image	*_Mem::get_image(){
+	r_comp::Image	*_Mem::get_models(){
+
+		r_comp::Image	*image=new	r_comp::Image();
+		image->timestamp=Now();
+
+		r_code::list<P<Code> >	models;
+		//ModelBase->Get()->get_models(models);	// protected by ModelBase.
+		image->add_objects(models);
+
+		return	image;
+	}
+
+	////////////////////////////////////////////////////////////////
+
+	MemStatic::MemStatic():_Mem(),last_oid(-1){
+	}
+
+	MemStatic::~MemStatic(){
+	}
+
+	void	MemStatic::bind(View	*view){
+
+		Code	*object=view->object;
+		object->views.insert(view);
+		objectsCS.enter();
+		object->set_oid(++last_oid);
+		if(object->code(0).getDescriptor()==Atom::NULL_PROGRAM){
+
+			objectsCS.leave();
+			return;
+		}
+		int32	location;
+		objects.push_back(object,location);
+		object->set_stroage_index(location);
+		objectsCS.leave();
+	}
+	void	MemStatic::set_last_oid(int32	oid){
+
+		last_oid=oid;
+	}
+
+	void	MemStatic::delete_object(r_code::Code	*object){	// called only if the object is registered, i.e. has a valid storage index.
+
+		if(deleted)
+			return;
+
+		objectsCS.enter();
+		objects.erase(object->get_storage_index());
+		objectsCS.leave();
+	}
+
+	r_comp::Image	*MemStatic::get_objects(){
 
 		r_comp::Image	*image=new	r_comp::Image();
 		image->timestamp=Now();
 		
 		objectsCS.enter();
-		//image->add_objects(objects);
+		image->add_objects(objects);
 		objectsCS.leave();
 
 		return	image;
+	}
+
+	////////////////////////////////////////////////////////////////
+
+	MemVolatile::MemVolatile():_Mem(),last_oid(-1){
+	}
+
+	MemVolatile::~MemVolatile(){
+	}
+
+	uint32	MemVolatile::get_oid(){
+
+		return	Atomic::Increment32(&last_oid);
+	}
+
+	void	MemVolatile::set_last_oid(int32	oid){
+
+		last_oid=oid;
+	}
+
+	void	MemVolatile::bind(View	*view){
+
+		view->object->set_oid(get_oid());
 	}
 }

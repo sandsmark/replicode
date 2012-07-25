@@ -136,6 +136,8 @@ namespace	r_exec{
 	}
 
 	TDecompiler::TDecompiler(uint32	ostream_id,std::string	header):_Object(),ostream_id(ostream_id),header(header),_thread(NULL),spawned(0){
+
+		objects.reserve(ObjectsInitialSize);
 	}
 
 	TDecompiler::~TDecompiler(){
@@ -149,9 +151,16 @@ namespace	r_exec{
 		objects.push_back(object);
 	}
 	
-	void	TDecompiler::add_objects(const	std::list<P<Code> >	&objects){
+	void	TDecompiler::add_objects(const	r_code::list<P<Code> >	&objects){
 
-		std::list<P<Code> >::const_iterator	o;
+		r_code::list<P<Code> >::const_iterator	o;
+		for(o=objects.begin();o!=objects.end();++o)
+			this->objects.push_back(*o);
+	}
+
+	void	TDecompiler::add_objects(const	std::vector<P<Code> >	&objects){
+
+		std::vector<P<Code> >::const_iterator	o;
 		for(o=objects.begin();o!=objects.end();++o)
 			this->objects.push_back(*o);
 	}

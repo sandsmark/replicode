@@ -397,7 +397,7 @@ namespace	r_exec{
 		void	inject_existing_object(View	*view);
 		void	inject_group(View	*view);
 		void	inject_notification(View	*view,bool	lock);
-		void	inject_hlps(std::list<View	*>	&views);
+		void	inject_hlps(std::vector<View	*>	&views);
 		void	inject_reduction_jobs(View	*view);
 
 		void	cov();

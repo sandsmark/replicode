@@ -179,14 +179,20 @@ namespace	r_exec{
 //input->object->get_reference(0)->trace();
 		_Fact	*input_object;
 		Pred	*prediction=((_Fact	*)input->object)->get_pred();
-		if(prediction)
+		bool	simulation;
+		if(prediction){
+
 			input_object=prediction->get_target();	// input_object is f1 as in f0->pred->f1->object.
-		else
+			simulation=prediction->is_simulation();
+		}else{
+
 			input_object=(_Fact	*)input->object;
+			simulation=false;
+		}
 
 		P<BindingMap>	bm=new	BindingMap();
 		_Fact			*bound_pattern=NULL;
-		std::list<P<_Fact>	>::const_iterator	p;
+		r_code::list<P<_Fact>	>::const_iterator	p;
 		for(p=patterns.begin();p!=patterns.end();++p){
 
 			bm->load(bindings);
@@ -218,6 +224,7 @@ namespace	r_exec{
 						inject_production();
 						invalidate();
 						offspring=NULL;
+						store_evidence(input->object,prediction,simulation);
 						return	true;
 					}else{
 //std::cout<<" guards failed\n";
@@ -232,11 +239,13 @@ namespace	r_exec{
 					inject_production();
 					invalidate();
 					offspring=NULL;
+					store_evidence(input->object,prediction,simulation);
 					return	true;
 				}
 			}else{
 //std::cout<<" match\n";
 				offspring=get_offspring(bm,(_Fact	*)input->object,bound_pattern);
+				store_evidence(input->object,prediction,simulation);
 				return	true;
 			}
 		}else{
@@ -282,10 +291,9 @@ namespace	r_exec{
 		if(become_invalidated())
 			return;
 
-		if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
-			input->object->code(0).asOpcode()!=Opcodes::AntiFact)	// discard everything but facts and |facts.
-			return;	// std::cout<<"TI: "<<get_host()->get_oid()<<" > "<<input->object->get_oid()<<std::endl;
-		Controller::__take_input<CSTController>(input);
+		if(	input->object->code(0).asOpcode()==Opcodes::Fact	||
+			input->object->code(0).asOpcode()==Opcodes::AntiFact)	// discard everything but facts and |facts.
+		Controller::__take_input<CSTController>(input);// std::cout<<"TI: "<<get_host()->get_oid()<<" > "<<input->object->get_oid()<<std::endl;
 	}
 
 	void	CSTController::reduce(r_exec::View	*input){
@@ -315,7 +323,7 @@ namespace	r_exec{
 			// std::cout<<"CTRL: "<<get_host()->get_oid()<<" > "<<input->object->get_oid()<<std::endl;
 			bool	match=false;
 			CSTOverlay	*offspring;
-			std::list<P<Overlay> >::const_iterator	o;
+			r_code::list<P<Overlay> >::const_iterator	o;
 			reductionCS.enter();
 			uint64	now=Now();
 			for(o=overlays.begin();o!=overlays.end();){
@@ -368,9 +376,15 @@ namespace	r_exec{
 				break;
 			case	MATCH_SUCCESS_NEGATIVE:	// negative evidence, no need to produce a sub-goal, the super-goal will probably fail within the target time frame: skip.
 				break;
-			case	MATCH_FAILURE:			// inject a sub-goal for the missing evidence.
-				inject_goal(bm,super_goal,bound_pattern,sim,now,confidence,host);	// all sub-goals share the same sim.
-				break;
+			case	MATCH_FAILURE:
+				switch(check_predicted_evidences(bound_pattern,evidence)){
+				case	MATCH_SUCCESS_POSITIVE:
+					break;
+				case	MATCH_SUCCESS_NEGATIVE:
+				case	MATCH_FAILURE:	// inject a sub-goal for the missing predicted positive evidence.
+					inject_goal(bm,super_goal,bound_pattern,sim,now,confidence,host);	// all sub-goals share the same sim.
+					break;
+				}
 			}
 		}
 	}

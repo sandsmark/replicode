@@ -110,6 +110,7 @@ namespace	r_exec{
 			if(!Match(lhs->get_reference(i),rhs->get_reference(i)))
 				return	false;
 		}
+		return	true;
 	}
 
 	ModelBase::MEntry::MEntry():mdl(NULL),touch_time(0),hash_code(0){
@@ -118,7 +119,7 @@ namespace	r_exec{
 	ModelBase::MEntry::MEntry(Code	*mdl,bool	packed):mdl(mdl),touch_time(Now()),hash_code(ComputeHashCode(mdl,packed)){
 	}
 
-	bool	ModelBase::MEntry::match(const	MEntry	&e)	const{	// at this point both models have same hash code; this.mdl is packed, e.mdl is unpacked.
+	bool	ModelBase::MEntry::match(const	MEntry	&e)	const{	// at this point both models have the same hash code; this.mdl is packed, e.mdl is unpacked.
 
 		if(mdl==e.mdl)
 			return	true;
@@ -137,8 +138,8 @@ namespace	r_exec{
 		if(!Match(lhs_0,lhs_1))
 			return	false;
 
-		Code	*rhs_0=mdl->get_reference(mdl->references_size()-1)->get_reference(0);	// payload of the fact.
-		Code	*rhs_1=e.mdl->get_reference(1)->get_reference(0);	// payload of the fact.
+		Code	*rhs_0=mdl->get_reference(mdl->references_size()-1)->get_reference(1);	// payload of the fact.
+		Code	*rhs_1=e.mdl->get_reference(1)->get_reference(1);	// payload of the fact.
 		if(!Match(rhs_0,rhs_1))
 			return	false;
 
@@ -157,9 +158,6 @@ namespace	r_exec{
 	ModelBase::ModelBase(){
 
 		Singleton=this;
-	}
-
-	ModelBase::~ModelBase(){
 	}
 
 	void	ModelBase::trim_objects(){

@@ -80,6 +80,7 @@ namespace	r_exec{
 		uint8	index;
 	public:
 		UnboundValue(BindingMap	*map,uint8	index);
+		~UnboundValue();
 
 		Value	*copy(BindingMap	*map)	const;
 		void	valuate(Code	*destination,uint16	write_index,uint16	&extent_index)	const;
@@ -168,8 +169,11 @@ namespace	r_exec{
 
 	class	r_exec_dll	BindingMap:
 	public	_Object{
+	friend	class	UnboundValue;
 	private:
 		std::vector<P<Value> >	map;	// indexed by vl-ptrs.
+
+		uint32	unbound_values;
 
 		void	add_unbound_value(uint8	id);
 		void	init_from_pattern(const	Code	*source);	// first source is f->obj.
@@ -228,6 +232,7 @@ namespace	r_exec{
 		uint64	get_bwd_before()	const;	// idem.
 
 		bool	intersect(BindingMap	*bm);
+		bool	is_fully_specified()	const;
 
 		Atom	*get_code(uint16	i)	const{	return	map[i]->get_code();	}
 		Code	*get_object(uint16	i)	const{	return	map[i]->get_object();	}

@@ -48,7 +48,7 @@ namespace	r_exec{
 																sim_thz(sim_thz),
 																f_imdl(f_imdl){	// goal is f0->g->f1->object.
 
-		simulating=(sim_thz>0);
+		simulating=(sim_thz>Now());
 		sim_mode=goal->get_goal()->sim->mode;
 		goal_target=target->get_goal()->get_target();	// f1.
 	}
@@ -116,7 +116,7 @@ namespace	r_exec{
 																		predicted_evidence(predicted_evidence){	// goal is f0->g->f1->object.
 
 		injected_goal=(predicted_evidence==NULL);
-		MonitoringJob<GMonitor>	*j=new	MonitoringJob<GMonitor>(this,sim_thz);
+		MonitoringJob<GMonitor>	*j=new	MonitoringJob<GMonitor>(this,simulating?sim_thz:deadline);
 		_Mem::Get()->pushTimeJob(j);
 	}
 

@@ -724,7 +724,7 @@ namespace	r_exec{
 
 			//	propagate to markers
 			object->acq_markers();
-			std::list<Code	*>::const_iterator	m;
+			r_code::list<Code	*>::const_iterator	m;
 			for(m=object->markers.begin();m!=object->markers.end();++m)
 				_propagate_sln(*m,change,source_sln_thr,path);
 			object->rel_markers();
@@ -747,7 +747,7 @@ namespace	r_exec{
 
 			//	propagate to markers
 			object->acq_markers();
-			std::list<Code	*>::const_iterator	m;
+			r_code::list<Code	*>::const_iterator	m;
 			for(m=object->markers.begin();m!=object->markers.end();++m)
 				_propagate_sln(*m,change,source_sln_thr,path);
 			object->rel_markers();
@@ -773,11 +773,11 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void	Group::inject_hlps(std::list<View	*>	&views){
+	void	Group::inject_hlps(std::vector<View	*>	&views){
 
 		enter();
 
-		std::list<View	*>::const_iterator	view;
+		std::vector<View	*>::const_iterator	view;
 		for(view=views.begin();view!=views.end();++view){
 
 			Atom	a=(*view)->object->code(0);
@@ -1228,7 +1228,7 @@ return;
 	Group	*Group::get_secondary_group(){
 
 		Group	*secondary=NULL;
-		std::list<Code	*>::const_iterator	m;
+		r_code::list<Code	*>::const_iterator	m;
 		acq_markers();
 		for(m=markers.begin();m!=markers.end();++m){
 

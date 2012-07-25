@@ -631,7 +631,7 @@ namespace	r_exec{
 
 		input_views.push_back(input);
 		bool	failed=false;
-		std::list<uint16>::iterator	it;
+		r_code::list<uint16>::const_iterator	it;
 		for(it=input_pattern_indices.begin();it!=input_pattern_indices.end();++it){
 
 			MatchResult	r=_match(input,*it);
@@ -764,5 +764,4 @@ namespace	r_exec{
 			return	NULL;
 		}
 	}
-
 }

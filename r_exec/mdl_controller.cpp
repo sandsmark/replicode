@@ -35,7 +35,7 @@
 
 namespace	r_exec{
 
-	MDLOverlay::MDLOverlay(Controller	*c,const	BindingMap	*bindings):HLPOverlay(c,bindings){
+	MDLOverlay::MDLOverlay(Controller	*c,const	BindingMap	*bindings):HLPOverlay(c,bindings,true){
 
 		load_patterns();
 	}
@@ -137,27 +137,12 @@ namespace	r_exec{
 			delete[]	code;
 			code=NULL;
 			bindings=original_bindings;
-			if(f_p_f_imdl==NULL){
-			
-				if(prediction){
-
-					if(!simulation)
-						((PrimaryMDLController	*)controller)->store_predicted_evidence(input);
-				}else{//std::cout<<"CACHED: "<<Now()<<" : "<<Utils::GetTimestamp<Code>(input,FACT_BEFORE)<<std::endl;
-					bool	tpl=((MDLController	*)controller)->has_tpl_args();
-					((PrimaryMDLController	*)controller)->store_evidence(input);}
-			}
+			if(f_p_f_imdl==NULL)	// i.e. if reduction not triggered a requirement.
+				store_evidence(input,prediction,simulation);
 			return	o;
-		}case	MATCH_SUCCESS_NEGATIVE:
-			if(f_p_f_imdl==NULL){
-
-				if(prediction){
-
-					if(!simulation)
-						((PrimaryMDLController	*)controller)->store_predicted_evidence(input);
-				}else
-					((PrimaryMDLController	*)controller)->store_evidence(input);
-			}
+		}case	MATCH_SUCCESS_NEGATIVE:	// counter-evidence WRT the lhs.
+			if(f_p_f_imdl==NULL)	// i.e. if reduction not triggered a requirement.
+				store_evidence(input,prediction,simulation);
 		case	MATCH_FAILURE:
 //std::cout<<" no match\n";
 			return	NULL;
@@ -188,7 +173,7 @@ namespace	r_exec{
 	SecondaryMDLOverlay::~SecondaryMDLOverlay(){
 	}
 
-	Overlay	*SecondaryMDLOverlay::reduce(_Fact *input,Fact	*f_p_f_imdl,MDLController	*req_controller){
+	Overlay	*SecondaryMDLOverlay::reduce(_Fact *input,Fact	*f_p_f_imdl,MDLController	*req_controller){	// no caching since no bwd.
 //std::cout<<std::hex<<this<<std::dec<<" "<<input->object->get_oid();
 		P<BindingMap>	bm=new	BindingMap(bindings);
 		bm->reset_fwd_timings(input);
@@ -318,7 +303,7 @@ namespace	r_exec{
 			return	false;
 
 		bool	r=false;
-		std::list<P<PMonitor> >::const_iterator	m;
+		r_code::list<P<PMonitor> >::const_iterator	m;
 		p_monitorsCS.enter();
 		for(m=p_monitors.begin();m!=p_monitors.end();){
 
@@ -383,11 +368,11 @@ namespace	r_exec{
 		}
 	}
 
-	void	MDLController::_store_requirement(std::list<REntry>	*cache,REntry	&e){
+	void	MDLController::_store_requirement(r_code::list<REntry>	*cache,REntry	&e){
 
 		requirements.CS.enter();
 		uint64	now=Now();
-		std::list<REntry>::const_iterator	_e;
+		r_code::list<REntry>::const_iterator	_e;
 		for(_e=cache->begin();_e!=cache->end();){
 
 			if((*_e).is_too_old(now))	// garbage collection.
@@ -412,7 +397,7 @@ namespace	r_exec{
 			r=WR_DISABLED;
 			requirements.CS.enter();
 			uint64	now=Now();
-			std::list<REntry>::const_iterator	e;
+			r_code::list<REntry>::const_iterator	e;
 			for(e=simulated_requirements.positive_evidences.begin();e!=simulated_requirements.positive_evidences.end();){
 
 				if((*e).is_too_old(now))	// garbage collection.
@@ -444,7 +429,7 @@ namespace	r_exec{
 
 				requirements.CS.enter();
 				uint64	now=Now();
-				std::list<REntry>::const_iterator	e;
+				r_code::list<REntry>::const_iterator	e;
 				for(e=simulated_requirements.negative_evidences.begin();e!=simulated_requirements.negative_evidences.end();){
 
 					if((*e).is_too_old(now))	// garbage collection.
@@ -474,7 +459,7 @@ namespace	r_exec{
 				float32	negative_cfd=0;
 				requirements.CS.enter();
 				uint64	now=Now();
-				std::list<REntry>::const_iterator	e;
+				r_code::list<REntry>::const_iterator	e;
 				for(e=simulated_requirements.negative_evidences.begin();e!=simulated_requirements.negative_evidences.end();){
 
 					if((*e).is_too_old(now))	// garbage collection.
@@ -542,7 +527,7 @@ namespace	r_exec{
 			r=WR_DISABLED;
 			requirements.CS.enter();
 			uint64	now=Now();
-			std::list<REntry>::const_iterator	e;
+			r_code::list<REntry>::const_iterator	e;
 			for(e=simulated_requirements.positive_evidences.begin();e!=simulated_requirements.positive_evidences.end();){
 
 				if((*e).is_too_old(now))	// garbage collection.
@@ -572,7 +557,7 @@ namespace	r_exec{
 
 				requirements.CS.enter();
 				uint64	now=Now();
-				std::list<REntry>::const_iterator	e;
+				r_code::list<REntry>::const_iterator	e;
 				for(e=simulated_requirements.negative_evidences.begin();e!=simulated_requirements.negative_evidences.end();){
 
 					if((*e).is_too_old(now))	// garbage collection.
@@ -600,7 +585,7 @@ namespace	r_exec{
 				float32	negative_cfd=0;
 				requirements.CS.enter();
 				uint64	now=Now();
-				std::list<REntry>::const_iterator	e;
+				r_code::list<REntry>::const_iterator	e;
 				for(e=simulated_requirements.negative_evidences.begin();e!=simulated_requirements.negative_evidences.end();){
 
 					if((*e).is_too_old(now))	// garbage collection.
@@ -676,7 +661,7 @@ namespace	r_exec{
 			r=WR_DISABLED;
 			requirements.CS.enter();
 			uint64	now=Now();
-			std::list<REntry>::const_iterator	e;
+			r_code::list<REntry>::const_iterator	e;
 			for(e=requirements.positive_evidences.begin();e!=requirements.positive_evidences.end();){
 
 				Code	*imdl=(*e).evidence->get_pred()->get_target()->get_reference(0);
@@ -721,7 +706,7 @@ namespace	r_exec{
 				r=WR_ENABLED;
 				requirements.CS.enter();
 				uint64	now=Now();
-				std::list<REntry>::const_iterator	e;
+				r_code::list<REntry>::const_iterator	e;
 				for(e=requirements.negative_evidences.begin();e!=requirements.negative_evidences.end();){
 
 					if((*e).is_too_old(now))	// garbage collection.
@@ -754,7 +739,7 @@ namespace	r_exec{
 				float32	negative_cfd=0;
 				uint64	now=Now();
 
-				std::list<REntry>::const_iterator	e;
+				r_code::list<REntry>::const_iterator	e;
 				for(e=requirements.negative_evidences.begin();e!=requirements.negative_evidences.end();){
 
 					if((*e).is_too_old(now))	// garbage collection.
@@ -848,7 +833,7 @@ namespace	r_exec{
 			r=WR_DISABLED;
 			requirements.CS.enter();
 			uint64	now=Now();
-			std::list<REntry>::const_iterator	e;
+			r_code::list<REntry>::const_iterator	e;
 			for(e=requirements.positive_evidences.begin();e!=requirements.positive_evidences.end();){
 
 				if((*e).is_too_old(now))	// garbage collection.
@@ -878,7 +863,7 @@ namespace	r_exec{
 
 				requirements.CS.enter();
 				uint64	now=Now();
-				std::list<REntry>::const_iterator	e;
+				r_code::list<REntry>::const_iterator	e;
 				for(e=requirements.negative_evidences.begin();e!=requirements.negative_evidences.end();){
 
 					if((*e).is_too_old(now))	// garbage collection.
@@ -903,7 +888,7 @@ namespace	r_exec{
 				float32	negative_cfd=0;
 				requirements.CS.enter();
 				uint64	now=Now();
-				std::list<REntry>::const_iterator	e;
+				r_code::list<REntry>::const_iterator	e;
 				for(e=requirements.negative_evidences.begin();e!=requirements.negative_evidences.end();){
 
 					if((*e).is_too_old(now))	// garbage collection.
@@ -956,6 +941,9 @@ namespace	r_exec{
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	MDLController::REntry::REntry():PEEntry(),controller(NULL),chaining_was_allowed(false){
+	}
 
 	MDLController::REntry::REntry(_Fact	*f_p_f_imdl,MDLController	*c,bool	chaining_was_allowed):PEEntry(f_p_f_imdl),controller(c),chaining_was_allowed(chaining_was_allowed){
 	}
@@ -1027,19 +1015,20 @@ namespace	r_exec{
 
 	bool	PMDLController::monitor_goals(_Fact	*input){
 
-		std::list<P<_GMonitor> >::const_iterator	m;
+		bool	r=false;
+		r_code::list<P<_GMonitor> >::const_iterator	m;
 		g_monitorsCS.enter();
 		for(m=g_monitors.begin();m!=g_monitors.end();){
 
 			if((*m)->reduce(input)){
 
 				m=g_monitors.erase(m);
-				return	true;
+				r=true;
 			}else
 				++m;
 		}
 		g_monitorsCS.leave();
-		return	false;
+		return	r;
 	}
 
 	void	PMDLController::register_predicted_goal_outcome(Fact	*goal,BindingMap	*bm,Fact	*f_imdl,bool	success,bool	injected_goal){	// called only for SIM_COMMITTED mode.
@@ -1097,10 +1086,9 @@ namespace	r_exec{
 
 	void	TopLevelMDLController::take_input(r_exec::View	*input){
 
-		if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
-			input->object->code(0).asOpcode()!=Opcodes::AntiFact)	//	discard everything but facts and |facts.
-			return;
-		Controller::__take_input<TopLevelMDLController>(input);
+		if(	input->object->code(0).asOpcode()==Opcodes::Fact	||
+			input->object->code(0).asOpcode()==Opcodes::AntiFact)	//	discard everything but facts and |facts.
+			Controller::__take_input<TopLevelMDLController>(input);
 	}
 
 	void	TopLevelMDLController::reduce(r_exec::View	*input){
@@ -1183,7 +1171,6 @@ namespace	r_exec{
 		Goal	*sub_goal=new	Goal(sub_goal_target,super_goal->get_goal()->get_actor(),1);
 		uint64	now=Now();
 		Fact	*f_sub_goal=new	Fact(sub_goal,now,now,1,1);
-
 		uint64	deadline=sub_goal_target->get_before();
 		uint64	sim_thz=get_sim_thz(now,deadline);
 
@@ -1191,10 +1178,10 @@ namespace	r_exec{
 
 		sub_goal->sim=sub_sim;
 
-		add_g_monitor(new	GMonitor(this,bm,deadline,now+sim_thz,f_sub_goal,f_imdl,evidence));
-
 		if(!evidence)
 			inject_goal(bm,f_sub_goal,f_imdl);
+		add_g_monitor(new	GMonitor(this,bm,deadline,now+sim_thz,f_sub_goal,f_imdl,evidence));
+		std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" goal\n";
 	}
 
 	void	TopLevelMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// no prediction here.
@@ -1233,20 +1220,16 @@ namespace	r_exec{
 		
 		Group	*primary_host=get_host();
 		uint16	out_group_count=get_out_group_count();
-		//Group	*drives_host=(Group	*)get_out_group(out_group_count-1);	// the drives group is the last of the output groups.
-		//int32	resilience=_Mem::Get()->get_goal_pred_success_res(drives_host,0);
-		//View	*view=new	View(true,now,1,resilience,drives_host,primary_host,f_success_object);
-		//_Mem::Get()->inject(view);	// inject in the drives group (will be caught by the drive injectors).
-
-		//resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
-		//view=new	View(true,now,1,resilience,primary_host,primary_host,f_success_object);
+		Group	*drives_host=(Group	*)get_out_group(out_group_count-1);	// the drives group is the last of the output groups.
+		View	*view=new	View(View::SYNC_ONCE,now,1,1,drives_host,primary_host,f_success_object);	// sln=1,res=1.
+		_Mem::Get()->inject(view);	// inject in the drives group (will be caught by the drive injectors).
 
 		for(uint16	i=0;i<out_group_count;++i){	// inject notification in out groups.
 
 			Group	*out_group=(Group	*)get_out_group(i);
 			int32	resilience=_Mem::Get()->get_goal_pred_success_res(out_group,now,0);
-			View	*view=new	View(View::SYNC_ONCE,now,1,resilience,out_group,primary_host,f_success_object);
-			_Mem::Get()->inject(view);
+			View	*view;//=new	View(View::SYNC_ONCE,now,1,resilience,out_group,primary_host,f_success_object);
+			//_Mem::Get()->inject(view);
 
 			if(absentee){
 
@@ -1254,6 +1237,7 @@ namespace	r_exec{
 				_Mem::Get()->inject(view);
 			}
 		}
+		if(success)std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" goal success\n";
 	}
 
 	void	TopLevelMDLController::register_simulated_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const{	// evidence is a simulated prediction.
@@ -1300,7 +1284,7 @@ namespace	r_exec{
 		REntry	e(f_p_f_imdl,this,chaining_was_allowed);
 		if(f_imdl->is_fact()){	// in case of a positive requirement tell monitors they can check for chaining again.
 
-			std::list<P<_GMonitor> >::const_iterator	m;
+			r_code::list<P<_GMonitor> >::const_iterator	m;
 			g_monitorsCS.enter();
 			for(m=r_monitors.begin();m!=r_monitors.end();){	// signal r-monitors.
 
@@ -1333,10 +1317,9 @@ namespace	r_exec{
 		if(become_invalidated())
 			return;
 
-		if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
-			input->object->code(0).asOpcode()!=Opcodes::AntiFact)	// discard everything but facts and |facts.
-			return;
-		Controller::__take_input<PrimaryMDLController>(input);
+		if(	input->object->code(0).asOpcode()==Opcodes::Fact	||
+			input->object->code(0).asOpcode()==Opcodes::AntiFact)	// discard everything but facts and |facts.
+			Controller::__take_input<PrimaryMDLController>(input);
 	}
 
 	void	PrimaryMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){
@@ -1461,7 +1444,7 @@ namespace	r_exec{
 			return;
 
 		bool	ignore_input=false;
-		std::list<P<Code> >::const_iterator	a;
+		r_code::list<P<Code> >::const_iterator	a;
 		assumptionsCS.enter();
 		for(a=assumptions.begin();a!=assumptions.end();){	// ignore home-made assumptions and perform some garbage collection.
 
@@ -1990,7 +1973,7 @@ namespace	r_exec{
 
 				codeCS.leave();
 				ModelBase::Get()->register_mdl_failure(model);
-				kill_views();
+				kill_views();std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" killed "<<std::endl;
 			}
 		}
 		//std::cout<<std::hex<<this<<std::dec<<" cnt:"<<instance_count<<" sr:"<<success_rate<<std::endl;
@@ -2113,10 +2096,9 @@ namespace	r_exec{
 		if(become_invalidated())
 			return;
 
-		if(	input->object->code(0).asOpcode()!=Opcodes::Fact	&&
-			input->object->code(0).asOpcode()!=Opcodes::AntiFact)	//	discard everything but facts and |facts.
-			return;
-		Controller::__take_input<SecondaryMDLController>(input);
+		if(	input->object->code(0).asOpcode()==Opcodes::Fact	||
+			input->object->code(0).asOpcode()==Opcodes::AntiFact)	//	discard everything but facts and |facts.
+			Controller::__take_input<SecondaryMDLController>(input);
 	}
 
 	void	SecondaryMDLController::reduce(r_exec::View	*input){

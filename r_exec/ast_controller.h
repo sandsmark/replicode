@@ -50,11 +50,11 @@ namespace	r_exec{
 	protected:
 		P<CTPX>		tpx;
 		P<_Fact>	target;	// the repeated fact to be monitored.
-		uint64		thz;	// time horizon: if an input is caught with ijt<thz, discard it.
+		uint64		thz;	// time horizon: if an input is caught with ijt<thz (meaning it's too old), discard it.
 
 		void	kill();
 
-		ASTController(AutoFocusController	*auto_focus,_Fact	*target);
+		ASTController(AutoFocusController	*auto_focus,View	*target);
 	public:
 		virtual	~ASTController();
 
@@ -68,7 +68,7 @@ namespace	r_exec{
 	class	PASTController:
 	public	ASTController<PASTController>{
 	public:
-		PASTController(AutoFocusController	*auto_focus,_Fact	*target);
+		PASTController(AutoFocusController	*auto_focus,View	*target);
 		~PASTController();
 
 		void	reduce(View	*input){	this->ASTController<PASTController>::reduce(input);	}
@@ -81,7 +81,7 @@ namespace	r_exec{
 	private:
 		P<_Fact>	source;	// to be invalidated if a counter-evidence is found.
 	public:
-		HASTController(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*source);
+		HASTController(AutoFocusController	*auto_focus,View	*target,_Fact	*source);
 		~HASTController();
 
 		void	reduce(View	*input){	this->ASTController<HASTController>::reduce(input);	}

@@ -102,6 +102,7 @@ namespace	r_exec{
 			P<MDLController>	controller;	// of the requirement.
 			bool				chaining_was_allowed;
 
+			REntry();
 			REntry(_Fact	*f_p_f_imdl,MDLController	*c,bool	chaining_was_allowed);	// f_imdl is f0 as in f0->pred->f1->imdl.
 
 			bool	is_out_of_range(uint64	now)	const{	return	(before<now	||	after>now);	}
@@ -110,17 +111,17 @@ namespace	r_exec{
 		class	RCache{
 		public:
 			CriticalSection	CS;
-			std::list<REntry>	positive_evidences;
-			std::list<REntry>	negative_evidences;
+			r_code::list<REntry>	positive_evidences;
+			r_code::list<REntry>	negative_evidences;
 		};
 
 		RCache	requirements;
 		RCache	simulated_requirements;
 
-		void	_store_requirement(std::list<REntry>	*cache,REntry	&e);
+		void	_store_requirement(r_code::list<REntry>	*cache,REntry	&e);
 
-		CriticalSection			p_monitorsCS;
-		std::list<P<PMonitor> >	p_monitors;
+		CriticalSection				p_monitorsCS;
+		r_code::list<P<PMonitor> >	p_monitors;
 
 		P<Code>	lhs;
 		P<Code>	rhs;
@@ -153,7 +154,7 @@ namespace	r_exec{
 
 			cache->CS.enter();
 			uint64	now=Now();
-			std::list<E>::const_iterator	_e;
+			r_code::list<E>::const_iterator	_e;
 			for(_e=cache->evidences.begin();_e!=cache->evidences.end();){
 
 				if((*_e).is_too_old(now))	// garbage collection.
@@ -205,8 +206,8 @@ namespace	r_exec{
 	public	MDLController{
 	protected:
 		CriticalSection				g_monitorsCS;
-		std::list<P<_GMonitor> >	g_monitors;
-		std::list<P<_GMonitor> >	r_monitors;
+		r_code::list<P<_GMonitor> >	g_monitors;
+		r_code::list<P<_GMonitor> >	r_monitors;
 
 		void	inject_goal(BindingMap	*bm,Fact	*goal,Fact	*f_imdl)	const;
 		void	inject_simulation(Fact	*simulation)	const;
@@ -292,7 +293,7 @@ namespace	r_exec{
 		CriticalSection		last_match_timeCS;
 
 		CriticalSection		assumptionsCS;
-		std::list<P<Code> >	assumptions;	// produced by the model; garbage collection at reduce(9 time..
+		r_code::list<P<Code> >	assumptions;	// produced by the model; garbage collection at reduce(9 time..
 
 		void	rate_model(bool	success);
 		void	kill_views();	// force res in both primary/secondary to 0.

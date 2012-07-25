@@ -46,13 +46,19 @@ namespace	r_exec{
 	protected:
 		P<BindingMap>	bindings;
 
-		std::list<P<_Fact>	>	patterns;
+		r_code::list<P<_Fact>	>	patterns;
 
 		bool	evaluate_guards(uint16	guard_set_iptr_index);
 		bool	evaluate_fwd_guards();
 		bool	evaluate(uint16	index);
+
+		void	store_evidence(_Fact	*evidence,bool	prediction,bool	simulation);	// stores both actual and non-simulated predicted evidences.
+
+		HLPOverlay(Controller	*c,BindingMap	*bindings);
 	public:
-		HLPOverlay(Controller	*c,const	BindingMap	*bindings,bool	load_code=false);
+		static	bool	EvaluateBWDGuards(Controller	*c,BindingMap	*bindings);	// updates the bindings.
+
+		HLPOverlay(Controller	*c,const	BindingMap	*bindings,bool	load_code);
 		virtual	~HLPOverlay();
 
 		BindingMap	*get_bindings()	const{	return	bindings;	}

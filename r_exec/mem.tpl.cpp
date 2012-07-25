@@ -40,15 +40,15 @@
 
 namespace	r_exec{
 
-	template<class	O>	Mem<O>::Mem():_Mem(){
+	template<class	O,class	S>	Mem<O,S>::Mem():S(){
 	}
 
-	template<class	O>	Mem<O>::~Mem(){
+	template<class	O,class	S>	Mem<O,S>::~Mem(){
 	}
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O>	r_code::Code	*Mem<O>::build_object(r_code::SysObject	*source)	const{
+	template<class	O,class	S>	r_code::Code	*Mem<O,S>::build_object(r_code::SysObject	*source)	const{
 
 		Atom	head=source->code[0];
 		switch(head.getDescriptor()){
@@ -85,14 +85,14 @@ namespace	r_exec{
 		}
 	}
 
-	template<class	O>	r_code::Code	*Mem<O>::_build_object(Atom	head)	const{
+	template<class	O,class	S>	r_code::Code	*Mem<O,S>::_build_object(Atom	head)	const{
 
 		r_code::Code	*object=new	O();
 		object->code(0)=head;
 		return	object;
 	}
 
-	template<class	O>	r_code::Code	*Mem<O>::build_object(Atom	head)	const{
+	template<class	O,class	S>	r_code::Code	*Mem<O,S>::build_object(Atom	head)	const{
 
 		r_code::Code	*object;
 		switch(head.getDescriptor()){
@@ -138,79 +138,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////
 
-	template<class	O>	bool	Mem<O>::load(std::vector<r_code::Code	*>	*objects,
-											uint32							stdin_oid,
-											uint32							stdout_oid,
-											uint32							self_oid){	// NB: no cov at init time.
-
-		uint32	i;
-		reduction_cores=new	ReductionCore	*[reduction_core_count];
-		for(i=0;i<reduction_core_count;++i)
-			reduction_cores[i]=new	ReductionCore();
-		time_cores=new	TimeCore	*[time_core_count];
-		for(i=0;i<time_core_count;++i)
-			time_cores[i]=new	TimeCore();
-
-		last_oid=objects->size();
-
-		// load root (always comes first).
-		_root=(Group	*)(*objects)[0];
-		this->objects.push_back((Code	*)_root);
-		initial_groups.push_back(_root);
-
-		for(uint32	i=1;i<objects->size();++i){	// skip root as it has no initial views.
-
-			Code	*object=(*objects)[i];
-			if(object->get_oid()==stdin_oid)
-				_stdin=(Group	*)(*objects)[i];
-			else	if(object->get_oid()==stdout_oid)
-				_stdout=(Group	*)(*objects)[i];
-			else	if(object->get_oid()==self_oid)
-				_self=(O	*)(*objects)[i];
-
-			switch(object->code(0).getDescriptor()){
-			case	Atom::MODEL:
-				unpack_hlp(object);
-				//object->add_reference(NULL);	// classifier.
-				break;
-			case	Atom::COMPOSITE_STATE:
-				unpack_hlp(object);
-				break;
-			case	Atom::INSTANTIATED_PROGRAM:	// refine the opcode depending on the inputs and the program type.
-				if(object->get_reference(0)->code(0).asOpcode()==Opcodes::Pgm){
-
-					if(object->get_reference(0)->code(object->get_reference(0)->code(PGM_INPUTS).asIndex()).getAtomCount()==0)
-						object->code(0)=Atom::InstantiatedInputLessProgram(object->code(0).asOpcode(),object->code(0).getAtomCount());
-				}else
-					object->code(0)=Atom::InstantiatedAntiProgram(object->code(0).asOpcode(),object->code(0).getAtomCount());
-				break;
-			}
-
-			UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v;
-			for(v=object->views.begin();v!=object->views.end();++v){
-
-				//	init hosts' member_set.
-				View	*view=(r_exec::View	*)*v;
-				view->set_object(object);
-				Group	*host=view->get_host();
-
-				if(!host->load(view,object))
-					return	false;
-			}
-
-			this->objects.push_back(object);
-			object->is_registered=true;
-			if(object->code(0).getDescriptor()==Atom::GROUP)
-				initial_groups.push_back((Group	*)object);	// convenience to create initial update jobs - see start().
-		}
-		registered_object_count=this->objects.size();
-
-		return	true;
-	}
-
-	////////////////////////////////////////////////////////////////
-
-	template<class	O>	Code	*Mem<O>::check_existence(Code	*object){
+	template<class	O,class	S>	Code	*Mem<O,S>::check_existence(Code	*object){
 
 		if(object->code(0).getDescriptor()==Atom::GROUP)	// groups are always new.
 			return	object;
@@ -224,7 +152,7 @@ namespace	r_exec{
 		return	_object;
 	}
 
-	template<class	O>	void	Mem<O>::inject(O	*object,View	*view){
+	template<class	O,class	S>	void	Mem<O,S>::inject(O	*object,View	*view){
 
 		view->set_object(object);
 		inject_new_object(view);

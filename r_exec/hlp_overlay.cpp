@@ -36,6 +36,15 @@
 
 namespace	r_exec{
 
+	bool	HLPOverlay::EvaluateBWDGuards(Controller	*c,BindingMap	*bindings){
+
+		HLPOverlay	o(c,bindings);
+		return	o.evaluate_bwd_guards();
+	}
+
+	HLPOverlay::HLPOverlay(Controller	*c,BindingMap	*bindings):Overlay(c,true),bindings(bindings){
+	}
+	
 	HLPOverlay::HLPOverlay(Controller	*c,const	BindingMap	*bindings,bool	load_code):Overlay(c,load_code){
 
 		this->bindings=new	BindingMap((BindingMap	*)bindings);
@@ -86,5 +95,15 @@ namespace	r_exec{
 	Code	*HLPOverlay::get_unpacked_object()	const{
 		
 		return	((HLPController	*)controller)->get_unpacked_object();
+	}
+
+	void	HLPOverlay::store_evidence(_Fact	*evidence,bool	prediction,bool	simulation){
+
+		if(prediction){
+
+			if(!simulation)
+				((HLPController	*)controller)->store_predicted_evidence(evidence);
+		}else
+			((HLPController	*)controller)->store_evidence(evidence);
 	}
 }

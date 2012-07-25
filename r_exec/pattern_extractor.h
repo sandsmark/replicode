@@ -31,8 +31,11 @@
 #ifndef	pattern_extractor_h
 #define	pattern_extractor_h
 
+#include	"../r_code/time_buffer.h"
+
 #include	"binding_map.h"
 #include	"guard_builder.h"
+#include	"cst_controller.h"
 
 
 namespace	r_exec{
@@ -45,41 +48,66 @@ namespace	r_exec{
 		P<_Fact>		abstraction;
 		P<_Fact>		input;
 		bool			eligible_cause;
+		uint64			ijt;	// injection time.
 
-		Input(_Fact	*input,bool	eligible_cause,_Fact	*abstraction,BindingMap	*bindings):input(input),eligible_cause(eligible_cause),abstraction(abstraction),bindings(bindings){}
-		Input():input(NULL),eligible_cause(false),abstraction(NULL),bindings(NULL){}
-		Input(const	Input	&original):input(original.input),eligible_cause(original.eligible_cause),abstraction(original.abstraction),bindings(original.bindings){}
+		Input(View	*input,_Fact	*abstraction,BindingMap	*bindings):input(input->object),ijt(input->get_ijt()),eligible_cause(IsEligibleCause(input)),abstraction(abstraction),bindings(bindings){}
+		Input():input(NULL),eligible_cause(false),abstraction(NULL),bindings(NULL),ijt(0){}
+		Input(const	Input	&original):input(original.input),eligible_cause(original.eligible_cause),abstraction(original.abstraction),bindings(original.bindings),ijt(original.ijt){}
 
-		static	bool	IsEligibleCause(r_exec::View	*view){	return	view->get_sync()!=View::SYNC_ONCE_AXIOM;	}
-		static	void	FillBuffer(std::list<Input>	&buffer,_Fact	*input,bool	eligible_cause,_Fact	*abstracted_input,BindingMap	*bm);
+		static	bool	IsEligibleCause(r_exec::View	*view);
+
+		uint64	get_time()	const{	return	ijt;	}	// for storage in time_buffers.
+	};
+
+	class	CInput{	// cached inputs.
+	public:
+		P<BindingMap>	bindings;	// contains the values for the abstraction.
+		P<_Fact>		abstraction;
+		P<View>			input;
+		bool			injected;
+		uint64			ijt;	// injection time.
+		CInput(View	*input,_Fact	*abstraction,BindingMap	*bindings):input(input),abstraction(abstraction),bindings(bindings),injected(false),ijt(input->get_ijt()){}
+		CInput():input(NULL),abstraction(NULL),bindings(NULL),injected(false),ijt(0){}
+
+		uint64	get_time()	const{	return	ijt;	}	// for storage in time_buffers.
 	};
 
 	// Targeted Pattern eXtractor.
 	// Does nothing.
-	// Used for wr_enabled productions or for well-rated productions.
+	// Used for wr_enabled productions, for well-rated productions or when model acqusiiton is disabled.
 	class	r_exec_dll	TPX:
 	public	_Object{
 	protected:
 		AutoFocusController	*auto_focus;
+		P<_Fact>			target;	// goal or prediction target, or premise (CTPX); abstraction: lhs of a mdl for goals, rhs for predictions, premise for CTPX.
+		P<BindingMap>		target_bindings;
+		P<_Fact>			abstracted_target;
 
-		Input	target;	// goal or prediction target; abstraction: lhs of a mdl for goals, rhs for predictions.
+		P<CSTController>	cst_hook;	// in case the target is an icst.
+
+		std::vector<P<BindingMap> >	new_maps;	// acquired (in the case the target's bm is not fully specified) while matching the target's bm with inputs.
+
+		bool	filter(View	*input,_Fact	*abstracted_input,BindingMap	*bm);
+		
 		TPX(AutoFocusController	*auto_focus,_Fact	*target);
 	public:
 		TPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
-		TPX(const	TPX	*original);
 		virtual	~TPX();
 
-		_Fact		*get_pattern()	const{	return	target.abstraction;	}
-		BindingMap	*get_bindings()	const{	return	target.bindings;	}
+		_Fact		*get_pattern()	const{	return	abstracted_target;	}
+		BindingMap	*get_bindings()	const{	return	target_bindings;	}
 
-		virtual	bool	take_input(_Fact	*input,_Fact	*abstracted_input,BindingMap	*bm);	// input->input is a fact; return true if the input shares a value with the target.
+		virtual	bool	take_input(View	*view,_Fact	*abstracted_input,BindingMap	*bm);
 		virtual	void	signal(View	*input)	const;
+		virtual	void	ack_pred_success(_Fact	*predicted_f);
 	};
 
 	class	ICST;
 
 	class	r_exec_dll	_TPX:
 	public	TPX{
+	private:
+		static	const	uint32	InputsInitialSize=16;
 	protected:
 		class	Component{	// for building csts.
 		public:
@@ -89,10 +117,10 @@ namespace	r_exec{
 			Component(_Fact	*object):object(object),discarded(false){}
 		};
 
-		std::list<Input>		inputs;	// time-controlled buffer (inputs older than tpx_time_horizon from now are discarded).
-		std::list<P<Code> >		mdls;	// new mdls.
-		std::list<P<Code> >		csts;	// new csts.
-		std::list<P<_Fact> >	icsts;	// new icsts.
+		r_code::list<Input>		inputs;	// time-controlled buffer (inputs older than tpx_time_horizon from now are discarded).
+		std::vector<P<Code> >	mdls;	// new mdls.
+		std::vector<P<Code> >	csts;	// new csts.
+		std::vector<P<_Fact> >	icsts;	// new icsts.
 
 		void	filter_icst_components(ICST	*icst,uint32	icst_index,std::vector<Component>	&components);
 		_Fact	*_find_f_icst(_Fact	*component,uint16	&component_index);
@@ -122,16 +150,21 @@ namespace	r_exec{
 	class	r_exec_dll	GTPX:	// target is a goal.
 	public	_TPX{
 	private:
+		P<Fact>	f_imdl;	// that produced the goal.
+
+		std::vector<P<_Fact> >	predictions;	// successful predictions that may invalidate the need for model building.
+
 		bool	build_mdl(_Fact	*cause,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
 		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period,Code	*new_cst);
 
 		std::string	get_header()	const;
 	public:
-		GTPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
+		GTPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings,Fact	*f_imdl);
 		~GTPX();
 
-		bool	take_input(_Fact	*input,bool	eligible_input,_Fact	*abstracted_input,BindingMap	*bm);	// input->input is a fact.
+		bool	take_input(View	*input,_Fact	*abstracted_input,BindingMap	*bm);
 		void	signal(View	*input)	const;
+		void	ack_pred_success(_Fact	*predicted_f);
 		void	reduce(View	*input);	// input is v->f->success(target,input) or v->|f->success(target,input).
 	};
 
@@ -150,7 +183,7 @@ namespace	r_exec{
 
 		std::string	get_header()	const;
 	public:
-		PTPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings);
+		PTPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings,Fact	*f_imdl);
 		~PTPX();
 
 		void	signal(View	*input)	const;
@@ -169,6 +202,7 @@ namespace	r_exec{
 	public	_TPX{
 	private:
 		bool	stored_premise;
+		P<View>	premise;
 
 		GuardBuilder	*get_default_guard_builder(_Fact	*cause,_Fact	*consequent,uint64	period);
 		GuardBuilder	*find_guard_builder(_Fact	*cause,_Fact	*consequent,uint64	period);
@@ -180,7 +214,7 @@ namespace	r_exec{
 
 		std::string	get_header()	const;
 	public:
-		CTPX(AutoFocusController	*auto_focus,_Fact	*premise);
+		CTPX(AutoFocusController	*auto_focus,View	*premise);
 		~CTPX();
 
 		void	store_input(r_exec::View	*input);

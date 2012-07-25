@@ -146,7 +146,7 @@ namespace	r_exec{
 	class	r_exec_dll	OController:
 	public	Controller{
 	protected:
-		std::list<P<Overlay> >	overlays;
+		r_code::list<P<Overlay> >	overlays;
 
 		OController(r_code::View	*view);
 	public:

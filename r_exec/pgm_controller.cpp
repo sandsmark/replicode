@@ -57,9 +57,9 @@ namespace	r_exec{
 		reductionCS.enter();
 		if(overlays.size()){
 
-			Overlay	*o=*overlays.begin();
-			((InputLessPGMOverlay	*)o)->inject_productions();
-			o->reset();
+			InputLessPGMOverlay	*overlay=(InputLessPGMOverlay	*)overlays.front();
+			overlay->inject_productions();
+			overlay->reset();
 
 			if(!run_once){
 
@@ -108,7 +108,7 @@ namespace	r_exec{
 
 	void	PGMController::reduce(r_exec::View	*input){
 
-		std::list<P<Overlay> >::const_iterator	o;
+		r_code::list<P<Overlay> >::const_iterator	o;
 		uint32	oid=input->object->get_oid();
 		//uint64	t=Now()-Utils::GetTimeReference();
 		//std::cout<<Time::ToString_seconds(t)<<" got "<<oid<<" "<<input->get_sync()<<std::endl;
@@ -183,7 +183,7 @@ namespace	r_exec{
 	void	AntiPGMController::reduce(r_exec::View	*input){
 
 		reductionCS.enter();
-		std::list<P<Overlay> >::const_iterator	o;
+		r_code::list<P<Overlay> >::const_iterator	o;
 		for(o=overlays.begin();o!=overlays.end();){
 
 			if((*o)->is_invalidated())
@@ -215,7 +215,7 @@ namespace	r_exec{
 			successful_match=false;
 		else{	//	no positive match during this job: inject productions and restart.
 
-			Overlay	*overlay=*overlays.begin();
+			Overlay	*overlay=overlays.front();
 			((AntiPGMOverlay	*)overlay)->inject_productions();
 			overlay->reset();	//	reset the first overlay and kill all others.
 			if(!run_once	&&	is_alive()){
