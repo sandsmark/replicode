@@ -255,7 +255,11 @@ int32	main(int	argc,char	**argv){
 
 		r_comp::Image	*image;
 
-		r_exec::Mem<r_exec::LObject>	*mem=new	r_exec::Mem<r_exec::LObject>();
+		r_exec::_Mem	*mem;
+		if(settings.get_objects)
+			mem=new	r_exec::Mem<r_exec::LObject,r_exec::MemStatic>();
+		else
+			mem=new	r_exec::Mem<r_exec::LObject,r_exec::MemVolatile>();
 
 		r_code::vector<r_code::Code	*>	ram_objects;
 		r_exec::Seed.get_objects(mem,ram_objects);
@@ -303,46 +307,75 @@ int32	main(int	argc,char	**argv){
 		
 		std::cout<<"> running for "<<settings.run_time<<" ms\n\n";
 		Thread::Sleep(settings.run_time);
-/*
-		Thread::Sleep(settings.run_time/2);
+
+		/*Thread::Sleep(settings.run_time/2);
 		test_many_injections(mem,
-			argc > 3 ? atoi(argv[3]) : 100,	// sampling period in ms
-			argc > 4 ? atoi(argv[4]) : 600,	// number of batches
-			argc > 5 ? atoi(argv[5]) : 66);	// number of objects per batch
-		Thread::Sleep(settings.run_time/2);
-*/
+			argc > 2 ? atoi(argv[2]) : 100,	// sampling period in ms
+			argc > 3 ? atoi(argv[3]) : 600,	// number of batches
+			argc > 4 ? atoi(argv[4]) : 66);	// number of objects per batch
+		Thread::Sleep(settings.run_time/2);*/
+
 		std::cout<<"\n> shutting rMem down...\n";
 		mem->stop();
 
+		if(settings.get_objects){
 		//TimeProbe	probe;
-		//probe.set();
-		image=mem->get_image();
+		//probe.set();			
+			image=mem->get_objects();
 		//probe.check();
-		image->object_names.symbols=r_exec::Seed.object_names.symbols;
+			image->object_names.symbols=r_exec::Seed.object_names.symbols;
 		
-		if(settings.write_image)
-			write_to_file(image,settings.image_path,settings.test_image?&decompiler:NULL,starting_time);
+			if(settings.write_objects)
+				write_to_file(image,settings.objects_path,settings.test_objects?&decompiler:NULL,starting_time);
 
-		if(settings.decompile_image	&&	(!settings.write_image	||	!settings.test_image)){
-            
-			if(argc>2){	// argv[2] is a file to redirect the decompiled code to.
+			if(settings.decompile_objects	&&	(!settings.write_objects	||	!settings.test_objects)){
+	            
+				if(settings.decompile_to_file){	// argv[2] is a file to redirect the decompiled code to.
 
-				std::ofstream	outfile;
-				outfile.open(argv[2],std::ios_base::trunc);
-				std::streambuf	*coutbuf=std::cout.rdbuf(outfile.rdbuf()); 
+					std::ofstream	outfile;
+					outfile.open(settings.decompilation_file_path.c_str(),std::ios_base::trunc);
+					std::streambuf	*coutbuf=std::cout.rdbuf(outfile.rdbuf()); 
 
-				decompile(decompiler,image,starting_time,settings.ignore_named_objects);
-				
-				std::cout.rdbuf(coutbuf);
-                outfile.close(); 
-			}else
-				decompile(decompiler,image,starting_time,settings.ignore_named_objects);
-        }
+					decompile(decompiler,image,starting_time,settings.ignore_named_objects);
+					
+					std::cout.rdbuf(coutbuf);
+					outfile.close(); 
+				}else
+					decompile(decompiler,image,starting_time,settings.ignore_named_objects);
+			}
+			delete	image;
+			//std::cout<<"get_image(): "<<probe.us()<<"us"<<std::endl;
+		}
 
-		delete	image;
+		if(settings.get_models){
+		//TimeProbe	probe;
+		//probe.set();			
+			image=mem->get_models();
+		//probe.check();
+			image->object_names.symbols=r_exec::Seed.object_names.symbols;
+		
+			if(settings.write_models)
+				write_to_file(image,settings.models_path,settings.test_models?&decompiler:NULL,starting_time);
+
+			if(settings.decompile_models	&&	(!settings.write_models	||	!settings.test_models)){
+	            
+				if(argc>2){	// argv[2] is a file to redirect the decompiled code to.
+
+					std::ofstream	outfile;
+					outfile.open(argv[2],std::ios_base::trunc);
+					std::streambuf	*coutbuf=std::cout.rdbuf(outfile.rdbuf()); 
+
+					decompile(decompiler,image,starting_time,settings.ignore_named_models);
+					
+					std::cout.rdbuf(coutbuf);
+					outfile.close(); 
+				}else
+					decompile(decompiler,image,starting_time,settings.ignore_named_models);
+			}
+			delete	image;
+			//std::cout<<"get_models(): "<<probe.us()<<"us"<<std::endl;
+		}
 		delete	mem;
-
-		//std::cout<<"getImage(): "<<probe.us()<<"us"<<std::endl;
 
 		r_exec::PipeOStream::Close();
 	}

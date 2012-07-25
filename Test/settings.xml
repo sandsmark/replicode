@@ -13,8 +13,8 @@
     mdl_inertia_sr_thr="0.9"
     mdl_inertia_cnt_thr="6"
     tpx_dsr_thr="0.1"
-    min_sim_time_horizon="25000"
-    max_sim_time_horizon="100000"
+    min_sim_time_horizon="0"
+    max_sim_time_horizon="0"
     sim_time_horizon="0.3"
     tpx_time_horizon="500000"
     perf_sampling_period="250000"
@@ -28,16 +28,27 @@
       ntf_mk_resilience="1"
       goal_pred_success_resilience="1000"
     />
+    <Objects
+      get_objects="yes"
+      decompile_objects="yes"
+      decompile_to_file="no"
+      decompilation_file_path=""
+      ignore_named_objects="yes"
+      write_objects="no"
+      objects_path="../Test/objects.replicode.image"
+      test_objects="no"
+    />
   </Debug>
-  <Run
-    run_time="2080"
-    probe_level="2"
-    decompile_image="yes"
-    ignore_named_objects="yes"
-    write_image="no"
-    image_path="../Test/test.replicode.image"
-    test_image="no"
-  />
+  <Run run_time="1080" probe_level="2">
+    <Models
+      get_models="no"
+      decompile_models="no"
+      ignore_named_models="yes"
+      write_models="no"
+      models_path="../Test/models.replicode.image"
+      test_models="no"
+    />
+  </Run>
 </TestConfiguration>
 
 <!--Usage
@@ -59,12 +70,19 @@ System
   primary_thz: time after which states/models that did not match are pushed down to secondary group (models) or sent to oblivion (states); in seconds.
   secondary_thz: time after which states/models that did not match are sent to oblivion; in seconds.
 Debug
-  ntf_mk_resilience: in upr (i.e. relative to the ntf group).
-  goal_pred_success_resilience: in upr (i.e. relative to the ntf group).
+  Resilience
+    ntf_mk_resilience: in upr (i.e. relative to the ntf group).
+    goal_pred_success_resilience: in upr (i.e. relative to the ntf group).
+  Image
+    get_image: yes or no; the image will contain all valid objects after the Mem shuts down.
+    decompile_image: yes or no.
+    decompile_to_file: yes or no.
+    ignore_named_objects: yes or no; if yes, objects provided by the deveoper are not decompiled.
+    write_image: yes or no.
+    test_image: yes or no (yes: reads back and decompiles).
 Run
   run_time: in ms.
   probe_level: any probe set to a level >= this level will not be executed. 0 means no probe will be executed.
-  decompile_image: yes or no.
-  write_image: yes or no.
-  test_image: yes or no (yes: reads back and decompiles).
+  Models
+    same as for Debug/Image.
 -->

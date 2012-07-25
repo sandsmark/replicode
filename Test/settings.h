@@ -64,15 +64,24 @@ public:
 	bool			debug;
 	core::uint32	ntf_mk_resilience;
 	core::uint32	goal_pred_success_resilience;
+	bool			get_objects;
+	bool			decompile_objects;
+	bool			decompile_to_file;
+	std::string		decompilation_file_path;
+	bool			ignore_named_objects;
+	bool			write_objects;
+	std::string		objects_path;
+	bool			test_objects;
 
 	//Run.
 	core::uint32	run_time;
 	core::uint32	probe_level;
-	bool			decompile_image;
-	bool			ignore_named_objects;
-	bool			write_image;
-	std::string		image_path;
-	bool			test_image;
+	bool			get_models;
+	bool			decompile_models;
+	bool			ignore_named_models;
+	bool			write_models;
+	std::string		models_path;
+	bool			test_models;
 
 	bool	load(const	char	*file_name){
 
@@ -164,6 +173,32 @@ public:
 				std::cerr<<"> Error: Debug/Resilience section is unreadable"<<std::endl;
 				return	false;
 			}
+			core::XMLNode	objects=debug.getChildNode("Objects");
+			if(!!objects){
+
+				const	char	*_get_objects=objects.getAttribute("get_objects");
+				const	char	*_decompile_objects=objects.getAttribute("decompile_objects");
+				const	char	*_decompile_to_file=objects.getAttribute("decompile_to_file");
+				const	char	*decompilation_file_path=objects.getAttribute("decompilation_file_path");
+				const	char	*_ignore_named_objects=objects.getAttribute("ignore_named_objects");
+				const	char	*_write_objects=objects.getAttribute("write_objects");
+				const	char	*_test_objects=objects.getAttribute("test_objects");
+
+				get_objects=(strcmp(_get_objects,"yes")==0);
+				decompile_objects=(strcmp(_decompile_objects,"yes")==0);
+				decompile_to_file=(strcmp(_decompile_to_file,"yes")==0);
+				ignore_named_objects=(strcmp(_ignore_named_objects,"yes")==0);
+				write_objects=(strcmp(_write_objects,"yes")==0);
+				if(write_objects){
+
+					objects_path=objects.getAttribute("objects_path");
+					test_objects=(strcmp(_test_objects,"yes")==0);
+				}
+			}else{
+
+				std::cerr<<"> Error: Debug/Objects section is unreadable"<<std::endl;
+				return	false;
+			}
 		}else{
 
 			std::cerr<<"> Error: Debug section is unreadable"<<std::endl;
@@ -175,20 +210,32 @@ public:
 
 			const	char	*_run_time=run.getAttribute("run_time");
 			const	char	*_probe_level=run.getAttribute("probe_level");
-			const	char	*_decompile_image=run.getAttribute("decompile_image");
-			const	char	*_ignore_named_objects=run.getAttribute("ignore_named_objects");
-			const	char	*_write_image=run.getAttribute("write_image");
-			const	char	*_test_image=run.getAttribute("test_image");
-
+			
 			run_time=atoi(_run_time);
 			probe_level=atoi(_probe_level);
-			decompile_image=(strcmp(_decompile_image,"yes")==0);
-			ignore_named_objects=(strcmp(_ignore_named_objects,"yes")==0);
-			write_image=(strcmp(_write_image,"yes")==0);
-			if(write_image){
+			
+			core::XMLNode	models=run.getChildNode("Models");
+			if(!!models){
 
-				image_path=run.getAttribute("image_path");
-				test_image=(strcmp(_test_image,"yes")==0);
+				const	char	*_get_models=models.getAttribute("get_models");
+				const	char	*_decompile_models=models.getAttribute("decompile_models");
+				const	char	*_ignore_named_models=models.getAttribute("ignore_named_models");
+				const	char	*_write_models=models.getAttribute("write_models");
+				const	char	*_test_models=models.getAttribute("test_models");
+
+				get_models=(strcmp(_get_models,"yes")==0);
+				decompile_models=(strcmp(_decompile_models,"yes")==0);
+				ignore_named_models=(strcmp(_ignore_named_models,"yes")==0);
+				write_models=(strcmp(_write_models,"yes")==0);
+				if(write_models){
+
+					models_path=models.getAttribute("models_path");
+					test_models=(strcmp(_test_models,"yes")==0);
+				}
+			}else{
+
+				std::cerr<<"> Error: Run/Models section is unreadable"<<std::endl;
+				return	false;
 			}
 		}else{
 
