@@ -42,6 +42,18 @@ namespace	r_exec{
 		return	o.evaluate_bwd_guards();
 	}
 
+	bool	HLPOverlay::CheckFWDTimings(Controller	*c,HLPBindingMap	*bindings){
+
+		HLPOverlay	o(c,bindings);
+		return	o.check_fwd_timings();
+	}
+
+	bool	HLPOverlay::ScanBWDGuards(Controller	*c,HLPBindingMap	*bindings){
+
+		HLPOverlay	o(c,bindings);
+		return	o.scan_bwd_guards();
+	}
+
 	HLPOverlay::HLPOverlay(Controller	*c,HLPBindingMap	*bindings):Overlay(c,true),bindings(bindings){
 	}
 	
@@ -90,6 +102,108 @@ namespace	r_exec{
 		HLPContext	c(code,index,this);
 		uint16	result_index;
 		return	c.evaluate(result_index);
+	}
+
+	bool	HLPOverlay::check_fwd_timings(){
+
+		int16	fwd_after_guard_index=-1;
+		int16	fwd_before_guard_index=-1;
+
+		uint16	bm_fwd_after_index=bindings->get_fwd_after_index();
+		uint16	bm_fwd_before_index=bindings->get_fwd_before_index();
+
+		uint16	guard_set_index=code[HLP_BWD_GUARDS].asIndex();
+		uint16	guard_count=code[guard_set_index].getAtomCount();
+		for(uint16	i=1;i<=guard_count;++i){	// find the relevant guards.
+
+			uint16	index=guard_set_index+i;
+			Atom	a=code[index];
+			if(a.getDescriptor()==Atom::ASSIGN_PTR){
+
+				uint16	_i=a.asAssignmentIndex();
+				if(_i==bm_fwd_after_index)
+					fwd_after_guard_index=i;
+				if(_i==bm_fwd_before_index)
+					fwd_before_guard_index=i;
+			}
+		}
+
+		if(!evaluate(guard_set_index+fwd_before_guard_index))
+			return	false;
+		if(bindings->get_fwd_before()<=Now())
+			return	false;
+		if(!evaluate(guard_set_index+fwd_after_guard_index))
+			return	false;
+
+		return	true;
+	}
+
+	bool	HLPOverlay::scan_bwd_guards(){
+
+		uint16	guard_set_index=code[HLP_BWD_GUARDS].asIndex();
+		uint16	guard_count=code[guard_set_index].getAtomCount();
+		for(uint16	i=1;i<=guard_count;++i){
+
+			uint16	index=guard_set_index+i;
+			Atom	a=code[index];
+			switch(a.getDescriptor()){
+			case	Atom::I_PTR:
+				if(!scan_location(a.asIndex()))
+					return	false;
+				break;
+			case	Atom::ASSIGN_PTR:
+				if(!scan_location(a.asIndex()))
+					return	false;
+				break;
+			}
+		}
+		return	true;
+	}
+
+	bool	HLPOverlay::scan_location(uint16	index){
+
+		Atom	a=code[index];
+		switch(a.getDescriptor()){
+		case	Atom::I_PTR:
+			return	scan_location(a.asIndex());
+		case	Atom::ASSIGN_PTR:
+			return	scan_location(a.asIndex());
+		case	Atom::VL_PTR:
+			if(bindings->scan_variable(a.asIndex()))
+				return	true;
+			else
+				return	scan_variable(a.asIndex());
+		case	Atom::OPERATOR:{
+			uint16	atom_count=a.getAtomCount();
+			for(uint16	j=1;j<=atom_count;++j){
+
+				if(!scan_location(index+j))
+					return	false;
+			}
+			return	true;
+		}
+		default:
+			return	true;
+		}
+	}
+
+	bool	HLPOverlay::scan_variable(uint16	index){	// check if the variable can be bound.
+
+		uint16	guard_set_index=code[HLP_BWD_GUARDS].asIndex();
+		uint16	guard_count=code[guard_set_index].getAtomCount();
+		for(uint16	i=1;i<=guard_count;++i){
+
+			uint16	index=guard_set_index+i;
+			Atom	a=code[index];
+			switch(a.getDescriptor()){
+			case	Atom::ASSIGN_PTR:
+				if(a.asIndex()==index)
+					return	scan_location(a.asAssignmentIndex());
+				break;
+			}
+		}
+
+		return	false;
 	}
 
 	Code	*HLPOverlay::get_unpacked_object()	const{

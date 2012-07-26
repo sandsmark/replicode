@@ -312,6 +312,8 @@ namespace	r_exec{
 		void	predict_simulated_evidence(_Fact	*evidence,Sim	*sim);
 		void	assume(_Fact	*input);
 		void	assume_lhs(HLPBindingMap	*bm,bool	opposite,_Fact	*input,float32	confidence);
+
+		bool	abduction_allowed(HLPBindingMap	*bm);
 	public:
 		PrimaryMDLController(r_code::View	*view);
 

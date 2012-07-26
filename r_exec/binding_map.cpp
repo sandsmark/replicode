@@ -778,6 +778,13 @@ namespace	r_exec{
 		return	map[id]->get_code_size();
 	}
 
+	bool	BindingMap::scan_variable(uint16	id)	const{
+
+		if(id<first_index)
+			return	true;
+		return	(map[id]->get_code()!=NULL);
+	}
+
 	bool	BindingMap::intersect(BindingMap	*bm){
 
 		for(uint32	i=0;i<map.size();){

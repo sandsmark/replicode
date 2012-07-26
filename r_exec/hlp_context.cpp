@@ -70,9 +70,13 @@ namespace	r_exec{
 		switch((*this)[0].getDescriptor()){
 		case	Atom::I_PTR:
 			return	*HLPContext(code,(*this)[0].asIndex(),(HLPOverlay	*)overlay,data);
-		case	Atom::VL_PTR:
-			return	*HLPContext(((HLPOverlay	*)overlay)->get_value_code((*this)[0].asIndex()),0,(HLPOverlay	*)overlay,BINDING_MAP);
-		case	Atom::VALUE_PTR:
+		case	Atom::VL_PTR:{
+			Atom	*value_code=((HLPOverlay	*)overlay)->get_value_code((*this)[0].asIndex());
+			if(value_code)
+				return	*HLPContext(value_code,0,(HLPOverlay	*)overlay,BINDING_MAP);
+			else	// unbound variable.
+				return	HLPContext();	// data=undefined: evaluation will return false.
+		}case	Atom::VALUE_PTR:
 			return	*HLPContext(&overlay->values[0],(*this)[0].asIndex(),(HLPOverlay	*)overlay,VALUE_ARRAY);
 		default:
 			return	*this;

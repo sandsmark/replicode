@@ -1535,9 +1535,12 @@ namespace	r_exec{
 
 	void	PrimaryMDLController::abduce(HLPBindingMap	*bm,Fact	*super_goal,bool	opposite,float32	confidence){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
 
+		if(!abduction_allowed(bm))
+			return;
+
 		P<Fact>	f_imdl=get_f_ihlp(bm,false);
 		Sim		*sim=super_goal->get_goal()->sim;
-		uint64	sim_thz=sim->thz>>1;	// 0 if super-goal had not time for simulation.
+		uint64	sim_thz=sim->thz>>1;	// 0 if super-goal had not time for simulation, else use half the thz (in case there are some requirments to simulate: they'll use the other half).
 		uint32	min_sim_thz=_Mem::Get()->get_min_sim_time_horizon()>>1;	// time allowance for the simulated predictions to flow upward.
 
 		Sim	*sub_sim;
@@ -2097,6 +2100,15 @@ namespace	r_exec{
 			if(now-last_match_time>_Mem::Get()->get_primary_thz())
 				getView()->set_act(0);	// will trigger lose_activation(), which will activate the model in the secondary group.
 		}
+	}
+
+	bool	PrimaryMDLController::abduction_allowed(HLPBindingMap	*bm){	// true if fwd timings valuated and all values used by the bwd guards can be evaluated (excepted the values in the tpl args).
+
+		if(!HLPOverlay::CheckFWDTimings(this,bm))
+			return	false;
+		if(!HLPOverlay::ScanBWDGuards(this,bm))
+			return	false;
+		return	true;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -52,11 +52,19 @@ namespace	r_exec{
 		bool	evaluate_fwd_guards();
 		bool	evaluate(uint16	index);
 
+		bool	check_fwd_timings();
+
+		bool	scan_bwd_guards();
+		bool	scan_location(uint16	index);
+		bool	scan_variable(uint16	index);
+
 		void	store_evidence(_Fact	*evidence,bool	prediction,bool	simulation);	// stores both actual and non-simulated predicted evidences.
 
 		HLPOverlay(Controller	*c,HLPBindingMap	*bindings);
 	public:
 		static	bool	EvaluateBWDGuards(Controller	*c,HLPBindingMap	*bindings);	// updates the bindings.
+		static	bool	CheckFWDTimings(Controller	*c,HLPBindingMap	*bindings);		// updates the bindings.
+		static	bool	ScanBWDGuards(Controller	*c,HLPBindingMap	*bindings);		// does not update the bindings.
 
 		HLPOverlay(Controller	*c,const	HLPBindingMap	*bindings,bool	load_code);
 		virtual	~HLPOverlay();
