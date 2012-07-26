@@ -1037,6 +1037,8 @@ namespace	r_exec{
 
 	void	MemVolatile::bind(View	*view){
 
-		view->object->set_oid(get_oid());
+		Code	*object=view->object;
+		object->views.insert(view);
+		object->set_oid(get_oid());
 	}
 }
