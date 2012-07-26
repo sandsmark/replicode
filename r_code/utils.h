@@ -33,6 +33,7 @@
 
 #include	"atom.h"
 #include	"../../CoreLibrary/trunk/CoreLibrary/base.h"
+#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
 
 
 namespace	r_code{
@@ -125,6 +126,8 @@ namespace	r_code{
 
 		static	int32	GetResilience(uint64	now,uint64	time_to_live,uint64	upr);	// ttl: us, upr: us.
 		static	int32	GetResilience(float32	resilience,float32	origin_upr,float32	destination_upr);	// express the res in destination group, given the res in origin group.
+
+		static	std::string	RelativeTime(uint64	t);
 	};
 }
 

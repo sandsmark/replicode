@@ -148,4 +148,9 @@ namespace	r_code{
 			return	1;
 		return	res;
 	}
+
+	std::string	Utils::RelativeTime(uint64	t){
+		
+		return	Time::ToString_seconds(t-TimeReference);
+	}
 }
