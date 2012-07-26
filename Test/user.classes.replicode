@@ -49,7 +49,7 @@ root:(grp
 1; psln_thr
 )
 []
-   [SYNC_FRONT now 0 forever nil nil COV_OFF 0]
+   [SYNC_ONCE now 0 forever nil nil COV_OFF 0]
 
 g1:(grp
 1; upr
@@ -86,7 +86,7 @@ g1:(grp
 1; psln_thr
 )
 []
-   [SYNC_FRONT now 0 forever root nil COV_OFF 0]
+   [SYNC_ONCE now 0 forever root nil COV_OFF 0]
 
 stdin:(grp
 1; upr
@@ -123,8 +123,8 @@ stdin:(grp
 1; psln_thr
 )
 []
-   [SYNC_FRONT now 0 forever root nil COV_OFF 0]
-   [SYNC_FRONT now 0 forever g1 nil COV_ON 1]; last 2 members: cov and vis.
+   [SYNC_ONCE now 0 forever root nil COV_OFF 0]
+   [SYNC_ONCE now 0 forever g1 nil COV_ON 1]; last 2 members: cov and vis.
 
 stdout:(grp
 1; upr
@@ -161,16 +161,16 @@ stdout:(grp
 1; psln_thr
 )
 []
-   [SYNC_FRONT now 0 forever root nil COV_OFF 0]
+   [SYNC_ONCE now 0 forever root nil COV_OFF 0]
 
 self:(ent
 0.95; psln_thr
 )
 []
-   [SYNC_FRONT now 0.6 forever root nil]
+   [SYNC_ONCE now 0.6 forever root nil]
 
 position:(ent
 1; psln_thr
 )
 []
-   [SYNC_FRONT now 1 forever root nil]
+   [SYNC_ONCE now 1 forever root nil]

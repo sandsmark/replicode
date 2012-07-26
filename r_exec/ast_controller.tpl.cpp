@@ -50,9 +50,13 @@ namespace	r_exec{
 		
 		if(is_invalidated())
 			return;
+		
 		if(	input->object->code(0).asOpcode()==Opcodes::Fact	||
 			input->object->code(0).asOpcode()==Opcodes::AntiFact){	// discard everything but facts and |facts.
 
+			Goal	*goal=((_Fact	*)input->object)->get_goal();
+			if(goal	&&	goal->get_actor()==_Mem::Get()->get_self())	// ignore self's goals.
+				return;
 			if(input->get_ijt()>=thz)	// input is too old.
 				Controller::__take_input<U>(input);
 		}
@@ -64,7 +68,7 @@ namespace	r_exec{
 			return;
 
 		_Fact	*input_object=input->object;
-		if(input_object->is_invalidated()){std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got inv data "<<input->object->get_oid()<<std::endl;
+		if(input_object->is_invalidated()){//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got inv data "<<input->object->get_oid()<<std::endl;
 			return;}
 //uint64	t0=Now();
 		reductionCS.enter();

@@ -53,13 +53,13 @@ namespace	r_exec{
 			target->invalidate();//std::cout<<Time::ToString_seconds(Now()-st)<<" "<<" ------------- "<<std::dec<<target->get_oid()<<std::endl;
 			break;
 		case	MATCH_SUCCESS_NEGATIVE:
-			std::cout<<Utils::RelativeTime(Now())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" counter-evidence: "<<input->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
+			//std::cout<<Utils::RelativeTime(Now())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" counter-evidence: "<<input->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
 			kill();
 			tpx->signal(v);
 			target->invalidate();//std::cout<<Utils::RelativeTime(Now())<<" "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<"|"<<std::dec<<target->get_oid()<<" invalidated"<<std::endl;
 			break;
 		case	MATCH_FAILURE:
-			std::cout<<Utils::RelativeTime(Now())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" stored: "<<input->get_oid()<<std::endl;
+			//std::cout<<Utils::RelativeTime(Now())<<" "<<std::hex<<this<<std::dec<<" target: "<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" stored: "<<input->get_oid()<<std::endl;
 			tpx->store_input(v);
 			break;
 		}

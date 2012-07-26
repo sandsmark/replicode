@@ -97,9 +97,9 @@ namespace	r_exec{
 				std::cout<<std::endl;*/
 				((CSTController	*)controller)->inject_prediction(f_p_f_icst,lowest_cfd,time_to_live);	// inject a f->pred->icst in the primary group, no rdx.
 			}else{
-				/*Code	*icst=f_icst->get_reference(0);
+				Code	*icst=f_icst->get_reference(0);
 				uint16	arg_index=icst->code(I_HLP_ARGS).asIndex();
-				std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<icst<<std::dec<<" icst "<<icst->code(arg_index+2).asFloat()<<" from";
+				/*std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<icst<<std::dec<<" icst "<<icst->code(arg_index+2).asFloat()<<" from";
 				for(uint32	i=0;i<inputs.size();++i)
 					std::cout<<" "<<inputs[i]->get_oid();
 				std::cout<<std::endl;*/
@@ -171,12 +171,10 @@ namespace	r_exec{
 			}
 		}
 		uint64	now=Now();
-//		uint64	st=_Mem::Get()->get_starting_time();
 //		if(match_deadline==0)
 //			std::cout<<Time::ToString_seconds(Now()-st)<<" "<<std::hex<<this<<std::dec<<" (0) "<<input->object->get_oid()<<std::endl;
 //		else
 //			std::cout<<Time::ToString_seconds(Now()-st)<<" "<<std::hex<<this<<std::dec<<" ("<<Time::ToString_seconds(match_deadline-st)<<") "<<input->object->get_oid()<<std::endl;
-//input->object->get_reference(0)->trace();
 		_Fact	*input_object;
 		Pred	*prediction=((_Fact	*)input->object)->get_pred();
 		bool	simulation;

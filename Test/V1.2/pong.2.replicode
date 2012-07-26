@@ -18,17 +18,15 @@ f_b_is_blue:(fact b_is_blue 0us MAX_TIME 1 1) [[SYNC_HOLD now 1 forever stdin ni
 
 m_run_0:(mdl |[] []
    (fact (mk.val b: position_y : :) t0: t1: ::)
-   (fact run t2: t3: ::); drive.
+   (fact run t0: t1: ::); drive.
 |[]
-[]
-   t0:(now)
-   t1:(+ t0 100000us)
+|[]
 [stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
 
 
 init_run_pgm:(pgm |[] |[] |[] []
    (inj []
-      f_run:(fact run t:(now) (+ t 100000us) 1 1)
+      f_run:(fact run t0:(+ now 50000us) (+ t0 100000us) 1 1)
       |[]
    )
    (inj []
@@ -36,18 +34,18 @@ init_run_pgm:(pgm |[] |[] |[] []
       |[]
    )
    (inj []
-      (fact g t t 1 1)
-      [SYNC_ONCE t 1 forever primary nil]
+      (fact g t1:(now) t1 1 1)
+      [SYNC_ONCE t1 1 forever primary nil]
    )
 1) |[]
 
-init_run_ipgm:(ipgm init_run_pgm |[] RUN_ONCE 50000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 1]]
+init_run_ipgm:(ipgm init_run_pgm |[] RUN_ONCE 50000us VOLATILE SILENT 1) [[SYNC_ONCE now 0 1 drives nil 1]]
 
 success_run_pgm:(pgm |[] []
-   (ptn (fact (success ::) ::) |[])
+   s:(ptn (fact (success (fact (goal (fact run after: before: ::) ::) ::) ::) ::) |[])
 |[] []
    (inj []
-      f_run:(fact run t:(now) (+ t 100000us) 1 1)
+      f_run:(fact run (+ after 100000us) (+ before 100000us) 1 1)
       |[]
    )
    (inj []
@@ -55,14 +53,31 @@ success_run_pgm:(pgm |[] []
       |[]
    )
    (inj []
-      (fact g t t 1 1)
-      [SYNC_ONCE t 1 1 primary nil]
+      (fact g t1:(now) t1 1 1)
+      [SYNC_ONCE t1 1 forever primary nil]
    )
-   (prb [1 "print" "goal renewed" |[]])
 1) |[]
 
-success_run_ipgm:(ipgm success_run_pgm |[] RUN_ALWAYS 0us STATIC NOTIFY 1) [[SYNC_ONCE now 0 1 drives nil 1]]
+success_run_ipgm:(ipgm success_run_pgm |[] RUN_ALWAYS 0us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever drives nil 1]]
 
+failure_run_pgm:(pgm |[] []
+   s:(ptn (|fact (success (fact (goal (fact run after: before: ::) ::) ::) ::) ::) |[])
+|[] []
+   (inj []
+      f_run:(fact run (+ after 100000us) (+ before 100000us) 1 1)
+      |[]
+   )
+   (inj []
+      g:(goal f_run self 1)
+      |[]
+   )
+   (inj []
+      (fact g t1:(now) t1 1 1)
+      [SYNC_ONCE t1 1 forever primary nil]
+   )
+1) |[]
+
+failure_run_ipgm:(ipgm failure_run_pgm |[] RUN_ALWAYS 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever drives nil 1]]
 
 ; input generators.
 
@@ -101,4 +116,4 @@ pgm0:(pgm |[] []
    )
 1) |[]
 
-ipgm0:(ipgm pgm0 |[] RUN_ONCE 20000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+ipgm0:(ipgm pgm0 |[] RUN_ALWAYS 20000us VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]

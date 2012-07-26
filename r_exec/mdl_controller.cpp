@@ -81,7 +81,7 @@ namespace	r_exec{
 			bindings=bm;
 			bool	is_req=((MDLController	*)controller)->is_requirement();
 			Overlay				*o;
-			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,false);//bm->trace();f_imdl->get_reference(0)->trace();
+			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,false);
 			RequirementsPair	r_p;
 			Fact				*ground=f_p_f_imdl;
 			bool				wr_enabled;
@@ -1181,7 +1181,7 @@ namespace	r_exec{
 		if(!evidence)
 			inject_goal(bm,f_sub_goal,f_imdl);
 		add_g_monitor(new	GMonitor(this,bm,deadline,now+sim_thz,f_sub_goal,f_imdl,evidence));
-		std::cout<<Utils::RelativeTime(Now())<<" goal["<<Utils::RelativeTime(sub_goal_target->get_after())<<","<<Utils::RelativeTime(sub_goal_target->get_before())<<"[\n";
+		//std::cout<<Utils::RelativeTime(Now())<<" "<<f_sub_goal->get_oid()<<" goal["<<Utils::RelativeTime(sub_goal_target->get_after())<<","<<Utils::RelativeTime(sub_goal_target->get_before())<<"[\n";
 	}
 
 	void	TopLevelMDLController::predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// no prediction here.
@@ -1235,7 +1235,8 @@ namespace	r_exec{
 		}
 
 		register_drive_outcome(goal->get_goal()->sim->super_goal,success);
-		if(success)std::cout<<Utils::RelativeTime(Now())<<" goal success\n";
+		//if(success)std::cout<<Utils::RelativeTime(Now())<<" "<<goal->get_oid()<<" goal success\n";
+		//else	std::cout<<Utils::RelativeTime(Now())<<" "<<goal->get_oid()<<" goal failure\n";
 	}
 
 	void	TopLevelMDLController::register_drive_outcome(Fact	*drive,bool	success)	const{
@@ -1255,8 +1256,8 @@ namespace	r_exec{
 		Group	*drives_host=(Group	*)get_out_group(out_group_count);	// the drives group is the last of the output groups.
 		View	*view=new	View(View::SYNC_ONCE,now,1,1,drives_host,primary_host,f_drive_success);	// sln=1,res=1.
 		_Mem::Get()->inject(view);	// inject in the drives group (will be caught by the drive injectors).
-		if(success)std::cout<<Utils::RelativeTime(Now())<<" drive success\n";
-		else	std::cout<<Utils::RelativeTime(Now())<<" drive failure\n";
+		//if(success)std::cout<<Utils::RelativeTime(Now())<<" drive success\n";
+		//else	std::cout<<Utils::RelativeTime(Now())<<" drive failure\n";
 	}
 
 	void	TopLevelMDLController::register_simulated_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const{	// evidence is a simulated prediction.
@@ -1997,7 +1998,7 @@ namespace	r_exec{
 				kill_views();std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" mdl "<<getObject()->get_oid()<<" deleted "<<std::endl;
 			}
 		}
-		//std::cout<<std::hex<<this<<std::dec<<" cnt:"<<instance_count<<" sr:"<<success_rate<<std::endl;
+		std::cout<<model->get_oid()<<" cnt:"<<instance_count<<" sr:"<<success_rate<<std::endl;
 	}
 
 	void	PrimaryMDLController::assume(_Fact	*input){

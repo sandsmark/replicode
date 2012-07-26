@@ -495,9 +495,9 @@ namespace	r_exec{
 
 		uint64	now=Now();
 		//if(group->get_secondary_group()!=NULL)
-		//	std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" UPR\n";
-		//if(group==_stdin)
-		//	std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" ----------------------------------------------------------------\n";
+		//	std::cout<<Utils::RelativeTime(Now())<<" UPR\n";
+		//if(this==_Mem::Get()->get_stdin())
+		//	std::cout<<Utils::RelativeTime(Now())<<" ----------------------------------------------------------------\n";
 		newly_salient_views.clear();
 
 		// execute pending operations.
@@ -600,8 +600,7 @@ namespace	r_exec{
 
 		//if(group->get_secondary_group()!=NULL)
 		//if(this==_Mem::Get()->get_stdin())
-		//	std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
-		//std::cout<<Time::ToString_seconds(now-Utils::GetTimeReference())<<" UPR\n";
+		//	std::cout<<Utils::RelativeTime(Now())<<" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
 	}
 
 	void	Group::_update_saliency(GroupState	*state,View	*view){

@@ -417,7 +417,7 @@ namespace	r_exec{
 	}
 
 	void	GTPX::signal(View	*input)	const{	// will be erased from the AF map upon return. P<> kept in reduction job.
-return;
+//return;
 		if(((_Fact	*)input->object)->is_fact()){	// goal success.
 
 			ReductionJob<GTPX>	*j=new	ReductionJob<GTPX>(new	View(input),(GTPX	*)this);
@@ -872,7 +872,7 @@ return;
 		P<Code>	m0=build_mdl_head(bm,3,cause,consequent,write_index);
 		guard_builder->build(m0,NULL,cause,write_index);
 		build_mdl_tail(m0,write_index);
-//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" found --------------------- M0\n";
+//std::cout<<Utils::RelativeTime(Now())<<" found --------------------- M0\n";
 		return	build_requirement(bm,m0,period);	// existence checks performed there.
 	}
 
@@ -898,7 +898,7 @@ return;
 		uint16	premise_index;
 		Code	*new_cst;
 		_Fact	*f_icst=find_f_icst(target,premise_index,new_cst);
-		if(f_icst==NULL){std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" failed xxxxxxxxx M1 / 0\n";
+		if(f_icst==NULL){//std::cout<<Utils::RelativeTime(Now())<<" failed xxxxxxxxx M1 / 0\n";
 			return	false;}
 
 		P<Fact>	f_im0=bm->build_f_ihlp(m0,Opcodes::IMdl,false);
@@ -937,7 +937,7 @@ return;
 				csts.push_back(new_cst);
 			mdls.push_back(m1);
 		}	// if m1 alrady exists, new_cst==NULL.
-		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" found --------------------- M1\n";
+		//std::cout<<Utils::RelativeTime(Now()<<" found --------------------- M1\n";
 		return	true;
 	}
 

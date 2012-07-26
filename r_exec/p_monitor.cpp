@@ -55,7 +55,7 @@ namespace	r_exec{
 	}
 
 	bool	PMonitor::reduce(_Fact	*input){	// input is always an actual fact.
-		if(controller->is_invalidated())std::cout<<"pmon: inv\n";
+
 		if(target->is_invalidated()){//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target has been invalidated\n";
 		return	true;}
 

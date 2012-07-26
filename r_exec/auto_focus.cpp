@@ -265,7 +265,7 @@ namespace	r_exec{
 
 					pattern=(_Fact	*)unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index+1).asIndex());	// lhs.
 					tpx=build_tpx<GTPX>(goal->get_target(),pattern,bm,goal_ratings,f_ihlp,f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
-					goals.insert(std::pair<P<Code>,P<TPX>	>((_Fact	*)production,tpx));
+					goals.insert(std::pair<P<Code>,P<TPX>	>((_Fact	*)production,tpx));std::cout<<Utils::RelativeTime(Now())<<" new GTPX\n";
 				}else{	
 					
 					Pred	*pred=((_Fact	*)production)->get_pred();
@@ -291,7 +291,7 @@ namespace	r_exec{
 					if(goal!=NULL){
 
 						//rate(target,success,goals,goal_ratings);
-						notify(target,input,goals);
+						notify(target,input,goals);std::cout<<Utils::RelativeTime(Now())<<" notify & delete GTPX\n";
 					}else{	// prediction.
 
 						//rate(target,success,predictions,prediction_ratings);
