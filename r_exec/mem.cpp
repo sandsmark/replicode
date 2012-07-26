@@ -42,11 +42,6 @@ namespace	r_exec{
 	}
 
 	_Mem::~_Mem(){
-
-		deleted=true;
-		if(state==RUNNING)
-			stop();
-		_root=NULL;
 	}
 
 	void	_Mem::init(	uint32	base_period,

@@ -44,6 +44,11 @@ namespace	r_exec{
 	}
 
 	template<class	O,class	S>	Mem<O,S>::~Mem(){
+
+		if(state==RUNNING)
+			stop();
+		deleted=true;
+		objects.clear();
 	}
 
 	////////////////////////////////////////////////////////////////
