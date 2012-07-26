@@ -36,18 +36,18 @@
 
 namespace	r_exec{
 
-	bool	HLPOverlay::EvaluateBWDGuards(Controller	*c,BindingMap	*bindings){
+	bool	HLPOverlay::EvaluateBWDGuards(Controller	*c,HLPBindingMap	*bindings){
 
 		HLPOverlay	o(c,bindings);
 		return	o.evaluate_bwd_guards();
 	}
 
-	HLPOverlay::HLPOverlay(Controller	*c,BindingMap	*bindings):Overlay(c,true),bindings(bindings){
+	HLPOverlay::HLPOverlay(Controller	*c,HLPBindingMap	*bindings):Overlay(c,true),bindings(bindings){
 	}
 	
-	HLPOverlay::HLPOverlay(Controller	*c,const	BindingMap	*bindings,bool	load_code):Overlay(c,load_code){
+	HLPOverlay::HLPOverlay(Controller	*c,const	HLPBindingMap	*bindings,bool	load_code):Overlay(c,load_code){
 
-		this->bindings=new	BindingMap((BindingMap	*)bindings);
+		this->bindings=new	HLPBindingMap((HLPBindingMap	*)bindings);
 	}
 
 	HLPOverlay::~HLPOverlay(){

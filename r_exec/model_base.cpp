@@ -178,7 +178,21 @@ namespace	r_exec{
 	void	ModelBase::load(Code	*mdl){	// mdl is already packed.
 
 		MEntry	e(mdl,true);
-		white_list.insert(e);
+		if(mdl->views.size()>0)	// no need to lock at load time.
+			white_list.insert(e);
+		else
+			black_list.insert(e);
+	}
+
+	void	ModelBase::get_models(r_code::list<P<Code> >	&models){
+
+		mdlCS.enter();
+		MdlSet::iterator	m;
+		for(m=white_list.begin();m!=white_list.end();++m)
+			models.push_back((*m).mdl);
+		for(m=black_list.begin();m!=black_list.end();++m)
+			models.push_back((*m).mdl);
+		mdlCS.leave();
 	}
 
 	Code	*ModelBase::check_existence(Code	*mdl){

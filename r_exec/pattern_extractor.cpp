@@ -64,8 +64,8 @@ namespace	r_exec{
 
 	TPX::TPX(AutoFocusController	*auto_focus,_Fact	*target):_Object(),auto_focus(auto_focus){
 
-		BindingMap	*bm=new	BindingMap();
-		abstracted_target=(_Fact	*)BindingMap::Abstract(target,bm);
+		P<BindingMap>	bm=new	BindingMap();
+		abstracted_target=(_Fact	*)bm->abstract_object(target,false);
 		this->target=target;
 		target_bindings=bm;
 	}
@@ -97,7 +97,7 @@ namespace	r_exec{
 		P<BindingMap>	_bm=new	BindingMap(target_bindings);
 		_bm->reset_fwd_timings(input->object);
 		time_buffer<CInput>	&cache=auto_focus->get_cache();
-		if(_bm->match_strict(input->object,target,MATCH_FORWARD)){
+		if(_bm->match_fwd_strict(input->object,target)){
 //std::cout<<" match";
 			new_maps.push_back(_bm);
 			time_buffer<CInput>::iterator	i;
@@ -252,18 +252,18 @@ namespace	r_exec{
 			cst=NULL;
 			return	NULL;
 		}
-/*
+
 		r_code::list<Input>::iterator	_i;
 		for(_i=inputs.begin();_i!=inputs.end();++_i){	// flag the components so the tpx does not try them again.
 
 			for(uint32	j=0;j<components.size();++j){
 
-				if((*_i).input==components[j].object)
-					(*_i).eligible_cause=false;
+				if(_i->input==components[j].object)
+					_i->eligible_cause=false;
 			}
-		}*/
+		}
 
-		P<BindingMap>	bm=new	BindingMap();
+		P<HLPBindingMap>	bm=new	HLPBindingMap();
 		cst=build_cst(components,bm,component);
 		uint32	rc=cst->references_size();
 		f_icst=bm->build_f_ihlp(cst,Opcodes::ICst,false);
@@ -316,7 +316,7 @@ namespace	r_exec{
 		return	cst;
 	}
 
-	Code	*_TPX::build_mdl_head(BindingMap	*bm,uint16	tpl_arg_count,_Fact	*lhs,_Fact	*rhs,uint16	&write_index){
+	Code	*_TPX::build_mdl_head(HLPBindingMap	*bm,uint16	tpl_arg_count,_Fact	*lhs,_Fact	*rhs,uint16	&write_index){
 
 		Code	*mdl=_Mem::Get()->build_object(Atom::Model(Opcodes::Mdl,MDL_ARITY));
 
@@ -417,7 +417,7 @@ namespace	r_exec{
 	}
 
 	void	GTPX::signal(View	*input)	const{	// will be erased from the AF map upon return. P<> kept in reduction job.
-
+return;
 		if(((_Fact	*)input->object)->is_fact()){	// goal success.
 
 			ReductionJob<GTPX>	*j=new	ReductionJob<GTPX>(new	View(input),(GTPX	*)this);
@@ -438,7 +438,7 @@ namespace	r_exec{
 
 			P<BindingMap>	bm=new	BindingMap();
 			bm->reset_fwd_timings(predictions[i]);
-			if(bm->match_strict(predictions[i],consequent,MATCH_FORWARD))
+			if(bm->match_fwd_strict(predictions[i],consequent))
 				return;
 		}
 		
@@ -558,7 +558,7 @@ namespace	r_exec{
 	}
 
 	void	PTPX::signal(View	*input)	const{	// will be erased from the AF map upon return. P<> kept in reduction job.
-
+return;
 		if(((_Fact	*)input->object)->is_anti_fact()){	// prediction failure.
 
 			ReductionJob<PTPX>	*j=new	ReductionJob<PTPX>(new	View(input),(PTPX	*)this);
@@ -575,8 +575,8 @@ namespace	r_exec{
 		_Fact	*consequent=new	Fact((Fact	*)f_imdl);	// input->object is the prediction failure: ignore and consider |f->imdl instead.
 		consequent->set_opposite();
 
-		BindingMap	*end_bm;
-		P<_Fact>	abstract_input=(_Fact	*)BindingMap::Abstract(consequent,end_bm);
+		P<BindingMap>	end_bm=new	BindingMap();
+		P<_Fact>		abstract_input=(_Fact	*)end_bm->abstract_object(consequent,false);
 		r_code::list<Input>::const_iterator	i;
 		for(i=inputs.begin();i!=inputs.end();){	// filter out inputs irrelevant for the prediction.
 
@@ -691,8 +691,8 @@ namespace	r_exec{
 	void	CTPX::store_input(r_exec::View	*input){
 
 		_Fact	*input_object=(_Fact	*)input->object;
-		BindingMap	*bm=new	BindingMap();
-		_Fact		*abstracted_input=(_Fact	*)BindingMap::Abstract(input_object,bm);
+		P<BindingMap>	bm=new	BindingMap();
+		_Fact		*abstracted_input=(_Fact	*)bm->abstract_object(input_object,false);
 		Input	i(input,abstracted_input,bm);
 		inputs.push_front(i);
 		if(input_object==target)
@@ -715,8 +715,8 @@ namespace	r_exec{
 
 		_Fact	*consequent=(_Fact	*)input->object;	// counter-evidence for the premise.
 
-		BindingMap	*end_bm;
-		P<_Fact>	abstract_input=(_Fact	*)BindingMap::Abstract(consequent,end_bm);
+		P<BindingMap>	end_bm=new	BindingMap();
+		P<_Fact>	abstract_input=(_Fact	*)end_bm->abstract_object(consequent,false);
 		r_code::list<Input>::const_iterator	i;
 		for(i=inputs.begin();i!=inputs.end();){
 
@@ -863,7 +863,7 @@ namespace	r_exec{
 	// m1:[icst->imdl m0[...][...]] with icst containing the premise.
 	bool	CTPX::build_mdl(_Fact	*cause,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period){
 
-		P<BindingMap>	bm=new	BindingMap();
+		P<HLPBindingMap>	bm=new	HLPBindingMap();
 		bm->init(target->get_reference(0),MK_VAL_VALUE);
 		bm->init(target,FACT_AFTER);
 		bm->init(target,FACT_BEFORE);
@@ -893,7 +893,7 @@ namespace	r_exec{
 		return	build_requirement(bm,m0,period);	// existence checks performed there.
 	}
 
-	bool	CTPX::build_requirement(BindingMap	*bm,Code	*m0,uint64	period){	// check for mdl existence at the same time (ModelBase::mdlCS-wise).
+	bool	CTPX::build_requirement(HLPBindingMap	*bm,Code	*m0,uint64	period){	// check for mdl existence at the same time (ModelBase::mdlCS-wise).
 
 		uint16	premise_index;
 		Code	*new_cst;

@@ -44,7 +44,7 @@ namespace	r_exec{
 	public	Overlay{
 	friend	class	HLPContext;
 	protected:
-		P<BindingMap>	bindings;
+		P<HLPBindingMap>	bindings;
 
 		r_code::list<P<_Fact>	>	patterns;
 
@@ -54,14 +54,14 @@ namespace	r_exec{
 
 		void	store_evidence(_Fact	*evidence,bool	prediction,bool	simulation);	// stores both actual and non-simulated predicted evidences.
 
-		HLPOverlay(Controller	*c,BindingMap	*bindings);
+		HLPOverlay(Controller	*c,HLPBindingMap	*bindings);
 	public:
-		static	bool	EvaluateBWDGuards(Controller	*c,BindingMap	*bindings);	// updates the bindings.
+		static	bool	EvaluateBWDGuards(Controller	*c,HLPBindingMap	*bindings);	// updates the bindings.
 
-		HLPOverlay(Controller	*c,const	BindingMap	*bindings,bool	load_code);
+		HLPOverlay(Controller	*c,const	HLPBindingMap	*bindings,bool	load_code);
 		virtual	~HLPOverlay();
 
-		BindingMap	*get_bindings()	const{	return	bindings;	}
+		HLPBindingMap	*get_bindings()	const{	return	bindings;	}
 
 		Atom	*get_value_code(uint16	id)	const;
 		uint16	get_value_code_size(uint16	id)	const;

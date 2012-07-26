@@ -64,6 +64,7 @@ public:
 	bool			debug;
 	core::uint32	ntf_mk_resilience;
 	core::uint32	goal_pred_success_resilience;
+	core::uint32	debug_windows;
 	bool			get_objects;
 	bool			decompile_objects;
 	bool			decompile_to_file;
@@ -158,7 +159,10 @@ public:
 		if(!!debug){
 
 			const	char	*_debug=debug.getAttribute("debug");
+			const	char	*_debug_windows=debug.getAttribute("debug_windows");
+
 			this->debug=(strcmp(_debug,"yes")==0);
+			debug_windows=atoi(_debug_windows);
 
 			core::XMLNode	resilience=debug.getChildNode("Resilience");
 			if(!!resilience){

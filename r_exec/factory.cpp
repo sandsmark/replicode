@@ -454,7 +454,7 @@ namespace	r_exec{
 
 	void	_Fact::trace()	const{
 
-		std::cout<<"<"<<get_oid()<<" "<<Time::ToString_seconds(get_after()-Utils::GetTimeReference())<<" "<<Time::ToString_seconds(get_before()-Utils::GetTimeReference())<<">"<<std::endl;
+		std::cout<<"<"<<get_oid()<<" "<<Utils::RelativeTime(get_after())<<" "<<Utils::RelativeTime(get_before())<<">"<<std::endl;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -725,10 +725,14 @@ namespace	r_exec{
 
 		code(0)=Atom::Object(Opcodes::Success,SUCCESS_ARITY);
 		code(SUCCESS_OBJ)=Atom::RPointer(0);
-		code(SUCCESS_EVD)=Atom::RPointer(1);
+		if(evidence)
+			code(SUCCESS_EVD)=Atom::RPointer(1);
+		else
+			code(SUCCESS_EVD)=Atom::Nil();
 		code(SUCCESS_ARITY)=Atom::Float(psln_thr);
 		add_reference(object);
-		add_reference(evidence);
+		if(evidence)
+			add_reference(evidence);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

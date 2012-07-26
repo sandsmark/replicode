@@ -128,7 +128,7 @@ namespace	r_exec{
 		_Fact	*find_f_icst(_Fact	*component,uint16	&component_index,Code	*&cst);
 		Code	*build_cst(const	std::vector<Component>	&components,BindingMap	*bm,_Fact	*main_component);
 
-		Code	*build_mdl_head(BindingMap	*bm,uint16	tpl_arg_count,_Fact	*lhs,_Fact	*rhs,uint16	&write_index);
+		Code	*build_mdl_head(HLPBindingMap	*bm,uint16	tpl_arg_count,_Fact	*lhs,_Fact	*rhs,uint16	&write_index);
 		void	build_mdl_tail(Code	*mdl,uint16	write_index);
 
 		void	inject_hlps()	const;
@@ -210,7 +210,7 @@ namespace	r_exec{
 		bool	build_mdl(_Fact	*cause,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
 		bool	build_mdl(_Fact	*f_icst,_Fact	*cause_pattern,_Fact	*consequent,GuardBuilder	*guard_builder,uint64	period);
 
-		bool	build_requirement(BindingMap	*bm,Code	*m0,uint64	period);
+		bool	build_requirement(HLPBindingMap	*bm,Code	*m0,uint64	period);
 
 		std::string	get_header()	const;
 	public:

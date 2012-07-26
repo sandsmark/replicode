@@ -23,14 +23,14 @@
     primary_thz="3600000"
     secondary_thz="7200000"
   />
-  <Debug debug="yes">
+  <Debug debug="yes" debug_windows="1">
     <Resilience
       ntf_mk_resilience="1"
       goal_pred_success_resilience="1000"
     />
     <Objects
       get_objects="yes"
-      decompile_objects="yes"
+      decompile_objects="no"
       decompile_to_file="no"
       decompilation_file_path=""
       ignore_named_objects="yes"

@@ -103,9 +103,9 @@ namespace	r_exec{
 			cache->CS.leave();
 		}
 
-		P<BindingMap>	bindings;
+		P<HLPBindingMap>	bindings;
 
-		bool	evaluate_bwd_guards(BindingMap	*bm);
+		bool	evaluate_bwd_guards(HLPBindingMap	*bm);
 
 		MatchResult	check_evidences(_Fact	*target,_Fact	*&evidence);			// evidence with the match (positive or negative), get_absentee(target) otherwise.
 		MatchResult	check_predicted_evidences(_Fact	*target,_Fact	*&evidence);	// evidence with the match (positive or negative), NULL otherwise.
@@ -142,7 +142,7 @@ namespace	r_exec{
 		void	store_evidence(_Fact	*evidence){			_store_evidence<EEntry>(&evidences,evidence);	}
 		void	store_predicted_evidence(_Fact	*evidence){	_store_evidence <PEEntry>(&predicted_evidences,evidence);	}
 		
-		virtual	Fact	*get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const=0;
+		virtual	Fact	*get_f_ihlp(HLPBindingMap	*bindings,bool	wr_enabled)	const=0;
 
 		uint16	get_out_group_count()	const;
 		Code	*get_out_group(uint16	i)	const;	// i starts at 1.

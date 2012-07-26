@@ -35,7 +35,7 @@
 
 namespace	r_exec{
 
-	CSTOverlay::CSTOverlay(Controller	*c,BindingMap	*bindings):HLPOverlay(c,bindings),match_deadline(0),lowest_cfd(1){
+	CSTOverlay::CSTOverlay(Controller	*c,HLPBindingMap	*bindings):HLPOverlay(c,bindings),match_deadline(0),lowest_cfd(1){
 	}
 
 	CSTOverlay::CSTOverlay(const	CSTOverlay	*original):HLPOverlay(original->controller,original->bindings){
@@ -116,7 +116,7 @@ namespace	r_exec{
 		}
 	}
 
-	CSTOverlay	*CSTOverlay::get_offspring(BindingMap	*map,_Fact	*input,_Fact	*bound_pattern){
+	CSTOverlay	*CSTOverlay::get_offspring(HLPBindingMap	*map,_Fact	*input,_Fact	*bound_pattern){
 
 		CSTOverlay	*offspring=new	CSTOverlay(this);
 		patterns.remove(bound_pattern);
@@ -127,7 +127,7 @@ namespace	r_exec{
 		return	offspring;
 	}
 
-	void	CSTOverlay::update(BindingMap	*map,_Fact	*input,_Fact	*bound_pattern){
+	void	CSTOverlay::update(HLPBindingMap	*map,_Fact	*input,_Fact	*bound_pattern){
 
 		bindings=map;
 		inputs.push_back(input);
@@ -190,15 +190,15 @@ namespace	r_exec{
 			simulation=false;
 		}
 
-		P<BindingMap>	bm=new	BindingMap();
-		_Fact			*bound_pattern=NULL;
+		P<HLPBindingMap>	bm=new	HLPBindingMap();
+		_Fact				*bound_pattern=NULL;
 		r_code::list<P<_Fact>	>::const_iterator	p;
 		for(p=patterns.begin();p!=patterns.end();++p){
 
 			bm->load(bindings);
 			if(inputs.size()==0)
 				bm->reset_fwd_timings(input_object);
-			if(bm->match_strict(input_object,*p,MATCH_FORWARD)){
+			if(bm->match_fwd_strict(input_object,*p)){
 
 				bound_pattern=*p;
 				break;
@@ -216,7 +216,7 @@ namespace	r_exec{
 				if(!code){
 					
 					load_code();
-					P<BindingMap>	original_bindings=bindings;
+					P<HLPBindingMap>	original_bindings=bindings;
 					bindings=bm;
 					if(evaluate_fwd_guards()){	// may update bindings; full match.
 //std::cout<<Time::ToString_seconds(now-Utils::GetTimeReference())<<" full match\n";
@@ -313,7 +313,7 @@ namespace	r_exec{
 
 				if(!get_requirement_count()){	// models will attempt to produce the icst
 
-					P<BindingMap>	bm=new	BindingMap(bm);
+					P<HLPBindingMap>	bm=new	HLPBindingMap(bm);
 					bm->init_from_f_ihlp(goal_target);
 					if(evaluate_bwd_guards(bm))	// leaves the controller constant: no need to protect; bm may be updated.
 						abduce(bm,input->object);
@@ -349,7 +349,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	CSTController::abduce(BindingMap	*bm,Fact	*super_goal){	// super_goal is f0->g->f1->icst or f0->g->|f1->icst.
+	void	CSTController::abduce(HLPBindingMap	*bm,Fact	*super_goal){	// super_goal is f0->g->f1->icst or f0->g->|f1->icst.
 
 		Goal	*g=super_goal->get_goal();
 		_Fact	*super_goal_target=g->get_target();
@@ -389,13 +389,13 @@ namespace	r_exec{
 		}
 	}
 
-	void	CSTController::inject_goal(	BindingMap	*bm,
-										Fact		*super_goal,		// f0->g->f1->icst or f0->g->|f1->icst.
-										_Fact		*sub_goal_target,	// f1.
-										Sim			*sim,
-										uint64		now,
-										float32		confidence,
-										Code		*group)	const{
+	void	CSTController::inject_goal(	HLPBindingMap	*bm,
+										Fact			*super_goal,		// f0->g->f1->icst or f0->g->|f1->icst.
+										_Fact			*sub_goal_target,	// f1.
+										Sim				*sim,
+										uint64			now,
+										float32			confidence,
+										Code			*group)	const{
 
 		sub_goal_target->set_cfd(confidence);
 
@@ -421,12 +421,12 @@ namespace	r_exec{
 		}
 	}
 
-	Fact	*CSTController::get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const{
+	Fact	*CSTController::get_f_ihlp(HLPBindingMap	*bindings,bool	wr_enabled)	const{
 
 		return	bindings->build_f_ihlp(getObject(),Opcodes::ICst,false);
 	}
 
-	Fact	*CSTController::get_f_icst(BindingMap	*bindings,std::vector<P<_Fact> >	*inputs)	const{
+	Fact	*CSTController::get_f_icst(HLPBindingMap	*bindings,std::vector<P<_Fact> >	*inputs)	const{
 
 		Fact	*f_icst=get_f_ihlp(bindings,false);
 		((ICST	*)f_icst->get_reference(0))->bindings=bindings;

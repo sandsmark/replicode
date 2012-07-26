@@ -61,12 +61,12 @@ namespace	r_exec{
 		UNORDERED_SET<P<Sim>,PHash<Sim> >		simulations;
 
 		void	inject_production();
-		void	update(BindingMap	*map,_Fact	*input,_Fact	*bound_pattern);
-		CSTOverlay	*get_offspring(BindingMap	*map,_Fact	*input,_Fact	*bound_pattern);
+		void	update(HLPBindingMap	*map,_Fact	*input,_Fact	*bound_pattern);
+		CSTOverlay	*get_offspring(HLPBindingMap	*map,_Fact	*input,_Fact	*bound_pattern);
 
 		CSTOverlay(const	CSTOverlay	*original);
 	public:
-		CSTOverlay(Controller	*c,BindingMap	*bindings);
+		CSTOverlay(Controller	*c,HLPBindingMap	*bindings);
 		~CSTOverlay();
 
 		bool	reduce(View	*input,CSTOverlay	*&offspring);
@@ -85,14 +85,14 @@ namespace	r_exec{
 	private:
 		Group	*secondary_host;
 
-		void	abduce(BindingMap	*bm,Fact	*super_goal);	// super_goal is f->g->f->icst.
-		void	inject_goal(BindingMap	*bm,
-							Fact		*super_goal,		// f0->g->f1->icst.
-							_Fact		*sub_goal_target,	// f1.
-							Sim			*sim,
-							uint64		now,
-							float32		confidence,
-							Code		*group)	const;
+		void	abduce(HLPBindingMap	*bm,Fact	*super_goal);	// super_goal is f->g->f->icst.
+		void	inject_goal(HLPBindingMap	*bm,
+							Fact			*super_goal,		// f0->g->f1->icst.
+							_Fact			*sub_goal_target,	// f1.
+							Sim				*sim,
+							uint64			now,
+							float32			confidence,
+							Code			*group)	const;
 
 		void	kill_views();
 		void	check_last_match_time(bool	match);	// kill if no match after primary_thz;
@@ -103,8 +103,8 @@ namespace	r_exec{
 		void	take_input(r_exec::View	*input);
 		void	reduce(r_exec::View	*input);
 
-		Fact	*get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const;
-		Fact	*get_f_icst(BindingMap	*bindings,std::vector<P<_Fact> >	*inputs)	const;
+		Fact	*get_f_ihlp(HLPBindingMap	*bindings,bool	wr_enabled)	const;
+		Fact	*get_f_icst(HLPBindingMap	*bindings,std::vector<P<_Fact> >	*inputs)	const;
 
 		void	inject_icst(Fact	*production,float32	confidence,uint64	time_to_live)	const;	// here, resilience=time to live, in us.
 		bool	inject_prediction(Fact	*prediction,float32	confidence,uint64	time_to_live)	const;	// here, resilience=time to live, in us; returns true if the prediction has actually been injected.

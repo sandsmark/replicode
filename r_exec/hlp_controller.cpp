@@ -37,7 +37,7 @@ namespace	r_exec{
 
 	HLPController::HLPController(r_code::View	*view):OController(view),strong_requirement_count(0),weak_requirement_count(0),requirement_count(0){
 
-		bindings=new	BindingMap();
+		bindings=new	HLPBindingMap();
 
 		Code	*object=get_unpacked_object();
 		bindings->init_from_hlp(object);	// init a binding map from the patterns.
@@ -110,7 +110,7 @@ namespace	r_exec{
 		return	hlp->get_reference(hlp->code(out_groups_index+i).asIndex());
 	}
 
-	bool	HLPController::evaluate_bwd_guards(BindingMap	*bm){
+	bool	HLPController::evaluate_bwd_guards(HLPBindingMap	*bm){
 
 		return	HLPOverlay::EvaluateBWDGuards(this,bm);
 	}

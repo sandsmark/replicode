@@ -211,6 +211,7 @@ namespace	r_exec{
 			case	Atom::MODEL:
 				unpack_hlp(object);
 				//object->add_reference(NULL);	// classifier.
+				ModelBase::Get()->load(object);
 				break;
 			case	Atom::COMPOSITE_STATE:
 				unpack_hlp(object);
@@ -964,7 +965,7 @@ namespace	r_exec{
 		image->timestamp=Now();
 
 		r_code::list<P<Code> >	models;
-		//ModelBase->Get()->get_models(models);	// protected by ModelBase.
+		ModelBase::Get()->get_models(models);	// protected by ModelBase.
 		image->add_objects(models);
 
 		return	image;

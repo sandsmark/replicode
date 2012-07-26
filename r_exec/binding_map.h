@@ -159,30 +159,25 @@ namespace	r_exec{
 		MATCH_FAILURE=2
 	}MatchResult;
 
-	typedef	enum{
-		MATCH_FORWARD=0,
-		MATCH_BACKWARD=1
-	}MatchDirection;
-
 	class	_Fact;
 	class	Fact;
 
 	class	r_exec_dll	BindingMap:
 	public	_Object{
 	friend	class	UnboundValue;
-	private:
+	protected:
 		std::vector<P<Value> >	map;	// indexed by vl-ptrs.
 
 		uint32	unbound_values;
 
 		void	add_unbound_value(uint8	id);
-		void	init_from_pattern(const	Code	*source);	// first source is f->obj.
-		bool	need_binding(Code	*pattern)	const;
 
 		uint16	first_index;	// index of the first value found in the first fact.
-		int16	after_index;	// before is at after_index+1; tpl args (if any) are located before after_index.
+		int16	fwd_after_index;	// tpl args (if any) are located before fwd_after_index.
+		int16	fwd_before_index;
 
-		bool	match_timings(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d);
+		bool	match_timings(uint64	stored_after,uint64	stored_before,uint64	after,uint64	before,uint32	destination_after_index,uint32	destination_before_index);
+		bool	match_fwd_timings(const	_Fact	*f_object,const	_Fact	*f_pattern);
 		bool	match(const	Code	*object,uint16	o_base_index,uint16	o_index,const	Code	*pattern,uint16	p_index,uint16	o_arity);
 
 		void	abstract_member(Code	*object,uint16	index,Code	*abstracted_object,uint16	write_index,uint16	&extent_index);
@@ -190,27 +185,29 @@ namespace	r_exec{
 		Atom	get_structure_variable(Code	*object,uint16	index);
 		Atom	get_object_variable(Code	*object);
 	public:
-		static	Code	*Abstract(Code	*object,BindingMap	*&bindings);
-				_Fact	*abstract_f_ihlp(_Fact	*fact)	const;	// for icst and imdl.
-				_Fact	*abstract_fact(_Fact	*fact,_Fact	*original,bool	force_sync);
-				Code	*abstract_object(Code	*object,bool	force_sync);
-
 		BindingMap();
 		BindingMap(const	BindingMap	*source);
 		BindingMap(const	BindingMap	&source);
+		virtual	~BindingMap();
 
 		BindingMap&	operator	=(const	BindingMap	&source);
 		void	load(const	BindingMap	*source);
 
-		void	clear();
+		virtual	void	clear();
 
 		void	init(Code	*object,uint16	index);
-		void	init_from_hlp(const	Code	*hlp);	// hlp is icst or imdl.
-		void	init_from_f_ihlp(const	_Fact	*f_ihlp);
-		Fact	*build_f_ihlp(Code	*hlp,uint16	opcode,bool	wr_enabled)	const;	// return f->ihlp.
 
-		MatchResult	match_lenient(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d);	// use for facts when we are lenient about fact vs |fact.
-		bool	match_strict(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d);		// use for facts when we need sharp match.
+		_Fact	*abstract_f_ihlp(_Fact	*fact)	const;	// for icst and imdl.
+		_Fact	*abstract_fact(_Fact	*fact,_Fact	*original,bool	force_sync);
+		Code	*abstract_object(Code	*object,bool	force_sync);
+
+		void	reset_fwd_timings(_Fact	*reference_fact);	// reset after and before from the timings of the reference object.
+
+		MatchResult	match_fwd_lenient(const	_Fact	*f_object,const	_Fact	*f_pattern);	// use for facts when we are lenient about fact vs |fact.
+		bool	match_fwd_strict(const	_Fact	*f_object,const	_Fact	*f_pattern);		// use for facts when we need sharp match.
+
+		uint64	get_fwd_after()		const;	// assumes the timings are valuated.
+		uint64	get_fwd_before()	const;	// idem.
 
 		bool	match_object(const	Code	*object,const	Code	*pattern);
 		bool	match_structure(const	Code	*object,uint16	o_base_index,uint16	o_index,const	Code	*pattern,uint16	p_index);
@@ -218,18 +215,9 @@ namespace	r_exec{
 
 		void	bind_variable(BoundValue	*value,uint8	id);
 		void	bind_variable(Atom	*code,uint8	id,uint16	value_index,Atom	*intermediate_results);
-		Code	*bind_pattern(Code	*pattern)	const;
 
 		Atom	*get_value_code(uint16	id);
 		uint16	get_value_code_size(uint16	id);
-
-		void	reset_fwd_timings(_Fact	*reference_fact);	// reset after and before from the timings of the reference object.
-		void	reset_bwd_timings(_Fact	*reference_fact);	// idem for the last 2 unbound variables (i.e. timings of the second pattern in a mdl).
-
-		uint64	get_fwd_after()		const;	// assumes the timings are valuated.
-		uint64	get_fwd_before()	const;	// idem.
-		uint64	get_bwd_after()		const;	// idem.
-		uint64	get_bwd_before()	const;	// idem.
 
 		bool	intersect(BindingMap	*bm);
 		bool	is_fully_specified()	const;
@@ -237,6 +225,40 @@ namespace	r_exec{
 		Atom	*get_code(uint16	i)	const{	return	map[i]->get_code();	}
 		Code	*get_object(uint16	i)	const{	return	map[i]->get_object();	}
 		void	trace();
+	};
+
+	class	r_exec_dll	HLPBindingMap:
+	public	BindingMap{
+	private:
+		int16	bwd_after_index;
+		int16	bwd_before_index;
+
+		bool	match_bwd_timings(const	_Fact	*f_object,const	_Fact	*f_pattern);
+
+		bool	need_binding(Code	*pattern)	const;
+		void	init_from_pattern(const	Code	*source,int16	position);	// first source is f->obj.
+	public:
+		HLPBindingMap();
+		HLPBindingMap(const	HLPBindingMap	*source);
+		HLPBindingMap(const	HLPBindingMap	&source);
+		~HLPBindingMap();
+
+		HLPBindingMap&	operator	=(const	HLPBindingMap	&source);
+		void	load(const	HLPBindingMap	*source);
+		void	clear();
+
+		void	init_from_hlp(const	Code	*hlp);
+		void	init_from_f_ihlp(const	_Fact	*f_ihlp);
+		Fact	*build_f_ihlp(Code	*hlp,uint16	opcode,bool	wr_enabled)	const;	// return f->ihlp.
+		Code	*bind_pattern(Code	*pattern)	const;
+
+		void	reset_bwd_timings(_Fact	*reference_fact);	// idem for the last 2 unbound variables (i.e. timings of the second pattern in a mdl).
+
+		MatchResult	match_bwd_lenient(const	_Fact	*f_object,const	_Fact	*f_pattern);	// use for facts when we are lenient about fact vs |fact.
+		bool	match_bwd_strict(const	_Fact	*f_object,const	_Fact	*f_pattern);		// use for facts when we need sharp match.
+
+		uint64	get_bwd_after()		const;	// assumes the timings are valuated.
+		uint64	get_bwd_before()	const;	// idem.
 	};
 }
 

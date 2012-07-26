@@ -181,7 +181,7 @@ namespace	r_exec{
 
 		if(!injected_goal){
 			
-			if(predicted_evidence->is_invalidated()){	// the predicted evidence was wrong.
+			if(predicted_evidence	&&	predicted_evidence->is_invalidated()){	// the predicted evidence was wrong.
 
 				((PMDLController	*)controller)->register_predicted_goal_outcome(target,bindings,f_imdl,false,injected_goal);	// report a predicted failure; this will inject the goal.
 				predicted_evidence=NULL;
@@ -230,7 +230,7 @@ namespace	r_exec{
 				case	MATCH_SUCCESS_POSITIVE:
 					if(injected_goal)
 						((PMDLController	*)controller)->register_predicted_goal_outcome(target,bindings,f_imdl,true,true);	// report a predicted success.
-					if(_input->get_cfd()>predicted_evidence->get_pred()->get_target()->get_cfd())	// bias toward cfd instead of age.
+					if(predicted_evidence	&&	_input->get_cfd()>predicted_evidence->get_pred()->get_target()->get_cfd())	// bias toward cfd instead of age.
 						predicted_evidence=input;
 					return	false;
 				case	MATCH_SUCCESS_NEGATIVE:

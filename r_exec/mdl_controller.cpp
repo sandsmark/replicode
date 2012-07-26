@@ -35,7 +35,7 @@
 
 namespace	r_exec{
 
-	MDLOverlay::MDLOverlay(Controller	*c,const	BindingMap	*bindings):HLPOverlay(c,bindings,true){
+	MDLOverlay::MDLOverlay(Controller	*c,const	HLPBindingMap	*bindings):HLPOverlay(c,bindings,true){
 
 		load_patterns();
 	}
@@ -50,7 +50,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	PrimaryMDLOverlay::PrimaryMDLOverlay(Controller	*c,const	BindingMap	*bindings):MDLOverlay(c,bindings){
+	PrimaryMDLOverlay::PrimaryMDLOverlay(Controller	*c,const	HLPBindingMap	*bindings):MDLOverlay(c,bindings){
 	}
 
 	PrimaryMDLOverlay::~PrimaryMDLOverlay(){
@@ -71,13 +71,13 @@ namespace	r_exec{
 			simulation=false;
 		}
 
-		P<BindingMap>	bm=new	BindingMap(bindings);
+		P<HLPBindingMap>	bm=new	HLPBindingMap(bindings);
 		bm->reset_fwd_timings(input_object);
-		switch(bm->match_lenient(input_object,((MDLController	*)controller)->get_lhs(),MATCH_FORWARD)){
+		switch(bm->match_fwd_lenient(input_object,((MDLController	*)controller)->get_lhs())){
 		case	MATCH_SUCCESS_POSITIVE:{
 
 			load_code();
-			P<BindingMap>	original_bindings=bindings;
+			P<HLPBindingMap>	original_bindings=bindings;
 			bindings=bm;
 			bool	is_req=((MDLController	*)controller)->is_requirement();
 			Overlay				*o;
@@ -149,7 +149,7 @@ namespace	r_exec{
 		}
 	}
 
-	bool	PrimaryMDLOverlay::check_simulated_chaining(BindingMap	*bm,Fact	*f_imdl,Pred	*prediction){
+	bool	PrimaryMDLOverlay::check_simulated_chaining(HLPBindingMap	*bm,Fact	*f_imdl,Pred	*prediction){
 
 		for(uint32	i=0;i<prediction->simulations.size();++i){
 
@@ -167,7 +167,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	SecondaryMDLOverlay::SecondaryMDLOverlay(Controller	*c,const	BindingMap	*bindings):MDLOverlay(c,bindings){
+	SecondaryMDLOverlay::SecondaryMDLOverlay(Controller	*c,const	HLPBindingMap	*bindings):MDLOverlay(c,bindings){
 	}
 
 	SecondaryMDLOverlay::~SecondaryMDLOverlay(){
@@ -175,13 +175,13 @@ namespace	r_exec{
 
 	Overlay	*SecondaryMDLOverlay::reduce(_Fact *input,Fact	*f_p_f_imdl,MDLController	*req_controller){	// no caching since no bwd.
 //std::cout<<std::hex<<this<<std::dec<<" "<<input->object->get_oid();
-		P<BindingMap>	bm=new	BindingMap(bindings);
+		P<HLPBindingMap>	bm=new	HLPBindingMap(bindings);
 		bm->reset_fwd_timings(input);
-		switch(bm->match_lenient(input,((MDLController	*)controller)->get_lhs(),MATCH_FORWARD)){
+		switch(bm->match_fwd_lenient(input,((MDLController	*)controller)->get_lhs())){
 		case	MATCH_SUCCESS_POSITIVE:{
 
 			load_code();
-			P<BindingMap>		original_bindings=bindings;
+			P<HLPBindingMap>	original_bindings=bindings;
 			bindings=bm;
 			Overlay				*o;
 			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,false);
@@ -343,7 +343,7 @@ namespace	r_exec{
 		return	rhs;
 	}
 
-	inline	Fact	*MDLController::get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const{
+	inline	Fact	*MDLController::get_f_ihlp(HLPBindingMap	*bindings,bool	wr_enabled)	const{
 
 		return	bindings->build_f_ihlp(getObject(),Opcodes::IMdl,wr_enabled);
 	}
@@ -384,7 +384,7 @@ namespace	r_exec{
 		requirements.CS.leave();
 	}
 
-	ChainingStatus	MDLController::retrieve_simulated_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,Controller	*root){
+	ChainingStatus	MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap	*bm,Fact	*f_imdl,Controller	*root){
 
 		uint32	wr_count;
 		uint32	sr_count;
@@ -411,7 +411,7 @@ namespace	r_exec{
 						_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
 						//_f_imdl->get_reference(0)->trace();
 						//f_imdl->get_reference(0)->trace();
-						if(bm->match_strict(_f_imdl,f_imdl,MATCH_BACKWARD)){	// tpl args will be valuated in bm, but not in f_imdl yet.
+						if(bm->match_bwd_strict(_f_imdl,f_imdl)){	// tpl args will be valuated in bm, but not in f_imdl yet.
 
 							r=WR_ENABLED;
 							break;
@@ -441,7 +441,7 @@ namespace	r_exec{
 						if((*e).evidence->get_pred()->get_simulation(root)){
 
 							_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-							if(bm->match_lenient(_f_imdl,f_imdl,MATCH_BACKWARD)==MATCH_SUCCESS_NEGATIVE){	// tpl args will be valuated in bm.
+							if(bm->match_bwd_lenient(_f_imdl,f_imdl)==MATCH_SUCCESS_NEGATIVE){	// tpl args will be valuated in bm.
 
 								requirements.CS.leave();
 								return	SR_DISABLED_NO_WR;
@@ -471,7 +471,7 @@ namespace	r_exec{
 						if((*e).evidence->get_pred()->get_simulation(root)){
 
 							_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-							if(bm->match_lenient(_f_imdl,f_imdl,MATCH_BACKWARD)==MATCH_SUCCESS_NEGATIVE){
+							if(bm->match_bwd_lenient(_f_imdl,f_imdl)==MATCH_SUCCESS_NEGATIVE){
 
 								negative_cfd=(*e).confidence;
 								r=SR_DISABLED_NO_WR;
@@ -494,7 +494,7 @@ namespace	r_exec{
 						if((*e).evidence->get_pred()->get_simulation(root)){
 
 							_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-							if(bm->match_strict(_f_imdl,f_imdl,MATCH_BACKWARD)){
+							if(bm->match_bwd_strict(_f_imdl,f_imdl)){
 
 								if((*e).confidence>=negative_cfd){
 
@@ -514,7 +514,7 @@ namespace	r_exec{
 		}
 	}
 
-	ChainingStatus	MDLController::retrieve_simulated_imdl_bwd(BindingMap	*bm,Fact	*f_imdl,Controller	*root){
+	ChainingStatus	MDLController::retrieve_simulated_imdl_bwd(HLPBindingMap	*bm,Fact	*f_imdl,Controller	*root){
 
 		uint32	wr_count;
 		uint32	sr_count;
@@ -539,7 +539,7 @@ namespace	r_exec{
 						_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
 						//_f_imdl->get_reference(0)->trace();
 						//f_imdl->get_reference(0)->trace();
-						if(bm->match_strict(_f_imdl,f_imdl,MATCH_BACKWARD)){	// tpl args will be valuated in bm, but not in f_imdl yet.
+						if(bm->match_bwd_strict(_f_imdl,f_imdl)){	// tpl args will be valuated in bm, but not in f_imdl yet.
 
 							r=WR_ENABLED;
 							break;
@@ -567,7 +567,7 @@ namespace	r_exec{
 						if((*e).evidence->get_pred()->get_simulation(root)){
 
 							_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-							if(bm->match_lenient(_f_imdl,f_imdl,MATCH_BACKWARD)==MATCH_SUCCESS_NEGATIVE){	// tpl args will be valuated in bm.
+							if(bm->match_bwd_lenient(_f_imdl,f_imdl)==MATCH_SUCCESS_NEGATIVE){	// tpl args will be valuated in bm.
 
 								requirements.CS.leave();
 								return	SR_DISABLED_NO_WR;
@@ -595,7 +595,7 @@ namespace	r_exec{
 						if((*e).evidence->get_pred()->get_simulation(root)){
 
 							_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-							if(bm->match_lenient(_f_imdl,f_imdl,MATCH_BACKWARD)==MATCH_SUCCESS_NEGATIVE){
+							if(bm->match_bwd_lenient(_f_imdl,f_imdl)==MATCH_SUCCESS_NEGATIVE){
 
 								negative_cfd=(*e).confidence;
 								r=SR_DISABLED_NO_WR;
@@ -616,7 +616,7 @@ namespace	r_exec{
 						if((*e).evidence->get_pred()->get_simulation(root)){
 
 							_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-							if(bm->match_strict(_f_imdl,f_imdl,MATCH_BACKWARD)){
+							if(bm->match_bwd_strict(_f_imdl,f_imdl)){
 
 								if((*e).confidence>=negative_cfd){
 
@@ -636,7 +636,7 @@ namespace	r_exec{
 		}
 	}
 
-	ChainingStatus	MDLController::retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground,MDLController	*req_controller,bool	&wr_enabled){	// wr_enabled: true if there is at least one wr stronger than at least one sr.
+	ChainingStatus	MDLController::retrieve_imdl_fwd(HLPBindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground,MDLController	*req_controller,bool	&wr_enabled){	// wr_enabled: true if there is at least one wr stronger than at least one sr.
 
 		uint32	wr_count;
 		uint32	sr_count;
@@ -645,7 +645,7 @@ namespace	r_exec{
 		if(!r_count)
 			return	NO_R;
 		ChainingStatus	r;
-		BindingMap	original(bm);
+		HLPBindingMap	original(bm);
 		if(!sr_count){	// no strong req., some weak req.: true if there is one f->imdl complying with timings and bindings.
 
 			wr_enabled=false;
@@ -677,8 +677,8 @@ namespace	r_exec{
 					_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
 					//_f_imdl->get_reference(0)->trace();
 					//f_imdl->get_reference(0)->trace();
-					BindingMap	_original=original;	// matching updates the bm; always start afresh.
-					if(_original.match_strict(_f_imdl,f_imdl,MATCH_FORWARD)){	// tpl args will be valuated in bm, but not in f_imdl yet.
+					HLPBindingMap	_original=original;	// matching updates the bm; always start afresh.
+					if(_original.match_fwd_strict(_f_imdl,f_imdl)){	// tpl args will be valuated in bm, but not in f_imdl yet.
 
 						if(r==WR_DISABLED	&&	(*e).chaining_was_allowed){	// first match.
 
@@ -716,8 +716,8 @@ namespace	r_exec{
 					else{
 
 						_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-						BindingMap	_original=original;	// matching updates the bm; always start afresh.
-						if(_original.match_lenient(_f_imdl,f_imdl,MATCH_FORWARD)==MATCH_SUCCESS_NEGATIVE){	// tpl args will be valuated in bm.
+						HLPBindingMap	_original=original;	// matching updates the bm; always start afresh.
+						if(_original.match_fwd_lenient(_f_imdl,f_imdl)==MATCH_SUCCESS_NEGATIVE){	// tpl args will be valuated in bm.
 
 							if(r==WR_ENABLED	&&	(*e).chaining_was_allowed)	// first match.
 								r=SR_DISABLED_NO_WR;
@@ -749,8 +749,8 @@ namespace	r_exec{
 					else{
 
 						_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-						BindingMap	_original=original;	// matching updates the bm; always start afresh.
-						if(_original.match_lenient(_f_imdl,f_imdl,MATCH_FORWARD)==MATCH_SUCCESS_NEGATIVE){
+						HLPBindingMap	_original=original;	// matching updates the bm; always start afresh.
+						if(_original.match_fwd_lenient(_f_imdl,f_imdl)==MATCH_SUCCESS_NEGATIVE){
 
 							if(r==NO_R	&&	(*e).chaining_was_allowed){	// first match.
 
@@ -788,8 +788,8 @@ namespace	r_exec{
 					else{
 
 						_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-						BindingMap	_original=original;	// matching updates the bm; always start afresh.
-						if(_original.match_strict(_f_imdl,f_imdl,MATCH_FORWARD)){
+						HLPBindingMap	_original=original;	// matching updates the bm; always start afresh.
+						if(_original.match_fwd_strict(_f_imdl,f_imdl)){
 
 							if(r!=WR_ENABLED	&&	(*e).chaining_was_allowed){	// first siginificant match.
 								
@@ -819,7 +819,7 @@ namespace	r_exec{
 		}
 	}
 
-	ChainingStatus	MDLController::retrieve_imdl_bwd(BindingMap	*bm,Fact	*f_imdl,Fact	*&ground){
+	ChainingStatus	MDLController::retrieve_imdl_bwd(HLPBindingMap	*bm,Fact	*f_imdl,Fact	*&ground){
 
 		uint32	wr_count;
 		uint32	sr_count;
@@ -843,7 +843,7 @@ namespace	r_exec{
 					_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
 					//_f_imdl->get_reference(0)->trace();
 					//f_imdl->get_reference(0)->trace();
-					if(bm->match_strict(_f_imdl,f_imdl,MATCH_BACKWARD)){	// tpl args will be valuated in bm, but not in f_imdl yet.
+					if(bm->match_bwd_strict(_f_imdl,f_imdl)){	// tpl args will be valuated in bm, but not in f_imdl yet.
 
 						r=WR_ENABLED;
 						ground=(*e).evidence;
@@ -871,7 +871,7 @@ namespace	r_exec{
 					else{
 
 						_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-						if(bm->match_lenient(_f_imdl,f_imdl,MATCH_BACKWARD)==MATCH_SUCCESS_NEGATIVE){	// tpl args will be valuated in bm.
+						if(bm->match_bwd_lenient(_f_imdl,f_imdl)==MATCH_SUCCESS_NEGATIVE){	// tpl args will be valuated in bm.
 
 							requirements.CS.leave();
 							return	SR_DISABLED_NO_WR;
@@ -896,7 +896,7 @@ namespace	r_exec{
 					else{
 
 						_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-						if(bm->match_lenient(_f_imdl,f_imdl,MATCH_BACKWARD)==MATCH_SUCCESS_NEGATIVE){
+						if(bm->match_bwd_lenient(_f_imdl,f_imdl)==MATCH_SUCCESS_NEGATIVE){
 
 							negative_cfd=(*e).confidence;
 							r=SR_DISABLED_NO_WR;
@@ -914,7 +914,7 @@ namespace	r_exec{
 	//(*e).f->get_reference(0)->trace();
 	//f->get_reference(0)->trace();
 						_Fact	*_f_imdl=(*e).evidence->get_pred()->get_target();
-						if(bm->match_strict(_f_imdl,f_imdl,MATCH_BACKWARD)){
+						if(bm->match_bwd_strict(_f_imdl,f_imdl)){
 
 							if((*e).confidence>=negative_cfd){
 
@@ -981,7 +981,7 @@ namespace	r_exec{
 		g_monitorsCS.leave();
 	}
 
-	void	PMDLController::inject_goal(BindingMap	*bm,Fact	*goal,Fact	*f_imdl)	const{
+	void	PMDLController::inject_goal(HLPBindingMap	*bm,Fact	*goal,Fact	*f_imdl)	const{
 
 		Group	*primary_grp=get_host();
 		uint64	before=goal->get_before();
@@ -993,7 +993,7 @@ namespace	r_exec{
 
 		MkRdx	*mk_rdx=new	MkRdx(f_imdl,goal->get_goal()->get_super_goal(),goal,1,bm);
 
-		uint16	out_group_count=get_out_group_count();
+		uint16	out_group_count=get_rdx_out_group_count();
 		for(uint16	i=0;i<out_group_count;++i){
 
 			Group	*out_group=(Group	*)get_out_group(i);
@@ -1031,7 +1031,7 @@ namespace	r_exec{
 		return	r;
 	}
 
-	void	PMDLController::register_predicted_goal_outcome(Fact	*goal,BindingMap	*bm,Fact	*f_imdl,bool	success,bool	injected_goal){	// called only for SIM_COMMITTED mode.
+	void	PMDLController::register_predicted_goal_outcome(Fact	*goal,HLPBindingMap	*bm,Fact	*f_imdl,bool	success,bool	injected_goal){	// called only for SIM_COMMITTED mode.
 
 		if(success)
 			goal->invalidate();	// monitor still running to detect failures (actual or predicted).
@@ -1105,16 +1105,16 @@ namespace	r_exec{
 			if(confidence<=get_host()->code(GRP_SLN_THR).asFloat())	// cfd is too low for any sub-goal to be injected.
 				return;
 			
-			P<BindingMap>	bm=new	BindingMap(bindings);
+			P<HLPBindingMap>	bm=new	HLPBindingMap(bindings);
 			bm->reset_bwd_timings(goal_target);
-			if(bm->match_strict(goal_target,rhs,MATCH_BACKWARD))	// the rhs of a top-level model is never a |fact, hence strict matching instead of lenient.
+			if(bm->match_bwd_strict(goal_target,rhs))	// the rhs of a top-level model is never a |fact, hence strict matching instead of lenient.
 				abduce(bm,(Fact	*)input_object,confidence);
 			else	if(!goal->is_requirement()){	// goal_target may be f->imdl and not a requirement: case of a reuse of the model, i.e. the goal target is for the model to make a prediction: this translates into making a sub-goal from the lhs.
 
 				Code	*imdl=goal_target->get_reference(0);
 				if(imdl->code(0).asOpcode()==Opcodes::IMdl	&&	imdl->get_reference(0)==getObject()){	// in that case, get the bm from the imdl, ignore the bwd guards, bind the rhs and inject.
 
-					bm=new	BindingMap(bindings);
+					bm=new	HLPBindingMap(bindings);
 					bm->reset_bwd_timings(goal_target);
 					bm->init_from_f_ihlp(goal_target);
 					abduce(bm,(Fact	*)input_object,confidence);
@@ -1129,7 +1129,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	TopLevelMDLController::abduce(BindingMap	*bm,Fact	*super_goal,float32	confidence){	// super_goal is a drive.
+	void	TopLevelMDLController::abduce(HLPBindingMap	*bm,Fact	*super_goal,float32	confidence){	// super_goal is a drive.
 
 		if(evaluate_bwd_guards(bm)){	// bm may be updated.
 
@@ -1139,10 +1139,10 @@ namespace	r_exec{
 
 			switch(check_evidences(bound_lhs,evidence)){
 			case	MATCH_SUCCESS_POSITIVE:	// goal target is already known: report drive success.
-				register_goal_outcome(super_goal,true,evidence);
+				register_drive_outcome(super_goal,true);
 				break;
 			case	MATCH_SUCCESS_NEGATIVE:	// a counter evidence is already known: report drive failure.
-				register_goal_outcome(super_goal,false,evidence);
+				register_drive_outcome(super_goal,false);
 				break;
 			case	MATCH_FAILURE:
 				f_imdl=get_f_ihlp(bm,false);
@@ -1162,7 +1162,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	TopLevelMDLController::abduce_lhs(	BindingMap	*bm,
+	void	TopLevelMDLController::abduce_lhs(	HLPBindingMap	*bm,
 												Fact		*super_goal,		// f->g->f->obj; actual goal.
 												_Fact		*sub_goal_target,	// f->obj, i.e. bound lhs.
 												Fact		*f_imdl,
@@ -1181,10 +1181,10 @@ namespace	r_exec{
 		if(!evidence)
 			inject_goal(bm,f_sub_goal,f_imdl);
 		add_g_monitor(new	GMonitor(this,bm,deadline,now+sim_thz,f_sub_goal,f_imdl,evidence));
-		std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" goal\n";
+		std::cout<<Utils::RelativeTime(Now())<<" goal["<<Utils::RelativeTime(sub_goal_target->get_after())<<","<<Utils::RelativeTime(sub_goal_target->get_before())<<"[\n";
 	}
 
-	void	TopLevelMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// no prediction here.
+	void	TopLevelMDLController::predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// no prediction here.
 	}
 
 	void	TopLevelMDLController::register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures){
@@ -1195,41 +1195,37 @@ namespace	r_exec{
 		goal->invalidate();
 
 		uint64	now=Now();
-		Code	*success_object;
-		Code	*f_success_object;
+		Code	*goal_success;
+		Code	*f_goal_success;
 		_Fact	*absentee;
-		
 		if(success){
 
-			success_object=new	Success(goal,evidence,1);
-			f_success_object=new	Fact(success_object,now,now,1,1);
+			goal_success=new	Success(goal,evidence,1);
+			f_goal_success=new	Fact(goal_success,now,now,1,1);
 			absentee=NULL;
 		}else{
 
 			if(!evidence){	// assert absence of the goal target.
 
 				absentee=goal->get_goal()->get_target()->get_absentee();
-				success_object=new	Success(goal,absentee,1);
+				goal_success=new	Success(goal,absentee,1);
 			}else{
 
 				absentee=NULL;
-				success_object=new	Success(goal,evidence,1);
+				goal_success=new	Success(goal,evidence,1);
 			}
-			f_success_object=new	AntiFact(success_object,now,now,1,1);
+			f_goal_success=new	AntiFact(goal_success,now,now,1,1);
 		}
 		
 		Group	*primary_host=get_host();
-		uint16	out_group_count=get_out_group_count();
-		Group	*drives_host=(Group	*)get_out_group(out_group_count-1);	// the drives group is the last of the output groups.
-		View	*view=new	View(View::SYNC_ONCE,now,1,1,drives_host,primary_host,f_success_object);	// sln=1,res=1.
-		_Mem::Get()->inject(view);	// inject in the drives group (will be caught by the drive injectors).
-
-		for(uint16	i=0;i<out_group_count;++i){	// inject notification in out groups.
+		uint16	out_group_count=get_out_group_count()-1;
+		Group	*drives_host=(Group	*)get_out_group(out_group_count);	// the drives group is the last of the output groups.
+		for(uint16	i=0;i<out_group_count;++i){	// inject notification in out groups (drives host excepted).
 
 			Group	*out_group=(Group	*)get_out_group(i);
 			int32	resilience=_Mem::Get()->get_goal_pred_success_res(out_group,now,0);
-			View	*view;//=new	View(View::SYNC_ONCE,now,1,resilience,out_group,primary_host,f_success_object);
-			//_Mem::Get()->inject(view);
+			View	*view=new	View(View::SYNC_ONCE,now,1,resilience,out_group,primary_host,f_goal_success);
+			_Mem::Get()->inject(view);
 
 			if(absentee){
 
@@ -1237,7 +1233,30 @@ namespace	r_exec{
 				_Mem::Get()->inject(view);
 			}
 		}
-		if(success)std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" goal success\n";
+
+		register_drive_outcome(goal->get_goal()->sim->super_goal,success);
+		if(success)std::cout<<Utils::RelativeTime(Now())<<" goal success\n";
+	}
+
+	void	TopLevelMDLController::register_drive_outcome(Fact	*drive,bool	success)	const{
+
+		drive->invalidate();
+
+		uint64	now=Now();
+		Code	*drive_success=new	Success(drive,NULL,1);
+		Code	*f_drive_success;
+		if(success)
+			f_drive_success=new	Fact(drive_success,now,now,1,1);
+		else
+			f_drive_success=new	AntiFact(drive_success,now,now,1,1);
+		
+		Group	*primary_host=get_host();
+		uint16	out_group_count=get_out_group_count()-1;
+		Group	*drives_host=(Group	*)get_out_group(out_group_count);	// the drives group is the last of the output groups.
+		View	*view=new	View(View::SYNC_ONCE,now,1,1,drives_host,primary_host,f_drive_success);	// sln=1,res=1.
+		_Mem::Get()->inject(view);	// inject in the drives group (will be caught by the drive injectors).
+		if(success)std::cout<<Utils::RelativeTime(Now())<<" drive success\n";
+		else	std::cout<<Utils::RelativeTime(Now())<<" drive failure\n";
 	}
 
 	void	TopLevelMDLController::register_simulated_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const{	// evidence is a simulated prediction.
@@ -1259,7 +1278,6 @@ namespace	r_exec{
 		Fact	*f_pred=new	Fact(pred,now,now,1,1);
 
 		Group	*primary_host=get_host();
-		uint16	out_group_count=get_out_group_count();
 		int32	resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,now,0);
 		View	*view=new	View(View::SYNC_ONCE,now,1,resilience,primary_host,primary_host,f_pred);
 		_Mem::Get()->inject(view);	// inject in the primary group.
@@ -1322,7 +1340,7 @@ namespace	r_exec{
 			Controller::__take_input<PrimaryMDLController>(input);
 	}
 
-	void	PrimaryMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){
+	void	PrimaryMDLController::predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){
 
 		//rhs->get_reference(0)->trace();//bindings->trace();
 		_Fact	*bound_rhs=(_Fact	*)bm->bind_pattern(rhs);	// fact or |fact.
@@ -1471,10 +1489,10 @@ namespace	r_exec{
 			if(confidence<=host->code(GRP_SLN_THR).asFloat())	// cfd is too low for any sub-goal to be injected.
 				return;
 
-			P<BindingMap>	bm=new	BindingMap(bindings);
+			P<HLPBindingMap>	bm=new	HLPBindingMap(bindings);
 			bm->reset_bwd_timings(goal_target);
 			bool	opposite=false;
-			MatchResult	match_result=bm->match_lenient(goal_target,rhs,MATCH_BACKWARD);
+			MatchResult	match_result=bm->match_bwd_lenient(goal_target,rhs);
 			switch(match_result){
 			case	MATCH_SUCCESS_NEGATIVE:
 				opposite=true;
@@ -1487,7 +1505,7 @@ namespace	r_exec{
 					Code	*imdl=goal_target->get_reference(0);
 					if(imdl->code(0).asOpcode()==Opcodes::IMdl	&&	imdl->get_reference(0)==getObject()){	// in that case, get the bm from the imdl, ignore the bwd guards, bind the rhs and inject.
 
-						bm=new	BindingMap(bindings);
+						bm=new	HLPBindingMap(bindings);
 						bm->reset_bwd_timings(goal_target);
 						bm->init_from_f_ihlp(goal_target);
 						abduce(bm,(Fact	*)input_object,opposite,confidence);
@@ -1515,7 +1533,7 @@ namespace	r_exec{
 		reduce_cache<PEEntry>(&predicted_evidences,f_p_f_imdl,controller);
 	}
 
-	void	PrimaryMDLController::abduce(BindingMap	*bm,Fact	*super_goal,bool	opposite,float32	confidence){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
+	void	PrimaryMDLController::abduce(HLPBindingMap	*bm,Fact	*super_goal,bool	opposite,float32	confidence){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
 
 		P<Fact>	f_imdl=get_f_ihlp(bm,false);
 		Sim		*sim=super_goal->get_goal()->sim;
@@ -1598,7 +1616,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	PrimaryMDLController::abduce_lhs(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim,Fact	*ground,bool	set_before){	// goal is f->g->f->object or f->g->|f->object; called concurrently by reduce() and _GMonitor::update().
+	void	PrimaryMDLController::abduce_lhs(HLPBindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim,Fact	*ground,bool	set_before){	// goal is f->g->f->object or f->g->|f->object; called concurrently by reduce() and _GMonitor::update().
 
 		if(evaluate_bwd_guards(bm)){	// bm may be updated.
 
@@ -1645,7 +1663,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	PrimaryMDLController::abduce_imdl(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
+	void	PrimaryMDLController::abduce_imdl(HLPBindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
 
 		f_imdl->set_cfd(confidence);
 
@@ -1658,7 +1676,7 @@ namespace	r_exec{
 		inject_goal(bm,f_sub_goal,f_imdl);
 	}
 
-	void	PrimaryMDLController::abduce_simulated_lhs(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
+	void	PrimaryMDLController::abduce_simulated_lhs(HLPBindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
 
 		if(evaluate_bwd_guards(bm)){	// bm may be updated.
 
@@ -1704,7 +1722,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	PrimaryMDLController::abduce_simulated_imdl(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
+	void	PrimaryMDLController::abduce_simulated_imdl(HLPBindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim){	// goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
 
 		f_imdl->set_cfd(confidence);
 
@@ -1717,7 +1735,7 @@ namespace	r_exec{
 		inject_simulation(f_sub_goal);
 	}
 
-	bool	PrimaryMDLController::check_imdl(Fact	*goal,BindingMap	*bm){	// goal is f->g->f->imdl; called by r-monitors.
+	bool	PrimaryMDLController::check_imdl(Fact	*goal,HLPBindingMap	*bm){	// goal is f->g->f->imdl; called by r-monitors.
 
 		Goal	*g=goal->get_goal();
 		Fact	*f_imdl=(Fact	*)g->get_target();
@@ -1740,7 +1758,7 @@ namespace	r_exec{
 		}
 	}
 
-	bool	PrimaryMDLController::check_simulated_imdl(Fact	*goal,BindingMap	*bm,Controller	*root){	// goal is f->g->f->imdl; called by sr-monitors.
+	bool	PrimaryMDLController::check_simulated_imdl(Fact	*goal,HLPBindingMap	*bm,Controller	*root){	// goal is f->g->f->imdl; called by sr-monitors.
 
 		Goal	*g=goal->get_goal();
 		Fact	*f_imdl=(Fact	*)g->get_target();
@@ -1770,7 +1788,7 @@ namespace	r_exec{
 		}
 	}
 
-	inline	void	PrimaryMDLController::predict_simulated_lhs(BindingMap	*bm,bool	opposite,float32	confidence,Sim	*sim){
+	inline	void	PrimaryMDLController::predict_simulated_lhs(HLPBindingMap	*bm,bool	opposite,float32	confidence,Sim	*sim){
 
 		_Fact	*bound_lhs=(_Fact	*)bm->bind_pattern(get_lhs());
 		if(opposite)
@@ -1973,7 +1991,7 @@ namespace	r_exec{
 
 				codeCS.leave();
 				ModelBase::Get()->register_mdl_failure(model);
-				kill_views();std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" killed "<<std::endl;
+				kill_views();std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" mdl "<<getObject()->get_oid()<<" deleted "<<std::endl;
 			}
 		}
 		//std::cout<<std::hex<<this<<std::dec<<" cnt:"<<instance_count<<" sr:"<<success_rate<<std::endl;
@@ -1996,10 +2014,10 @@ namespace	r_exec{
 		if(confidence<=host->code(GRP_SLN_THR).asFloat())	// cfd is too low for any assumption to be injected.
 			return;
 
-		P<BindingMap>	bm=new	BindingMap(bindings);
+		P<HLPBindingMap>	bm=new	HLPBindingMap(bindings);
 		bm->reset_bwd_timings(input);
 		bool	opposite=false;
-		MatchResult	match_result=bm->match_lenient(input,rhs,MATCH_BACKWARD);
+		MatchResult	match_result=bm->match_bwd_lenient(input,rhs);
 		switch(match_result){
 		case	MATCH_SUCCESS_NEGATIVE:
 			opposite=true;
@@ -2011,7 +2029,7 @@ namespace	r_exec{
 		}
 	}
 
-	void	PrimaryMDLController::assume_lhs(BindingMap	*bm,bool	opposite,_Fact	*input,float32	confidence){	// produce an assumption and inject in primary; no rdx.
+	void	PrimaryMDLController::assume_lhs(HLPBindingMap	*bm,bool	opposite,_Fact	*input,float32	confidence){	// produce an assumption and inject in primary; no rdx.
 
 		P<Fact>	f_imdl=get_f_ihlp(bm,false);
 		Fact	*ground;
@@ -2128,7 +2146,7 @@ namespace	r_exec{
 		reduce_cache<PEEntry>(&predicted_evidences,f_p_f_imdl,controller);
 	}
 
-	void	SecondaryMDLController::predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// predicitons are not injected: they are silently produced for rating purposes.
+	void	SecondaryMDLController::predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){	// predicitons are not injected: they are silently produced for rating purposes.
 
 		//rhs->trace();rhs->get_reference(0)->trace();bindings->trace();
 		_Fact	*bound_rhs=(_Fact	*)bm->bind_pattern(rhs);	// fact or |fact.

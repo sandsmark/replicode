@@ -248,7 +248,7 @@ int32	main(int	argc,char	**argv){
 
 		std::cout<<"> ... done\n";
 
-		r_exec::PipeOStream::Open(1);
+		r_exec::PipeOStream::Open(settings.debug_windows);
 
 		Decompiler	decompiler;
 		decompiler.init(&r_exec::Metadata);

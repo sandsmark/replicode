@@ -42,7 +42,7 @@ namespace	r_exec{
 	class	MDLOverlay:
 	public	HLPOverlay{
 	protected:
-		MDLOverlay(Controller	*c,const	BindingMap	*bindngs);
+		MDLOverlay(Controller	*c,const	HLPBindingMap	*bindngs);
 	public:
 		~MDLOverlay();
 
@@ -54,9 +54,9 @@ namespace	r_exec{
 	class	PrimaryMDLOverlay:
 	public	MDLOverlay{
 	protected:
-		bool	check_simulated_chaining(BindingMap	*bm,Fact	*f_imdl,Pred	*prediction);
+		bool	check_simulated_chaining(HLPBindingMap	*bm,Fact	*f_imdl,Pred	*prediction);
 	public:
-		PrimaryMDLOverlay(Controller	*c,const	BindingMap	*bindngs);
+		PrimaryMDLOverlay(Controller	*c,const	HLPBindingMap	*bindngs);
 		~PrimaryMDLOverlay();
 
 		Overlay	*reduce(_Fact	*input,Fact	*f_p_f_imdl,MDLController	*req_controller);
@@ -65,7 +65,7 @@ namespace	r_exec{
 	class	SecondaryMDLOverlay:
 	public	MDLOverlay{
 	public:
-		SecondaryMDLOverlay(Controller	*c,const	BindingMap	*bindngs);
+		SecondaryMDLOverlay(Controller	*c,const	HLPBindingMap	*bindngs);
 		~SecondaryMDLOverlay();
 
 		Overlay	*reduce(_Fact	*input,Fact	*f_p_f_imdl,MDLController	*req_controller);
@@ -180,15 +180,15 @@ namespace	r_exec{
 
 		_Fact	*get_lhs()	const;
 		_Fact	*get_rhs()	const;
-		Fact	*get_f_ihlp(BindingMap	*bindings,bool	wr_enabled)	const;
+		Fact	*get_f_ihlp(HLPBindingMap	*bindings,bool	wr_enabled)	const;
 
 		virtual	void	store_requirement(_Fact	*f_p_f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation)=0;
-		ChainingStatus	retrieve_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground,MDLController	*req_controller,bool	&wr_enabled);	// checks the requirement instances during fwd; r_p: all wrs in first, all srs in second.
-		ChainingStatus	retrieve_imdl_bwd(BindingMap	*bm,Fact	*f_imdl,Fact	*&ground);	// checks the requirement instances during bwd; ground is set to the best weak requirement if chaining allowed, NULL otherwise.
-		ChainingStatus	retrieve_simulated_imdl_fwd(BindingMap	*bm,Fact	*f_imdl,Controller	*root);
-		ChainingStatus	retrieve_simulated_imdl_bwd(BindingMap	*bm,Fact	*f_imdl,Controller	*root);
+		ChainingStatus	retrieve_imdl_fwd(HLPBindingMap	*bm,Fact	*f_imdl,RequirementsPair	&r_p,Fact	*&ground,MDLController	*req_controller,bool	&wr_enabled);	// checks the requirement instances during fwd; r_p: all wrs in first, all srs in second.
+		ChainingStatus	retrieve_imdl_bwd(HLPBindingMap	*bm,Fact	*f_imdl,Fact	*&ground);	// checks the requirement instances during bwd; ground is set to the best weak requirement if chaining allowed, NULL otherwise.
+		ChainingStatus	retrieve_simulated_imdl_fwd(HLPBindingMap	*bm,Fact	*f_imdl,Controller	*root);
+		ChainingStatus	retrieve_simulated_imdl_bwd(HLPBindingMap	*bm,Fact	*f_imdl,Controller	*root);
 
-		virtual	void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground)=0;
+		virtual	void	predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground)=0;
 		virtual	void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures)=0;
 		virtual	void	register_req_outcome(Fact	*f_pred,bool	success,bool	rate_failures){}
 
@@ -209,7 +209,8 @@ namespace	r_exec{
 		r_code::list<P<_GMonitor> >	g_monitors;
 		r_code::list<P<_GMonitor> >	r_monitors;
 
-		void	inject_goal(BindingMap	*bm,Fact	*goal,Fact	*f_imdl)	const;
+		virtual	uint32	get_rdx_out_group_count()	const{	return	get_out_group_count();	}
+		void	inject_goal(HLPBindingMap	*bm,Fact	*goal,Fact	*f_imdl)	const;
 		void	inject_simulation(Fact	*simulation)	const;
 
 		bool	monitor_goals(_Fact	*input);
@@ -224,7 +225,7 @@ namespace	r_exec{
 		void	remove_r_monitor(_GMonitor	*m);
 
 		virtual	void	register_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const=0;
-				void	register_predicted_goal_outcome(Fact	*goal,BindingMap	*bm,Fact	*f_imdl,bool	success,bool	injected_goal);
+				void	register_predicted_goal_outcome(Fact	*goal,HLPBindingMap	*bm,Fact	*f_imdl,bool	success,bool	injected_goal);
 		virtual	void	register_simulated_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const=0;
 	};
 
@@ -248,8 +249,12 @@ namespace	r_exec{
 	class	TopLevelMDLController:
 	public	PMDLController{
 	private:
-		void	abduce(BindingMap	*bm,Fact	*super_goal,float32	confidence);
-		void	abduce_lhs(	BindingMap	*bm,Fact	*super_goal,_Fact	*sub_goal_target,Fact	*f_imdl,_Fact	*evidence);
+		uint32	get_rdx_out_group_count()	const{	return	get_out_group_count()-1;	}	// so that rdx are not injected in the drives host.
+
+		void	abduce(HLPBindingMap	*bm,Fact	*super_goal,float32	confidence);
+		void	abduce_lhs(HLPBindingMap	*bm,Fact	*super_goal,_Fact	*sub_goal_target,Fact	*f_imdl,_Fact	*evidence);
+
+		void	register_drive_outcome(Fact	*goal,bool	success)	const;
 
 		void	check_last_match_time(bool	match){}
 	public:
@@ -260,7 +265,7 @@ namespace	r_exec{
 
 		void	store_requirement(_Fact	*f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation);	// never called.
 
-		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
+		void	predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
 		void	register_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
 		void	register_simulated_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
@@ -299,14 +304,14 @@ namespace	r_exec{
 		void	kill_views();	// force res in both primary/secondary to 0.
 		void	check_last_match_time(bool	match);	// activate secondary controller if no match after primary_thz;
 
-		void	abduce_lhs(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim,Fact	*ground,bool	set_before);
-		void	abduce_imdl(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim);
-		void	abduce_simulated_lhs(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim);
-		void	abduce_simulated_imdl(BindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim);
-		void	predict_simulated_lhs(BindingMap	*bm,bool	opposite,float32	confidence,Sim	*sim);
+		void	abduce_lhs(HLPBindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim,Fact	*ground,bool	set_before);
+		void	abduce_imdl(HLPBindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim);
+		void	abduce_simulated_lhs(HLPBindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim);
+		void	abduce_simulated_imdl(HLPBindingMap	*bm,Fact	*super_goal,Fact	*f_imdl,bool	opposite,float32	confidence,Sim	*sim);
+		void	predict_simulated_lhs(HLPBindingMap	*bm,bool	opposite,float32	confidence,Sim	*sim);
 		void	predict_simulated_evidence(_Fact	*evidence,Sim	*sim);
 		void	assume(_Fact	*input);
-		void	assume_lhs(BindingMap	*bm,bool	opposite,_Fact	*input,float32	confidence);
+		void	assume_lhs(HLPBindingMap	*bm,bool	opposite,_Fact	*input,float32	confidence);
 	public:
 		PrimaryMDLController(r_code::View	*view);
 
@@ -318,7 +323,7 @@ namespace	r_exec{
 
 		void	store_requirement(_Fact	*f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation);
 
-		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
+		void	predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
 		bool	inject_prediction(Fact	*prediction,Fact	*f_imdl,float32	confidence,uint64	time_to_live,Code	*mk_rdx)	const;	// here, resilience=time to live, in us; returns true if the prediction has actually been injected.
 
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
@@ -327,9 +332,9 @@ namespace	r_exec{
 		void	register_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
 		void	register_simulated_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
 
-		bool	check_imdl(Fact	*goal,BindingMap	*bm);
-		bool	check_simulated_imdl(Fact	*goal,BindingMap	*bm,Controller	*root);
-		void	abduce(BindingMap	*bm,Fact	*super_goal,bool	opposite,float32	confidence);
+		bool	check_imdl(Fact	*goal,HLPBindingMap	*bm);
+		bool	check_simulated_imdl(Fact	*goal,HLPBindingMap	*bm,Controller	*root);
+		void	abduce(HLPBindingMap	*bm,Fact	*super_goal,bool	opposite,float32	confidence);
 	};
 
 	// No backward chaining.
@@ -358,7 +363,7 @@ namespace	r_exec{
 
 		void	store_requirement(_Fact	*f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation);
 
-		void	predict(BindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
+		void	predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
 		void	register_req_outcome(_Fact	*f_pred,bool	success,bool	rate_failures);
 	};

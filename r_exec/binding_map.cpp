@@ -315,12 +315,6 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Code	*BindingMap::Abstract(Code	*object,BindingMap	*&bindings){	// builds a binding map holding the original values.
-
-		bindings=new	BindingMap();
-		return	bindings->abstract_object(object,false);
-	}
-
 	_Fact	*BindingMap::abstract_f_ihlp(_Fact	*f_ihlp)	const{	// bindings are set already (coming from a mk.rdx caught by auto-focus).
 
 		uint16	opcode;
@@ -367,15 +361,15 @@ namespace	r_exec{
 
 	_Fact	*BindingMap::abstract_fact(_Fact	*fact,_Fact	*original,bool	force_sync){	// abstract values as they are encountered.
 		
-		if(after_index==-1)
+		if(fwd_after_index==-1)
 			first_index=map.size();
 
 		uint16	extent_index=FACT_ARITY+1;
 		abstract_member(original,FACT_OBJ,fact,FACT_OBJ,extent_index);
-		if(after_index!=-1	&&	force_sync){
+		if(fwd_after_index!=-1	&&	force_sync){
 			
-			fact->code(FACT_AFTER)=Atom::VLPointer(after_index);
-			fact->code(FACT_BEFORE)=Atom::VLPointer(after_index+1);
+			fact->code(FACT_AFTER)=Atom::VLPointer(fwd_after_index);
+			fact->code(FACT_BEFORE)=Atom::VLPointer(fwd_before_index);
 		}else{
 			
 			abstract_member(original,FACT_AFTER,fact,FACT_AFTER,extent_index);
@@ -384,8 +378,11 @@ namespace	r_exec{
 		fact->code(FACT_CFD)=Atom::Wildcard();
 		fact->code(FACT_ARITY)=Atom::Wildcard();
 
-		if(after_index==-1)
-			after_index=map.size()-2;
+		if(fwd_after_index==-1){
+
+			fwd_after_index=map.size()-2;
+			fwd_before_index=fwd_after_index+1;
+		}
 
 		return	fact;
 	}
@@ -522,7 +519,7 @@ namespace	r_exec{
 		return	Atom::VLPointer(size);
 	}
 
-	BindingMap::BindingMap():_Object(),after_index(-1),unbound_values(0){
+	BindingMap::BindingMap():_Object(),fwd_after_index(-1),fwd_before_index(-1),unbound_values(0){
 	}
 
 	BindingMap::BindingMap(const	BindingMap	*source):_Object(){
@@ -535,10 +532,13 @@ namespace	r_exec{
 		*this=source;
 	}
 
+	BindingMap::~BindingMap(){
+	}
+
 	void	BindingMap::clear(){
 
 		map.clear();
-		after_index=-1;
+		fwd_after_index=fwd_before_index=-1;
 	}
 
 	BindingMap	&BindingMap::operator	=(const	BindingMap	&source){
@@ -547,7 +547,8 @@ namespace	r_exec{
 		for(uint8	i=0;i<source.map.size();++i)
 			map.push_back(source.map[i]->copy(this));
 		first_index=source.first_index;
-		after_index=source.after_index;
+		fwd_after_index=source.fwd_after_index;
+		fwd_before_index=source.fwd_before_index;
 		unbound_values=source.unbound_values;
 		return	*this;
 	}
@@ -562,149 +563,6 @@ namespace	r_exec{
 		if(id>=map.size())
 			map.resize(id+1);
 		map[id]=new	UnboundValue(this,id);
-	}
-
-	void	BindingMap::init_from_hlp(const	Code	*hlp){	// hlp is cst or mdl.
-
-		uint16	tpl_arg_set_index=hlp->code(HLP_TPL_ARGS).asIndex();
-		uint16	tpl_arg_count=hlp->code(tpl_arg_set_index).getAtomCount();
-		for(uint16	i=1;i<=tpl_arg_count;++i){
-
-			Atom	a=hlp->code(tpl_arg_set_index+i);
-			if(a.getDescriptor()==Atom::VL_PTR)
-				add_unbound_value(a.asIndex());
-		}
-
-		first_index=map.size();
-		
-		uint16	obj_set_index=hlp->code(HLP_OBJS).asIndex();
-		uint16	obj_count=hlp->code(obj_set_index).getAtomCount();
-		for(uint16	i=1;i<=obj_count;++i){
-
-			_Fact	*pattern=(_Fact	*)hlp->get_reference(hlp->code(obj_set_index+i).asIndex());
-			init_from_pattern(pattern);
-		}
-	}
-
-	void	BindingMap::init_from_pattern(const	Code	*source){	// source is abstracted.
-
-		bool	set_timing_index=(source->code(0).asOpcode()==Opcodes::Fact	||	source->code(0).asOpcode()==Opcodes::AntiFact)	&&	after_index==-1;
-		for(uint16	i=1;i<source->code_size();++i){
-
-			Atom	s=source->code(i);
-			switch(s.getDescriptor()){
-			case	Atom::VL_PTR:{
-				uint8	value_index=source->code(i).asIndex();
-				add_unbound_value(value_index);
-				if(set_timing_index	&&	i==FACT_AFTER){
-
-					after_index=value_index;
-					set_timing_index=false;
-				}
-				break;
-			}default:
-				break;
-			}
-		}
-
-		for(uint16	i=0;i<source->references_size();++i)
-			init_from_pattern(source->get_reference(i));
-	}
-
-	void	BindingMap::init_from_f_ihlp(const	_Fact	*f_ihlp){	// source is f->icst or f->imdl; map already initialized with values from hlp.
-
-		Code	*ihlp=f_ihlp->get_reference(0);
-
-		uint16	tpl_val_set_index=ihlp->code(I_HLP_TPL_ARGS).asIndex();
-		uint16	tpl_val_count=ihlp->code(tpl_val_set_index++).getAtomCount();
-		for(uint16	i=0;i<tpl_val_count;++i){	// valuate tpl args.
-
-			Atom	atom=ihlp->code(tpl_val_set_index+i);
-			switch(atom.getDescriptor()){
-			case	Atom::R_PTR:
-				map[i]=new	ObjectValue(this,ihlp->get_reference(atom.asIndex()));
-				break;
-			case	Atom::I_PTR:
-				map[i]=new	StructureValue(this,ihlp,atom.asIndex());
-				break;
-			default:
-				map[i]=new	AtomValue(this,atom);
-				break;
-			}
-		}
-
-		uint16	val_set_index=ihlp->code(I_HLP_ARGS).asIndex()+1;
-		uint32	i=0;
-		for(uint32	j=first_index;j<map.size();++j){	// valuate args.
-
-			if(j==after_index	||	j==after_index+1)
-				continue;
-
-			Atom	atom=ihlp->code(val_set_index+i);
-			switch(atom.getDescriptor()){
-			case	Atom::R_PTR:
-				map[j]=new	ObjectValue(this,ihlp->get_reference(atom.asIndex()));
-				break;
-			case	Atom::I_PTR:
-				map[j]=new	StructureValue(this,ihlp,atom.asIndex());
-				break;
-			case	Atom::WILDCARD:
-			case	Atom::T_WILDCARD:
-			case	Atom::VL_PTR:
-				break;
-			default:
-				map[j]=new	AtomValue(this,atom);
-				break;
-			}
-		}
-
-		map[after_index]=new	StructureValue(this,f_ihlp,FACT_AFTER);	// valuate timings; after_index is already known.
-		map[after_index+1]=new	StructureValue(this,f_ihlp,FACT_BEFORE);
-	}
-
-	Fact	*BindingMap::build_f_ihlp(Code	*hlp,uint16	opcode,bool	wr_enabled)	const{
-
-		Code	*ihlp=_Mem::Get()->build_object(Atom::Object(opcode,I_HLP_ARITY));
-		ihlp->code(I_HLP_OBJ)=Atom::RPointer(0);
-		ihlp->add_reference(hlp);
-
-		uint16	tpl_arg_index=I_HLP_ARITY+1;
-		ihlp->code(I_HLP_TPL_ARGS)=Atom::IPointer(tpl_arg_index);
-		ihlp->code(tpl_arg_index)=Atom::Set(first_index);
-		uint16	write_index=tpl_arg_index+1;
-		uint16	extent_index=write_index+first_index;
-		for(uint16	i=0;i<first_index;++i){	// valuate tpl args.
-
-			map[i]->valuate(ihlp,write_index,extent_index);
-			++write_index;
-		}
-
-		ihlp->code(I_HLP_ARGS)=Atom::IPointer(extent_index);
-		uint16	exposed_arg_start=first_index;
-		uint16	exposed_arg_count=map.size()-exposed_arg_start-2;	// -2: do not expose the first after/before timestamps.
-		ihlp->code(extent_index)=Atom::Set(exposed_arg_count);
-
-		uint32	before_index=after_index+1;
-		write_index=extent_index+1;
-		extent_index=write_index+exposed_arg_count;
-		for(uint16	i=exposed_arg_start;i<map.size();++i){	// valuate args.
-
-			if(i==after_index)
-				continue;
-			if(i==before_index)
-				continue;
-			map[i]->valuate(ihlp,write_index,extent_index);
-			++write_index;
-		}
-
-		ihlp->code(I_HLP_WR_E)=Atom::Boolean(wr_enabled);
-		ihlp->code(I_HLP_ARITY)=Atom::Float(1);	// psln_thr.
-
-		Fact	*f_ihlp=new	Fact(ihlp,0,0,1,1);
-		extent_index=FACT_ARITY+1;
-		map[after_index]->valuate(f_ihlp,FACT_AFTER,extent_index);
-		map[after_index+1]->valuate(f_ihlp,FACT_BEFORE,extent_index);
-		return	f_ihlp;
 	}
 
 	bool	BindingMap::match(const	Code	*object,uint16	o_base_index,uint16	o_index,const	Code	*pattern,uint16	p_index,uint16	o_arity){
@@ -799,39 +657,26 @@ namespace	r_exec{
 		return	match(object,o_base_index,o_index+1,pattern,p_index+1,arity);
 	}
 
-	bool	BindingMap::match_timings(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d){
+	void	BindingMap::reset_fwd_timings(_Fact	*reference_fact){	// valuate at after_index and after_index+1 from the timings of the reference object.
 
-		uint64	after=f_object->get_after();
-		uint64	before=f_object->get_before();
+		map[fwd_after_index]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_AFTER).asIndex());
+		map[fwd_before_index]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_BEFORE).asIndex());
+	}
 
-		uint64	stored_after;
-		uint64	stored_before;
-		uint32	after_index;
-		switch(d){
-		case	MATCH_FORWARD:
-			stored_after=get_fwd_after();
-			stored_before=get_fwd_before();
-			after_index=this->after_index;
-			break;
-		case	MATCH_BACKWARD:
-			stored_after=get_bwd_after();
-			stored_before=get_bwd_before();
-			after_index=map.size()-2;
-			break;
-		}
+	bool	BindingMap::match_timings(uint64	stored_after,uint64	stored_before,uint64	after,uint64	before,uint32	destination_after_index,uint32	destination_before_index){
 
 		if(stored_after<=after){
 
 			if(stored_before>=before){			// sa a b sb
 
-				Utils::SetTimestamp(map[after_index]->get_code(),after);
-				Utils::SetTimestamp(map[after_index+1]->get_code(),before);
+				Utils::SetTimestamp(map[destination_after_index]->get_code(),after);
+				Utils::SetTimestamp(map[destination_before_index]->get_code(),before);
 				return	true;
 			}else{
 
 				if(stored_before>after){		// sa a sb b
 
-					Utils::SetTimestamp(map[after_index]->get_code(),after);
+					Utils::SetTimestamp(map[destination_after_index]->get_code(),after);
 					return	true;
 				}
 				return	false;
@@ -842,26 +687,31 @@ namespace	r_exec{
 				return	true;
 			else	if(stored_after<before){	// a sa b sb
 
-				Utils::SetTimestamp(map[after_index+1]->get_code(),before);
+				Utils::SetTimestamp(map[destination_before_index]->get_code(),before);
 				return	true;
 			}
 			return	false;
 		}
 	}
 
-	bool	BindingMap::match_strict(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d){
+	bool	BindingMap::match_fwd_timings(const	_Fact	*f_object,const	_Fact	*f_pattern){
+
+		return	match_timings(get_fwd_after(),get_fwd_before(),f_object->get_after(),f_object->get_before(),fwd_after_index,fwd_before_index);
+	}
+
+	bool	BindingMap::match_fwd_strict(const	_Fact	*f_object,const	_Fact	*f_pattern){
 
 		if(match_object(f_object->get_reference(0),f_pattern->get_reference(0))){
 
 			if(f_object->code(0)!=f_pattern->code(0))
 				return	false;
 
-			return	match_timings(f_object,f_pattern,d);
+			return	match_fwd_timings(f_object,f_pattern);
 		}else
 			return	false;
 	}
 
-	MatchResult	BindingMap::match_lenient(const	_Fact	*f_object,const	_Fact	*f_pattern,MatchDirection	d){
+	MatchResult	BindingMap::match_fwd_lenient(const	_Fact	*f_object,const	_Fact	*f_pattern){
 
 		if(match_object(f_object->get_reference(0),f_pattern->get_reference(0))){
 
@@ -871,11 +721,21 @@ namespace	r_exec{
 			else
 				r=MATCH_SUCCESS_NEGATIVE;
 
-			if(match_timings(f_object,f_pattern,d))
+			if(match_fwd_timings(f_object,f_pattern))
 				return	r;
 			return	MATCH_FAILURE;
 		}else
 			return	MATCH_FAILURE;
+	}
+
+	uint64	BindingMap::get_fwd_after()		const{
+
+		return	Utils::GetTimestamp(map[fwd_after_index]->get_code());
+	}
+
+	uint64	BindingMap::get_fwd_before()	const{
+
+		return	Utils::GetTimestamp(map[fwd_before_index]->get_code());
 	}
 
 	bool	BindingMap::match_object(const	Code	*object,const	Code	*pattern){
@@ -908,7 +768,256 @@ namespace	r_exec{
 		}
 	}
 
-	Code	*BindingMap::bind_pattern(Code	*pattern)	const{
+	Atom	*BindingMap::get_value_code(uint16	id){
+
+		return	map[id]->get_code();
+	}
+
+	uint16	BindingMap::get_value_code_size(uint16	id){
+
+		return	map[id]->get_code_size();
+	}
+
+	bool	BindingMap::intersect(BindingMap	*bm){
+
+		for(uint32	i=0;i<map.size();){
+
+			if(i==fwd_after_index){	// ignore fact timings.
+
+				i+=2;
+				continue;
+			}
+
+			for(uint32	j=0;j<bm->map.size();){
+
+				if(j==bm->fwd_after_index){	// ignore fact timings.
+
+					j+=2;
+					continue;
+				}
+
+				if(map[i]->intersect(bm->map[j]))
+					return	true;
+
+				++j;
+			}
+
+			++i;
+		}
+
+		return	false;
+	}
+
+	bool	BindingMap::is_fully_specified()	const{
+
+		return	unbound_values==0;
+	}
+
+	void	BindingMap::trace(){
+
+		std::cout<<"Binding Map"<<std::endl;
+		for(uint16	i=0;i<map.size();++i){
+
+			std::cout<<"["<<i<<"]\n";
+			map[i]->trace();
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	HLPBindingMap::HLPBindingMap():BindingMap(),bwd_after_index(-1),bwd_before_index(-1){
+	}
+
+	HLPBindingMap::HLPBindingMap(const	HLPBindingMap	*source):BindingMap(){
+
+		*this=*source;
+	}
+
+	HLPBindingMap::HLPBindingMap(const	HLPBindingMap	&source):BindingMap(){
+
+		*this=source;
+	}
+
+	HLPBindingMap::~HLPBindingMap(){
+	}
+
+	void	HLPBindingMap::clear(){
+
+		BindingMap::clear();
+		bwd_after_index=bwd_before_index=-1;
+	}
+
+	HLPBindingMap	&HLPBindingMap::operator	=(const	HLPBindingMap	&source){
+
+		clear();
+		for(uint8	i=0;i<source.map.size();++i)
+			map.push_back(source.map[i]->copy(this));
+		first_index=source.first_index;
+		fwd_after_index=source.fwd_after_index;
+		fwd_before_index=source.fwd_before_index;
+		bwd_after_index=source.bwd_after_index;
+		bwd_before_index=source.bwd_before_index;
+		unbound_values=source.unbound_values;
+		return	*this;
+	}
+
+	void	HLPBindingMap::load(const	HLPBindingMap	*source){
+
+		*this=*source;
+	}
+
+	void	HLPBindingMap::init_from_pattern(const	Code	*source,int16	position){	// source is abstracted.
+
+		bool	set_fwd_timing_index=(position==0);
+		bool	set_bwd_timing_index=(position==1);
+		for(uint16	i=1;i<source->code_size();++i){
+
+			Atom	s=source->code(i);
+			switch(s.getDescriptor()){
+			case	Atom::VL_PTR:{
+				uint8	value_index=source->code(i).asIndex();
+				add_unbound_value(value_index);
+				if(set_fwd_timing_index	&&	i==FACT_AFTER)
+					fwd_after_index=value_index;
+				else	if(set_fwd_timing_index	&&	i==FACT_BEFORE){
+
+					fwd_before_index=value_index;
+					set_fwd_timing_index=false;
+				}else	if(set_bwd_timing_index	&&	i==FACT_AFTER)
+					bwd_after_index=value_index;
+				else	if(set_bwd_timing_index	&&	i==FACT_BEFORE){
+
+					bwd_before_index=value_index;
+					set_bwd_timing_index=false;
+				}
+				break;
+			}default:
+				break;
+			}
+		}
+
+		for(uint16	i=0;i<source->references_size();++i)
+			init_from_pattern(source->get_reference(i),-1);
+	}
+
+	void	HLPBindingMap::init_from_hlp(const	Code	*hlp){	// hlp is cst or mdl.
+
+		uint16	tpl_arg_set_index=hlp->code(HLP_TPL_ARGS).asIndex();
+		uint16	tpl_arg_count=hlp->code(tpl_arg_set_index).getAtomCount();
+		for(uint16	i=1;i<=tpl_arg_count;++i){
+
+			Atom	a=hlp->code(tpl_arg_set_index+i);
+			if(a.getDescriptor()==Atom::VL_PTR)
+				add_unbound_value(a.asIndex());
+		}
+
+		first_index=map.size();
+		
+		uint16	obj_set_index=hlp->code(HLP_OBJS).asIndex();
+		uint16	obj_count=hlp->code(obj_set_index).getAtomCount();
+		for(uint16	i=1;i<=obj_count;++i){
+
+			_Fact	*pattern=(_Fact	*)hlp->get_reference(hlp->code(obj_set_index+i).asIndex());
+			init_from_pattern(pattern,i-1);
+		}
+	}
+
+	void	HLPBindingMap::init_from_f_ihlp(const	_Fact	*f_ihlp){	// source is f->icst or f->imdl; map already initialized with values from hlp.
+
+		Code	*ihlp=f_ihlp->get_reference(0);
+
+		uint16	tpl_val_set_index=ihlp->code(I_HLP_TPL_ARGS).asIndex();
+		uint16	tpl_val_count=ihlp->code(tpl_val_set_index++).getAtomCount();
+		for(uint16	i=0;i<tpl_val_count;++i){	// valuate tpl args.
+
+			Atom	atom=ihlp->code(tpl_val_set_index+i);
+			switch(atom.getDescriptor()){
+			case	Atom::R_PTR:
+				map[i]=new	ObjectValue(this,ihlp->get_reference(atom.asIndex()));
+				break;
+			case	Atom::I_PTR:
+				map[i]=new	StructureValue(this,ihlp,atom.asIndex());
+				break;
+			default:
+				map[i]=new	AtomValue(this,atom);
+				break;
+			}
+		}
+
+		uint16	val_set_index=ihlp->code(I_HLP_ARGS).asIndex()+1;
+		uint32	i=0;
+		for(uint32	j=first_index;j<map.size();++j){	// valuate args.
+
+			if(j==fwd_after_index	||	j==fwd_before_index)
+				continue;
+
+			Atom	atom=ihlp->code(val_set_index+i);
+			switch(atom.getDescriptor()){
+			case	Atom::R_PTR:
+				map[j]=new	ObjectValue(this,ihlp->get_reference(atom.asIndex()));
+				break;
+			case	Atom::I_PTR:
+				map[j]=new	StructureValue(this,ihlp,atom.asIndex());
+				break;
+			case	Atom::WILDCARD:
+			case	Atom::T_WILDCARD:
+			case	Atom::VL_PTR:
+				break;
+			default:
+				map[j]=new	AtomValue(this,atom);
+				break;
+			}
+		}
+
+		map[fwd_after_index]=new	StructureValue(this,f_ihlp,FACT_AFTER);	// valuate timings; fwd_after_index is already known.
+		map[fwd_before_index]=new	StructureValue(this,f_ihlp,FACT_BEFORE);
+	}
+
+	Fact	*HLPBindingMap::build_f_ihlp(Code	*hlp,uint16	opcode,bool	wr_enabled)	const{
+
+		Code	*ihlp=_Mem::Get()->build_object(Atom::Object(opcode,I_HLP_ARITY));
+		ihlp->code(I_HLP_OBJ)=Atom::RPointer(0);
+		ihlp->add_reference(hlp);
+
+		uint16	tpl_arg_index=I_HLP_ARITY+1;
+		ihlp->code(I_HLP_TPL_ARGS)=Atom::IPointer(tpl_arg_index);
+		ihlp->code(tpl_arg_index)=Atom::Set(first_index);
+		uint16	write_index=tpl_arg_index+1;
+		uint16	extent_index=write_index+first_index;
+		for(uint16	i=0;i<first_index;++i){	// valuate tpl args.
+
+			map[i]->valuate(ihlp,write_index,extent_index);
+			++write_index;
+		}
+
+		ihlp->code(I_HLP_ARGS)=Atom::IPointer(extent_index);
+		uint16	exposed_arg_start=first_index;
+		uint16	exposed_arg_count=map.size()-exposed_arg_start-2;	// -2: do not expose the first after/before timestamps.
+		ihlp->code(extent_index)=Atom::Set(exposed_arg_count);
+
+		write_index=extent_index+1;
+		extent_index=write_index+exposed_arg_count;
+		for(uint16	i=exposed_arg_start;i<map.size();++i){	// valuate args.
+
+			if(i==fwd_after_index)
+				continue;
+			if(i==fwd_before_index)
+				continue;
+			map[i]->valuate(ihlp,write_index,extent_index);
+			++write_index;
+		}
+
+		ihlp->code(I_HLP_WR_E)=Atom::Boolean(wr_enabled);
+		ihlp->code(I_HLP_ARITY)=Atom::Float(1);	// psln_thr.
+
+		Fact	*f_ihlp=new	Fact(ihlp,0,0,1,1);
+		extent_index=FACT_ARITY+1;
+		map[fwd_after_index]->valuate(f_ihlp,FACT_AFTER,extent_index);
+		map[fwd_before_index]->valuate(f_ihlp,FACT_BEFORE,extent_index);
+		return	f_ihlp;
+	}
+
+	Code	*HLPBindingMap::bind_pattern(Code	*pattern)	const{
 
 		if(!need_binding(pattern))
 			return	pattern;
@@ -933,10 +1042,14 @@ namespace	r_exec{
 				map[p_atom.asIndex()]->valuate(bound_pattern,i,extent_index);
 				break;
 			case	Atom::TIMESTAMP:
-			case	Atom::STRING:
-				i+=p_atom.getAtomCount();
+			case	Atom::STRING:{	// avoid misinterpreting raw data that could be lead by descriptors.
+				bound_pattern->code(i)=p_atom;
+				uint16	atom_count=p_atom.getAtomCount();
+				for(uint16	j=i+1;j<=i+atom_count;++j)
+					bound_pattern->code(j)=pattern->code(j);
+				i+=atom_count;
 				break;
-			default:
+			}default:
 				bound_pattern->code(i)=p_atom;
 				break;
 			}
@@ -945,7 +1058,7 @@ namespace	r_exec{
 		return	bound_pattern;
 	}
 
-	bool	BindingMap::need_binding(Code	*pattern)	const{
+	bool	HLPBindingMap::need_binding(Code	*pattern)	const{
 
 		if(	pattern->code(0).asOpcode()==Opcodes::Ont	||
 			pattern->code(0).asOpcode()==Opcodes::Ent	||
@@ -977,90 +1090,53 @@ namespace	r_exec{
 		return	false;
 	}
 
-	Atom	*BindingMap::get_value_code(uint16	id){
+	void	HLPBindingMap::reset_bwd_timings(_Fact	*reference_fact){	// valuate at after_index and after_index+1 from the timings of the reference fact.
 
-		return	map[id]->get_code();
+		map[bwd_after_index]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_AFTER).asIndex());
+		map[bwd_before_index]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_BEFORE).asIndex());
 	}
 
-	uint16	BindingMap::get_value_code_size(uint16	id){
+	bool	HLPBindingMap::match_bwd_timings(const	_Fact	*f_object,const	_Fact	*f_pattern){
 
-		return	map[id]->get_code_size();
+		return	match_timings(get_bwd_after(),get_bwd_before(),f_object->get_after(),f_object->get_before(),bwd_after_index,bwd_before_index);
 	}
 
-	void	BindingMap::reset_fwd_timings(_Fact	*reference_fact){	// valuate at after_index and after_index+1 from the timings of the reference object.
+	bool	HLPBindingMap::match_bwd_strict(const	_Fact	*f_object,const	_Fact	*f_pattern){
 
-		map[after_index]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_AFTER).asIndex());
-		map[after_index+1]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_BEFORE).asIndex());
+		if(match_object(f_object->get_reference(0),f_pattern->get_reference(0))){
+
+			if(f_object->code(0)!=f_pattern->code(0))
+				return	false;
+
+			return	match_bwd_timings(f_object,f_pattern);
+		}else
+			return	false;
 	}
 
-	void	BindingMap::reset_bwd_timings(_Fact	*reference_fact){	// valuate at after_index and after_index+1 from the timings of the reference fact.
+	MatchResult	HLPBindingMap::match_bwd_lenient(const	_Fact	*f_object,const	_Fact	*f_pattern){
 
-		map[map.size()-2]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_AFTER).asIndex());
-		map[map.size()-1]=new	StructureValue(this,reference_fact,reference_fact->code(FACT_BEFORE).asIndex());
+		if(match_object(f_object->get_reference(0),f_pattern->get_reference(0))){
+
+			MatchResult	r;
+			if(f_pattern->code(0)==f_object->code(0))
+				r=MATCH_SUCCESS_POSITIVE;
+			else
+				r=MATCH_SUCCESS_NEGATIVE;
+
+			if(match_bwd_timings(f_object,f_pattern))
+				return	r;
+			return	MATCH_FAILURE;
+		}else
+			return	MATCH_FAILURE;
 	}
 
-	uint64	BindingMap::get_fwd_after()		const{
+	uint64	HLPBindingMap::get_bwd_after()		const{
 
-		return	Utils::GetTimestamp(map[after_index]->get_code());
+		return	Utils::GetTimestamp(map[bwd_after_index]->get_code());
 	}
 
-	uint64	BindingMap::get_fwd_before()	const{
+	uint64	HLPBindingMap::get_bwd_before()	const{
 
-		return	Utils::GetTimestamp(map[after_index+1]->get_code());
-	}
-
-	uint64	BindingMap::get_bwd_after()		const{
-
-		return	Utils::GetTimestamp(map[map.size()-2]->get_code());
-	}
-
-	uint64	BindingMap::get_bwd_before()	const{
-
-		return	Utils::GetTimestamp(map[map.size()-1]->get_code());
-	}
-
-	bool	BindingMap::intersect(BindingMap	*bm){
-
-		for(uint32	i=0;i<map.size();){
-
-			if(i==after_index){	// ignore fact timings.
-
-				i+=2;
-				continue;
-			}
-
-			for(uint32	j=0;j<bm->map.size();){
-
-				if(j==bm->after_index){	// ignore fact timings.
-
-					j+=2;
-					continue;
-				}
-
-				if(map[i]->intersect(bm->map[j]))
-					return	true;
-
-				++j;
-			}
-
-			++i;
-		}
-
-		return	false;
-	}
-
-	bool	BindingMap::is_fully_specified()	const{
-
-		return	unbound_values==0;
-	}
-
-	void	BindingMap::trace(){
-
-		std::cout<<"Binding Map"<<std::endl;
-		for(uint16	i=0;i<map.size();++i){
-
-			std::cout<<"["<<i<<"]\n";
-			map[i]->trace();
-		}
+		return	Utils::GetTimestamp(map[bwd_before_index]->get_code());
 	}
 }
