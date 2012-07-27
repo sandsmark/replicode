@@ -48,7 +48,7 @@
 !class (imdl (_obj {mdl:mdl tpl_args:[] args:[] wr_e:bl}))
 !class (pred (_obj {obj:}))
 !class (goal (_obj {obj: actr:ent}))
-!class (success (_obj obj: evd:))
+!class (success (_obj {obj: evd:}))
 !class (mk.grp_pair (_obj {primary:grp secondary:grp}))
 
 ; performance counters (latencies).
