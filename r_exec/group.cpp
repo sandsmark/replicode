@@ -494,7 +494,7 @@ namespace	r_exec{
 		}
 
 		uint64	now=Now();
-		//if(group->get_secondary_group()!=NULL)
+		//if(get_secondary_group()!=NULL)
 		//	std::cout<<Utils::RelativeTime(Now())<<" UPR\n";
 		//if(this==_Mem::Get()->get_stdin())
 		//	std::cout<<Utils::RelativeTime(Now())<<" ----------------------------------------------------------------\n";
@@ -598,7 +598,7 @@ namespace	r_exec{
 
 		leave();
 
-		//if(group->get_secondary_group()!=NULL)
+		//if(get_secondary_group()!=NULL)
 		//if(this==_Mem::Get()->get_stdin())
 		//	std::cout<<Utils::RelativeTime(Now())<<" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
 	}

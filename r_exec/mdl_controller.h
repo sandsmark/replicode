@@ -190,12 +190,12 @@ namespace	r_exec{
 
 		virtual	void	predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground)=0;
 		virtual	void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures)=0;
-		virtual	void	register_req_outcome(Fact	*f_pred,bool	success,bool	rate_failures){}
+		virtual	void	register_req_outcome(Fact	*f_pred,bool	success,bool	rate_failures)=0;
 
 		void	add_requirement_to_rhs();
 		void	remove_requirement_from_rhs();
 
-		RType	is_requirement()	const{	return	_is_requirement;	}
+		bool	is_requirement()	const{	return	(_is_requirement!=NaR);	}
 		bool	is_reuse()			const{	return	_is_reuse;	}
 		bool	is_cmd()			const{	return	_is_cmd;	}
 
@@ -269,6 +269,7 @@ namespace	r_exec{
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
 		void	register_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
 		void	register_simulated_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
+		void	register_req_outcome(Fact	*f_pred,bool	success,bool	rate_failures);
 	};
 
 	class	SecondaryMDLController;
@@ -329,7 +330,7 @@ namespace	r_exec{
 		bool	inject_prediction(Fact	*prediction,Fact	*f_imdl,float32	confidence,uint64	time_to_live,Code	*mk_rdx)	const;	// here, resilience=time to live, in us; returns true if the prediction has actually been injected.
 
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
-		void	register_req_outcome(_Fact	*f_imdl,bool	success,bool	rate_failures);
+		void	register_req_outcome(Fact	*f_pred,bool	success,bool	rate_failures);
 
 		void	register_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
 		void	register_simulated_goal_outcome(Fact	*goal,bool	success,_Fact	*evidence)	const;
@@ -337,6 +338,8 @@ namespace	r_exec{
 		bool	check_imdl(Fact	*goal,HLPBindingMap	*bm);
 		bool	check_simulated_imdl(Fact	*goal,HLPBindingMap	*bm,Controller	*root);
 		void	abduce(HLPBindingMap	*bm,Fact	*super_goal,bool	opposite,float32	confidence);
+
+		void	debug(View	*input);
 	};
 
 	// No backward chaining.
@@ -367,7 +370,7 @@ namespace	r_exec{
 
 		void	predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground);
 		void	register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures);
-		void	register_req_outcome(_Fact	*f_pred,bool	success,bool	rate_failures);
+		void	register_req_outcome(Fact	*f_pred,bool	success,bool	rate_failures);
 	};
 }
 

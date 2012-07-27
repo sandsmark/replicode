@@ -417,7 +417,10 @@ namespace	r_exec{
 	}
 
 	void	GTPX::signal(View	*input)	const{	// will be erased from the AF map upon return. P<> kept in reduction job.
-//return;
+
+		if(!auto_focus->gtpx_on())
+			return;
+
 		if(((_Fact	*)input->object)->is_fact()){	// goal success.
 
 			ReductionJob<GTPX>	*j=new	ReductionJob<GTPX>(new	View(input),(GTPX	*)this);
@@ -433,10 +436,12 @@ namespace	r_exec{
 	void	GTPX::reduce(r_exec::View	*input){	// input->object: f->success.
 
 		_Fact	*consequent=(_Fact	*)input->object->get_reference(0)->get_reference(1);
+		P<BindingMap>	consequent_bm=new	BindingMap();
+		_Fact	*abstracted_consequent=(_Fact	*)consequent_bm->abstract_object(consequent,false);
 
 		for(uint32	i=0;i<predictions.size();++i){	// check if some models have successfully predicted the target: if so, abort.
 
-			P<BindingMap>	bm=new	BindingMap();
+			P<BindingMap>	bm=new	BindingMap(consequent_bm);
 			bm->reset_fwd_timings(predictions[i]);
 			if(bm->match_fwd_strict(predictions[i],consequent))
 				return;
@@ -558,7 +563,10 @@ namespace	r_exec{
 	}
 
 	void	PTPX::signal(View	*input)	const{	// will be erased from the AF map upon return. P<> kept in reduction job.
-return;
+
+		if(!auto_focus->ptpx_on())
+			return;
+
 		if(((_Fact	*)input->object)->is_anti_fact()){	// prediction failure.
 
 			ReductionJob<PTPX>	*j=new	ReductionJob<PTPX>(new	View(input),(PTPX	*)this);

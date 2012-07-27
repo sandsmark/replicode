@@ -40,17 +40,21 @@ namespace	r_exec{
 		Code	*icpp_pgm=getObject();
 		uint16	arg_set_index=icpp_pgm->code(ICPP_PGM_ARGS).asIndex();
 		uint16	arg_count=icpp_pgm->code(arg_set_index).getAtomCount();
-		_pass_through=icpp_pgm->code(arg_set_index+1).asBoolean();
-		_acquire_models=icpp_pgm->code(arg_set_index+2).asBoolean();
-		_decompile_models=icpp_pgm->code(arg_set_index+3).asBoolean();
-		for(uint16	i=3;i<arg_count;++i)
-			output_groups.push_back((Group	*)icpp_pgm->get_reference(i-3));
+		uint8	i=1;
+		_pass_through=icpp_pgm->code(arg_set_index+i++).asBoolean();
+		_ctpx_on=icpp_pgm->code(arg_set_index+i++).asBoolean();
+		_gtpx_on=icpp_pgm->code(arg_set_index+i++).asBoolean();
+		_ptpx_on=icpp_pgm->code(arg_set_index+i++).asBoolean();
+		_trace_injections=icpp_pgm->code(arg_set_index+i++).asBoolean();
+		_decompile_models=icpp_pgm->code(arg_set_index+i).asBoolean();
+		for(uint16	j=i;j<arg_count;++j)
+			output_groups.push_back((Group	*)icpp_pgm->get_reference(j-i));
 
 		cross_buffer.set_thz(_Mem::Get()->get_tpx_time_horizon());
-		cross_buffer.reserve(1024);
+		cross_buffer.reserve(CrossBufferInitialSize);
 		uint64	thz=2*((r_exec::View*)view)->get_host()->get_upr()*Utils::GetBasePeriod();	// thz==2*sampling period.
 		cache.set_thz(thz);
-		cache.reserve(128);
+		cache.reserve(CacheInitialSize);
 	}
 
 	AutoFocusController::~AutoFocusController(){
@@ -78,9 +82,6 @@ namespace	r_exec{
 
 		View	*primary_view=inject_input(input);
 		cross_buffer.push_back(Input(primary_view,abstract_input,bm));
-		std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" inj: "<<input->object->get_oid()<<"|"<<primary_view->object->get_oid();
-		if(input->get_sync()==View::SYNC_HOLD)std::cout<<" HOLD ";
-		std::cout<<std::endl;
 	}
 
 	inline	View	*AutoFocusController::inject_input(View	*input){
@@ -101,6 +102,7 @@ namespace	r_exec{
 				Group	*output_group=output_groups[i];
 				View	*view=new	View(input,true);
 				view->references[0]=output_group;
+				view->references[1]=input->references[0];
 				view->code(VIEW_RES)=Atom::Float(Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr()));
 				_Mem::Get()->inject(view);
 				if(i==0)
@@ -117,13 +119,14 @@ namespace	r_exec{
 				Group	*output_group=output_groups[i];
 				View	*view=new	View(input,true);
 				view->references[0]=output_group;
+				view->references[1]=input->references[0];
 				view->code(VIEW_RES)=Atom::Float(Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr()));
 				view->object=copy;
 				_Mem::Get()->inject(view);
 				if(i==0){
 					
 					primary_view=view;
-					if(_acquire_models)
+					if(_ctpx_on)
 						_Mem::Get()->inject_null_program(new	PASTController(this,view),output_group,output_group->get_upr()*Utils::GetBasePeriod(),true);
 				}
 			}
@@ -139,6 +142,7 @@ namespace	r_exec{
 				Group	*output_group=output_groups[i];
 				View	*view=new	View(input,true);
 				view->references[0]=output_group;
+				view->references[1]=input->references[0];
 				view->code(VIEW_SYNC)=Atom::Float(View::SYNC_ONCE);
 				view->code(VIEW_RES)=Atom::Float(Utils::GetResilience(view->code(VIEW_RES).asFloat(),origin->get_upr(),output_group->get_upr()));
 				view->object=copy;
@@ -146,10 +150,10 @@ namespace	r_exec{
 				if(i==0){
 					
 					primary_view=view;
-					if(_acquire_models)
+					if(_ctpx_on)
 						_Mem::Get()->inject_null_program(new	HASTController(this,view,input_fact),output_group,output_group->get_upr()*Utils::GetBasePeriod(),true);
 				}
-			}//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" AF sync hold "<<input_fact->get_oid()<<"|"<<copy->get_oid()<<std::endl;
+			}
 			break;
 		}case	View::SYNC_AXIOM:		// inject a copy, sync_once, res=1, fact.before=next output_grp upr.
 			if(input_fact->is_anti_fact())
@@ -161,6 +165,7 @@ namespace	r_exec{
 				Group	*output_group=output_groups[i];
 				View	*view=new	View(input,true);
 				view->references[0]=output_group;
+				view->references[1]=input->references[0];
 				view->code(VIEW_SYNC)=Atom::Float(View::SYNC_ONCE_AXIOM);
 				view->code(VIEW_RES)=Atom::Float(1);
 				view->object=copy;
@@ -169,6 +174,17 @@ namespace	r_exec{
 					primary_view=view;
 			}
 			break;
+		}
+
+		if(_trace_injections){
+
+			std::cout<<Utils::RelativeTime(Now())<<" A/F: "<<input->object->get_oid()<<"|"<<primary_view->object->get_oid();
+			switch(input->get_sync()){
+			case	View::SYNC_HOLD:std::cout<<" (h)";break;
+			case	View::SYNC_ONCE:std::cout<<" (o)";break;
+			case	View::SYNC_PERIODIC:std::cout<<" (p)";break;
+			case	View::SYNC_AXIOM:std::cout<<" (a)";break;
+			}std::cout<<std::endl;
 		}
 
 		return	primary_view;
@@ -303,9 +319,11 @@ namespace	r_exec{
 					inject_input(input,2);	// inject in all output groups but the primary and secondary.
 				else{	// filter according to targets: inject (once) when possible and pass to TPX if any.
 
-					if(_pass_through)
-						inject_input(input);
-					else{
+					if(_pass_through){
+
+						if(opcode!=Opcodes::ICst)	// don't inject again (since it comes from inside).
+							inject_input(input);
+					}else{
 
 						P<BindingMap>	bm=new	BindingMap();
 						if(opcode==Opcodes::ICst){	// dispatch but don't inject again (since it comes from inside).

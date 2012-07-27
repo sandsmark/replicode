@@ -157,7 +157,7 @@ namespace	r_exec{
 		this->view=view;
 	}
 
-	void	Controller::_take_input(r_exec::View	*input){	// called by the rMem at update time and at injection time.
+	void	Controller::_take_input(r_exec::View	*input){	// called by groups at update and injection time.
 	
 		if(is_alive()	&&	!input->object->is_invalidated())
 			take_input(input);

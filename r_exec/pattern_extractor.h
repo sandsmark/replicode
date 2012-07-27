@@ -140,6 +140,8 @@ namespace	r_exec{
 		_TPX(AutoFocusController	*auto_focus,_Fact	*target);
 	public:
 		virtual	~_TPX();
+
+		void	debug(View	*input){};
 	};
 
 	// Pattern extractor targeted at goal successes.

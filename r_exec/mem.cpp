@@ -391,7 +391,9 @@ namespace	r_exec{
 
 		if(state==STOPPED)
 			return	NULL;
-		return	reduction_job_queue->pop();
+		_ReductionJob	*j;
+		j=reduction_job_queue->pop();
+		return	j;
 	}
 
 	void	_Mem::pushReductionJob(_ReductionJob	*j){

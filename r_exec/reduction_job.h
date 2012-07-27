@@ -44,33 +44,38 @@ namespace	r_exec{
 	public:
 		uint64	ijt;	// time of injection of the job in the pipe.
 		virtual	bool	update(uint64	now)=0;	//	return false to shutdown the reduction core.
+		virtual	void	debug(){}
 	};
 
-	template<class	T>	class	ReductionJob:
+	template<class	_P>	class	ReductionJob:
 	public	_ReductionJob{
 	public:
 		P<View>	input;
-		P<T>	target;
-		ReductionJob(View	*input,T	*target):_ReductionJob(),input(input),target(target){}
+		P<_P>	processor;
+		ReductionJob(View	*input,_P	*processor):_ReductionJob(),input(input),processor(processor){}
 		bool	update(uint64	now){
 			
 			_Mem::Get()->register_reduction_job_latency(now-ijt);
-			target->reduce(input);
+			processor->reduce(input);
 			return	true;
+		}
+		void	debug(){
+
+			processor->debug(input);
 		}
 	};
 
-	template<class	T,class	TR,class	C>	class	BatchReductionJob:
+	template<class	_P,class	T,class	C>	class	BatchReductionJob:
 	public	_ReductionJob{
 	public:
-		P<T>	target;
-		P<TR>	trigger;
-		P<C>	controller;
-		BatchReductionJob(T	*target,TR	*trigger,C	*controller):_ReductionJob(),target(target),trigger(trigger),controller(controller){}
+		P<_P>	processor;	// the controller that will process the job.
+		P<T>	trigger;	// the event that triggered the job.
+		P<C>	controller;	// the controller that produced the job.
+		BatchReductionJob(_P	*processor,T	*trigger,C	*controller):_ReductionJob(),processor(processor),trigger(trigger),controller(controller){}
 		bool	update(uint64	now){
 			
 			_Mem::Get()->register_reduction_job_latency(now-ijt);
-			target->reduce_batch(trigger,controller);
+			processor->reduce_batch(trigger,controller);
 			return	true;
 		}
 	};
