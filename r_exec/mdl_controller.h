@@ -161,8 +161,8 @@ namespace	r_exec{
 					_e=cache->evidences.erase(_e);
 				else{
 					
-					P<MDLOverlay>	o=new	PrimaryMDLOverlay(this,bindings);
-					o->reduce((*_e).evidence,f_p_f_imdl,controller);
+					PrimaryMDLOverlay	o(this,bindings);
+					o.reduce((*_e).evidence,f_p_f_imdl,controller);
 					++_e;
 				}
 			}

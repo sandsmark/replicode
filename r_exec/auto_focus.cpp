@@ -178,7 +178,7 @@ namespace	r_exec{
 
 		if(_trace_injections){
 
-			std::cout<<Utils::RelativeTime(Now())<<" A/F: "<<input->object->get_oid()<<"|"<<primary_view->object->get_oid();
+			std::cout<<Utils::RelativeTime(Now())<<" A/F -> "<<input->object->get_oid()<<"|"<<primary_view->object->get_oid();
 			switch(input->get_sync()){
 			case	View::SYNC_HOLD:std::cout<<" (h)";break;
 			case	View::SYNC_ONCE:std::cout<<" (o)";break;
@@ -280,16 +280,18 @@ namespace	r_exec{
 				if(goal!=NULL){	// build a tpx to find models like M:[A -> B] where B is the goal target.
 
 					pattern=(_Fact	*)unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index+1).asIndex());	// lhs.
-					tpx=build_tpx<GTPX>(goal->get_target(),pattern,bm,goal_ratings,f_ihlp,f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
-					goals.insert(std::pair<P<Code>,P<TPX>	>((_Fact	*)production,tpx));std::cout<<Utils::RelativeTime(Now())<<" new GTPX\n";
+					tpx=build_tpx<GTPX>((_Fact	*)production,pattern,bm,goal_ratings,f_ihlp,f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
+					goals.insert(std::pair<P<Code>,P<TPX>	>((_Fact	*)production,tpx));
+					//std::cout<<Utils::RelativeTime(Now())<<" goal focus["<<production->get_oid()<<"]\n";
 				}else{	
 					
 					Pred	*pred=((_Fact	*)production)->get_pred();
 					if(pred!=NULL){	// build a tpx to find models like M:[A -> |imdl M0] where M0 is the model that produced the prediction.
 
 						pattern=(_Fact	*)unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index+2).asIndex());	// rhs.
-						tpx=build_tpx<PTPX>((_Fact	*)f_ihlp,pattern,bm,prediction_ratings,f_ihlp,f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
+						tpx=build_tpx<PTPX>((_Fact	*)production,pattern,bm,prediction_ratings,f_ihlp,f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
 						predictions.insert(std::pair<P<Code>,P<TPX>	>((_Fact	*)production,tpx));
+						//std::cout<<Utils::RelativeTime(Now())<<" pred focus["<<production->get_oid()<<"]\n";
 					}
 				}
 			}
@@ -307,7 +309,7 @@ namespace	r_exec{
 					if(goal!=NULL){
 
 						//rate(target,success,goals,goal_ratings);
-						notify(target,input,goals);std::cout<<Utils::RelativeTime(Now())<<" notify & delete GTPX\n";
+						notify(target,input,goals);
 					}else{	// prediction.
 
 						//rate(target,success,predictions,prediction_ratings);

@@ -38,16 +38,6 @@ namespace	r_exec{
 	Value::Value(BindingMap	*map):_Object(),map(map){
 	}
 
-	void	Value::trace(){
-
-		Atom	*code=get_code();
-		for(uint16	i=0;i<get_code_size();++i){
-
-			code[i].trace();
-			std::cout<<endl;
-		}
-	}
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	BoundValue::BoundValue(BindingMap	*map):Value(map){
@@ -818,16 +808,6 @@ namespace	r_exec{
 	bool	BindingMap::is_fully_specified()	const{
 
 		return	unbound_values==0;
-	}
-
-	void	BindingMap::trace(){
-
-		std::cout<<"Binding Map"<<std::endl;
-		for(uint16	i=0;i<map.size();++i){
-
-			std::cout<<"["<<i<<"]\n";
-			map[i]->trace();
-		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////

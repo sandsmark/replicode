@@ -56,7 +56,10 @@ namespace	r_exec{
 
 		static	bool	IsEligibleCause(r_exec::View	*view);
 
-		uint64	get_time()	const{	return	ijt;	}	// for storage in time_buffers.
+		bool	is_invalidated(uint64	time_reference,uint32	thz)	const{	// for storage in time_buffers.
+			
+			return	(time_reference-ijt>thz);
+		}
 	};
 
 	class	CInput{	// cached inputs.
@@ -69,7 +72,12 @@ namespace	r_exec{
 		CInput(View	*input,_Fact	*abstraction,BindingMap	*bindings):input(input),abstraction(abstraction),bindings(bindings),injected(false),ijt(input->get_ijt()){}
 		CInput():input(NULL),abstraction(NULL),bindings(NULL),injected(false),ijt(0){}
 
-		uint64	get_time()	const{	return	ijt;	}	// for storage in time_buffers.
+		bool	is_invalidated(uint64	time_reference,uint32	thz)	const{	// for storage in time_buffers.
+			
+			return	(time_reference-ijt>thz);
+		}
+
+		bool	operator	==(const	CInput	&i)	const{	return	input==i.input;	}
 	};
 
 	// Targeted Pattern eXtractor.
@@ -149,7 +157,7 @@ namespace	r_exec{
 	// Models produced are of the form: M1[cause -> goal_target], where cause can be an imdl and goal_target can be an imdl.
 	// M1 does not have template arguments.
 	// Commands are ignored (CTPX' job).
-	class	r_exec_dll	GTPX:	// target is a goal.
+	class	r_exec_dll	GTPX:	// target is the goal target.
 	public	_TPX{
 	private:
 		P<Fact>	f_imdl;	// that produced the goal.
@@ -175,7 +183,7 @@ namespace	r_exec{
 	// Models produced are of the form: M1[cause -> |imdl M0] where M0 is the model that produced the failed prediction and cause can be an imdl.
 	// M1 does not have template arguments.
 	// Commands are ignored (CTPX' job).
-	class	r_exec_dll	PTPX:	// target is a prediction.
+	class	r_exec_dll	PTPX:	// target is the prediction.
 	public	_TPX{
 	private:
 		P<Fact>	f_imdl;	// that produced the prediction (and for which the PTPX will find strong requirements).

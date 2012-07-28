@@ -35,11 +35,11 @@
 #define	EXECUTIVE_DEVICE	0xA1000000
 
 
-#define	VIEW_CODE_MAX_SIZE	13	//	size of the code of the largest view (grp view) + 1 (oid used by rMems); view set opcode's index is 0.
+#define	VIEW_CODE_MAX_SIZE	13	// size of the code of the largest view (grp view) + 1 (oid used by rMems); view set opcode's index is 0.
 
 #define	VIEW_OPCODE		0
 #define	VIEW_SYNC		1
-#define	VIEW_IJT		2	//	iptr to timestamp (+3 atoms)
+#define	VIEW_IJT		2	// iptr to timestamp (+3 atoms)
 #define	VIEW_SLN		3
 #define	VIEW_RES		4
 #define	VIEW_HOST		5
@@ -47,6 +47,8 @@
 #define	VIEW_ACT		7
 #define	GRP_VIEW_COV	7
 #define	GRP_VIEW_VIS	8
+#define	VIEW_CTRL_0		10	// for nong-group views, this uint32 (not atom) may hold control data (ex: cache status).
+#define	VIEW_CTRL_1		11	// idem.
 #define	VIEW_OID		12
 
 #define	VIEW_ARITY		6

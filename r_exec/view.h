@@ -124,6 +124,8 @@ namespace	r_exec{
 		float32		get_act();
 		bool		get_cov();
 		float32		get_vis();
+		uint32		&ctrl0(){	return	_code[VIEW_CTRL_0].atom;	}	// use only for non-group views.
+		uint32		&ctrl1(){	return	_code[VIEW_CTRL_1].atom;	}	// idem.
 
 		void	mod_res(float32	value);
 		void	set_res(float32	value);

@@ -62,11 +62,11 @@ namespace	r_exec{
 		}
 	}
 
-	bool	CSTOverlay::can_match(uint64	now)	const{
+	bool	CSTOverlay::can_match(uint64	now)	const{	// to reach inputs until a given thz in the past, return now<deadline+thz.
 
 		if(match_deadline==0)
 			return	true;
-		return	now/*-Utils::GetTimeTolerance()*/<=match_deadline;
+		return	now<=match_deadline;
 	}
 
 	void	CSTOverlay::inject_production(){
@@ -100,10 +100,10 @@ namespace	r_exec{
 				Code	*icst=f_icst->get_reference(0);
 				((CSTController	*)controller)->inject_icst(f_icst,lowest_cfd,time_to_live);	// inject f->icst in the primary and secondary groups, and in the output groups.
 				uint16	arg_index=icst->code(I_HLP_ARGS).asIndex();
-				std::cout<<Utils::RelativeTime(Now())<<"				"<<f_icst->get_oid()<<" icst["<<controller->getObject()->get_oid()<<"][";
-				for(uint32	i=0;i<inputs.size();++i)
-					std::cout<<" "<<inputs[i]->get_oid();
-				std::cout<<"]"<<std::endl;
+				//std::cout<<Utils::RelativeTime(Now())<<"				"<<f_icst->get_oid()<<" icst["<<controller->getObject()->get_oid()<<"][";
+				//for(uint32	i=0;i<inputs.size();++i)
+				//	std::cout<<" "<<inputs[i]->get_oid();
+				//std::cout<<"]"<<std::endl;
 			}
 		}else{	// there are simulations; the production is therefore a prediction; add the simulations to the latter.
 
@@ -291,7 +291,8 @@ namespace	r_exec{
 
 		if(	input->object->code(0).asOpcode()==Opcodes::Fact	||
 			input->object->code(0).asOpcode()==Opcodes::AntiFact)	// discard everything but facts and |facts.
-		Controller::__take_input<CSTController>(input);// std::cout<<"TI: "<<get_host()->get_oid()<<" > "<<input->object->get_oid()<<std::endl;
+			{//std::cout<<Utils::RelativeTime(Now())<<" cst "<<getObject()->get_oid()<<" <- "<<input->object->get_oid()<<std::endl;
+			Controller::__take_input<CSTController>(input);}
 	}
 
 	void	CSTController::reduce(r_exec::View	*input){

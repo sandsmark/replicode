@@ -622,9 +622,9 @@ namespace	r_exec{
 						newly_salient_views.insert(view);
 					break;
 				case	View::SYNC_HOLD:
-				case	View::SYNC_AXIOM:	// sync on state.
+				case	View::SYNC_AXIOM:	// sync on state: treat as if it was a new injection.
+					view->set_ijt(Now());
 					newly_salient_views.insert(view);
-					//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" GRP sync hold "<<view->object->get_oid()<<std::endl;
 					break;
 				}
 			}
@@ -931,38 +931,8 @@ namespace	r_exec{
 		}
 		
 		leave();
-return;
-		if(a.getDescriptor()==Atom::OBJECT){
-			if(get_secondary_group()!=NULL){
-
-				_Fact	*f=(_Fact	*)view->object;
-				Pred	*p=f->get_pred();
-				if(p!=NULL){
-
-					std::cout<<"PRED "<<f->get_oid()<<" ";
-					f=p->get_target();
-
-					if(f->get_reference(0)->code(0).asOpcode()==Opcodes::MkVal)
-						std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" target: "<<f->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
-					else	if(f->get_reference(0)->code(0).asOpcode()==Opcodes::ICst)
-						std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" ---------------pred icst: "<<std::hex<<(void	*)f->get_reference(0)<<"\n";
-					else	if(f->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl)
-						std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" ---------------pred imdl: "<<std::hex<<(void	*)f->get_reference(0)<<"\n";
-				}else{
-			}//else	if(get_oid()==2){	// stdin.
-				if(view->object->code(0).asOpcode()==Opcodes::Fact){
-
-					if(view->object->get_reference(0)->code(0).asOpcode()==Opcodes::MkVal)
-						std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" target: "<<view->object->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<"|"<<std::dec<<view->object->get_oid()<<"\n";
-					else	if(view->object->get_reference(0)->code(0).asOpcode()==Opcodes::ICst)
-						std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" ---------------icst: "<<std::hex<<(void	*)view->object->get_reference(0)<<std::dec<<"|"<<view->object->get_oid()<<"\n";
-					else	if(view->object->get_reference(0)->code(0).asOpcode()==Opcodes::IMdl)
-						std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" ---------------imdl: "<<std::hex<<(void	*)view->object->get_reference(0)<<std::dec<<"|"<<view->object->get_oid()<<"\n";
-					else	if(view->object->get_reference(0)->code(0).asOpcode()==Opcodes::Cmd)
-						std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" cmd: "<<view->object->get_oid()<<"\n";
-				}
-			}
-		}
+		//if(get_oid()==2)
+		//	std::cout<<Utils::RelativeTime(Now())<<" stdin <- "<<view->object->get_oid()<<std::endl;
 	}
 
 	void	Group::inject_new_object(View	*view){	// the view can hold anything but groups and notifications.

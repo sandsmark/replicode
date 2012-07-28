@@ -57,7 +57,7 @@ namespace	r_exec{
 	}
 
 	Overlay	*PrimaryMDLOverlay::reduce(_Fact *input,Fact	*f_p_f_imdl,MDLController	*req_controller){
-
+//std::cout<<Utils::RelativeTime(Now())<<" mdl "<<controller->getObject()->get_oid()<<" <- "<<input->get_oid()<<std::endl;
 		_Fact	*input_object;
 		Pred	*prediction=input->get_pred();
 		bool	simulation;
@@ -1338,9 +1338,7 @@ namespace	r_exec{
 
 		if(	input->object->code(0).asOpcode()==Opcodes::Fact	||
 			input->object->code(0).asOpcode()==Opcodes::AntiFact)	// discard everything but facts and |facts.
-			{/*if(_is_requirement==NaR)
-				std::cout<<getObject()->get_oid()<<" take input: "<<input->object->get_oid()<<std::endl;*/
-			Controller::__take_input<PrimaryMDLController>(input);}
+			Controller::__take_input<PrimaryMDLController>(input);
 	}
 
 	void	PrimaryMDLController::predict(HLPBindingMap	*bm,_Fact	*input,Fact	*f_imdl,bool	chaining_was_allowed,RequirementsPair	&r_p,Fact	*ground){

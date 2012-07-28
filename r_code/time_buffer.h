@@ -39,7 +39,7 @@ using	namespace	core;
 namespace	r_code{
 
 	// Time limited buffer.
-	// T is expected a function: uint64 get_time() const;
+	// T is expected a function: bool is_invalidated(uint64	time_reference,uint32	thz) const where time_reference and thz are valuated with the buffer's own.
 	template<typename	T>	class	time_buffer:
 	public	list<T>{
 	protected:
@@ -65,11 +65,11 @@ namespace	r_code{
 				_cell=buffer->cells[_cell].next;
 				if(_cell!=null){
 
-time_check:			if(buffer->time_reference-buffer->cells[_cell].data.get_time()>buffer->thz){
+check:				if(buffer->cells[_cell].data.is_invalidated(buffer->time_reference,buffer->thz)){
 
 						_cell=buffer->_erase(_cell);
 						if(_cell!=null)
-							goto	time_check;
+							goto	check;
 					}
 				}
 				return	*this;
@@ -85,7 +85,27 @@ time_check:			if(buffer->time_reference-buffer->cells[_cell].data.get_time()>buf
 			this->time_reference=time_reference;
 			return	iterator(this,used_cells_head);
 		}
-		iterator		&end(){	return	end_iterator;	}
+		iterator	&end(){	return	end_iterator;	}
+		iterator	find(uint64	time_reference,const	T	&t){
+
+			iterator	i;
+			for(i=begin(time_reference);i!=end();++i){
+
+				if((*i)==t)
+					return	i;
+			}
+			return	end_iterator;
+		}
+		iterator	find(const	T	&t){
+
+			for(int32	c=used_cells_head;c!=null;c=_cells[c].next){
+
+				if(_cells[c].data==t)
+					return	iterator(this,c);
+			}
+			return	end_iterator;
+		}
+		iterator	erase(iterator	&i){	return	iterator(this,_erase(i._cell));	}
 	};
 
 	template<typename	T>	typename	time_buffer<T>::iterator	time_buffer<T>::end_iterator;

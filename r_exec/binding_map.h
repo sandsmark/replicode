@@ -63,8 +63,6 @@ namespace	r_exec{
 		virtual	bool	contains(const	Atom	a)	const{	return	false;	}
 		virtual	bool	contains(const	Atom	*s)	const{	return	false;	}
 		virtual	bool	contains(const	Code	*o)	const{	return	false;	}
-
-		void	trace();
 	};
 
 	class	r_exec_dll	BoundValue:
@@ -227,7 +225,6 @@ namespace	r_exec{
 		uint16	get_fwd_after_index()	const{	return	fwd_after_index;	}
 		uint16	get_fwd_before_index()	const{	return	fwd_before_index;	}
 		bool	scan_variable(uint16	id)	const;	// return true if id<first_index or map[id] is not an UnboundValue.
-		void	trace();
 	};
 
 	class	r_exec_dll	HLPBindingMap:

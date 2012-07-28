@@ -49,11 +49,11 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	TPX::TPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings):_Object(),auto_focus(auto_focus),target(target),abstracted_target(pattern),target_bindings(bindings),cst_hook(NULL){
+	TPX::TPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings):_Object(),auto_focus(auto_focus),target(target),abstracted_target(pattern),target_bindings(bindings),cst_hook(NULL){	// called by GTPX and PTPX's ctor.
 
 		if(bindings->is_fully_specified()){	// get a hook on a cst controller so we get icsts from it: this is needed if the target is an underspecified icst.
 
-			Code	*target_payload=target->get_reference(0);
+			Code	*target_payload=target->get_reference(0)->get_reference(0)->get_reference(0);
 			if(target_payload->code(0).asOpcode()==Opcodes::ICst){
 
 				Code	*cst=target_payload->get_reference(0);
@@ -62,7 +62,7 @@ namespace	r_exec{
 		}
 	}
 
-	TPX::TPX(AutoFocusController	*auto_focus,_Fact	*target):_Object(),auto_focus(auto_focus){
+	TPX::TPX(AutoFocusController	*auto_focus,_Fact	*target):_Object(),auto_focus(auto_focus){	// called by CTPX's ctor.
 
 		P<BindingMap>	bm=new	BindingMap();
 		abstracted_target=(_Fact	*)bm->abstract_object(target,false);
@@ -78,46 +78,60 @@ namespace	r_exec{
 		return	filter(input,abstracted_input,bm);
 	}
 
-	void	TPX::signal(View	*input)	const{
+	void	TPX::signal(View	*input)	const{	// input->object is f->success or|f->success.
+		//std::cout<<Utils::RelativeTime(Now())<<" "<<input->object->get_reference(0)->get_reference(1)->get_oid()<<": end of focus["<<target->get_oid()<<"]\n";
 	}
 
 	void	TPX::ack_pred_success(_Fact	*predicted_f){
 	}
 
 	bool	TPX::filter(View	*input,_Fact	*abstracted_input,BindingMap	*bm){
-//std::cout<<" gtpx got: "<<input->object->get_oid();
-		if(target_bindings->intersect(bm)){//std::cout<<" good"<<std::endl;
+
+		if(input->object->get_reference(0)->code(0).asOpcode()==Opcodes::ICst)	// if we get an icst we are called by auto_focus::dispatch_no_inject: the inout is irrelevant.
+			return	false;
+//std::cout<<Utils::RelativeTime(Now())<<"				tpx ["<<target->get_oid()<<"] <- "<<input->object->get_oid();
+		if(target_bindings->intersect(bm)){//std::cout<<" lvl0"<<std::endl;
 			return	true;}
-		if(target_bindings->is_fully_specified()){//std::cout<<" bad"<<std::endl;
-			return	false;}
+		if(target_bindings->is_fully_specified())
+			return	false;
 		for(uint32	i=0;i<new_maps.size();++i)
-			if(new_maps[i]->intersect(bm)){//std::cout<<" good, 2nd chance"<<std::endl;
+			if(new_maps[i]->intersect(bm)){//std::cout<<" lvl1"<<std::endl;
 				return	true;}
 
 		P<BindingMap>	_bm=new	BindingMap(target_bindings);
 		_bm->reset_fwd_timings(input->object);
 		time_buffer<CInput>	&cache=auto_focus->get_cache();
-		if(_bm->match_fwd_strict(input->object,target)){
+		if(_bm->match_fwd_strict(input->object,(_Fact	*)target->get_reference(0)->get_reference(0))){	// both GTPX and PTPX' target are f0->g/p->f1: we need to match on f1.
 //std::cout<<" match";
 			new_maps.push_back(_bm);
 			time_buffer<CInput>::iterator	i;
-			for(i=cache.begin(Now());i!=cache.end();++i){
-//std::cout<<" trying: "<<(*i).input->object->get_oid();
-				if(i->injected)
-					continue;
+			uint64	now=Now();
+			for(i=cache.begin(now);i!=cache.end();++i){
+
+				if(i->injected){//std::cout<<" ?"<<(*i).input->object->get_oid()<<" ("<<Utils::RelativeTime(i->ijt)<<") skip\n";
+				continue;}
 				if(_bm->intersect(i->bindings)){
-//std::cout<<" success\n";
 					i->injected=true;
 					auto_focus->inject_input(i->input,i->abstraction,i->bindings);
-				}else	std::cout<<" failure\n";
+//std::cout<<" ?"<<(*i).input->object->get_oid()<<" ("<<Utils::RelativeTime(i->ijt)<<") success\n";
+				}//else	std::cout<<" ?"<<(*i).input->object->get_oid()<<" ("<<Utils::RelativeTime(i->ijt)<<") failure\n";
 			}
 			return true;
 		}else{
 
 			if(cst_hook!=NULL)
 				cst_hook->take_input(input);
-			cache.push_back(CInput(input,abstracted_input,bm));
-//std::cout<<" no match\n";
+			CInput	ci(input,abstracted_input,bm);
+			time_buffer<CInput>::iterator	i=cache.find(Now(),ci);
+			if(i!=cache.end()){	// input already cached.
+
+				if(i->ijt<ci.ijt)	// older view (happens for sync_axiom and sync_old).
+					cache.erase(i);
+				else
+					return	false;
+			}
+			cache.push_back(ci);
+//std::cout<<" cached"<<" ("<<Utils::RelativeTime(input->get_ijt())<<")\n";
 			return	false;
 		}
 	}
