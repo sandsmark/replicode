@@ -1,4 +1,4 @@
-; as pong, debug PTPX.
+; as pong, debug combinations of CTPX, GTPX and PTPX; goal-driven.
 
 ; objects.
 
@@ -14,7 +14,7 @@ b_is_blue:(mk.val b color blue_color 1) |[]
 f_b_is_blue:(fact b_is_blue 0us MAX_TIME 1 1) [[SYNC_HOLD now 1 forever stdin nil]]
 
 
-; top-level model and drive injector.
+; top-level model and drive injectors.
 
 m_run_0:(mdl |[] []
    (fact (mk.val b: position_y : :) t0: t1: ::)
@@ -26,7 +26,7 @@ m_run_0:(mdl |[] []
 
 init_run_pgm:(pgm |[] |[] |[] []
    (inj []
-      f_run:(fact run t0:(+ now 50000us) (+ t0 100000us) 1 1)
+      f_run:(fact run t0:(+ now 50000us) (+ t0 sampling_period) 1 1)
       |[]
    )
    (inj []
@@ -45,7 +45,7 @@ success_run_pgm:(pgm |[] []
    s:(ptn (fact (success (fact (goal (fact run after: before: ::) ::) ::) ::) ::) |[])
 |[] []
    (inj []
-      f_run:(fact run (+ after 100000us) (+ before 100000us) 1 1)
+      f_run:(fact run (+ after sampling_period) (+ before sampling_period) 1 1)
       |[]
    )
    (inj []
@@ -64,7 +64,7 @@ failure_run_pgm:(pgm |[] []
    s:(ptn (|fact (success (fact (goal (fact run after: before: ::) ::) ::) ::) ::) |[])
 |[] []
    (inj []
-      f_run:(fact run (+ after 100000us) (+ before 100000us) 1 1)
+      f_run:(fact run (+ after sampling_period) (+ before sampling_period) 1 1)
       |[]
    )
    (inj []
@@ -78,6 +78,7 @@ failure_run_pgm:(pgm |[] []
 1) |[]
 
 failure_run_ipgm:(ipgm failure_run_pgm |[] RUN_ALWAYS 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever drives nil 1]]
+
 
 ; input generators.
 
