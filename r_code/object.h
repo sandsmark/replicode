@@ -273,9 +273,8 @@ namespace	r_code{
 	};
 
 	class	dll_export	Mem{
-	private:
-		static	Mem	*Singleton;
 	protected:
+		static	Mem	*Singleton;
 		Mem();
 	public:
 		static	Mem	*Get();

@@ -42,6 +42,10 @@ namespace	r_exec{
 	}
 
 	_Mem::~_Mem(){
+
+		for(uint32	i=0;i<DebugStreamCount;++i)
+			if(debug_streams[i]!=NULL)
+				delete	debug_streams[i];
 	}
 
 	void	_Mem::init(	uint32	base_period,
@@ -62,7 +66,8 @@ namespace	r_exec{
 						bool	debug,
 						uint32	ntf_mk_res,
 						uint32	goal_pred_success_res,
-						uint32	probe_level){
+						uint32	probe_level,
+						uint32	traces){
 
 		this->base_period=base_period;
 
@@ -94,6 +99,21 @@ namespace	r_exec{
 		reduction_job_count=time_job_count=0;
 		reduction_job_avg_latency=_reduction_job_avg_latency=0;
 		time_job_avg_latency=_time_job_avg_latency=0;
+
+		uint32	mask=1;
+		for(uint32	i=0;i<DebugStreamCount;++i){
+
+			if(traces	&	mask)
+				debug_streams[i]=NULL;
+			else
+				debug_streams[i]=new	NullOStream();
+			mask<<=1;
+		}
+	}
+
+	std::ostream	&_Mem::Output(TraceLevel	l){
+
+		return	(_Mem::Get()->debug_streams[l]==NULL?std::cout:*(_Mem::Get()->debug_streams[l]));
 	}
 
 	void	_Mem::reset(){

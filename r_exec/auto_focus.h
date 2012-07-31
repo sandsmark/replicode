@@ -92,8 +92,8 @@ namespace	r_exec{
 		static	const	uint32	CacheInitialSize=128;
 		static	const	uint32	CrossBufferInitialSize=1024;
 
-		time_buffer<CInput>	cache;			// contains all inputs we don't no yet if they are relevant or not; thz==sampling period.
-		time_buffer<Input>	cross_buffer;	// contains all relevant inputs.
+		time_buffer<CInput,CInput::IsInvalidated>	cache;			// contains all inputs we don't no yet if they are relevant or not; thz==sampling period.
+		time_buffer<Input,Input::IsInvalidated>		cross_buffer;	// contains all relevant inputs.
 
 		void	notify(_Fact	*target,View	*input,TPXMap	&map);
 		void	dispatch_pred_success(_Fact	*predicted_f,TPXMap	&map);
@@ -138,7 +138,7 @@ namespace	r_exec{
 		Group	*get_primary_group()	const{	return	output_groups[0];	}
 
 		void	copy_cross_buffer(r_code::list<Input>	&destination);
-		time_buffer<CInput>	&get_cache(){	return	cache;	}
+		time_buffer<CInput,CInput::IsInvalidated>	&get_cache(){	return	cache;	}
 	};
 }
 

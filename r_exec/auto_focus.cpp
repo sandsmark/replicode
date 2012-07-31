@@ -370,7 +370,7 @@ namespace	r_exec{
 	void	AutoFocusController::copy_cross_buffer(r_code::list<Input>	&destination){	// copy inputs so they can be flagged independently by the tpxs that share the cross buffer.
 
 		reductionCS.enter();
-		time_buffer<Input>::iterator	i;
+		time_buffer<Input,Input::IsInvalidated>::iterator	i;
 		for(i=cross_buffer.begin(Now());i!=cross_buffer.end();++i)
 			destination.push_back(Input(*i));
 		reductionCS.leave();

@@ -282,7 +282,8 @@ int32	main(int	argc,char	**argv){
 					settings.debug,
 					settings.ntf_mk_resilience,
 					settings.goal_pred_success_resilience,
-					settings.probe_level);
+					settings.probe_level,
+					settings.trace_levels);
 
 		uint32	stdin_oid;
 		std::string	stdin_symbol("stdin");

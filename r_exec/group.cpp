@@ -781,13 +781,13 @@ namespace	r_exec{
 
 			Atom	a=(*view)->object->code(0);
 			switch(a.getDescriptor()){
-			case	Atom::COMPOSITE_STATE:{std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" cst "<<(*view)->object->get_oid()<<" injected"<<std::endl;
+			case	Atom::COMPOSITE_STATE:{std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" -> cst "<<(*view)->object->get_oid()<<std::endl;
 				ipgm_views[(*view)->get_oid()]=*view;
 				CSTController	*c=new	CSTController(*view);
 				(*view)->controller=c;
 				c->set_secondary_host(get_secondary_group());
 				break;
-				}case	Atom::MODEL:{std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" mdl "<<(*view)->object->get_oid()<<" injected"<<std::endl;
+				}case	Atom::MODEL:{std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" -> mdl "<<(*view)->object->get_oid()<<std::endl;
 				ipgm_views[(*view)->get_oid()]=*view;
 				bool			inject_in_secondary_group;
 				MDLController	*c=MDLController::New(*view,inject_in_secondary_group);
@@ -893,7 +893,8 @@ namespace	r_exec{
 			other_views[view->get_oid()]=view;
 			cov(view);
 			break;
-		case	Atom::COMPOSITE_STATE:{std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" cst "<<view->object->get_oid()<<" injected"<<std::endl;
+		case	Atom::COMPOSITE_STATE:{
+			OUTPUT(HLP_INJ)<<Utils::RelativeTime(Now())<<" cst "<<view->object->get_oid()<<" injected"<<std::endl;
 			ipgm_views[view->get_oid()]=view;
 			CSTController	*c=new	CSTController(view);
 			view->controller=c;
@@ -906,7 +907,8 @@ namespace	r_exec{
 					c->_take_input(*v);	// view will be copied.
 			}
 			break;
-		}case	Atom::MODEL:{std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" mdl injected"<<std::endl;
+		}case	Atom::MODEL:{
+			OUTPUT(HLP_INJ)<<Utils::RelativeTime(Now())<<" mdl "<<view->object->get_oid()<<" injected"<<std::endl;
 			ipgm_views[view->get_oid()]=view;
 			bool			inject_in_secondary_group;
 			MDLController	*c=MDLController::New(view,inject_in_secondary_group);

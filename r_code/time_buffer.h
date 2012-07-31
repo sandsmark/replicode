@@ -40,7 +40,7 @@ namespace	r_code{
 
 	// Time limited buffer.
 	// T is expected a function: bool is_invalidated(uint64	time_reference,uint32	thz) const where time_reference and thz are valuated with the buffer's own.
-	template<typename	T>	class	time_buffer:
+	template<typename	T,class	IsInvalidated>	class	time_buffer:
 	public	list<T>{
 	protected:
 		uint32	thz;	// time horizon.
@@ -65,7 +65,8 @@ namespace	r_code{
 				_cell=buffer->cells[_cell].next;
 				if(_cell!=null){
 
-check:				if(buffer->cells[_cell].data.is_invalidated(buffer->time_reference,buffer->thz)){
+					IsInvalidated	i;
+check:				if(i(buffer->cells[_cell].data,buffer->time_reference,buffer->thz)){
 
 						_cell=buffer->_erase(_cell);
 						if(_cell!=null)
@@ -108,7 +109,7 @@ check:				if(buffer->cells[_cell].data.is_invalidated(buffer->time_reference,buf
 		iterator	erase(iterator	&i){	return	iterator(this,_erase(i._cell));	}
 	};
 
-	template<typename	T>	typename	time_buffer<T>::iterator	time_buffer<T>::end_iterator;
+	template<typename	T,class	IsInvalidated>	typename	time_buffer<T,IsInvalidated>::iterator	time_buffer<T,IsInvalidated>::end_iterator;
 }
 
 

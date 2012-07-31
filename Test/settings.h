@@ -65,6 +65,7 @@ public:
 	core::uint32	ntf_mk_resilience;
 	core::uint32	goal_pred_success_resilience;
 	core::uint32	debug_windows;
+	core::uint32	trace_levels;
 	bool			get_objects;
 	bool			decompile_objects;
 	bool			decompile_to_file;
@@ -160,9 +161,11 @@ public:
 
 			const	char	*_debug=debug.getAttribute("debug");
 			const	char	*_debug_windows=debug.getAttribute("debug_windows");
+			const	char	*_trace_levels=debug.getAttribute("trace_levels");
 
 			this->debug=(strcmp(_debug,"yes")==0);
 			debug_windows=atoi(_debug_windows);
+			sscanf(_trace_levels,"%x",&trace_levels);
 
 			core::XMLNode	resilience=debug.getChildNode("Resilience");
 			if(!!resilience){
@@ -183,7 +186,7 @@ public:
 				const	char	*_get_objects=objects.getAttribute("get_objects");
 				const	char	*_decompile_objects=objects.getAttribute("decompile_objects");
 				const	char	*_decompile_to_file=objects.getAttribute("decompile_to_file");
-				const	char	*decompilation_file_path=objects.getAttribute("decompilation_file_path");
+				decompilation_file_path=objects.getAttribute("decompilation_file_path");
 				const	char	*_ignore_named_objects=objects.getAttribute("ignore_named_objects");
 				const	char	*_write_objects=objects.getAttribute("write_objects");
 				const	char	*_test_objects=objects.getAttribute("test_objects");

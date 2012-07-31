@@ -87,7 +87,7 @@ namespace	r_exec{
 
 	bool	TPX::filter(View	*input,_Fact	*abstracted_input,BindingMap	*bm){
 
-		if(input->object->get_reference(0)->code(0).asOpcode()==Opcodes::ICst)	// if we get an icst we are called by auto_focus::dispatch_no_inject: the inout is irrelevant.
+		if(input->object->get_reference(0)->code(0).asOpcode()==Opcodes::ICst)	// if we get an icst we are called by auto_focus::dispatch_no_inject: the input is irrelevant.
 			return	false;
 //std::cout<<Utils::RelativeTime(Now())<<"				tpx ["<<target->get_oid()<<"] <- "<<input->object->get_oid();
 		if(target_bindings->intersect(bm)){//std::cout<<" lvl0"<<std::endl;
@@ -100,11 +100,11 @@ namespace	r_exec{
 
 		P<BindingMap>	_bm=new	BindingMap(target_bindings);
 		_bm->reset_fwd_timings(input->object);
-		time_buffer<CInput>	&cache=auto_focus->get_cache();
+		time_buffer<CInput,CInput::IsInvalidated>	&cache=auto_focus->get_cache();
 		if(_bm->match_fwd_strict(input->object,(_Fact	*)target->get_reference(0)->get_reference(0))){	// both GTPX and PTPX' target are f0->g/p->f1: we need to match on f1.
 //std::cout<<" match";
 			new_maps.push_back(_bm);
-			time_buffer<CInput>::iterator	i;
+			time_buffer<CInput,CInput::IsInvalidated>::iterator	i;
 			uint64	now=Now();
 			for(i=cache.begin(now);i!=cache.end();++i){
 
@@ -122,7 +122,7 @@ namespace	r_exec{
 			if(cst_hook!=NULL)
 				cst_hook->take_input(input);
 			CInput	ci(input,abstracted_input,bm);
-			time_buffer<CInput>::iterator	i=cache.find(Now(),ci);
+			time_buffer<CInput,CInput::IsInvalidated>::iterator	i=cache.find(Now(),ci);
 			if(i!=cache.end()){	// input already cached.
 
 				if(i->ijt<ci.ijt)	// older view (happens for sync_axiom and sync_old).
@@ -463,7 +463,12 @@ namespace	r_exec{
 		
 		uint64	analysis_starting_time=Now();
 
+		bool	need_guard;
+		if(target->get_reference(0)->code(0).asOpcode()==Opcodes::MkVal)
+			return;	// this case will be handled by CTPXs.
+
 		P<GuardBuilder>	guard_builder;
+
 		uint64	period;
 		uint64	lhs_duration;
 		uint64	rhs_duration;
@@ -491,10 +496,17 @@ namespace	r_exec{
 				continue;
 			}
 
+			if(Utils::Synchronous(cause.input->get_after(),target->get_after())){	// cause in sync with the premise: ignore.
+				
+				++i;
+				continue;
+			}
+
+			guard_builder=new	TimingGuardBuilder(period);// TODO: use the durations.
+
 			period=consequent->get_after()-cause.input->get_after();
 			lhs_duration=cause.input->get_before()-cause.input->get_after();
 			rhs_duration=consequent->get_before()-consequent->get_after();
-			guard_builder=new	TimingGuardBuilder(period);	// TODO: use the durations.
 
 			uint16	cause_index;
 			Code	*new_cst;

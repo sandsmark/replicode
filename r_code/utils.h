@@ -47,11 +47,11 @@ namespace	r_code{
 	};
 
 	// Debugging facility.
-	class	NullStream:
+	class	NullOStream:
 	public	std::ostream{
 	public:
-		NullStream():std::ostream(NULL){}
-		template<typename	T>	NullStream&	operator	<<(T	&t){
+		NullOStream():std::ostream(NULL){}
+		template<typename	T>	NullOStream&	operator	<<(T	&t){
 			return	*this;
 		}
 	};

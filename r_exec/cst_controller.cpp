@@ -89,21 +89,19 @@ namespace	r_exec{
 				UNORDERED_SET<P<_Fact>,PHash<_Fact>	>::const_iterator	pred;
 				for(pred=predictions.begin();pred!=predictions.end();++pred) // add antecedents to the prediction.
 					prediction->grounds.push_back(*pred);
-				/*Code	*icst=f_icst->get_reference(0);
-				uint16	arg_index=icst->code(I_HLP_ARGS).asIndex();
-				std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<icst<<std::dec<<" pred cst "<<" from";
-				for(uint32	i=0;i<inputs.size();++i)
-					std::cout<<" "<<inputs[i]->get_oid();
-				std::cout<<std::endl;*/
 				((CSTController	*)controller)->inject_prediction(f_p_f_icst,lowest_cfd,time_to_live);	// inject a f->pred->icst in the primary group, no rdx.
+
+				OUTPUT(CST_OUT)<<Utils::RelativeTime(Now())<<"				"<<f_p_f_icst->get_oid()<<" pred icst["<<controller->getObject()->get_oid()<<"][";
+				for(uint32	i=0;i<inputs.size();++i)
+					OUTPUT(CST_OUT)<<" "<<inputs[i]->get_oid();
+				OUTPUT(CST_OUT)<<std::endl;
 			}else{
-				Code	*icst=f_icst->get_reference(0);
 				((CSTController	*)controller)->inject_icst(f_icst,lowest_cfd,time_to_live);	// inject f->icst in the primary and secondary groups, and in the output groups.
-				uint16	arg_index=icst->code(I_HLP_ARGS).asIndex();
-				//std::cout<<Utils::RelativeTime(Now())<<"				"<<f_icst->get_oid()<<" icst["<<controller->getObject()->get_oid()<<"][";
-				//for(uint32	i=0;i<inputs.size();++i)
-				//	std::cout<<" "<<inputs[i]->get_oid();
-				//std::cout<<"]"<<std::endl;
+
+				OUTPUT(CST_OUT)<<Utils::RelativeTime(Now())<<"				"<<f_icst->get_oid()<<" icst["<<controller->getObject()->get_oid()<<"][";
+				for(uint32	i=0;i<inputs.size();++i)
+					OUTPUT(CST_OUT)<<" "<<inputs[i]->get_oid();
+				OUTPUT(CST_OUT)<<"]"<<std::endl;
 			}
 		}else{	// there are simulations; the production is therefore a prediction; add the simulations to the latter.
 
@@ -290,9 +288,11 @@ namespace	r_exec{
 			return;
 
 		if(	input->object->code(0).asOpcode()==Opcodes::Fact	||
-			input->object->code(0).asOpcode()==Opcodes::AntiFact)	// discard everything but facts and |facts.
-			{//std::cout<<Utils::RelativeTime(Now())<<" cst "<<getObject()->get_oid()<<" <- "<<input->object->get_oid()<<std::endl;
-			Controller::__take_input<CSTController>(input);}
+			input->object->code(0).asOpcode()==Opcodes::AntiFact){	// discard everything but facts and |facts.
+		
+			OUTPUT(CST_IN)<<Utils::RelativeTime(Now())<<" cst "<<getObject()->get_oid()<<" <- "<<input->object->get_oid()<<std::endl;
+			Controller::__take_input<CSTController>(input);
+		}
 	}
 
 	void	CSTController::reduce(r_exec::View	*input){

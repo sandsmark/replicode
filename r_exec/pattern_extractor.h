@@ -56,10 +56,13 @@ namespace	r_exec{
 
 		static	bool	IsEligibleCause(r_exec::View	*view);
 
-		bool	is_invalidated(uint64	time_reference,uint32	thz)	const{	// for storage in time_buffers.
-			
-			return	(time_reference-ijt>thz);
-		}
+		class	IsInvalidated{	// for storage in time_buffers.
+		public:
+			bool	operator	()(Input	&i,uint64	time_reference,uint32	thz)	const{
+
+				return	(time_reference-i.ijt>thz);
+			}
+		};
 	};
 
 	class	CInput{	// cached inputs.
@@ -72,12 +75,15 @@ namespace	r_exec{
 		CInput(View	*input,_Fact	*abstraction,BindingMap	*bindings):input(input),abstraction(abstraction),bindings(bindings),injected(false),ijt(input->get_ijt()){}
 		CInput():input(NULL),abstraction(NULL),bindings(NULL),injected(false),ijt(0){}
 
-		bool	is_invalidated(uint64	time_reference,uint32	thz)	const{	// for storage in time_buffers.
-			
-			return	(time_reference-ijt>thz);
-		}
-
 		bool	operator	==(const	CInput	&i)	const{	return	input==i.input;	}
+
+		class	IsInvalidated{	// for storage in time_buffers.
+		public:
+			bool	operator	()(CInput	&i,uint64	time_reference,uint32	thz)	const{
+
+				return	(time_reference-i.ijt>thz);
+			}
+		};
 	};
 
 	// Targeted Pattern eXtractor.

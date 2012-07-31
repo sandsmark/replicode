@@ -135,6 +135,9 @@ namespace	r_exec{
 
 		bool	deleted;
 
+		static	const	uint32	DebugStreamCount=8;
+		ostream	*debug_streams[8];
+
 		_Mem();
 
 		void	_unpack_code(Code	*hlp,uint16	fact_object_index,Code	*fact_object,uint16	read_index)	const;
@@ -166,7 +169,8 @@ namespace	r_exec{
 					bool	debug,
 					uint32	ntf_mk_res,
 					uint32	goal_pred_success_res,
-					uint32	probe_level);
+					uint32	probe_level,
+					uint32	traces);
 
 		uint64	get_probe_level()						const{	return	probe_level;	}
 		float32	get_mdl_inertia_sr_thr()				const{	return	mdl_inertia_sr_thr;	}
@@ -260,7 +264,21 @@ namespace	r_exec{
 		r_comp::Image	*get_models();				// create an image; fill with all models; call only when stopped.
 
 		//std::vector<uint64>	timings_report;	// debug facility.
+		typedef	enum{
+			CST_IN=0,
+			CST_OUT=1,
+			MDL_IN=2,
+			MDL_OUT=3,
+			PRED_MON=4,
+			GOAL_MON=5,
+			MDL_RATING=6,
+			HLP_INJ=7
+		}TraceLevel;
+		static	std::ostream	&Output(TraceLevel	l);
 	};
+
+
+#define	OUTPUT(c)	_Mem::Output(_Mem::c)
 
 	// _Mem that stores the objects as long as they are not invalidated.
 	class	r_exec_dll	MemStatic:
