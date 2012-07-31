@@ -42,7 +42,7 @@ drives:(std_grp 40 0 0 0 [stdout]) [[SYNC_ONCE now 0 forever root nil COV_OFF 0]
 
 ; extensions.
 
-; args: pass_through, ctpx_on, gtpx_on, ptpx_on, trace, trace injections, decompile_models, primary group, other output groups.
+; args: pass_through, ctpx_on, gtpx_on, ptpx_on, trace injections, decompile_models, primary group, other output groups.
 auto_focus:(icpp_pgm "auto_focus" [true true false false true true primary] RUN_ALWAYS 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
 
 
