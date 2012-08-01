@@ -271,7 +271,7 @@ namespace	r_exec{
 			MDL_OUT=3,
 			PRED_MON=4,
 			GOAL_MON=5,
-			MDL_RATING=6,
+			MDL_REV=6,
 			HLP_INJ=7
 		}TraceLevel;
 		static	std::ostream	&Output(TraceLevel	l);

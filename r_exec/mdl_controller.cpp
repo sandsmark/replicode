@@ -2002,14 +2002,16 @@ namespace	r_exec{
 				getView()->set_act(0);
 				secondary->getView()->set_act(success_rate);	// may trigger secondary->gain_activation().
 				codeCS.leave();
+				OUTPUT(MDL_REV)<<Utils::RelativeTime(Now())<<" mdl "<<getObject()->get_oid()<<" phased out "<<std::endl;
 			}else{	// no weak models live in the secondary group.
 
 				codeCS.leave();
 				ModelBase::Get()->register_mdl_failure(model);
-				kill_views();std::cout<<Utils::RelativeTime(Now())<<" mdl "<<getObject()->get_oid()<<" deleted "<<std::endl;
+				kill_views();
+				OUTPUT(MDL_REV)<<Utils::RelativeTime(Now())<<" mdl "<<getObject()->get_oid()<<" deleted "<<std::endl;
 			}
 		}
-		OUTPUT(MDL_RATING)<<"mdl "<<model->get_oid()<<" cnt:"<<instance_count<<" sr:"<<success_rate<<std::endl;
+		OUTPUT(MDL_REV)<<"mdl "<<model->get_oid()<<" cnt:"<<instance_count<<" sr:"<<success_rate<<std::endl;
 	}
 
 	void	PrimaryMDLController::assume(_Fact	*input){
@@ -2228,13 +2230,14 @@ namespace	r_exec{
 
 			getView()->set_act(0);
 			primary->getView()->set_act(success_rate);	// activate the primary controller in its own group g: will be performmed at the nex g->upr.
+			codeCS.leave();
+			OUTPUT(MDL_REV)<<Utils::RelativeTime(Now())<<" mdl "<<getObject()->get_oid()<<" phased in "<<std::endl;
 		}else{											// will trigger primary->gain_activation() at the next g->upr.
 			
 			if(success_rate>getView()->get_host()->get_act_thr())	// else: leave the model in the secondary group.
 				getView()->set_act(success_rate);
+			codeCS.leave();
 		}
-
-		codeCS.leave();
 	}
 
 	void	SecondaryMDLController::register_pred_outcome(Fact	*f_pred,bool	success,_Fact	*evidence,float32	confidence,bool	rate_failures){	// success==false means executed in the thread of a time core; otherwise, executed in the same thread as for Controller::reduce().
