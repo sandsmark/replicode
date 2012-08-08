@@ -138,13 +138,8 @@ namespace	r_exec{
 
 				for(uint16	i=0;i<prediction->simulations.size();++i)
 					simulations.insert(prediction->simulations[i]);
-			}else{
-
-				if(prediction->grounds.size()==0)
-					predictions.insert(prediction->get_target());
-				else	for(uint16	i=0;i<prediction->grounds.size();++i)
-					predictions.insert(prediction->grounds[i]);
-			}
+			}else
+				predictions.insert(input);
 		}else
 			last_cfd=input->get_cfd();
 		

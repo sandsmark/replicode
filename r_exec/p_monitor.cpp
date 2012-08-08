@@ -42,13 +42,11 @@ namespace	r_exec{
 
 		prediction_target=prediction->get_pred()->get_target();	// f1.
 		uint64	now=Now();
-		//std::cout<<"PMon: "<<now-_Mem::Get()->get_starting_time()<<":"<<Utils::GetTimestamp<Code>(prediction_target,FACT_BEFORE)-_Mem::Get()->get_starting_time()<<std::endl;
 
 		bindings->reset_fwd_timings(prediction_target);
 
 		MonitoringJob<PMonitor>	*j=new	MonitoringJob<PMonitor>(this,prediction_target->get_before()+Utils::GetTimeTolerance());
 		_Mem::Get()->pushTimeJob(j);
-		//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<prediction_target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" created\n";
 	}
 
 	PMonitor::~PMonitor(){

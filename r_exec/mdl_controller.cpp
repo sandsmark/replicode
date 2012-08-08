@@ -1833,11 +1833,11 @@ namespace	r_exec{
 		if(success){
 
 			f_success_object=new	Fact(success_object,now,now,confidence,1);
-			OUTPUT(PRED_MON)<<Utils::RelativeTime(now)<<" "<<getObject()<<f_pred->get_oid()<<" pred success"<<std::endl;
+			OUTPUT(PRED_MON)<<Utils::RelativeTime(now)<<evidence->get_oid()<<" -> "<<f_pred->get_oid()<<" pred success"<<std::endl;
 		}else{
 
 			f_success_object=new	AntiFact(success_object,now,now,confidence,1);
-			OUTPUT(PRED_MON)<<Utils::RelativeTime(now)<<" "<<getObject()<<f_pred->get_oid()<<" pred failure"<<std::endl;
+			OUTPUT(PRED_MON)<<Utils::RelativeTime(now)<<" "<<f_pred->get_oid()<<" pred failure"<<std::endl;
 		}
 
 		Group	*primary_host=get_host();
