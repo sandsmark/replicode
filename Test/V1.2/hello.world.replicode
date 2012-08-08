@@ -1,0 +1,44 @@
+; all programs are deactivated: activate the ones according to the method you want to try.
+
+
+; Method 1: locked on timer.
+
+pgm0:(pgm |[] |[] |[] []
+   (prb [1 "print" "hello world" |[]])
+1) |[]
+
+ipgm0:(ipgm pgm0 |[] RUN_ONCE 50000us VOLATILE SILENT 1) [[SYNC_ONCE now 0 1 stdin nil 0]]
+
+
+; Method 2: one object injected at a point in time, caught by another program.
+
+pgm1:(pgm |[] |[] |[] []
+   (inj []
+      (ent 1)
+      [SYNC_ONCE now 1 1 stdin nil]
+   )
+1) |[]
+
+ipgm1:(ipgm pgm1 |[] RUN_ONCE 50000us VOLATILE SILENT 1) [[SYNC_ONCE now 0 1 stdin nil 0]]
+
+pgm2:(pgm |[] []
+   (ptn (ent ::) |[])
+|[] []
+   (prb [1 "print" "hello world" |[]])
+1) |[]
+
+ipgm2:(ipgm pgm2 |[] RUN_ONCE 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 1 stdin nil 0]]
+
+
+; Method 3: one program that injects a new instance of itself.
+
+pgm3:(pgm |[] |[] |[] []
+   (inj []
+      (ins pgm3 |[] RUN_ONCE 50000us VOLATILE SILENT)
+      [SYNC_ONCE now 0 forever stdin nil 1]
+   )
+   (prb [1 "print" "hello world" |[]])
+1) |[]
+
+ipgm3:(ipgm pgm3 |[] RUN_ONCE 50000us VOLATILE SILENT 1) [[SYNC_ONCE now 0 1 stdin nil 1]]
+
