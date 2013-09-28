@@ -30,7 +30,7 @@
 
 #include	"preprocessor.h"
 #include	"compiler.h"
-#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
+#include	"CoreLibrary/utils.h"
 
 
 namespace	r_comp{
@@ -52,7 +52,7 @@ RepliStruct::~RepliStruct() {
 
 void	RepliStruct::reset(){
 
-	std::list<RepliStruct*>::const_iterator	arg;
+	std::list<RepliStruct*>::iterator	arg;
 	for(arg=args.begin();arg!=args.end();){
 
 		switch((*arg)->type){

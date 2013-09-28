@@ -33,7 +33,6 @@
 #include	"mem.h"
 #include	"model_base.h"
 
-
 namespace	r_exec{
 
 	bool	Input::IsEligibleCause(r_exec::View	*view){
@@ -394,7 +393,7 @@ namespace	r_exec{
 			uint64	analysis_end=Now();
 			uint32	d=analysis_end-analysis_starting_time;
 			char	_timing[255];
-			itoa(d,_timing,10);
+            snprintf(_timing, 255, "%d", d);
 			header=Time::ToString_seconds(Now()-Utils::GetTimeReference());
 			std::string	s0=(" > ");
 			s0+=get_header()+std::string(":production [");

@@ -38,12 +38,12 @@ namespace	r_exec{
 
 	template<class	C,class	U>	Object<C,U>::Object(r_code::Mem	*mem):C(),hash_value(0),invalidated(0){
 
-		set_oid(UNDEFINED_OID);
+		this->set_oid(UNDEFINED_OID);
 	}
 
 	template<class	C,class	U>	Object<C,U>::~Object(){
 
-		invalidate();
+		this->invalidate();
 	}
 
 	template<class	C,class	U>	bool	Object<C,U>::is_invalidated(){
@@ -58,16 +58,16 @@ namespace	r_exec{
 		invalidated=1;//std::cout<<std::dec<<get_oid()<<" invalidated\n";
 
 		acq_views();
-		views.clear();
+        this->views.clear();
 		rel_views();
 		
-		if(code(0).getDescriptor()==Atom::MARKER){
+		if(this->code(0).getDescriptor()==Atom::MARKER){
 
-			for(uint16	i=0;i<references_size();++i)
-				get_reference(i)->remove_marker(this);
+			for(uint16	i=0;i<this->references_size();++i)
+				this->get_reference(i)->remove_marker(this);
 		}
 		
-		if(is_registered())
+		if(this->is_registered())
 			r_code::Mem::Get()->delete_object(this);
 
 		return	false;
@@ -75,41 +75,41 @@ namespace	r_exec{
 
 	template<class	C,class	U>	void	Object<C,U>::compute_hash_value(){
 
-		hash_value=code(0).asOpcode()<<20;				//	12 bits for the opcode.
-		hash_value|=(code_size()	&	0x00000FFF)<<8;	//	12 bits for the code size.
-		hash_value|=references_size()	&	0x000000FF;	//	8 bits for the reference set size.
+		hash_value=this->code(0).asOpcode()<<20;				//	12 bits for the opcode.
+		hash_value|=(this->code_size()	&	0x00000FFF)<<8;	//	12 bits for the code size.
+		hash_value|=this->references_size()	&	0x000000FF;	//	8 bits for the reference set size.
 	}
 
 	template<class	C,class	U>	float32	Object<C,U>::get_psln_thr(){
 
 		psln_thr_sem.enter();
-		float32	r=code(code(0).getAtomCount()).asFloat();	//	psln is always the last member of an object.
+		float32	r=this->code(this->code(0).getAtomCount()).asFloat();	//	psln is always the last member of an object.
 		psln_thr_sem.leave();
 		return	r;
 	}
 
 	template<class	C,class	U>	void	Object<C,U>::mod(uint16	member_index,float32	value){
 
-		if(member_index!=code_size()-1)
+		if(member_index!=this->code_size()-1)
 			return;
-		float32	v=code(member_index).asFloat()+value;
+		float32	v=this->code(member_index).asFloat()+value;
 		if(v<0)
 			v=0;
 		else	if(v>1)
 			v=1;
 
 		psln_thr_sem.enter();
-		code(member_index)=Atom::Float(v);
+		this->code(member_index)=Atom::Float(v);
 		psln_thr_sem.leave();
 	}
 
 	template<class	C,class	U>	void	Object<C,U>::set(uint16	member_index,float32	value){
 
-		if(member_index!=code_size()-1)
+		if(member_index!=this->code_size()-1)
 			return;
 
 		psln_thr_sem.enter();
-		code(member_index)=Atom::Float(value);
+		this->code(member_index)=Atom::Float(value);
 		psln_thr_sem.leave();
 	}
 
@@ -121,8 +121,8 @@ namespace	r_exec{
 		r_code::View	probe;
 		probe.references[0]=group;
 
-		UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v=views.find(&probe);
-		if(v!=views.end()){
+		UNORDERED_SET<r_code::View	*,r_code::View::Hash,r_code::View::Equal>::const_iterator	v=this->views.find(&probe);
+		if(v!=this->views.end()){
 
 			if(lock)
 				rel_views();

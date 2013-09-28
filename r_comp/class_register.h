@@ -31,7 +31,7 @@
 #ifndef	r_comp_class_register_h
 #define	r_comp_class_register_h
 
-#include	"atom.h"
+#include	"r_code/atom.h"
 
 
 namespace	r_comp{

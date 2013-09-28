@@ -53,11 +53,11 @@ namespace	r_exec{
 			}else	if(opcode==Opcodes::IMdl){	// type 3.
 			
 				hash_code|=0x00000C00;
-				hash_code|=(((uint32)payload->get_reference(0))	&	0x000003FF);	// data: address of the mdl.
+				hash_code|=(((uintptr_t)payload->get_reference(0))	&	0x000003FF);	// data: address of the mdl.
 			}else	if(opcode==Opcodes::ICst){	// type 4.
 
 				hash_code|=0x00001000;
-				hash_code|=(((uint32)payload->get_reference(0))	&	0x000003FF);	// data: address of the cst.
+				hash_code|=(((uintptr_t)payload->get_reference(0))	&	0x000003FF);	// data: address of the cst.
 			}else	// type: 0.
 				hash_code|=(opcode	&	0x000003FF);	// data: class id.
 			break;
@@ -201,15 +201,19 @@ namespace	r_exec{
 		mdlCS.enter();
 		MdlSet::iterator	m=black_list.find(e);
 		if(m!=black_list.end()){
-
-			(*m).touch_time=Now();
+            ModelBase::MEntry mEntry = *m;
+            black_list.erase(m);
+			mEntry.touch_time=Now();
+            black_list.emplace(mEntry);
 			mdlCS.leave();
 			return	NULL;
 		}
 		m=white_list.find(e);
 		if(m!=white_list.end()){
-
-			(*m).touch_time=Now();
+            ModelBase::MEntry mEntry = *m;
+            white_list.erase(m);
+			mEntry.touch_time=Now();
+            white_list.emplace(mEntry);
 			mdlCS.leave();
 			return	(*m).mdl;
 		}
@@ -225,16 +229,20 @@ namespace	r_exec{
 		mdlCS.enter();
 		MdlSet::iterator	m=black_list.find(e_m0);
 		if(m!=black_list.end()){
-
-			(*m).touch_time=Now();
+            ModelBase::MEntry mEntry = *m;
+            black_list.erase(m);
+			mEntry.touch_time=Now();
+            black_list.emplace(mEntry);
 			mdlCS.leave();
 			_m0=_m1=NULL;
 			return;
 		}
 		m=white_list.find(e_m0);
 		if(m!=white_list.end()){
-
-			(*m).touch_time=Now();
+            ModelBase::MEntry mEntry = *m;
+            white_list.erase(m);
+			mEntry.touch_time=Now();
+            white_list.emplace(mEntry);
 			_m0=(*m).mdl;
 			Code	*rhs=m1->get_reference(m1->code(m1->code(MDL_OBJS).asIndex()+2).asIndex());
 			Code	*im0=rhs->get_reference(0);
@@ -244,16 +252,20 @@ namespace	r_exec{
 		MEntry	e_m1(m1,false);
 		m=black_list.find(e_m1);
 		if(m!=black_list.end()){
-
-			(*m).touch_time=Now();
+            ModelBase::MEntry mEntry = *m;
+            black_list.erase(m);
+			mEntry.touch_time=Now();
+            black_list.emplace(mEntry);
 			mdlCS.leave();
 			_m1=NULL;
 			return;
 		}
 		m=white_list.find(e_m1);
 		if(m!=white_list.end()){
-
-			(*m).touch_time=Now();
+            ModelBase::MEntry mEntry = *m;
+            white_list.erase(m);
+			mEntry.touch_time=Now();
+            white_list.emplace(mEntry);
 			mdlCS.leave();
 			_m1=(*m).mdl;
 			return;

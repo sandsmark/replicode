@@ -31,11 +31,12 @@
 #ifndef	ipgm_context_h
 #define	ipgm_context_h
 
-#include	"../r_code/atom.h"
-#include	"../r_code/utils.h"
+#include	"r_code/atom.h"
+#include	"r_code/utils.h"
 #include	"object.h"
 #include	"_context.h"
 #include	"pgm_overlay.h"
+#include "operator.h"
 
 
 namespace	r_exec{
@@ -262,8 +263,8 @@ namespace	r_exec{
 			}
 		}
 
-		void	IPGMContext::copy_structure_to_value_array(bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr);
-		void	IPGMContext::copy_member_to_value_array(uint16	child_index,bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr);
+		void	copy_structure_to_value_array(bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr);
+		void	copy_member_to_value_array(uint16	child_index,bool	prefix,uint16	write_index,uint16	&extent_index,bool	dereference_cptr);
 	public:
 		static	IPGMContext	GetContextFromInput(View	*input,InputLessPGMOverlay	*overlay){	return	IPGMContext(input->object,input,&input->object->code(0),0,overlay,REFERENCE);	}
 

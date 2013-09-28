@@ -281,7 +281,7 @@ namespace	r_exec{
 
 					pattern=(_Fact	*)unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index+1).asIndex());	// lhs.
 					tpx=build_tpx<GTPX>((_Fact	*)production,pattern,bm,goal_ratings,f_ihlp,f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
-					goals.insert(std::pair<P<Code>,P<TPX>	>((_Fact	*)production,tpx));
+					goals.insert(std::pair<P<_Fact>,P<TPX>	>((_Fact	*)production,tpx));
 					//std::cout<<Utils::RelativeTime(Now())<<" goal focus["<<production->get_oid()<<"]\n";
 				}else{	
 					
@@ -290,7 +290,7 @@ namespace	r_exec{
 
 						pattern=(_Fact	*)unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index+2).asIndex());	// rhs.
 						tpx=build_tpx<PTPX>((_Fact	*)production,pattern,bm,prediction_ratings,f_ihlp,f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
-						predictions.insert(std::pair<P<Code>,P<TPX>	>((_Fact	*)production,tpx));
+						predictions.insert(std::pair<P<_Fact>,P<TPX>	>((_Fact	*)production,tpx));
 						//std::cout<<Utils::RelativeTime(Now())<<" pred focus["<<production->get_oid()<<"]\n";
 					}
 				}

@@ -1,9 +1,9 @@
-//	reduction_job.cpp
+//	utils.tpl.cpp
 //
-//	Author: Eric Nivel
+//	Author: Eric Nivel, Thor List
 //
 //	BSD license:
-//	Copyright (c) 2010, Eric Nivel
+//	Copyright (c) 2010, Eric Nivel, Thor List
 //	All rights reserved.
 //	Redistribution and use in source and binary forms, with or without
 //	modification, are permitted provided that the following conditions are met:
@@ -13,7 +13,7 @@
 //   - Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-//   - Neither the name of Eric Nivel nor the
+//   - Neither the name of Eric Nivel or Thor List nor the
 //     names of their contributors may be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
@@ -28,38 +28,52 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"reduction_job.h"
-#include	"mem.h"
+#include	<iostream>
 
+#if defined (WINDOWS)
+#elif defined (LINUX)
+#include <dlfcn.h>
+#else
+	#error "Not yet ported to your platform"
+#endif
 
-namespace	r_exec{
+namespace	core{
 
-	_ReductionJob::_ReductionJob():_Object(){
+	template<typename	T>	T	SharedLibrary::getFunction(const	char	*functionName){
+		T	function=NULL;
+#if defined	WINDOWS
+		if(library){
+
+			function=(T)GetProcAddress(library,functionName);
+			if(!function){
+
+				DWORD	error=GetLastError();
+				std::cerr<<"GetProcAddress > Error: "<<error<<std::endl;
+			}
+		}
+#elif defined LINUX
+		if(library){
+			function = (T)dlsym(library,functionName);
+			if(!function){
+				std::cout<<"> Error: unable to find symbol "<<functionName<<" :"<< dlerror() << std::endl;
+			}
+		}
+#endif
+		return	function;
 	}
 
-    template <class _P> bool ReductionJob<_P>::update(uint64	now){
-        _Mem::Get()->register_reduction_job_latency(now-ijt);
-        processor->reduce(input);
-        return	true;
-    }
-    template<class	_P,class	T,class	C> bool BatchReductionJob<_P, T, C>::update(uint64	now){
-        _Mem::Get()->register_reduction_job_latency(now-ijt);
-        processor->reduce_batch(trigger,controller);
-        return	true;
-    }
+	////////////////////////////////////////////////////////////////////////////////////////////////
 
-	////////////////////////////////////////////////////////////
+	template<class	T>	T	*Thread::New(thread_function	f,void	*args){
 
-	bool	ShutdownReductionCore::update(uint64	now){
-
-		return	false;
-	}
-
-	////////////////////////////////////////////////////////////
-
-	bool	AsyncInjectionJob::update(uint64	now){
-
-		_Mem::Get()->inject(input);
-		return	true;
+		T	*t=new	T();
+#if defined	WINDOWS
+		if(t->_thread=CreateThread(NULL,0,f,args,0,NULL))
+#elif defined LINUX
+		if (pthread_create(&t->_thread, NULL, f, args) == 0)
+#endif
+			return	t;
+		delete	t;
+		return	NULL;
 	}
 }

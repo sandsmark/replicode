@@ -31,7 +31,7 @@
 #ifndef	view_h
 #define	view_h
 
-#include	"../r_code/object.h"
+#include	"r_code/object.h"
 #include	"overlay.h"
 #include	"dll.h"
 
@@ -69,9 +69,9 @@ namespace	r_exec{
 					 uint64		ijt,
 					 float32	sln,
 					 int32		res,
-					 Code		*host,
-					 Code		*origin,
-					 Code		*object);
+					 r_code::Code		*host,
+					 r_code::Code		*origin,
+					 r_code::Code		*object);
 	protected:
 		void	reset_init_sln();
 		void	reset_init_act();
@@ -124,11 +124,11 @@ namespace	r_exec{
 		float32		get_act();
 		bool		get_cov();
 		float32		get_vis();
-		uint32		&ctrl0(){	return	_code[VIEW_CTRL_0].atom;	}	// use only for non-group views.
-		uint32		&ctrl1(){	return	_code[VIEW_CTRL_1].atom;	}	// idem.
+		uintptr_t		&ctrl0(){	return	_code[VIEW_CTRL_0].atom;	}	// use only for non-group views.
+		uintptr_t		&ctrl1(){	return	_code[VIEW_CTRL_1].atom;	}	// idem.
 
-		void	mod_res(float32	value);
-		void	set_res(float32	value);
+		void	mod_res(float	value);
+		void	set_res(float	value);
 		void	mod_sln(float32	value);
 		void	set_sln(float32	value);
 		void	mod_act(float32	value);

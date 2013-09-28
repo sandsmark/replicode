@@ -35,6 +35,7 @@
 #include	<istream>
 #include	<sstream>
 #include	<fstream>
+#include <list>
 
 using	namespace	r_code;
 

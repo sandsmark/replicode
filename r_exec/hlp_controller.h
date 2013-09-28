@@ -35,6 +35,7 @@
 #include	"binding_map.h"
 #include	"g_monitor.h"
 #include	"group.h"
+#include "init.h"
 
 
 namespace	r_exec{
@@ -90,8 +91,8 @@ namespace	r_exec{
 
 			E	e(evidence);
 			cache->CS.enter();
-			uint64	now=Now();
-			r_code::list<E>::const_iterator	_e;
+			uint64	now=r_exec::Now();
+			typename r_code::list<E>::const_iterator	_e;
 			for(_e=cache->evidences.begin();_e!=cache->evidences.end();){
 
 				if((*_e).is_too_old(now))	// garbage collection.

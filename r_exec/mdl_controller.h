@@ -35,6 +35,8 @@
 #include	"hlp_controller.h"
 #include	"p_monitor.h"
 #include	"factory.h"
+#include "reduction_job.h"
+#include "mem.h"
 
 
 namespace	r_exec{
@@ -154,7 +156,7 @@ namespace	r_exec{
 
 			cache->CS.enter();
 			uint64	now=Now();
-			r_code::list<E>::const_iterator	_e;
+			typename r_code::list<E>::const_iterator	_e;
 			for(_e=cache->evidences.begin();_e!=cache->evidences.end();){
 
 				if((*_e).is_too_old(now))	// garbage collection.

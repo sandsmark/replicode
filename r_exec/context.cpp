@@ -474,7 +474,7 @@ dereference:
 
 	bool	match(const	IPGMContext	&input,const	IPGMContext	&pattern,const	IPGMContext	&productions,std::vector<uint16>	&production_indices){
 
-		IPGMContext	&skeleton=IPGMContext();
+		IPGMContext	skeleton=IPGMContext();
 		uint16	last_patch_index;
 		if(pattern[0].asOpcode()==Opcodes::Ptn){
 			
@@ -579,14 +579,14 @@ build_productions:
 			input_indices.push_back(i);
 
 		std::vector<uint16>	production_indices;	//	list of productions built upon successful matches.
-
+        uint16	input_count;
 		if(input_set[0].getDescriptor()!=Atom::SET	&&
 			input_set[0].getDescriptor()!=Atom::S_SET	&&
 			positive_section[0].getDescriptor()!=Atom::SET	&&
 			negative_section[0].getDescriptor()!=Atom::SET)
 			goto	failure;
 
-		uint16	input_count=input_set.getChildrenCount();
+		input_count=input_set.getChildrenCount();
 		if(!input_count)
 			goto	failure;
 
@@ -705,8 +705,8 @@ failure:
 			index=context.setCompoundResultHead(v->code(0));
 			for(uint16	i=1;i<VIEW_CODE_MAX_SIZE;++i)
 				context.addCompoundResultPart(v->code(i));
-			context.addCompoundResultPart(Atom((uint32)v->references[0]));
-			context.addCompoundResultPart(Atom((uint32)v->references[1]));
+			context.addCompoundResultPart(Atom((uintptr_t)v->references[0]));
+			context.addCompoundResultPart(Atom((uintptr_t)v->references[1]));
 			delete	v;
 			return	true;
 		}

@@ -31,8 +31,8 @@
 #ifndef	segments_h
 #define	segments_h
 
-#include	"../r_code/object.h"
-#include	"../r_code/list.h"
+#include	"r_code/object.h"
+#include	"r_code/list.h"
 
 #include	"class.h"
 

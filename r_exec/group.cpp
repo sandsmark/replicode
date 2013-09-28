@@ -444,7 +444,8 @@ namespace	r_exec{
 			break;
 		}case	Atom::INSTANTIATED_CPP_PROGRAM:{
 			ipgm_views[view->get_oid()]=view;
-			Controller	*c=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),view);	//	now will be added to the deadline at start time.
+            std::string str = Utils::GetString<Code>(view->object,ICPP_PGM_NAME);
+			Controller	*c=CPPPrograms::New(str,view);	//	now will be added to the deadline at start time.
 			if(!c)
 				return	false;
 			view->controller=c;
@@ -849,7 +850,8 @@ namespace	r_exec{
 			break;
 		}case	Atom::INSTANTIATED_CPP_PROGRAM:{
 			ipgm_views[view->get_oid()]=view;
-			Controller	*c=CPPPrograms::New(Utils::GetString<Code>(view->object,ICPP_PGM_NAME),view);
+            std::string str = Utils::GetString<Code>(view->object,ICPP_PGM_NAME);
+			Controller	*c=CPPPrograms::New(str,view);
 			if(!c)
 				return;
 			view->controller=c;

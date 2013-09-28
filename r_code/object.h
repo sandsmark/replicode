@@ -35,9 +35,9 @@
 #include	"vector.h"
 #include	"list.h"
 #include	"replicode_defs.h"
+#include	"utils.h"
 
-#include	"../../CoreLibrary/trunk/CoreLibrary/base.h"
-#include	"../r_code/utils.h"
+#include	"CoreLibrary/base.h"
 
 
 using	namespace	core;
@@ -50,6 +50,7 @@ namespace	r_code{
 	public:
 		r_code::vector<Atom>	code;
 		r_code::vector<uint16>	references;
+        virtual ~ImageObject() {}
 
 		virtual	void	write(word32	*data)=0;
 		virtual	void	read(word32		*data)=0;

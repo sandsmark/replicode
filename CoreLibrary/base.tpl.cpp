@@ -1,4 +1,4 @@
-//	reduction_job.cpp
+//	base.tpl.cpp
 //
 //	Author: Eric Nivel
 //
@@ -28,38 +28,83 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"reduction_job.h"
-#include	"mem.h"
+namespace	core{
 
-
-namespace	r_exec{
-
-	_ReductionJob::_ReductionJob():_Object(){
+	template<class	C>	inline	P<C>::P():object(NULL){
 	}
 
-    template <class _P> bool ReductionJob<_P>::update(uint64	now){
-        _Mem::Get()->register_reduction_job_latency(now-ijt);
-        processor->reduce(input);
-        return	true;
-    }
-    template<class	_P,class	T,class	C> bool BatchReductionJob<_P, T, C>::update(uint64	now){
-        _Mem::Get()->register_reduction_job_latency(now-ijt);
-        processor->reduce_batch(trigger,controller);
-        return	true;
-    }
+	template<class	C>	inline	P<C>::P(C	*o):object(o){
 
-	////////////////////////////////////////////////////////////
-
-	bool	ShutdownReductionCore::update(uint64	now){
-
-		return	false;
+		if(object)
+			object->incRef();
 	}
 
-	////////////////////////////////////////////////////////////
+	template<class	C>	inline	P<C>::P(const P<C>	&p):object(p.object){
 
-	bool	AsyncInjectionJob::update(uint64	now){
+		if(object)
+			object->incRef();
+	}
 
-		_Mem::Get()->inject(input);
-		return	true;
+	template<class	C>	inline	P<C>::~P(){
+
+		if(object)
+			object->decRef();
+	}
+
+	template<class	C>	inline	C	*P<C>::operator	->()	const{
+
+		return	(C	*)object;
+	}
+
+	template<class	C>	inline	bool	P<C>::operator	==(C	*c)	const{
+
+		return	object==c;
+	}
+
+	template<class	C>	inline	bool	P<C>::operator	!=(C	*c)	const{
+
+		return	object!=c;
+	}
+
+	template<class	C>	template<class	D>	inline	bool	P<C>::operator	==(P<D>	&p)	const{
+
+		return	object==p.object;
+	}
+
+	template<class	C>	template<class	D>	inline	bool	P<C>::operator	!=(P<D>	&p)	const{
+
+		return	object!=p.object;
+	}
+
+	template<class	C>	inline	bool	P<C>::operator	!()	const{
+
+		return	!object;
+	}
+
+	template<class	C>	inline	P<C>&	P<C>::operator	=(C	*c){
+
+		if(object==c)
+			return	*this;
+		if(object)
+			object->decRef();
+		if(object=c)
+			object->incRef();
+
+		return	*this;
+	}
+
+	template<class	C>	template<class	D>	inline	P<C>	&P<C>::operator	=(const P<D>	&p){
+
+		return	this->operator	=((C	*)p.object);
+	}
+
+	template<class	C>	inline	P<C>	&P<C>::operator	=(const P<C>	&p){
+
+		return	this->operator	=((C	*)p.object);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////
+
+	template<class	C>	inline	_ObjectAdapter<C>::_ObjectAdapter():_Object(),C(){
 	}
 }

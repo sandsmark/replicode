@@ -31,13 +31,13 @@
 #ifndef	init_h
 #define	init_h
 
-#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
+#include	"CoreLibrary/utils.h"
 
-#include	"../r_code/list.h"
+#include	"r_code/list.h"
 
-#include	"../r_comp/segments.h"
-#include	"../r_comp/compiler.h"
-#include	"../r_comp/preprocessor.h"
+#include	"r_comp/segments.h"
+#include	"r_comp/compiler.h"
+#include	"r_comp/preprocessor.h"
 
 #include	"dll.h"
 
@@ -101,8 +101,10 @@ namespace	r_exec{
 		static	std::vector<PipeOStream	*>	Streams;
 		static	PipeOStream					NullStream;
 
-		HANDLE	pipe_read;
-		HANDLE	pipe_write;
+        int m_pipeRead[2];
+        int m_pipeWrite[2];
+		//HANDLE	pipe_read;
+		//HANDLE	pipe_write;
 
 		void	init();	// create one child process and a pipe.
 		PipeOStream();

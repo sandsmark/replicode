@@ -1,4 +1,4 @@
-//	reduction_job.cpp
+//	base.cpp
 //
 //	Author: Eric Nivel
 //
@@ -28,38 +28,27 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"reduction_job.h"
-#include	"mem.h"
+#include	<memory>
+#include	"base.h"
+#include	"utils.h"
 
 
-namespace	r_exec{
+namespace	core{
 
-	_ReductionJob::_ReductionJob():_Object(){
+	_Object::_Object():refCount(0){
 	}
 
-    template <class _P> bool ReductionJob<_P>::update(uint64	now){
-        _Mem::Get()->register_reduction_job_latency(now-ijt);
-        processor->reduce(input);
-        return	true;
-    }
-    template<class	_P,class	T,class	C> bool BatchReductionJob<_P, T, C>::update(uint64	now){
-        _Mem::Get()->register_reduction_job_latency(now-ijt);
-        processor->reduce_batch(trigger,controller);
-        return	true;
-    }
-
-	////////////////////////////////////////////////////////////
-
-	bool	ShutdownReductionCore::update(uint64	now){
-
-		return	false;
+	_Object::~_Object(){
 	}
 
-	////////////////////////////////////////////////////////////
+	void	_Object::incRef(){
 
-	bool	AsyncInjectionJob::update(uint64	now){
+		Atomic::Increment32(&refCount);
+	}
 
-		_Mem::Get()->inject(input);
-		return	true;
+	void	_Object::decRef(){
+
+		if(Atomic::Decrement32(&refCount)==0)
+			delete	this;
 	}
 }

@@ -1172,7 +1172,7 @@ return_false:
 		return	true;
 	}
 
-	bool	Compiler::hex(uint32	&h){
+	bool	Compiler::hex(uintptr_t	&h){
 
 		std::streampos	i=in_stream->tellg();
 		if(!match_symbol("0x",false)){
@@ -2046,11 +2046,11 @@ return_false:
 			return	true;
 
 		std::streampos	i=in_stream->tellg();
-		uint32	h;
+		uintptr_t	h;
 		if(hex(h)	&&	Atom(h).getDescriptor()==Atom::NODE){
 
 			if(write)
-				current_object->code[write_index]=Atom::Atom(h);
+				current_object->code[write_index]=Atom(h);
 			return	true;
 		}
 		in_stream->seekg(i);
@@ -2080,11 +2080,11 @@ return_false:
 			return	true;
 
 		std::streampos	i=in_stream->tellg();
-		uint32	h;
+		uintptr_t	h;
 		if(hex(h)	&&	Atom(h).getDescriptor()==Atom::DEVICE){
 
 			if(write)
-				current_object->code[write_index]=Atom::Atom(h);
+				current_object->code[write_index]=Atom(h);
 			return	true;
 		}
 		in_stream->seekg(i);

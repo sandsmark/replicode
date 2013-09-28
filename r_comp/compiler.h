@@ -159,7 +159,7 @@ namespace	r_comp{
 		bool	timestamp(uint64	&ts);
 		bool	str(std::string	&s);
 		bool	number(float32	&n);
-		bool	hex(uint32	&h);
+		bool	hex(uintptr_t	&h);
 		bool	boolean(bool	&b);
 		bool	object(Class	&p);					//	looks first in sys_objects, then in objects.
 		bool	object(const	Class	&p);			//	must conform to p.

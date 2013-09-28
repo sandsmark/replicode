@@ -34,8 +34,8 @@
 #include	"init.h"
 #include	"opcodes.h"
 #include	"group.h"
-#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
-#include	"../r_code/utils.h"
+#include	"CoreLibrary/utils.h"
+#include	"r_code/utils.h"
 #include	<math.h>
 
 
@@ -484,7 +484,7 @@ namespace	r_exec{
 
 			if(rhs[0].isFloat()){
 
-				index=context.setAtomicResult(Atom::Float(abs(lhs[0].asFloat()-rhs[0].asFloat())));
+				index=context.setAtomicResult(Atom::Float(fabs(lhs[0].asFloat()-rhs[0].asFloat())));
 				return	true;
 			}
 		}else	if(lhs[0].getDescriptor()==Atom::TIMESTAMP){
@@ -493,7 +493,7 @@ namespace	r_exec{
 
 				uint64	lhs_t=Utils::GetTimestamp(&lhs[0]);
 				uint64	rhs_t=Utils::GetTimestamp(&rhs[0]);
-				index=context.setTimestampResult(abs((float64)(lhs_t-rhs_t)));
+				index=context.setTimestampResult(fabs((float64)(lhs_t-rhs_t)));
 				return	true;
 			}
 		}

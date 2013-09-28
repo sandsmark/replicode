@@ -45,10 +45,10 @@ namespace	r_exec{
 
 	template<class	O,class	S>	Mem<O,S>::~Mem(){
 
-		if(state==RUNNING)
-			stop();
-		deleted=true;
-		objects.clear();
+		if(this->state==_Mem::RUNNING)
+			this->stop();
+		this->deleted=true;
+		this->objects.clear();
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -160,6 +160,6 @@ namespace	r_exec{
 	template<class	O,class	S>	void	Mem<O,S>::inject(O	*object,View	*view){
 
 		view->set_object(object);
-		inject_new_object(view);
+		this->inject_new_object(view);
 	}
 }

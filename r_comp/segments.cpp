@@ -475,7 +475,7 @@ namespace	r_comp{
 				add_object(reference);
 		}
 		
-		uint32	_object=(uint32)object;
+		uintptr_t	_object=(uintptr_t)object;
 		sys_object->references[0]=(_object	&	0x0000FFFF);
 		sys_object->references[1]=(_object	>>	16);
 	}
@@ -528,7 +528,7 @@ namespace	r_comp{
 		}
 		object->rel_views();
 		
-		uint32	_object=(uint32)object;
+		uintptr_t	_object=(uintptr_t)object;
 		sys_object->references[0]=(_object	&	0x0000FFFF);
 		sys_object->references[1]=(_object	>>	16);
 		return	sys_object;

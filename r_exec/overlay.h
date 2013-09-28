@@ -31,9 +31,9 @@
 #ifndef	overlay_h
 #define	overlay_h
 
-#include	"../../CoreLibrary/trunk/CoreLibrary/base.h"
-#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
-#include	"../r_code/object.h"
+#include	"CoreLibrary/base.h"
+#include	"CoreLibrary/utils.h"
+#include	"r_code/object.h"
 #include	"dll.h"
 
 
@@ -59,12 +59,7 @@ namespace	r_exec{
 		CriticalSection	reductionCS;
 
 		virtual	void	take_input(r_exec::View	*input){}
-		template<class	C>	void	__take_input(r_exec::View	*input){	// utility: to be called by sub-classes.
-
-			View	*_view=new	View(input);
-			ReductionJob<C>	*j=new	ReductionJob<C>(input/*_view*/,(C	*)this);
-			_Mem::Get()->pushReductionJob(j);
-		}
+		template<class	C> void	__take_input(r_exec::View	*input); // utility: to be called by sub-classes.
 
 		Controller(r_code::View	*view);
 	public:

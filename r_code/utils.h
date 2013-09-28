@@ -32,8 +32,8 @@
 #define	r_code_utils_h
 
 #include	"atom.h"
-#include	"../../CoreLibrary/trunk/CoreLibrary/base.h"
-#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
+#include	"CoreLibrary/base.h"
+#include	"CoreLibrary/utils.h"
 
 
 namespace	r_code{

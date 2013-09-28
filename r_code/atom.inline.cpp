@@ -1,10 +1,10 @@
 #include	<iostream>
+#include "atom.h"
 namespace	r_code{
 
-	inline	Atom	Atom::Float(float32	f){
+	inline	Atom	Atom::Float(float	f){
 
-		float32	_f=f;
-		uint32	a=*reinterpret_cast<uint32	*>(&_f);
+		uintptr_t	a=*reinterpret_cast<uintptr_t	*>(&f);
 		return	Atom(a>>1);
 	}
 
@@ -243,10 +243,10 @@ namespace	r_code{
 
 	inline	Atom	Atom::RawPointer(void	*pointer){
 
-		return	Atom((uint32)pointer);
+		return	Atom((uintptr_t)pointer);
 	}
 
-	inline	Atom::Atom(uint32	a):atom(a){
+	inline	Atom::Atom(uintptr_t	a):atom(a){
 	}
 
 	inline	Atom::~Atom(){

@@ -31,7 +31,7 @@
 #ifndef	r_code_atom_h
 #define	r_code_atom_h
 
-#include	"../../CoreLibrary/trunk/CoreLibrary/types.h"
+#include	"CoreLibrary/types.h"
 
 #undef	THIS
 
@@ -92,7 +92,7 @@ namespace	r_code{
 		}Type;
 
 		// encoders
-		static	Atom	Float(float32 f);	//	IEEE 754 32 bits encoding; shifted by 1 to the right (loss of precison).
+		static	Atom	Float(float f);	//	IEEE 754 32 bits encoding; shifted by 1 to the right (loss of precison).
 		static	Atom	PlusInfinity();
 		static	Atom	MinusInfinity();
 		static	Atom	UndefinedFloat();
@@ -142,7 +142,7 @@ namespace	r_code{
 		static	Atom	NullProgram(bool	take_past_inputs);
 		static	Atom	RawPointer(void	*pointer);
 
-		Atom(uint32	a=0xFFFFFFFF);
+		Atom(uintptr_t	a=UINTPTR_MAX);
 		~Atom();
 
 		Atom	&operator	=(const	Atom&	a);
@@ -151,7 +151,7 @@ namespace	r_code{
 		bool	operator	!()	const;
 		operator	size_t	()	const;
 
-		uint32	atom;
+		uintptr_t atom;
 
 		// decoders
 		bool	isUndefined()		const;

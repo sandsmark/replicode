@@ -2,7 +2,7 @@
 #define	correlator_h
 
 #include	"../types.h"
-#include	"../../r_exec/overlay.h"
+#include	"r_exec/overlay.h"
 
 // switch to use WinEpi instead of LSTM for finding correlations
 #define USE_WINEPI
@@ -23,8 +23,8 @@ r_exec::Controller	dll_export	*correlator(r_code::View	*view);
 #include	<iterator>
 #include	<utility> // pair
 #include	<math.h>
-#include	<../../CoreLibrary/trunk/CoreLibrary/base.h>
-#include	<../r_code/object.h>
+#include	<CoreLibrary/base.h>
+#include	<r_code/object.h>
 
 #ifdef USE_WINEPI
 #include	"winepi.h"

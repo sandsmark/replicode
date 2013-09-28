@@ -76,53 +76,53 @@ namespace	r_code{
 
 	template<class	I>	uint32	Image<I>::get_size()	const{
 
-		return	map_size()+code_size()+names_size();
+		return	this->map_size()+this->code_size()+this->names_size();
 	}
 
 	template<class	I>	uint32	Image<I>::getObjectCount()	const{
 
-		return	map_size();
+		return	this->map_size();
 	}
 
 	template<class	I>	word32	*Image<I>::getObject(uint32	i){
 
-		return	data()+data(i);
+		return	this->data()+this->data(i);
 	}
 
 	template<class	I>	word32	*Image<I>::getCodeSegment(){
 	
-		return	data()+map_size();
+		return	this->data()+this->map_size();
 	}
 
 	template<class	I>	uint32	Image<I>::getCodeSegmentSize()	const{
 
-		return	code_size();
+		return	this->code_size();
 	}
 
 	template<class	I>	void	Image<I>::trace()	const{
 
 		std::cout<<"---Image---\n";
 		std::cout<<"Size: "<<get_size()<<std::endl;
-		std::cout<<"Object Map Size: "<<map_size()<<std::endl;
-		std::cout<<"Code Segment Size: "<<code_size()<<std::endl;
-		std::cout<<"Names Size: "<<names_size()<<std::endl;
+		std::cout<<"Object Map Size: "<<this->map_size()<<std::endl;
+		std::cout<<"Code Segment Size: "<<this->code_size()<<std::endl;
+		std::cout<<"Names Size: "<<this->names_size()<<std::endl;
 		
 		uint32	i=0;
 
 		std::cout<<"===Object Map==="<<std::endl;
-		for(;i<map_size();++i)
-			std::cout<<i<<" "<<data(i)<<std::endl;
+		for(;i<this->map_size();++i)
+			std::cout<<i<<" "<<this->data(i)<<std::endl;
 
 		//	at this point, i is at the first word32 of the first object in the code segment
 		std::cout<<"===Code Segment==="<<std::endl;
-		uint32	code_start=map_size();
+		uint32	code_start=this->map_size();
 		for(uint32	j=0;j<code_start;++j){	//	read object map: data[data[j]] is the first word32 of an object, data[data[j]+5] is the first atom
 
-			uint32	object_axiom=data(data(j));
-			uint32	object_code_size=data(data(j)+1);
-			uint32	object_reference_set_size=data(data(j)+2);
-			uint32	object_marker_set_size=data(data(j)+3);
-			uint32	object_view_set_size=data(data(j)+4);
+			uint32	object_axiom=this->data(this->data(j));
+			uint32	object_code_size=this->data(this->data(j)+1);
+			uint32	object_reference_set_size=this->data(this->data(j)+2);
+			uint32	object_marker_set_size=this->data(this->data(j)+3);
+			uint32	object_view_set_size=this->data(this->data(j)+4);
 			std::cout<<"---object---\n";
 			std::cout<<i++;
 			/*switch(object_axiom){
@@ -138,26 +138,26 @@ namespace	r_code{
 			std::cout<<i++<<" view set size: "<<object_view_set_size<<std::endl;
 			
 			std::cout<<"---code---\n";
-			for(;i<data(j)+5+object_code_size;++i){
+			for(;i<this->data(j)+5+object_code_size;++i){
 
 				std::cout<<i<<" ";
-				((Atom	*)&data(i))->trace();
+				((Atom	*)&this->data(i))->trace();
 				std::cout<<std::endl;
 			}
 
 			std::cout<<"---reference set---\n";
-			for(;i<data(j)+5+object_code_size+object_reference_set_size;++i)
-				std::cout<<i<<" "<<data(i)<<std::endl;
+			for(;i<this->data(j)+5+object_code_size+object_reference_set_size;++i)
+				std::cout<<i<<" "<<this->data(i)<<std::endl;
 
 			std::cout<<"---marker set---\n";
-			for(;i<data(j)+5+object_code_size+object_reference_set_size+object_marker_set_size;++i)
-				std::cout<<i<<" "<<data(i)<<std::endl;
+			for(;i<this->data(j)+5+object_code_size+object_reference_set_size+object_marker_set_size;++i)
+				std::cout<<i<<" "<<this->data(i)<<std::endl;
 
 			std::cout<<"---view set---\n";
 			for(uint32	k=0;k<object_view_set_size;++k){
 
-				uint32	view_code_size=data(i);
-				uint32	view_reference_set_size=data(i+1);
+				uint32	view_code_size=this->data(i);
+				uint32	view_reference_set_size=this->data(i+1);
 
 				std::cout<<"view["<<k<<"]\n";
 				std::cout<<i++<<" code size: "<<view_code_size<<std::endl;
@@ -168,13 +168,13 @@ namespace	r_code{
 				for(l=0;l<view_code_size;++i,++l){
 
 					std::cout<<i<<" ";
-					((Atom	*)&data(i))->trace();
+					((Atom	*)&this->data(i))->trace();
 					std::cout<<std::endl;
 				}
 
 				std::cout<<"---reference set---\n";
 				for(l=0;l<view_reference_set_size;++i,++l)
-					std::cout<<i<<" "<<data(i)<<std::endl;
+					std::cout<<i<<" "<<this->data(i)<<std::endl;
 			}
 		}
 	}

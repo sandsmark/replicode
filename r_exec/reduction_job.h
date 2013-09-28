@@ -53,12 +53,7 @@ namespace	r_exec{
 		P<View>	input;
 		P<_P>	processor;
 		ReductionJob(View	*input,_P	*processor):_ReductionJob(),input(input),processor(processor){}
-		bool	update(uint64	now){
-			
-			_Mem::Get()->register_reduction_job_latency(now-ijt);
-			processor->reduce(input);
-			return	true;
-		}
+		bool	update(uint64	now);
 		void	debug(){
 
 			processor->debug(input);
@@ -72,12 +67,7 @@ namespace	r_exec{
 		P<T>	trigger;	// the event that triggered the job.
 		P<C>	controller;	// the controller that produced the job.
 		BatchReductionJob(_P	*processor,T	*trigger,C	*controller):_ReductionJob(),processor(processor),trigger(trigger),controller(controller){}
-		bool	update(uint64	now){
-			
-			_Mem::Get()->register_reduction_job_latency(now-ijt);
-			processor->reduce_batch(trigger,controller);
-			return	true;
-		}
+		bool	update(uint64	now);
 	};
 
 	class	r_exec_dll	ShutdownReductionCore:

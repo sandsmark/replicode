@@ -31,7 +31,7 @@
 #ifndef	r_code_list_h
 #define	r_code_list_h
 
-#include	"../../CoreLibrary/trunk/CoreLibrary/types.h"
+#include	"CoreLibrary/types.h"
 
 
 using	namespace	core;
@@ -234,6 +234,8 @@ namespace	r_code{
 				_cell=i._cell;
 				return	*this;
 			}
+        protected:
+            using _iterator::_cell;
 		};
 
 		class	iterator:
@@ -241,6 +243,7 @@ namespace	r_code{
 		friend	class	list;
 		friend	class	const_iterator;
 		protected:
+            using _iterator::_cell;
 			list	*_list;
 			iterator(list	*l,int32	c):_iterator(c),_list(l){}
 		public:

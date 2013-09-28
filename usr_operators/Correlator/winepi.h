@@ -16,8 +16,8 @@
 #include <iostream> // cout
 #include <ctime> // clock_t
 
-#include	<../../CoreLibrary/trunk/CoreLibrary/base.h>
-#include	<../r_code/object.h>
+#include	<CoreLibrary/base.h>
+#include	<r_code/object.h>
 
 //#include "correlator.h"
 typedef uint64 timestamp_t;
@@ -231,7 +231,7 @@ public:
 		size_t nIn = in.size();
 		size_t nOut = 1 << nIn;
 		out.resize(nOut);
-		std::map<K,V>::iterator it = in.begin();
+		typename std::map<K,V>::iterator it = in.begin();
 		for(size_t i = 0; i < nIn; ++i, ++it) {
 			size_t chunk_size = 1 << (nIn - i - 1);
 			for(size_t chunk_start = 0; chunk_start < nOut; chunk_start += 2 * chunk_size)
