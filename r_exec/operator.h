@@ -45,7 +45,7 @@ namespace	r_exec{
 		_Context	*implementation;
 	public:
 		Context(_Context	*implementation):implementation(implementation){}
-		~Context(){	delete	implementation;	}
+		virtual ~Context(){	delete	implementation;	}
 
 		_Context	*get_implementation()	const{	return	implementation;	}
 

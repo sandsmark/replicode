@@ -34,7 +34,7 @@
 
 namespace	r_comp{
 
-	Decompiler::Decompiler():out_stream(NULL),current_object(NULL),metadata(NULL),image(NULL),in_hlp(false){
+	Decompiler::Decompiler():out_stream(NULL),in_hlp(false),current_object(NULL),metadata(NULL),image(NULL){
 	}
 
 	Decompiler::~Decompiler(){
@@ -210,7 +210,6 @@ namespace	r_comp{
 		current_object=image->code_segment.objects[object_index];
 		SysObject	*sys_object=(SysObject	*)current_object;
 		uint16	read_index=0;
-		bool	after_tail_wildcard=false;
 		indents=0;
 
 		if(!partial_decompilation	&&	ignore_named_objects){	// decompilation of the entire memory.

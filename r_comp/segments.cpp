@@ -541,7 +541,7 @@ namespace	r_comp{
 		for(uint32	i=0;i<code_segment.objects.as_std()->size();++i){
 
 			sys_object=code_segment.objects[i];
-			uint32	_object=sys_object->references[0];
+			uintptr_t	_object=sys_object->references[0];
 			_object|=(sys_object->references[1]<<16);
 			object=(Code	*)_object;
 			sys_object->references.as_std()->clear();

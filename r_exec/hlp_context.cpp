@@ -100,6 +100,8 @@ namespace	r_exec{
 			return	true;
 		case	UNDEFINED:
 			return	false;
+        default:
+            break;
 		}
 
 		switch(code[index].getDescriptor()){

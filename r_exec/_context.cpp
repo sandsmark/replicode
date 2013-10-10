@@ -75,6 +75,8 @@ namespace	r_exec{
 		case	VWS:
 			std::cout<<"--> vws\n";
 			return;
+        default:
+            break;
 		}
 
 		for(uint16	i=0;i<get_object_code_size();++i){

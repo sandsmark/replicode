@@ -41,9 +41,10 @@ namespace	r_comp{
 									std::string	m,
 									std::string	p,
 									Iteration	i):_read(r),
-													name(m),
 													_class(p),
-													iteration(i){
+													iteration(i),
+													name(m)
+    {
 
 				if(_read==&Compiler::read_any)			type=ANY;
 		else	if(_read==&Compiler::read_number)		type=NUMBER;

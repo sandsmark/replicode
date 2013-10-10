@@ -662,16 +662,16 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Sim::Sim():_Object(),super_goal(NULL),root(NULL),sol(NULL),is_requirement(false),opposite(false),invalidated(0),sol_cfd(0),sol_before(0){
+	Sim::Sim():_Object(),invalidated(0),is_requirement(false),opposite(false),super_goal(NULL),root(NULL),sol(NULL),sol_cfd(0),sol_before(0){
 	}
 
-	Sim::Sim(Sim	*s):_Object(),mode(s->mode),thz(s->thz),super_goal(s->super_goal),root(s->root),sol(s->sol),is_requirement(false),opposite(s->opposite),invalidated(0),sol_cfd(s->sol_cfd),sol_before(s->sol_before){
+	Sim::Sim(Sim	*s):_Object(),invalidated(0),is_requirement(false),opposite(s->opposite),mode(s->mode),thz(s->thz),super_goal(s->super_goal),root(s->root),sol(s->sol),sol_cfd(s->sol_cfd),sol_before(s->sol_before){
 	}
 
-	Sim::Sim(SimMode	mode,uint64	thz,Fact	*super_goal,bool	opposite,Controller	*root):_Object(),mode(mode),thz(thz),super_goal(super_goal),root(root),sol(NULL),is_requirement(false),opposite(opposite),invalidated(0),sol_cfd(0),sol_before(0){
+	Sim::Sim(SimMode	mode,uint64	thz,Fact	*super_goal,bool	opposite,Controller	*root):_Object(),invalidated(0),is_requirement(false),opposite(opposite),mode(mode),thz(thz),super_goal(super_goal),root(root),sol(NULL),sol_cfd(0),sol_before(0){
 	}
 
-	Sim::Sim(SimMode	mode,uint64	thz,Fact	*super_goal,bool	opposite,Controller	*root,Controller	*sol,float32	sol_cfd,uint64	sol_deadline):_Object(),mode(mode),thz(thz),super_goal(super_goal),root(root),sol(sol),is_requirement(false),opposite(opposite),invalidated(0),sol_cfd(sol_cfd),sol_before(sol_before){
+	Sim::Sim(SimMode	mode,uint64	thz,Fact	*super_goal,bool	opposite,Controller	*root,Controller	*sol,float32	sol_cfd,uint64	sol_deadline):_Object(),invalidated(0),is_requirement(false),opposite(opposite),mode(mode),thz(thz),super_goal(super_goal),root(root),sol(sol),sol_cfd(sol_cfd),sol_before(sol_before){
 	}
 
 	void	Sim::invalidate(){

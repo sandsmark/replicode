@@ -163,7 +163,7 @@ namespace	r_exec{
 				return	false;
 			}
 		}
-		uint64	now=Now();
+//		uint64	now=Now();
 //		if(match_deadline==0)
 //			std::cout<<Time::ToString_seconds(Now()-st)<<" "<<std::hex<<this<<std::dec<<" (0) "<<input->object->get_oid()<<std::endl;
 //		else

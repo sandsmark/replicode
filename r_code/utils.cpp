@@ -62,13 +62,12 @@ namespace	r_code{
 
 		if(l==r)
 			return	true;
-		float32	d=fabs(l-r);
 		return	fabs(l-r)<FloatTolerance;
 	}
 
 	bool	Utils::Synchronous(uint64	l,uint64	r){
 
-		return	abs((int32)(l-r))<TimeTolerance;
+		return	uint32_t(abs((int32)(l-r)))<TimeTolerance;
 	}
 
 	uint64	Utils::GetTimestamp(const	Atom	*iptr){

@@ -50,9 +50,9 @@ namespace	r_exec{
 		bool			eligible_cause;
 		uint64			ijt;	// injection time.
 
-		Input(View	*input,_Fact	*abstraction,BindingMap	*bindings):input(input->object),ijt(input->get_ijt()),eligible_cause(IsEligibleCause(input)),abstraction(abstraction),bindings(bindings){}
-		Input():input(NULL),eligible_cause(false),abstraction(NULL),bindings(NULL),ijt(0){}
-		Input(const	Input	&original):input(original.input),eligible_cause(original.eligible_cause),abstraction(original.abstraction),bindings(original.bindings),ijt(original.ijt){}
+		Input(View	*input,_Fact	*abstraction,BindingMap	*bindings):bindings(bindings),abstraction(abstraction),input(input->object),eligible_cause(IsEligibleCause(input)),ijt(input->get_ijt()){}
+		Input():bindings(NULL),abstraction(NULL),input(NULL),eligible_cause(false),ijt(0){}
+		Input(const	Input	&original):bindings(original.bindings),abstraction(original.abstraction),input(original.input),eligible_cause(original.eligible_cause),ijt(original.ijt){}
 
 		static	bool	IsEligibleCause(r_exec::View	*view);
 
@@ -72,8 +72,8 @@ namespace	r_exec{
 		P<View>			input;
 		bool			injected;
 		uint64			ijt;	// injection time.
-		CInput(View	*input,_Fact	*abstraction,BindingMap	*bindings):input(input),abstraction(abstraction),bindings(bindings),injected(false),ijt(input->get_ijt()){}
-		CInput():input(NULL),abstraction(NULL),bindings(NULL),injected(false),ijt(0){}
+		CInput(View	*input,_Fact	*abstraction,BindingMap	*bindings):bindings(bindings),abstraction(abstraction),input(input),injected(false),ijt(input->get_ijt()){}
+		CInput():bindings(NULL),abstraction(NULL),input(NULL),injected(false),ijt(0){}
 
 		bool	operator	==(const	CInput	&i)	const{	return	input==i.input;	}
 

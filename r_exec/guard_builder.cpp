@@ -61,7 +61,8 @@ namespace	r_exec{
 		mdl->code(++write_index)=Atom::AssignmentPointer(l,++extent_index);
 		mdl->code(extent_index)=Atom::Operator(opcode,2);	// l:(opcode r offset)
 		mdl->code(++extent_index)=Atom::VLPointer(r);
-		mdl->code(++extent_index)=Atom::IPointer(extent_index+1);
+        extent_index++;
+		mdl->code(extent_index)=Atom::IPointer(extent_index);
 		Utils::SetTimestamp(mdl,++extent_index,offset);
 		extent_index+=2;
 	}
@@ -142,10 +143,12 @@ namespace	r_exec{
 		mdl->code(++write_index)=Atom::AssignmentPointer(q1,++extent_index);
 		mdl->code(extent_index)=Atom::Operator(Opcodes::Add,2);	// q1:(+ q0 (* s period))
 		mdl->code(++extent_index)=Atom::VLPointer(q0);
-		mdl->code(++extent_index)=Atom::IPointer(extent_index+1);
+        extent_index++;
+		mdl->code(extent_index)=Atom::IPointer(extent_index);
 		mdl->code(++extent_index)=Atom::Operator(Opcodes::Mul,2);
 		mdl->code(++extent_index)=Atom::VLPointer(speed_value);
-		mdl->code(++extent_index)=Atom::IPointer(extent_index+1);
+        extent_index++;
+		mdl->code(extent_index)=Atom::IPointer(extent_index);
 		Utils::SetTimestamp(mdl,++extent_index,period);
 		extent_index+=2;
 
@@ -163,8 +166,10 @@ namespace	r_exec{
 
 		mdl->code(++write_index)=Atom::AssignmentPointer(speed_value,++extent_index);
 		mdl->code(extent_index)=Atom::Operator(Opcodes::Div,2);	// s:(/ (- q1 q0) period)
-		mdl->code(++extent_index)=Atom::IPointer(extent_index+2);
-		mdl->code(++extent_index)=Atom::IPointer(extent_index+4);
+        extent_index++;
+		mdl->code(extent_index)=Atom::IPointer(extent_index+1);
+        extent_index++;
+		mdl->code(extent_index)=Atom::IPointer(extent_index+3);
 		mdl->code(++extent_index)=Atom::Operator(Opcodes::Sub,2);
 		mdl->code(++extent_index)=Atom::VLPointer(q1);
 		mdl->code(++extent_index)=Atom::VLPointer(q0);

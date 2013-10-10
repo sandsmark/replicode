@@ -36,7 +36,7 @@ namespace	r_comp{
 
 	static	bool	Output=true;
 
-	Compiler::Compiler():out_stream(NULL),current_object(NULL),error(std::string("")){
+	Compiler::Compiler():error(std::string("")),current_object(NULL),out_stream(NULL){
 	}
 
 	Compiler::~Compiler(){
@@ -1482,7 +1482,6 @@ return_false:
 		if(write	&&	state.pattern_lvl)	//	fill up with wildcards that will be overwritten up to ::.
 			for(uint16	j=write_index;j<write_index+p.atom.getAtomCount();++j)
 				current_object->code[j]=Atom::Wildcard();
-		std::streampos	i=in_stream->tellg();
 		while(!in_stream->eof()){
 
 			if(expression_end(indented)){

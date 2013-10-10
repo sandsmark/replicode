@@ -509,7 +509,7 @@ namespace	r_exec{
 		return	Atom::VLPointer(size);
 	}
 
-	BindingMap::BindingMap():_Object(),fwd_after_index(-1),fwd_before_index(-1),unbound_values(0){
+	BindingMap::BindingMap():_Object(),unbound_values(0),fwd_after_index(-1),fwd_before_index(-1){
 	}
 
 	BindingMap::BindingMap(const	BindingMap	*source):_Object(){
@@ -779,7 +779,7 @@ namespace	r_exec{
 
 		for(uint32	i=0;i<map.size();){
 
-			if(i==fwd_after_index){	// ignore fact timings.
+			if(fwd_after_index > 0 && i==uint32(fwd_after_index)){	// ignore fact timings.
 
 				i+=2;
 				continue;
@@ -787,7 +787,7 @@ namespace	r_exec{
 
 			for(uint32	j=0;j<bm->map.size();){
 
-				if(j==bm->fwd_after_index){	// ignore fact timings.
+				if(bm->fwd_after_index > 0 && j==uint32(bm->fwd_after_index)){	// ignore fact timings.
 
 					j+=2;
 					continue;
@@ -935,7 +935,7 @@ namespace	r_exec{
 		uint32	i=0;
 		for(uint32	j=first_index;j<map.size();++j){	// valuate args.
 
-			if(j==fwd_after_index	||	j==fwd_before_index)
+			if((fwd_after_index > 0 && j==uint32(fwd_after_index))	||	(fwd_before_index > 0 && j==uint32(fwd_before_index)))
 				continue;
 
 			Atom	atom=ihlp->code(val_set_index+i);

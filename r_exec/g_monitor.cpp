@@ -263,6 +263,8 @@ namespace	r_exec{
 				return	false;
 			}
 		}
+        std::cerr << "reached invalid state!";
+        return false;
 	}
 
 	void	GMonitor::update(uint64	&next_target){	// executed by a time core.
@@ -456,6 +458,9 @@ namespace	r_exec{
 		case	MATCH_FAILURE:
 			return	false;
 		}
+
+        std::cerr << "reached invalid state!";
+        return false;
 	}
 
 	void	SGMonitor::update(uint64	&next_target){	// executed by a time core.

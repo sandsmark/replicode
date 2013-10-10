@@ -87,7 +87,8 @@ namespace	core{
 			return	*this;
 		if(object)
 			object->decRef();
-		if(object=c)
+        object = c;
+		if(object)
 			object->incRef();
 
 		return	*this;

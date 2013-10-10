@@ -60,8 +60,9 @@ namespace	r_exec{
 		}Data;
 		Data	data;
 
-		_Context(Atom	*code,uint16	index,Overlay	*overlay,Data	data):code(code),index(index),overlay(overlay),data(data){}
+		_Context(Atom	*code,uint16	index,Overlay	*overlay,Data	data):overlay(overlay),code(code),index(index),data(data){}
 	public:
+        virtual ~_Context() {}
 		virtual	_Context	*assign(const	_Context	*c)=0;
 
 		virtual	bool	equal(const	_Context	*c)	const=0;
