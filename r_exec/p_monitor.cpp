@@ -41,7 +41,6 @@ namespace	r_exec{
 						bool			rate_failures):Monitor(controller,bindings,prediction),rate_failures(rate_failures){	// prediction is f0->pred->f1->obj; not simulated.
 
 		prediction_target=prediction->get_pred()->get_target();	// f1.
-		uint64	now=Now();
 
 		bindings->reset_fwd_timings(prediction_target);
 
@@ -96,6 +95,7 @@ namespace	r_exec{
 				return	false;
 			}
 		}
+        return false;
 	}
 
 	void	PMonitor::update(uint64	&next_target){	// executed by a time core, upon reaching the expected time of occurrence of the target of the prediction.

@@ -41,7 +41,7 @@ namespace	r_exec{
 		values.as_std()->resize(MAX_VALUE_SIZE);	// MAX_VALUE_SIZE is the limit; if the array is resized later on, some contexts with data==VALUE_ARRAY may point to invalid adresses: case of embedded contexts with both data==VALUE_ARRAY.
 	}
 
-	Overlay::Overlay(Controller	*c,bool	load_code):_Object(),controller(c),value_commit_index(0),code(NULL),invalidated(0){
+	Overlay::Overlay(Controller	*c,bool	load_code):_Object(),invalidated(0),controller(c),code(NULL),value_commit_index(0){
 
 		values.as_std()->resize(128);
 		if(load_code)

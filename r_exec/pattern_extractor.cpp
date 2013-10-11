@@ -48,7 +48,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	TPX::TPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings):_Object(),auto_focus(auto_focus),target(target),abstracted_target(pattern),target_bindings(bindings),cst_hook(NULL){	// called by GTPX and PTPX's ctor.
+	TPX::TPX(AutoFocusController	*auto_focus,_Fact	*target,_Fact	*pattern,BindingMap	*bindings):_Object(),auto_focus(auto_focus),target(target),target_bindings(bindings),abstracted_target(pattern),cst_hook(NULL){	// called by GTPX and PTPX's ctor.
 
 		if(bindings->is_fully_specified()){	// get a hook on a cst controller so we get icsts from it: this is needed if the target is an underspecified icst.
 
@@ -278,7 +278,6 @@ namespace	r_exec{
 
 		P<HLPBindingMap>	bm=new	HLPBindingMap();
 		cst=build_cst(components,bm,component);
-		uint32	rc=cst->references_size();
 		f_icst=bm->build_f_ihlp(cst,Opcodes::ICst,false);
 		icsts.push_back(f_icst);	// the f_icst can be reused in subsequent model building attempts.
 		return	f_icst;
@@ -450,7 +449,6 @@ namespace	r_exec{
 
 		_Fact	*consequent=(_Fact	*)input->object->get_reference(0)->get_reference(1);
 		P<BindingMap>	consequent_bm=new	BindingMap();
-		_Fact	*abstracted_consequent=(_Fact	*)consequent_bm->abstract_object(consequent,false);
 
 		for(uint32	i=0;i<predictions.size();++i){	// check if some models have successfully predicted the target: if so, abort.
 
@@ -462,15 +460,12 @@ namespace	r_exec{
 		
 		uint64	analysis_starting_time=Now();
 
-		bool	need_guard;
 		if(target->get_reference(0)->code(0).asOpcode()==Opcodes::MkVal)
 			return;	// this case will be handled by CTPXs.
 
 		P<GuardBuilder>	guard_builder;
 
 		uint64	period;
-		uint64	lhs_duration;
-		uint64	rhs_duration;
 
 		r_code::list<Input>::const_iterator	i;
 		for(i=inputs.begin();i!=inputs.end();){
@@ -504,8 +499,6 @@ namespace	r_exec{
 			guard_builder=new	TimingGuardBuilder(period);// TODO: use the durations.
 
 			period=consequent->get_after()-cause.input->get_after();
-			lhs_duration=cause.input->get_before()-cause.input->get_after();
-			rhs_duration=consequent->get_before()-consequent->get_after();
 
 			uint16	cause_index;
 			Code	*new_cst;
@@ -624,8 +617,6 @@ namespace	r_exec{
 
 		P<GuardBuilder>	guard_builder;
 		uint64	period;
-		uint64	lhs_duration;
-		uint64	rhs_duration;
 
 		for(i=inputs.begin();i!=inputs.end();++i){
 
@@ -638,8 +629,6 @@ namespace	r_exec{
 				continue;
 
 			period=consequent->get_after()-cause.input->get_after();
-			lhs_duration=cause.input->get_before()-cause.input->get_after();
-			rhs_duration=consequent->get_before()-consequent->get_after();
 			guard_builder=new	TimingGuardBuilder(period);	// TODO: use the durations.
 
 			uint16	cause_index;
@@ -801,7 +790,6 @@ namespace	r_exec{
 			}else{
 
 				Code	*cst=f_icst->get_reference(0)->get_reference(0);	// cst is packed.
-				Code	*unpacked_cst=cst->get_reference(cst->references_size()-CST_HIDDEN_REFS);	// get the unpacked code to retreive the pattern.
 				_Fact	*cause_pattern=(_Fact	*)cst->get_reference(cause_index);
 				if(build_mdl(f_icst,cause_pattern,consequent,guard_builder,period))	// m0:[premise.value premise.after premise.before][icst->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
 					inject_hlps(analysis_starting_time);

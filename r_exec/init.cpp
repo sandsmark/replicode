@@ -122,15 +122,13 @@ namespace	r_exec{
 		std::ostringstream	decompiled_code;
 		decompiler.decompile(image,&decompiled_code,Utils::GetTimeReference(),imported_objects);
 
-		if(_this->ostream_id==0){
-
-			std::cout<<_this->header.c_str();
-			std::cout<<decompiled_code.str().c_str();
-		}else{
-
+#ifdef WINDOWS
 			PipeOStream::Get(_this->ostream_id-1)<<_this->header.c_str();
 			PipeOStream::Get(_this->ostream_id-1)<<decompiled_code.str().c_str();
-		}
+#else
+			std::cout<<_this->header.c_str();
+			std::cout<<decompiled_code.str().c_str();
+#endif//WINDOWS
 
 		thread_ret_val(0);
 	}
@@ -172,41 +170,38 @@ namespace	r_exec{
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
-#warning TODO http://www.erack.de/download/pipe-fork.c
+#ifdef WINDOWS
+#pragma warning "TODO http://www.erack.de/download/pipe-fork.c"
 	std::vector<PipeOStream	*>	PipeOStream::Streams;
 	
 	PipeOStream	PipeOStream::NullStream;
 
 	void	PipeOStream::Open(uint8	count){
-/*
 		for(uint8	i=0;i<count;++i){
 
 			PipeOStream	*p=new	PipeOStream();
 			p->init();
 
 			Streams.push_back(p);
-		}*/
+		}
 	}
 
 	void	PipeOStream::Close(){
-/*
 		for(uint8	i=0;i<Streams.size();++i)
 			delete	Streams[i];
-		Streams.clear();*/
+		Streams.clear();
 	}
 
 	PipeOStream	&PipeOStream::Get(uint8	id){
-/*
 		if(id<Streams.size())
 			return	*Streams[id];
-		return	NullStream;*/
+		return	NullStream;
 	}
 
 	PipeOStream::PipeOStream():std::ostream(NULL)/*,pipe_read(0),pipe_write(0)*/{
 	}
 
 	void	PipeOStream::init(){
-/*
 		SECURITY_ATTRIBUTES	saAttr;
 		saAttr.nLength=sizeof(saAttr); 
 		saAttr.bInheritHandle=true; 
@@ -235,22 +230,21 @@ namespace	r_exec{
 						NULL,				// use parent's environment block
 						NULL,				// use parent's starting directory 
 						&si,				// pointer to STARTUPINFO structure
-						&pi);				// pointer to PROCESS_INFORMATION structure*/
+						&pi);				// pointer to PROCESS_INFORMATION structure
 	}
 
 	PipeOStream::~PipeOStream(){
 
-/*		if(pipe_read==0)
+		if(pipe_read==0)
 			return;
 
 		std::string	stop("close_output_window");
 		*this<<stop;
 		CloseHandle(pipe_read);
-		CloseHandle(pipe_write);*/
+		CloseHandle(pipe_write);
 	}
 
 	PipeOStream	&PipeOStream::operator	<<(std::string	&s){
-/*
 		if(pipe_read==0)
 			return	*this;
 
@@ -259,11 +253,10 @@ namespace	r_exec{
  
 		WriteFile(pipe_write,s.c_str(),to_write,&written,NULL);
 	
-		return	*this;*/
+		return	*this;
 	}
 
 	PipeOStream&	PipeOStream::operator	<<(const	char	*s){
-/*
 		if(pipe_read==0)
 			return	*this;
 
@@ -271,8 +264,9 @@ namespace	r_exec{
 		uint32	written; 
  
 		WriteFile(pipe_write,s,to_write,&written,NULL);
-		return	*this;*/
+		return	*this;
 	}
+#endif//WINDOWS
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 

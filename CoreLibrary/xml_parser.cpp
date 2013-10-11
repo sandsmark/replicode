@@ -981,7 +981,7 @@ XMLNode XMLNode::createXMLTopNode(XMLCSTR lpszName, char isDeclaration) { return
 
 #define MEMORYINCREASE 50
 
-static inline void myFree(void *p) { if (p) free(p); };
+static inline void myFree(void *p) { if (p) free(p); }
 static inline void *myRealloc(void *p, int newsize, int memInc, int sizeofElem)
 {
     if (p==NULL) { if (memInc) return malloc(memInc*sizeofElem); return malloc(sizeofElem); }

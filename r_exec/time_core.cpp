@@ -37,8 +37,6 @@ namespace	r_exec{
 
 	thread_ret thread_function_call	TimeCore::Run(void	*args){
 
-		TimeCore	*_this=((TimeCore	*)args);
-
 		bool	run=true;
 		while(run){
 

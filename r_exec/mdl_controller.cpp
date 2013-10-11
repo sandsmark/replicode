@@ -80,13 +80,11 @@ namespace	r_exec{
 			load_code();
 			P<HLPBindingMap>	original_bindings=bindings;
 			bindings=bm;
-			bool	is_req=((MDLController	*)controller)->is_requirement();
 			Overlay				*o;
 			Fact				*f_imdl=((MDLController	*)controller)->get_f_ihlp(bm,false);
 			RequirementsPair	r_p;
 			Fact				*ground=f_p_f_imdl;
 			bool				wr_enabled;
-			bool	stop=(req_controller!=NULL);
 			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground,req_controller,wr_enabled);
 			f_imdl->get_reference(0)->code(I_HLP_WR_E)=Atom::Boolean(wr_enabled);
 			bool				c_a=(c_s>=WR_ENABLED);
@@ -144,6 +142,7 @@ namespace	r_exec{
 			if(f_p_f_imdl==NULL)	// i.e. if reduction not triggered a requirement.
 				store_evidence(input,prediction,simulation);
 		case	MATCH_FAILURE:
+        default:
 //std::cout<<" no match\n";
 			return	NULL;
 		}
@@ -190,7 +189,6 @@ namespace	r_exec{
 			bool				wr_enabled;
 			ChainingStatus		c_s=((MDLController	*)controller)->retrieve_imdl_fwd(bm,f_imdl,r_p,ground,req_controller,wr_enabled);
 			f_imdl->get_reference(0)->code(I_HLP_WR_E)=Atom::Boolean(wr_enabled);
-			bool				c_a=(c_s>=NO_R);
 			switch(c_s){
 			case	WR_DISABLED:
 			case	SR_DISABLED_NO_WR:	// silent monitoring of a prediction that will not be injected.
@@ -221,6 +219,7 @@ namespace	r_exec{
 			return	o;
 		}case	MATCH_SUCCESS_NEGATIVE:
 		case	MATCH_FAILURE:
+        default:
 //std::cout<<" no match\n";
 			return	NULL;
 		}
@@ -664,8 +663,8 @@ namespace	r_exec{
 			r_code::list<REntry>::const_iterator	e;
 			for(e=requirements.positive_evidences.begin();e!=requirements.positive_evidences.end();){
 
-				Code	*imdl=(*e).evidence->get_pred()->get_target()->get_reference(0);
-				uint16	tpl_index=imdl->code(I_HLP_TPL_ARGS).asIndex();
+				//Code	*imdl=(*e).evidence->get_pred()->get_target()->get_reference(0);
+				//uint16	tpl_index=imdl->code(I_HLP_TPL_ARGS).asIndex();
 				//std::cout<<"IMDL: "<<imdl->code(tpl_index+1).asFloat()<<" ["<<Time::ToString_seconds((*e).after-Utils::GetTimeReference())<<" "<<Time::ToString_seconds((*e).before-Utils::GetTimeReference())<<"["<<std::endl;
 
 				if((*e).is_too_old(now))	// garbage collection.
@@ -1217,7 +1216,6 @@ namespace	r_exec{
 		
 		Group	*primary_host=get_host();
 		uint16	out_group_count=get_out_group_count()-1;
-		Group	*drives_host=(Group	*)get_out_group(out_group_count);	// the drives group is the last of the output groups.
 		for(uint16	i=0;i<out_group_count;++i){	// inject notification in out groups (drives host excepted).
 
 			Group	*out_group=(Group	*)get_out_group(i);
@@ -1300,7 +1298,6 @@ namespace	r_exec{
 	void	PrimaryMDLController::store_requirement(_Fact	*f_p_f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation){
 
 		_Fact	*f_imdl=f_p_f_imdl->get_pred()->get_target();
-		Code	*mdl=f_imdl->get_reference(0);
 		REntry	e(f_p_f_imdl,controller,chaining_was_allowed);
 		if(f_imdl->is_fact()){	// in case of a positive requirement tell monitors they can check for chaining again.
 
@@ -1549,7 +1546,6 @@ namespace	r_exec{
 
 			f_imdl->set_reference(0,bm->bind_pattern(f_imdl->get_reference(0)));	// valuate f_imdl from updated bm.
 
-			uint64	now=Now();
 			switch(sim->mode){
 			case	SIM_ROOT:
 				sub_sim=new	Sim(opposite?SIM_MANDATORY:SIM_OPTIONAL,sim_thz,super_goal,opposite,sim->root,this,confidence,0);
@@ -2194,7 +2190,6 @@ namespace	r_exec{
 
 	void	SecondaryMDLController::store_requirement(_Fact	*f_imdl,MDLController	*controller,bool	chaining_was_allowed,bool	simulation){
 
-		Code	*mdl=f_imdl->get_reference(0);
 		REntry	e(f_imdl,controller,chaining_was_allowed);
 		if(f_imdl->is_fact()){
 

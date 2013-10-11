@@ -923,7 +923,6 @@ namespace	r_exec{
 
 	void	_Mem::pack_fact_object(Code	*fact_object,Code	*hlp,uint16	&write_index,std::vector<P<Code>	>	*references)	const{
 
-		uint16	extent_index=write_index+fact_object->code_size();
 		uint16	offset=write_index;
 		for(uint16	i=0;i<fact_object->code_size();++i){
 

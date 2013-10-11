@@ -37,8 +37,6 @@ namespace	r_exec{
 
 	thread_ret thread_function_call	ReductionCore::Run(void	*args){
 
-		ReductionCore	*_this=((ReductionCore	*)args);
-
 		bool	run=true;
 		while(run){
 

@@ -71,14 +71,13 @@ namespace	r_exec{
 		public	Thread{
 		};
 
-					_Thread	*_thread;
-		volatile	uint32	spawned;
-
-		r_code::list<P<Code> >	objects;
 
 		uint32	ostream_id;	// 0 is std::cout.
-
 		std::string	header;
+		r_code::list<P<Code> >	objects;
+        _Thread	*_thread;
+		volatile	uint32	spawned;
+
 	public:
 		TDecompiler(uint32	ostream_id,std::string	header);
 		~TDecompiler();
@@ -95,6 +94,7 @@ namespace	r_exec{
 	// (b) shall be defined in CoreLibrary instead of here,
 	// (c) the stream pool management (PipeOStream::Open(), PipeOStream::Close() and PipeOStream::Get()) shall be decoupled from this implementation (it's an IDE feature),
 	// (d) PipeOStream shall be based on std::ostringstream instead of std::ostream with a refined std::stringbuf (override sync() to write in the pipe).
+#ifdef WINDOWS
 	class	r_exec_dll	PipeOStream:
 	public	std::ostream{
 	private:
@@ -118,6 +118,7 @@ namespace	r_exec{
 		PipeOStream	&operator	<<(std::string	&s);
 		PipeOStream	&operator	<<(const	char	*s);
 	};
+#endif
 
 	//	Initialize Now, compile user.classes.replicode, builds the Seed and loads the user-defined operators.
 	//	Return false in case of a problem (e.g. file not found, operator not found, etc.).

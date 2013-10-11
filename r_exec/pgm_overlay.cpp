@@ -623,6 +623,7 @@ namespace	r_exec{
 		case	FAILURE:	// just rollback: let the overlay match other inputs.
 			rollback();
 		case	IMPOSSIBLE:
+        default:
 			return	NULL;
 		}
 	}
@@ -761,6 +762,7 @@ namespace	r_exec{
 		case	FAILURE:	// just rollback: let the overlay match other inputs.
 			rollback();
 		case	IMPOSSIBLE:
+        default:
 			return	NULL;
 		}
 	}

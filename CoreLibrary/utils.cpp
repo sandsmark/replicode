@@ -771,7 +771,7 @@ namespace	core{
 		__sync_add_and_fetch(v, 1);
 		return	*v;
 #endif
-	};
+	}
 
 	int32	Atomic::Decrement32(int32	volatile	*v){
 #if defined	WINDOWS
@@ -780,7 +780,7 @@ namespace	core{
 		__sync_add_and_fetch(v, -1);
 		return	*v;
 #endif
-	};
+	}
 
 	int32	Atomic::CompareAndSwap32(int32	volatile	*target,int32	v1,int32	v2){
 #if defined	WINDOWS
