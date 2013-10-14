@@ -12,6 +12,7 @@ set(CoreLibrary_HDR
     xml_parser.h
     )
 
-add_library(CoreLibrary SHARED ${CoreLibrary_SRC})
+add_library(CoreLibrary ${CoreLibrary_SRC})
+target_link_libraries(CoreLibrary dl)
 install(TARGETS CoreLibrary DESTINATION lib)
 install(FILES ${CoreLibrary_HDR} DESTINATION include)

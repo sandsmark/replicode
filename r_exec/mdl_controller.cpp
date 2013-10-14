@@ -31,6 +31,8 @@
 #include	"mdl_controller.h"
 #include	"mem.h"
 #include	"model_base.h"
+#include "reduction_job.tpl.cpp"
+#include "overlay.inline.cpp"
 
 
 namespace	r_exec{

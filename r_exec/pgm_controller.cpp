@@ -30,6 +30,8 @@
 
 #include	"pgm_controller.h"
 #include	"mem.h"
+#include "overlay.inline.cpp"
+#include "reduction_job.tpl.cpp"
 
 
 namespace	r_exec{

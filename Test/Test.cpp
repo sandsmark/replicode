@@ -28,10 +28,10 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"decompiler.h"
-#include	"mem.h"
-#include	"init.h"
-#include	"image_impl.h"
+#include	<r_comp/decompiler.h>
+#include	<r_exec/mem.h>
+#include	<r_exec/init.h>
+#include	<r_code/image_impl.h>
 #include	"settings.h"
 
 
@@ -248,7 +248,9 @@ int32	main(int	argc,char	**argv){
 
 		std::cout<<"> ... done\n";
 
+#ifdef WINDOWS
 		r_exec::PipeOStream::Open(settings.debug_windows);
+#endif
 
 		Decompiler	decompiler;
 		decompiler.init(&r_exec::Metadata);
@@ -378,7 +380,9 @@ int32	main(int	argc,char	**argv){
 		}
 		delete	mem;
 
+#ifdef WINDOWS
 		r_exec::PipeOStream::Close();
+#endif
 	}
 
 	return	0;

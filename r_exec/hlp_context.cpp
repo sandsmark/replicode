@@ -83,7 +83,7 @@ namespace	r_exec{
 		}
 	}
 
-	inline	bool	HLPContext::evaluate(uint16	&result_index)	const{
+	bool	HLPContext::evaluate(uint16	&result_index)	const{
 
 		if(data==BINDING_MAP	||	data==VALUE_ARRAY)
 			return	true;

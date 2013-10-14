@@ -729,7 +729,7 @@ namespace	r_exec{
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	inline	AntiPGMOverlay::AntiPGMOverlay(Controller	*c):PGMOverlay(c){
+	AntiPGMOverlay::AntiPGMOverlay(Controller	*c):PGMOverlay(c){
 	}
 
 	inline	AntiPGMOverlay::AntiPGMOverlay(AntiPGMOverlay	*original,uint16	last_input_index,uint16	value_limit):PGMOverlay(original,last_input_index,value_limit){

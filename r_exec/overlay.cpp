@@ -76,12 +76,6 @@ namespace	r_exec{
 		memcpy(code,&getObject()->get_reference(0)->code(0),code_size*sizeof(r_code::Atom));	//	restore code to prisitne copy.
 	}
 
-    template<class	C> void Controller::__take_input(r_exec::View	*input){	// utility: to be called by sub-classes.
-        View	*_view=new	View(input);
-        ReductionJob<C>	*j=new	ReductionJob<C>(input/*_view*/,(C	*)this);
-        _Mem::Get()->pushReductionJob(j);
-    }
-
 	void	Overlay::rollback(){
 
 		Code	*object=get_core_object();

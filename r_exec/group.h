@@ -153,7 +153,7 @@ namespace	r_exec{
 		protected:
 			Operation(uint32	oid):oid(oid){}
 		public:
-            virtual ~Operation();
+            virtual ~Operation() {};
 			const	uint32	oid;	//	of the view.
 			virtual	void	execute(Group	*g)	const=0;
 		};
