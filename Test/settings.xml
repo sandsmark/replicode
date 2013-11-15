@@ -1,8 +1,8 @@
 <TestConfiguration>
   <Load
-    usr_operator_path="./usr_operators.dll"
-    usr_class_path="C:/Work/Replicode/Test/V1.2/user.classes.replicode"
-    source_file_name="C:/Work/Replicode/Test/V1.2/main.replicode"
+      usr_operator_path="/home/cassarossa/itk/sandsmark/projects/replicode/build/usr_operators/libusr_operators.so"
+    usr_class_path="/home/cassarossa/itk/sandsmark/projects/replicode/Test/V1.2/user.classes.replicode"
+    source_file_name="/home/cassarossa/itk/sandsmark/projects/replicode/Test/V1.2/main.replicode"
   />
   <Init
     base_period="50000"
