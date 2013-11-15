@@ -135,9 +135,9 @@ namespace	core{
 		 * components add them in.
 		 */
 		char *libraryName = (char *)calloc(1, strlen(fileName)+6+1);
-		if (strstr(fileName, "lib") == NULL) {
+		/*if (strstr(fileName, "lib") == NULL) {
 			strcat(libraryName, "lib");
-		}
+		}*/
 		strcat(libraryName, fileName);
 		if (strstr(fileName+(strlen(fileName)-3), ".so") == NULL) {
 			strcat(libraryName, ".so");
