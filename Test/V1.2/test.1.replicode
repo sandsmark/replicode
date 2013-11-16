@@ -1,7 +1,7 @@
 ; debug
 
-!load c:/work/Replicode/Test/V1.2/test.domain.replicode
-; !load c:/work/Replicode/Test/V1.2/drives.replicode
+!load V1.2/test.domain.replicode
+; !load V1.2/drives.replicode
 
 
 s0:(cst |[] []

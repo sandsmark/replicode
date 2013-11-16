@@ -1,7 +1,7 @@
 ; test 1,2 and 3 together.
 
-!load c:/work/Replicode/Test/V1.2/test.domain.replicode
-; !load c:/work/Replicode/Test/V1.2/drives.replicode
+!load V1.2/test.domain.replicode
+; !load V1.2/drives.replicode
 
 
 ; input generators.
