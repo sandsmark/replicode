@@ -30,7 +30,7 @@
 
 #include	"callbacks.h"
 
-#include	"../r_exec/mem.h"
+#include	"r_exec/mem.h"
 
 
 bool	print(uint64	t,bool	suspended,const	char	*msg,uint8	object_count,Code	**objects){	//	return true to resume the executive (applies when called from a suspend call, i.e. suspended==true).

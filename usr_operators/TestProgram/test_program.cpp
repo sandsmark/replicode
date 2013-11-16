@@ -30,7 +30,7 @@
 
 #include	"test_program.h"
 
-#include	"../r_exec/mem.h"
+#include	"r_exec/mem.h"
 
 
 //	Sample c++ user-defined program.
