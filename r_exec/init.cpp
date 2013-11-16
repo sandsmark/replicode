@@ -50,7 +50,7 @@ namespace	r_exec{
 	dll_export	r_comp::Metadata	Metadata;
 	dll_export	r_comp::Image		Seed;
 
-	UNORDERED_MAP<std::string,uint16>	_Opcodes;
+	static UNORDERED_MAP<std::string,uint16>	_Opcodes;
 
 	dll_export	r_comp::Compiler		Compiler;
 	r_exec_dll	r_comp::Preprocessor	Preprocessor;
