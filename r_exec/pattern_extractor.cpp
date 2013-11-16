@@ -30,6 +30,7 @@
 
 #include	"auto_focus.h"
 #include	"reduction_job.h"
+#include	"reduction_job.tpl.cpp"
 #include	"mem.h"
 #include	"model_base.h"
 

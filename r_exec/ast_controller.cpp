@@ -32,7 +32,8 @@
 #include	"mem.h"
 #include	"factory.h"
 #include	"auto_focus.h"
-
+#include "overlay.inline.cpp"
+#include "reduction_job.tpl.cpp"
 
 namespace	r_exec{
 

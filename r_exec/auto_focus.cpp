@@ -30,6 +30,8 @@
 
 #include	"auto_focus.h"
 #include	"ast_controller.h"
+#include	"overlay.inline.cpp"
+#include "reduction_job.tpl.cpp"
 
 
 namespace	r_exec{
