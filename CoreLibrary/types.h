@@ -112,8 +112,8 @@
 	#define		UNORDERED_MULTIMAP	std::unordered_multimap
 	#define		UNORDERED_MULTISET	std::unordered_multiset
 
-	#define dll_export __attribute((visibility("default")))
-	#define dll_import __attribute((visibility("default")))
+	#define dll_export __attribute__((visibility("default")))
+	#define dll_import __attribute__((visibility("default")))
 	#define cdecl
 
 	#include <sys/socket.h>
