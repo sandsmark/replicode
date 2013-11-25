@@ -47,8 +47,20 @@ namespace	r_exec{
 
 	dll_export	uint64	(*Now)();
 
-	dll_export	r_comp::Metadata	Metadata;
-	dll_export	r_comp::Image		Seed;
+	//dll_export	r_comp::Metadata	Metadata;
+	//dll_export	r_comp::Image		Seed;
+r_comp::Metadata* getMetadata()
+{
+    static r_comp::Metadata metadata;
+    return &metadata;
+}
+
+r_comp::Image* getSeed()
+{
+    static r_comp::Image image;
+    return &image;
+}
+
 
 	static UNORDERED_MAP<std::string,uint16>	_Opcodes;
 
@@ -62,12 +74,12 @@ namespace	r_exec{
 	bool	Compile(std::istream	&source_code,std::string	&error,bool	compile_metadata){
 
 		std::ostringstream	preprocessed_code_out;
-		if(!r_exec::Preprocessor.process(&source_code,&preprocessed_code_out,error,compile_metadata?&Metadata:NULL))
+		if(!r_exec::Preprocessor.process(&source_code,&preprocessed_code_out,error,compile_metadata? getMetadata() : NULL))
 			return	false;
 
 		std::istringstream	preprocessed_code_in(preprocessed_code_out.str());
 
-		if(!r_exec::Compiler.compile(&preprocessed_code_in,&Seed,&Metadata,error,false)){
+		if(!r_exec::Compiler.compile(&preprocessed_code_in, getSeed(), getMetadata(),error,false)){
 
 			std::streampos	i=preprocessed_code_in.tellg();
 			std::cerr.write(preprocessed_code_in.str().c_str(),i);
@@ -111,13 +123,13 @@ namespace	r_exec{
 		_this->spawned=1;
 
 		r_comp::Decompiler	decompiler;
-		decompiler.init(&r_exec::Metadata);
+		decompiler.init(getMetadata());
 
 		std::vector<SysObject	*>	imported_objects;
 
 		r_comp::Image	*image=new	r_comp::Image();
 		image->add_objects(_this->objects,imported_objects);
-		image->object_names.symbols=r_exec::Seed.object_names.symbols;
+		image->object_names.symbols=getSeed()->object_names.symbols;
 
 		std::ostringstream	decompiled_code;
 		decompiler.decompile(image,&decompiled_code,Utils::GetTimeReference(),imported_objects);
@@ -281,12 +293,12 @@ namespace	r_exec{
 		Now=time_base;
 
 		UNORDERED_MAP<std::string,r_comp::Class>::iterator it;
-		for(it=Metadata.classes.begin();it!=Metadata.classes.end();++it){
+		for(it=getMetadata()->classes.begin();it!=getMetadata()->classes.end();++it){
 
 			_Opcodes[it->first]=it->second.atom.asOpcode();
 			//std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
 		}
-		for(it=Metadata.sys_classes.begin();it!=Metadata.sys_classes.end();++it){
+		for(it=getMetadata()->sys_classes.begin();it!=getMetadata()->sys_classes.end();++it){
 
 			_Opcodes[it->first]=it->second.atom.asOpcode();
 			//std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
@@ -517,8 +529,8 @@ namespace	r_exec{
 				const	r_comp::Metadata	&metadata,
 				const	r_comp::Image		&seed){
 
-		Metadata=metadata;
-		Seed=seed;
+		*getMetadata()=metadata;
+		*getSeed()=seed;
 
 		return	Init(user_operator_library_path,time_base);
 	}

@@ -253,7 +253,7 @@ int32	main(int	argc,char	**argv){
 #endif
 
 		Decompiler	decompiler;
-		decompiler.init(&r_exec::Metadata);
+		decompiler.init(r_exec::getMetadata());
 
 		r_comp::Image	*image;
 
@@ -294,7 +294,7 @@ int32	main(int	argc,char	**argv){
 		uint32	self_oid;
 		std::string	self_symbol("self");
 		UNORDERED_MAP<uint32,std::string>::const_iterator	n;
-		for(n=r_exec::Seed.object_names.symbols.begin();n!=r_exec::Seed.object_names.symbols.end();++n){
+		for(n=r_exec::getSeed()->object_names.symbols.begin();n!=r_exec::getSeed()->object_names.symbols.end();++n){
 
 			if(n->second==stdin_symbol)
 				stdin_oid=n->first;
@@ -326,7 +326,7 @@ int32	main(int	argc,char	**argv){
 		//probe.set();			
 			image=mem->get_objects();
 		//probe.check();
-			image->object_names.symbols=r_exec::Seed.object_names.symbols;
+			image->object_names.symbols=r_exec::getSeed()->object_names.symbols;
 		
 			if(settings.write_objects)
 				write_to_file(image,settings.objects_path,settings.test_objects?&decompiler:NULL,starting_time);
@@ -355,7 +355,7 @@ int32	main(int	argc,char	**argv){
 		//probe.set();			
 			image=mem->get_models();
 		//probe.check();
-			image->object_names.symbols=r_exec::Seed.object_names.symbols;
+			image->object_names.symbols=r_exec::getSeed()->object_names.symbols;
 		
 			if(settings.write_models)
 				write_to_file(image,settings.models_path,settings.test_models?&decompiler:NULL,starting_time);
