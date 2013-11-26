@@ -10,4 +10,4 @@ set(r_comp_SRC
     structure_member.cpp
     )
 
-add_library(r_comp ${r_comp_SRC})
+add_library(r_comp SHARED ${r_comp_SRC})

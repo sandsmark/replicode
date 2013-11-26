@@ -38,4 +38,4 @@ set(r_exec_SRC
     #view.inline.cpp
     )
 
-add_library(r_exec ${r_exec_SRC})
+add_library(r_exec SHARED ${r_exec_SRC})

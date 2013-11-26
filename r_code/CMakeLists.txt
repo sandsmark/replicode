@@ -10,4 +10,4 @@ set(r_code_SRC
     vector.cpp
     )
 
-add_library(r_code ${r_code_SRC})
+add_library(r_code SHARED ${r_code_SRC})
