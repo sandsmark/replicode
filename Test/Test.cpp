@@ -264,7 +264,7 @@ int32	main(int	argc,char	**argv){
 			mem=new	r_exec::Mem<r_exec::LObject,r_exec::MemVolatile>();
 
 		r_code::vector<r_code::Code	*>	ram_objects;
-		r_exec::Seed.get_objects(mem,ram_objects);
+		r_exec::getSeed()->get_objects(mem,ram_objects);
 
 		mem->init(	settings.base_period,
 					settings.reduction_core_count,

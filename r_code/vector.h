@@ -39,23 +39,24 @@ using	namespace	core;
 namespace	r_code{
 
 	//	auto-resized vector
-	template<typename	T>	class	vector:
-	private	std::vector<T>{
+	template<typename	T>	class	vector {
 	public:
-		uint32	size()	const{	return	std::vector<T>::size();	}
+        vector() : m_vector(new std::vector<T>) {}
+		uint32	size()	const{	return	m_vector->size();	}
 		T	&operator	[](uint32	i){
-
 			if(i>=size())
-				std::vector<T>::resize(i+1);
-			return	std::vector<T>::operator [](i);
+				m_vector->resize(i+1);
+			return	m_vector->at(i);
 		}
 		T	&operator	[](uint32	i)	const{
-
-			return	std::vector<T>::operator [](i);
+            return m_vector->at(i);
 		}
-		void	push_back(T	t){	std::vector<T>::push_back(t);	}
-		std::vector<T>	*as_std()	const{	return	(std::vector<T>	*)this;	}
+		void	push_back(T	t){	m_vector->push_back(t);	}
+		std::vector<T>	*as_std()	const{	return	m_vector;	}
+private:
+    std::vector<T> *m_vector;
 	};
+
 }
 
 
