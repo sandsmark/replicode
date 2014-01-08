@@ -13,6 +13,6 @@ set(CoreLibrary_HDR
     )
 
 add_library(CoreLibrary SHARED ${CoreLibrary_SRC})
-target_link_libraries(CoreLibrary dl)
+target_link_libraries(CoreLibrary dl pthread rt)
 install(TARGETS CoreLibrary DESTINATION lib)
 install(FILES ${CoreLibrary_HDR} DESTINATION include)
