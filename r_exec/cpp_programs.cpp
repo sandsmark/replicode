@@ -36,12 +36,10 @@ namespace	r_exec{
 	UNORDERED_MAP<std::string,CPPPrograms::Program>	CPPPrograms::Programs;
 
 	void	CPPPrograms::Register(std::string	&pgm_name,Program	pgm){
-
 		Programs[pgm_name]=pgm;
 	}
 
 	CPPPrograms::Program	CPPPrograms::Get(std::string	&pgm_name){
-		
 		UNORDERED_MAP<std::string,Program>::const_iterator	it=Programs.find(pgm_name);
 		if(it!=Programs.end())
 			return	it->second;
@@ -55,7 +53,7 @@ namespace	r_exec{
 			return	pgm(view);
 		else{
 
-			std::cerr<<"cpp pgm "<<pgm_name<<" could not be found\n";
+			std::cerr << "c++ program '" << pgm_name << "' could not be found\n";
 			return	NULL;
 		}
 	}

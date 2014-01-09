@@ -87,8 +87,8 @@ namespace	r_exec{
 		void	reset_decay_values();
 
 		//	Notifications.
-		int32	sln_change_monitoring_periods_to_go;
-		int32	act_change_monitoring_periods_to_go;
+		int32	sln_change_monitoring_periods_to_go=0;
+		int32	act_change_monitoring_periods_to_go=0;
 
 		void	_mod_0_positive(uint16	member_index,float32	value);
 		void	_mod_0_plus1(uint16	member_index,float32	value);

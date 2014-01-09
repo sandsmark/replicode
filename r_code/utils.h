@@ -103,13 +103,17 @@ namespace	r_code{
 		template<class	O>	static	std::string	GetString(const	O	*object,uint16	index){
 
 			uint16	s_index=object->code(index).asIndex();
-			std::string	s;
 			char	buffer[255];
 			uint8	char_count=(object->code(s_index).atom	&	0x000000FF);
-			memcpy(buffer,&object->code(s_index+1),char_count);
-			buffer[char_count]=0;
-			s+=buffer;
-			return	s;
+            buffer[char_count]=0;
+            for (int i=0; i<char_count; i+=4) {
+                uint32 val = object->code(s_index + 1 + i/4);
+                buffer[i] = (val & 0x000000ff);
+                buffer[i+1] = (val & 0x0000ff00) >> 8;
+                buffer[i+2] = (val & 0x00ff0000) >> 16;
+                buffer[i+3] = (val & 0xff000000) >> 24;
+            }
+			return	std::string(buffer);
 		}
 
 		template<class	O>	static	void	SetString(O	*object,uint16	index,const	std::string	&s){
