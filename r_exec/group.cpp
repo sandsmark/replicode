@@ -852,8 +852,10 @@ namespace	r_exec{
 			ipgm_views[view->get_oid()]=view;
             std::string str = Utils::GetString<Code>(view->object,ICPP_PGM_NAME);
 			Controller	*c=CPPPrograms::New(str,view);
-			if(!c)
+            if(!c) {
+                leave();
 				return;
+            }
 			view->controller=c;
 			if(is_active_pgm(view)){
 

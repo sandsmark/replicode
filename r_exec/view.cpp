@@ -241,9 +241,12 @@ namespace	r_exec{
 
 		object->acq_views();
 		object->views.erase(this);
-		if(object->views.size()==0)
+        if(object->views.size()==0) {
+            object->rel_views(); // avoid deadlock
 			object->invalidate();
-		object->rel_views();
+        } else {
+            object->rel_views();
+        }
 	}
 
 	void	View::delete_from_group(){
