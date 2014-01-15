@@ -179,7 +179,10 @@ namespace	core{
 
 	class	core_dll	CriticalSection{
 	private:
-		critical_section	cs;
+        critical_section	cs;
+#ifdef DEBUG
+        void *storedBt[20];
+#endif
 	public:
 		CriticalSection();
 		~CriticalSection();

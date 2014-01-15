@@ -39,7 +39,11 @@
 #pragma	intrinsic (_InterlockedCompareExchange)
 #pragma	intrinsic (_InterlockedCompareExchange64)
 #elif defined LINUX
-#endif
+#ifdef DEBUG
+#include <map>
+#include <execinfo.h>
+#endif // DEBUG
+#endif //LINUX
 
 #include	<algorithm>
 #include	<cctype>
@@ -528,14 +532,27 @@ namespace	core{
 #endif
 	}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
-	CriticalSection::CriticalSection(){
+#ifdef DEBUG
+    static pthread_mutex_t printerlock = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
+    CriticalSection::CriticalSection(){
 #if defined	WINDOWS
 		InitializeCriticalSection(&cs);
 #elif defined LINUX
-		pthread_mutex_init(&cs, NULL);
-#endif
+#ifdef DEBUG
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+        pthread_mutexattr_init(&attr);
+        pthread_mutex_init(&cs, &attr);
+
+        memset(storedBt, 0, 10);
+#else //DEBUG
+        pthread_mutex_init(&cs, NULL);
+#endif //DEBUG
+#endif //LINUX
 	}
 
 	CriticalSection::~CriticalSection(){
@@ -550,7 +567,33 @@ namespace	core{
 #if defined	WINDOWS
 		EnterCriticalSection(&cs);
 #elif defined LINUX
-		pthread_mutex_lock(&cs);
+#ifdef DEBUG
+        struct timespec timeToWait;
+        struct timeval now;
+        gettimeofday(&now,NULL);
+        timeToWait.tv_sec = now.tv_sec+5;
+        timeToWait.tv_nsec = (now.tv_usec+1000UL*5)*1000UL;
+        int ret = pthread_mutex_timedlock(&cs, &timeToWait);
+        if (ret != 0) {
+            pthread_mutex_lock(&printerlock);
+            std::cerr << "--- POTENTIAL DEADLOCK: " << strerror(ret) << " LOCKED BY: " << std::endl;
+            backtrace_symbols_fd(storedBt, 20, STDERR_FILENO);
+            std::cerr << "--- NOW TRYING TO LOCK FROM ---" << std::endl;
+            void *arr[20];
+            backtrace(arr, 20);
+            backtrace_symbols_fd(arr, 20, STDERR_FILENO);
+            std::cerr << "--- BACKTRACE END ---" << std::endl;
+            exit(0);
+            pthread_mutex_unlock(&printerlock);
+            pthread_mutex_lock(&cs);
+        }
+
+        pthread_mutex_lock(&printerlock);
+        backtrace(storedBt, 20);
+        pthread_mutex_unlock(&printerlock);
+#else //DEBUG
+        pthread_mutex_lock(&cs);
+#endif //DEBUG
 #endif
 	}
 
@@ -558,6 +601,11 @@ namespace	core{
 #if defined	WINDOWS
 		LeaveCriticalSection(&cs);
 #elif defined LINUX
+#ifdef DEBUG
+        pthread_mutex_lock(&printerlock);
+        memset(storedBt, 0, 20);
+        pthread_mutex_unlock(&printerlock);
+#endif //DEBUG
 		pthread_mutex_unlock(&cs);
 #endif
 	}
