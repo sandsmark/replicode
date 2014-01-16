@@ -671,7 +671,7 @@ namespace	r_exec{
 	Sim::Sim(SimMode	mode,uint64	thz,Fact	*super_goal,bool	opposite,Controller	*root):_Object(),invalidated(0),is_requirement(false),opposite(opposite),mode(mode),thz(thz),super_goal(super_goal),root(root),sol(NULL),sol_cfd(0),sol_before(0){
 	}
 
-	Sim::Sim(SimMode	mode,uint64	thz,Fact	*super_goal,bool	opposite,Controller	*root,Controller	*sol,float32	sol_cfd,uint64	sol_deadline):_Object(),invalidated(0),is_requirement(false),opposite(opposite),mode(mode),thz(thz),super_goal(super_goal),root(root),sol(sol),sol_cfd(sol_cfd),sol_before(sol_before){
+	Sim::Sim(SimMode	mode,uint64	thz,Fact	*super_goal,bool	opposite,Controller	*root,Controller	*sol,float32	sol_cfd,uint64	sol_deadline):_Object(),invalidated(0),is_requirement(false),opposite(opposite),mode(mode),thz(thz),super_goal(super_goal),root(root),sol(sol),sol_cfd(sol_cfd),sol_before(0){
 	}
 
 	void	Sim::invalidate(){
