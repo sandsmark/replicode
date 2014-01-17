@@ -203,8 +203,9 @@ namespace	core{
 #if defined	WINDOWS
 		::Sleep((uint32)ms);
 #elif defined LINUX
-		// we are actually being passed millisecond, so multiply up
-		usleep(ms*1000);
+        struct timespec to_sleep = { ms / 1000, // seconds
+                                    (ms % 1000) * 1000 }; // nanoseconds
+        while (nanosleep(&to_sleep, &to_sleep) && errno == EINTR) {} // we need to do this because signals (like timer interrupts) will make *sleep() calls return
 #endif
 	}
 
