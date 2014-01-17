@@ -44,8 +44,8 @@ namespace	r_comp{
 	class	Reference{
 	public:
 		Reference();
-		Reference(const	uint16	i,const	Class	&c,const	Class	&cc);
-		uint16	index;
+        Reference(const	uintptr_t	i,const	Class	&c,const	Class	&cc);
+        uintptr_t	index;
 		Class	_class;
 		Class	cast_class;
 	};
@@ -56,12 +56,12 @@ namespace	r_comp{
 
 	class	dll_export	Metadata{
 	private:
-		uint32	get_class_array_size();
-		uint32	get_classes_size();
-		uint32	get_sys_classes_size();
-		uint32	get_class_names_size();
-		uint32	get_operator_names_size();
-		uint32	get_function_names_size();
+        uintptr_t	get_class_array_size();
+        uintptr_t get_classes_size();
+        uintptr_t	get_sys_classes_size();
+		size_t	get_class_names_size();
+		size_t	get_operator_names_size();
+		size_t	get_function_names_size();
 	public:
 		Metadata();
 
@@ -74,22 +74,22 @@ namespace	r_comp{
 		r_code::vector<Class>		classes_by_opcodes;	// classes indexed by opcodes; used to retrieve member names; registers all classes (incl. set classes).
 
 		Class	*get_class(std::string	&class_name);
-		Class	*get_class(uint16	opcode);
+		Class	*get_class(size_t opcode);
 
-		void	write(word32	*data);
-		void	read(word32		*data,uint32	size);
-		uint32	get_size();
+		void	write(uintptr_t	*data);
+		void	read(uintptr_t* data, size_t size);
+		size_t	get_size();
 	};
 
 	class	dll_export	ObjectMap{
 	public:
-		r_code::vector<uint16>	objects;
+        r_code::vector<uintptr_t>	objects;
 
-		void	shift(uint16	offset);
+        void	shift(uintptr_t	offset);
 
-		void	write(word32	*data);
-		void	read(word32		*data,uint32	size);
-		uint32	get_size()	const;
+        void	write(uintptr_t *data);
+        void	read(uintptr_t		*data, uintptr_t size);
+		size_t	get_size()	const;
 	};
 
 	class	dll_export	CodeSegment{
@@ -98,30 +98,30 @@ namespace	r_comp{
 		
 		~CodeSegment();
 		
-		void	write(word32	*data);
-		void	read(word32		*data,uint16	object_count);
-		uint32	get_size();
+		void	write(uintptr_t	*data);
+		void	read(uintptr_t		*data,size_t	object_count);
+		size_t	get_size();
 	};
 
 	class	dll_export	ObjectNames{
 	public:
-		UNORDERED_MAP<uint32,std::string>	symbols;	// indexed by objects' OIDs.
+		UNORDERED_MAP<uintptr_t,std::string>	symbols;	// indexed by objects' OIDs.
 
 		~ObjectNames();
 
-		void	write(word32	*data);
-		void	read(word32		*data);
-		uint32	get_size();
+		void	write(uintptr_t	*data);
+		void	read(uintptr_t		*data);
+		size_t	get_size();
 	};
 
 	class	dll_export	Image{
 	private:
-		uint32	map_offset;
-		UNORDERED_MAP<r_code::Code	*,uint16>	ptrs_to_indices;	// used for injection in memory.
+		size_t	map_offset;
+		UNORDERED_MAP<r_code::Code	*,size_t>	ptrs_to_indices;	// used for injection in memory.
 
 		void		add_object(r_code::Code	*object);
 		SysObject	*add_object(Code	*object,std::vector<SysObject	*>	&imported_objects);
-		uint32		get_reference_count(const	Code	*object)	const;
+		size_t		get_reference_count(const	Code	*object)	const;
 		void		build_references();
 		void		build_references(SysObject	*sys_object,r_code::Code	*object);
 		void		unpack_objects(r_code::vector<Code	*>	&ram_objects);
@@ -141,9 +141,9 @@ namespace	r_comp{
 		void	get_objects(Mem	*mem,r_code::vector<r_code::Code	*>	&ram_objects);
 		template<class	O>	void	get_objects(r_code::vector<Code	*>	&ram_objects){
 
-			for(uint32	i=0;i<code_segment.objects.size();++i){
+			for(size_t	i=0;i<code_segment.objects.size();++i){
 
-				uint16	opcode=code_segment.objects[i]->code[0].asOpcode();
+				uintptr_t	opcode=code_segment.objects[i]->code[0].asOpcode();
 				ram_objects[i]=new	O(code_segment.objects[i]);
 			}
 			unpack_objects(ram_objects);

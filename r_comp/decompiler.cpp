@@ -168,7 +168,7 @@ namespace	r_comp{
 		for(uint16	i=0;i<image->code_segment.objects.size();++i){
 
 			SysObject	*sys_object=(SysObject	*)image->code_segment.objects[i];
-			UNORDERED_MAP<uint32,std::string>::const_iterator	n=image->object_names.symbols.find(sys_object->oid);
+			UNORDERED_MAP<uintptr_t,std::string>::const_iterator	n=image->object_names.symbols.find(sys_object->oid);
 			if(n!=image->object_names.symbols.end()){
 
 				s=n->second;

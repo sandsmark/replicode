@@ -42,7 +42,7 @@ namespace	r_code{
 	template<typename	T>	class	vector {
 	public:
         vector() : m_vector(new std::vector<T>) {}
-		uint32	size()	const{	return	m_vector->size();	}
+		size_t	size()	const{	return	m_vector->size();	}
 		T	&operator	[](uint32	i){
 			if(i>=size())
 				m_vector->resize(i+1);

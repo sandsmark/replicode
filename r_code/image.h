@@ -95,7 +95,7 @@ namespace	r_code{
 	public	I{
 	friend	class r_comp::Image;
 	public:
-		static	Image<I>	*Build(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	names_size);
+		static	Image<I>	*Build(uint64	timestamp,size_t	map_size,size_t	code_size,size_t	names_size);
 		//	file IO
 		static	Image<I>	*Read(ifstream &stream);
 		static	void		Write(Image<I>	*image,ofstream &stream);
@@ -103,19 +103,19 @@ namespace	r_code{
 		Image();
 		~Image();
 
-		uint32	get_size()	const;				//	size of data in word32
-		uint32	getObjectCount()	const;
-		word32	*getObject(uint32	i);			//	points to the code size of the object; the first atom is at getObject()+2
-		word32	*getCodeSegment();				//	equals getObject(0)
-		uint32	getCodeSegmentSize()	const;
+		size_t	get_size()	const;				//	size of data in word32
+		size_t	getObjectCount()	const;
+		uintptr_t	*getObject(uint32	i);			//	points to the code size of the object; the first atom is at getObject()+2
+		uintptr_t	*getCodeSegment();				//	equals getObject(0)
+		size_t	getCodeSegmentSize()	const;
 		
 		void	trace()	const;
 	};
 
 	//	utilities
-	uint32	dll_export	GetSize(const	std::string	&s);	//	returns the number of word32 needed to encode the string
-	void	dll_export	Write(word32	*data,const	std::string	&s);
-	void	dll_export	Read(word32	*data,std::string	&s);
+	size_t	dll_export	GetSize(const	std::string	&s);	//	returns the number of word32 needed to encode the string
+	void	dll_export	Write(uintptr_t	*data,const	std::string	&s);
+	void	dll_export	Read(uintptr_t	*data,std::string	&s);
 }
 
 

@@ -293,7 +293,7 @@ int32	main(int	argc,char	**argv){
 		std::string	stdout_symbol("stdout");
 		uint32	self_oid;
 		std::string	self_symbol("self");
-		UNORDERED_MAP<uint32,std::string>::const_iterator	n;
+		UNORDERED_MAP<uintptr_t,std::string>::const_iterator	n;
 		for(n=r_exec::getSeed()->object_names.symbols.begin();n!=r_exec::getSeed()->object_names.symbols.end();++n){
 
 			if(n->second==stdin_symbol)
@@ -332,7 +332,6 @@ int32	main(int	argc,char	**argv){
 				write_to_file(image,settings.objects_path,settings.test_objects?&decompiler:NULL,starting_time);
 
 			if(settings.decompile_objects	&&	(!settings.write_objects	||	!settings.test_objects)){
-	            
 				if(settings.decompile_to_file){	// argv[2] is a file to redirect the decompiled code to.
 
 					std::ofstream	outfile;

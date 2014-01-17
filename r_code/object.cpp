@@ -41,38 +41,38 @@ namespace	r_code{
 
 	SysView::SysView(View	*source){
 
-		for(uint32	i=0;i<VIEW_CODE_MAX_SIZE;++i)
+		for(size_t	i=0;i<VIEW_CODE_MAX_SIZE;++i)
 			code[i]=source->code(i);
 
-		for(uint32	i=0;i<2;++i)	//	to get the right size in Image::add_object().
+		for(size_t	i=0;i<2;++i)	//	to get the right size in Image::add_object().
 			if(source->references[i])
 				references.push_back(0);
 	}
 
-	void	SysView::write(word32	*data){
+	void	SysView::write(uintptr_t	*data){
 
 		data[0]=code.size();
 		data[1]=references.size();
-		uint32	i=0;
+		size_t	i=0;
 		for(;i<code.size();++i)
 			data[2+i]=code[i].atom;
-		for(uint32	j=0;j<references.size();++j)
+		for(size_t	j=0;j<references.size();++j)
 			data[2+i+j]=references[j];
 	}
 
-	void	SysView::read(word32	*data){
+	void	SysView::read(uintptr_t* data){
 
-		uint32	code_size=data[0];
-		uint32	reference_set_size=data[1];
-		uint32	i;
-		uint32	j;
+		size_t	code_size=data[0];
+		size_t	reference_set_size=data[1];
+		size_t	i;
+		size_t	j;
 		for(i=0;i<code_size;++i)
 			code.push_back(Atom(data[2+i]));
 		for(j=0;j<reference_set_size;++j)
 			references.push_back(data[2+i+j]);
 	}
 
-	uint32	SysView::get_size()	const{
+	size_t	SysView::get_size()	const{
 
 		return	2+code.size()+references.size();
 	}
@@ -82,26 +82,26 @@ namespace	r_code{
 		std::cout<<" code size: "<<code.size()<<std::endl;
 		std::cout<<" reference set size: "<<references.size()<<std::endl;
 		std::cout<<"---code---"<<std::endl;
-		for(uint32	i=0;i<code.size();++i){
+		for(size_t	i=0;i<code.size();++i){
 
 			code[i].trace();
 			std::cout<<std::endl;
 		}
 		std::cout<<"---reference set---"<<std::endl;
-		for(uint32	i=0;i<references.size();++i)
+		for(size_t	i=0;i<references.size();++i)
 			std::cout<<references[i]<<std::endl;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	uint32	SysObject::LastOID=0;
+	uintptr_t	SysObject::LastOID=0;
 
 	SysObject::SysObject():oid(LastOID++){
 	}
 
 	SysObject::SysObject(Code	*source){
 
-		uint32	i;
+		size_t	i;
 		for(i=0;i<source->code_size();++i)
 			code[i]=source->code(i);
 
@@ -119,28 +119,28 @@ namespace	r_code{
 
 	SysObject::~SysObject(){
 
-		for(uint32	i=0;i<views.size();++i)
+		for(size_t	i=0;i<views.size();++i)
 			delete	views[i];
 	}
 
-	void	SysObject::write(word32	*data){
+	void	SysObject::write(uintptr_t	*data){
 
 		data[0]=oid;
 		data[1]=code.size();
 		data[2]=references.size();
 		data[3]=markers.size();
 		data[4]=views.size();
-		uint32	i;
-		uint32	j;
-		uint32	k;
-		uint32	l;
+		size_t	i;
+		size_t	j;
+		size_t	k;
+		size_t	l;
 		for(i=0;i<code.size();++i)
 			data[5+i]=code[i].atom;
 		for(j=0;j<references.size();++j)
 			data[5+i+j]=references[j];
 		for(k=0;k<markers.size();++k)
 			data[5+i+j+k]=markers[k];
-		uint32	offset=0;
+		size_t	offset=0;
 		for(l=0;l<views.size();++l){
 
 			views[l]->write(data+5+i+j+k+offset);
@@ -148,24 +148,24 @@ namespace	r_code{
 		}
 	}
 
-	void	SysObject::read(word32	*data){
+	void	SysObject::read(uintptr_t* data){
 
 		oid=data[0];
-		uint32	code_size=data[1];
-		uint32	reference_set_size=data[2];
-		uint32	marker_set_size=data[3];
-		uint32	view_set_size=data[4];
-		uint32	i;
-		uint32	j;
-		uint32	k;
-		uint32	l;
+		size_t	code_size=data[1];
+		size_t	reference_set_size=data[2];
+		size_t	marker_set_size=data[3];
+		size_t	view_set_size=data[4];
+		size_t	i;
+		size_t	j;
+		size_t	k;
+		size_t	l;
 		for(i=0;i<code_size;++i)
 			code.push_back(Atom(data[5+i]));
 		for(j=0;j<reference_set_size;++j)
 			references.push_back(data[5+i+j]);
 		for(k=0;k<marker_set_size;++k)
 			markers.push_back(data[5+i+j+k]);
-		uint32	offset=0;
+		size_t	offset=0;
 		for(l=0;l<view_set_size;++l){
 
 			SysView	*v=new	SysView();
@@ -175,10 +175,10 @@ namespace	r_code{
 		}
 	}
 
-	uint32	SysObject::get_size(){
+	size_t	SysObject::get_size(){
 
-		uint32	view_set_size=0;
-		for(uint32	i=0;i<views.size();++i)
+		size_t	view_set_size=0;
+		for(size_t	i=0;i<views.size();++i)
 			view_set_size+=views[i]->get_size();
 		return	5+code.size()+references.size()+markers.size()+view_set_size;
 	}
@@ -192,7 +192,7 @@ namespace	r_code{
 		std::cout<<"marker set size: "<<markers.size()<<std::endl;
 		std::cout<<"view set size: "<<views.size()<<std::endl;
 		std::cout<<"\n---code---\n";
-		uint32	i;
+		size_t	i;
 		for(i=0;i<code.size();++i){
 
 			std::cout<<i<<" ";
@@ -206,12 +206,12 @@ namespace	r_code{
 		for(i=0;i<markers.size();++i)
 			std::cout<<i<<" "<<markers[i]<<std::endl;
 		std::cout<<"\n---view set---\n";
-		for(uint32	k=0;k<views.size();++k){
+		for(size_t	k=0;k<views.size();++k){
 
 			std::cout<<"view["<<k<<"]"<<std::endl;
 			std::cout<<"reference set size: "<<views[k]->references.size()<<std::endl;
 			std::cout<<"-code-"<<std::endl;
-			uint32	j;
+			size_t	j;
 			for(j=0;j<views[k]->code.size();++i,++j){
 
 				std::cout<<j<<" ";

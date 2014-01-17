@@ -106,7 +106,7 @@ namespace	r_comp{
 		return	NULL;
 	}
 
-	void	Class::write(word32	*storage){
+	void	Class::write(uintptr_t	*storage){
 
 		storage[0]=atom.atom;
 		r_code::Write(storage+1,str_opcode);
@@ -121,7 +121,7 @@ namespace	r_comp{
 		}
 	}
 
-	void	Class::read(word32	*storage){
+	void	Class::read(uintptr_t* storage){
 		
 		atom=storage[0];
 		r_code::Read(storage+1,str_opcode);
@@ -138,11 +138,11 @@ namespace	r_comp{
 		}
 	}
 
-	uint32	Class::get_size(){	//	see segments.cpp for the RAM layout
+	size_t	Class::get_size(){	//	see segments.cpp for the RAM layout
 
-		uint32	size=4;	//	atom, return type, usage, number of members
+		size_t	size=4;	//	atom, return type, usage, number of members
 		size+=r_code::GetSize(str_opcode);
-		for(uint32	i=0;i<things_to_read.size();++i)
+		for(size_t	i=0;i<things_to_read.size();++i)
 			size+=things_to_read[i].get_size();
 		return	size;
 	}

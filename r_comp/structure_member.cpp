@@ -84,7 +84,7 @@ namespace	r_comp{
 		return	_read;
 	}
 
-	void	StructureMember::write(word32	*storage)	const{
+	void	StructureMember::write(uintptr_t	*storage)	const{
 
 		if(_read==&Compiler::read_any)
 			storage[0]=R_ANY;
@@ -116,7 +116,7 @@ namespace	r_comp{
 		r_code::Write(storage+offset,name);
 	}
 
-	void	StructureMember::read(word32	*storage){
+	void	StructureMember::read(uintptr_t* storage){
 		
 		switch(storage[0]){
 		case	R_ANY:			_read=&Compiler::read_any;			break;

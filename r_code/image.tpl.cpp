@@ -34,7 +34,7 @@
 
 namespace	r_code{
 
-	template<class	I>	Image<I>	*Image<I>::Build(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	names_size){
+	template<class	I>	Image<I>	*Image<I>::Build(uint64	timestamp,size_t	map_size,size_t	code_size,size_t	names_size){
 
 		I	*image=new(map_size+code_size)	I(timestamp,map_size,code_size,names_size);
 		return	(Image<I>	*)image;
@@ -43,29 +43,29 @@ namespace	r_code{
 	template<class	I>	Image<I>	*Image<I>::Read(ifstream &stream){
 
 		uint64	timestamp;
-		uint32	map_size;
-		uint32	code_size;
-		uint32	names_size;
+		size_t	map_size;
+		size_t	code_size;
+		size_t	names_size;
 		stream.read((char	*)&timestamp,sizeof(uint64));
-		stream.read((char	*)&map_size,sizeof(uint32));
-		stream.read((char	*)&code_size,sizeof(uint32));
-		stream.read((char	*)&names_size,sizeof(uint32));
+		stream.read((char	*)&map_size,sizeof(size_t));
+		stream.read((char	*)&code_size,sizeof(size_t));
+		stream.read((char	*)&names_size,sizeof(size_t));
 		Image	*image=Build(timestamp,map_size,code_size,names_size);
-		stream.read((char	*)image->data(),image->get_size()*sizeof(word32));
+		stream.read((char	*)image->data(),image->get_size()*sizeof(uintptr_t));
 		return	image;
 	}
 
 	template<class	I>	void	Image<I>::Write(Image<I>	*image,ofstream &stream){
 
 		uint64	timestamp=image->timestamp();
-		uint32	map_size=image->map_size();
-		uint32	code_size=image->code_size();
-		uint32	names_size=image->names_size();
+		size_t	map_size=image->map_size();
+		size_t	code_size=image->code_size();
+		size_t	names_size=image->names_size();
 		stream.write((char	*)&timestamp,sizeof(uint64));
-		stream.write((char	*)&map_size,sizeof(uint32));
-		stream.write((char	*)&code_size,sizeof(uint32));
-		stream.write((char	*)&names_size,sizeof(uint32));
-		stream.write((char	*)image->data(),image->get_size()*sizeof(word32));
+		stream.write((char	*)&map_size,sizeof(size_t));
+		stream.write((char	*)&code_size,sizeof(size_t));
+		stream.write((char	*)&names_size,sizeof(size_t));
+		stream.write((char	*)image->data(),image->get_size()*sizeof(uintptr_t));
 	}
 
 	template<class	I>	Image<I>::Image():I(){
@@ -74,27 +74,27 @@ namespace	r_code{
 	template<class	I>	Image<I>::~Image(){
 	}
 
-	template<class	I>	uint32	Image<I>::get_size()	const{
+	template<class	I>	size_t	Image<I>::get_size()	const{
 
 		return	this->map_size()+this->code_size()+this->names_size();
 	}
 
-	template<class	I>	uint32	Image<I>::getObjectCount()	const{
+	template<class	I>	size_t	Image<I>::getObjectCount()	const{
 
 		return	this->map_size();
 	}
 
-	template<class	I>	word32	*Image<I>::getObject(uint32	i){
+	template<class	I>	uintptr_t	*Image<I>::getObject(uint32	i){
 
 		return	this->data()+this->data(i);
 	}
 
-	template<class	I>	word32	*Image<I>::getCodeSegment(){
+	template<class	I>	uintptr_t	*Image<I>::getCodeSegment(){
 	
 		return	this->data()+this->map_size();
 	}
 
-	template<class	I>	uint32	Image<I>::getCodeSegmentSize()	const{
+	template<class	I>	size_t	Image<I>::getCodeSegmentSize()	const{
 
 		return	this->code_size();
 	}
@@ -107,7 +107,7 @@ namespace	r_code{
 		std::cout<<"Code Segment Size: "<<this->code_size()<<std::endl;
 		std::cout<<"Names Size: "<<this->names_size()<<std::endl;
 		
-		uint32	i=0;
+		size_t	i=0;
 
 		std::cout<<"===Object Map==="<<std::endl;
 		for(;i<this->map_size();++i)
@@ -115,14 +115,14 @@ namespace	r_code{
 
 		//	at this point, i is at the first word32 of the first object in the code segment
 		std::cout<<"===Code Segment==="<<std::endl;
-		uint32	code_start=this->map_size();
-		for(uint32	j=0;j<code_start;++j){	//	read object map: data[data[j]] is the first word32 of an object, data[data[j]+5] is the first atom
+		size_t	code_start=this->map_size();
+		for(size_t	j=0;j<code_start;++j){	//	read object map: data[data[j]] is the first word32 of an object, data[data[j]+5] is the first atom
 
-			uint32	object_axiom=this->data(this->data(j));
-			uint32	object_code_size=this->data(this->data(j)+1);
-			uint32	object_reference_set_size=this->data(this->data(j)+2);
-			uint32	object_marker_set_size=this->data(this->data(j)+3);
-			uint32	object_view_set_size=this->data(this->data(j)+4);
+			uintptr_t	object_axiom=this->data(this->data(j));
+			size_t	object_code_size=this->data(this->data(j)+1);
+			size_t	object_reference_set_size=this->data(this->data(j)+2);
+			size_t	object_marker_set_size=this->data(this->data(j)+3);
+			size_t	object_view_set_size=this->data(this->data(j)+4);
 			std::cout<<"---object---\n";
 			std::cout<<i++;
 			/*switch(object_axiom){
@@ -154,17 +154,17 @@ namespace	r_code{
 				std::cout<<i<<" "<<this->data(i)<<std::endl;
 
 			std::cout<<"---view set---\n";
-			for(uint32	k=0;k<object_view_set_size;++k){
+			for(size_t	k=0;k<object_view_set_size;++k){
 
-				uint32	view_code_size=this->data(i);
-				uint32	view_reference_set_size=this->data(i+1);
+				size_t	view_code_size=this->data(i);
+				size_t	view_reference_set_size=this->data(i+1);
 
 				std::cout<<"view["<<k<<"]\n";
 				std::cout<<i++<<" code size: "<<view_code_size<<std::endl;
 				std::cout<<i++<<" reference set size: "<<view_reference_set_size<<std::endl;
 
 				std::cout<<"---code---\n";
-				uint32	l;
+				size_t	l;
 				for(l=0;l<view_code_size;++i,++l){
 
 					std::cout<<i<<" ";

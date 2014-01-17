@@ -276,7 +276,6 @@ namespace	r_comp{
 	}
 
 	bool	Compiler::getGlobalReferenceIndex(const	std::string	reference_name,const	ReturnType	t,ImageObject	*object,uint16	&index,Class	*&_class){
-
 		UNORDERED_MAP<std::string,Reference>::iterator	it=global_references.find(reference_name);
 		if(it!=global_references.end()	&&	(t==ANY	||	(t!=ANY	&&	it->second._class.type==t))){
 

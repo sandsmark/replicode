@@ -49,11 +49,11 @@ namespace	r_code{
 	class	dll_export	ImageObject{
 	public:
 		r_code::vector<Atom>	code;
-		r_code::vector<uint16>	references;
+		r_code::vector<uintptr_t>	references;
         virtual ~ImageObject() {}
 
-		virtual	void	write(word32	*data)=0;
-		virtual	void	read(word32		*data)=0;
+		virtual	void	write(uintptr_t	*data)=0;
+		virtual	void	read(uintptr_t		*data)=0;
 		virtual	void	trace()=0;
 	};
 
@@ -65,9 +65,9 @@ namespace	r_code{
 		SysView();
 		SysView(View	*source);
 
-		void	write(word32	*data);
-		void	read(word32		*data);
-		uint32	get_size()	const;
+		void	write(uintptr_t	*data);
+		void	read(uintptr_t		*data);
+		size_t	get_size()	const;
 		void	trace();
 	};
 
@@ -76,20 +76,20 @@ namespace	r_code{
 	class	dll_export	SysObject:
 	public	ImageObject{
 	private:
-		static	uint32	LastOID;
+		static	uintptr_t	LastOID;
 	public:
-		r_code::vector<uint32>		markers;	// indexes in the relocation segment
+		r_code::vector<uintptr_t>		markers;	// indexes in the relocation segment
 		r_code::vector<SysView	*>	views;
 
-		uint32	oid;
+		uintptr_t	oid;
 
 		SysObject();
 		SysObject(Code	*source);
 		~SysObject();
 
-		void	write(word32	*data);
-		void	read(word32		*data);
-		uint32	get_size();
+		void	write(uintptr_t	*data);
+		void	read(uintptr_t		*data);
+		size_t	get_size();
 		void	trace();
 	};
 

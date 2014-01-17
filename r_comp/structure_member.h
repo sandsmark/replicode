@@ -99,8 +99,8 @@ namespace	r_comp{
 		Iteration	getIteration()	const;
 		_Read		read()	const;
 
-		void	write(word32	*storage)	const;
-		void	read(word32		*storage);
+		void	write(uintptr_t	*storage)	const;
+		void	read(uintptr_t		*storage);
 		uint32	get_size();
 	};
 }

@@ -40,19 +40,19 @@ namespace	r_code{
 
 	class	dll_export	ImageImpl{
 	private:
-		word32	*_data;	//	[object map|code segment|object names]
+		uintptr_t	*_data;	//	[object map|code segment|object names]
 		uint64	_timestamp;
-		uint32	_map_size;
-		uint32	_code_size;
-		uint32	_names_size;
+		size_t	_map_size;
+		size_t	_code_size;
+		size_t	_names_size;
 	protected:
 		uint64	timestamp()		const;
-		uint32	map_size()		const;
-		uint32	code_size()		const;
-		uint32	names_size()	const;
-		word32	*data()			const;
-		word32	&data(uint32	i);
-		word32	&data(uint32	i)	const;
+		size_t	map_size()		const;
+		size_t	code_size()		const;
+		size_t	names_size()	const;
+		uintptr_t	*data()			const;
+		uintptr_t	&data(size_t i);
+		uintptr_t	&data(size_t	i)	const;
 	public:
 		void	*operator	new(size_t,uint32	data_size);
 		void	operator delete(void	*o);

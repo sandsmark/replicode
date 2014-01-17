@@ -29,10 +29,10 @@
       goal_pred_success_resilience="1000"
     />
     <Objects
-      get_objects="no"
-      decompile_objects="no"
+      get_objects="yes"
+      decompile_objects="yes"
       decompile_to_file="no"
-      decompilation_file_path=""
+      decompilation_file_path="../Test/decompiled.replicode"
       ignore_named_objects="yes"
       write_objects="no"
       objects_path="../Test/objects.replicode.image"

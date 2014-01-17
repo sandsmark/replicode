@@ -62,9 +62,9 @@ namespace	r_comp{
 		ReturnType						type;				//	ANY for non-operators.
 		StructureMember::Iteration		use_as;
 
-		void	write(word32	*storage);
-		void	read(word32		*storage);
-		uint32	get_size();
+		void	write(uintptr_t *storage);
+		void	read(uintptr_t 	*storage);
+		size_t	get_size();
 	};
 }
 

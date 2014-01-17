@@ -45,7 +45,7 @@ namespace	r_code{
 
 	ImageImpl::ImageImpl(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	names_size):_timestamp(timestamp),_map_size(map_size),_code_size(code_size),_names_size(names_size){
 
-		_data=new	word32[_map_size+_code_size+_names_size];
+		_data=new	uintptr_t[_map_size+_code_size+_names_size];
 	}
 
 	ImageImpl::~ImageImpl(){
@@ -58,32 +58,32 @@ namespace	r_code{
 		return	_timestamp;
 	}
 
-	uint32	ImageImpl::map_size()	const{
+	size_t	ImageImpl::map_size()	const{
 
 		return	_map_size;
 	}
 
-	uint32	ImageImpl::code_size()	const{
+	size_t	ImageImpl::code_size()	const{
 
 		return	_code_size;
 	}
 
-	uint32	ImageImpl::names_size()	const{
+	size_t	ImageImpl::names_size()	const{
 
 		return	_names_size;
 	}
 
-	word32	*ImageImpl::data()	const{
+	uintptr_t	*ImageImpl::data()	const{
 
 		return	_data;
 	}
 
-	word32	&ImageImpl::data(uint32	i){
+	uintptr_t	&ImageImpl::data(size_t	i){
 
 		return	_data[i];
 	}
 
-	word32	&ImageImpl::data(uint32	i)	const{
+	uintptr_t	&ImageImpl::data(size_t i)	const{
 
 		return	_data[i];
 	}
