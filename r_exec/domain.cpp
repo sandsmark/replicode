@@ -28,148 +28,148 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"domain.h"
+#include "domain.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 /*
-	void	Domain::add(BindingMap	*bm){
+ void Domain::add(BindingMap *bm){
 
-		for(uint32	i=0;i<ranges.size();++i)
-			ranges[i]->add(bm,i);
-	}
+ for(uint32 i=0;i<ranges.size();++i)
+ ranges[i]->add(bm,i);
+ }
 
-	void	Domain::remove(BindingMap	*bm){
+ void Domain::remove(BindingMap *bm){
 
-		for(uint32	i=0;i<ranges.size();++i)
-			ranges[i]->remove(bm,i);
-	}
+ for(uint32 i=0;i<ranges.size();++i)
+ ranges[i]->remove(bm,i);
+ }
 
-	bool	Domain::contains(BindingMap	*bm)	const{
+ bool Domain::contains(BindingMap *bm) const{
 
-		if(ranges.size()==0)
-			return	false;
+ if(ranges.size()==0)
+ return false;
 
-		for(uint32	i=0;i<ranges.size();++i){
+ for(uint32 i=0;i<ranges.size();++i){
 
-			if(!ranges[i]->contains(bm,i));
-				return	false;
-		}
+ if(!ranges[i]->contains(bm,i));
+ return false;
+ }
 
-		return	true;
-	}
+ return true;
+ }
 
-	////////////////////////////////////////////////////////////////////////////////////////////////
+ ////////////////////////////////////////////////////////////////////////////////////////////////
 
-	template<>	void	DRange<bool>::add(BindingMap	*bm,uint32	i){
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			add(a->asBoolean());	
-	}
+ template<> void DRange<bool>::add(BindingMap *bm,uint32 i){
 
-	template<>	void	DRange<bool>::remove(BindingMap	*bm,uint32	i){
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			remove(a->asBoolean());
-	}
+ Atom *a=bm->get_code(i);
+ if(a)
+ add(a->asBoolean());
+ }
 
-	template<>	bool	DRange<bool>::contains(BindingMap	*bm,uint32	i)	const{
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			return	contains(a->asBoolean());
-		return	true;
-	}
+ template<> void DRange<bool>::remove(BindingMap *bm,uint32 i){
 
-	template<>	void	DRange<std::string>::add(BindingMap	*bm,uint32	i){
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			add(Utils::GetString(a));	
-	}
+ Atom *a=bm->get_code(i);
+ if(a)
+ remove(a->asBoolean());
+ }
 
-	template<>	void	DRange<std::string>::remove(BindingMap	*bm,uint32	i){
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			remove(Utils::GetString(a));
-	}
+ template<> bool DRange<bool>::contains(BindingMap *bm,uint32 i) const{
 
-	template<>	bool	DRange<std::string>::contains(BindingMap	*bm,uint32	i)	const{
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			return	contains(Utils::GetString(a));	
-		return	true;
-	}
+ Atom *a=bm->get_code(i);
+ if(a)
+ return contains(a->asBoolean());
+ return true;
+ }
 
-	template<>	void	DRange<P<Code> >::add(BindingMap	*bm,uint32	i){
-	
-		P<Code>	o=bm->get_object(i);
-		if(!!o)
-			add(o);
-	}
+ template<> void DRange<std::string>::add(BindingMap *bm,uint32 i){
 
-	template<>	void	DRange<P<Code> >::remove(BindingMap	*bm,uint32	i){
-		
-		P<Code>	o=bm->get_object(i);
-		if(!!o)
-			remove(o);	
-	}
+ Atom *a=bm->get_code(i);
+ if(a)
+ add(Utils::GetString(a));
+ }
 
-	template<>	bool	DRange<P<Code> >::contains(BindingMap	*bm,uint32	i)	const{
-		
-		P<Code>	o=bm->get_object(i);
-		if(!!o)
-			return	contains(o);
-		return	true;
-	}
+ template<> void DRange<std::string>::remove(BindingMap *bm,uint32 i){
 
-	////////////////////////////////////////////////////////////////////////////////////////////////
+ Atom *a=bm->get_code(i);
+ if(a)
+ remove(Utils::GetString(a));
+ }
 
-	template<>	void	CRange<float32>::add(BindingMap	*bm,uint32	i){
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			add(a->asFloat());	
-	}
+ template<> bool DRange<std::string>::contains(BindingMap *bm,uint32 i) const{
 
-	template<>	void	CRange<float32>::remove(BindingMap	*bm,uint32	i){
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			remove(a->asFloat());
-	}
+ Atom *a=bm->get_code(i);
+ if(a)
+ return contains(Utils::GetString(a));
+ return true;
+ }
 
-	template<>	bool	CRange<float32>::contains(BindingMap	*bm,uint32	i)	const{
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			return	contains(a->asFloat());
-		return	true;
-	}
+ template<> void DRange<P<Code> >::add(BindingMap *bm,uint32 i){
 
-	template<>	void	CRange<uint64>::add(BindingMap	*bm,uint32	i){
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			add(Utils::GetTimestamp(a));	
-	}
+ P<Code> o=bm->get_object(i);
+ if(!!o)
+ add(o);
+ }
 
-	template<>	void	CRange<uint64>::remove(BindingMap	*bm,uint32	i){
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			remove(Utils::GetTimestamp(a));
-	}
+ template<> void DRange<P<Code> >::remove(BindingMap *bm,uint32 i){
 
-	template<>	bool	CRange<uint64>::contains(BindingMap	*bm,uint32	i)	const{
-		
-		Atom	*a=bm->get_code(i);
-		if(a)
-			return	contains(Utils::GetTimestamp(a));	
-		return	true;
-	}*/
+ P<Code> o=bm->get_object(i);
+ if(!!o)
+ remove(o);
+ }
+
+ template<> bool DRange<P<Code> >::contains(BindingMap *bm,uint32 i) const{
+
+ P<Code> o=bm->get_object(i);
+ if(!!o)
+ return contains(o);
+ return true;
+ }
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+
+ template<> void CRange<float32>::add(BindingMap *bm,uint32 i){
+
+ Atom *a=bm->get_code(i);
+ if(a)
+ add(a->asFloat());
+ }
+
+ template<> void CRange<float32>::remove(BindingMap *bm,uint32 i){
+
+ Atom *a=bm->get_code(i);
+ if(a)
+ remove(a->asFloat());
+ }
+
+ template<> bool CRange<float32>::contains(BindingMap *bm,uint32 i) const{
+
+ Atom *a=bm->get_code(i);
+ if(a)
+ return contains(a->asFloat());
+ return true;
+ }
+
+ template<> void CRange<uint64>::add(BindingMap *bm,uint32 i){
+
+ Atom *a=bm->get_code(i);
+ if(a)
+ add(Utils::GetTimestamp(a));
+ }
+
+ template<> void CRange<uint64>::remove(BindingMap *bm,uint32 i){
+
+ Atom *a=bm->get_code(i);
+ if(a)
+ remove(Utils::GetTimestamp(a));
+ }
+
+ template<> bool CRange<uint64>::contains(BindingMap *bm,uint32 i) const{
+
+ Atom *a=bm->get_code(i);
+ if(a)
+ return contains(Utils::GetTimestamp(a));
+ return true;
+ }*/
 }

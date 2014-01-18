@@ -28,115 +28,115 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"usr_operators.h"
+#include "usr_operators.h"
 
-#include	"../r_exec/init.h"
+#include "../r_exec/init.h"
 
-#include	<iostream>
-#include	<cmath>
+#include <iostream>
+#include <cmath>
 
 
-void	Init(OpcodeRetriever	r){
+void Init(OpcodeRetriever r) {
 
-	Operators::Init(r);
+    Operators::Init(r);
 
-	std::cout<<"> usr operators initialized"<<std::endl;
+    std::cout << "> usr operators initialized" << std::endl;
 }
 
-uint16	GetOperatorCount(){
+uint16 GetOperatorCount() {
 
-	return	4;
+    return 4;
 }
 
-void	GetOperatorName(char	*op_name){
+void GetOperatorName(char *op_name) {
 
-	static	uint16	op_index=0;
+    static uint16 op_index = 0;
 
-	if(op_index==0){
+    if (op_index == 0) {
 
-		std::string	s="add";
-		memcpy(op_name,s.c_str(),s.length());
-		++op_index;
-		return;
-	}
+        std::string s = "add";
+        memcpy(op_name, s.c_str(), s.length());
+        ++op_index;
+        return;
+    }
 
-	if(op_index==1){
+    if (op_index == 1) {
 
-		std::string	s="sub";
-		memcpy(op_name,s.c_str(),s.length());
-		++op_index;
-		return;
-	}
+        std::string s = "sub";
+        memcpy(op_name, s.c_str(), s.length());
+        ++op_index;
+        return;
+    }
 
-	if(op_index==2){
+    if (op_index == 2) {
 
-		std::string	s="mul";
-		memcpy(op_name,s.c_str(),s.length());
-		++op_index;
-		return;
-	}
+        std::string s = "mul";
+        memcpy(op_name, s.c_str(), s.length());
+        ++op_index;
+        return;
+    }
 
-	if(op_index==3){
+    if (op_index == 3) {
 
-		std::string	s="dis";
-		memcpy(op_name,s.c_str(),s.length());
-		++op_index;
-		return;
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-uint16	GetProgramCount(){
-
-	return	2;
-}
-
-void	GetProgramName(char	*pgm_name){
-
-	static	uint16	pgm_index=0;
-
-	if(pgm_index==0){
-
-		std::string	s="test_program";
-		memcpy(pgm_name,s.c_str(),s.length());
-		++pgm_index;
-		return;
-	}
-/*
-	if(pgm_index==1){
-
-		std::string	s="correlator";
-		memcpy(pgm_name,s.c_str(),s.length());
-		++pgm_index;
-		return;
-	}
-*/
-	if(pgm_index==1){
-
-		std::string	s="auto_focus";
-		memcpy(pgm_name,s.c_str(),s.length());
-		++pgm_index;
-		return;
-	}
+        std::string s = "dis";
+        memcpy(op_name, s.c_str(), s.length());
+        ++op_index;
+        return;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint16	GetCallbackCount(){
+uint16 GetProgramCount() {
 
-	return	1;
+    return 2;
 }
 
-void	GetCallbackName(char	*callback_name){
+void GetProgramName(char *pgm_name) {
 
-	static	uint16	callback_index=0;
+    static uint16 pgm_index = 0;
 
-	if(callback_index==0){
+    if (pgm_index == 0) {
 
-		std::string	s="print";
-		memcpy(callback_name,s.c_str(),s.length());
-		++callback_index;
-		return;
-	}
+        std::string s = "test_program";
+        memcpy(pgm_name, s.c_str(), s.length());
+        ++pgm_index;
+        return;
+    }
+    /*
+    if(pgm_index==1){
+
+    std::string s="correlator";
+    memcpy(pgm_name,s.c_str(),s.length());
+    ++pgm_index;
+    return;
+    }
+    */
+    if (pgm_index == 1) {
+
+        std::string s = "auto_focus";
+        memcpy(pgm_name, s.c_str(), s.length());
+        ++pgm_index;
+        return;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint16 GetCallbackCount() {
+
+    return 1;
+}
+
+void GetCallbackName(char *callback_name) {
+
+    static uint16 callback_index = 0;
+
+    if (callback_index == 0) {
+
+        std::string s = "print";
+        memcpy(callback_name, s.c_str(), s.length());
+        ++callback_index;
+        return;
+    }
 }

@@ -31,72 +31,72 @@
 #ifndef core_base_h
 #define core_base_h
 
-#include	<cstdlib>
+#include <cstdlib>
 
-#include	"types.h"
+#include "types.h"
 
 
-namespace	core{
-	
-	class	_Object;
+namespace core {
 
-	//	Smart pointer (ref counting, deallocates when ref count<=0).
-	//	No circular refs (use std c++ ptrs).
-	//	No passing in functions (cast P<C> into C*).
-	//	Cannot be a value returned by a function (return C* instead).
-	template<class	C>	class	P{
-	private:
-		_Object	*object;
-	public:
-		P();
-		P(C	*o);
-		P(const P<C>	&p);
-		~P();
-		C	*operator	->()	const;
-		template<class	D>	operator	D	*()	const{
+class _Object;
 
-			return	(D	*)object;
-		}
-		bool	operator	==(C	*c)	const;
-		bool	operator	!=(C	*c)	const;
-		bool	operator	<(C	*c)	const;
-		bool	operator	!()	const;
-		template<class	D>	bool	operator	==(P<D>	&p)	const;
-		template<class	D>	bool	operator	!=(P<D>	&p)	const;
-		P<C>	&operator	=(C	*c);
-		P<C>	&operator	=(const  P<C>	&p);
-		template<class	D>	P<C>	&operator	=(const P<D>	&p);
-	};
+// Smart pointer (ref counting, deallocates when ref count<=0).
+// No circular refs (use std c++ ptrs).
+// No passing in functions (cast P<C> into C*).
+// Cannot be a value returned by a function (return C* instead).
+template<class C> class P {
+private:
+    _Object *object;
+public:
+    P();
+    P(C *o);
+    P(const P<C> &p);
+    ~P();
+    C *operator ->() const;
+    template<class D> operator D *() const {
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        return (D *)object;
+    }
+    bool operator ==(C *c) const;
+    bool operator !=(C *c) const;
+    bool operator <(C *c) const;
+    bool operator !() const;
+    template<class D> bool operator ==(P<D> &p) const;
+    template<class D> bool operator !=(P<D> &p) const;
+    P<C> &operator =(C *c);
+    P<C> &operator =(const P<C> &p);
+    template<class D> P<C> &operator =(const P<D> &p);
+};
 
-	//	Root smart-pointable object class.
-	class	core_dll	_Object{
-	template<class	C>	friend	class	P;
-	friend	class	_P;
-	protected:
-		#ifdef	ARCH_32
-		uint32	__vfptr_padding_Object;
-		#endif
-		int32	volatile	refCount;
-		_Object();
-	public:
-		virtual	~_Object();
-		void	incRef();
-		virtual	void	decRef();
-	};
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	//	Template version of the well-known DP. Adapts C to _Object.
-	template<class	C>	class	_ObjectAdapter:
-	public	C,
-	public	_Object{
-	protected:
-		_ObjectAdapter();
-	};
+// Root smart-pointable object class.
+class core_dll _Object {
+    template<class C> friend class P;
+    friend class _P;
+protected:
+#ifdef ARCH_32
+    uint32 __vfptr_padding_Object;
+#endif
+    int32 volatile refCount;
+    _Object();
+public:
+    virtual ~_Object();
+    void incRef();
+    virtual void decRef();
+};
+
+// Template version of the well-known DP. Adapts C to _Object.
+template<class C> class _ObjectAdapter:
+    public C,
+    public _Object {
+protected:
+    _ObjectAdapter();
+};
 }
 
 
-#include	"base.tpl.cpp"
+#include "base.tpl.cpp"
 
 
 #endif

@@ -28,39 +28,39 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	time_core_h
-#define	time_core_h
+#ifndef time_core_h
+#define time_core_h
 
-#include	"CoreLibrary/utils.h"
-#include	"time_job.h"
+#include "CoreLibrary/utils.h"
+#include "time_job.h"
 
 
-using	namespace	core;
+using namespace core;
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	DelegatedCore:
-	public	Thread{
-	private:
-		Timer		timer;
-		uint64		target_time;
-		uint64		time_to_wait;
-		P<TimeJob>	job;
-	public:
-		static	thread_ret thread_function_call	Wait(void	*args);
+class DelegatedCore:
+    public Thread {
+private:
+    Timer timer;
+    uint64 target_time;
+    uint64 time_to_wait;
+    P<TimeJob> job;
+public:
+    static thread_ret thread_function_call Wait(void *args);
 
-		DelegatedCore(uint64		target_time,uint64	time_to_wait,TimeJob	*j);
-		~DelegatedCore();
-	};
+    DelegatedCore(uint64 target_time, uint64 time_to_wait, TimeJob *j);
+    ~DelegatedCore();
+};
 
-	class	r_exec_dll	TimeCore:
-	public	Thread{
-	public:
-		static	thread_ret thread_function_call	Run(void	*args);
+class r_exec_dll TimeCore:
+    public Thread {
+public:
+    static thread_ret thread_function_call Run(void *args);
 
-		TimeCore();
-		~TimeCore();
-	};
+    TimeCore();
+    ~TimeCore();
+};
 }
 
 

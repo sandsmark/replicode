@@ -28,110 +28,144 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	operator_h
-#define	operator_h
+#ifndef operator_h
+#define operator_h
 
-#include	"../r_code/object.h"
+#include "../r_code/object.h"
 
-#include	"_context.h"
+#include "_context.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	//	Wrapper class for evaluation contexts.
-	//	Template operator functions is not an option since some operators are defined in usr_operators.dll.
-	class	dll_export	Context{
-	private:
-		_Context	*implementation;
-	public:
-		Context(_Context	*implementation):implementation(implementation){}
-		virtual ~Context(){	delete	implementation;	}
+// Wrapper class for evaluation contexts.
+// Template operator functions is not an option since some operators are defined in usr_operators.dll.
+class dll_export Context {
+private:
+    _Context *implementation;
+public:
+    Context(_Context *implementation): implementation(implementation) {}
+    virtual ~Context() {
+        delete implementation;
+    }
 
-		_Context	*get_implementation()	const{	return	implementation;	}
+    _Context *get_implementation() const {
+        return implementation;
+    }
 
-		uint16	getChildrenCount()		const{	return	implementation->getChildrenCount();	}
-		Context	getChild(uint16	index)	const{	return	Context(implementation->_getChild(index));	}
+    uint16 getChildrenCount() const {
+        return implementation->getChildrenCount();
+    }
+    Context getChild(uint16 index) const {
+        return Context(implementation->_getChild(index));
+    }
 
-		Context	operator	*()	const{	return	Context(implementation->dereference());	}
-		Context	&operator	=(const	Context	&c){
+    Context operator *() const {
+        return Context(implementation->dereference());
+    }
+    Context &operator =(const Context &c) {
 
-			delete	implementation;
-			implementation=implementation->assign(c.get_implementation());
-			return	*this;
-		}
+        delete implementation;
+        implementation = implementation->assign(c.get_implementation());
+        return *this;
+    }
 
-		bool	operator	==(const	Context	&c)	const{	return	implementation->equal(c.get_implementation());	}
-		bool	operator	!=(const	Context	&c)	const{	return	!implementation->equal(c.get_implementation());	}
+    bool operator ==(const Context &c) const {
+        return implementation->equal(c.get_implementation());
+    }
+    bool operator !=(const Context &c) const {
+        return !implementation->equal(c.get_implementation());
+    }
 
-		Atom	&operator	[](uint16	i)	const{	return	implementation->get_atom(i);	}
+    Atom &operator [](uint16 i) const {
+        return implementation->get_atom(i);
+    }
 
-		uint16	setAtomicResult(Atom	a)		const{	return	implementation->setAtomicResult(a);	}
-		uint16	setTimestampResult(uint64	t)	const{	return	implementation->setTimestampResult(t);	}
-		uint16	setCompoundResultHead(Atom	a)	const{	return	implementation->setCompoundResultHead(a);	}
-		uint16	addCompoundResultPart(Atom	a)	const{	return	implementation->addCompoundResultPart(a);	}
+    uint16 setAtomicResult(Atom a) const {
+        return implementation->setAtomicResult(a);
+    }
+    uint16 setTimestampResult(uint64 t) const {
+        return implementation->setTimestampResult(t);
+    }
+    uint16 setCompoundResultHead(Atom a) const {
+        return implementation->setCompoundResultHead(a);
+    }
+    uint16 addCompoundResultPart(Atom a) const {
+        return implementation->addCompoundResultPart(a);
+    }
 
-		void	trace()	const{	return	implementation->trace();	}
-	};
+    void trace() const {
+        return implementation->trace();
+    }
+};
 
-	bool	red(const	Context	&context,uint16	&index);	//	executive-dependent.
+bool red(const Context &context, uint16 &index); // executive-dependent.
 
-	bool	syn(const	Context	&context,uint16	&index);
+bool syn(const Context &context, uint16 &index);
 
-	class	Operator{
-	private:
-		static	r_code::vector<Operator>	Operators;	//	indexed by opcodes.
+class Operator {
+private:
+    static r_code::vector<Operator> Operators; // indexed by opcodes.
 
-		bool	(*_operator)(const	Context	&,uint16	&);
-		bool	(*_overload)(const	Context	&,uint16	&);
-	public:
-		static	void		Register(uint16	opcode,bool	(*op)(const	Context	&,uint16	&));	//	first, register std operators; next register user-defined operators (may be registered as overloads).
-		static	Operator	Get(uint16	opcode){	return	Operators[opcode];	}
-		Operator():_operator(NULL),_overload(NULL){}
-		Operator(bool	(*o)(const	Context	&,uint16	&)):_operator(o),_overload(NULL){}
-		~Operator(){}
+    bool (*_operator)(const Context &, uint16 &);
+    bool (*_overload)(const Context &, uint16 &);
+public:
+    static void Register(uint16 opcode, bool (*op)(const Context &, uint16 &)); // first, register std operators; next register user-defined operators (may be registered as overloads).
+    static Operator Get(uint16 opcode) {
+        return Operators[opcode];
+    }
+    Operator(): _operator(NULL), _overload(NULL) {}
+    Operator(bool (*o)(const Context &, uint16 &)): _operator(o), _overload(NULL) {}
+    ~Operator() {}
 
-		void	setOverload(bool	(*o)(const	Context	&,uint16	&)){	_overload=o;	}
+    void setOverload(bool (*o)(const Context &, uint16 &)) {
+        _overload = o;
+    }
 
-		bool	operator	()(const	Context	&context,uint16	&index)	const{
-			if(_operator(context,index))
-				return	true;
-			if(_overload)
-				return	_overload(context,index);
-			return	false;
-		}
+    bool operator()(const Context &context, uint16 &index) const {
+        if (_operator(context, index))
+            return true;
+        if (_overload)
+            return _overload(context, index);
+        return false;
+    }
 
-		bool	is_red()	const{	return	_operator==red;	}
-		bool	is_syn()	const{	return	_operator==syn;	}
-	};
+    bool is_red() const {
+        return _operator == red;
+    }
+    bool is_syn() const {
+        return _operator == syn;
+    }
+};
 
-	//	std operators	////////////////////////////////////////
+// std operators ////////////////////////////////////////
 
-	bool	now(const	Context	&context,uint16	&index);
+bool now(const Context &context, uint16 &index);
 
-	bool	rnd(const	Context	&context,uint16	&index);
+bool rnd(const Context &context, uint16 &index);
 
-	bool	equ(const	Context	&context,uint16	&index);
-	bool	neq(const	Context	&context,uint16	&index);
-	bool	gtr(const	Context	&context,uint16	&index);
-	bool	lsr(const	Context	&context,uint16	&index);
-	bool	gte(const	Context	&context,uint16	&index);
-	bool	lse(const	Context	&context,uint16	&index);
+bool equ(const Context &context, uint16 &index);
+bool neq(const Context &context, uint16 &index);
+bool gtr(const Context &context, uint16 &index);
+bool lsr(const Context &context, uint16 &index);
+bool gte(const Context &context, uint16 &index);
+bool lse(const Context &context, uint16 &index);
 
-	bool	add(const	Context	&context,uint16	&index);
-	bool	sub(const	Context	&context,uint16	&index);
-	bool	mul(const	Context	&context,uint16	&index);
-	bool	div(const	Context	&context,uint16	&index);
+bool add(const Context &context, uint16 &index);
+bool sub(const Context &context, uint16 &index);
+bool mul(const Context &context, uint16 &index);
+bool div(const Context &context, uint16 &index);
 
-	bool	dis(const	Context	&context,uint16	&index);
+bool dis(const Context &context, uint16 &index);
 
-	bool	ln(const	Context	&context,uint16	&index);
-	bool	exp(const	Context	&context,uint16	&index);
-	bool	log(const	Context	&context,uint16	&index);
-	bool	e10(const	Context	&context,uint16	&index);
+bool ln(const Context &context, uint16 &index);
+bool exp(const Context &context, uint16 &index);
+bool log(const Context &context, uint16 &index);
+bool e10(const Context &context, uint16 &index);
 
-	bool	ins(const	Context	&context,uint16	&index);	//	executive-dependent.
-	
-	bool	fvw(const	Context	&context,uint16	&index);	//	executive-dependent.
+bool ins(const Context &context, uint16 &index); // executive-dependent.
+
+bool fvw(const Context &context, uint16 &index); // executive-dependent.
 }
 
 

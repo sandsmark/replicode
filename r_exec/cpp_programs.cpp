@@ -28,33 +28,33 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"cpp_programs.h"
+#include "cpp_programs.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	UNORDERED_MAP<std::string,CPPPrograms::Program>	CPPPrograms::Programs;
+UNORDERED_MAP<std::string, CPPPrograms::Program> CPPPrograms::Programs;
 
-	void	CPPPrograms::Register(std::string	&pgm_name,Program	pgm){
-		Programs[pgm_name]=pgm;
-	}
+void CPPPrograms::Register(std::string &pgm_name, Program pgm) {
+    Programs[pgm_name] = pgm;
+}
 
-	CPPPrograms::Program	CPPPrograms::Get(std::string	&pgm_name){
-		UNORDERED_MAP<std::string,Program>::const_iterator	it=Programs.find(pgm_name);
-		if(it!=Programs.end())
-			return	it->second;
-		return	NULL;
-	}
+CPPPrograms::Program CPPPrograms::Get(std::string &pgm_name) {
+    UNORDERED_MAP<std::string, Program>::const_iterator it = Programs.find(pgm_name);
+    if (it != Programs.end())
+        return it->second;
+    return NULL;
+}
 
-	Controller	*CPPPrograms::New(std::string	&pgm_name,r_code::View	*view){
-		
-		CPPPrograms::Program	pgm=Get(pgm_name);
-		if(pgm!=NULL)
-			return	pgm(view);
-		else{
+Controller *CPPPrograms::New(std::string &pgm_name, r_code::View *view) {
 
-			std::cerr << "c++ program '" << pgm_name << "' could not be found\n";
-			return	NULL;
-		}
-	}
+    CPPPrograms::Program pgm = Get(pgm_name);
+    if (pgm != NULL)
+        return pgm(view);
+    else {
+
+        std::cerr << "c++ program '" << pgm_name << "' could not be found\n";
+        return NULL;
+    }
+}
 }

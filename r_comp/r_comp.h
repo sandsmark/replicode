@@ -28,14 +28,14 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	r_comp_h
-#define	r_comp_h
+#ifndef r_comp_h
+#define r_comp_h
 
-#include	"CoreLibrary/types.h"
+#include "CoreLibrary/types.h"
 
 
-extern	"C"{
-void	dll_export	Init();
+extern "C" {
+    void dll_export Init();
 }
 
 

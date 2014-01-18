@@ -28,15 +28,15 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace	r_exec{
+namespace r_exec {
 
-	inline	r_code::Code	*PGMOverlay::getInputObject(uint16	i)	const{	
-		
-		return	input_views[i]->object;
-	}
-	
-	inline	r_code::View	*PGMOverlay::getInputView(uint16	i)	const{	
-		
-		return	(r_code::View	*)input_views[i];
-	}
+inline r_code::Code *PGMOverlay::getInputObject(uint16 i) const {
+
+    return input_views[i]->object;
+}
+
+inline r_code::View *PGMOverlay::getInputView(uint16 i) const {
+
+    return (r_code::View *)input_views[i];
+}
 }

@@ -28,213 +28,213 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"object.h"
-#include	"replicode_defs.h"
+#include "object.h"
+#include "replicode_defs.h"
 
-#include	<iostream>
+#include <iostream>
 
 
-namespace	r_code{
+namespace r_code {
 
-	SysView::SysView(){
-	}
+SysView::SysView() {
+}
 
-	SysView::SysView(View	*source){
+SysView::SysView(View *source) {
 
-		for(size_t	i=0;i<VIEW_CODE_MAX_SIZE;++i)
-			code[i]=source->code(i);
+    for (size_t i = 0; i < VIEW_CODE_MAX_SIZE; ++i)
+        code[i] = source->code(i);
 
-		for(size_t	i=0;i<2;++i)	//	to get the right size in Image::add_object().
-			if(source->references[i])
-				references.push_back(0);
-	}
+    for (size_t i = 0; i < 2; ++i) // to get the right size in Image::add_object().
+        if (source->references[i])
+            references.push_back(0);
+}
 
-	void	SysView::write(uintptr_t	*data){
+void SysView::write(uintptr_t *data) {
 
-		data[0]=code.size();
-		data[1]=references.size();
-		size_t	i=0;
-		for(;i<code.size();++i)
-			data[2+i]=code[i].atom;
-		for(size_t	j=0;j<references.size();++j)
-			data[2+i+j]=references[j];
-	}
+    data[0] = code.size();
+    data[1] = references.size();
+    size_t i = 0;
+    for (; i < code.size(); ++i)
+        data[2 + i] = code[i].atom;
+    for (size_t j = 0; j < references.size(); ++j)
+        data[2 + i + j] = references[j];
+}
 
-	void	SysView::read(uintptr_t* data){
+void SysView::read(uintptr_t* data) {
 
-		size_t	code_size=data[0];
-		size_t	reference_set_size=data[1];
-		size_t	i;
-		size_t	j;
-		for(i=0;i<code_size;++i)
-			code.push_back(Atom(data[2+i]));
-		for(j=0;j<reference_set_size;++j)
-			references.push_back(data[2+i+j]);
-	}
+    size_t code_size = data[0];
+    size_t reference_set_size = data[1];
+    size_t i;
+    size_t j;
+    for (i = 0; i < code_size; ++i)
+        code.push_back(Atom(data[2 + i]));
+    for (j = 0; j < reference_set_size; ++j)
+        references.push_back(data[2 + i + j]);
+}
 
-	size_t	SysView::get_size()	const{
+size_t SysView::get_size() const {
 
-		return	2+code.size()+references.size();
-	}
+    return 2 + code.size() + references.size();
+}
 
-	void	SysView::trace(){
+void SysView::trace() {
 
-		std::cout<<" code size: "<<code.size()<<std::endl;
-		std::cout<<" reference set size: "<<references.size()<<std::endl;
-		std::cout<<"---code---"<<std::endl;
-		for(size_t	i=0;i<code.size();++i){
+    std::cout << " code size: " << code.size() << std::endl;
+    std::cout << " reference set size: " << references.size() << std::endl;
+    std::cout << "---code---" << std::endl;
+    for (size_t i = 0; i < code.size(); ++i) {
 
-			code[i].trace();
-			std::cout<<std::endl;
-		}
-		std::cout<<"---reference set---"<<std::endl;
-		for(size_t	i=0;i<references.size();++i)
-			std::cout<<references[i]<<std::endl;
-	}
+        code[i].trace();
+        std::cout << std::endl;
+    }
+    std::cout << "---reference set---" << std::endl;
+    for (size_t i = 0; i < references.size(); ++i)
+        std::cout << references[i] << std::endl;
+}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	uintptr_t	SysObject::LastOID=0;
+uintptr_t SysObject::LastOID = 0;
 
-	SysObject::SysObject():oid(LastOID++){
-	}
+SysObject::SysObject(): oid(LastOID++) {
+}
 
-	SysObject::SysObject(Code	*source){
+SysObject::SysObject(Code *source) {
 
-		size_t	i;
-		for(i=0;i<source->code_size();++i)
-			code[i]=source->code(i);
+    size_t i;
+    for (i = 0; i < source->code_size(); ++i)
+        code[i] = source->code(i);
 
-		UNORDERED_SET<View	*,View::Hash,View::Equal>::const_iterator	v;
-		source->acq_views();
-		for(i=0,v=source->views.begin();v!=source->views.end();++i,++v)
-			views[i]=new	SysView(*v);
-		source->rel_views();
+    UNORDERED_SET<View *, View::Hash, View::Equal>::const_iterator v;
+    source->acq_views();
+    for (i = 0, v = source->views.begin(); v != source->views.end(); ++i, ++v)
+        views[i] = new SysView(*v);
+    source->rel_views();
 
-		oid=source->get_oid();
+    oid = source->get_oid();
 
-		for(i=0;i<source->references_size();++i)	//	to get the right size in Image::add_object().
-			references.push_back(0);
-	}
+    for (i = 0; i < source->references_size(); ++i) // to get the right size in Image::add_object().
+        references.push_back(0);
+}
 
-	SysObject::~SysObject(){
+SysObject::~SysObject() {
 
-		for(size_t	i=0;i<views.size();++i)
-			delete	views[i];
-	}
+    for (size_t i = 0; i < views.size(); ++i)
+        delete views[i];
+}
 
-	void	SysObject::write(uintptr_t	*data){
+void SysObject::write(uintptr_t *data) {
 
-		data[0]=oid;
-		data[1]=code.size();
-		data[2]=references.size();
-		data[3]=markers.size();
-		data[4]=views.size();
-		size_t	i;
-		size_t	j;
-		size_t	k;
-		size_t	l;
-		for(i=0;i<code.size();++i)
-			data[5+i]=code[i].atom;
-		for(j=0;j<references.size();++j)
-			data[5+i+j]=references[j];
-		for(k=0;k<markers.size();++k)
-			data[5+i+j+k]=markers[k];
-		size_t	offset=0;
-		for(l=0;l<views.size();++l){
+    data[0] = oid;
+    data[1] = code.size();
+    data[2] = references.size();
+    data[3] = markers.size();
+    data[4] = views.size();
+    size_t i;
+    size_t j;
+    size_t k;
+    size_t l;
+    for (i = 0; i < code.size(); ++i)
+        data[5 + i] = code[i].atom;
+    for (j = 0; j < references.size(); ++j)
+        data[5 + i + j] = references[j];
+    for (k = 0; k < markers.size(); ++k)
+        data[5 + i + j + k] = markers[k];
+    size_t offset = 0;
+    for (l = 0; l < views.size(); ++l) {
 
-			views[l]->write(data+5+i+j+k+offset);
-			offset+=views[l]->get_size();
-		}
-	}
+        views[l]->write(data + 5 + i + j + k + offset);
+        offset += views[l]->get_size();
+    }
+}
 
-	void	SysObject::read(uintptr_t* data){
+void SysObject::read(uintptr_t* data) {
 
-		oid=data[0];
-		size_t	code_size=data[1];
-		size_t	reference_set_size=data[2];
-		size_t	marker_set_size=data[3];
-		size_t	view_set_size=data[4];
-		size_t	i;
-		size_t	j;
-		size_t	k;
-		size_t	l;
-		for(i=0;i<code_size;++i)
-			code.push_back(Atom(data[5+i]));
-		for(j=0;j<reference_set_size;++j)
-			references.push_back(data[5+i+j]);
-		for(k=0;k<marker_set_size;++k)
-			markers.push_back(data[5+i+j+k]);
-		size_t	offset=0;
-		for(l=0;l<view_set_size;++l){
+    oid = data[0];
+    size_t code_size = data[1];
+    size_t reference_set_size = data[2];
+    size_t marker_set_size = data[3];
+    size_t view_set_size = data[4];
+    size_t i;
+    size_t j;
+    size_t k;
+    size_t l;
+    for (i = 0; i < code_size; ++i)
+        code.push_back(Atom(data[5 + i]));
+    for (j = 0; j < reference_set_size; ++j)
+        references.push_back(data[5 + i + j]);
+    for (k = 0; k < marker_set_size; ++k)
+        markers.push_back(data[5 + i + j + k]);
+    size_t offset = 0;
+    for (l = 0; l < view_set_size; ++l) {
 
-			SysView	*v=new	SysView();
-			v->read(data+5+i+j+k+offset);
-			views.push_back(v);
-			offset+=v->get_size();
-		}
-	}
+        SysView *v = new SysView();
+        v->read(data + 5 + i + j + k + offset);
+        views.push_back(v);
+        offset += v->get_size();
+    }
+}
 
-	size_t	SysObject::get_size(){
+size_t SysObject::get_size() {
 
-		size_t	view_set_size=0;
-		for(size_t	i=0;i<views.size();++i)
-			view_set_size+=views[i]->get_size();
-		return	5+code.size()+references.size()+markers.size()+view_set_size;
-	}
+    size_t view_set_size = 0;
+    for (size_t i = 0; i < views.size(); ++i)
+        view_set_size += views[i]->get_size();
+    return 5 + code.size() + references.size() + markers.size() + view_set_size;
+}
 
-	void	SysObject::trace(){
+void SysObject::trace() {
 
-		std::cout<<"\n---object---\n";
-		std::cout<<oid<<std::endl;
-		std::cout<<"code size: "<<code.size()<<std::endl;
-		std::cout<<"reference set size: "<<references.size()<<std::endl;
-		std::cout<<"marker set size: "<<markers.size()<<std::endl;
-		std::cout<<"view set size: "<<views.size()<<std::endl;
-		std::cout<<"\n---code---\n";
-		size_t	i;
-		for(i=0;i<code.size();++i){
+    std::cout << "\n---object---\n";
+    std::cout << oid << std::endl;
+    std::cout << "code size: " << code.size() << std::endl;
+    std::cout << "reference set size: " << references.size() << std::endl;
+    std::cout << "marker set size: " << markers.size() << std::endl;
+    std::cout << "view set size: " << views.size() << std::endl;
+    std::cout << "\n---code---\n";
+    size_t i;
+    for (i = 0; i < code.size(); ++i) {
 
-			std::cout<<i<<" ";
-			code[i].trace();
-			std::cout<<std::endl;
-		}
-		std::cout<<"\n---reference set---\n";
-		for(i=0;i<references.size();++i)
-			std::cout<<i<<" "<<references[i]<<std::endl;
-		std::cout<<"\n---marker set---\n";
-		for(i=0;i<markers.size();++i)
-			std::cout<<i<<" "<<markers[i]<<std::endl;
-		std::cout<<"\n---view set---\n";
-		for(size_t	k=0;k<views.size();++k){
+        std::cout << i << " ";
+        code[i].trace();
+        std::cout << std::endl;
+    }
+    std::cout << "\n---reference set---\n";
+    for (i = 0; i < references.size(); ++i)
+        std::cout << i << " " << references[i] << std::endl;
+    std::cout << "\n---marker set---\n";
+    for (i = 0; i < markers.size(); ++i)
+        std::cout << i << " " << markers[i] << std::endl;
+    std::cout << "\n---view set---\n";
+    for (size_t k = 0; k < views.size(); ++k) {
 
-			std::cout<<"view["<<k<<"]"<<std::endl;
-			std::cout<<"reference set size: "<<views[k]->references.size()<<std::endl;
-			std::cout<<"-code-"<<std::endl;
-			size_t	j;
-			for(j=0;j<views[k]->code.size();++i,++j){
+        std::cout << "view[" << k << "]" << std::endl;
+        std::cout << "reference set size: " << views[k]->references.size() << std::endl;
+        std::cout << "-code-" << std::endl;
+        size_t j;
+        for (j = 0; j < views[k]->code.size(); ++i, ++j) {
 
-				std::cout<<j<<" ";
-				views[k]->code[j].trace();
-				std::cout<<std::endl;
-			}
-			std::cout<<"-reference set-"<<std::endl;
-			for(j=0;j<views[k]->references.size();++i,++j)
-				std::cout<<j<<" "<<views[k]->references[j]<<std::endl;
-		}
-	}
+            std::cout << j << " ";
+            views[k]->code[j].trace();
+            std::cout << std::endl;
+        }
+        std::cout << "-reference set-" << std::endl;
+        for (j = 0; j < views[k]->references.size(); ++i, ++j)
+            std::cout << j << " " << views[k]->references[j] << std::endl;
+    }
+}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Mem	*Mem::Singleton=NULL;
+Mem *Mem::Singleton = NULL;
 
-	Mem::Mem(){
-		
-		Singleton=this;
-	}
+Mem::Mem() {
 
-	Mem	*Mem::Get(){
+    Singleton = this;
+}
 
-		return	Singleton;
-	}
+Mem *Mem::Get() {
+
+    return Singleton;
+}
 }

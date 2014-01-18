@@ -28,35 +28,35 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	usr_operators_h
-#define	usr_operators_h
+#ifndef usr_operators_h
+#define usr_operators_h
 
-#include	"types.h"
+#include "types.h"
 
 
-extern	"C"{
-void	dll_export	Init(OpcodeRetriever	r);	//	OpcodeRetriever allows the dll to retrieve opcodes from the r_rxec dll without referencing the corresponding STL structures.
+extern "C" {
+    void dll_export Init(OpcodeRetriever r); // OpcodeRetriever allows the dll to retrieve opcodes from the r_rxec dll without referencing the corresponding STL structures.
 
-//	Operators		//////////////////////////////////////////////////////////////////////////////
+// Operators //////////////////////////////////////////////////////////////////////////////
 
-uint16	dll_export	GetOperatorCount();
-void	dll_export	GetOperatorName(char	*op_name);
+    uint16 dll_export GetOperatorCount();
+    void dll_export GetOperatorName(char *op_name);
 
-//	CPP Programs	//////////////////////////////////////////////////////////////////////////////
+// CPP Programs //////////////////////////////////////////////////////////////////////////////
 
-uint16	dll_export	GetProgramCount();
-void	dll_export	GetProgramName(char	*pgm_name);
+    uint16 dll_export GetProgramCount();
+    void dll_export GetProgramName(char *pgm_name);
 
-//	Callbacks		//////////////////////////////////////////////////////////////////////////////
+// Callbacks //////////////////////////////////////////////////////////////////////////////
 
-uint16	dll_export	GetCallbackCount();
-void	dll_export	GetCallbackName(char	*callback_name);
+    uint16 dll_export GetCallbackCount();
+    void dll_export GetCallbackName(char *callback_name);
 }
 
-#include	"./Operators/operators.h"
-#include	"./TestProgram/test_program.h"
-#include	"./Correlator/correlator.h"
-#include	"./Callbacks/callbacks.h"
+#include "./Operators/operators.h"
+#include "./TestProgram/test_program.h"
+#include "./Correlator/correlator.h"
+#include "./Callbacks/callbacks.h"
 
 
 #endif

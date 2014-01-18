@@ -28,37 +28,37 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	image_impl_h
-#define	image_impl_h
+#ifndef image_impl_h
+#define image_impl_h
 
-#include	"CoreLibrary/types.h"
+#include "CoreLibrary/types.h"
 
 
-using	namespace	core;
+using namespace core;
 
-namespace	r_code{
+namespace r_code {
 
-	class	dll_export	ImageImpl{
-	private:
-		uintptr_t	*_data;	//	[object map|code segment|object names]
-		uint64	_timestamp;
-		size_t	_map_size;
-		size_t	_code_size;
-		size_t	_names_size;
-	protected:
-		uint64	timestamp()		const;
-		size_t	map_size()		const;
-		size_t	code_size()		const;
-		size_t	names_size()	const;
-		uintptr_t	*data()			const;
-		uintptr_t	&data(size_t i);
-		uintptr_t	&data(size_t	i)	const;
-	public:
-		void	*operator	new(size_t,uint32	data_size);
-		void	operator delete(void	*o);
-		ImageImpl(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	names_size);
-		~ImageImpl();
-	};
+class dll_export ImageImpl {
+private:
+    uintptr_t *_data; // [object map|code segment|object names]
+    uint64 _timestamp;
+    size_t _map_size;
+    size_t _code_size;
+    size_t _names_size;
+protected:
+    uint64 timestamp() const;
+    size_t map_size() const;
+    size_t code_size() const;
+    size_t names_size() const;
+    uintptr_t *data() const;
+    uintptr_t &data(size_t i);
+    uintptr_t &data(size_t i) const;
+public:
+    void *operator new(size_t, uint32 data_size);
+    void operator delete(void *o);
+    ImageImpl(uint64 timestamp, uint32 map_size, uint32 code_size, uint32 names_size);
+    ~ImageImpl();
+};
 }
 
 

@@ -28,37 +28,37 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"image.h"
+#include "image.h"
 
 
-namespace	r_code{
+namespace r_code {
 
-	size_t	GetSize(const	std::string	&s){	//	string content is aligned on 4 bytes boundaries; string length heads the structure
+size_t GetSize(const std::string &s) { // string content is aligned on 4 bytes boundaries; string length heads the structure
 
-		uint32	length=s.length()+1;	//	+1 for null termination
-		if(length%4)
-			return	length/4+2;	//	+1 for the length, +1 for alignment
-		return	length/4+1;	//	+1 for the length
-	}
+    uint32 length = s.length() + 1; // +1 for null termination
+    if (length % 4)
+        return length / 4 + 2; // +1 for the length, +1 for alignment
+    return length / 4 + 1; // +1 for the length
+}
 
-	void	Write(uintptr_t	*data,const	std::string	&s){
+void Write(uintptr_t *data, const std::string &s) {
 
-		data[0]=GetSize(s)-1;
-		char	*content=(char	*)(data+1);
-		for(uint32	i=0;i<s.length();++i)
-			content[i]=s[i];
-		content[s.length()]='\0';
-	}
+    data[0] = GetSize(s) - 1;
+    char *content = (char *)(data + 1);
+    for (uint32 i = 0; i < s.length(); ++i)
+        content[i] = s[i];
+    content[s.length()] = '\0';
+}
 
-	void	Read(uintptr_t	*data,std::string	&s){
+void Read(uintptr_t *data, std::string &s) {
 
-		char	*content=(char	*)(data+1);
-		for(uint32	i=0;;++i){
+    char *content = (char *)(data + 1);
+    for (uint32 i = 0;; ++i) {
 
-			if(content[i]!='\0')
-				s+=content[i];
-			else
-				break;
-		}
-	}
+        if (content[i] != '\0')
+            s += content[i];
+        else
+            break;
+    }
+}
 }

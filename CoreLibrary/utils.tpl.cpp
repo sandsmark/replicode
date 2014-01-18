@@ -28,52 +28,52 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	<iostream>
+#include <iostream>
 
 #if defined (WINDOWS)
 #elif defined (LINUX)
 #include <dlfcn.h>
 #else
-	#error "Not yet ported to your platform"
+#error "Not yet ported to your platform"
 #endif
 
-namespace	core{
+namespace core {
 
-	template<typename	T>	T	SharedLibrary::getFunction(const	char	*functionName){
-		T	function=NULL;
-#if defined	WINDOWS
-		if(library){
+template<typename T> T SharedLibrary::getFunction(const char *functionName) {
+    T function = NULL;
+#if defined WINDOWS
+    if (library) {
 
-			function=(T)GetProcAddress(library,functionName);
-			if(!function){
+        function = (T)GetProcAddress(library, functionName);
+        if (!function) {
 
-				DWORD	error=GetLastError();
-				std::cerr<<"GetProcAddress > Error: "<<error<<std::endl;
-			}
-		}
+            DWORD error = GetLastError();
+            std::cerr << "GetProcAddress > Error: " << error << std::endl;
+        }
+    }
 #elif defined LINUX
-		if(library){
-			function = (T)dlsym(library,functionName);
-			if(!function){
-				std::cout<<"> Error: unable to find symbol "<<functionName<<" :"<< dlerror() << std::endl;
-			}
-		}
+    if (library) {
+        function = (T)dlsym(library, functionName);
+        if (!function) {
+            std::cout << "> Error: unable to find symbol " << functionName << " :" << dlerror() << std::endl;
+        }
+    }
 #endif
-		return	function;
-	}
+    return function;
+}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
 
-	template<class	T>	T	*Thread::New(thread_function	f,void	*args){
+template<class T> T *Thread::New(thread_function f, void *args) {
 
-		T	*t=new	T();
-#if defined	WINDOWS
-		if(t->_thread=CreateThread(NULL,0,f,args,0,NULL))
+    T *t = new T();
+#if defined WINDOWS
+    if (t->_thread = CreateThread(NULL, 0, f, args, 0, NULL))
 #elif defined LINUX
-		if (pthread_create(&t->_thread, NULL, f, args) == 0)
+    if (pthread_create(&t->_thread, NULL, f, args) == 0)
 #endif
-			return	t;
-		delete	t;
-		return	NULL;
-	}
+        return t;
+    delete t;
+    return NULL;
+}
 }

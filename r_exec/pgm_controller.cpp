@@ -28,228 +28,228 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"pgm_controller.h"
-#include	"mem.h"
+#include "pgm_controller.h"
+#include "mem.h"
 #include "overlay.inline.cpp"
 #include "reduction_job.tpl.cpp"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	_PGMController::_PGMController(r_code::View	*ipgm_view):OController(ipgm_view){
+_PGMController::_PGMController(r_code::View *ipgm_view): OController(ipgm_view) {
 
-		run_once=!ipgm_view->object->code(IPGM_RUN).asBoolean();
-	}
+    run_once = !ipgm_view->object->code(IPGM_RUN).asBoolean();
+}
 
-	_PGMController::~_PGMController(){
-	}
+_PGMController::~_PGMController() {
+}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	InputLessPGMController::InputLessPGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view){
+InputLessPGMController::InputLessPGMController(r_code::View *ipgm_view): _PGMController(ipgm_view) {
 
-		overlays.push_back(new	InputLessPGMOverlay(this));
-	}
+    overlays.push_back(new InputLessPGMOverlay(this));
+}
 
-	InputLessPGMController::~InputLessPGMController(){
-	}
+InputLessPGMController::~InputLessPGMController() {
+}
 
-	void	InputLessPGMController::signal_input_less_pgm(){	// next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
+void InputLessPGMController::signal_input_less_pgm() { // next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
 
-		reductionCS.enter();
-		if(overlays.size()){
+    reductionCS.enter();
+    if (overlays.size()) {
 
-			InputLessPGMOverlay	*overlay=(InputLessPGMOverlay	*)overlays.front();
-			overlay->inject_productions();
-			overlay->reset();
+        InputLessPGMOverlay *overlay = (InputLessPGMOverlay *)overlays.front();
+        overlay->inject_productions();
+        overlay->reset();
 
-			if(!run_once){
+        if (!run_once) {
 
-				if(is_alive()){
+            if (is_alive()) {
 
-					Group	*host=getView()->get_host();
-					host->enter();
-					if(	host->get_c_act()>host->get_c_act_thr()		&&	// c-active group.
-						host->get_c_sln()>host->get_c_sln_thr()){		// c-salient group.
+                Group *host = getView()->get_host();
+                host->enter();
+                if (host->get_c_act() > host->get_c_act_thr() && // c-active group.
+                        host->get_c_sln() > host->get_c_sln_thr()) { // c-salient group.
 
-						host->leave();
+                    host->leave();
 
-						TimeJob	*next_job=new	InputLessPGMSignalingJob((r_exec::View*)view,Now()+tsc);
-						_Mem::Get()->pushTimeJob(next_job);
-					}else
-						host->leave();
-				}
-			}
-		}
-		reductionCS.leave();
+                    TimeJob *next_job = new InputLessPGMSignalingJob((r_exec::View*)view, Now() + tsc);
+                    _Mem::Get()->pushTimeJob(next_job);
+                } else
+                    host->leave();
+            }
+        }
+    }
+    reductionCS.leave();
 
-		if(run_once)
-			invalidate();
-	}
+    if (run_once)
+        invalidate();
+}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	PGMController::PGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view){
+PGMController::PGMController(r_code::View *ipgm_view): _PGMController(ipgm_view) {
 
-		overlays.push_back(new	PGMOverlay(this));
-	}
+    overlays.push_back(new PGMOverlay(this));
+}
 
-	PGMController::~PGMController(){
-	}
+PGMController::~PGMController() {
+}
 
-	void	PGMController::notify_reduction(){
+void PGMController::notify_reduction() {
 
-		if(run_once)
-			invalidate();
-	}
+    if (run_once)
+        invalidate();
+}
 
-	void	PGMController::take_input(r_exec::View	*input){
+void PGMController::take_input(r_exec::View *input) {
 
-		Controller::__take_input<PGMController>(input);
-	}
+    Controller::__take_input<PGMController>(input);
+}
 
-	void	PGMController::reduce(r_exec::View	*input){
+void PGMController::reduce(r_exec::View *input) {
 
-		r_code::list<P<Overlay> >::const_iterator	o;
-		//uint32	oid=input->object->get_oid();
-		//uint64	t=Now()-Utils::GetTimeReference();
-		//std::cout<<Time::ToString_seconds(t)<<" got "<<oid<<" "<<input->get_sync()<<std::endl;
-		if(tsc>0){
+    r_code::list<P<Overlay> >::const_iterator o;
+//uint32 oid=input->object->get_oid();
+//uint64 t=Now()-Utils::GetTimeReference();
+//std::cout<<Time::ToString_seconds(t)<<" got "<<oid<<" "<<input->get_sync()<<std::endl;
+    if (tsc > 0) {
 
-			reductionCS.enter();
-			uint64	now=Now();	// call must be located after the CS.enter() since (*o)->reduce() may update (*o)->birth_time.
-			//uint64	t=now-Utils::GetTimeReference();
-			for(o=overlays.begin();o!=overlays.end();){
+        reductionCS.enter();
+        uint64 now = Now(); // call must be located after the CS.enter() since (*o)->reduce() may update (*o)->birth_time.
+//uint64 t=now-Utils::GetTimeReference();
+        for (o = overlays.begin(); o != overlays.end();) {
 
-				if((*o)->is_invalidated())
-					o=overlays.erase(o);
-				else{
+            if ((*o)->is_invalidated())
+                o = overlays.erase(o);
+            else {
 
-					uint64	birth_time=((PGMOverlay	*)*o)->get_birth_time();
-					if(birth_time>0	&&	now-birth_time>tsc){
-						//std::cout<<Time::ToString_seconds(t)<<" kill "<<std::hex<<(void	*)*o<<std::dec<<" born: "<<Time::ToString_seconds(birth_time-Utils::GetTimeReference())<<" after "<<Time::ToString_seconds(now-birth_time)<<std::endl;
-						//std::cout<<std::hex<<(void	*)*o<<std::dec<<" ------------kill "<<input->object->get_oid()<<" ignored "<<std::endl;
-						o=overlays.erase(o);
-					}else{
-						//void	*oo=*o;
-						Overlay	*offspring=(*o)->reduce(input);
-						if(offspring){
-							overlays.push_front(offspring);
-							//std::cout<<Time::ToString_seconds(t)<<" "<<std::hex<<oo<<std::dec<<" born: "<<Time::ToString_seconds(((PGMOverlay	*)oo)->get_birth_time()-Utils::GetTimeReference())<<" reduced "<<input->object->get_oid()<<" "<<input->get_sync()<<" offspring: "<<std::hex<<offspring<<std::dec<<std::endl;
-							//std::cout<<std::hex<<(void	*)oo<<std::dec<<" --------------- reduced "<<input->object->get_oid()<<" "<<input->get_sync()<<std::endl;
-						}
-						if(!is_alive())
-							break;
-						++o;
-					}
-				}
-			}
-			reductionCS.leave();
-		}else{
+                uint64 birth_time = ((PGMOverlay *)*o)->get_birth_time();
+                if (birth_time > 0 && now - birth_time > tsc) {
+//std::cout<<Time::ToString_seconds(t)<<" kill "<<std::hex<<(void *)*o<<std::dec<<" born: "<<Time::ToString_seconds(birth_time-Utils::GetTimeReference())<<" after "<<Time::ToString_seconds(now-birth_time)<<std::endl;
+//std::cout<<std::hex<<(void *)*o<<std::dec<<" ------------kill "<<input->object->get_oid()<<" ignored "<<std::endl;
+                    o = overlays.erase(o);
+                } else {
+//void *oo=*o;
+                    Overlay *offspring = (*o)->reduce(input);
+                    if (offspring) {
+                        overlays.push_front(offspring);
+//std::cout<<Time::ToString_seconds(t)<<" "<<std::hex<<oo<<std::dec<<" born: "<<Time::ToString_seconds(((PGMOverlay *)oo)->get_birth_time()-Utils::GetTimeReference())<<" reduced "<<input->object->get_oid()<<" "<<input->get_sync()<<" offspring: "<<std::hex<<offspring<<std::dec<<std::endl;
+//std::cout<<std::hex<<(void *)oo<<std::dec<<" --------------- reduced "<<input->object->get_oid()<<" "<<input->get_sync()<<std::endl;
+                    }
+                    if (!is_alive())
+                        break;
+                    ++o;
+                }
+            }
+        }
+        reductionCS.leave();
+    } else {
 
-			reductionCS.enter();
-			for(o=overlays.begin();o!=overlays.end();){
+        reductionCS.enter();
+        for (o = overlays.begin(); o != overlays.end();) {
 
-				if((*o)->is_invalidated())
-					o=overlays.erase(o);
-				else{
+            if ((*o)->is_invalidated())
+                o = overlays.erase(o);
+            else {
 
-					Overlay	*offspring=(*o)->reduce(input);
-					if(offspring)
-						overlays.push_front(offspring);
-					if(!is_alive())
-						break;
-					++o;
-				}
-					
-			}
-			reductionCS.leave();
-		}
-	}
+                Overlay *offspring = (*o)->reduce(input);
+                if (offspring)
+                    overlays.push_front(offspring);
+                if (!is_alive())
+                    break;
+                ++o;
+            }
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+        reductionCS.leave();
+    }
+}
 
-	AntiPGMController::AntiPGMController(r_code::View	*ipgm_view):_PGMController(ipgm_view),successful_match(false){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		overlays.push_back(new	AntiPGMOverlay(this));
-	}
+AntiPGMController::AntiPGMController(r_code::View *ipgm_view): _PGMController(ipgm_view), successful_match(false) {
 
-	AntiPGMController::~AntiPGMController(){
-	}
+    overlays.push_back(new AntiPGMOverlay(this));
+}
 
-	void	AntiPGMController::take_input(r_exec::View	*input){
+AntiPGMController::~AntiPGMController() {
+}
 
-		Controller::__take_input<AntiPGMController>(input);
-	}
+void AntiPGMController::take_input(r_exec::View *input) {
 
-	void	AntiPGMController::reduce(r_exec::View	*input){
+    Controller::__take_input<AntiPGMController>(input);
+}
 
-		reductionCS.enter();
-		r_code::list<P<Overlay> >::const_iterator	o;
-		for(o=overlays.begin();o!=overlays.end();){
+void AntiPGMController::reduce(r_exec::View *input) {
 
-			if((*o)->is_invalidated())
-				o=overlays.erase(o);
-			else{
+    reductionCS.enter();
+    r_code::list<P<Overlay> >::const_iterator o;
+    for (o = overlays.begin(); o != overlays.end();) {
 
-				Overlay	*offspring=(*o)->reduce(input);
-				if(successful_match){	//	the controller has been restarted: reset the overlay and kill all others
+        if ((*o)->is_invalidated())
+            o = overlays.erase(o);
+        else {
 
-					Overlay	*overlay=*o;
-					overlay->reset();
-					overlays.clear();
-					overlays.push_back(overlay);
-					successful_match=false;
-					break;
-				}
-				++o;
-				if(offspring)
-					overlays.push_front(offspring);
-			}
-		}
-		reductionCS.leave();
-	}
+            Overlay *offspring = (*o)->reduce(input);
+            if (successful_match) { // the controller has been restarted: reset the overlay and kill all others
 
-	void	AntiPGMController::signal_anti_pgm(){
+                Overlay *overlay = *o;
+                overlay->reset();
+                overlays.clear();
+                overlays.push_back(overlay);
+                successful_match = false;
+                break;
+            }
+            ++o;
+            if (offspring)
+                overlays.push_front(offspring);
+        }
+    }
+    reductionCS.leave();
+}
 
-		reductionCS.enter();
-		if(successful_match)	//	a signaling job has been spawn in restart(): we are here in an old job during which a positive match occurred: do nothing.
-			successful_match=false;
-		else{	//	no positive match during this job: inject productions and restart.
+void AntiPGMController::signal_anti_pgm() {
 
-			Overlay	*overlay=overlays.front();
-			((AntiPGMOverlay	*)overlay)->inject_productions();
-			overlay->reset();	//	reset the first overlay and kill all others.
-			if(!run_once	&&	is_alive()){
+    reductionCS.enter();
+    if (successful_match) // a signaling job has been spawn in restart(): we are here in an old job during which a positive match occurred: do nothing.
+        successful_match = false;
+    else { // no positive match during this job: inject productions and restart.
 
-				overlays.clear();
-				overlays.push_back(overlay);
-			}
-		}
-		reductionCS.leave();
+        Overlay *overlay = overlays.front();
+        ((AntiPGMOverlay *)overlay)->inject_productions();
+        overlay->reset(); // reset the first overlay and kill all others.
+        if (!run_once && is_alive()) {
 
-		if(run_once)
-			invalidate();
-	}
+            overlays.clear();
+            overlays.push_back(overlay);
+        }
+    }
+    reductionCS.leave();
 
-	void	AntiPGMController::restart(){	//	one anti overlay matched all its inputs, timings and guards. 
+    if (run_once)
+        invalidate();
+}
 
-		push_new_signaling_job();
-		successful_match=true;
-	}
+void AntiPGMController::restart() { // one anti overlay matched all its inputs, timings and guards.
 
-	void	AntiPGMController::push_new_signaling_job(){
+    push_new_signaling_job();
+    successful_match = true;
+}
 
-		Group	*host=getView()->get_host();
-		host->enter();
-		if(getView()->get_act()>host->get_act_thr()	&&	//	active ipgm.
-			host->get_c_act()>host->get_c_act_thr()	&&	//	c-active group.
-			host->get_c_sln()>host->get_c_sln_thr()){	//	c-salient group.
+void AntiPGMController::push_new_signaling_job() {
 
-			host->leave();
-			TimeJob	*next_job=new	AntiPGMSignalingJob((r_exec::View*)view,Now()+Utils::GetTimestamp<Code>(getObject(),IPGM_TSC));
-			_Mem::Get()->pushTimeJob(next_job);
-		}else
-			host->leave();
-	}
+    Group *host = getView()->get_host();
+    host->enter();
+    if (getView()->get_act() > host->get_act_thr() && // active ipgm.
+            host->get_c_act() > host->get_c_act_thr() && // c-active group.
+            host->get_c_sln() > host->get_c_sln_thr()) { // c-salient group.
+
+        host->leave();
+        TimeJob *next_job = new AntiPGMSignalingJob((r_exec::View*)view, Now() + Utils::GetTimestamp<Code>(getObject(), IPGM_TSC));
+        _Mem::Get()->pushTimeJob(next_job);
+    } else
+        host->leave();
+}
 }

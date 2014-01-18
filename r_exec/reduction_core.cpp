@@ -28,33 +28,33 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"reduction_core.h"
-#include	"mem.h"
-#include	"init.h"
+#include "reduction_core.h"
+#include "mem.h"
+#include "init.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	thread_ret thread_function_call	ReductionCore::Run(void	*args){
+thread_ret thread_function_call ReductionCore::Run(void *args) {
 
-		bool	run=true;
-		while(run){
+    bool run = true;
+    while (run) {
 
-			P<_ReductionJob>	j=_Mem::Get()->popReductionJob();
-			if(j==NULL)
-				break;
-			run=j->update(Now());
-			j=NULL;
-		}
+        P<_ReductionJob> j = _Mem::Get()->popReductionJob();
+        if (j == NULL)
+            break;
+        run = j->update(Now());
+        j = NULL;
+    }
 
-		thread_ret_val(0);
-	}
+    thread_ret_val(0);
+}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	ReductionCore::ReductionCore():Thread(){
-	}
+ReductionCore::ReductionCore(): Thread() {
+}
 
-	ReductionCore::~ReductionCore(){
-	}
+ReductionCore::~ReductionCore() {
+}
 }

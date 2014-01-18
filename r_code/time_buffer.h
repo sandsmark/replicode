@@ -28,91 +28,105 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	r_code_time_buffer_h
-#define	r_code_time_buffer_h
+#ifndef r_code_time_buffer_h
+#define r_code_time_buffer_h
 
-#include	"list.h"
+#include "list.h"
 #include "utils.h"
 
 
-using	namespace	core;
+using namespace core;
 
-namespace	r_code{
+namespace r_code {
 
-	// Time limited buffer.
-	// T is expected a function: bool is_invalidated(uint64	time_reference,uint32	thz) const where time_reference and thz are valuated with the buffer's own.
-	template<typename	T,class	IsInvalidated>	class	time_buffer:
-	public	list<T>{
-	protected:
-        using list<T>::used_cells_head;
-        //using list<T>::_cells;
-		uint32	thz;	// time horizon.
-		uint64	time_reference;
-	public:
-		time_buffer() : list<T>(),thz(Utils::MaxTHZ){}
+// Time limited buffer.
+// T is expected a function: bool is_invalidated(uint64 time_reference,uint32 thz) const where time_reference and thz are valuated with the buffer's own.
+template<typename T, class IsInvalidated> class time_buffer:
+    public list<T> {
+protected:
+    using list<T>::used_cells_head;
+//using list<T>::_cells;
+    uint32 thz; // time horizon.
+    uint64 time_reference;
+public:
+    time_buffer() : list<T>(), thz(Utils::MaxTHZ) {}
 
-		void	set_thz(uint32	thz){	this->thz=thz;	}
-		
-		class	iterator{
-		friend	class	time_buffer;
-		private:
-			time_buffer	*buffer;
-			uintptr_t	_cell;
-			iterator(time_buffer	*b,int32	c):buffer(b),_cell(c){}
-		public:
-			iterator():buffer(nullptr),_cell(0){}
-			T	&operator	*()		const{	return	buffer->cells[_cell].data;	}
-			T	*operator	->()	const{	return	&(buffer->cells[_cell].data);	}
-			iterator	&operator	++(){	// moves to the next time-compliant cell and erase old cells met in the process.
-				
-				_cell=buffer->cells[_cell].next;
-				if(_cell!=0){
+    void set_thz(uint32 thz) {
+        this->thz = thz;
+    }
 
-					IsInvalidated	i;
-check:				if(i(buffer->cells[_cell].data,buffer->time_reference,buffer->thz)){
+    class iterator {
+        friend class time_buffer;
+    private:
+        time_buffer *buffer;
+        uintptr_t _cell;
+        iterator(time_buffer *b, int32 c): buffer(b), _cell(c) {}
+    public:
+        iterator(): buffer(nullptr), _cell(0) {}
+        T &operator *() const {
+            return buffer->cells[_cell].data;
+        }
+        T *operator ->() const {
+            return &(buffer->cells[_cell].data);
+        }
+        iterator &operator ++() { // moves to the next time-compliant cell and erase old cells met in the process.
 
-						_cell=buffer->_erase(_cell);
-						if(_cell!=0)
-							goto	check;
-					}
-				}
-				return	*this;
-			}
-			bool	operator==(iterator	&i)	const{	return	_cell==i._cell;	}
-			bool	operator!=(iterator	&i)	const{	return	_cell!=i._cell;	}
-		};
-	private:
-		static	iterator	end_iterator;
-	public:
-		iterator	begin(uint64	time_reference){
-		
-			this->time_reference=time_reference;
-			return	iterator(this,used_cells_head);
-		}
-		iterator	&end(){	return	end_iterator;	}
-		iterator	find(uint64	time_reference,const	T	&t){
+            _cell = buffer->cells[_cell].next;
+            if (_cell != 0) {
 
-			iterator	i;
-			for(i=begin(time_reference);i!=end();++i){
+                IsInvalidated i;
+            check: if (i(buffer->cells[_cell].data, buffer->time_reference, buffer->thz)) {
 
-				if((*i)==t)
-					return	i;
-			}
-			return	end_iterator;
-		}
-		iterator	find(const	T	&t){
+                    _cell = buffer->_erase(_cell);
+                    if (_cell != 0)
+                        goto check;
+                }
+            }
+            return *this;
+        }
+        bool operator==(iterator &i) const {
+            return _cell == i._cell;
+        }
+        bool operator!=(iterator &i) const {
+            return _cell != i._cell;
+        }
+    };
+private:
+    static iterator end_iterator;
+public:
+    iterator begin(uint64 time_reference) {
 
-			for(uintptr_t	c=used_cells_head;c!=0;c=this->_cells[c].next){
+        this->time_reference = time_reference;
+        return iterator(this, used_cells_head);
+    }
+    iterator &end() {
+        return end_iterator;
+    }
+    iterator find(uint64 time_reference, const T &t) {
 
-				if(this->_cells[c].data==t)
-					return	iterator(this,c);
-			}
-			return	end_iterator;
-		}
-		iterator	erase(iterator	&i){	return	iterator(this,this->_erase(i._cell));	}
-	};
+        iterator i;
+        for (i = begin(time_reference); i != end(); ++i) {
 
-	template<typename	T,class	IsInvalidated>	typename	time_buffer<T,IsInvalidated>::iterator	time_buffer<T,IsInvalidated>::end_iterator;
+            if ((*i) == t)
+                return i;
+        }
+        return end_iterator;
+    }
+    iterator find(const T &t) {
+
+        for (uintptr_t c = used_cells_head; c != 0; c = this->_cells[c].next) {
+
+            if (this->_cells[c].data == t)
+                return iterator(this, c);
+        }
+        return end_iterator;
+    }
+    iterator erase(iterator &i) {
+        return iterator(this, this->_erase(i._cell));
+    }
+};
+
+template<typename T, class IsInvalidated> typename time_buffer<T, IsInvalidated>::iterator time_buffer<T, IsInvalidated>::end_iterator;
 }
 
 

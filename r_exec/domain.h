@@ -28,95 +28,95 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	domain_h
-#define	domain_h
+#ifndef domain_h
+#define domain_h
 
-#include	"binding_map.h"
+#include "binding_map.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 /*
-	class	Range:
-	public	_Object{
-	public:
-		virtual	void	add(BindingMap	*bm,uint32	i)=0;
-		virtual	void	remove(BindingMap	*bm,uint32	i)=0;
-		virtual	bool	contains(BindingMap	*bm,uint32	i)	const=0;
-	};
+ class Range:
+ public _Object{
+ public:
+ virtual void add(BindingMap *bm,uint32 i)=0;
+ virtual void remove(BindingMap *bm,uint32 i)=0;
+ virtual bool contains(BindingMap *bm,uint32 i) const=0;
+ };
 
-	// Discrete range.
-	// Use for bool, std::string, P<Code>.
-	template<typename	T>	class	DRange:
-	public	Range{
-	private:
-		UNORDERED_SET<T>	values;
+ // Discrete range.
+ // Use for bool, std::string, P<Code>.
+ template<typename T> class DRange:
+ public Range{
+ private:
+ UNORDERED_SET<T> values;
 
-		void	add(T	value){
-			values.insert(value);
-		}
-		void	remove(T	value){
-			values.erase(value);
-		}
-		bool	contains(T	value)	const{
-			return	values.find(value)!=values.end();
-		}
-	public:
-		void	add(BindingMap	*bm,uint32	i){}
-		void	remove(BindingMap	*bm,uint32	i){}
-		bool	contains(BindingMap	*bm,uint32	i)	const{	return	false;	}
-	};
+ void add(T value){
+ values.insert(value);
+ }
+ void remove(T value){
+ values.erase(value);
+ }
+ bool contains(T value) const{
+ return values.find(value)!=values.end();
+ }
+ public:
+ void add(BindingMap *bm,uint32 i){}
+ void remove(BindingMap *bm,uint32 i){}
+ bool contains(BindingMap *bm,uint32 i) const{ return false; }
+ };
 
-	// Continuous range.
-	// Use for numerical intervals (float32 or uint64).
-	template<typename	T>	class	CRange:
-	public	Range{
-	private:
-		std::list<std::pair<T,T> >	values;
+ // Continuous range.
+ // Use for numerical intervals (float32 or uint64).
+ template<typename T> class CRange:
+ public Range{
+ private:
+ std::list<std::pair<T,T> > values;
 
-		void	add(T	value){
+ void add(T value){
 
-			std::list<std::pair<T,T> >::const_iterator	i;
-			for(i=values.begin();i!=values.end();++i){
-
-				
-				
-			}
-		}
-		void	remove(T	value){
-
-			std::list<std::pair<T,T> >::const_iterator	i;
-			for(i=values.begin();i!=values.end();++i){
+ std::list<std::pair<T,T> >::const_iterator i;
+ for(i=values.begin();i!=values.end();++i){
 
 
-			}
-		}
-		bool	contains(T	value)	const{
 
-			std::list<std::pair<T,T> >::const_iterator	i;
-			for(i=values.begin();i!=values.end();++i){
+ }
+ }
+ void remove(T value){
 
-				if((*i).first<=value	&&	(*i).second>=value)
-					return	true;
-			}
+ std::list<std::pair<T,T> >::const_iterator i;
+ for(i=values.begin();i!=values.end();++i){
 
-			return	false;
-		}
-	public:
-		void	add(BindingMap	*bm,uint32	i){}
-		void	remove(BindingMap	*bm,uint32	i){}
-		bool	contains(BindingMap	*bm,uint32	i)	const{	return	false;	}
-	};
 
-	// Last hidden reference of a model.
-	class	Domain:
-	public	Code{
-	private:
-		std::vector<P<Range> >	ranges;	// same indices as in a BindingMap.
-	public:
-		void	add(BindingMap	*bm);
-		void	remove(BindingMap	*bm);
-		bool	contains(BindingMap	*bm)	const;
-	};*/
+ }
+ }
+ bool contains(T value) const{
+
+ std::list<std::pair<T,T> >::const_iterator i;
+ for(i=values.begin();i!=values.end();++i){
+
+ if((*i).first<=value && (*i).second>=value)
+ return true;
+ }
+
+ return false;
+ }
+ public:
+ void add(BindingMap *bm,uint32 i){}
+ void remove(BindingMap *bm,uint32 i){}
+ bool contains(BindingMap *bm,uint32 i) const{ return false; }
+ };
+
+ // Last hidden reference of a model.
+ class Domain:
+ public Code{
+ private:
+ std::vector<P<Range> > ranges; // same indices as in a BindingMap.
+ public:
+ void add(BindingMap *bm);
+ void remove(BindingMap *bm);
+ bool contains(BindingMap *bm) const;
+ };*/
 }
 
 

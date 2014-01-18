@@ -28,23 +28,23 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	callbacks_h
-#define	callbacks_h
+#ifndef callbacks_h
+#define callbacks_h
 
-#include	"overlay.h"
+#include "overlay.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	r_exec_dll	Callbacks{
-	public:
-		typedef	bool	(*Callback)(uint64,bool,const	char	*,uint8,Code	**);
-	private:
-		static	UNORDERED_MAP<std::string,Callback>	_Callbacks;
-	public:
-		static	void	Register(std::string	&callback_name,Callback	callback);
-		static	Callback	Get(std::string	&callback_name);
-	};
+class r_exec_dll Callbacks {
+public:
+    typedef bool (*Callback)(uint64, bool, const char *, uint8, Code **);
+private:
+    static UNORDERED_MAP<std::string, Callback> _Callbacks;
+public:
+    static void Register(std::string &callback_name, Callback callback);
+    static Callback Get(std::string &callback_name);
+};
 }
 
 

@@ -28,14 +28,14 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	auto_focus_proxy_h
-#define	auto_focus_proxy_h
+#ifndef auto_focus_proxy_h
+#define auto_focus_proxy_h
 
-#include	"../r_exec/overlay.h"
+#include "../r_exec/overlay.h"
 
 
-extern	"C"{
-r_exec::Controller	dll_export	*auto_focus(r_code::View	*view);
+extern "C" {
+    r_exec::Controller dll_export *auto_focus(r_code::View *view);
 }
 
 

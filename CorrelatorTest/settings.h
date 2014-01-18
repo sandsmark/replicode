@@ -28,56 +28,56 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	test_correlator_settings_h
-#define	test_correlator_settings_h
+#ifndef test_correlator_settings_h
+#define test_correlator_settings_h
 
-#include	<../../CoreLibrary/trunk/CoreLibrary/xml_parser.h>
+#include <../../CoreLibrary/trunk/CoreLibrary/xml_parser.h>
 
 
-class	CorrelatorTestSettings{
+class CorrelatorTestSettings {
 public:
-	typedef	enum{
-		TS_RELATIVE=0,
-		TS_ABSOLUTE=1
-	}TSMode;
-	TSMode		decompile_timestamps;
-	std::string	usr_operator_path;
-	std::string	usr_class_path;
-	std::string	use_case_path;
-	std::string	image_name;
+    typedef enum {
+        TS_RELATIVE = 0,
+        TS_ABSOLUTE = 1
+    } TSMode;
+    TSMode decompile_timestamps;
+    std::string usr_operator_path;
+    std::string usr_class_path;
+    std::string use_case_path;
+    std::string image_name;
 
-	bool	load(const	char	*file_name){
+    bool load(const char *file_name) {
 
-		XMLNode	mainNode=XMLNode::openFileHelper(file_name,"TestConfiguration");
-		if(!mainNode){
+        XMLNode mainNode = XMLNode::openFileHelper(file_name, "TestConfiguration");
+        if (!mainNode) {
 
-			std::cerr<<"> Error: TestConfiguration is unreadable"<<std::endl;
-			return	false;
-		}
-		
-		XMLNode	parameters=mainNode.getChildNode("Parameters");
-		if(!!parameters){
+            std::cerr << "> Error: TestConfiguration is unreadable" << std::endl;
+            return false;
+        }
 
-			const	char	*_decompile_timestamps=parameters.getAttribute("decompile_timestamps");
-			
-			usr_operator_path=parameters.getAttribute("usr_operator_path");
-			usr_class_path=parameters.getAttribute("usr_class_path");
+        XMLNode parameters = mainNode.getChildNode("Parameters");
+        if (!!parameters) {
 
-			use_case_path=parameters.getAttribute("use_case_path");
-			image_name=parameters.getAttribute("image_name");
+            const char *_decompile_timestamps = parameters.getAttribute("decompile_timestamps");
 
-			if(strcmp(_decompile_timestamps,"relative")==0)
-				decompile_timestamps=TS_RELATIVE;
-			else
-				decompile_timestamps=TS_ABSOLUTE;
-		}else{
+            usr_operator_path = parameters.getAttribute("usr_operator_path");
+            usr_class_path = parameters.getAttribute("usr_class_path");
 
-			std::cerr<<"> Error: Parameter section is unreadable"<<std::endl;
-			return	false;
-		}
+            use_case_path = parameters.getAttribute("use_case_path");
+            image_name = parameters.getAttribute("image_name");
 
-		return	true;
-	}
+            if (strcmp(_decompile_timestamps, "relative") == 0)
+                decompile_timestamps = TS_RELATIVE;
+            else
+                decompile_timestamps = TS_ABSOLUTE;
+        } else {
+
+            std::cerr << "> Error: Parameter section is unreadable" << std::endl;
+            return false;
+        }
+
+        return true;
+    }
 };
 
 

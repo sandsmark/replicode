@@ -28,113 +28,125 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	r_exec_object_h
-#define	r_exec_object_h
+#ifndef r_exec_object_h
+#define r_exec_object_h
 
-#include	"CoreLibrary/utils.h"
-#include	"r_code/object.h"
-#include	"view.h"
-#include	"opcodes.h"
+#include "CoreLibrary/utils.h"
+#include "r_code/object.h"
+#include "view.h"
+#include "opcodes.h"
 
-#include	<list>
+#include <list>
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	r_exec_dll	bool		IsNotification(Code	*object);
+r_exec_dll bool IsNotification(Code *object);
 
-	//	Shared resources:
-	//		views: accessed by Mem::injectNow (via various sub calls) and Mem::update.
-	//		psln_thr: accessed by reduction cores (via overlay mod/set).
-	//		marker_set: accessed by Mem::injectNow ans Mem::_initiate_sln_propagation.
-	template<class	C,class	U>	class	Object:
-	public	C{
-	private:
-		size_t	hash_value;
+// Shared resources:
+// views: accessed by Mem::injectNow (via various sub calls) and Mem::update.
+// psln_thr: accessed by reduction cores (via overlay mod/set).
+// marker_set: accessed by Mem::injectNow ans Mem::_initiate_sln_propagation.
+template<class C, class U> class Object:
+    public C {
+private:
+    size_t hash_value;
 
-		volatile	uint32	invalidated;	// must be aligned on 32 bits.
+    volatile uint32 invalidated; // must be aligned on 32 bits.
 
-		CriticalSection	psln_thr_sem;
-		CriticalSection	views_sem;
-		CriticalSection	markers_sem;
-	protected:
-		Object();
-		Object(r_code::Mem	*mem);
-	public:
-		virtual	~Object();	//	un-registers from the rMem's object_register.
+    CriticalSection psln_thr_sem;
+    CriticalSection views_sem;
+    CriticalSection markers_sem;
+protected:
+    Object();
+    Object(r_code::Mem *mem);
+public:
+    virtual ~Object(); // un-registers from the rMem's object_register.
 
-		r_code::View	*build_view(SysView	*source){
+    r_code::View *build_view(SysView *source) {
 
-			return	Code::build_view<r_exec::View>(source);
-		}
+        return Code::build_view<r_exec::View>(source);
+    }
 
-		virtual	bool	is_invalidated();
-		virtual	bool	invalidate();	//	return false when was not invalidated, true otherwise.
+    virtual bool is_invalidated();
+    virtual bool invalidate(); // return false when was not invalidated, true otherwise.
 
-		void	compute_hash_value();
+    void compute_hash_value();
 
-		float32	get_psln_thr();
+    float32 get_psln_thr();
 
-		void	acq_views(){	views_sem.enter();	}
-		void	rel_views(){	views_sem.leave();	}
-		void	acq_markers(){	markers_sem.enter();	}
-		void	rel_markers(){	markers_sem.leave();	}
+    void acq_views() {
+        views_sem.enter();
+    }
+    void rel_views() {
+        views_sem.leave();
+    }
+    void acq_markers() {
+        markers_sem.enter();
+    }
+    void rel_markers() {
+        markers_sem.leave();
+    }
 
-		//	Target psln_thr only.
-		void	set(uint16	member_index,float32	value);
-		void	mod(uint16	member_index,float32	value);
+// Target psln_thr only.
+    void set(uint16 member_index, float32 value);
+    void mod(uint16 member_index, float32 value);
 
-		View	*get_view(Code	*group,bool	lock);		// returns the found view if any, NULL otherwise.
+    View *get_view(Code *group, bool lock); // returns the found view if any, NULL otherwise.
 
-		void	kill();
+    void kill();
 
-		class	Hash{
-		public:
-			size_t	operator	()(U	*o)	const{
-				
-				if(o->hash_value==0)
-					o->compute_hash_value();
-				return	o->hash_value;
-			}
-		};
+    class Hash {
+    public:
+        size_t operator()(U *o) const {
 
-		class	Equal{
-		public:
-			bool	operator	()(const	U	*lhs,const	U	*rhs)	const{	//	lhs and rhs have the same hash value, i.e. same opcode, same code size and same reference size.
-				
-				if(lhs->code(0).asOpcode()==Opcodes::Ent	||	rhs->code(0).asOpcode()==Opcodes::Ent)
-					return	lhs==rhs;
+            if (o->hash_value == 0)
+                o->compute_hash_value();
+            return o->hash_value;
+        }
+    };
 
-				uint16	i;
-				for(i=0;i<lhs->references_size();++i)
-					if(lhs->get_reference(i)!=rhs->get_reference(i))
-						return	false;
-				for(i=0;i<lhs->code_size();++i){
+    class Equal {
+    public:
+        bool operator()(const U *lhs, const U *rhs) const { // lhs and rhs have the same hash value, i.e. same opcode, same code size and same reference size.
 
-					if(lhs->code(i)!=rhs->code(i))
-						return	false;
-				}
-				return	true;
-			}
-		};
-	};
+            if (lhs->code(0).asOpcode() == Opcodes::Ent || rhs->code(0).asOpcode() == Opcodes::Ent)
+                return lhs == rhs;
 
-	//	Local object.
-	//	Used for r-code that does not travel across networks (groups and notifications) or when the rMem is not distributed.
-	//	Markers are killed when at least one of their references dies (held by their views).
-	//	Marker deletion is performed by registering pending delete operations in the groups they are projected onto.
-	class	r_exec_dll	LObject:
-	public	Object<r_code::LObject,LObject>{
-	public:
-		static	bool	RequiresPacking(){	return	false;	}
-		static	LObject	*Pack(Code	*object,r_code::Mem	*mem){	return	(LObject	*)object;	}	//	object is always a LObject (local operation).
-		LObject(r_code::Mem	*mem=NULL):Object<r_code::LObject,LObject>(mem){}
-		LObject(r_code::SysObject	*source):Object<r_code::LObject,LObject>(){
-		
-			load(source);
-		}
-		virtual	~LObject(){}
-	};
+            uint16 i;
+            for (i = 0; i < lhs->references_size(); ++i)
+                if (lhs->get_reference(i) != rhs->get_reference(i))
+                    return false;
+            for (i = 0; i < lhs->code_size(); ++i) {
+
+                if (lhs->code(i) != rhs->code(i))
+                    return false;
+            }
+            return true;
+        }
+    };
+};
+
+// Local object.
+// Used for r-code that does not travel across networks (groups and notifications) or when the rMem is not distributed.
+// Markers are killed when at least one of their references dies (held by their views).
+// Marker deletion is performed by registering pending delete operations in the groups they are projected onto.
+class r_exec_dll LObject:
+    public Object<r_code::LObject, LObject> {
+public:
+    static bool RequiresPacking() {
+        return false;
+    }
+    static LObject *Pack(Code *object, r_code::Mem *mem) {
+        return (LObject *)object; //   object is always a LObject (local operation).
+    }
+    LObject(r_code::Mem *mem = NULL): Object<r_code::LObject, LObject>(mem) {}
+    LObject(r_code::SysObject *source): Object<r_code::LObject, LObject>() {
+
+        load(source);
+    }
+    virtual ~LObject() {}
+};
 }
 
 

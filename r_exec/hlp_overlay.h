@@ -28,56 +28,58 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	hlp_overlay_h
-#define	hlp_overlay_h
+#ifndef hlp_overlay_h
+#define hlp_overlay_h
 
-#include	"overlay.h"
-#include	"binding_map.h"
+#include "overlay.h"
+#include "binding_map.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	HLPContext;
+class HLPContext;
 
-	//	HLP: high-level patterns.
-	class	HLPOverlay:
-	public	Overlay{
-	friend	class	HLPContext;
-	protected:
-		P<HLPBindingMap>	bindings;
+// HLP: high-level patterns.
+class HLPOverlay:
+    public Overlay {
+    friend class HLPContext;
+protected:
+    P<HLPBindingMap> bindings;
 
-		r_code::list<P<_Fact>	>	patterns;
+    r_code::list<P<_Fact> > patterns;
 
-		bool	evaluate_guards(uint16	guard_set_iptr_index);
-		bool	evaluate_fwd_guards();
-		bool	evaluate(uint16	index);
+    bool evaluate_guards(uint16 guard_set_iptr_index);
+    bool evaluate_fwd_guards();
+    bool evaluate(uint16 index);
 
-		bool	check_fwd_timings();
+    bool check_fwd_timings();
 
-		bool	scan_bwd_guards();
-		bool	scan_location(uint16	index);
-		bool	scan_variable(uint16	index);
+    bool scan_bwd_guards();
+    bool scan_location(uint16 index);
+    bool scan_variable(uint16 index);
 
-		void	store_evidence(_Fact	*evidence,bool	prediction,bool	simulation);	// stores both actual and non-simulated predicted evidences.
+    void store_evidence(_Fact *evidence, bool prediction, bool simulation); // stores both actual and non-simulated predicted evidences.
 
-		HLPOverlay(Controller	*c,HLPBindingMap	*bindings);
-	public:
-		static	bool	EvaluateBWDGuards(Controller	*c,HLPBindingMap	*bindings);	// updates the bindings.
-		static	bool	CheckFWDTimings(Controller	*c,HLPBindingMap	*bindings);		// updates the bindings.
-		static	bool	ScanBWDGuards(Controller	*c,HLPBindingMap	*bindings);		// does not update the bindings.
+    HLPOverlay(Controller *c, HLPBindingMap *bindings);
+public:
+    static bool EvaluateBWDGuards(Controller *c, HLPBindingMap *bindings); // updates the bindings.
+    static bool CheckFWDTimings(Controller *c, HLPBindingMap *bindings); // updates the bindings.
+    static bool ScanBWDGuards(Controller *c, HLPBindingMap *bindings); // does not update the bindings.
 
-		HLPOverlay(Controller	*c,const	HLPBindingMap	*bindings,bool	load_code);
-		virtual	~HLPOverlay();
+    HLPOverlay(Controller *c, const HLPBindingMap *bindings, bool load_code);
+    virtual ~HLPOverlay();
 
-		HLPBindingMap	*get_bindings()	const{	return	bindings;	}
+    HLPBindingMap *get_bindings() const {
+        return bindings;
+    }
 
-		Atom	*get_value_code(uint16	id)	const;
-		uint16	get_value_code_size(uint16	id)	const;
+    Atom *get_value_code(uint16 id) const;
+    uint16 get_value_code_size(uint16 id) const;
 
-		Code	*get_unpacked_object()	const;
+    Code *get_unpacked_object() const;
 
-		bool	evaluate_bwd_guards();
-	};
+    bool evaluate_bwd_guards();
+};
 }
 
 

@@ -28,124 +28,124 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	time_job_h
-#define	time_job_h
+#ifndef time_job_h
+#define time_job_h
 
-#include	"group.h"
-#include	"pgm_overlay.h"
+#include "group.h"
+#include "pgm_overlay.h"
 
 
-namespace	r_exec{
-	
-	class	r_exec_dll	TimeJob:
-	public	_Object{
-	protected:
-		TimeJob(uint64	target_time);
-	public:
-		int64			target_time;	// absolute deadline; 0 means ASAP.
-		virtual	bool	update(uint64	&next_target)=0;	// next_target: absolute deadline; 0 means no more waiting; return false to shutdown the time core.
-		virtual	bool	is_alive()	const;
-		virtual	void	report(int64	lag)	const;
-	};
+namespace r_exec {
 
-	class	r_exec_dll	UpdateJob:
-	public	TimeJob{
-	public:
-		P<Group>	group;
-		UpdateJob(Group	*g,uint64	ijt);
-		bool	update(uint64	&next_target);
-		void	report(int64	lag)	const;
-	};
+class r_exec_dll TimeJob:
+    public _Object {
+protected:
+    TimeJob(uint64 target_time);
+public:
+    int64 target_time; // absolute deadline; 0 means ASAP.
+    virtual bool update(uint64 &next_target) = 0; // next_target: absolute deadline; 0 means no more waiting; return false to shutdown the time core.
+    virtual bool is_alive() const;
+    virtual void report(int64 lag) const;
+};
 
-	class	r_exec_dll	SignalingJob:
-	public	TimeJob{
-	protected:
-		SignalingJob(View	*v,uint64	ijt);
-	public:
-		P<View>	view;
-		bool	is_alive()	const;
-	};
+class r_exec_dll UpdateJob:
+    public TimeJob {
+public:
+    P<Group> group;
+    UpdateJob(Group *g, uint64 ijt);
+    bool update(uint64 &next_target);
+    void report(int64 lag) const;
+};
 
-	class	r_exec_dll	AntiPGMSignalingJob:
-	public	SignalingJob{
-	public:
-		AntiPGMSignalingJob(View	*v,uint64	ijt);
-		bool	update(uint64	&next_target);
-		void	report(int64	lag)	const;
-	};
+class r_exec_dll SignalingJob:
+    public TimeJob {
+protected:
+    SignalingJob(View *v, uint64 ijt);
+public:
+    P<View> view;
+    bool is_alive() const;
+};
 
-	class	r_exec_dll	InputLessPGMSignalingJob:
-	public	SignalingJob{
-	public:
-		InputLessPGMSignalingJob(View	*v,uint64	ijt);
-		bool	update(uint64	&next_target);
-		void	report(int64	lag)	const;
-	};
+class r_exec_dll AntiPGMSignalingJob:
+    public SignalingJob {
+public:
+    AntiPGMSignalingJob(View *v, uint64 ijt);
+    bool update(uint64 &next_target);
+    void report(int64 lag) const;
+};
 
-	class	r_exec_dll	InjectionJob:
-	public	TimeJob{
-	public:
-		P<View>	view;
-		InjectionJob(View	*v,uint64	ijt);
-		bool	update(uint64	&next_target);
-		void	report(int64	lag)	const;
-	};
+class r_exec_dll InputLessPGMSignalingJob:
+    public SignalingJob {
+public:
+    InputLessPGMSignalingJob(View *v, uint64 ijt);
+    bool update(uint64 &next_target);
+    void report(int64 lag) const;
+};
 
-	class	r_exec_dll	EInjectionJob:
-	public	TimeJob{
-	public:
-		P<View>	view;
-		EInjectionJob(View	*v,uint64	ijt);
-		bool	update(uint64	&next_target);
-		void	report(int64	lag)	const;
-	};
+class r_exec_dll InjectionJob:
+    public TimeJob {
+public:
+    P<View> view;
+    InjectionJob(View *v, uint64 ijt);
+    bool update(uint64 &next_target);
+    void report(int64 lag) const;
+};
 
-	class	r_exec_dll	SaliencyPropagationJob:
-	public	TimeJob{
-	public:
-		P<Code>	object;
-		float32		sln_change;
-		float32		source_sln_thr;
-		SaliencyPropagationJob(Code	*o,float32	sln_change,float32	source_sln_thr,uint64	ijt);
-		bool	update(uint64	&next_target);
-		void	report(int64	lag)	const;
-	};
+class r_exec_dll EInjectionJob:
+    public TimeJob {
+public:
+    P<View> view;
+    EInjectionJob(View *v, uint64 ijt);
+    bool update(uint64 &next_target);
+    void report(int64 lag) const;
+};
 
-	class	r_exec_dll	ShutdownTimeCore:
-	public	TimeJob{
-	public:
-		ShutdownTimeCore();
-		bool	update(uint64	&next_target);
-	};
+class r_exec_dll SaliencyPropagationJob:
+    public TimeJob {
+public:
+    P<Code> object;
+    float32 sln_change;
+    float32 source_sln_thr;
+    SaliencyPropagationJob(Code *o, float32 sln_change, float32 source_sln_thr, uint64 ijt);
+    bool update(uint64 &next_target);
+    void report(int64 lag) const;
+};
 
-	template<class	M>	class	MonitoringJob:
-	public	TimeJob{
-	public:
-		P<M>	monitor;
-		MonitoringJob(M	*monitor,uint64	deadline):TimeJob(deadline),monitor(monitor){}
-		bool	update(uint64	&next_target){
+class r_exec_dll ShutdownTimeCore:
+    public TimeJob {
+public:
+    ShutdownTimeCore();
+    bool update(uint64 &next_target);
+};
 
-			monitor->update(next_target);
-			return	true;
-		}
-		bool	is_alive()	const{
+template<class M> class MonitoringJob:
+    public TimeJob {
+public:
+    P<M> monitor;
+    MonitoringJob(M *monitor, uint64 deadline): TimeJob(deadline), monitor(monitor) {}
+    bool update(uint64 &next_target) {
 
-			return	monitor->is_alive();
-		}
-		void	report(int64	lag)	const{
+        monitor->update(next_target);
+        return true;
+    }
+    bool is_alive() const {
 
-			std::cout<<"> late monitoring: "<<lag<<" us behind."<<std::endl;
-		}
-	};
+        return monitor->is_alive();
+    }
+    void report(int64 lag) const {
 
-	class	r_exec_dll	PerfSamplingJob:
-	public	TimeJob{
-	public:
-		uint32	period;
-		PerfSamplingJob(uint64	start,uint32	period);
-		bool	is_alive()	const;
-		bool	update(uint64	&next_target);
-	};
+        std::cout << "> late monitoring: " << lag << " us behind." << std::endl;
+    }
+};
+
+class r_exec_dll PerfSamplingJob:
+    public TimeJob {
+public:
+    uint32 period;
+    PerfSamplingJob(uint64 start, uint32 period);
+    bool is_alive() const;
+    bool update(uint64 &next_target);
+};
 }
 
 

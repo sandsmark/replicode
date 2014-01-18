@@ -28,63 +28,63 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"image_impl.h"
+#include "image_impl.h"
 
 
-namespace	r_code{
+namespace r_code {
 
-	void	*ImageImpl::operator	new(size_t	s,uint32	data_size){
+void *ImageImpl::operator new(size_t s, uint32 data_size) {
 
-		return	::operator	new(s);
-	}
+    return ::operator new(s);
+}
 
-	void	ImageImpl::operator delete(void	*o){
+void ImageImpl::operator delete(void *o) {
 
-		::operator	delete(o);
-	}
+    ::operator delete(o);
+}
 
-	ImageImpl::ImageImpl(uint64	timestamp,uint32	map_size,uint32	code_size,uint32	names_size):_timestamp(timestamp),_map_size(map_size),_code_size(code_size),_names_size(names_size){
+ImageImpl::ImageImpl(uint64 timestamp, uint32 map_size, uint32 code_size, uint32 names_size): _timestamp(timestamp), _map_size(map_size), _code_size(code_size), _names_size(names_size) {
 
-		_data=new	uintptr_t[_map_size+_code_size+_names_size];
-	}
+    _data = new uintptr_t[_map_size + _code_size + _names_size];
+}
 
-	ImageImpl::~ImageImpl(){
+ImageImpl::~ImageImpl() {
 
-		delete[]	_data;
-	}
+    delete[] _data;
+}
 
-	uint64	ImageImpl::timestamp()	const{
+uint64 ImageImpl::timestamp() const {
 
-		return	_timestamp;
-	}
+    return _timestamp;
+}
 
-	size_t	ImageImpl::map_size()	const{
+size_t ImageImpl::map_size() const {
 
-		return	_map_size;
-	}
+    return _map_size;
+}
 
-	size_t	ImageImpl::code_size()	const{
+size_t ImageImpl::code_size() const {
 
-		return	_code_size;
-	}
+    return _code_size;
+}
 
-	size_t	ImageImpl::names_size()	const{
+size_t ImageImpl::names_size() const {
 
-		return	_names_size;
-	}
+    return _names_size;
+}
 
-	uintptr_t	*ImageImpl::data()	const{
+uintptr_t *ImageImpl::data() const {
 
-		return	_data;
-	}
+    return _data;
+}
 
-	uintptr_t	&ImageImpl::data(size_t	i){
+uintptr_t &ImageImpl::data(size_t i) {
 
-		return	_data[i];
-	}
+    return _data[i];
+}
 
-	uintptr_t	&ImageImpl::data(size_t i)	const{
+uintptr_t &ImageImpl::data(size_t i) const {
 
-		return	_data[i];
-	}
+    return _data[i];
+}
 }

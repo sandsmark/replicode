@@ -28,84 +28,84 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace	core{
+namespace core {
 
-	template<class	C>	inline	P<C>::P():object(NULL){
-	}
+template<class C> inline P<C>::P(): object(NULL) {
+}
 
-	template<class	C>	inline	P<C>::P(C	*o):object(o){
+template<class C> inline P<C>::P(C *o): object(o) {
 
-		if(object)
-			object->incRef();
-	}
+    if (object)
+        object->incRef();
+}
 
-	template<class	C>	inline	P<C>::P(const P<C>	&p):object(p.object){
+template<class C> inline P<C>::P(const P<C> &p): object(p.object) {
 
-		if(object)
-			object->incRef();
-	}
+    if (object)
+        object->incRef();
+}
 
-	template<class	C>	inline	P<C>::~P(){
+template<class C> inline P<C>::~P() {
 
-		if(object)
-			object->decRef();
-	}
+    if (object)
+        object->decRef();
+}
 
-	template<class	C>	inline	C	*P<C>::operator	->()	const{
+template<class C> inline C *P<C>::operator ->() const {
 
-		return	(C	*)object;
-	}
+    return (C *)object;
+}
 
-	template<class	C>	inline	bool	P<C>::operator	==(C	*c)	const{
+template<class C> inline bool P<C>::operator ==(C *c) const {
 
-		return	object==c;
-	}
+    return object == c;
+}
 
-	template<class	C>	inline	bool	P<C>::operator	!=(C	*c)	const{
+template<class C> inline bool P<C>::operator !=(C *c) const {
 
-		return	object!=c;
-	}
+    return object != c;
+}
 
-	template<class	C>	template<class	D>	inline	bool	P<C>::operator	==(P<D>	&p)	const{
+template<class C> template<class D> inline bool P<C>::operator ==(P<D> &p) const {
 
-		return	object==p.object;
-	}
+    return object == p.object;
+}
 
-	template<class	C>	template<class	D>	inline	bool	P<C>::operator	!=(P<D>	&p)	const{
+template<class C> template<class D> inline bool P<C>::operator !=(P<D> &p) const {
 
-		return	object!=p.object;
-	}
+    return object != p.object;
+}
 
-	template<class	C>	inline	bool	P<C>::operator	!()	const{
+template<class C> inline bool P<C>::operator !() const {
 
-		return	!object;
-	}
+    return !object;
+}
 
-	template<class	C>	inline	P<C>&	P<C>::operator	=(C	*c){
+template<class C> inline P<C>& P<C>::operator =(C *c) {
 
-		if(object==c)
-			return	*this;
-		if(object)
-			object->decRef();
-        object = c;
-		if(object)
-			object->incRef();
+    if (object == c)
+        return *this;
+    if (object)
+        object->decRef();
+    object = c;
+    if (object)
+        object->incRef();
 
-		return	*this;
-	}
+    return *this;
+}
 
-	template<class	C>	template<class	D>	inline	P<C>	&P<C>::operator	=(const P<D>	&p){
+template<class C> template<class D> inline P<C> &P<C>::operator =(const P<D> &p) {
 
-		return	this->operator	=((C	*)p.object);
-	}
+    return this->operator =((C *)p.object);
+}
 
-	template<class	C>	inline	P<C>	&P<C>::operator	=(const P<C>	&p){
+template<class C> inline P<C> &P<C>::operator =(const P<C> &p) {
 
-		return	this->operator	=((C	*)p.object);
-	}
+    return this->operator =((C *)p.object);
+}
 
-	////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
 
-	template<class	C>	inline	_ObjectAdapter<C>::_ObjectAdapter():_Object(),C(){
-	}
+template<class C> inline _ObjectAdapter<C>::_ObjectAdapter(): _Object(), C() {
+}
 }

@@ -28,258 +28,258 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"../r_code/utils.h"
-#include	"opcodes.h"
-
-
-namespace	r_exec{
-
-	inline	View::View():r_code::View(),controller(NULL){
-
-		_code[VIEW_OID].atom=GetOID();
-		reset_ctrl_values();
-	}
-
-	inline	View::View(r_code::SysView	*source,r_code::Code	*object):r_code::View(source,object),controller(NULL){
-
-		_code[VIEW_OID].atom=GetOID();
-		reset();
-	}
-
-	inline	View::View(const	View	*view,bool	new_OID):r_code::View(),controller(NULL){
-
-		object=view->object;
-		memcpy(_code,view->_code,VIEW_CODE_MAX_SIZE*sizeof(Atom)+2*sizeof(Code	*));	// reference_set is contiguous to code; memcpy in one go.
-		if(new_OID)
-			_code[VIEW_OID].atom=GetOID();
-		controller=NULL;	// deprecated: controller=view->controller;
-		reset();
-	}
+#include "../r_code/utils.h"
+#include "opcodes.h"
 
-	inline	View::View(SyncMode	sync,
-						uint64	ijt,
-						float32	sln,
-						int32	res,
-						Code	*destination,
-						Code	*origin,
-						Code	*object):r_code::View(),controller(NULL){
-	
-		code(VIEW_OPCODE)=Atom::SSet(Opcodes::View,VIEW_ARITY);
-		init(sync,ijt,sln,res,destination,origin,object);
-	}
 
-	inline	View::View(SyncMode	sync,
-						uint64	ijt,
-						float32	sln,
-						int32	res,
-						Code	*destination,
-						Code	*origin,
-						Code	*object,
-						float32	act):r_code::View(),controller(NULL){
-	
-		code(VIEW_OPCODE)=Atom::SSet(Opcodes::PgmView,PGM_VIEW_ARITY);
-		init(sync,ijt,sln,res,destination,origin,object);
-		code(VIEW_ACT)=Atom::Float(act);
-	}
+namespace r_exec {
 
-	inline	void	View::init(SyncMode	sync,
-								uint64	ijt,
-								float32	sln,
-								int32	res,
-								Code	*destination,
-								Code	*origin,
-								Code	*object){
+inline View::View(): r_code::View(), controller(NULL) {
 
-		_code[VIEW_OID].atom=GetOID();
-		reset_ctrl_values();
-		
-		code(VIEW_SYNC)=Atom::Float(sync);
-		code(VIEW_IJT)=Atom::IPointer(code(VIEW_OPCODE).getAtomCount()+1);
-		Utils::SetTimestamp<View>(this,VIEW_IJT,ijt);
-		code(VIEW_SLN)=Atom::Float(sln);
-		code(VIEW_RES)=res<0?Atom::PlusInfinity():Atom::Float(res);
-		code(VIEW_HOST)=Atom::RPointer(0);
-		code(VIEW_ORG)=origin?Atom::RPointer(1):Atom::Nil();
+    _code[VIEW_OID].atom = GetOID();
+    reset_ctrl_values();
+}
 
-		references[0]=destination;
-		references[1]=origin;
+inline View::View(r_code::SysView *source, r_code::Code *object): r_code::View(source, object), controller(NULL) {
 
-		set_object(object);
-	}
+    _code[VIEW_OID].atom = GetOID();
+    reset();
+}
 
-	inline	View::~View(){
+inline View::View(const View *view, bool new_OID): r_code::View(), controller(NULL) {
 
-		if(!!controller)
-			controller->invalidate();
-	}
+    object = view->object;
+    memcpy(_code, view->_code, VIEW_CODE_MAX_SIZE * sizeof(Atom) + 2 * sizeof(Code *)); // reference_set is contiguous to code; memcpy in one go.
+    if (new_OID)
+        _code[VIEW_OID].atom = GetOID();
+    controller = NULL; // deprecated: controller=view->controller;
+    reset();
+}
 
-	inline	void	View::reset(){
+inline View::View(SyncMode sync,
+                  uint64 ijt,
+                  float32 sln,
+                  int32 res,
+                  Code *destination,
+                  Code *origin,
+                  Code *object): r_code::View(), controller(NULL) {
 
-		reset_ctrl_values();
-		reset_init_sln();
-		reset_init_act();
-	}
+    code(VIEW_OPCODE) = Atom::SSet(Opcodes::View, VIEW_ARITY);
+    init(sync, ijt, sln, res, destination, origin, object);
+}
 
-	inline	uint32	View::get_oid()	const{
+inline View::View(SyncMode sync,
+                  uint64 ijt,
+                  float32 sln,
+                  int32 res,
+                  Code *destination,
+                  Code *origin,
+                  Code *object,
+                  float32 act): r_code::View(), controller(NULL) {
 
-		return	_code[VIEW_OID].atom;
-	}
+    code(VIEW_OPCODE) = Atom::SSet(Opcodes::PgmView, PGM_VIEW_ARITY);
+    init(sync, ijt, sln, res, destination, origin, object);
+    code(VIEW_ACT) = Atom::Float(act);
+}
 
-	inline	bool	View::isNotification()	const{
+inline void View::init(SyncMode sync,
+                       uint64 ijt,
+                       float32 sln,
+                       int32 res,
+                       Code *destination,
+                       Code *origin,
+                       Code *object) {
 
-		return	false;
-	}
+    _code[VIEW_OID].atom = GetOID();
+    reset_ctrl_values();
 
-	inline	Group	*View::get_host(){
+    code(VIEW_SYNC) = Atom::Float(sync);
+    code(VIEW_IJT) = Atom::IPointer(code(VIEW_OPCODE).getAtomCount() + 1);
+    Utils::SetTimestamp<View>(this, VIEW_IJT, ijt);
+    code(VIEW_SLN) = Atom::Float(sln);
+    code(VIEW_RES) = res < 0 ? Atom::PlusInfinity() : Atom::Float(res);
+    code(VIEW_HOST) = Atom::RPointer(0);
+    code(VIEW_ORG) = origin ? Atom::RPointer(1) : Atom::Nil();
 
-		uint32	host_reference=code(VIEW_HOST).asIndex();
-		return	(Group	*)references[host_reference];
-	}
+    references[0] = destination;
+    references[1] = origin;
 
-	inline	View::SyncMode	View::get_sync(){
+    set_object(object);
+}
 
-		return	(SyncMode)(uint32)code(VIEW_SYNC).asFloat();
-	}
+inline View::~View() {
 
-	inline	float32	View::get_res(){
+    if (!!controller)
+        controller->invalidate();
+}
 
-		return	code(VIEW_RES).asFloat();
-	}
+inline void View::reset() {
 
-	inline	float32	View::get_sln(){
+    reset_ctrl_values();
+    reset_init_sln();
+    reset_init_act();
+}
 
-		return	code(VIEW_SLN).asFloat();
-	}
+inline uint32 View::get_oid() const {
 
-	inline	float32	View::get_act(){
+    return _code[VIEW_OID].atom;
+}
 
-		return	code(VIEW_ACT).asFloat();
-	}
+inline bool View::isNotification() const {
 
-	inline	float32	View::get_vis(){
+    return false;
+}
 
-		return	code(GRP_VIEW_VIS).asFloat();
-	}
+inline Group *View::get_host() {
 
-	inline	bool	View::get_cov(){
+    uint32 host_reference = code(VIEW_HOST).asIndex();
+    return (Group *)references[host_reference];
+}
 
-		if(object->code(0).getDescriptor()==Atom::GROUP)
-			return	code(GRP_VIEW_COV).asBoolean();
-		return	false;
-	}
+inline View::SyncMode View::get_sync() {
 
-	inline	void	View::mod_res(float32	value){
+    return (SyncMode)(uint32)code(VIEW_SYNC).asFloat();
+}
 
-		if(code(VIEW_RES)==Atom::PlusInfinity())
-			return;
-		acc_res+=value;
-		++res_changes;
-	}
+inline float32 View::get_res() {
 
-	inline	void	View::set_res(float32	value){
+    return code(VIEW_RES).asFloat();
+}
 
-		if(code(VIEW_RES)==Atom::PlusInfinity())
-			return;
-		acc_res+=value-get_res();
-		++res_changes;
-	}
+inline float32 View::get_sln() {
 
-	inline	void	View::mod_sln(float32	value){
+    return code(VIEW_SLN).asFloat();
+}
 
-		acc_sln+=value;
-		++sln_changes;
-	}
+inline float32 View::get_act() {
 
-	inline	void	View::set_sln(float32	value){
+    return code(VIEW_ACT).asFloat();
+}
 
-		acc_sln+=value-get_sln();
-		++sln_changes;
-	}
+inline float32 View::get_vis() {
 
-	inline	void	View::mod_act(float32	value){
+    return code(GRP_VIEW_VIS).asFloat();
+}
 
-		acc_act+=value;
-		++act_changes;
-	}
+inline bool View::get_cov() {
 
-	inline	void	View::set_act(float32	value){
+    if (object->code(0).getDescriptor() == Atom::GROUP)
+        return code(GRP_VIEW_COV).asBoolean();
+    return false;
+}
 
-		acc_act+=value-get_act();
-		++act_changes;
-	}
+inline void View::mod_res(float32 value) {
 
-	inline	void	View::mod_vis(float32	value){
+    if (code(VIEW_RES) == Atom::PlusInfinity())
+        return;
+    acc_res += value;
+    ++res_changes;
+}
 
-		acc_vis+=value;
-		++vis_changes;
-	}
+inline void View::set_res(float32 value) {
 
-	inline	void	View::set_vis(float32	value){
+    if (code(VIEW_RES) == Atom::PlusInfinity())
+        return;
+    acc_res += value - get_res();
+    ++res_changes;
+}
 
-		acc_vis+=value-get_vis();
-		++vis_changes;
-	}
+inline void View::mod_sln(float32 value) {
 
-	inline	float32	View::update_sln_delta(){
+    acc_sln += value;
+    ++sln_changes;
+}
 
-		float32	delta=get_sln()-initial_sln;
-		initial_sln=get_sln();
-		return	delta;
-	}
+inline void View::set_sln(float32 value) {
 
-	inline	float32	View::update_act_delta(){
+    acc_sln += value - get_sln();
+    ++sln_changes;
+}
 
-		float32	act=get_act();
-		float32	delta=act-initial_act;
-		initial_act=act;
-		return	delta;
-	}
+inline void View::mod_act(float32 value) {
 
-	inline	void	View::force_res(float32	value){
+    acc_act += value;
+    ++act_changes;
+}
 
-		code(VIEW_RES)=Atom::Float(value);
-	}
+inline void View::set_act(float32 value) {
 
-	inline	void	View::mod(uint16	member_index,float32	value){
+    acc_act += value - get_act();
+    ++act_changes;
+}
 
-		switch(member_index){
-		case	VIEW_SLN:
-			mod_sln(value);
-			break;
-		case	VIEW_RES:
-			mod_res(value);
-			break;
-		case	VIEW_ACT:
-			mod_act(value);
-			break;
-		case	GRP_VIEW_VIS:
-			mod_vis(value);
-			break;
-		}
-	}
+inline void View::mod_vis(float32 value) {
 
-	inline	void	View::set(uint16	member_index,float32	value){
+    acc_vis += value;
+    ++vis_changes;
+}
 
-		switch(member_index){
-		case	VIEW_SLN:
-			set_sln(value);
-			break;
-		case	VIEW_RES:
-			set_res(value);
-			break;
-		case	VIEW_ACT:
-			set_act(value);
-			break;
-		case	GRP_VIEW_VIS:
-			set_vis(value);
-			break;
-		}
-	}
+inline void View::set_vis(float32 value) {
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    acc_vis += value - get_vis();
+    ++vis_changes;
+}
 
-	inline	bool	NotificationView::isNotification()	const{
+inline float32 View::update_sln_delta() {
 
-		return	true;
-	}
+    float32 delta = get_sln() - initial_sln;
+    initial_sln = get_sln();
+    return delta;
+}
+
+inline float32 View::update_act_delta() {
+
+    float32 act = get_act();
+    float32 delta = act - initial_act;
+    initial_act = act;
+    return delta;
+}
+
+inline void View::force_res(float32 value) {
+
+    code(VIEW_RES) = Atom::Float(value);
+}
+
+inline void View::mod(uint16 member_index, float32 value) {
+
+    switch (member_index) {
+    case VIEW_SLN:
+        mod_sln(value);
+        break;
+    case VIEW_RES:
+        mod_res(value);
+        break;
+    case VIEW_ACT:
+        mod_act(value);
+        break;
+    case GRP_VIEW_VIS:
+        mod_vis(value);
+        break;
+    }
+}
+
+inline void View::set(uint16 member_index, float32 value) {
+
+    switch (member_index) {
+    case VIEW_SLN:
+        set_sln(value);
+        break;
+    case VIEW_RES:
+        set_res(value);
+        break;
+    case VIEW_ACT:
+        set_act(value);
+        break;
+    case GRP_VIEW_VIS:
+        set_vis(value);
+        break;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+inline bool NotificationView::isNotification() const {
+
+    return true;
+}
 }

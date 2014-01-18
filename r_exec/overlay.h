@@ -28,127 +28,155 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	overlay_h
-#define	overlay_h
+#ifndef overlay_h
+#define overlay_h
 
-#include	"CoreLibrary/base.h"
-#include	"CoreLibrary/utils.h"
-#include	"r_code/object.h"
-#include	"dll.h"
+#include "CoreLibrary/base.h"
+#include "CoreLibrary/utils.h"
+#include "r_code/object.h"
+#include "dll.h"
 
 
-using	namespace	r_code;
+using namespace r_code;
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	View;
-	
-	// Upon invocation of take_input() the overlays older than tsc are killed, assuming stc>0; otherwise, overlays live unitl the ipgm dies.
-	// Controllers are built at loading time and at the view's injection time.
-	// Derived classes must expose a function: void	reduce(r_code::View*input);	(called by reduction jobs).
-	class	r_exec_dll	Controller:
-	public	_Object{
-	protected:
-		volatile	uint32	invalidated;	// 32 bit alignment.
-		volatile	uint32	activated;		// 32 bit alignment.
+class View;
 
-		uint64	tsc;
+// Upon invocation of take_input() the overlays older than tsc are killed, assuming stc>0; otherwise, overlays live unitl the ipgm dies.
+// Controllers are built at loading time and at the view's injection time.
+// Derived classes must expose a function: void reduce(r_code::View*input); (called by reduction jobs).
+class r_exec_dll Controller:
+    public _Object {
+protected:
+    volatile uint32 invalidated; // 32 bit alignment.
+    volatile uint32 activated; // 32 bit alignment.
 
-		r_code::View	*view;
+    uint64 tsc;
 
-		CriticalSection	reductionCS;
+    r_code::View *view;
 
-		virtual	void	take_input(r_exec::View	*input){}
-		template<class	C> void	__take_input(r_exec::View	*input); // utility: to be called by sub-classes.
+    CriticalSection reductionCS;
 
-		Controller(r_code::View	*view);
-	public:
-		virtual	~Controller();
+    virtual void take_input(r_exec::View *input) {}
+    template<class C> void __take_input(r_exec::View *input); // utility: to be called by sub-classes.
 
-		uint64	get_tsc(){	return	tsc;	}
+    Controller(r_code::View *view);
+public:
+    virtual ~Controller();
 
-		virtual	void	invalidate()	{	invalidated=1;	}
-		bool	is_invalidated()		{	return	invalidated==1;	};
-		void	activate(bool	a)		{	activated=(a?1:0);	}
-		bool	is_activated()	const	{	return	activated==1;	}
-		bool	is_alive()	const		{	return	invalidated==0	&&	activated==1;	}
+    uint64 get_tsc() {
+        return tsc;
+    }
 
-		virtual	Code	*get_core_object()	const=0;
+    virtual void invalidate() {
+        invalidated = 1;
+    }
+    bool is_invalidated() {
+        return invalidated == 1;
+    };
+    void activate(bool a) {
+        activated = (a ? 1 : 0);
+    }
+    bool is_activated() const {
+        return activated == 1;
+    }
+    bool is_alive() const {
+        return invalidated == 0 && activated == 1;
+    }
 
-		r_code::Code	*getObject()	const	{	return	view->object;			}	// return the reduction object (e.g. ipgm, icpp_pgm, cst, mdl).
-		r_exec::View	*getView()		const	{	return	(r_exec::View	*)view;	}	// return the reduction object's view.
+    virtual Code *get_core_object() const = 0;
 
-		void	_take_input(r_exec::View	*input);	// called by the rMem at update time and at injection time.
+    r_code::Code *getObject() const {
+        return view->object; // return the reduction object (e.g. ipgm, icpp_pgm, cst, mdl).
+    }
+    r_exec::View *getView() const {
+        return (r_exec::View *)view; // return the reduction object's view.
+    }
 
-		virtual	void	gain_activation(){	activate(true);	 }
-		virtual	void	lose_activation(){	activate(false); }
+    void _take_input(r_exec::View *input); // called by the rMem at update time and at injection time.
 
-		void	set_view(View	*view);
+    virtual void gain_activation() {
+        activate(true);
+    }
+    virtual void lose_activation() {
+        activate(false);
+    }
 
-		void	debug(View	*input){}
-	};
+    void set_view(View *view);
 
-	class	_Context;
-	class	IPGMContext;
-	class	HLPContext;
+    void debug(View *input) {}
+};
 
-	class	r_exec_dll	Overlay:
-	public	_Object{
-	friend	class	_Context;
-	friend	class	IPGMContext;
-	friend	class	HLPContext;
-	protected:
-		volatile	uint32	invalidated;
+class _Context;
+class IPGMContext;
+class HLPContext;
 
-		Controller	*controller;
+class r_exec_dll Overlay:
+    public _Object {
+    friend class _Context;
+    friend class IPGMContext;
+    friend class HLPContext;
+protected:
+    volatile uint32 invalidated;
 
-		r_code::vector<Atom>	values;	// value array: stores the results of computations.
-		// Copy of the pgm/hlp code. Will be patched during matching and evaluation:
-		// any area indexed by a vl_ptr will be overwritten with:
-		// 		the evaluation result if it fits in a single atom,
-		//		a ptr to the value array if the result is larger than a single atom,
-		//		a ptr to an input if the result is a pattern input.
-		Atom				*code;
-		uint16				code_size;
-		std::vector<uint16>	patch_indices;		// indices where patches are applied; used for rollbacks.
-		uint16				value_commit_index;	// index of the last computed value+1; used for rollbacks.
+    Controller *controller;
 
-		void				load_code();
-		void				patch_code(uint16	index,Atom	value);
-		uint16				get_last_patch_index();
-		void				unpatch_code(uint16	patch_index);
+    r_code::vector<Atom> values; // value array: stores the results of computations.
+// Copy of the pgm/hlp code. Will be patched during matching and evaluation:
+// any area indexed by a vl_ptr will be overwritten with:
+// the evaluation result if it fits in a single atom,
+// a ptr to the value array if the result is larger than a single atom,
+// a ptr to an input if the result is a pattern input.
+    Atom *code;
+    uint16 code_size;
+    std::vector<uint16> patch_indices; // indices where patches are applied; used for rollbacks.
+    uint16 value_commit_index; // index of the last computed value+1; used for rollbacks.
 
-		void	rollback();	// reset the overlay to the last commited state: unpatch code and values.
-		void	commit();	// empty the patch_indices and set value_commit_index to values.size().
+    void load_code();
+    void patch_code(uint16 index, Atom value);
+    uint16 get_last_patch_index();
+    void unpatch_code(uint16 patch_index);
 
-		Code	*get_core_object()	const;	// pgm, mdl, cst.
+    void rollback(); // reset the overlay to the last commited state: unpatch code and values.
+    void commit(); // empty the patch_indices and set value_commit_index to values.size().
 
-		Overlay();
-		Overlay(Controller	*c,bool	load_code=true);
-	public:
-		virtual	~Overlay();
+    Code *get_core_object() const; // pgm, mdl, cst.
 
-		virtual	void	reset();							// reset to original state.
-		virtual	Overlay	*reduce(r_exec::View	*input);	// returns an offspring in case of a match.
+    Overlay();
+    Overlay(Controller *c, bool load_code = true);
+public:
+    virtual ~Overlay();
 
-				void	invalidate()		{	invalidated=1;	}
-		virtual	bool	is_invalidated()	{	return	invalidated==1;	}
+    virtual void reset(); // reset to original state.
+    virtual Overlay *reduce(r_exec::View *input); // returns an offspring in case of a match.
 
-		r_code::Code	*getObject()	const	{	return	((Controller	*)controller)->getObject();	}
-		r_exec::View	*getView()		const	{	return	((Controller	*)controller)->getView();	}
+    void invalidate() {
+        invalidated = 1;
+    }
+    virtual bool is_invalidated() {
+        return invalidated == 1;
+    }
 
-		r_code::Code	*build_object(Atom	head)	const;
-	};
+    r_code::Code *getObject() const {
+        return ((Controller *)controller)->getObject();
+    }
+    r_exec::View *getView() const {
+        return ((Controller *)controller)->getView();
+    }
 
-	class	r_exec_dll	OController:
-	public	Controller{
-	protected:
-		r_code::list<P<Overlay> >	overlays;
+    r_code::Code *build_object(Atom head) const;
+};
 
-		OController(r_code::View	*view);
-	public:
-		virtual	~OController();
-	};
+class r_exec_dll OController:
+    public Controller {
+protected:
+    r_code::list<P<Overlay> > overlays;
+
+    OController(r_code::View *view);
+public:
+    virtual ~OController();
+};
 }
 
 #endif

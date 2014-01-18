@@ -28,143 +28,147 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	view_h
-#define	view_h
+#ifndef view_h
+#define view_h
 
-#include	"r_code/object.h"
-#include	"overlay.h"
-#include	"dll.h"
+#include "r_code/object.h"
+#include "overlay.h"
+#include "dll.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	Group;
-	class	LObject;
+class Group;
+class LObject;
 
-	//	OID is hidden at _code[VIEW_OID].
-	//	Shared resources:
-	//		none: all mod/set operations are pushed on the group and executed at update time.
-	class	r_exec_dll	View:
-	public	r_code::View{
-	private:
-		static	uint32	LastOID;
-		static	uint32	GetOID();
+// OID is hidden at _code[VIEW_OID].
+// Shared resources:
+// none: all mod/set operations are pushed on the group and executed at update time.
+class r_exec_dll View:
+    public r_code::View {
+private:
+    static uint32 LastOID;
+    static uint32 GetOID();
 
-		//	Ctrl values.
-		uint32	sln_changes;
-		float32	acc_sln;
-		uint32	act_changes;
-		float32	acc_act;
-		uint32	vis_changes;
-		float32	acc_vis;
-		uint32	res_changes;
-		float32	acc_res;
-		void	reset_ctrl_values();
+// Ctrl values.
+    uint32 sln_changes;
+    float32 acc_sln;
+    uint32 act_changes;
+    float32 acc_act;
+    uint32 vis_changes;
+    float32 acc_vis;
+    uint32 res_changes;
+    float32 acc_res;
+    void reset_ctrl_values();
 
-		//	Monitoring
-		float32	initial_sln;
-		float32	initial_act;
+// Monitoring
+    float32 initial_sln;
+    float32 initial_act;
 
-		void	init(SyncMode	sync,
-					 uint64		ijt,
-					 float32	sln,
-					 int32		res,
-					 r_code::Code		*host,
-					 r_code::Code		*origin,
-					 r_code::Code		*object);
-	protected:
-		void	reset_init_sln();
-		void	reset_init_act();
-	public:
-		static	uint16	ViewOpcode;
+    void init(SyncMode sync,
+              uint64 ijt,
+              float32 sln,
+              int32 res,
+              r_code::Code *host,
+              r_code::Code *origin,
+              r_code::Code *object);
+protected:
+    void reset_init_sln();
+    void reset_init_act();
+public:
+    static uint16 ViewOpcode;
 
-		P<Controller>	controller;	//	built upon injection of the view (if the object is an ipgm/icpp_pgm/cst/mdl).
+    P<Controller> controller; // built upon injection of the view (if the object is an ipgm/icpp_pgm/cst/mdl).
 
-		static	float32	MorphValue(float32	value,float32	source_thr,float32	destination_thr);
-		static	float32	MorphChange(float32	change,float32	source_thr,float32	destination_thr);
+    static float32 MorphValue(float32 value, float32 source_thr, float32 destination_thr);
+    static float32 MorphChange(float32 change, float32 source_thr, float32 destination_thr);
 
-		uint32	periods_at_low_sln;
-		uint32	periods_at_high_sln;
-		uint32	periods_at_low_act;
-		uint32	periods_at_high_act;
+    uint32 periods_at_low_sln;
+    uint32 periods_at_high_sln;
+    uint32 periods_at_low_act;
+    uint32 periods_at_high_act;
 
-		View();
-		View(r_code::SysView	*source,r_code::Code	*object);
-		View(View	*view,Group	*group);	//	copy the view and assigns it to the group (used for cov); morph ctrl values.
-		View(const	View	*view,bool	new_OID=false);	//	simple copy.
-		View(SyncMode	sync,
-			 uint64		ijt,
-			 float32	sln,
-			 int32		res,
-			 Code		*host,
-			 Code		*origin,
-			 Code		*object);	//	regular view; res set to -1 means forever.
-		View(SyncMode	sync,
-			 uint64		ijt,
-			 float32	sln,
-			 int32		res,
-			 Code		*host,
-			 Code		*origin,
-			 Code		*object,
-			 float32	act);	//	pgm/mdl view; res set to -1 means forever.
-		~View();
+    View();
+    View(r_code::SysView *source, r_code::Code *object);
+    View(View *view, Group *group); // copy the view and assigns it to the group (used for cov); morph ctrl values.
+    View(const View *view, bool new_OID = false); // simple copy.
+    View(SyncMode sync,
+         uint64 ijt,
+         float32 sln,
+         int32 res,
+         Code *host,
+         Code *origin,
+         Code *object); // regular view; res set to -1 means forever.
+    View(SyncMode sync,
+         uint64 ijt,
+         float32 sln,
+         int32 res,
+         Code *host,
+         Code *origin,
+         Code *object,
+         float32 act); // pgm/mdl view; res set to -1 means forever.
+    ~View();
 
-		void	reset();
-		void	set_object(r_code::Code	*object);
+    void reset();
+    void set_object(r_code::Code *object);
 
-		uint32	get_oid()	const;
+    uint32 get_oid() const;
 
-		virtual	bool	isNotification()	const;
+    virtual bool isNotification() const;
 
-		Group	*get_host();
+    Group *get_host();
 
-		SyncMode	get_sync();
-		float32		get_res();
-		float32		get_sln();
-		float32		get_act();
-		bool		get_cov();
-		float32		get_vis();
-		uintptr_t		&ctrl0(){	return	_code[VIEW_CTRL_0].atom;	}	// use only for non-group views.
-		uintptr_t		&ctrl1(){	return	_code[VIEW_CTRL_1].atom;	}	// idem.
+    SyncMode get_sync();
+    float32 get_res();
+    float32 get_sln();
+    float32 get_act();
+    bool get_cov();
+    float32 get_vis();
+    uintptr_t &ctrl0() {
+        return _code[VIEW_CTRL_0].atom; // use only for non-group views.
+    }
+    uintptr_t &ctrl1() {
+        return _code[VIEW_CTRL_1].atom; // idem.
+    }
 
-		void	mod_res(float	value);
-		void	set_res(float	value);
-		void	mod_sln(float32	value);
-		void	set_sln(float32	value);
-		void	mod_act(float32	value);
-		void	set_act(float32	value);
-		void	mod_vis(float32	value);
-		void	set_vis(float32	value);
+    void mod_res(float value);
+    void set_res(float value);
+    void mod_sln(float32 value);
+    void set_sln(float32 value);
+    void mod_act(float32 value);
+    void set_act(float32 value);
+    void mod_vis(float32 value);
+    void set_vis(float32 value);
 
-		float32	update_res();
-		float32	update_sln(float32	low,float32	high);
-		float32	update_act(float32	low,float32	high);
-		float32	update_vis();
+    float32 update_res();
+    float32 update_sln(float32 low, float32 high);
+    float32 update_act(float32 low, float32 high);
+    float32 update_vis();
 
-		float32	update_sln_delta();
-		float32	update_act_delta();
+    float32 update_sln_delta();
+    float32 update_act_delta();
 
-		void	force_res(float32	value);	// unmediated.
+    void force_res(float32 value); // unmediated.
 
-		//	Target res, sln, act, vis.
-		void	mod(uint16	member_index,float32	value);
-		void	set(uint16	member_index,float32	value);
+// Target res, sln, act, vis.
+    void mod(uint16 member_index, float32 value);
+    void set(uint16 member_index, float32 value);
 
-		void	delete_from_object();
-		void	delete_from_group();
-	};
+    void delete_from_object();
+    void delete_from_group();
+};
 
-	class	r_exec_dll	NotificationView:
-	public	View{
-	public:
-		NotificationView(Code	*origin,Code	*destination,Code	*marker);	//	res=1, sln=1.
+class r_exec_dll NotificationView:
+    public View {
+public:
+    NotificationView(Code *origin, Code *destination, Code *marker); // res=1, sln=1.
 
-		bool	isNotification()	const;
-	};
+    bool isNotification() const;
+};
 }
 
 
-#include	"view.inline.cpp"
+#include "view.inline.cpp"
 
 
 #endif

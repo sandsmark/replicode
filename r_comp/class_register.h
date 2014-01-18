@@ -28,21 +28,21 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	r_comp_class_register_h
-#define	r_comp_class_register_h
+#ifndef r_comp_class_register_h
+#define r_comp_class_register_h
 
-#include	"r_code/atom.h"
+#include "r_code/atom.h"
 
 
-namespace	r_comp{
+namespace r_comp {
 
-	class	dll_export	ClassRegister{
-	private:
-		static	UNORDERED_MAP<std::string,r_code::Atom>	Opcodes;	//	opcodes retrieved by name
-	public:
-		static	void	LoadClasses(const	char	*path);		//	preprocesses user.classes.replicode
-		static	uint16	GetOpcode(const	char	*class_name);	//	returns 0xFFFF if not defined.
-	};
+class dll_export ClassRegister {
+private:
+    static UNORDERED_MAP<std::string, r_code::Atom> Opcodes; // opcodes retrieved by name
+public:
+    static void LoadClasses(const char *path); // preprocesses user.classes.replicode
+    static uint16 GetOpcode(const char *class_name); // returns 0xFFFF if not defined.
+};
 }
 
 

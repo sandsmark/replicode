@@ -28,22 +28,22 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	operators_h
-#define	operators_h
+#ifndef operators_h
+#define operators_h
 
-#include	"../types.h"
+#include "../types.h"
 
 
-extern	"C"{
-bool	dll_export	add(const	r_exec::Context	&context,uint16	&index);
-bool	dll_export	sub(const	r_exec::Context	&context,uint16	&index);
-bool	dll_export	mul(const	r_exec::Context	&context,uint16	&index);
-bool	dll_export	dis(const	r_exec::Context	&context,uint16	&index);
+extern "C" {
+    bool dll_export add(const r_exec::Context &context, uint16 &index);
+    bool dll_export sub(const r_exec::Context &context, uint16 &index);
+    bool dll_export mul(const r_exec::Context &context, uint16 &index);
+    bool dll_export dis(const r_exec::Context &context, uint16 &index);
 }
 
-class	Operators{
+class Operators {
 public:
-	static	void	Init(OpcodeRetriever	r);
+    static void Init(OpcodeRetriever r);
 };
 
 

@@ -28,31 +28,31 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	p_monitor_h
-#define	p_monitor_h
+#ifndef p_monitor_h
+#define p_monitor_h
 
-#include	"monitor.h"
+#include "monitor.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	MDLController;
+class MDLController;
 
-	class	PMonitor:
-	public	Monitor{
-	private:
-		bool	rate_failures;
-		_Fact	*prediction_target;	// f1 as in f0->pred->f1->object.
-	public:
-		PMonitor(	MDLController	*controller,
-					BindingMap		*bindings,
-					Fact			*prediction,	// f0->pred->f1->object.
-					bool			rate_failures);
-		~PMonitor();
+class PMonitor:
+    public Monitor {
+private:
+    bool rate_failures;
+    _Fact *prediction_target; // f1 as in f0->pred->f1->object.
+public:
+    PMonitor(MDLController *controller,
+             BindingMap *bindings,
+             Fact *prediction, // f0->pred->f1->object.
+             bool rate_failures);
+    ~PMonitor();
 
-		bool	reduce(_Fact	*input);
-		void	update(uint64	&next_target);
-	};
+    bool reduce(_Fact *input);
+    void update(uint64 &next_target);
+};
 }
 
 

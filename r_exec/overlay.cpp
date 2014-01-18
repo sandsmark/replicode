@@ -28,146 +28,146 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"overlay.h"
-#include	"mem.h"
+#include "overlay.h"
+#include "mem.h"
 
 
-#define	MAX_VALUE_SIZE	128
+#define MAX_VALUE_SIZE 128
 
-namespace	r_exec{
+namespace r_exec {
 
-	Overlay::Overlay():_Object(),invalidated(0){
+Overlay::Overlay(): _Object(), invalidated(0) {
 
-		values.as_std()->resize(MAX_VALUE_SIZE);	// MAX_VALUE_SIZE is the limit; if the array is resized later on, some contexts with data==VALUE_ARRAY may point to invalid adresses: case of embedded contexts with both data==VALUE_ARRAY.
-	}
+    values.as_std()->resize(MAX_VALUE_SIZE); // MAX_VALUE_SIZE is the limit; if the array is resized later on, some contexts with data==VALUE_ARRAY may point to invalid adresses: case of embedded contexts with both data==VALUE_ARRAY.
+}
 
-	Overlay::Overlay(Controller	*c,bool	load_code):_Object(),invalidated(0),controller(c),code(NULL),value_commit_index(0){
+Overlay::Overlay(Controller *c, bool load_code): _Object(), invalidated(0), controller(c), code(NULL), value_commit_index(0) {
 
-		values.as_std()->resize(128);
-		if(load_code)
-			this->load_code();
-	}
+    values.as_std()->resize(128);
+    if (load_code)
+        this->load_code();
+}
 
-	Overlay::~Overlay(){
+Overlay::~Overlay() {
 
-		if(code)
-			delete[]	code;
-	}
+    if (code)
+        delete[] code;
+}
 
-	inline	Code	*Overlay::get_core_object()	const{
-		
-		return	controller->get_core_object();
-	}
+inline Code *Overlay::get_core_object() const {
 
-	void	Overlay::load_code(){
+    return controller->get_core_object();
+}
 
-		if(code)
-			delete[]	code;
+void Overlay::load_code() {
 
-		Code	*object=get_core_object();
-		//	copy the original pgm/hlp code.
-		code_size=object->code_size();
-		code=new	r_code::Atom[code_size];
-		memcpy(code,&object->code(0),code_size*sizeof(r_code::Atom));
-	}
+    if (code)
+        delete[] code;
 
-	void	Overlay::reset(){
+    Code *object = get_core_object();
+// copy the original pgm/hlp code.
+    code_size = object->code_size();
+    code = new r_code::Atom[code_size];
+    memcpy(code, &object->code(0), code_size * sizeof(r_code::Atom));
+}
 
-		memcpy(code,&getObject()->get_reference(0)->code(0),code_size*sizeof(r_code::Atom));	//	restore code to prisitne copy.
-	}
+void Overlay::reset() {
 
-	void	Overlay::rollback(){
+    memcpy(code, &getObject()->get_reference(0)->code(0), code_size * sizeof(r_code::Atom)); // restore code to prisitne copy.
+}
 
-		Code	*object=get_core_object();
-		Atom	*original_code=&object->code(0);
-		for(uint16	i=0;i<patch_indices.size();++i)	//	upatch code.
-			code[patch_indices[i]]=original_code[patch_indices[i]];
-		patch_indices.clear();
+void Overlay::rollback() {
 
-		if(value_commit_index!=values.size()){	//	shrink the values down to the last commit index.
+    Code *object = get_core_object();
+    Atom *original_code = &object->code(0);
+    for (uint16 i = 0; i < patch_indices.size(); ++i) // upatch code.
+        code[patch_indices[i]] = original_code[patch_indices[i]];
+    patch_indices.clear();
 
-			if(value_commit_index>0)
-				values.as_std()->resize(value_commit_index);
-			else
-				values.as_std()->clear();
-			value_commit_index=values.size();
-		}
-	}
+    if (value_commit_index != values.size()) { // shrink the values down to the last commit index.
 
-	void	Overlay::commit(){
+        if (value_commit_index > 0)
+            values.as_std()->resize(value_commit_index);
+        else
+            values.as_std()->clear();
+        value_commit_index = values.size();
+    }
+}
 
-		patch_indices.clear();
-		value_commit_index=values.size();
-	}
+void Overlay::commit() {
 
-	void	Overlay::patch_code(uint16	index,Atom	value){
+    patch_indices.clear();
+    value_commit_index = values.size();
+}
 
-		code[index]=value;
-		patch_indices.push_back(index);
-	}
+void Overlay::patch_code(uint16 index, Atom value) {
 
-	uint16	Overlay::get_last_patch_index(){
+    code[index] = value;
+    patch_indices.push_back(index);
+}
 
-		return	patch_indices.size();
-	}
+uint16 Overlay::get_last_patch_index() {
 
-	void	Overlay::unpatch_code(uint16	patch_index){
+    return patch_indices.size();
+}
 
-		Code	*object=get_core_object();
-		Atom	*original_code=&object->code(0);
-		for(uint16	i=patch_index;i<patch_indices.size();++i)
-			code[patch_indices[i]]=original_code[patch_indices[i]];
-		patch_indices.resize(patch_index);
-	}
+void Overlay::unpatch_code(uint16 patch_index) {
 
-	Overlay	*Overlay::reduce(r_exec::View	*input){
+    Code *object = get_core_object();
+    Atom *original_code = &object->code(0);
+    for (uint16 i = patch_index; i < patch_indices.size(); ++i)
+        code[patch_indices[i]] = original_code[patch_indices[i]];
+    patch_indices.resize(patch_index);
+}
 
-		return	NULL;
-	}
+Overlay *Overlay::reduce(r_exec::View *input) {
 
-	r_code::Code	*Overlay::build_object(Atom	head)	const{
-		
-		return	_Mem::Get()->build_object(head);
-	}
+    return NULL;
+}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+r_code::Code *Overlay::build_object(Atom head) const {
 
-	Controller::Controller(r_code::View	*view):_Object(),invalidated(0),activated(0),view(view){
+    return _Mem::Get()->build_object(head);
+}
 
-		if(!view)
-			return;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		switch(getObject()->code(0).getDescriptor()){
-		case	Atom::INSTANTIATED_PROGRAM:
-		case	Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
-		case	Atom::INSTANTIATED_ANTI_PROGRAM:
-			tsc=Utils::GetTimestamp<Code>(getObject(),IPGM_TSC);
-			break;
-		case	Atom::INSTANTIATED_CPP_PROGRAM:
-			tsc=Utils::GetTimestamp<Code>(getObject(),ICPP_PGM_TSC);
-			break;
-		}
-	}
+Controller::Controller(r_code::View *view): _Object(), invalidated(0), activated(0), view(view) {
 
-	Controller::~Controller(){
-	}
+    if (!view)
+        return;
 
-	void	Controller::set_view(View	*view){
+    switch (getObject()->code(0).getDescriptor()) {
+    case Atom::INSTANTIATED_PROGRAM:
+    case Atom::INSTANTIATED_INPUT_LESS_PROGRAM:
+    case Atom::INSTANTIATED_ANTI_PROGRAM:
+        tsc = Utils::GetTimestamp<Code>(getObject(), IPGM_TSC);
+        break;
+    case Atom::INSTANTIATED_CPP_PROGRAM:
+        tsc = Utils::GetTimestamp<Code>(getObject(), ICPP_PGM_TSC);
+        break;
+    }
+}
 
-		this->view=view;
-	}
+Controller::~Controller() {
+}
 
-	void	Controller::_take_input(r_exec::View	*input){	// called by groups at update and injection time.
-	
-		if(is_alive()	&&	!input->object->is_invalidated())
-			take_input(input);
-	}
+void Controller::set_view(View *view) {
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    this->view = view;
+}
 
-	OController::OController(r_code::View	*view):Controller(view){
-	}
+void Controller::_take_input(r_exec::View *input) { // called by groups at update and injection time.
 
-	OController::~OController(){
-	}
+    if (is_alive() && !input->object->is_invalidated())
+        take_input(input);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+OController::OController(r_code::View *view): Controller(view) {
+}
+
+OController::~OController() {
+}
 }

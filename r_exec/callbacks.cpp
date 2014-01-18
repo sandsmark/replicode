@@ -30,21 +30,20 @@
 
 #include	"callbacks.h"
 
+namespace r_exec {
 
-namespace	r_exec{
+UNORDERED_MAP<std::string, Callbacks::Callback> Callbacks::_Callbacks;
 
-	UNORDERED_MAP<std::string,Callbacks::Callback>	Callbacks::_Callbacks;
+void Callbacks::Register(std::string &callback_name, Callback callback) {
 
-	void	Callbacks::Register(std::string	&callback_name,Callback	callback){
+    _Callbacks[callback_name] = callback;
+}
 
-		_Callbacks[callback_name]=callback;
-	}
+Callbacks::Callback Callbacks::Get(std::string &callback_name) {
 
-	Callbacks::Callback	Callbacks::Get(std::string	&callback_name){
-		
-		UNORDERED_MAP<std::string,Callback>::const_iterator	it=_Callbacks.find(callback_name);
-		if(it!=_Callbacks.end())
-			return	it->second;
-		return	NULL;
-	}
+    UNORDERED_MAP<std::string, Callback>::const_iterator it = _Callbacks.find(callback_name);
+    if (it != _Callbacks.end())
+        return it->second;
+    return NULL;
+}
 }

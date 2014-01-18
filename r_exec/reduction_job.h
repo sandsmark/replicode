@@ -28,61 +28,61 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	reduction_job_h
-#define	reduction_job_h
+#ifndef reduction_job_h
+#define reduction_job_h
 
-#include	"overlay.h"
-#include	"object.h"
+#include "overlay.h"
+#include "object.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	r_exec_dll	_ReductionJob:
-	public	_Object{
-	protected:
-		_ReductionJob();
-	public:
-		uint64	ijt;	// time of injection of the job in the pipe.
-		virtual	bool	update(uint64	now)=0;	//	return false to shutdown the reduction core.
-		virtual	void	debug(){}
-	};
+class r_exec_dll _ReductionJob:
+    public _Object {
+protected:
+    _ReductionJob();
+public:
+    uint64 ijt; // time of injection of the job in the pipe.
+    virtual bool update(uint64 now) = 0; // return false to shutdown the reduction core.
+    virtual void debug() {}
+};
 
-	template<class	_P>	class	ReductionJob:
-	public	_ReductionJob{
-	public:
-		P<View>	input;
-		P<_P>	processor;
-		ReductionJob(View	*input,_P	*processor):_ReductionJob(),input(input),processor(processor){}
-		bool	update(uint64	now);
-		void	debug(){
+template<class _P> class ReductionJob:
+    public _ReductionJob {
+public:
+    P<View> input;
+    P<_P> processor;
+    ReductionJob(View *input, _P *processor): _ReductionJob(), input(input), processor(processor) {}
+    bool update(uint64 now);
+    void debug() {
 
-			processor->debug(input);
-		}
-	};
+        processor->debug(input);
+    }
+};
 
-	template<class	_P,class	T,class	C>	class	BatchReductionJob:
-	public	_ReductionJob{
-	public:
-		P<_P>	processor;	// the controller that will process the job.
-		P<T>	trigger;	// the event that triggered the job.
-		P<C>	controller;	// the controller that produced the job.
-		BatchReductionJob(_P	*processor,T	*trigger,C	*controller):_ReductionJob(),processor(processor),trigger(trigger),controller(controller){}
-		bool	update(uint64	now);
-	};
+template<class _P, class T, class C> class BatchReductionJob:
+    public _ReductionJob {
+public:
+    P<_P> processor; // the controller that will process the job.
+    P<T> trigger; // the event that triggered the job.
+    P<C> controller; // the controller that produced the job.
+    BatchReductionJob(_P *processor, T *trigger, C *controller): _ReductionJob(), processor(processor), trigger(trigger), controller(controller) {}
+    bool update(uint64 now);
+};
 
-	class	r_exec_dll	ShutdownReductionCore:
-	public	_ReductionJob{
-	public:
-		bool	update(uint64	now);
-	};
+class r_exec_dll ShutdownReductionCore:
+    public _ReductionJob {
+public:
+    bool update(uint64 now);
+};
 
-	class	r_exec_dll	AsyncInjectionJob:
-	public	_ReductionJob{
-	public:
-		P<View>	input;
-		AsyncInjectionJob(View	*input):_ReductionJob(),input(input){}
-		bool	update(uint64	now);
-	};
+class r_exec_dll AsyncInjectionJob:
+    public _ReductionJob {
+public:
+    P<View> input;
+    AsyncInjectionJob(View *input): _ReductionJob(), input(input) {}
+    bool update(uint64 now);
+};
 }
 
 #endif

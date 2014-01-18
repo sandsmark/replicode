@@ -28,23 +28,23 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"p_monitor.h"
-#include	"mem.h"
-#include	"mdl_controller.h"
+#include "p_monitor.h"
+#include "mem.h"
+#include "mdl_controller.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	Monitor::Monitor(	MDLController	*controller,
-						BindingMap		*bindings,
-						Fact			*target):_Object(),controller(controller){
+Monitor::Monitor(MDLController *controller,
+                 BindingMap *bindings,
+                 Fact *target): _Object(), controller(controller) {
 
-		this->bindings=bindings;
-		this->target=target;
-	}
+    this->bindings = bindings;
+    this->target = target;
+}
 
-	bool	Monitor::is_alive()	const{
+bool Monitor::is_alive() const {
 
-		return	!controller->is_invalidated()	&&	controller->is_activated()	&&	!target->is_invalidated();
-	}
+    return !controller->is_invalidated() && controller->is_activated() && !target->is_invalidated();
+}
 }

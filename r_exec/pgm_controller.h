@@ -28,71 +28,73 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	pgm_controller_h
-#define	pgm_controller_h
+#ifndef pgm_controller_h
+#define pgm_controller_h
 
-#include	"pgm_overlay.h"
+#include "pgm_overlay.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	r_exec_dll	_PGMController:
-	public	OController{
-	protected:
-		bool	run_once;
+class r_exec_dll _PGMController:
+    public OController {
+protected:
+    bool run_once;
 
-		_PGMController(r_code::View	*ipgm_view);
-		virtual	~_PGMController();
-	public:
-		Code	*get_core_object()	const{	return	getObject()->get_reference(0);	}
-	};
+    _PGMController(r_code::View *ipgm_view);
+    virtual ~_PGMController();
+public:
+    Code *get_core_object() const {
+        return getObject()->get_reference(0);
+    }
+};
 
-	//	TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
-	//	No overlays.
-	class	r_exec_dll	InputLessPGMController:
-	public	_PGMController{
-	public:
-		InputLessPGMController(r_code::View	*ipgm_view);
-		~InputLessPGMController();
+// TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
+// No overlays.
+class r_exec_dll InputLessPGMController:
+    public _PGMController {
+public:
+    InputLessPGMController(r_code::View *ipgm_view);
+    ~InputLessPGMController();
 
-		void	signal_input_less_pgm();
-	};
+    void signal_input_less_pgm();
+};
 
-	// Controller for programs with inputs.
-	class	r_exec_dll	PGMController:
-	public	_PGMController{
-	public:
-		PGMController(r_code::View	*ipgm_view);
-		virtual	~PGMController();
+// Controller for programs with inputs.
+class r_exec_dll PGMController:
+    public _PGMController {
+public:
+    PGMController(r_code::View *ipgm_view);
+    virtual ~PGMController();
 
-		void	take_input(r_exec::View	*input);
-		void	reduce(r_exec::View	*input);
+    void take_input(r_exec::View *input);
+    void reduce(r_exec::View *input);
 
-		void	notify_reduction();
-	};
+    void notify_reduction();
+};
 
-	//	Signaled by TimeCores (holding AntiPGMSignalingJob).
-	//	Possible recursive locks: signal_anti_pgm()->overlay->inject_productions()->mem->inject()->injectNow()->inject_reduction_jobs()->overlay->take_input().
-	class	r_exec_dll	AntiPGMController:
-	public	_PGMController{
-	private:
-		bool	successful_match;
+// Signaled by TimeCores (holding AntiPGMSignalingJob).
+// Possible recursive locks: signal_anti_pgm()->overlay->inject_productions()->mem->inject()->injectNow()->inject_reduction_jobs()->overlay->take_input().
+class r_exec_dll AntiPGMController:
+    public _PGMController {
+private:
+    bool successful_match;
 
-		void	push_new_signaling_job();
-	public:
-		AntiPGMController(r_code::View	*ipgm_view);
-		~AntiPGMController();
+    void push_new_signaling_job();
+public:
+    AntiPGMController(r_code::View *ipgm_view);
+    ~AntiPGMController();
 
-		void	take_input(r_exec::View	*input);
-		void	reduce(r_exec::View	*input);
-		void	signal_anti_pgm();
+    void take_input(r_exec::View *input);
+    void reduce(r_exec::View *input);
+    void signal_anti_pgm();
 
-		void	restart();
-	};
+    void restart();
+};
 }
 
 
-#include	"pgm_controller.inline.cpp"
+#include "pgm_controller.inline.cpp"
 
 
 #endif

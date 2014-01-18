@@ -28,64 +28,64 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"_context.h"
+#include "_context.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	uint16	_Context::setAtomicResult(Atom	a)		const{	//	patch code with 32 bits data.
-			
-			overlay->patch_code(index,a);
-			return	index;
-		}
+uint16 _Context::setAtomicResult(Atom a) const { // patch code with 32 bits data.
 
-	uint16	_Context::setTimestampResult(uint64	t)	const{	//	patch code with a VALUE_PTR
-			
-		overlay->patch_code(index,Atom::ValuePointer(overlay->values.size()));
-		overlay->values.as_std()->resize(overlay->values.size()+3);
-		uint16	value_index=overlay->values.size()-3;
-		Utils::SetTimestamp(&overlay->values[value_index],t);
-		return	value_index;
-	}
+    overlay->patch_code(index, a);
+    return index;
+}
 
-	uint16	_Context::setCompoundResultHead(Atom	a)	const{	//	patch code with a VALUE_PTR.
-		
-		uint16	value_index=overlay->values.size();
-		overlay->patch_code(index,Atom::ValuePointer(value_index));
-		addCompoundResultPart(a);
-		return	value_index;
-	}
+uint16 _Context::setTimestampResult(uint64 t) const { // patch code with a VALUE_PTR
 
-	uint16	_Context::addCompoundResultPart(Atom	a)	const{	//	store result in the value array.
-		
-		overlay->values.push_back(a);
-		return	overlay->values.size()-1;
-	}
+    overlay->patch_code(index, Atom::ValuePointer(overlay->values.size()));
+    overlay->values.as_std()->resize(overlay->values.size() + 3);
+    uint16 value_index = overlay->values.size() - 3;
+    Utils::SetTimestamp(&overlay->values[value_index], t);
+    return value_index;
+}
 
-	void	_Context::trace()	const{
+uint16 _Context::setCompoundResultHead(Atom a) const { // patch code with a VALUE_PTR.
 
-		std::cout<<"======== CONTEXT ========\n";
-		switch(data){
-		case	UNDEFINED:
-			std::cout<<"undefined\n";
-			return;
-		case	MKS:
-			std::cout<<"--> mks\n";
-			return;
-		case	VWS:
-			std::cout<<"--> vws\n";
-			return;
-        default:
-            break;
-		}
+    uint16 value_index = overlay->values.size();
+    overlay->patch_code(index, Atom::ValuePointer(value_index));
+    addCompoundResultPart(a);
+    return value_index;
+}
 
-		for(uint16	i=0;i<get_object_code_size();++i){
+uint16 _Context::addCompoundResultPart(Atom a) const { // store result in the value array.
 
-			if(index==i)
-				std::cout<<">>";
-			std::cout<<i<<"\t";
-			code[i].trace();
-			std::cout<<std::endl;
-		}
-	}
+    overlay->values.push_back(a);
+    return overlay->values.size() - 1;
+}
+
+void _Context::trace() const {
+
+    std::cout << "======== CONTEXT ========\n";
+    switch (data) {
+    case UNDEFINED:
+        std::cout << "undefined\n";
+        return;
+    case MKS:
+        std::cout << "--> mks\n";
+        return;
+    case VWS:
+        std::cout << "--> vws\n";
+        return;
+    default:
+        break;
+    }
+
+    for (uint16 i = 0; i < get_object_code_size(); ++i) {
+
+        if (index == i)
+            std::cout << ">>";
+        std::cout << i << "\t";
+        code[i].trace();
+        std::cout << std::endl;
+    }
+}
 }

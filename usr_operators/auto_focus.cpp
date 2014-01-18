@@ -28,11 +28,11 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"auto_focus.h"
-#include	"../r_exec/auto_focus.h"
+#include "auto_focus.h"
+#include "../r_exec/auto_focus.h"
 
 
-r_exec::Controller	*auto_focus(r_code::View	*view){
+r_exec::Controller *auto_focus(r_code::View *view) {
 
-	return	new	r_exec::AutoFocusController(view);
+    return new r_exec::AutoFocusController(view);
 }

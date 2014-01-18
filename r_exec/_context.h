@@ -28,67 +28,77 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	_context_h
-#define	_context_h
+#ifndef _context_h
+#define _context_h
 
-#include	"../r_code/atom.h"
-#include	"overlay.h"
+#include "../r_code/atom.h"
+#include "overlay.h"
 
 
-using	namespace	r_code;
+using namespace r_code;
 
-namespace	r_exec{
+namespace r_exec {
 
-	//	Base class for evaluation contexts.
-	//	Subclasses: IPGMContext and HLPContext.
-	//	_Context	* wrapped in Context, the latter used by operators.
-	class	dll_export	_Context{
-	protected:
-		Overlay	*const	overlay;	//	the overlay where the evaluation is performed; NULL when the context is dereferenced outside the original pgm or outside the value array.
-		Atom			*code;		//	the object's code, or the code in value array, or the view's code when the context is dereferenced from Atom::VIEW.
-		uint16			index;		//	in the code;
+// Base class for evaluation contexts.
+// Subclasses: IPGMContext and HLPContext.
+// _Context * wrapped in Context, the latter used by operators.
+class dll_export _Context {
+protected:
+    Overlay *const overlay; // the overlay where the evaluation is performed; NULL when the context is dereferenced outside the original pgm or outside the value array.
+    Atom *code; // the object's code, or the code in value array, or the view's code when the context is dereferenced from Atom::VIEW.
+    uint16 index; // in the code;
 
-		typedef	enum{				//	indicates whether the context refers to:
-			STEM=0,					//		- the pgm/hlp being reducing inputs;
-			REFERENCE=1,			//		- a reference to another object;
-			VIEW=2,					//		- a view;
-			MKS=3,					//		- the mks or an object;
-			VWS=4,					//		- the vws of an object;
-			VALUE_ARRAY=5,			//		- code in the overlay's value array.
-			BINDING_MAP=6,			//		- values of a imdl/icst.
-			UNDEFINED=7
-		}Data;
-		Data	data;
+    typedef enum { // indicates whether the context refers to:
+        STEM = 0, // - the pgm/hlp being reducing inputs;
+        REFERENCE = 1, // - a reference to another object;
+        VIEW = 2, // - a view;
+        MKS = 3, // - the mks or an object;
+        VWS = 4, // - the vws of an object;
+        VALUE_ARRAY = 5, // - code in the overlay's value array.
+        BINDING_MAP = 6, // - values of a imdl/icst.
+        UNDEFINED = 7
+    } Data;
+    Data data;
 
-		_Context(Atom	*code,uint16	index,Overlay	*overlay,Data	data):overlay(overlay),code(code),index(index),data(data){}
-	public:
-        virtual ~_Context() {}
-		virtual	_Context	*assign(const	_Context	*c)=0;
+    _Context(Atom *code, uint16 index, Overlay *overlay, Data data): overlay(overlay), code(code), index(index), data(data) {}
+public:
+    virtual ~_Context() {}
+    virtual _Context *assign(const _Context *c) = 0;
 
-		virtual	bool	equal(const	_Context	*c)	const=0;
+    virtual bool equal(const _Context *c) const = 0;
 
-		virtual	Atom	&get_atom(uint16	i)	const=0;
+    virtual Atom &get_atom(uint16 i) const = 0;
 
-		virtual	uint16	get_object_code_size()	const=0;
+    virtual uint16 get_object_code_size() const = 0;
 
-		virtual	uint16		getChildrenCount()			const=0;
-		virtual	_Context	*_getChild(uint16	index)	const=0;
-		
-		virtual	_Context	*dereference()	const=0;
+    virtual uint16 getChildrenCount() const = 0;
+    virtual _Context *_getChild(uint16 index) const = 0;
 
-		void	commit()	const{	overlay->commit();		}
-		void	rollback()	const{	overlay->rollback();	}
-		void	patch_code(uint16	location,Atom	value)	const{	overlay->patch_code(location,value);	}
-		void	unpatch_code(uint16	patch_index)	const{	overlay->unpatch_code(patch_index);	}
-		uint16	get_last_patch_index()	const{	return	overlay->get_last_patch_index();	}
+    virtual _Context *dereference() const = 0;
 
-		uint16	setAtomicResult(Atom	a)		const;
-		uint16	setTimestampResult(uint64	t)	const;
-		uint16	setCompoundResultHead(Atom	a)	const;
-		uint16	addCompoundResultPart(Atom	a)	const;
+    void commit() const {
+        overlay->commit();
+    }
+    void rollback() const {
+        overlay->rollback();
+    }
+    void patch_code(uint16 location, Atom value) const {
+        overlay->patch_code(location, value);
+    }
+    void unpatch_code(uint16 patch_index) const {
+        overlay->unpatch_code(patch_index);
+    }
+    uint16 get_last_patch_index() const {
+        return overlay->get_last_patch_index();
+    }
 
-		void	trace()	const;
-	};
+    uint16 setAtomicResult(Atom a) const;
+    uint16 setTimestampResult(uint64 t) const;
+    uint16 setCompoundResultHead(Atom a) const;
+    uint16 addCompoundResultPart(Atom a) const;
+
+    void trace() const;
+};
 }
 
 

@@ -28,24 +28,24 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	cpp_programs_h
-#define	cpp_programs_h
+#ifndef cpp_programs_h
+#define cpp_programs_h
 
-#include	"overlay.h"
+#include "overlay.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	r_exec_dll	CPPPrograms{
-	public:
-		typedef	Controller	*(*Program)(r_code::View	*);
-	private:
-		static	UNORDERED_MAP<std::string,Program>	Programs;
-	public:
-		static	void	Register(std::string	&pgm_name,Program	pgm);
-		static	Program	Get(std::string	&pgm_name);
-		static	Controller	*New(std::string	&pgm_name,r_code::View	*view);
-	};
+class r_exec_dll CPPPrograms {
+public:
+    typedef Controller *(*Program)(r_code::View *);
+private:
+    static UNORDERED_MAP<std::string, Program> Programs;
+public:
+    static void Register(std::string &pgm_name, Program pgm);
+    static Program Get(std::string &pgm_name);
+    static Controller *New(std::string &pgm_name, r_code::View *view);
+};
 }
 
 

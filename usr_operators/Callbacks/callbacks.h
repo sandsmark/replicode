@@ -28,14 +28,14 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	callbacks_h
-#define	callbacks_h
+#ifndef callbacks_h
+#define callbacks_h
 
-#include	"../types.h"
+#include "../types.h"
 
 
-extern	"C"{
-bool	dll_export	print(uint64	t,bool	suspended,const	char	*msg,uint8	object_count,Code	**objects);
+extern "C" {
+    bool dll_export print(uint64 t, bool suspended, const char *msg, uint8 object_count, Code **objects);
 }
 
 

@@ -28,36 +28,36 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"../../CoreLibrary/trunk/CoreLibrary/utils.h"
+#include "../../CoreLibrary/trunk/CoreLibrary/utils.h"
 
 
-using	namespace	core;
+using namespace core;
 
-int32	main(int	argc,char	**argv){
+int32 main(int argc, char **argv) {
 
-	HANDLE	pipe_read=(HANDLE)atoi(argv[1]);
+    HANDLE pipe_read = (HANDLE)atoi(argv[1]);
 
-	uint32	read;
-	char	buffer[1024];
-	bool	r;
-	while(1){
+    uint32 read;
+    char buffer[1024];
+    bool r;
+    while (1) {
 
-		r=ReadFile(pipe_read,buffer,1024,&read,NULL);
-		if(!r	||	read==0)
-			break;
+        r = ReadFile(pipe_read, buffer, 1024, &read, NULL);
+        if (!r || read == 0)
+            break;
 
-		std::string	s(buffer);
-		s=s.substr(0,read);
-		std::string	stop("close_output_window");
-		size_t	found=s.rfind(stop);
-		if(found!=std::string::npos)
-			break;
+        std::string s(buffer);
+        s = s.substr(0, read);
+        std::string stop("close_output_window");
+        size_t found = s.rfind(stop);
+        if (found != std::string::npos)
+            break;
 
-		std::cout<<s;
-	}
+        std::cout << s;
+    }
 
-	std::cout<<"> press a key to exit\n";
-	getchar();
+    std::cout << "> press a key to exit\n";
+    getchar();
 
-	return	0;
+    return 0;
 }

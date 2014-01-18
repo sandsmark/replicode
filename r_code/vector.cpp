@@ -28,9 +28,9 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"vector.h"
+#include "vector.h"
 
 
-namespace	r_code{
+namespace r_code {
 
 }

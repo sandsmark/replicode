@@ -28,85 +28,86 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"ast_controller.h"
-#include	"mem.h"
-#include	"factory.h"
-#include	"auto_focus.h"
+#include "ast_controller.h"
+#include "mem.h"
+#include "factory.h"
+#include "auto_focus.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	template<class	U>	ASTController<U>::ASTController(AutoFocusController	*auto_focus,View	*target):OController(NULL){
-		
-		this->target=(_Fact	*)target->object;
-		tpx=new	CTPX(auto_focus,target);	// target is the premise, i.e. the tpx' target to be defeated.
-		thz=Now()-Utils::GetTimeTolerance();
-	}
+template<class U> ASTController<U>::ASTController(AutoFocusController *auto_focus, View *target): OController(NULL) {
 
-	template<class	U>	ASTController<U>::~ASTController(){
-	}
+    this->target = (_Fact *)target->object;
+    tpx = new CTPX(auto_focus, target); // target is the premise, i.e. the tpx' target to be defeated.
+    thz = Now() - Utils::GetTimeTolerance();
+}
 
-	template<class	U>	void	ASTController<U>::take_input(r_exec::View	*input){
-		
-		if(is_invalidated())
-			return;
-		
-		if(	input->object->code(0).asOpcode()==Opcodes::Fact	||
-			input->object->code(0).asOpcode()==Opcodes::AntiFact){	// discard everything but facts and |facts.
+template<class U> ASTController<U>::~ASTController() {
+}
 
-			Goal	*goal=((_Fact	*)input->object)->get_goal();
-			if(goal	&&	goal->get_actor()==_Mem::Get()->get_self())	// ignore self's goals.
-				return;
-			if(input->get_ijt()>=thz)	// input is too old.
-				Controller::__take_input<U>(input);
-		}
-	}
+template<class U> void ASTController<U>::take_input(r_exec::View *input) {
 
-	template<class	U>	void	ASTController<U>::reduce(View	*input){
+    if (is_invalidated())
+        return;
 
-		if(is_invalidated())
-			return;
+    if (input->object->code(0).asOpcode() == Opcodes::Fact ||
+            input->object->code(0).asOpcode() == Opcodes::AntiFact) { // discard everything but facts and |facts.
 
-		_Fact	*input_object=input->object;
-		if(input_object->is_invalidated()){//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got inv data "<<input->object->get_oid()<<std::endl;
-			return;}
-//uint64	t0=Now();
-		reductionCS.enter();
+        Goal *goal = ((_Fact *)input->object)->get_goal();
+        if (goal && goal->get_actor() == _Mem::Get()->get_self()) // ignore self's goals.
+            return;
+        if (input->get_ijt() >= thz) // input is too old.
+            Controller::__take_input<U>(input);
+    }
+}
 
-		if(input_object==target){
+template<class U> void ASTController<U>::reduce(View *input) {
 
-			tpx->store_input(input);
-			reductionCS.leave();
-			return;
-		}
-		
-		Pred	*prediction=input_object->get_pred();
-		if(prediction){
-			//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got pred "<<prediction->get_target()->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
-			switch(prediction->get_target()->is_timeless_evidence(target)){
-			case	MATCH_SUCCESS_POSITIVE:
-			case	MATCH_SUCCESS_NEGATIVE:	// a model predicted the next value of the target.
-				//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" killed\n";
-				kill();
-				break;
-			case	MATCH_FAILURE:
-				break;
-			}
+    if (is_invalidated())
+        return;
 
-			reductionCS.leave();
-			return;
-		}
+    _Fact *input_object = input->object;
+    if (input_object->is_invalidated()) { //std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got inv data "<<input->object->get_oid()<<std::endl;
+        return;
+    }
+//uint64 t0=Now();
+    reductionCS.enter();
+
+    if (input_object == target) {
+
+        tpx->store_input(input);
+        reductionCS.leave();
+        return;
+    }
+
+    Pred *prediction = input_object->get_pred();
+    if (prediction) {
+//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got pred "<<prediction->get_target()->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
+        switch (prediction->get_target()->is_timeless_evidence(target)) {
+        case MATCH_SUCCESS_POSITIVE:
+        case MATCH_SUCCESS_NEGATIVE: // a model predicted the next value of the target.
+//std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" killed\n";
+            kill();
+            break;
+        case MATCH_FAILURE:
+            break;
+        }
+
+        reductionCS.leave();
+        return;
+    }
 //std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got "<<input->object->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
-		((U	*)this)->reduce(input,input_object);
+    ((U *)this)->reduce(input, input_object);
 
-		reductionCS.leave();
-//uint64	t1=Now();
+    reductionCS.leave();
+//uint64 t1=Now();
 //std::cout<<"ASTC: "<<t1-t0<<std::endl;
-	}
+}
 
-	template<class	U>	void	ASTController<U>::kill(){
+template<class U> void ASTController<U>::kill() {
 
-		invalidate();
-		getView()->force_res(0);
-	}
+    invalidate();
+    getView()->force_res(0);
+}
 }

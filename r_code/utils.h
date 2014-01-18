@@ -28,121 +28,121 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	r_code_utils_h
-#define	r_code_utils_h
+#ifndef r_code_utils_h
+#define r_code_utils_h
 
-#include	"atom.h"
-#include	"CoreLibrary/base.h"
-#include	"CoreLibrary/utils.h"
+#include "atom.h"
+#include "CoreLibrary/base.h"
+#include "CoreLibrary/utils.h"
 
 
-namespace	r_code{
+namespace r_code {
 
-	// For use in STL containers.
-	template<class	C>	class	PHash{
-	public:
-		size_t	operator	()(P<C>	c)	const{
-			return	(size_t)(C	*)c;
-		}
-	};
+// For use in STL containers.
+template<class C> class PHash {
+public:
+    size_t operator()(P<C> c) const {
+        return (size_t)(C *)c;
+    }
+};
 
-	// Debugging facility.
-	class	NullOStream:
-	public	std::ostream{
-	public:
-		NullOStream():std::ostream(NULL){}
-		template<typename	T>	NullOStream&	operator	<<(T	&t){
-			return	*this;
-		}
-	};
+// Debugging facility.
+class NullOStream:
+    public std::ostream {
+public:
+    NullOStream(): std::ostream(NULL) {}
+    template<typename T> NullOStream& operator <<(T &t) {
+        return *this;
+    }
+};
 
-	class	Code;
+class Code;
 
-	class	dll_export	Utils{
-	private:
-		static	uint64	TimeReference;	// starting time.
-		static	uint32	BasePeriod;
-		static	float32	FloatTolerance;
-		static	uint32	TimeTolerance;
-	public:
-		static	uint64	GetTimeReference();
-		static	uint32	GetBasePeriod();
-		static	uint32	GetFloatTolerance();
-		static	uint32	GetTimeTolerance();
-		static	void	SetReferenceValues(uint32	base_period,float32	float_tolerance,uint32	time_tolerance);
-		static	void	SetTimeReference(uint64	time_reference);
+class dll_export Utils {
+private:
+    static uint64 TimeReference; // starting time.
+    static uint32 BasePeriod;
+    static float32 FloatTolerance;
+    static uint32 TimeTolerance;
+public:
+    static uint64 GetTimeReference();
+    static uint32 GetBasePeriod();
+    static uint32 GetFloatTolerance();
+    static uint32 GetTimeTolerance();
+    static void SetReferenceValues(uint32 base_period, float32 float_tolerance, uint32 time_tolerance);
+    static void SetTimeReference(uint64 time_reference);
 
-		static	bool	Equal(float32	l,float32	r);
-		static	bool	Synchronous(uint64	l,uint64	r);
+    static bool Equal(float32 l, float32 r);
+    static bool Synchronous(uint64 l, uint64 r);
 
-		static	uint64	GetTimestamp(const	Atom	*iptr);
-		static	void	SetTimestamp(Atom	*iptr,uint64	t);
-		static	void	SetTimestamp(Code	*object,uint16	index,uint64	t);	// allocates atoms.
+    static uint64 GetTimestamp(const Atom *iptr);
+    static void SetTimestamp(Atom *iptr, uint64 t);
+    static void SetTimestamp(Code *object, uint16 index, uint64 t); // allocates atoms.
 
-		static	const	uint64	MaxTime=0xFFFFFFFFFFFFFFFF;
-		static	const	uint64	MaxTHZ=0xFFFFFFFF;
+    static const uint64 MaxTime = 0xFFFFFFFFFFFFFFFF;
+    static const uint64 MaxTHZ = 0xFFFFFFFF;
 
-		template<class	O>	static	uint64	GetTimestamp(const	O	*object,uint16	index){
+    template<class O> static uint64 GetTimestamp(const O *object, uint16 index) {
 
-			uint16	t_index=object->code(index).asIndex();
-			uint64	high=object->code(t_index+1).atom;
-			return	high<<32	|	object->code(t_index+2).atom;
-		}
+        uint16 t_index = object->code(index).asIndex();
+        uint64 high = object->code(t_index + 1).atom;
+        return high << 32 | object->code(t_index + 2).atom;
+    }
 
-		template<class	O>	static	void	SetTimestamp(O	*object,uint16	index,uint64	t){
+    template<class O> static void SetTimestamp(O *object, uint16 index, uint64 t) {
 
-			uint16	t_index=object->code(index).asIndex();
-			object->code(t_index)=Atom::Timestamp();
-			object->code(t_index+1).atom=t>>32;
-			object->code(t_index+2).atom=t	&	0x00000000FFFFFFFF;
-		}
+        uint16 t_index = object->code(index).asIndex();
+        object->code(t_index) = Atom::Timestamp();
+        object->code(t_index + 1).atom = t >> 32;
+        object->code(t_index + 2).atom = t & 0x00000000FFFFFFFF;
+    }
 
-		static	std::string	GetString(const	Atom	*iptr);
-		static	void	SetString(Atom	*iptr,const	std::string	&s);
+    static std::string GetString(const Atom *iptr);
+    static void SetString(Atom *iptr, const std::string &s);
 
-		template<class	O>	static	std::string	GetString(const	O	*object,uint16	index){
+    template<class O> static std::string GetString(const O *object, uint16 index) {
 
-			uint16	s_index=object->code(index).asIndex();
-			char	buffer[255];
-			uint8	char_count=(object->code(s_index).atom	&	0x000000FF);
-            buffer[char_count]=0;
-            for (int i=0; i<char_count; i+=4) {
-                uint32 val = object->code(s_index + 1 + i/4);
-                buffer[i] = (val & 0x000000ff);
-                buffer[i+1] = (val & 0x0000ff00) >> 8;
-                buffer[i+2] = (val & 0x00ff0000) >> 16;
-                buffer[i+3] = (val & 0xff000000) >> 24;
+        uint16 s_index = object->code(index).asIndex();
+        char buffer[255];
+        uint8 char_count = (object->code(s_index).atom & 0x000000FF);
+        buffer[char_count] = 0;
+        for (int i = 0; i < char_count; i += 4) {
+            uint32 val = object->code(s_index + 1 + i / 4);
+            buffer[i] = (val & 0x000000ff);
+            buffer[i + 1] = (val & 0x0000ff00) >> 8;
+            buffer[i + 2] = (val & 0x00ff0000) >> 16;
+            buffer[i + 3] = (val & 0xff000000) >> 24;
+        }
+        return std::string(buffer);
+    }
+
+    template<class O> static void SetString(O *object, uint16 index, const std::string &s) {
+
+        uint16 s_index = object->code(index).asIndex();
+        uint8 l = (uint8)s.length();
+        object->code(s_index) = Atom::String(l);
+        uint32 _st = 0;
+        int8 shift = 0;
+        for (uint8 i = 0; i < l; ++i) {
+
+            _st |= s[i] << shift;
+            shift += 8;
+            if (shift == 32) {
+
+                object->code(++s_index) = _st;
+                _st = 0;
+                shift = 0;
             }
-			return	std::string(buffer);
-		}
+        }
+        if (l % 4)
+            object->code(++s_index) = _st;
+    }
 
-		template<class	O>	static	void	SetString(O	*object,uint16	index,const	std::string	&s){
+    static int32 GetResilience(uint64 now, uint64 time_to_live, uint64 upr); // ttl: us, upr: us.
+    static int32 GetResilience(float32 resilience, float32 origin_upr, float32 destination_upr); // express the res in destination group, given the res in origin group.
 
-			uint16	s_index=object->code(index).asIndex();
-			uint8	l=(uint8)s.length();
-			object->code(s_index)=Atom::String(l);
-			uint32	_st=0;
-			int8	shift=0;
-			for(uint8	i=0;i<l;++i){
-				
-				_st|=s[i]<<shift;
-				shift+=8;
-				if(shift==32){
-
-					object->code(++s_index)=_st;
-					_st=0;
-					shift=0;
-				}
-			}
-			if(l%4)
-				object->code(++s_index)=_st;
-		}
-
-		static	int32	GetResilience(uint64	now,uint64	time_to_live,uint64	upr);	// ttl: us, upr: us.
-		static	int32	GetResilience(float32	resilience,float32	origin_upr,float32	destination_upr);	// express the res in destination group, given the res in origin group.
-
-		static	std::string	RelativeTime(uint64	t);
-	};
+    static std::string RelativeTime(uint64 t);
+};
 }
 
 

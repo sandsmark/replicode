@@ -15,22 +15,22 @@
 class LstmLayer {
 
 public:
-	LstmLayer(int nCells, int nInputs, int nOutputs, int nBlocks);
-	void forwardPassStep(int t, std::vector <std::vector<LstmBlockState> >& state,  std::vector<std::vector<double> >& x);
-	void backwardPassStep(int t, std::vector <std::vector<LstmBlockState> >& state, std::vector< std::vector<double> >& wK,
-			std::vector<double>& dk, std::vector<std::vector<double> >& x);
-	void getBlockOutputs(int t, std::vector <std::vector<LstmBlockState> >& state, std::vector<double>& b);
-	void updateWeights(double eta, double alpha);
-	void setConstantWeights(double w);
-	void setRandomWeights(double halfRange);
+    LstmLayer(int nCells, int nInputs, int nOutputs, int nBlocks);
+    void forwardPassStep(int t, std::vector <std::vector<LstmBlockState> >& state, std::vector<std::vector<double> >& x);
+    void backwardPassStep(int t, std::vector <std::vector<LstmBlockState> >& state, std::vector< std::vector<double> >& wK,
+                          std::vector<double>& dk, std::vector<std::vector<double> >& x);
+    void getBlockOutputs(int t, std::vector <std::vector<LstmBlockState> >& state, std::vector<double>& b);
+    void updateWeights(double eta, double alpha);
+    void setConstantWeights(double w);
+    void setRandomWeights(double halfRange);
 
-	void resetDerivs();
+    void resetDerivs();
 
-	void printWeights();
+    void printWeights();
 
-	~LstmLayer();
+    ~LstmLayer();
 
-	std::vector <LstmBlock> lstmBlock; // lstm blocks
+    std::vector <LstmBlock> lstmBlock; // lstm blocks
 private:
 
 };

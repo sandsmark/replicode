@@ -28,517 +28,517 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"g_monitor.h"
-#include	"mem.h"
-#include	"mdl_controller.h"
-#include	"factory.h"
+#include "g_monitor.h"
+#include "mem.h"
+#include "mdl_controller.h"
+#include "factory.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	_GMonitor::_GMonitor(	PMDLController	*controller,
-							BindingMap		*bindings,
-							uint64			deadline,
-							uint64			sim_thz,
-							Fact			*goal,
-							Fact			*f_imdl):Monitor(	controller,
-																bindings,
-																goal),
-																deadline(deadline),
-																sim_thz(sim_thz),
-																f_imdl(f_imdl){	// goal is f0->g->f1->object.
+_GMonitor::_GMonitor(PMDLController *controller,
+                     BindingMap *bindings,
+                     uint64 deadline,
+                     uint64 sim_thz,
+                     Fact *goal,
+                     Fact *f_imdl): Monitor(controller,
+                                 bindings,
+                                 goal),
+    deadline(deadline),
+    sim_thz(sim_thz),
+    f_imdl(f_imdl) { // goal is f0->g->f1->object.
 
-		simulating=(sim_thz>Now());
-		sim_mode=goal->get_goal()->sim->mode;
-		goal_target=target->get_goal()->get_target();	// f1.
-	}
+    simulating = (sim_thz > Now());
+    sim_mode = goal->get_goal()->sim->mode;
+    goal_target = target->get_goal()->get_target(); // f1.
+}
 
-	void	_GMonitor::store_simulated_outcome(Goal	*affected_goal,Sim	*sim,bool	success){	// outcome is f0 as in f0->pred->f1->success.
+void _GMonitor::store_simulated_outcome(Goal *affected_goal, Sim *sim, bool success) { // outcome is f0 as in f0->pred->f1->success.
 
-		if(success){
+    if (success) {
 
-			switch(sim->mode){
-			case	SIM_MANDATORY:
-				sim_successes.mandatory_solutions.push_back(std::pair<P<Goal>,P<Sim> >(affected_goal,sim));
-				break;
-			case	SIM_OPTIONAL:
-				sim_successes.mandatory_solutions.push_back(std::pair<P<Goal>,P<Sim> >(affected_goal,sim));
-				break;
-			default:
-				break;
-			}
-		}else{
+        switch (sim->mode) {
+        case SIM_MANDATORY:
+            sim_successes.mandatory_solutions.push_back(std::pair<P<Goal>, P<Sim> >(affected_goal, sim));
+            break;
+        case SIM_OPTIONAL:
+            sim_successes.mandatory_solutions.push_back(std::pair<P<Goal>, P<Sim> >(affected_goal, sim));
+            break;
+        default:
+            break;
+        }
+    } else {
 
-			switch(sim->mode){
-			case	SIM_MANDATORY:
-				sim_failures.optional_solutions.push_back(std::pair<P<Goal>,P<Sim> >(affected_goal,sim));
-				break;
-			case	SIM_OPTIONAL:
-				sim_failures.optional_solutions.push_back(std::pair<P<Goal>,P<Sim> >(affected_goal,sim));
-				break;
-			default:
-				break;
-			}
-		}
-	}
+        switch (sim->mode) {
+        case SIM_MANDATORY:
+            sim_failures.optional_solutions.push_back(std::pair<P<Goal>, P<Sim> >(affected_goal, sim));
+            break;
+        case SIM_OPTIONAL:
+            sim_failures.optional_solutions.push_back(std::pair<P<Goal>, P<Sim> >(affected_goal, sim));
+            break;
+        default:
+            break;
+        }
+    }
+}
 
-	void	_GMonitor::invalidate_sim_outcomes(){
+void _GMonitor::invalidate_sim_outcomes() {
 
-		SolutionList::const_iterator	sol;
+    SolutionList::const_iterator sol;
 
-		for(sol=sim_failures.mandatory_solutions.begin();sol!=sim_failures.mandatory_solutions.end();++sol)
-			(*sol).second->invalidate();
+    for (sol = sim_failures.mandatory_solutions.begin(); sol != sim_failures.mandatory_solutions.end(); ++sol)
+        (*sol).second->invalidate();
 
-		for(sol=sim_failures.optional_solutions.begin();sol!=sim_failures.optional_solutions.end();++sol)
-			(*sol).second->invalidate();
+    for (sol = sim_failures.optional_solutions.begin(); sol != sim_failures.optional_solutions.end(); ++sol)
+        (*sol).second->invalidate();
 
-		for(sol=sim_successes.mandatory_solutions.begin();sol!=sim_successes.mandatory_solutions.end();++sol)
-			(*sol).second->invalidate();
+    for (sol = sim_successes.mandatory_solutions.begin(); sol != sim_successes.mandatory_solutions.end(); ++sol)
+        (*sol).second->invalidate();
 
-		for(sol=sim_successes.optional_solutions.begin();sol!=sim_successes.optional_solutions.end();++sol)
-			(*sol).second->invalidate();
-	}
+    for (sol = sim_successes.optional_solutions.begin(); sol != sim_successes.optional_solutions.end(); ++sol)
+        (*sol).second->invalidate();
+}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	GMonitor::GMonitor(	PMDLController	*controller,
-						BindingMap		*bindings,
-						uint64			deadline,
-						uint64			sim_thz,
-						Fact			*goal,
-						Fact			*f_imdl,
-						_Fact			*predicted_evidence):_GMonitor(	controller,
-																		bindings,
-																		deadline,
-																		sim_thz,
-																		goal,
-																		f_imdl),
-																		predicted_evidence(predicted_evidence){	// goal is f0->g->f1->object.
+GMonitor::GMonitor(PMDLController *controller,
+                   BindingMap *bindings,
+                   uint64 deadline,
+                   uint64 sim_thz,
+                   Fact *goal,
+                   Fact *f_imdl,
+                   _Fact *predicted_evidence): _GMonitor(controller,
+                               bindings,
+                               deadline,
+                               sim_thz,
+                               goal,
+                               f_imdl),
+    predicted_evidence(predicted_evidence) { // goal is f0->g->f1->object.
 
-		injected_goal=(predicted_evidence==NULL);
-		MonitoringJob<GMonitor>	*j=new	MonitoringJob<GMonitor>(this,simulating?sim_thz:deadline);
-		_Mem::Get()->pushTimeJob(j);
-	}
+    injected_goal = (predicted_evidence == NULL);
+    MonitoringJob<GMonitor> *j = new MonitoringJob<GMonitor>(this, simulating ? sim_thz : deadline);
+    _Mem::Get()->pushTimeJob(j);
+}
 
-	void	GMonitor::commit(){	// the purpose is to invalidate damaging simulations; if anything remains, commit to all mandatory simulations and to the best optional one.
+void GMonitor::commit() { // the purpose is to invalidate damaging simulations; if anything remains, commit to all mandatory simulations and to the best optional one.
 
-		Goal	*monitored_goal=target->get_goal();
+    Goal *monitored_goal = target->get_goal();
 
-		uint64	now=Now();
+    uint64 now = Now();
 
-		SolutionList::const_iterator	sol;
+    SolutionList::const_iterator sol;
 
-		for(sol=sim_failures.mandatory_solutions.begin();sol!=sim_failures.mandatory_solutions.end();++sol){	// check if any mandatory solution could result in the failure of more important a goal.
+    for (sol = sim_failures.mandatory_solutions.begin(); sol != sim_failures.mandatory_solutions.end(); ++sol) { // check if any mandatory solution could result in the failure of more important a goal.
 
-			if((*sol).second->is_invalidated())
-				continue;
-			if((*sol).first->get_strength(now)>monitored_goal->get_strength(now)){	// cave in.
+        if ((*sol).second->is_invalidated())
+            continue;
+        if ((*sol).first->get_strength(now) > monitored_goal->get_strength(now)) { // cave in.
 
-				invalidate_sim_outcomes();	// this stops any further propagation of the goal simulation.
-				return;
-			}
-		}
+            invalidate_sim_outcomes(); // this stops any further propagation of the goal simulation.
+            return;
+        }
+    }
 
-		for(sol=sim_failures.optional_solutions.begin();sol!=sim_failures.optional_solutions.end();++sol){		// check if any optional solutions could result in the failure of more important a goal; invalidate the culprits.
+    for (sol = sim_failures.optional_solutions.begin(); sol != sim_failures.optional_solutions.end(); ++sol) { // check if any optional solutions could result in the failure of more important a goal; invalidate the culprits.
 
-			if((*sol).second->is_invalidated())
-				continue;
-			if((*sol).first->get_strength(now)>monitored_goal->get_strength(now))
-				(*sol).second->invalidate();
-		}
+        if ((*sol).second->is_invalidated())
+            continue;
+        if ((*sol).first->get_strength(now) > monitored_goal->get_strength(now))
+            (*sol).second->invalidate();
+    }
 
-		Sim	*best_sol=NULL;
-		for(sol=sim_successes.optional_solutions.begin();sol!=sim_successes.optional_solutions.end();++sol){	// find the best optional solution left.
+    Sim *best_sol = NULL;
+    for (sol = sim_successes.optional_solutions.begin(); sol != sim_successes.optional_solutions.end(); ++sol) { // find the best optional solution left.
 
-			if((*sol).second->is_invalidated())
-				continue;
-			if(!best_sol)
-				best_sol=(*sol).second;
-			else{
-				
-				float32	s=(*sol).second->sol_cfd/((*sol).second->sol_before-now);
-				float32	_s=best_sol->sol_cfd/(best_sol->sol_before-now);
-				if(s>_s)
-					best_sol=(*sol).second;
-			}
-		}
+        if ((*sol).second->is_invalidated())
+            continue;
+        if (!best_sol)
+            best_sol = (*sol).second;
+        else {
 
-		invalidate_sim_outcomes();	// this stops any further propagation of the goal simulation.
+            float32 s = (*sol).second->sol_cfd / ((*sol).second->sol_before - now);
+            float32 _s = best_sol->sol_cfd / (best_sol->sol_before - now);
+            if (s > _s)
+                best_sol = (*sol).second;
+        }
+    }
 
-		if(best_sol){
+    invalidate_sim_outcomes(); // this stops any further propagation of the goal simulation.
 
-			((PrimaryMDLController	*)(*sol).second->sol)->abduce(bindings,best_sol->super_goal,best_sol->opposite,goal_target->get_cfd());
+    if (best_sol) {
 
-			for(sol=sim_successes.mandatory_solutions.begin();sol!=sim_successes.mandatory_solutions.end();++sol)	// commit to all mandatory solutions.
-				((PrimaryMDLController	*)(*sol).second->sol)->abduce(bindings,(*sol).second->super_goal,(*sol).second->opposite,goal_target->get_cfd());
-		}
-	}
+        ((PrimaryMDLController *)(*sol).second->sol)->abduce(bindings, best_sol->super_goal, best_sol->opposite, goal_target->get_cfd());
 
-	bool	GMonitor::reduce(_Fact	*input){	// executed by a reduction core; invalidation check performed in Monitor::is_alive().
+        for (sol = sim_successes.mandatory_solutions.begin(); sol != sim_successes.mandatory_solutions.end(); ++sol) // commit to all mandatory solutions.
+            ((PrimaryMDLController *)(*sol).second->sol)->abduce(bindings, (*sol).second->super_goal, (*sol).second->opposite, goal_target->get_cfd());
+    }
+}
 
-		if(target->is_invalidated())
-			return	true;
+bool GMonitor::reduce(_Fact *input) { // executed by a reduction core; invalidation check performed in Monitor::is_alive().
 
-		if(!injected_goal){
-			
-			if(predicted_evidence	&&	predicted_evidence->is_invalidated()){	// the predicted evidence was wrong.
+    if (target->is_invalidated())
+        return true;
 
-				((PMDLController	*)controller)->register_predicted_goal_outcome(target,bindings,f_imdl,false,injected_goal);	// report a predicted failure; this will inject the goal.
-				predicted_evidence=NULL;
-				injected_goal=true;
-				return	false;
-			}
-		}
+    if (!injected_goal) {
 
-		Pred	*prediction=input->get_pred();
-		if(prediction){	// input is f0->pred->f1->object.
+        if (predicted_evidence && predicted_evidence->is_invalidated()) { // the predicted evidence was wrong.
 
-			_Fact	*_input=prediction->get_target();	// _input is f1->obj.
-			if(simulating){	// injected_goal==true.
+            ((PMDLController *)controller)->register_predicted_goal_outcome(target, bindings, f_imdl, false, injected_goal); // report a predicted failure; this will inject the goal.
+            predicted_evidence = NULL;
+            injected_goal = true;
+            return false;
+        }
+    }
 
-				Sim		*sim=prediction->get_simulation(target);
-				if(sim){
+    Pred *prediction = input->get_pred();
+    if (prediction) { // input is f0->pred->f1->object.
 
-					Code	*outcome=_input->get_reference(0);
-					if(outcome->code(0).asOpcode()==Opcodes::Success){	// _input is f1->success or |f1->success.
+        _Fact *_input = prediction->get_target(); // _input is f1->obj.
+        if (simulating) { // injected_goal==true.
 
-						_Fact	*f_success=(_Fact	*)outcome->get_reference(SUCCESS_OBJ);
-						Goal	*affected_goal=f_success->get_goal();
-						if(affected_goal){
+            Sim *sim = prediction->get_simulation(target);
+            if (sim) {
 
-							store_simulated_outcome(affected_goal,sim,_input->is_fact());
-							return	false;
-						}
-					}else{	// report the simulated outcome: this will inject a simulated prediction of the outcome, to allow any g-monitor deciding on this ground.
+                Code *outcome = _input->get_reference(0);
+                if (outcome->code(0).asOpcode() == Opcodes::Success) { // _input is f1->success or |f1->success.
 
-						switch(_input->is_evidence(goal_target)){
-						case	MATCH_SUCCESS_POSITIVE:
-							((PMDLController	*)controller)->register_simulated_goal_outcome(target,true,input);	// report a simulated success.
-							return	false;
-						case	MATCH_SUCCESS_NEGATIVE:
-							((PMDLController	*)controller)->register_simulated_goal_outcome(target,false,input);	// report a simulated failure.
-							return	false;
-						case	MATCH_FAILURE:
-							return	false;
-						}
-					}
-				}else	// during simulation (SIM_ROOT) if the prediction is actual, positive and comes true, we'll eventually catch an actual evidence; otherwise (positive that does not come true or negative), keep simulating: in any case ignore it.
-					return	false;
-			}else{
+                    _Fact *f_success = (_Fact *)outcome->get_reference(SUCCESS_OBJ);
+                    Goal *affected_goal = f_success->get_goal();
+                    if (affected_goal) {
 
-				switch(_input->is_evidence(goal_target)){
-				case	MATCH_SUCCESS_POSITIVE:
-					if(injected_goal)
-						((PMDLController	*)controller)->register_predicted_goal_outcome(target,bindings,f_imdl,true,true);	// report a predicted success.
-					if(predicted_evidence	&&	_input->get_cfd()>predicted_evidence->get_pred()->get_target()->get_cfd())	// bias toward cfd instead of age.
-						predicted_evidence=input;
-					return	false;
-				case	MATCH_SUCCESS_NEGATIVE:
-					((PMDLController	*)controller)->register_predicted_goal_outcome(target,bindings,f_imdl,false,injected_goal);	// report a predicted failure; this may invalidate the target.
-					predicted_evidence=NULL;
-					injected_goal=true;
-					return	target->is_invalidated();
-				case	MATCH_FAILURE:
-					return	false;
-				}
-			}
-		}else{	// input is an actual fact.
+                        store_simulated_outcome(affected_goal, sim, _input->is_fact());
+                        return false;
+                    }
+                } else { // report the simulated outcome: this will inject a simulated prediction of the outcome, to allow any g-monitor deciding on this ground.
 
-			Goal	*g=target->get_goal();
-			if(g->ground_invalidated(input)){	// invalidate the goal and abduce from the super-goal.
+                    switch (_input->is_evidence(goal_target)) {
+                    case MATCH_SUCCESS_POSITIVE:
+                        ((PMDLController *)controller)->register_simulated_goal_outcome(target, true, input); // report a simulated success.
+                        return false;
+                    case MATCH_SUCCESS_NEGATIVE:
+                        ((PMDLController *)controller)->register_simulated_goal_outcome(target, false, input); // report a simulated failure.
+                        return false;
+                    case MATCH_FAILURE:
+                        return false;
+                    }
+                }
+            } else // during simulation (SIM_ROOT) if the prediction is actual, positive and comes true, we'll eventually catch an actual evidence; otherwise (positive that does not come true or negative), keep simulating: in any case ignore it.
+                return false;
+        } else {
 
-				target->invalidate();
-				((PrimaryMDLController	*)controller)->abduce(bindings,g->sim->super_goal,g->sim->opposite,goal_target->get_cfd());
-				return	true;
-			}
+            switch (_input->is_evidence(goal_target)) {
+            case MATCH_SUCCESS_POSITIVE:
+                if (injected_goal)
+                    ((PMDLController *)controller)->register_predicted_goal_outcome(target, bindings, f_imdl, true, true); // report a predicted success.
+                if (predicted_evidence && _input->get_cfd() > predicted_evidence->get_pred()->get_target()->get_cfd()) // bias toward cfd instead of age.
+                    predicted_evidence = input;
+                return false;
+            case MATCH_SUCCESS_NEGATIVE:
+                ((PMDLController *)controller)->register_predicted_goal_outcome(target, bindings, f_imdl, false, injected_goal); // report a predicted failure; this may invalidate the target.
+                predicted_evidence = NULL;
+                injected_goal = true;
+                return target->is_invalidated();
+            case MATCH_FAILURE:
+                return false;
+            }
+        }
+    } else { // input is an actual fact.
 
-			switch(input->is_evidence(goal_target)){
-			case	MATCH_SUCCESS_POSITIVE:
-				((PMDLController	*)controller)->register_goal_outcome(target,true,input);	// report a success.
-				return	true;
-			case	MATCH_SUCCESS_NEGATIVE:
-				((PMDLController	*)controller)->register_goal_outcome(target,false,input);	// report a failure.
-				return	true;
-			case	MATCH_FAILURE:
-				return	false;
-			}
-		}
-        std::cerr << "reached invalid state!";
+        Goal *g = target->get_goal();
+        if (g->ground_invalidated(input)) { // invalidate the goal and abduce from the super-goal.
+
+            target->invalidate();
+            ((PrimaryMDLController *)controller)->abduce(bindings, g->sim->super_goal, g->sim->opposite, goal_target->get_cfd());
+            return true;
+        }
+
+        switch (input->is_evidence(goal_target)) {
+        case MATCH_SUCCESS_POSITIVE:
+            ((PMDLController *)controller)->register_goal_outcome(target, true, input); // report a success.
+            return true;
+        case MATCH_SUCCESS_NEGATIVE:
+            ((PMDLController *)controller)->register_goal_outcome(target, false, input); // report a failure.
+            return true;
+        case MATCH_FAILURE:
+            return false;
+        }
+    }
+    std::cerr << "reached invalid state!";
+    return false;
+}
+
+void GMonitor::update(uint64 &next_target) { // executed by a time core.
+
+    if (target->is_invalidated()) {
+
+        ((PMDLController *)controller)->remove_g_monitor(this);
+        next_target = 0;
+    } else if (simulating) {
+
+        simulating = 0;
+        commit();
+        next_target = deadline;
+    } else {
+
+        ((PMDLController *)controller)->register_goal_outcome(target, false, NULL);
+        ((PMDLController *)controller)->remove_g_monitor(this);
+        next_target = 0;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RMonitor::RMonitor(PrimaryMDLController *controller,
+                   BindingMap *bindings,
+                   uint64 deadline,
+                   uint64 sim_thz,
+                   Fact *goal,
+                   Fact *f_imdl): GMonitor(controller,
+                               bindings,
+                               deadline,
+                               sim_thz,
+                               goal,
+                               f_imdl,
+                               NULL) { // goal is f0->g->f1->object.
+
+    MonitoringJob<RMonitor> *j = new MonitoringJob<RMonitor>(this, deadline);
+    _Mem::Get()->pushTimeJob(j);
+}
+
+bool RMonitor::signal(bool simulation) {
+
+    if (target->is_invalidated())
+        return true;
+
+    if (simulating && simulation) { // report the simulated outcome: this will inject a simulated prediction of the outcome, to allow any g-monitor deciding on this ground.
+
+        if (((PrimaryMDLController *)controller)->check_simulated_imdl(target, bindings, target->get_goal()->sim->root))
+            ((PMDLController *)controller)->register_simulated_goal_outcome(target, true, target); // report a simulated success.
+        else
+            ((PMDLController *)controller)->register_simulated_goal_outcome(target, false, NULL); // report a simulated failure.
         return false;
-	}
+    } else if (((PrimaryMDLController *)controller)->check_imdl(target, bindings))
+        return true;
+    return false;
+}
 
-	void	GMonitor::update(uint64	&next_target){	// executed by a time core.
-		
-		if(target->is_invalidated()){
+bool RMonitor::reduce(_Fact *input) { // catch simulated predictions only; requirements are observable in signal().
 
-			((PMDLController	*)controller)->remove_g_monitor(this);
-			next_target=0;
-		}else	if(simulating){
+    if (target->is_invalidated())
+        return true;
 
-			simulating=0;
-			commit();
-			next_target=deadline;
-		}else{
+    Pred *prediction = input->get_pred();
+    if (prediction) { // input is f0->pred->f1->object.
 
-			((PMDLController	*)controller)->register_goal_outcome(target,false,NULL);
-			((PMDLController	*)controller)->remove_g_monitor(this);
-			next_target=0;
-		}
-	}
+        _Fact *_input = prediction->get_target(); // _input is f1->obj.
+        if (simulating) { // injected_goal==true.
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            Sim *sim = prediction->get_simulation(target);
+            if (sim) {
 
-	RMonitor::RMonitor(	PrimaryMDLController	*controller,
-						BindingMap				*bindings,
-						uint64					deadline,
-						uint64					sim_thz,
-						Fact					*goal,
-						Fact					*f_imdl):GMonitor(	controller,
-																	bindings,
-																	deadline,
-																	sim_thz,
-																	goal,
-																	f_imdl,
-																	NULL){	// goal is f0->g->f1->object.
+                Code *outcome = _input->get_reference(0);
+                if (outcome->code(0).asOpcode() == Opcodes::Success) { // _input is f1->success or |f1->success.
 
-		MonitoringJob<RMonitor>	*j=new	MonitoringJob<RMonitor>(this,deadline);
-		_Mem::Get()->pushTimeJob(j);
-	}
+                    _Fact *f_success = (_Fact *)outcome->get_reference(SUCCESS_OBJ);
+                    Goal *affected_goal = f_success->get_goal();
+                    if (affected_goal) {
 
-	bool	RMonitor::signal(bool	simulation){
+                        store_simulated_outcome(affected_goal, sim, _input->is_fact());
+                        return false;
+                    }
+                }
+            }
+        }
+    }
 
-		if(target->is_invalidated())
-			return	true;
+    return false;
+}
 
-		if(simulating	&&	simulation){	// report the simulated outcome: this will inject a simulated prediction of the outcome, to allow any g-monitor deciding on this ground.
+void RMonitor::update(uint64 &next_target) {
 
-			if(((PrimaryMDLController	*)controller)->check_simulated_imdl(target,bindings,target->get_goal()->sim->root))
-				((PMDLController	*)controller)->register_simulated_goal_outcome(target,true,target);		// report a simulated success.
-			else
-				((PMDLController	*)controller)->register_simulated_goal_outcome(target,false,NULL);	// report a simulated failure.
-			return	false;
-		}else	if(((PrimaryMDLController	*)controller)->check_imdl(target,bindings))
-			return	true;
-		return	false;
-	}
+    if (target->is_invalidated()) {
 
-	bool	RMonitor::reduce(_Fact	*input){	// catch simulated predictions only; requirements are observable in signal().
+        ((PMDLController *)controller)->remove_r_monitor(this);
+        next_target = 0;
+    } else if (simulating) {
 
-		if(target->is_invalidated())
-			return	true;
+        simulating = 0;
+        commit();
+        next_target = deadline;
+    } else {
 
-		Pred	*prediction=input->get_pred();
-		if(prediction){	// input is f0->pred->f1->object.
+        ((PMDLController *)controller)->register_goal_outcome(target, false, NULL);
+        ((PMDLController *)controller)->remove_r_monitor(this);
+        next_target = 0;
+    }
+}
 
-			_Fact	*_input=prediction->get_target();	// _input is f1->obj.
-			if(simulating){	// injected_goal==true.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-				Sim		*sim=prediction->get_simulation(target);
-				if(sim){
+SGMonitor::SGMonitor(PrimaryMDLController *controller,
+                     BindingMap *bindings,
+                     uint64 sim_thz,
+                     Fact *goal,
+                     Fact *f_imdl): _GMonitor(controller,
+                                 bindings,
+                                 0,
+                                 sim_thz,
+                                 goal,
+                                 f_imdl) { // goal is f0->g->f1->object.
 
-					Code	*outcome=_input->get_reference(0);
-					if(outcome->code(0).asOpcode()==Opcodes::Success){	// _input is f1->success or |f1->success.
+    MonitoringJob<SGMonitor> *j = new MonitoringJob<SGMonitor>(this, sim_thz);
+    _Mem::Get()->pushTimeJob(j);
+}
 
-						_Fact	*f_success=(_Fact	*)outcome->get_reference(SUCCESS_OBJ);
-						Goal	*affected_goal=f_success->get_goal();
-						if(affected_goal){
+void SGMonitor::commit() { // the purpose is to invalidate damaging simulations and let the rest flow upward.
 
-							store_simulated_outcome(affected_goal,sim,_input->is_fact());
-							return	false;
-						}
-					}
-				}
-			}
-		}
+    Goal *monitored_goal = target->get_goal();
 
-		return	false;
-	}
+    uint64 now = Now();
 
-	void	RMonitor::update(uint64	&next_target){
+    SolutionList::const_iterator sol;
 
-		if(target->is_invalidated()){
+    for (sol = sim_failures.mandatory_solutions.begin(); sol != sim_failures.mandatory_solutions.end(); ++sol) { // check if any mandatory solution could result in the failure of more important a goal.
 
-			((PMDLController	*)controller)->remove_r_monitor(this);
-			next_target=0;
-		}else	if(simulating){
+        if ((*sol).second->is_invalidated())
+            continue;
+        if ((*sol).first->get_strength(now) > monitored_goal->get_strength(now)) { // cave in.
 
-			simulating=0;
-			commit();
-			next_target=deadline;
-		}else{
+            (*sol).second->invalidate();
+            return;
+        }
+    }
 
-			((PMDLController	*)controller)->register_goal_outcome(target,false,NULL);
-			((PMDLController	*)controller)->remove_r_monitor(this);
-			next_target=0;
-		}
-	}
+    for (sol = sim_failures.optional_solutions.begin(); sol != sim_failures.optional_solutions.end(); ++sol) { // check if any optional solutions could result in the failure of more important a goal; invalidate the culprits.
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        if ((*sol).second->is_invalidated())
+            continue;
+        if ((*sol).first->get_strength(now) > monitored_goal->get_strength(now))
+            (*sol).second->invalidate();
+    }
+}
 
-	SGMonitor::SGMonitor(	PrimaryMDLController	*controller,
-							BindingMap				*bindings,
-							uint64					sim_thz,
-							Fact					*goal,
-							Fact					*f_imdl):_GMonitor(controller,
-																		bindings,
-																		0,
-																		sim_thz,
-																		goal,
-																		f_imdl){	// goal is f0->g->f1->object.
+bool SGMonitor::reduce(_Fact *input) {
 
-		MonitoringJob<SGMonitor>	*j=new	MonitoringJob<SGMonitor>(this,sim_thz);
-		_Mem::Get()->pushTimeJob(j);
-	}
+    if (target->is_invalidated())
+        return true;
 
-	void	SGMonitor::commit(){	// the purpose is to invalidate damaging simulations and let the rest flow upward.
+    _Fact *_input;
+    Pred *prediction = input->get_pred();
+    if (prediction) { // input is f0->pred->f1->object.
 
-		Goal	*monitored_goal=target->get_goal();
+        _input = prediction->get_target(); // _input is f1->obj.
 
-		uint64	now=Now();
+        Sim *sim = prediction->get_simulation(target);
+        if (sim) {
 
-		SolutionList::const_iterator	sol;
+            Code *outcome = _input->get_reference(0);
+            if (outcome->code(0).asOpcode() == Opcodes::Success) { // _input is f1->success or |f1->success.
 
-		for(sol=sim_failures.mandatory_solutions.begin();sol!=sim_failures.mandatory_solutions.end();++sol){	// check if any mandatory solution could result in the failure of more important a goal.
+                _Fact *f_success = (_Fact *)outcome->get_reference(SUCCESS_OBJ);
+                Goal *affected_goal = f_success->get_goal();
+                if (affected_goal) {
 
-			if((*sol).second->is_invalidated())
-				continue;
-			if((*sol).first->get_strength(now)>monitored_goal->get_strength(now)){	// cave in.
+                    store_simulated_outcome(affected_goal, sim, _input->is_fact());
+                    return false;
+                }
+            }
+        }
+    } else
+        _input = input;
 
-				(*sol).second->invalidate();
-				return;
-			}
-		}
-
-		for(sol=sim_failures.optional_solutions.begin();sol!=sim_failures.optional_solutions.end();++sol){		// check if any optional solutions could result in the failure of more important a goal; invalidate the culprits.
-
-			if((*sol).second->is_invalidated())
-				continue;
-			if((*sol).first->get_strength(now)>monitored_goal->get_strength(now))
-				(*sol).second->invalidate();
-		}
-	}
-
-	bool	SGMonitor::reduce(_Fact	*input){
-
-		if(target->is_invalidated())
-			return	true;
-
-		_Fact	*_input;
-		Pred	*prediction=input->get_pred();
-		if(prediction){	// input is f0->pred->f1->object.
-
-			_input=prediction->get_target();	// _input is f1->obj.
-
-			Sim		*sim=prediction->get_simulation(target);
-			if(sim){
-
-				Code	*outcome=_input->get_reference(0);
-				if(outcome->code(0).asOpcode()==Opcodes::Success){	// _input is f1->success or |f1->success.
-
-					_Fact	*f_success=(_Fact	*)outcome->get_reference(SUCCESS_OBJ);
-					Goal	*affected_goal=f_success->get_goal();
-					if(affected_goal){
-
-						store_simulated_outcome(affected_goal,sim,_input->is_fact());
-						return	false;
-					}
-				}
-			}
-		}else
-			_input=input;
-		
-		// Non-simulated input (can be actual or predicted): report the simulated outcome: this will inject a simulated prediction of the outcome, to allow any g-monitor deciding on this ground.
-		switch(_input->is_evidence(goal_target)){
-		case	MATCH_SUCCESS_POSITIVE:
-			((PMDLController	*)controller)->register_simulated_goal_outcome(target,true,_input);		// report a simulated success.
-			return	false;
-		case	MATCH_SUCCESS_NEGATIVE:
-			((PMDLController	*)controller)->register_simulated_goal_outcome(target,false,_input);	// report a simulated failure.
-			return	false;
-		case	MATCH_FAILURE:
-			return	false;
-		}
-
-        std::cerr << "reached invalid state!";
+// Non-simulated input (can be actual or predicted): report the simulated outcome: this will inject a simulated prediction of the outcome, to allow any g-monitor deciding on this ground.
+    switch (_input->is_evidence(goal_target)) {
+    case MATCH_SUCCESS_POSITIVE:
+        ((PMDLController *)controller)->register_simulated_goal_outcome(target, true, _input); // report a simulated success.
         return false;
-	}
+    case MATCH_SUCCESS_NEGATIVE:
+        ((PMDLController *)controller)->register_simulated_goal_outcome(target, false, _input); // report a simulated failure.
+        return false;
+    case MATCH_FAILURE:
+        return false;
+    }
 
-	void	SGMonitor::update(uint64	&next_target){	// executed by a time core.
-		
-		if(!target->is_invalidated())
-			commit();
-		((PMDLController	*)controller)->remove_g_monitor(this);
-		next_target=0;
-	}
+    std::cerr << "reached invalid state!";
+    return false;
+}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void SGMonitor::update(uint64 &next_target) { // executed by a time core.
 
-	SRMonitor::SRMonitor(	PrimaryMDLController	*controller,
-							BindingMap				*bindings,
-							uint64					sim_thz,
-							Fact					*goal,
-							Fact					*f_imdl):SGMonitor(controller,
-																		bindings,
-																		sim_thz,
-																		goal,
-																		f_imdl){	// goal is f0->g->f1->object.
+    if (!target->is_invalidated())
+        commit();
+    ((PMDLController *)controller)->remove_g_monitor(this);
+    next_target = 0;
+}
 
-		MonitoringJob<SRMonitor>	*j=new	MonitoringJob<SRMonitor>(this,sim_thz);
-		_Mem::Get()->pushTimeJob(j);
-	}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	bool	SRMonitor::signal(bool	simulation){
+SRMonitor::SRMonitor(PrimaryMDLController *controller,
+                     BindingMap *bindings,
+                     uint64 sim_thz,
+                     Fact *goal,
+                     Fact *f_imdl): SGMonitor(controller,
+                                 bindings,
+                                 sim_thz,
+                                 goal,
+                                 f_imdl) { // goal is f0->g->f1->object.
 
-		if(target->is_invalidated())
-			return	true;
+    MonitoringJob<SRMonitor> *j = new MonitoringJob<SRMonitor>(this, sim_thz);
+    _Mem::Get()->pushTimeJob(j);
+}
 
-		if(simulation){
+bool SRMonitor::signal(bool simulation) {
 
-			if(((PrimaryMDLController	*)controller)->check_simulated_imdl(target,bindings,target->get_goal()->sim->root))
-				((PMDLController	*)controller)->register_simulated_goal_outcome(target,true,target);	// report a simulated success.
-		}else{
+    if (target->is_invalidated())
+        return true;
 
-			if(((PrimaryMDLController	*)controller)->check_simulated_imdl(target,bindings,NULL))
-				((PMDLController	*)controller)->register_simulated_goal_outcome(target,false,NULL);	// report a simulated failure.
-		}
-		return	false;
-	}
+    if (simulation) {
 
-	bool	SRMonitor::reduce(_Fact	*input){
+        if (((PrimaryMDLController *)controller)->check_simulated_imdl(target, bindings, target->get_goal()->sim->root))
+            ((PMDLController *)controller)->register_simulated_goal_outcome(target, true, target); // report a simulated success.
+    } else {
 
-		if(target->is_invalidated())
-			return	true;
+        if (((PrimaryMDLController *)controller)->check_simulated_imdl(target, bindings, NULL))
+            ((PMDLController *)controller)->register_simulated_goal_outcome(target, false, NULL); // report a simulated failure.
+    }
+    return false;
+}
 
-		Pred	*prediction=input->get_pred();
-		if(prediction){	// input is f0->pred->f1->object.
+bool SRMonitor::reduce(_Fact *input) {
 
-			_Fact	*_input=prediction->get_target();	// _input is f1->obj.
+    if (target->is_invalidated())
+        return true;
 
-			Sim		*sim=prediction->get_simulation(target);
-			if(sim){
+    Pred *prediction = input->get_pred();
+    if (prediction) { // input is f0->pred->f1->object.
 
-				Code	*outcome=_input->get_reference(0);
-				if(outcome->code(0).asOpcode()==Opcodes::Success){	// _input is f1->success or |f1->success.
+        _Fact *_input = prediction->get_target(); // _input is f1->obj.
 
-					_Fact	*f_success=(_Fact	*)outcome->get_reference(SUCCESS_OBJ);
-					Goal	*affected_goal=f_success->get_goal();
-					if(affected_goal){
+        Sim *sim = prediction->get_simulation(target);
+        if (sim) {
 
-						store_simulated_outcome(affected_goal,sim,_input->is_fact());
-						return	false;
-					}
-				}
-			}
-		}
-		
-		return	false;
-	}
+            Code *outcome = _input->get_reference(0);
+            if (outcome->code(0).asOpcode() == Opcodes::Success) { // _input is f1->success or |f1->success.
 
-	void	SRMonitor::update(uint64	&next_target){
+                _Fact *f_success = (_Fact *)outcome->get_reference(SUCCESS_OBJ);
+                Goal *affected_goal = f_success->get_goal();
+                if (affected_goal) {
 
-		if(!target->is_invalidated())
-			commit();
-		((PMDLController	*)controller)->remove_r_monitor(this);
-		next_target=0;
-	}
+                    store_simulated_outcome(affected_goal, sim, _input->is_fact());
+                    return false;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+void SRMonitor::update(uint64 &next_target) {
+
+    if (!target->is_invalidated())
+        commit();
+    ((PMDLController *)controller)->remove_r_monitor(this);
+    next_target = 0;
+}
 }

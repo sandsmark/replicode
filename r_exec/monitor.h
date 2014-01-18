@@ -28,33 +28,33 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	monitor_h
-#define	monitor_h
+#ifndef monitor_h
+#define monitor_h
 
-#include	"CoreLibrary/utils.h"
-#include	"binding_map.h"
-#include	"factory.h"
+#include "CoreLibrary/utils.h"
+#include "binding_map.h"
+#include "factory.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	MDLController;
+class MDLController;
 
-	class	Monitor:
-	public	_Object{
-	protected:
-		P<BindingMap>	bindings;
-		P<Fact>			target;	// f->g or f->p.
+class Monitor:
+    public _Object {
+protected:
+    P<BindingMap> bindings;
+    P<Fact> target; // f->g or f->p.
 
-		MDLController	*controller;
+    MDLController *controller;
 
-		Monitor(MDLController	*controller,
-				BindingMap		*bindings,
-				Fact			*target);	// fact.
-	public:
-		bool	is_alive()	const;
-		virtual	bool	reduce(_Fact	*input)=0;
-	};
+    Monitor(MDLController *controller,
+            BindingMap *bindings,
+            Fact *target); // fact.
+public:
+    bool is_alive() const;
+    virtual bool reduce(_Fact *input) = 0;
+};
 }
 
 

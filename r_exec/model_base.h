@@ -28,78 +28,84 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	model_base_h
-#define	model_base_h
+#ifndef model_base_h
+#define model_base_h
 
-#include	"factory.h"
+#include "factory.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	class	_Mem;
+class _Mem;
 
-	// TPX guess models: this list is meant for TPXs to (a) avoid re-guessing known failed models and,
-	// (b) avoid producing the same models in case they run concurrently.
-	// The black list contains bad models (models that were killed). This list is trimmed down on a time basis (black_thz) by the garbage collector.
-	// Each bad model is tagged with the last time it was successfully compared to. GC is performed by comparing this time to the thz.
-	// The white list contains models that are still alive and is trimmed down when models time out.
-	// Models are packed before insertion in the white list.
-	class	ModelBase{
-	friend	class	_Mem;
-	private:
-		static	ModelBase	*Singleton;
+// TPX guess models: this list is meant for TPXs to (a) avoid re-guessing known failed models and,
+// (b) avoid producing the same models in case they run concurrently.
+// The black list contains bad models (models that were killed). This list is trimmed down on a time basis (black_thz) by the garbage collector.
+// Each bad model is tagged with the last time it was successfully compared to. GC is performed by comparing this time to the thz.
+// The white list contains models that are still alive and is trimmed down when models time out.
+// Models are packed before insertion in the white list.
+class ModelBase {
+    friend class _Mem;
+private:
+    static ModelBase *Singleton;
 
-		CriticalSection	mdlCS;
+    CriticalSection mdlCS;
 
-		uint64	thz;
-		
-		class	MEntry{
-		private:
-			static	bool	Match(Code	*lhs,Code	*rhs);
-			static	uint32	_ComputeHashCode(_Fact	*component);	// use for lhs/rhs.
-		public:
-			static	uint32	ComputeHashCode(Code	*mdl,bool	packed);
+    uint64 thz;
 
-			MEntry();
-			MEntry(Code	*mdl,bool	packed);
+    class MEntry {
+    private:
+        static bool Match(Code *lhs, Code *rhs);
+        static uint32 _ComputeHashCode(_Fact *component); // use for lhs/rhs.
+    public:
+        static uint32 ComputeHashCode(Code *mdl, bool packed);
 
-			P<Code>	mdl;
-			uint64	touch_time;	// last time the mdl was successfully compared to.
-			uint32	hash_code;
+        MEntry();
+        MEntry(Code *mdl, bool packed);
 
-			bool	match(const	MEntry	&e)	const;
+        P<Code> mdl;
+        uint64 touch_time; // last time the mdl was successfully compared to.
+        uint32 hash_code;
 
-			class	Hash{
-			public:
-				size_t	operator	()(MEntry	e)	const{	return	e.hash_code;	}
-			};
+        bool match(const MEntry &e) const;
 
-			class	Equal{
-			public:
-				bool	operator	()(const	MEntry	lhs,const	MEntry	rhs)	const{	return	lhs.match(rhs);	}
-			};
-		};
+        class Hash {
+        public:
+            size_t operator()(MEntry e) const {
+                return e.hash_code;
+            }
+        };
 
-		typedef	UNORDERED_SET<MEntry,typename	MEntry::Hash,typename	MEntry::Equal> MdlSet;
+        class Equal {
+        public:
+            bool operator()(const MEntry lhs, const MEntry rhs) const {
+                return lhs.match(rhs);
+            }
+        };
+    };
 
-		MdlSet	black_list;	// mdls are already packed when inserted (they come from the white list).
-		MdlSet	white_list;	// mdls are packed just before insertion.
+    typedef UNORDERED_SET<MEntry, typename MEntry::Hash, typename MEntry::Equal> MdlSet;
 
-		void	set_thz(uint64	thz){	this->thz=thz;	}	// called by _Mem::start(); set to secondary_thz.
-		void	trim_objects();	// called by _Mem::GC().
+    MdlSet black_list; // mdls are already packed when inserted (they come from the white list).
+    MdlSet white_list; // mdls are packed just before insertion.
 
-		ModelBase();
-	public:
-		static	ModelBase	*Get();
+    void set_thz(uint64 thz) {
+        this->thz = thz; // called by _Mem::start(); set to secondary_thz.
+    }
+    void trim_objects(); // called by _Mem::GC().
 
-		void	load(Code	*mdl);	// called by _Mem::load(); models with no views go to the black_list.
-		void	get_models(r_code::list<P<Code> >	&models);	// white_list first, black_list next.
+    ModelBase();
+public:
+    static ModelBase *Get();
 
-		Code	*check_existence(Code	*mdl);	// caveat: mdl is unpacked; return (a) NULL if the model is in the black list, (b) a model in the white list if the mdl has been registered there or (c) the mdl itself if not in the model base, in which case the mdl is added to the white list.
-		void	check_existence(Code	*m0,Code	*m1,Code	*&_m0,Code	*&_m1);	// m1 is a requirement on m0; _m0 and _m1 are the return values as defined above; m0 added only if m1 is not black listed.
-		void	register_mdl_failure(Code	*mdl);	// moves the mdl from the white to the black list; happens to bad models.
-		void	register_mdl_timeout(Code	*mdl);	// deletes the mdl from the white list; happen to models that have been unused for primary_thz.
-	};
+    void load(Code *mdl); // called by _Mem::load(); models with no views go to the black_list.
+    void get_models(r_code::list<P<Code> > &models); // white_list first, black_list next.
+
+    Code *check_existence(Code *mdl); // caveat: mdl is unpacked; return (a) NULL if the model is in the black list, (b) a model in the white list if the mdl has been registered there or (c) the mdl itself if not in the model base, in which case the mdl is added to the white list.
+    void check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1); // m1 is a requirement on m0; _m0 and _m1 are the return values as defined above; m0 added only if m1 is not black listed.
+    void register_mdl_failure(Code *mdl); // moves the mdl from the white to the black list; happens to bad models.
+    void register_mdl_timeout(Code *mdl); // deletes the mdl from the white list; happen to models that have been unused for primary_thz.
+};
 }
 
 

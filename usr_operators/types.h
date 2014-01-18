@@ -28,15 +28,15 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	usr_operators_types_h
-#define	usr_operators_types_h
+#ifndef usr_operators_types_h
+#define usr_operators_types_h
 
-#include	"../r_exec/operator.h"
+#include "../r_exec/operator.h"
 
 
-typedef	bool	(*Operator)(const	r_exec::Context	&,uint16	&);
+typedef bool (*Operator)(const r_exec::Context &, uint16 &);
 
-typedef	uint16	(*OpcodeRetriever)(const	char	*);
+typedef uint16(*OpcodeRetriever)(const char *);
 
 
 #endif

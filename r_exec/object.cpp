@@ -28,28 +28,28 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"object.h"
-#include	"group.h"
-#include	"opcodes.h"
+#include "object.h"
+#include "group.h"
+#include "opcodes.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	bool	IsNotification(Code	*object){
+bool IsNotification(Code *object) {
 
-		switch(object->code(0).getDescriptor()){
-		case	Atom::MARKER:
-			return	object->code(0).asOpcode()==Opcodes::MkActChg	||
-					object->code(0).asOpcode()==Opcodes::MkHighAct	||
-					object->code(0).asOpcode()==Opcodes::MkHighSln	||
-					object->code(0).asOpcode()==Opcodes::MkLowAct	||
-					object->code(0).asOpcode()==Opcodes::MkLowRes	||
-					object->code(0).asOpcode()==Opcodes::MkLowSln	||
-					object->code(0).asOpcode()==Opcodes::MkNew		||
-					object->code(0).asOpcode()==Opcodes::MkRdx		||
-					object->code(0).asOpcode()==Opcodes::MkSlnChg;
-		default:
-			return	false;
-		}
-	}
+    switch (object->code(0).getDescriptor()) {
+    case Atom::MARKER:
+        return object->code(0).asOpcode() == Opcodes::MkActChg ||
+               object->code(0).asOpcode() == Opcodes::MkHighAct ||
+               object->code(0).asOpcode() == Opcodes::MkHighSln ||
+               object->code(0).asOpcode() == Opcodes::MkLowAct ||
+               object->code(0).asOpcode() == Opcodes::MkLowRes ||
+               object->code(0).asOpcode() == Opcodes::MkLowSln ||
+               object->code(0).asOpcode() == Opcodes::MkNew ||
+               object->code(0).asOpcode() == Opcodes::MkRdx ||
+               object->code(0).asOpcode() == Opcodes::MkSlnChg;
+    default:
+        return false;
+    }
+}
 }

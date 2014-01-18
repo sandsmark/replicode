@@ -28,273 +28,273 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include	"model_base.h"
-#include	"mem.h"
+#include "model_base.h"
+#include "mem.h"
 
 
-namespace	r_exec{
+namespace r_exec {
 
-	uint32	ModelBase::MEntry::_ComputeHashCode(_Fact	*component){	// 14 bits: [fact or |fact (1)|type (3)|data (10)].
+uint32 ModelBase::MEntry::_ComputeHashCode(_Fact *component) { // 14 bits: [fact or |fact (1)|type (3)|data (10)].
 
-		uint32	hash_code;
-		if(component->is_fact())
-			hash_code=0x00000000;
-		else
-			hash_code=0x00002000;
-		Code	*payload=component->get_reference(0);
-		Atom	head=payload->code(0);
-		uint16	opcode=head.asOpcode();
-		switch(head.getDescriptor()){
-		case	Atom::OBJECT:
-			if(opcode==Opcodes::Cmd){	// type: 2.
-			
-				hash_code|=0x00000800;
-				hash_code|=(payload->code(CMD_FUNCTION).asOpcode()	&	0x000003FF);	// data: function id.
-			}else	if(opcode==Opcodes::IMdl){	// type 3.
-			
-				hash_code|=0x00000C00;
-				hash_code|=(((uintptr_t)payload->get_reference(0))	&	0x000003FF);	// data: address of the mdl.
-			}else	if(opcode==Opcodes::ICst){	// type 4.
+    uint32 hash_code;
+    if (component->is_fact())
+        hash_code = 0x00000000;
+    else
+        hash_code = 0x00002000;
+    Code *payload = component->get_reference(0);
+    Atom head = payload->code(0);
+    uint16 opcode = head.asOpcode();
+    switch (head.getDescriptor()) {
+    case Atom::OBJECT:
+        if (opcode == Opcodes::Cmd) { // type: 2.
 
-				hash_code|=0x00001000;
-				hash_code|=(((uintptr_t)payload->get_reference(0))	&	0x000003FF);	// data: address of the cst.
-			}else	// type: 0.
-				hash_code|=(opcode	&	0x000003FF);	// data: class id.
-			break;
-		case	Atom::MARKER:	// type 1.
-			hash_code|=0x00000400;
-			hash_code|=(opcode	&	0x000003FF);	// data: class id.
-			break;
-		}
-		
-		return	hash_code;
-	}
+            hash_code |= 0x00000800;
+            hash_code |= (payload->code(CMD_FUNCTION).asOpcode() & 0x000003FF); // data: function id.
+        } else if (opcode == Opcodes::IMdl) { // type 3.
 
-	uint32	ModelBase::MEntry::ComputeHashCode(Code	*mdl,bool	packed){
+            hash_code |= 0x00000C00;
+            hash_code |= (((uintptr_t)payload->get_reference(0)) & 0x000003FF); // data: address of the mdl.
+        } else if (opcode == Opcodes::ICst) { // type 4.
 
-		uint32	hash_code=(mdl->code(mdl->code(HLP_TPL_ARGS).asIndex()).getAtomCount()<<28);
-		_Fact	*lhs;
-		_Fact	*rhs;
-		if(packed){
+            hash_code |= 0x00001000;
+            hash_code |= (((uintptr_t)payload->get_reference(0)) & 0x000003FF); // data: address of the cst.
+        } else // type: 0.
+            hash_code |= (opcode & 0x000003FF); // data: class id.
+        break;
+    case Atom::MARKER: // type 1.
+        hash_code |= 0x00000400;
+        hash_code |= (opcode & 0x000003FF); // data: class id.
+        break;
+    }
 
-			Code	*unpacked_mdl=mdl->get_reference(mdl->references_size()-MDL_HIDDEN_REFS);
-			lhs=(_Fact	*)unpacked_mdl->get_reference(0);
-			rhs=(_Fact	*)unpacked_mdl->get_reference(1);
-		}else{
+    return hash_code;
+}
 
-			lhs=(_Fact	*)mdl->get_reference(0);
-			rhs=(_Fact	*)mdl->get_reference(1);
-		}
-		hash_code|=(_ComputeHashCode(lhs)<<14);
-		hash_code|=_ComputeHashCode(rhs);
-		return	hash_code;
-	}
+uint32 ModelBase::MEntry::ComputeHashCode(Code *mdl, bool packed) {
 
-	bool	ModelBase::MEntry::Match(Code	*lhs,Code	*rhs){
+    uint32 hash_code = (mdl->code(mdl->code(HLP_TPL_ARGS).asIndex()).getAtomCount() << 28);
+    _Fact *lhs;
+    _Fact *rhs;
+    if (packed) {
 
-		if(lhs->code(0).asOpcode()==Opcodes::Ent	||	rhs->code(0).asOpcode()==Opcodes::Ent)
-			return	lhs==rhs;
-		if(lhs->code(0).asOpcode()==Opcodes::Ont	||	rhs->code(0).asOpcode()==Opcodes::Ont)
-			return	lhs==rhs;
-		if(lhs->code_size()!=rhs->code_size())
-			return	false;
-		if(lhs->references_size()!=rhs->references_size())
-			return	false;
-		for(uint16	i=0;i<lhs->code_size();++i){
+        Code *unpacked_mdl = mdl->get_reference(mdl->references_size() - MDL_HIDDEN_REFS);
+        lhs = (_Fact *)unpacked_mdl->get_reference(0);
+        rhs = (_Fact *)unpacked_mdl->get_reference(1);
+    } else {
 
-			if(lhs->code(i)!=rhs->code(i))
-				return	false;
-		}
-		for(uint16	i=0;i<lhs->references_size();++i){
+        lhs = (_Fact *)mdl->get_reference(0);
+        rhs = (_Fact *)mdl->get_reference(1);
+    }
+    hash_code |= (_ComputeHashCode(lhs) << 14);
+    hash_code |= _ComputeHashCode(rhs);
+    return hash_code;
+}
 
-			if(!Match(lhs->get_reference(i),rhs->get_reference(i)))
-				return	false;
-		}
-		return	true;
-	}
+bool ModelBase::MEntry::Match(Code *lhs, Code *rhs) {
 
-	ModelBase::MEntry::MEntry():mdl(NULL),touch_time(0),hash_code(0){
-	}
+    if (lhs->code(0).asOpcode() == Opcodes::Ent || rhs->code(0).asOpcode() == Opcodes::Ent)
+        return lhs == rhs;
+    if (lhs->code(0).asOpcode() == Opcodes::Ont || rhs->code(0).asOpcode() == Opcodes::Ont)
+        return lhs == rhs;
+    if (lhs->code_size() != rhs->code_size())
+        return false;
+    if (lhs->references_size() != rhs->references_size())
+        return false;
+    for (uint16 i = 0; i < lhs->code_size(); ++i) {
 
-	ModelBase::MEntry::MEntry(Code	*mdl,bool	packed):mdl(mdl),touch_time(Now()),hash_code(ComputeHashCode(mdl,packed)){
-	}
+        if (lhs->code(i) != rhs->code(i))
+            return false;
+    }
+    for (uint16 i = 0; i < lhs->references_size(); ++i) {
 
-	bool	ModelBase::MEntry::match(const	MEntry	&e)	const{	// at this point both models have the same hash code; this.mdl is packed, e.mdl is unpacked.
+        if (!Match(lhs->get_reference(i), rhs->get_reference(i)))
+            return false;
+    }
+    return true;
+}
 
-		if(mdl==e.mdl)
-			return	true;
+ModelBase::MEntry::MEntry(): mdl(NULL), touch_time(0), hash_code(0) {
+}
 
-		for(uint16	i=0;i<mdl->code_size();++i){	// first check the mdl code: this checks on tpl args and guards.
+ModelBase::MEntry::MEntry(Code *mdl, bool packed): mdl(mdl), touch_time(Now()), hash_code(ComputeHashCode(mdl, packed)) {
+}
 
-			if(i==MDL_STRENGTH	||	i==MDL_CNT	||	i==MDL_SR	||	i==MDL_DSR	||	i==MDL_ARITY)	// ignore house keeping data.
-				continue;
+bool ModelBase::MEntry::match(const MEntry &e) const { // at this point both models have the same hash code; this.mdl is packed, e.mdl is unpacked.
 
-			if(mdl->code(i)!=e.mdl->code(i))
-				return	false;
-		}
+    if (mdl == e.mdl)
+        return true;
 
-		Code	*lhs_0=mdl->get_reference(mdl->references_size()-1)->get_reference(0);	// payload of the fact.
-		Code	*lhs_1=e.mdl->get_reference(0)->get_reference(0);	// payload of the fact.
-		if(!Match(lhs_0,lhs_1))
-			return	false;
+    for (uint16 i = 0; i < mdl->code_size(); ++i) { // first check the mdl code: this checks on tpl args and guards.
 
-		Code	*rhs_0=mdl->get_reference(mdl->references_size()-1)->get_reference(1);	// payload of the fact.
-		Code	*rhs_1=e.mdl->get_reference(1)->get_reference(1);	// payload of the fact.
-		if(!Match(rhs_0,rhs_1))
-			return	false;
+        if (i == MDL_STRENGTH || i == MDL_CNT || i == MDL_SR || i == MDL_DSR || i == MDL_ARITY) // ignore house keeping data.
+            continue;
 
-		return	true;
-	}
+        if (mdl->code(i) != e.mdl->code(i))
+            return false;
+    }
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    Code *lhs_0 = mdl->get_reference(mdl->references_size() - 1)->get_reference(0); // payload of the fact.
+    Code *lhs_1 = e.mdl->get_reference(0)->get_reference(0); // payload of the fact.
+    if (!Match(lhs_0, lhs_1))
+        return false;
 
-	ModelBase	*ModelBase::Singleton=NULL;
+    Code *rhs_0 = mdl->get_reference(mdl->references_size() - 1)->get_reference(1); // payload of the fact.
+    Code *rhs_1 = e.mdl->get_reference(1)->get_reference(1); // payload of the fact.
+    if (!Match(rhs_0, rhs_1))
+        return false;
 
-	ModelBase	*ModelBase::Get(){
+    return true;
+}
 
-		return	Singleton;
-	}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	ModelBase::ModelBase(){
+ModelBase *ModelBase::Singleton = NULL;
 
-		Singleton=this;
-	}
+ModelBase *ModelBase::Get() {
 
-	void	ModelBase::trim_objects(){
+    return Singleton;
+}
 
-		mdlCS.enter();
-		uint64	now=Now();
-		MdlSet::iterator	m;
-		for(m=black_list.begin();m!=black_list.end();){
+ModelBase::ModelBase() {
 
-			if(now-(*m).touch_time>=thz)
-				m=black_list.erase(m);
-			else
-				++m;
-		}
-		mdlCS.leave();
-	}
+    Singleton = this;
+}
 
-	void	ModelBase::load(Code	*mdl){	// mdl is already packed.
+void ModelBase::trim_objects() {
 
-		MEntry	e(mdl,true);
-		if(mdl->views.size()>0)	// no need to lock at load time.
-			white_list.insert(e);
-		else
-			black_list.insert(e);
-	}
+    mdlCS.enter();
+    uint64 now = Now();
+    MdlSet::iterator m;
+    for (m = black_list.begin(); m != black_list.end();) {
 
-	void	ModelBase::get_models(r_code::list<P<Code> >	&models){
+        if (now - (*m).touch_time >= thz)
+            m = black_list.erase(m);
+        else
+            ++m;
+    }
+    mdlCS.leave();
+}
 
-		mdlCS.enter();
-		MdlSet::iterator	m;
-		for(m=white_list.begin();m!=white_list.end();++m)
-			models.push_back((*m).mdl);
-		for(m=black_list.begin();m!=black_list.end();++m)
-			models.push_back((*m).mdl);
-		mdlCS.leave();
-	}
+void ModelBase::load(Code *mdl) { // mdl is already packed.
 
-	Code	*ModelBase::check_existence(Code	*mdl){
+    MEntry e(mdl, true);
+    if (mdl->views.size() > 0) // no need to lock at load time.
+        white_list.insert(e);
+    else
+        black_list.insert(e);
+}
 
-		MEntry	e(mdl,false);
-		mdlCS.enter();
-		MdlSet::iterator	m=black_list.find(e);
-		if(m!=black_list.end()){
-            ModelBase::MEntry mEntry = *m;
-            black_list.erase(m);
-			mEntry.touch_time=Now();
-            black_list.emplace(mEntry);
-			mdlCS.leave();
-			return	NULL;
-		}
-		m=white_list.find(e);
-		if(m!=white_list.end()){
-            ModelBase::MEntry mEntry = *m;
-            white_list.erase(m);
-			mEntry.touch_time=Now();
-            white_list.emplace(mEntry);
-			mdlCS.leave();
-			return	(*m).mdl;
-		}
-		_Mem::Get()->pack_hlp(e.mdl);
-		white_list.insert(e);
-		mdlCS.leave();
-		return	mdl;
-	}
+void ModelBase::get_models(r_code::list<P<Code> > &models) {
 
-	void	ModelBase::check_existence(Code	*m0,Code	*m1,Code	*&_m0,Code	*&_m1){	// m0 and m1 unpacked.
+    mdlCS.enter();
+    MdlSet::iterator m;
+    for (m = white_list.begin(); m != white_list.end(); ++m)
+        models.push_back((*m).mdl);
+    for (m = black_list.begin(); m != black_list.end(); ++m)
+        models.push_back((*m).mdl);
+    mdlCS.leave();
+}
 
-		MEntry	e_m0(m0,false);
-		mdlCS.enter();
-		MdlSet::iterator	m=black_list.find(e_m0);
-		if(m!=black_list.end()){
-            ModelBase::MEntry mEntry = *m;
-            black_list.erase(m);
-			mEntry.touch_time=Now();
-            black_list.emplace(mEntry);
-			mdlCS.leave();
-			_m0=_m1=NULL;
-			return;
-		}
-		m=white_list.find(e_m0);
-		if(m!=white_list.end()){
-            ModelBase::MEntry mEntry = *m;
-            white_list.erase(m);
-			mEntry.touch_time=Now();
-            white_list.emplace(mEntry);
-			_m0=(*m).mdl;
-			Code	*rhs=m1->get_reference(m1->code(m1->code(MDL_OBJS).asIndex()+2).asIndex());
-			Code	*im0=rhs->get_reference(0);
-			im0->set_reference(0,_m0);	// change imdl m0 into imdl _m0.
-		}else
-			_m0=m0;
-		MEntry	e_m1(m1,false);
-		m=black_list.find(e_m1);
-		if(m!=black_list.end()){
-            ModelBase::MEntry mEntry = *m;
-            black_list.erase(m);
-			mEntry.touch_time=Now();
-            black_list.emplace(mEntry);
-			mdlCS.leave();
-			_m1=NULL;
-			return;
-		}
-		m=white_list.find(e_m1);
-		if(m!=white_list.end()){
-            ModelBase::MEntry mEntry = *m;
-            white_list.erase(m);
-			mEntry.touch_time=Now();
-            white_list.emplace(mEntry);
-			mdlCS.leave();
-			_m1=(*m).mdl;
-			return;
-		}
-		if(_m0==m0){
+Code *ModelBase::check_existence(Code *mdl) {
 
-			_Mem::Get()->pack_hlp(m0);
-			white_list.insert(e_m0);
-		}
-		_Mem::Get()->pack_hlp(m1);
-		white_list.insert(e_m1);
-		mdlCS.leave();
-		_m1=m1;
-	}
+    MEntry e(mdl, false);
+    mdlCS.enter();
+    MdlSet::iterator m = black_list.find(e);
+    if (m != black_list.end()) {
+        ModelBase::MEntry mEntry = *m;
+        black_list.erase(m);
+        mEntry.touch_time = Now();
+        black_list.emplace(mEntry);
+        mdlCS.leave();
+        return NULL;
+    }
+    m = white_list.find(e);
+    if (m != white_list.end()) {
+        ModelBase::MEntry mEntry = *m;
+        white_list.erase(m);
+        mEntry.touch_time = Now();
+        white_list.emplace(mEntry);
+        mdlCS.leave();
+        return (*m).mdl;
+    }
+    _Mem::Get()->pack_hlp(e.mdl);
+    white_list.insert(e);
+    mdlCS.leave();
+    return mdl;
+}
 
-	void	ModelBase::register_mdl_failure(Code	*mdl){	// mdl is packed.
+void ModelBase::check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1) { // m0 and m1 unpacked.
 
-		MEntry	e(mdl,true);
-		mdlCS.enter();
-		white_list.erase(e);
-		black_list.insert(e);
-		mdlCS.leave();
-	}
+    MEntry e_m0(m0, false);
+    mdlCS.enter();
+    MdlSet::iterator m = black_list.find(e_m0);
+    if (m != black_list.end()) {
+        ModelBase::MEntry mEntry = *m;
+        black_list.erase(m);
+        mEntry.touch_time = Now();
+        black_list.emplace(mEntry);
+        mdlCS.leave();
+        _m0 = _m1 = NULL;
+        return;
+    }
+    m = white_list.find(e_m0);
+    if (m != white_list.end()) {
+        ModelBase::MEntry mEntry = *m;
+        white_list.erase(m);
+        mEntry.touch_time = Now();
+        white_list.emplace(mEntry);
+        _m0 = (*m).mdl;
+        Code *rhs = m1->get_reference(m1->code(m1->code(MDL_OBJS).asIndex() + 2).asIndex());
+        Code *im0 = rhs->get_reference(0);
+        im0->set_reference(0, _m0); // change imdl m0 into imdl _m0.
+    } else
+        _m0 = m0;
+    MEntry e_m1(m1, false);
+    m = black_list.find(e_m1);
+    if (m != black_list.end()) {
+        ModelBase::MEntry mEntry = *m;
+        black_list.erase(m);
+        mEntry.touch_time = Now();
+        black_list.emplace(mEntry);
+        mdlCS.leave();
+        _m1 = NULL;
+        return;
+    }
+    m = white_list.find(e_m1);
+    if (m != white_list.end()) {
+        ModelBase::MEntry mEntry = *m;
+        white_list.erase(m);
+        mEntry.touch_time = Now();
+        white_list.emplace(mEntry);
+        mdlCS.leave();
+        _m1 = (*m).mdl;
+        return;
+    }
+    if (_m0 == m0) {
 
-	void	ModelBase::register_mdl_timeout(Code	*mdl){	// mdl is packed.
+        _Mem::Get()->pack_hlp(m0);
+        white_list.insert(e_m0);
+    }
+    _Mem::Get()->pack_hlp(m1);
+    white_list.insert(e_m1);
+    mdlCS.leave();
+    _m1 = m1;
+}
 
-		MEntry	e(mdl,true);
-		mdlCS.enter();
-		white_list.erase(e);
-		mdlCS.leave();
-	}
+void ModelBase::register_mdl_failure(Code *mdl) { // mdl is packed.
+
+    MEntry e(mdl, true);
+    mdlCS.enter();
+    white_list.erase(e);
+    black_list.insert(e);
+    mdlCS.leave();
+}
+
+void ModelBase::register_mdl_timeout(Code *mdl) { // mdl is packed.
+
+    MEntry e(mdl, true);
+    mdlCS.enter();
+    white_list.erase(e);
+    mdlCS.leave();
+}
 }

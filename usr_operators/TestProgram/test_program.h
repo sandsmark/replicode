@@ -28,15 +28,15 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	test_program_h
-#define	test_program_h
+#ifndef test_program_h
+#define test_program_h
 
-#include	"../types.h"
-#include	"r_exec/overlay.h"
+#include "../types.h"
+#include "r_exec/overlay.h"
 
 
-extern	"C"{
-r_exec::Controller	dll_export	*test_program(r_code::View	*view);
+extern "C" {
+    r_exec::Controller dll_export *test_program(r_code::View *view);
 }
 
 

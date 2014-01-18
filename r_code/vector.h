@@ -28,34 +28,40 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef	r_code_vector_h
-#define	r_code_vector_h
+#ifndef r_code_vector_h
+#define r_code_vector_h
 
-#include	"CoreLibrary/types.h"
+#include "CoreLibrary/types.h"
 
 
-using	namespace	core;
+using namespace core;
 
-namespace	r_code{
+namespace r_code {
 
-	//	auto-resized vector
-	template<typename	T>	class	vector {
-	public:
-        vector() : m_vector(new std::vector<T>) {}
-		size_t	size()	const{	return	m_vector->size();	}
-		T	&operator	[](uint32	i){
-			if(i>=size())
-				m_vector->resize(i+1);
-			return	m_vector->at(i);
-		}
-		T	&operator	[](uint32	i)	const{
-            return m_vector->at(i);
-		}
-		void	push_back(T	t){	m_vector->push_back(t);	}
-		std::vector<T>	*as_std()	const{	return	m_vector;	}
+// auto-resized vector
+template<typename T> class vector {
+public:
+    vector() : m_vector(new std::vector<T>) {}
+    size_t size() const {
+        return m_vector->size();
+    }
+    T &operator [](uint32 i) {
+        if (i >= size())
+            m_vector->resize(i + 1);
+        return m_vector->at(i);
+    }
+    T &operator [](uint32 i) const {
+        return m_vector->at(i);
+    }
+    void push_back(T t) {
+        m_vector->push_back(t);
+    }
+    std::vector<T> *as_std() const {
+        return m_vector;
+    }
 private:
     std::vector<T> *m_vector;
-	};
+};
 
 }
 
