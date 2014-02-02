@@ -232,13 +232,16 @@ int32 main(int argc, char **argv) {
     if (!settings.load(argv[1]))
         return 1;
 
-    std::cout << "> compiling ...\n";
+    std::cout << "> REPLICODE 1.0" << std::endl
+              << "> Part of the AERA/HUMANOBS project" << std::endl;
+    std::cout << "> Initializing with user operator library and user class code..." << std::endl;
     if (!r_exec::Init(settings.usr_operator_path.c_str(), Time::Get, settings.usr_class_path.c_str()))
         return 2;
 
     srand(r_exec::Now());
     Random::Init();
 
+    std::cout << "> compiling source..." << std::endl;
     std::string error;
     if (!r_exec::Compile(settings.source_file_name.c_str(), error)) {
 
@@ -246,7 +249,7 @@ int32 main(int argc, char **argv) {
         return 3;
     } else {
 
-        std::cout << "> ... done\n";
+        std::cout << "> ... source compiled!" << std::endl;
 
 #ifdef WINDOWS
         r_exec::PipeOStream::Open(settings.debug_windows);
@@ -308,7 +311,7 @@ int32 main(int argc, char **argv) {
             return 4;
         uint64 starting_time = mem->start();
 
-        std::cout << "> running for " << settings.run_time << " ms\n\n";
+        std::cout << "> running for " << settings.run_time << " ms" << std::endl;
         Thread::Sleep(settings.run_time);
 
         /*Thread::Sleep(settings.run_time/2);
@@ -318,7 +321,7 @@ int32 main(int argc, char **argv) {
         argc > 4 ? atoi(argv[4]) : 66); // number of objects per batch
         Thread::Sleep(settings.run_time/2);*/
 
-        std::cout << "\n> shutting rMem down...\n";
+        std::cout << std::endl << "> shutting rMem down..." << std::endl;
         mem->stop();
 
         if (settings.get_objects) {

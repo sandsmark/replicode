@@ -1,4 +1,4 @@
-<TestConfiguration>
+<RunConfiguration>
   <Load
     usr_operator_path="../build/usr_operators/libusr_operators.so"
     usr_class_path="./V1.2/user.classes.replicode"
@@ -39,17 +39,17 @@
       test_objects="no"
     />
   </Debug>
-  <Run run_time="1080" probe_level="2">
+  <Run run_time="10080" probe_level="2">
     <Models
-      get_models="no"
-      decompile_models="no"
+      get_models="yes"
+      decompile_models="yes"
       ignore_named_models="yes"
       write_models="no"
       models_path="../Test/models.replicode.image"
       test_models="no"
     />
   </Run>
-</TestConfiguration>
+</RunConfiguration>
 
 <!--Usage
 Init

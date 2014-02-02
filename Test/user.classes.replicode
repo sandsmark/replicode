@@ -1,4 +1,4 @@
-!load ../Test/std.replicode
+!load std.replicode
 
 !class (vec3 x:nb y:nb z:nb)
 !class (mk.tag (_obj {object: tag:st}))

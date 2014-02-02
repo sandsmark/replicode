@@ -1,4 +1,4 @@
-!load ./V1.2/std.replicode
+!load std.replicode
 
 
 ; utilities.

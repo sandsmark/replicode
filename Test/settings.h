@@ -33,7 +33,6 @@
 
 #include <CoreLibrary/xml_parser.h>
 
-
 class Settings {
 public:
 // Load.
@@ -87,10 +86,10 @@ public:
 
     bool load(const char *file_name) {
 
-        core::XMLNode mainNode = core::XMLNode::openFileHelper(file_name, "TestConfiguration");
+        core::XMLNode mainNode = core::XMLNode::openFileHelper(file_name, "RunConfiguration");
         if (!mainNode) {
 
-            std::cerr << "> Error: TestConfiguration is unreadable" << std::endl;
+            std::cerr << "> Error: RunConfiguration is unreadable" << std::endl;
             return false;
         }
 
