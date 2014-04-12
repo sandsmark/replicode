@@ -42,7 +42,6 @@
 
 //#include <process.h>
 
-
 namespace r_exec {
 
 dll_export uint64(*Now)();
@@ -73,24 +72,15 @@ SharedLibrary userOperatorLibrary;
 
 bool Compile(const char* filename, std::string &error, bool compile_metadata) {
     std::cout << "compiling file: " << filename << std::endl;
-    std::ostringstream preprocessed_code_out;
-    if (!r_exec::Preprocessor.process(filename, &preprocessed_code_out, error, compile_metadata ? getMetadata() : NULL)) {
+    r_comp::RepliStruct *root = r_exec::Preprocessor.process(filename, error, compile_metadata ? getMetadata() : NULL);
+    if (!root) {
         error.insert(0, std::to_string(r_exec::Preprocessor.root->line) + ": Preprocessor ");
         return false;
     }
-
-    std::cerr << "preprocessed source:" << preprocessed_code_out.str() << std::endl;
-
-    std::istringstream preprocessed_code_in(preprocessed_code_out.str());
-
-    if (!r_exec::Compiler.compile(&preprocessed_code_in, getSeed(), getMetadata(), error, false)) {
-        //error.insert(0, std::to_string(r_exec::Compiler.line) + ": Compilation ");
-        error.insert(0, ": Compilation ");
-        std::streampos i = preprocessed_code_in.tellg();
-        error += ":" + preprocessed_code_in.str().substr(0, i) + "\n";
+    if (!r_exec::Compiler.compile(root, getSeed(), getMetadata(), error, false)) {
+        std::cerr << "Compilation failed: " << r_exec::Compiler.getError() << std::endl;
         return false;
     }
-
     return true;
 }
 

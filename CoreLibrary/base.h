@@ -60,6 +60,7 @@ public:
     bool operator ==(C *c) const;
     bool operator !=(C *c) const;
     bool operator <(C *c) const;
+    bool operator >(C *c) const;
     bool operator !() const;
     template<class D> bool operator ==(P<D> &p) const;
     template<class D> bool operator !=(P<D> &p) const;

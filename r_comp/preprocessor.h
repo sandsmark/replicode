@@ -51,7 +51,7 @@ private:
     Metadata *metadata;
     uint16 class_opcode; // shared with sys_classes
     UNORDERED_MAP<std::string, RepliStruct *> template_classes;
-    void instantiateClass(RepliStruct *tpl_class, std::list<RepliStruct *> &tpl_args, std::string &instantiated_class_name);
+    void instantiateClass(RepliStruct *tpl_class, std::vector<RepliStruct *> &tpl_args, std::string &instantiated_class_name);
     bool isSet(std::string class_name);
     bool isTemplateClass(RepliStruct *s);
     void getMember(std::vector<StructureMember> &members, RepliStruct *m, std::list<RepliStruct *> &tpl_args, bool instantiate);
@@ -63,8 +63,7 @@ public:
 
     Preprocessor();
     ~Preprocessor();
-    bool process(const char *file, // if an ifstream, stream must be open.
-                 std::ostringstream *outstream, // output stream=input stream where macros are expanded.
+    RepliStruct *process(const char *file, // if an ifstream, stream must be open.
                  std::string &error, // set when function fails, e.g. returns false.
                  Metadata *metadata = NULL); // process will fill class_image, or use the exiting one if NULL.
 };

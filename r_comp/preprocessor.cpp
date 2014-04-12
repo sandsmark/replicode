@@ -48,37 +48,31 @@ Preprocessor::~Preprocessor() {
     delete root;
 }
 
-bool Preprocessor::process(const char* file, ostringstream* outstream, string& error, r_comp::Metadata* metadata) {
-
+RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Metadata* metadata)
+{
     RepliStruct::GlobalFilename = file;
 
     std::ifstream stream(file);
     if (!stream.good()) {
         error = "unable to load file ";
         error += file;
-        return false;
+        return 0;
     }
 
-    std::cout << "FEH: " << root->fileName << root->line << std::endl;
     root->reset(); // trims root from previously preprocessed objects.
-    std::cout << "FOH: " << root->fileName << root->line << std::endl;
 
     uint32 a = 0, b = 0;
     if (root->parse(&stream, a, b) < 0) {
-
         error = root->printError();
         stream.close();
-        return false;
+        return 0;
     }
     std::cout << root->fileName << root->line << std::endl;
     if (!stream.eof()) {
-
         error = "Code structure error: Unmatched ) or ].\n";
         stream.close();
-        return false;
+        return 0;
     }
-
-// printf("Replicode:\n\n%s\n",root->print().c_str());
 
     int32 pass = 0, total = 0, count;
     std::cout << root->fileName << root->line << std::endl;
@@ -86,32 +80,29 @@ bool Preprocessor::process(const char* file, ostringstream* outstream, string& e
 
         total += count;
         pass++;
-// printf("Pass %d, %d changes, %d total\n", pass, count, total);
     }
     if (count < 0) {
 
         error = root->printError();
         stream.close();
-        return false;
+        return 0;
     }
-// printf("Replicode:\n\n%s\n",root->print().c_str());
-    std::cout << "GROKED FILE: " << root->fileName << root->line << std::endl;
-
-    *outstream << root;
 
     if (metadata)
         initialize(metadata);
 
     error = root->printError();
     stream.close();
-    std::cout << "parsed file: " << file << RepliStruct::GlobalLine << std::endl;
-    return (error.size() == 0);
+    if (error.size() > 0) {
+        return 0;
+    }
+
+    return root;
 }
 
 bool Preprocessor::isTemplateClass(RepliStruct *s) {
 
-    for (std::list<RepliStruct *>::iterator j(s->args.begin()); j != s->args.end(); ++j) {
-
+    for (std::vector<RepliStruct *>::iterator j(s->args.begin()); j != s->args.end(); ++j) {
         std::string name;
         std::string type;
         switch ((*j)->type) {
@@ -132,10 +123,9 @@ bool Preprocessor::isTemplateClass(RepliStruct *s) {
     return false;
 }
 
-bool Preprocessor::isSet(std::string class_name) {
-
-    for (std::list<RepliStruct *>::iterator i(root->args.begin()); i != root->args.end(); ++i) {
-
+bool Preprocessor::isSet(std::string class_name)
+{
+    for (std::vector<RepliStruct *>::iterator i(root->args.begin()); i != root->args.end(); ++i) {
         if ((*i)->type != RepliStruct::Directive || (*i)->cmd != "!class")
             continue;
         RepliStruct *s = *(*i)->args.begin();
@@ -147,7 +137,7 @@ bool Preprocessor::isSet(std::string class_name) {
     return false;
 }
 
-void Preprocessor::instantiateClass(RepliStruct *tpl_class, std::list<RepliStruct *> &tpl_args, std::string &instantiated_class_name) {
+void Preprocessor::instantiateClass(RepliStruct *tpl_class, std::vector<RepliStruct *> &tpl_args, std::string &instantiated_class_name) {
 
     static uint32 LastClassID = 0;
 // remove the trailing [].
@@ -161,7 +151,7 @@ void Preprocessor::instantiateClass(RepliStruct *tpl_class, std::list<RepliStruc
 
     std::vector<StructureMember> members;
     std::list<RepliStruct *> _tpl_args;
-    for (std::list<RepliStruct *>::reverse_iterator i = tpl_args.rbegin(); i != tpl_args.rend(); ++i)
+    for (std::vector<RepliStruct *>::reverse_iterator i = tpl_args.rbegin(); i != tpl_args.rend(); ++i)
         _tpl_args.push_back(*i);
     getMembers(tpl_class, members, _tpl_args, true);
 
@@ -243,7 +233,7 @@ void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct 
             members.push_back(StructureMember(&Compiler::read_set, m->label.substr(0, m->label.length() - 1), instantiated_class_name, StructureMember::I_CLASS));
         } else {
 
-            for (std::list<RepliStruct *>::reverse_iterator i = m->args.rbegin(); i != m->args.rend(); ++i) // append the passed args to the ones held by m.
+            for (std::vector<RepliStruct *>::reverse_iterator i = m->args.rbegin(); i != m->args.rend(); ++i) // append the passed args to the ones held by m.
                 tpl_args.push_back(*i);
             getMembers(template_class, members, tpl_args, false);
         }
@@ -258,7 +248,7 @@ void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct 
 
 void Preprocessor::getMembers(RepliStruct *s, std::vector<StructureMember> &members, std::list<RepliStruct *> &tpl_args, bool instantiate) {
 
-    for (std::list<RepliStruct *>::iterator j(s->args.begin()); j != s->args.end(); ++j)
+    for (std::vector<RepliStruct *>::iterator j(s->args.begin()); j != s->args.end(); ++j)
         getMember(members, *j, tpl_args, instantiate);
 }
 
@@ -283,8 +273,8 @@ ReturnType Preprocessor::getReturnType(RepliStruct *s) {
     return ANY;
 }
 
-void Preprocessor::initialize(Metadata *metadata) {
-
+void Preprocessor::initialize(Metadata *metadata)
+{
     this->metadata = metadata;
 
     class_opcode = 0;
@@ -298,8 +288,7 @@ void Preprocessor::initialize(Metadata *metadata) {
     metadata->classes[std::string(Class::Type)] = Class(Atom::Object(class_opcode, 0), Class::Type, r_type); // to read object types in expressions and sets.
     ++class_opcode;
 
-    for (std::list<RepliStruct *>::iterator i(root->args.begin()); i != root->args.end(); ++i) {
-
+    for (std::vector<RepliStruct *>::iterator i(root->args.begin()); i != root->args.end(); ++i) {
         if ((*i)->type != RepliStruct::Directive)
             continue;
 
@@ -372,7 +361,6 @@ void Preprocessor::initialize(Metadata *metadata) {
             metadata->classes[operator_name] = Class(Atom::Operator(operator_opcode, s->args.size()), operator_name, members, return_type);
             ++operator_opcode;
         } else if ((*i)->cmd == "!dfn") { // don't bother to read the members, it's always a set.
-
             std::vector<StructureMember> r_set;
             r_set.push_back(StructureMember(&Compiler::read_set, ""));
 

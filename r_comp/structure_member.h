@@ -43,6 +43,7 @@ namespace r_comp {
 
 class Class;
 class Compiler;
+class RepliStruct;
 
 typedef enum {
     ANY = 0,
@@ -57,7 +58,7 @@ typedef enum {
     CLASS = 9
 } ReturnType;
 
-typedef bool (Compiler::*_Read)(bool &, bool, const Class *, uint16, uint16 &, bool); // reads from the stream and writes in an object.
+typedef bool (Compiler::*_Read)(RepliStruct *, bool, const Class *, uint16, uint16 &, bool); // reads from the stream and writes in an object.
 
 class Metadata;
 class StructureMember {

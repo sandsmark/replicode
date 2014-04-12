@@ -24,7 +24,7 @@ public:
     std::string error;
     std::string fileName;
     uint32_t line;
-    std::list<RepliStruct *> args;
+    std::vector<RepliStruct *> args;
     RepliStruct *parent;
 
     RepliStruct(r_comp::RepliStruct::Type type);

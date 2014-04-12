@@ -586,10 +586,12 @@ void Image::build_references(SysObject *sys_object, Code *object) {
     object->rel_views();
 }
 
-void Image::get_objects(Mem *mem, r_code::vector<Code *> &ram_objects) {
-
-    for (size_t i = 0; i < code_segment.objects.size(); ++i)
+void Image::get_objects(Mem *mem, r_code::vector<Code *> &ram_objects)
+{
+    std::cout << "number of objects: " << code_segment.objects.size() << std::endl;
+    for (size_t i = 0; i < code_segment.objects.size(); ++i) {
         ram_objects[i] = mem->build_object(code_segment.objects[i]);
+    }
     unpack_objects(ram_objects);
 }
 
