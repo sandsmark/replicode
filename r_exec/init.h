@@ -58,8 +58,7 @@ r_exec_dll r_comp::Image *getSeed();
 // A preprocessor and a compiler are maintained throughout the life of the dll to retain, respectively, macros and global references.
 // Both functions add the compiled object to Seed.code_image.
 // Source files: use ANSI encoding (not Unicode).
-bool r_exec_dll Compile(const char *filename, std::string &error);
-bool r_exec_dll Compile(std::istream &source_code, std::string &error);
+bool Compile(const char* filename, string& error, bool compile_metadata = false);
 
 // Threaded decompiler, for decompiling on the fly asynchronously.
 // Named objects are referenced but not decompiled.

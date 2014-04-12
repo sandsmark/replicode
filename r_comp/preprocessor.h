@@ -31,6 +31,7 @@
 #ifndef preprocessor_h
 #define preprocessor_h
 
+#include "replistruct.h"
 #include "segments.h"
 #include <istream>
 #include <sstream>
@@ -40,72 +41,6 @@
 using namespace r_code;
 
 namespace r_comp {
-
-class RepliMacro;
-class RepliCondition;
-class RepliStruct {
-public:
-    static UNORDERED_MAP<std::string, RepliMacro *> RepliMacros;
-    static UNORDERED_MAP<std::string, int32> Counters;
-    static std::list<RepliCondition *> Conditions;
-    static uint32 GlobalLine;
-
-    enum Type {Root, Structure, Set, Atom, Directive, Condition, Development};
-    Type type;
-    std::string cmd;
-    std::string tail;
-    std::string label;
-    std::string error;
-    uint32 line;
-    std::list<RepliStruct *> args;
-    RepliStruct *parent;
-
-    RepliStruct(RepliStruct::Type type);
-    ~RepliStruct();
-
-    void reset(); // remove rags that are objects.
-
-    uint32 getIndent(std::istream *stream);
-    int32 parse(std::istream *stream, uint32 &curIndent, uint32 &prevIndent, int32 paramExpect = 0);
-    bool parseDirective(std::istream *stream, uint32 &curIndent, uint32 &prevIndent);
-    int32 process();
-
-    RepliStruct *findAtom(const std::string &name);
-    RepliStruct *loadReplicodeFile(const std::string &filename);
-
-    RepliStruct *clone() const;
-    std::string print() const;
-    std::string printError() const;
-
-    friend std::ostream& operator<<(std::ostream &os, const RepliStruct &structure);
-    friend std::ostream& operator<<(std::ostream &os, RepliStruct *structure);
-};
-
-class RepliMacro {
-public:
-    std::string name;
-    RepliStruct *src;
-    RepliStruct *dest;
-    std::string error;
-
-    RepliMacro(const std::string &name, RepliStruct *src, RepliStruct *dest);
-    ~RepliMacro();
-
-    uint32 argCount();
-    RepliStruct *expandMacro(RepliStruct *oldStruct);
-};
-
-class RepliCondition {
-public:
-    std::string name;
-    bool reversed;
-
-    RepliCondition(const std::string &name, bool reversed);
-    ~RepliCondition();
-    bool reverse();
-    bool isActive(UNORDERED_MAP<std::string, RepliMacro*> &RepliMacros, UNORDERED_MAP<std::string, int32> &Counters);
-};
-
 class dll_export Preprocessor {
 private:
     typedef enum {
@@ -128,7 +63,7 @@ public:
 
     Preprocessor();
     ~Preprocessor();
-    bool process(std::istream *stream, // if an ifstream, stream must be open.
+    bool process(const char *file, // if an ifstream, stream must be open.
                  std::ostringstream *outstream, // output stream=input stream where macros are expanded.
                  std::string &error, // set when function fails, e.g. returns false.
                  Metadata *metadata = NULL); // process will fill class_image, or use the exiting one if NULL.

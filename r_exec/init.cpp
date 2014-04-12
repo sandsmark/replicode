@@ -71,48 +71,27 @@ SharedLibrary userOperatorLibrary;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool Compile(std::istream &source_code, std::string &error, bool compile_metadata) {
-
+bool Compile(const char* filename, std::string &error, bool compile_metadata) {
+    std::cout << "compiling file: " << filename << std::endl;
     std::ostringstream preprocessed_code_out;
-    if (!r_exec::Preprocessor.process(&source_code, &preprocessed_code_out, error, compile_metadata ? getMetadata() : NULL))
+    if (!r_exec::Preprocessor.process(filename, &preprocessed_code_out, error, compile_metadata ? getMetadata() : NULL)) {
+        error.insert(0, std::to_string(r_exec::Preprocessor.root->line) + ": Preprocessor ");
         return false;
+    }
+
+    std::cerr << "preprocessed source:" << preprocessed_code_out.str() << std::endl;
 
     std::istringstream preprocessed_code_in(preprocessed_code_out.str());
 
     if (!r_exec::Compiler.compile(&preprocessed_code_in, getSeed(), getMetadata(), error, false)) {
-
+        //error.insert(0, std::to_string(r_exec::Compiler.line) + ": Compilation ");
+        error.insert(0, ": Compilation ");
         std::streampos i = preprocessed_code_in.tellg();
-        std::cerr.write(preprocessed_code_in.str().c_str(), i);
-        std::cerr << " <- " << error << std::endl;
+        error += ":" + preprocessed_code_in.str().substr(0, i) + "\n";
         return false;
     }
 
     return true;
-}
-
-bool Compile(const char *filename, std::string &error, bool compile_metadata) {
-
-    std::ifstream source_code(filename);
-    if (!source_code.good()) {
-
-        error = "unable to load file ";
-        error += filename;
-        return false;
-    }
-
-    bool r = Compile(source_code, error, compile_metadata);
-    source_code.close();
-    return r;
-}
-
-bool Compile(const char *filename, std::string &error) {
-
-    return Compile(filename, error, false);
-}
-
-bool Compile(std::istream &source_code, std::string &error) {
-
-    return Compile(source_code, error, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

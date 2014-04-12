@@ -1,5 +1,6 @@
 set(r_comp_SRC
     class.cpp
+    replistruct.cpp
     #    class_register.cpp
     compiler.cpp
     decompiler.cpp
