@@ -1137,20 +1137,14 @@ bool WaitForSocketWriteability(socket s, int32 timeout) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-int32 String::StartsWith(const std::string &s, const std::string &str) {
-    std::string::size_type pos = s.find_first_of(str);
-    if (pos == 0)
-        return 0;
-    else
-        return -1;
+bool String::StartsWith(const std::string &s, const std::string &str) {
+    if (str.size() > s.size()) return false;
+    return (s.compare(0, str.length(), str) == 0);
 }
 
-int32 String::EndsWith(const std::string &s, const std::string &str) {
-    std::string::size_type pos = s.find_last_of(str);
-    if (pos == s.size() - str.size())
-        return pos;
-    else
-        return -1;
+bool String::EndsWith(const std::string &s, const std::string &str) {
+    if (str.size() > s.size()) return false;
+    return (s.compare(s.size() - str.size(), str.size(), str) == 0);
 }
 
 void String::MakeUpper(std::string &str)

@@ -2,7 +2,7 @@
   <Load
     usr_operator_path="../build/usr_operators/libusr_operators.so"
     usr_class_path="./V1.2/user.classes.replicode"
-    source_file_name="./test.2.replicode"
+    source_file_name="./V1.2/test.2.replicode"
   />
   <Init
     base_period="50000"

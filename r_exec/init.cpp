@@ -71,14 +71,14 @@ SharedLibrary userOperatorLibrary;
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool Compile(const char* filename, std::string &error, bool compile_metadata) {
-    std::cout << "compiling file: " << filename << std::endl;
+    std::cout << "> compiling file: " << filename << std::endl;
     r_comp::RepliStruct *root = r_exec::Preprocessor.process(filename, error, compile_metadata ? getMetadata() : NULL);
     if (!root) {
         error.insert(0, std::to_string(r_exec::Preprocessor.root->line) + ": Preprocessor ");
         return false;
     }
     if (!r_exec::Compiler.compile(root, getSeed(), getMetadata(), error, false)) {
-        std::cerr << "Compilation failed: " << r_exec::Compiler.getError() << std::endl;
+        std::cerr << "! Compilation failed: " << r_exec::Compiler.getError() << std::endl;
         return false;
     }
     return true;

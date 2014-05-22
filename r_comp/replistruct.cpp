@@ -678,7 +678,6 @@ RepliStruct *RepliStruct::loadReplicodeFile(const std::string &filename) {
     if (!loadStream.eof())
         newRoot->error = "Code structure error: Unmatched ) or ].\n";
     loadStream.close();
-    std::cout << "loaded: " << GlobalFilename << GlobalLine << std::endl;
     GlobalLine = oldLine;
     GlobalFilename = oldFile;
     return newRoot;
@@ -713,7 +712,7 @@ std::string RepliStruct::print() const {
         return label + "[" + str + "]" + tail;
     case Root:
         for (std::vector<RepliStruct*>::const_iterator iter(args.begin()), iterEnd(args.end()); iter != iterEnd; ++iter)
-            str += (*iter)->print() + "\n; HERP DERP";
+            str += (*iter)->print();
         return str;
     default:
         break;

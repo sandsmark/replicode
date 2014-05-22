@@ -263,8 +263,8 @@ public:
 
 class core_dll String {
 public:
-    static int32 StartsWith(const std::string &s, const std::string &str);
-    static int32 EndsWith(const std::string &s, const std::string &str);
+    static bool StartsWith(const std::string &s, const std::string &str);
+    static bool EndsWith(const std::string &s, const std::string &str);
     static void MakeUpper(std::string &str);
     static void MakeLower(std::string &str);
     static void Trim(std::string& str, const char* chars2remove = " ");

@@ -67,7 +67,6 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
         stream.close();
         return 0;
     }
-    std::cout << root->fileName << root->line << std::endl;
     if (!stream.eof()) {
         error = "Code structure error: Unmatched ) or ].\n";
         stream.close();
@@ -75,7 +74,6 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
     }
 
     int32 pass = 0, total = 0, count;
-    std::cout << root->fileName << root->line << std::endl;
     while ((count = root->process()) > 0) {
 
         total += count;

@@ -80,6 +80,7 @@ void Compiler::set_arity_error(RepliStruct *node, uint16 expected, uint16 got) {
     s += " elements, expected ";
     sprintf(buffer, "%d", expected);
     s += buffer;
+    s += " for '" + node->cmd + "'";
     set_error(s, node);
 }
 
@@ -176,7 +177,7 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
     }
 
     if (_metadata->classes.count(node->cmd) == 0) {
-        set_error("error: unknown class", node);
+        set_error("error: unknown class '" + node->cmd + "'", node);
         return false;
     }
 
@@ -187,7 +188,8 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
     }
     current_object = new SysObject();
     if (hasLabel) {
-        global_references[node->label] = Reference(_image->code_segment.objects.size(), current_class, Class());
+        std::string label = node->label.substr(0, node->label.size() - 1);
+        global_references[label] = Reference(_image->code_segment.objects.size(), current_class, Class());
     }
 
     current_object->code[0] = current_class.atom;
@@ -244,7 +246,8 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
     if (trace)
         sys_object->trace();
 
-    _image->add_sys_object(sys_object, node->label);
+    std::string label = node->label.substr(0, node->label.size() - 1);
+    _image->add_sys_object(sys_object, label);
     return true;
 }
 
@@ -260,12 +263,11 @@ bool Compiler::read(RepliStruct *node, const StructureMember &m, bool enforce, u
 
 bool Compiler::getGlobalReferenceIndex(const std::string reference_name, const ReturnType t, ImageObject *object, uint16 &index, Class *&_class) {
     UNORDERED_MAP<std::string, Reference>::iterator it = global_references.find(reference_name);
-    if (it != global_references.end() && (t == ANY || (t != ANY && it->second._class.type == t))) {
 
+    if (it != global_references.end() && (t == ANY || (t != ANY && it->second._class.type == t))) {
         _class = &it->second._class;
         for (uint16 j = 0; j < object->references.size(); ++j)
             if (object->references[j] == it->second.index) { // the object has already been referenced.
-
                 index = j; // rptr points to object->reference_set[j], which in turn points to it->second.index.
                 return true;
             }
@@ -683,24 +685,28 @@ bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16 write_i
 bool Compiler::expression(RepliStruct *node, const ReturnType t, uint16 write_index, uint16 &extent_index, bool write)
 {
     bool lbl = false;
-    if (node->label != "")
+    std::string label;
+    if (node->label != "") {
+        label = node->label.substr(0, node->label.size() - 1);
         lbl = true;
+    }
 
     Class p;
     if (!expression_head(node, p, t)) {
         return false;
     }
     if (lbl && !in_hlp) {
-        if (!addLocalReference(node->label, write_index, p)) {
-            set_error("cast to " + node->label.substr(node->label.find("#") + 1) + ": unknown class", node);
+        if (!addLocalReference(label, write_index, p)) {
+            set_error("cast to " + label.substr(label.find("#") + 1) + ": unknown class", node);
             return false;
         }
     }
     uint16 tail_write_index = 0;
     if (write) {
         if (lbl && in_hlp) {
-            uint8 variable_index = get_hlp_reference(node->label);
+            uint8 variable_index = get_hlp_reference(label);
             if (variable_index == 0xFF) {
+                std::cout << "'" << label<< ":::"<< node->label << "'\n";
                 set_error(" error: undeclared variable", node);
                 return false;
             }
@@ -719,22 +725,24 @@ bool Compiler::expression(RepliStruct *node, const ReturnType t, uint16 write_in
 bool Compiler::expression(RepliStruct *node, const Class &p, uint16 write_index, uint16 &extent_index, bool write)
 {
     bool lbl = false;
+    std::string label;
     if (node->label != "") {
+        label = node->label.substr(0, node->label.size() - 1);
         lbl = true;
     }
     if (!expression_head(node, p)) {
         return false;
     }
     if (lbl) {
-        if (!addLocalReference(node->label, write_index, p)) {
-            set_error("cast to " + node->label.substr(node->label.find("#") + 1) + ": unknown class", node);
+        if (!addLocalReference(label, write_index, p)) {
+            set_error("cast to " + label.substr(label.find("#") + 1) + ": unknown class", node);
             return false;
         }
     }
     uint16 tail_write_index = 0;
     if (write) {
         if (lbl && in_hlp) {
-            uint8 variable_index = get_hlp_reference(node->label);
+            uint8 variable_index = get_hlp_reference(label);
             if (variable_index == 0xFF) {
                 set_error(" error: undeclared variable", node);
                 return false;
@@ -754,13 +762,15 @@ bool Compiler::expression(RepliStruct *node, const Class &p, uint16 write_index,
 bool Compiler::set(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write)
 {
     bool lbl = false;
+    std::string label;
     if (node->label != "") {
+        label = node->label.substr(0, node->label.size() - 1);
         lbl = true;
     }
 
     if (lbl) {
-        if (!addLocalReference(node->label, write_index, Class(SET))) {
-            set_error("cast to " + node->label.substr(node->label.find("#") + 1) + ": unknown class", node);
+        if (!addLocalReference(label, write_index, Class(SET))) {
+            set_error("cast to " + label.substr(label.find("#") + 1) + ": unknown class", node);
             return false;
         }
     }
@@ -778,19 +788,21 @@ bool Compiler::set(RepliStruct *node, uint16 write_index, uint16 &extent_index, 
             return false;
         }
     }
-    return false;
+    return true;
 }
 
 bool Compiler::set(RepliStruct *node, const Class &p, uint16 write_index, uint16 &extent_index, bool write)
 {
     bool lbl = false;
-    std::string l;
-    if (node->label != "")
+    std::string label;
+    if (node->label != "") {
+        label = node->label.substr(0, node->label.size() - 1);
         lbl = true;
+    }
 
     if (lbl) {
-        if (!addLocalReference(node->label, write_index, p)) {
-            set_error("cast to " + node->label.substr(node->label.find("#") + 1) + ": unknown class", node);
+        if (!addLocalReference(label, write_index, p)) {
+            set_error("cast to " + label.substr(label.find("#") + 1) + ": unknown class", node);
             return false;
         }
     }
@@ -848,7 +860,7 @@ bool Compiler::set(RepliStruct *node, const Class &p, uint16 write_index, uint16
             return false;
         }
     }
-    return false;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -917,7 +929,8 @@ bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint
                 current_object->code[write_index] = Atom::Float(n);
             }
             return true;
-        } catch (const std::invalid_argument &ia) { }
+        } catch (const std::invalid_argument &ia) {
+        }
     }
 
     State s = save_state();
@@ -926,7 +939,7 @@ bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint
     }
     restore_state(s);
     if (enforce) {
-        set_error(" error: expected a number or an expr evaluating to a number", node);
+        set_error(" error: expected a number or an expr evaluating to a number, got: " + node->cmd, node);
         return false;
     }
     return false;
@@ -1016,18 +1029,19 @@ bool Compiler::read_string(RepliStruct *node, bool enforce, const Class *p, uint
     if (read_tail_wildcard(node, write_index, extent_index, write))
         return true;
 
-    if (node->cmd[0] == '"' && node->cmd[node->cmd.length()] == '"') {
+    if (node->cmd.size() > 2 && node->cmd[0] == '"' && node->cmd[node->cmd.length() - 1] == '"') {
         if (write) {
-            uint16 l = (uint16)node->cmd.length(); // TODO: check string length
+            std::string str = node->cmd.substr(1, node->cmd.size() - 2);
+            std::cout << "STRING: " << str << std::endl;
+            uint16 l = (uint16)str.length(); // TODO: check string length
             current_object->code[write_index] = Atom::IPointer(extent_index);
             current_object->code[extent_index++] = Atom::String(l);
             uint32 _st = 0;
             int8 shift = 0;
             for (uint16 i = 0; i < l; ++i) {
-                _st |= node->cmd[i] << shift;
+                _st |= str[i] << shift;
                 shift += 8;
                 if (shift == 32) {
-
                     current_object->code[extent_index++] = _st;
                     _st = 0;
                     shift = 0;
@@ -1185,6 +1199,7 @@ bool Compiler::read_expression(RepliStruct *node, bool enforce, const Class *p, 
         if (p) {
             s += " of type: ";
             s += p->str_opcode;
+            s+= " got: " + node->cmd;
         }
         set_error(s, node);
         return false;
@@ -1222,11 +1237,12 @@ bool Compiler::read_set(RepliStruct *node, bool enforce, const Class *p, uint16 
 
 bool Compiler::read_class(RepliStruct *node, bool enforce, const Class *p, uint16 write_index, uint16 &extent_index, bool write) { // p always NULL.
     if (node->label != "") {
+        std::string label = node->label.substr(0, node->label.size() - 1);
         Class _p;
         if (!object(node, _p))
             if (!marker(node, _p))
                 return false;
-        local_references[node->label] = Reference(write_index, _p, Class());
+        local_references[label] = Reference(write_index, _p, Class());
         if (write)
             current_object->code[write_index] = _p.atom;
         return true;
