@@ -31,6 +31,7 @@
 #include "compiler.h"
 #include "replistruct.h"
 #include <string.h>
+#include <assert.h>
 
 
 namespace r_comp {
@@ -68,6 +69,7 @@ void Compiler::set_error(const std::string &s, RepliStruct *node)
         m_errorLine = node->line;
         err = true;
         error = s;
+        assert(0);
     }
 }
 
@@ -663,8 +665,19 @@ bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16 write_i
     }
 
     if (node->args.size() != p.atom.getAtomCount()) {
-        set_arity_error(node, p.atom.getAtomCount(), node->args.size());
-        return false;
+        std::cout << " has " << node->cmd << "::: ";
+        for(const RepliStruct *n: node->args) {
+            std::cout << n->cmd << " ";
+        }
+        std::cout << "\n";
+        std::cout << String::Int2String(p.atom.getDescriptor()) << "\n";
+
+        for(const StructureMember &n : p.things_to_read) {
+            std::cout << n.name << " ";
+        }
+        std::cout << "\n";
+//        set_arity_error(node, p.atom.getAtomCount(), node->args.size());
+//        return false;
     }
 
     for (size_t i=0; i < node->args.size(); i++) {
@@ -706,7 +719,6 @@ bool Compiler::expression(RepliStruct *node, const ReturnType t, uint16 write_in
         if (lbl && in_hlp) {
             uint8 variable_index = get_hlp_reference(label);
             if (variable_index == 0xFF) {
-                std::cout << "'" << label<< ":::"<< node->label << "'\n";
                 set_error(" error: undeclared variable", node);
                 return false;
             }
@@ -924,11 +936,15 @@ bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint
 
     if (!String::StartsWith(node->cmd, "0x") && !String::EndsWith(node->cmd, "us")) { // Make sure it isn't a hex num or a timestamp
         try {
-            float32 n = std::strtof(node->cmd.c_str(), nullptr);
-            if (write) {
-                current_object->code[write_index] = Atom::Float(n);
+            // Fuck the STL, all this for a string::toint();
+            char *p;
+            float32 n = std::strtof(node->cmd.c_str(), &p);
+            if (*p == 0) {
+                if (write) {
+                    current_object->code[write_index] = Atom::Float(n);
+                }
+                return true;
             }
-            return true;
         } catch (const std::invalid_argument &ia) {
         }
     }
@@ -994,14 +1010,17 @@ bool Compiler::read_timestamp(RepliStruct *node, bool enforce, const Class *p, u
     if (String::EndsWith(node->cmd, "us")) {
         std::string number = node->cmd.substr(0, node->cmd.find("us"));
         try {
-            long long ts = std::strtoll(number.c_str(), nullptr, 10);
-            if (write) {
-                current_object->code[write_index] = Atom::IPointer(extent_index);
-                current_object->code[extent_index++] = Atom::Timestamp();
-                current_object->code[extent_index++] = ts >> 32;
-                current_object->code[extent_index++] = (ts & 0x00000000FFFFFFFF);
+            char *p;
+            long long ts = std::strtoll(number.c_str(), &p, 10);
+            if (*p == 0) {
+                if (write) {
+                    current_object->code[write_index] = Atom::IPointer(extent_index);
+                    current_object->code[extent_index++] = Atom::Timestamp();
+                    current_object->code[extent_index++] = ts >> 32;
+                    current_object->code[extent_index++] = (ts & 0x00000000FFFFFFFF);
+                }
+                return true;
             }
-            return true;
         } catch (const std::invalid_argument &ia) { }
     }
 
@@ -1032,7 +1051,6 @@ bool Compiler::read_string(RepliStruct *node, bool enforce, const Class *p, uint
     if (node->cmd.size() > 2 && node->cmd[0] == '"' && node->cmd[node->cmd.length() - 1] == '"') {
         if (write) {
             std::string str = node->cmd.substr(1, node->cmd.size() - 2);
-            std::cout << "STRING: " << str << std::endl;
             uint16 l = (uint16)str.length(); // TODO: check string length
             current_object->code[write_index] = Atom::IPointer(extent_index);
             current_object->code[extent_index++] = Atom::String(l);
@@ -1080,11 +1098,14 @@ bool Compiler::read_node(RepliStruct *node, bool enforce, const Class *p, uint16
 
     if (String::StartsWith(node->cmd, "0x")) {
         try {
-            uintptr_t h = std::strtoll(node->cmd.c_str(), nullptr, 16);
-            if (Atom(h).getDescriptor() == Atom::NODE) {
-                if (write)
-                    current_object->code[write_index] = Atom(h);
-                return true;
+            char *p;
+            uintptr_t h = std::strtoll(node->cmd.c_str(), &p, 16);
+            if (*p == 0) {
+                if (Atom(h).getDescriptor() == Atom::NODE) {
+                    if (write)
+                        current_object->code[write_index] = Atom(h);
+                    return true;
+                }
             }
         } catch (const std::invalid_argument &ia) { }
     }
@@ -1116,11 +1137,14 @@ bool Compiler::read_device(RepliStruct *node, bool enforce, const Class *p, uint
 
     if (String::StartsWith(node->cmd, "0x")) {
         try {
-            uintptr_t h = std::strtoll(node->cmd.c_str(), nullptr, 16);
-            if (Atom(h).getDescriptor() == Atom::DEVICE) {
-                if (write)
-                    current_object->code[write_index] = Atom(h);
-                return true;
+            char *p;
+            uintptr_t h = std::strtoll(node->cmd.c_str(), &p, 16);
+            if (*p == 0) {
+                if (Atom(h).getDescriptor() == Atom::DEVICE) {
+                    if (write)
+                        current_object->code[write_index] = Atom(h);
+                    return true;
+                }
             }
         } catch (const std::invalid_argument &ia) { }
     }
