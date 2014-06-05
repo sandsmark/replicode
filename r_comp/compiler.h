@@ -62,22 +62,12 @@ private:
 
     class State {
     public:
-        State(): indents(0),
-            right_indents_ahead(0),
-            left_indents_ahead(0),
-            pattern_lvl(0),
+        State(): pattern_lvl(0),
             no_arity_check(false) {}
-        State(Compiler *c): indents(c->state.indents),
-            right_indents_ahead(c->state.right_indents_ahead),
-            left_indents_ahead(c->state.left_indents_ahead),
-            pattern_lvl(c->state.pattern_lvl),
+        State(Compiler *c): pattern_lvl(c->state.pattern_lvl),
             no_arity_check(c->state.no_arity_check) {}
-        uint16 indents; // 1 indent = 3 char.
-        uint16 right_indents_ahead; // parsing right indents may unveil more 3-char groups than needed: that's some indents ahead. Avoids requiring a newline for each indent.
-        uint16 left_indents_ahead; // as above.
         uint16 pattern_lvl; // add one when parsing skel in (ptn skel guards), sub one when done.
         bool no_arity_check; // set to true when a tail wildcard is encountered while parsing an expression, set back to false when done parsing the expression.
-        std::streampos stream_ptr;
     };
 
     State state;
@@ -121,48 +111,14 @@ private:
     bool err; // set to true when parsing fails in the functions below.
 
 // All functions below return false (a) upon eof or, (b) when the class structure is not matched; in both cases, characters are pushed back.
-// Sub-lexical units
-    //bool comment(); // pull comments out of the stream.
-    //bool separator(bool pushback); // blank space or indent.
-    //bool right_indent(bool pushback); // newline + 3 blank spaces wrt indents.top().
-    //bool left_indent(bool pushback); // newline - 3 blank spaces wrt indents.top().
-    //bool indent(bool pushback); // newline + same number of 3 blank spaces as given by indents.top().
-    //bool expression_begin(bool &indented); // ( or right_indent.
-    //bool expression_end(bool indented); // ) or left_indent.
-    //bool set_begin(bool &indented); // [ or []+right_indent.
-    //bool set_end(bool indented); // ] or left_indent.
-    //bool symbol_expr(std::string &s); // finds any symbol s; detects trailing blanks, newline and ).
-    //bool symbol_expr_set(std::string &s); // finds any symbol s; detects trailing blanks, newline, ) and ].
-    //bool match_symbol_separator(RepliStruct *node, const char *symbol, bool pushback); // matches a symbol followed by a separator/left/right indent; separator/left/right indent is pushed back.
-    //bool match_symbol(const char *symbol, bool pushback); // matches a symbol regardless of what follows.
-    //bool member(std::string &s); // finds a string possibly followed by ., blanks, newline, ) and ].
 
 // Lexical units.
-    //bool nil(); // nil
-    //bool nil_nb(); // |nb
-    //bool nil_us(); // |ms
-    //bool forever(); // forever
-    //bool nil_nid(); // |nid
-    //bool nil_did(); // |did
-    //bool nil_fid(); // |fid
-    //bool nil_bl(); // |bl
-    //bool nil_st(); // |st
-    //bool label(std::string &l);
-    //bool variable(std::string &v);
-    //bool this_(); // this
     bool local_reference(RepliStruct *node, uint16 &index, const ReturnType t); // must conform to t; indicates if the ref is to ba valuated in the value array (in_pattern set to true).
     bool global_reference(RepliStruct *node, uint16 &index, const ReturnType t); // no conformance: return type==ANY.
     bool hlp_reference(RepliStruct *node, uint16 &index);
     bool this_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t); // ex: this.res.
     bool local_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t, uint16 &cast_opcode); // ex: p.res where p is a label/variable declared within the object; cast_opcode=0x0FFF if no cast.
     bool global_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t); // ex: p.res where p is a label/variable declared outside the object.
-    //bool wildcard(); :
-    //bool tail_wildcard(); // ::
-    //bool timestamp(uint64 &ts); // !0x, !number, us
-    //bool str(std::string &s); // "*"
-    //bool number(float32 &n); // 0x*, *us, cast
-    //bool hex(uintptr_t &h); // 0x*
-    //bool boolean(bool &b); // true|false
     bool object(RepliStruct *node, Class &p); // looks first in sys_objects, then in objects.
     bool object(RepliStruct *node, const Class &p); // must conform to p.
     bool sys_object(RepliStruct *node, Class &p); // looks only in sys_objects.
@@ -181,15 +137,11 @@ private:
     bool set(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write); // no conformance, i.e. set of anything. [ ] is illegal; use |[] instead, or [nil].
     bool set(RepliStruct *node, const Class &p, uint16 write_index, uint16 &extent_index, bool write); // must conform to p. for class defs like member-name:[member-list] or !class (name[] member-list).
 
-    //uint8 set_element_count(bool indented); // returns the number of elements in a set; parses the stream (write set to false) until it finds the end of the set and rewinds (write set back to true).
     bool read(RepliStruct *node, const StructureMember &m, bool enforce, uint16 write_index, uint16 &extent_index, bool write);
-
-    OutStream *out_stream;
 
     bool read_sys_object(RepliStruct *node, RepliStruct *view); // compiles one object; return false when there is an error.
 public:
     Compiler();
-    ~Compiler();
 
     bool compile(RepliStruct *rootNode, // stream must be open.
                  r_comp::Image *_image,

@@ -131,7 +131,6 @@ inline bool View::isNotification() const {
 }
 
 inline Group *View::get_host() {
-
     uint32 host_reference = code(VIEW_HOST).asIndex();
     return (Group *)references[host_reference];
 }

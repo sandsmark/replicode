@@ -175,6 +175,7 @@ int32_t RepliStruct::parse(std::istream *stream, uint32_t &curIndent, uint32_t &
 // act as if we met a space
                 if (str.size() > 0) {
                     if ((cmd.size() > 0) || (type == Set) || (type == Root)) {
+
                         subStruct = new RepliStruct(Atom);
                         subStruct->parent = this;
                         args.push_back(subStruct);
@@ -198,6 +199,17 @@ int32_t RepliStruct::parse(std::istream *stream, uint32_t &curIndent, uint32_t &
 // next string is ready
             if (str.size() > 0) {
                 if ((cmd.size() > 0) || (type == Set) || (type == Development)) { // Modification from Eric to have the Development treat tpl vars as atoms instead of a Development.cmd
+                    // Check if we need to read more tokens for the string
+                    if (str[0] == '"' && str[str.length() - 1] != '"') {
+                        str += ' ';
+                        while (!stream->eof()) {
+                            c = stream->get();
+                            str += c;
+                            if (c == '"') {
+                                break;
+                            }
+                        }
+                    }
                     subStruct = new RepliStruct(Atom);
                     subStruct->parent = this;
                     args.push_back(subStruct);

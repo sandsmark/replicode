@@ -38,13 +38,7 @@ namespace r_comp {
 
 static bool Output = true;
 
-Compiler::Compiler(): error(std::string("")), current_object(NULL), out_stream(NULL) {
-}
-
-Compiler::~Compiler() {
-
-    if (out_stream)
-        delete out_stream;
+Compiler::Compiler(): error(std::string("")), current_object(NULL)  {
 }
 
 Compiler::State Compiler::save_state() {
@@ -114,6 +108,7 @@ bool Compiler::compile(RepliStruct *root, r_comp::Image *_image, r_comp::Metadat
         if (node->type == RepliStruct::Directive) {
             continue;
         }
+
         iter++;
         if (iter == root->args.end()) {
             set_error("missing view", node);
@@ -125,29 +120,6 @@ bool Compiler::compile(RepliStruct *root, r_comp::Image *_image, r_comp::Metadat
         }
         current_object_index++;
     }
-
-/*    while (!in_stream->eof()) {
-
-        switch (in_stream->peek()) {
-        case '!':
-            set_error("error: found preprocessor directive");
-            error = this->error;
-            return false;
-        default:
-            if (in_stream->eof())
-                return true;
-            if (!read_sys_object()) {
-
-                error = this->error;
-                return false;
-            }
-            current_object_index++;
-            break;
-        }
-        char c = (char)in_stream->get();
-        if (c != -1)
-            in_stream->putback(c);
-    }*/
 
     return !err;
 }
@@ -218,45 +190,53 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
             return false;
         }
 
-        if (current_class.str_opcode == "grp")
+        if (current_class.str_opcode == "grp") {
             current_class = _metadata->classes.find("grp_view")->second;
-        else if (current_class.str_opcode == "ipgm" ||
+        } else if (current_class.str_opcode == "ipgm" ||
                  current_class.str_opcode == "icpp_pgm" ||
                  current_class.str_opcode == "mdl" ||
-                 current_class.str_opcode == "cst")
+                 current_class.str_opcode == "cst") {
             current_class = _metadata->classes.find("pgm_view")->second;
-        else
+        } else {
             current_class = _metadata->classes.find("view")->second;
+        }
+
         current_class.use_as = StructureMember::I_CLASS;
 
         uint16 count = 0;
-        for (std::vector<RepliStruct*>::iterator iter = view->args.begin(); iter != view->args.end(); iter++) {
+
+        for (RepliStruct *argNode : view->args) {
             current_object = new SysView();
             current_view_index = count;
             uint16 extent_index = 0;
 
-            if (!read_set(*iter, true, &current_class, 0, extent_index, true)) {
-                set_error(" error: illegal element in set", *iter);
+            if (!read_set(argNode, true, &current_class, 0, extent_index, true)) {
+                set_error(" error: illegal element in set", argNode);
                 delete current_object;
                 return false;
             }
             count++;
             sys_object->views.push_back((SysView *)current_object);
         }
+    } else if (view->type != RepliStruct::Atom && view->cmd != "|[]") {
+        set_error("expected a view set", view);
+        return false;
     }
 
     if (trace)
         sys_object->trace();
 
+
     std::string label = node->label.substr(0, node->label.size() - 1);
     _image->add_sys_object(sys_object, label);
+
+    static int counts = 0;
     return true;
 }
 
 bool Compiler::read(RepliStruct *node, const StructureMember &m, bool enforce, uint16 write_index, uint16 &extent_index, bool write) {
 
     if (Class *p = m.get_class(_metadata)) {
-
         p->use_as = m.getIteration();
         return (this->*m.read())(node, enforce, p, write_index, extent_index, write);
     }
@@ -310,7 +290,6 @@ uint8 Compiler::add_hlp_reference(std::string reference_name) {
 }
 
 uint8 Compiler::get_hlp_reference(std::string reference_name) {
-
     for (uint8 i = 0; i < hlp_references.size(); ++i)
         if (reference_name == hlp_references[i])
             return i;
@@ -321,12 +300,13 @@ uint8 Compiler::get_hlp_reference(std::string reference_name) {
 
 bool Compiler::local_reference(RepliStruct *node, uint16 &index, const ReturnType t)
 {
-    if (node->type == RepliStruct::Set) {
-        UNORDERED_MAP<std::string, Reference>::iterator it = local_references.find(node->cmd);
-        if (it != local_references.end() && (t == ANY || (t != ANY && it->second._class.type == t))) {
-            index = it->second.index;
-            return true;
-        }
+    if (node->type != RepliStruct::Set) {
+        return false;
+    }
+    UNORDERED_MAP<std::string, Reference>::iterator it = local_references.find(node->cmd);
+    if (it != local_references.end() && (t == ANY || (t != ANY && it->second._class.type == t))) {
+        index = it->second.index;
+        return true;
     }
     return false;
 }
@@ -411,8 +391,8 @@ bool Compiler::this_indirection(RepliStruct *node, std::vector<int16> &v, const 
     return false;
 }
 
-///////////////// XXXXXXXXXX CONTINUE HERE /////////
-bool Compiler::local_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t, uint16 &cast_opcode) {
+bool Compiler::local_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t, uint16 &cast_opcode)
+{
     std::string name = node->cmd;
     size_t pos = name.find(".");
     if (pos == std::string::npos) {
@@ -665,19 +645,8 @@ bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16 write_i
     }
 
     if (node->args.size() != p.atom.getAtomCount()) {
-        std::cout << " has " << node->cmd << "::: ";
-        for(const RepliStruct *n: node->args) {
-            std::cout << n->cmd << " ";
-        }
-        std::cout << "\n";
-        std::cout << String::Int2String(p.atom.getDescriptor()) << "\n";
-
-        for(const StructureMember &n : p.things_to_read) {
-            std::cout << n.name << " ";
-        }
-        std::cout << "\n";
-//        set_arity_error(node, p.atom.getAtomCount(), node->args.size());
-//        return false;
+        set_arity_error(node, p.atom.getAtomCount(), node->args.size());
+        return false;
     }
 
     for (size_t i=0; i < node->args.size(); i++) {
@@ -697,6 +666,8 @@ bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16 write_i
 
 bool Compiler::expression(RepliStruct *node, const ReturnType t, uint16 write_index, uint16 &extent_index, bool write)
 {
+    if (node->type != RepliStruct::Structure) return false;
+
     bool lbl = false;
     std::string label;
     if (node->label != "") {
@@ -723,8 +694,9 @@ bool Compiler::expression(RepliStruct *node, const ReturnType t, uint16 write_in
                 return false;
             }
             current_object->code[write_index] = Atom::AssignmentPointer(variable_index, extent_index);
-        } else
+        } else {
             current_object->code[write_index] = Atom::IPointer(extent_index);
+        }
         current_object->code[extent_index++] = p.atom;
         tail_write_index = extent_index;
         extent_index += p.atom.getAtomCount();
@@ -760,8 +732,9 @@ bool Compiler::expression(RepliStruct *node, const Class &p, uint16 write_index,
                 return false;
             }
             current_object->code[write_index] = Atom::AssignmentPointer(variable_index, extent_index);
-        } else
+        } else {
             current_object->code[write_index] = Atom::IPointer(extent_index);
+        }
         current_object->code[extent_index++] = p.atom;
         tail_write_index = extent_index;
         extent_index += p.atom.getAtomCount();
@@ -878,42 +851,63 @@ bool Compiler::set(RepliStruct *node, const Class &p, uint16 write_index, uint16
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16 write_index, uint16 &extent_index, bool write) { // enforce always false, p always NULL.
-    if (read_number(node, false, NULL, write_index, extent_index, write))
+    if (read_number(node, false, NULL, write_index, extent_index, write)) {
         return true;
+    }
     if (err)
         return false;
-    if (read_timestamp(node, false, NULL, write_index, extent_index, write))
+
+    if (read_timestamp(node, false, NULL, write_index, extent_index, write)) {
         return true;
+    }
     if (err)
         return false;
-    if (read_string(node, false, NULL, write_index, extent_index, write))
+
+    if (read_string(node, false, NULL, write_index, extent_index, write)) {
         return true;
+    }
     if (err)
         return false;
-    if (read_boolean(node, false, NULL, write_index, extent_index, write))
+
+    if (read_boolean(node, false, NULL, write_index, extent_index, write)) {
         return true;
+    }
     if (err)
         return false;
-    if (read_function(node, false, NULL, write_index, extent_index, write))
+
+    if (read_function(node, false, NULL, write_index, extent_index, write)) {
         return true;
+    }
     if (err)
         return false;
-    if (read_node(node, false, NULL, write_index, extent_index, write))
+
+    if (read_node(node, false, NULL, write_index, extent_index, write)) {
         return true;
+    }
     if (err)
         return false;
-    if (read_device(node, false, NULL, write_index, extent_index, write))
+
+    if (read_device(node, false, NULL, write_index, extent_index, write)) {
         return true;
-    if (read_class(node, false, NULL, write_index, extent_index, write))
-        return true;
+    }
     if (err)
         return false;
-    if (read_expression(node, false, NULL, write_index, extent_index, write))
+
+    if (read_class(node, false, NULL, write_index, extent_index, write)) {
         return true;
+    }
     if (err)
         return false;
-    if (read_set(node, false, NULL, write_index, extent_index, write))
+
+    if (read_expression(node, false, NULL, write_index, extent_index, write)) {
         return true;
+    }
+    if (err)
+        return false;
+
+    if (read_set(node, false, NULL, write_index, extent_index, write)) {
+        return true;
+    }
     if (write)
         set_error("error: expecting more elements", node);
     return false;
@@ -921,20 +915,26 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16 
 
 bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint16 write_index, uint16 &extent_index, bool write) { // p always NULL
 
-    if (read_nil_nb(node, write_index, extent_index, write))
+    if (read_nil_nb(node, write_index, extent_index, write)) {
         return true;
-    if (read_forever_nb(node, write_index, extent_index, write))
+    }
+    if (read_forever_nb(node, write_index, extent_index, write)) {
         return true;
-    if (read_variable(node, write_index, extent_index, write, NUMBER))
+    }
+    if (read_variable(node, write_index, extent_index, write, NUMBER)) {
         return true;
-    if (read_reference(node, write_index, extent_index, write, NUMBER))
+    }
+    if (read_reference(node, write_index, extent_index, write, NUMBER)) {
         return true;
-    if (read_wildcard(node, write_index, extent_index, write))
+    }
+    if (read_wildcard(node, write_index, extent_index, write)) {
         return true;
-    if (read_tail_wildcard(node, write_index, extent_index, write))
+    }
+    if (read_tail_wildcard(node, write_index, extent_index, write)) {
         return true;
+    }
 
-    if (!String::StartsWith(node->cmd, "0x") && !String::EndsWith(node->cmd, "us")) { // Make sure it isn't a hex num or a timestamp
+    if (node->cmd != "" && !String::StartsWith(node->cmd, "0x") && !String::EndsWith(node->cmd, "us")) { // Make sure it isn't a hex num or a timestamp
         try {
             // Fuck the STL, all this for a string::toint();
             char *p;
@@ -1011,7 +1011,7 @@ bool Compiler::read_timestamp(RepliStruct *node, bool enforce, const Class *p, u
         std::string number = node->cmd.substr(0, node->cmd.find("us"));
         try {
             char *p;
-            long long ts = std::strtoll(number.c_str(), &p, 10);
+            unsigned long long ts = std::strtoull(number.c_str(), &p, 10);
             if (*p == 0) {
                 if (write) {
                     current_object->code[write_index] = Atom::IPointer(extent_index);
@@ -1022,6 +1022,7 @@ bool Compiler::read_timestamp(RepliStruct *node, bool enforce, const Class *p, u
                 return true;
             }
         } catch (const std::invalid_argument &ia) { }
+    } else {
     }
 
     State s = save_state();
@@ -1385,7 +1386,7 @@ bool Compiler::read_nil_st(RepliStruct *node, uint16 write_index, uint16 &extent
 }
 
 bool Compiler::read_variable(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write, const Class p) {
-    if (!String::EndsWith(node->cmd, ":") || node->type != RepliStruct::Atom) {
+    if (!String::EndsWith(node->cmd, ":") || String::StartsWith(node->cmd, ":") || node->type != RepliStruct::Atom) {
         return false;
     }
     if (!state.pattern_lvl) {
