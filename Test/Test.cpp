@@ -309,7 +309,6 @@ int32 main(int argc, char **argv) {
 
         if (!mem->load(ram_objects.as_std(), stdin_oid, stdout_oid, self_oid))
             return 4;
-        decompile(decompiler, image, 0, settings.ignore_named_objects);
         uint64 starting_time = mem->start();
 
         std::cout << "> running for " << settings.run_time << " ms" << std::endl;
