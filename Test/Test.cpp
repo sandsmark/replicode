@@ -229,8 +229,21 @@ int main(int argc, char **argv) {
     core::Time::Init(1000);
 
     Settings settings;
-    if (!settings.load(argv[1]))
+    if (argc == 2) {
+        if (!settings.load(argv[1])) {
+            std::cerr << "Unable to load config file " << argv[1] << std::endl;
+            return 1;
+        }
+    } else if (argc == 1) {
+        if (!settings.load("settings.xml")) {
+            std::cerr << "Unable to load default config file settings.xml" << std::endl;
+            return 1;
+        }
+    } else {
+        std::cerr << "Usage: " << argv[0] << " [settings file]" << std::endl;
         return 1;
+    }
+
 
     std::cout << "> REPLICODE 1.0" << std::endl
               << "> Part of the AERA/HUMANOBS project" << std::endl;
