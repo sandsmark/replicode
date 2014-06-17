@@ -42,13 +42,11 @@ _Object::~_Object() {
 }
 
 void _Object::incRef() {
-
-    Atomic::Increment32(&refCount);
+    refCount++;
 }
 
 void _Object::decRef() {
-
-    if (Atomic::Decrement32(&refCount) == 0)
+    if (--refCount == 0)
         delete this;
 }
 }

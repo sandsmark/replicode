@@ -53,6 +53,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <mutex>
+#include <atomic>
 // #undef HANDLE
 // #define HANDLE pthread_cond_t*
 #endif
@@ -205,30 +206,12 @@ public:
     static void Remove(signal_handler h);
 };
 
-class core_dll Atomic {
-public:
-    static int64 Increment32(int64 volatile *v); // return the final value of *v
-    static int64 Decrement32(int64 volatile *v); // return the final value of *v
-    static int64 CompareAndSwap32(int64 volatile *target, int64 v1, int64 v2); // compares *target with v1, if equal, replace it with v2; return the initial value of *target
-    static int64 CompareAndSwap64(int64 volatile *target, int64 v1, int64 v2);
-// static word CompareAndSwap(word volatile *target,word v1,word v2); // uses the right version according to ARCH_xx
-    static int64 Swap32(int64 volatile *target, int64 v); // writes v at target; return the initial value of *target
-    static int64 Swap64(int64 volatile *target, int64 v); // ifndef ARCH_64, calls CompareAndSwap64(target,v,v)
-// static word Swap(word volatile *target,word v); // uses the right version according to ARCH_xx
-#if defined ARCH_64
-    static int64 Increment64(int64 volatile *v);
-    static int64 Decrement64(int64 volatile *v);
-    static int64 Add32(int64 volatile *target, int64 v); // adds v to *target; return the final value of *target
-    static int64 Add64(int64 volatile *target, int64 v);
-#endif
-};
-
 uint8 core_dll BSR(word data); // BitScanReverse
 
 class core_dll FastSemaphore: // lock-free under no contention
     public Semaphore {
 private:
-    int64 volatile count; // minus the number of waiting threads
+    std::atomic_int_fast64_t count; // minus the number of waiting threads
     const int64 maxCount; // max number of threads allowed to run
 public:
     FastSemaphore(uint64 initialCount, uint64 maxCount); // initialCount >=0

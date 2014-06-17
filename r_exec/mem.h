@@ -38,6 +38,7 @@
 #include "dll.h"
 
 #include <list>
+#include <atomic>
 
 #include "../r_code/list.h"
 #include "../r_comp/segments.h"
@@ -328,7 +329,7 @@ public:
 class r_exec_dll MemVolatile:
     public _Mem {
 private:
-    volatile int64 last_oid;
+    std::atomic_int_fast64_t last_oid;
     uint64 get_oid();
     void bind(View *view); // assigns an oid (atomic operation).
     void set_last_oid(int64 oid);

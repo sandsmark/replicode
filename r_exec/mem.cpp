@@ -1030,18 +1030,17 @@ MemVolatile::MemVolatile(): _Mem(), last_oid(-1) {
 MemVolatile::~MemVolatile() {
 }
 
-uint64 MemVolatile::get_oid() {
-
-    return Atomic::Increment32(&last_oid);
+uint64 MemVolatile::get_oid()
+{
+    return ++last_oid;
 }
 
 void MemVolatile::set_last_oid(int64 oid) {
-
     last_oid = oid;
 }
 
-void MemVolatile::bind(View *view) {
-
+void MemVolatile::bind(View *view)
+{
     Code *object = view->object;
     object->views.insert(view);
     object->set_oid(get_oid());

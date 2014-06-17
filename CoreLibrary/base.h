@@ -32,7 +32,7 @@
 #define core_base_h
 
 #include <cstdlib>
-
+#include <atomic>
 #include "types.h"
 
 
@@ -76,10 +76,7 @@ class core_dll _Object {
     template<class C> friend class P;
     friend class _P;
 protected:
-#ifdef ARCH_32
-    uint64 __vfptr_padding_Object;
-#endif
-    int64 volatile refCount;
+    std::atomic_int_fast64_t refCount;
     _Object();
 public:
     virtual ~_Object();

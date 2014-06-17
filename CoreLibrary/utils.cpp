@@ -683,76 +683,6 @@ void SignalHandler::Remove(signal_handler h) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-int64 Atomic::Increment32(int64 volatile *v) {
-#if defined WINDOWS
-    return InterlockedIncrement((long*)v);
-#elif defined LINUX
-    __sync_add_and_fetch(v, 1);
-    return *v;
-#endif
-}
-
-int64 Atomic::Decrement32(int64 volatile *v) {
-#if defined WINDOWS
-    return InterlockedDecrement((long*)v);
-#elif defined LINUX
-    __sync_add_and_fetch(v, -1);
-    return *v;
-#endif
-}
-
-int64 Atomic::CompareAndSwap32(int64 volatile *target, int64 v1, int64 v2) {
-#if defined WINDOWS
-    return _InterlockedCompareExchange((long*)target, v2, v1);
-#elif defined LINUX
-// note that v1 and v2 are swapped for Linux!!!
-    return __sync_val_compare_and_swap(target, v1, v2);
-#endif
-}
-
-int64 Atomic::CompareAndSwap64(int64 volatile *target, int64 v1, int64 v2) {
-#if defined WINDOWS
-    return _InterlockedCompareExchange64(target, v2, v1);
-#elif defined LINUX
-// note that v1 and v2 are swapped for Linux!!!
-    return __sync_val_compare_and_swap(target, v1, v2);
-#endif
-}
-
-// word Atomic::CompareAndSwap(word volatile *target,word v1,word v2){
-//#if defined ARCH_32
-// return CompareAndSwap32(target,v1,v2);
-//#elif defined ARCH_64
-// return CompareAndSwap32((uint64*)target,v1,v2);
-//#endif
-// }
-
-int64 Atomic::Swap32(int64 volatile *target, int64 v) {
-#if defined WINDOWS
-    return _InterlockedExchange((long*)target, v);
-#elif defined LINUX
-    return __sync_fetch_and_sub(target, v);
-#endif
-}
-
-int64 Atomic::Swap64(int64 volatile *target, int64 v) {
-#if defined WINDOWS
-    return CompareAndSwap64(target, v, v);
-#elif defined LINUX
-    return __sync_fetch_and_sub(target, v);
-#endif
-}
-
-// word Atomic::Swap(word volatile *target,word v){
-//#if defined ARCH_32
-// return Swap32(target,v);
-//#elif defined ARCH_64
-// return Swap32((uint64*)target,v);
-//#endif
-// }
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 uint8 BSR(word data) {
 #if defined WINDOWS
 #if defined ARCH_32
@@ -781,17 +711,17 @@ FastSemaphore::FastSemaphore(uint64 initialCount, uint64 maxCount): Semaphore(in
 FastSemaphore::~FastSemaphore() {
 }
 
-void FastSemaphore::acquire() {
-
+void FastSemaphore::acquire()
+{
     int64 c;
-    while ((c = Atomic::Decrement32(&count)) >= maxCount); // release calls can bring count over maxCount: acquire has to exhaust these extras
+    while ((c = --count) >= maxCount); // release calls can bring count over maxCount: acquire has to exhaust these extras
     if (c < 0)
         Semaphore::acquire();
 }
 
-void FastSemaphore::release() {
-
-    int64 c = Atomic::Increment32(&count);
+void FastSemaphore::release()
+{
+    int64 c = ++count;
     if (c <= 0)
         Semaphore::release();
 }
