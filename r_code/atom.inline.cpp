@@ -387,7 +387,6 @@ inline uint8 Atom::getAtomCount() const
     case GROUP:
     case S_SET: return atom & 0x0000000000FF;
     case STRING: return (atom & 0x00000000FF00) >> 8;
-    //case TIMESTAMP: return 1;
     default:
         return 0;
     }

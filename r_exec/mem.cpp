@@ -264,6 +264,7 @@ void _Mem::init_timings(uint64 now) const { // called at the beginning of _Mem::
 
     uint64 time_tolerance = Utils::GetTimeTolerance() * 2;
     r_code::list<P<Code> >::const_iterator o;
+
     for (o = objects.begin(); o != objects.end(); ++o) {
 
         uint16 opcode = (*o)->code(0).asOpcode();
@@ -271,7 +272,6 @@ void _Mem::init_timings(uint64 now) const { // called at the beginning of _Mem::
 
             uint64 after = Utils::GetTimestamp<Code>(*o, FACT_AFTER);
             uint64 before = Utils::GetTimestamp<Code>(*o, FACT_BEFORE);
-
             if (after < Utils::MaxTime - now)
                 Utils::SetTimestamp<Code>(*o, FACT_AFTER, after + now);
             if (before < Utils::MaxTime - now - time_tolerance)

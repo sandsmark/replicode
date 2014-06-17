@@ -82,19 +82,16 @@ public:
     static const uint64 MaxTime = 0xFFFFFFFFFFFFFFFF;
     static const uint64 MaxTHZ = 0xFFFFFFFF;
 
-    template<class O> static uint64 GetTimestamp(const O *object, uint16 index) {
-
-        uint16 t_index = object->code(index).asIndex();
-        uint64 high = object->code(t_index + 1).atom;
-        return high << 32 | object->code(t_index + 2).atom;
+    template<class O> static uint64_t GetTimestamp(const O *object, uint32_t index) {
+        uint32_t t_index = object->code(index).asIndex();
+        return object->code(t_index + 1).atom;
     }
 
-    template<class O> static void SetTimestamp(O *object, uint16 index, uint64 t) {
+    template<class O> static void SetTimestamp(O *object, uint32_t index, uint64_t t) {
 
         uint16 t_index = object->code(index).asIndex();
         object->code(t_index) = Atom::Timestamp();
-        object->code(t_index + 1).atom = t >> 32;
-        object->code(t_index + 2).atom = t & 0x00000000FFFFFFFF;
+        object->code(t_index + 1).atom = t;
     }
 
     static std::string GetString(const Atom *iptr);
