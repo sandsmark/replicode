@@ -443,7 +443,6 @@ Goal *_Fact::get_goal() const {
 }
 
 uint64 _Fact::get_after() const {
-
     return Utils::GetTimestamp<Code>(this, FACT_AFTER);
 }
 

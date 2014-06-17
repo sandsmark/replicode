@@ -39,6 +39,7 @@
 
 #include <list>
 #include <atomic>
+#include <thread>
 
 #include "../r_code/list.h"
 #include "../r_comp/segments.h"
@@ -96,8 +97,8 @@ protected:
 
     PipeNN<P<_ReductionJob>, 1024> *reduction_job_queue;
     PipeNN<P<TimeJob>, 1024> *time_job_queue;
-    ReductionCore **reduction_cores;
-    TimeCore **time_cores;
+
+    std::vector<std::thread> m_coreThreads;
 
 // Performance stats.
     uint64 reduction_job_count;
@@ -115,7 +116,9 @@ protected:
 
     State state;
     std::mutex m_stateMutex;
-    Semaphore *stop_sem; // blocks the rMem until all cores terminate.
+
+    std::mutex m_stopMutex; // blocks the rMem until all cores terminate.
+
 
     r_code::list<P<Code> > objects; // store objects in order of injection: holds the initial objects (and dynamically created ones if MemStatic is used).
 
@@ -123,8 +126,6 @@ protected:
     Code *_stdin;
     Code *_stdout;
     Code *_self;
-
-    void reset(); // clear the content of the mem.
 
     std::vector<Group *> initial_groups; // convenience; cleared after start();
 
@@ -230,7 +231,9 @@ public:
     void start_core(); // called upon creation of a delegate.
     void shutdown_core(); // called upon completion of a delegate's task.
 
-    bool load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 stdout_oid, uint64 self_oid); // call before start; no mod/set/eje will be executed (only inj);
+    /// call before start; no mod/set/eje will be executed (only inj);
+    /// no cov at init time.
+    bool load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 stdout_oid, uint64 self_oid);
 // return false on error.
     uint64 start(); // return the starting time.
     void stop(); // after stop() the content is cleared and one has to call load() and start() again.

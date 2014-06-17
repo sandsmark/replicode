@@ -160,10 +160,11 @@ void test_many_injections(r_exec::_Mem *mem, uint64 sampling_period_ms, uint64_t
         debug("test many injections") << "number of runs:" << nRuns;
         test_injection(mem, nObjects);
         uint64 taken_ms = (r_exec::Now() - start) / 1000;
-        if (taken_ms > sampling_period_ms)
+        if (taken_ms > sampling_period_ms) {
             debug("test many injections") << "Good grief! I exceeded the sampling period!";
-        else
-            Thread::Sleep(sampling_period_ms - taken_ms);
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(sampling_period_ms - taken_ms));
+        }
     }
 }
 
@@ -225,9 +226,9 @@ void write_to_file(r_comp::Image *image, std::string &image_path, Decompiler *de
     }
 }
 
-int main(int argc, char **argv) {
-
-    core::Time::Init(1000);
+int main(int argc, char **argv)
+{
+    core::Time::Init();
 
     Settings settings;
     if (argc == 2) {
@@ -245,6 +246,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    core::s_debugEnabled = settings.debug;
 
     debug("main") << "Initializing with user operator library and user class code...";
     if (!r_exec::Init(settings.usr_operator_path.c_str(), Time::Get, settings.usr_class_path.c_str()))
@@ -322,7 +324,7 @@ int main(int argc, char **argv) {
         uint64 starting_time = mem->start();
 
         debug("main") << "running for " << settings.run_time << " ms";
-        Thread::Sleep(settings.run_time);
+        std::this_thread::sleep_for(std::chrono::milliseconds(settings.run_time));
 
         /*Thread::Sleep(settings.run_time/2);
         test_many_injections(mem,

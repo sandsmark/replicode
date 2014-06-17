@@ -38,29 +38,7 @@
 using namespace core;
 
 namespace r_exec {
-
-class DelegatedCore:
-    public Thread {
-private:
-    Timer timer;
-    uint64 target_time;
-    uint64 time_to_wait;
-    P<TimeJob> job;
-public:
-    static thread_ret thread_function_call Wait(void *args);
-
-    DelegatedCore(uint64 target_time, uint64 time_to_wait, TimeJob *j);
-    ~DelegatedCore();
-};
-
-class r_exec_dll TimeCore:
-    public Thread {
-public:
-    static thread_ret thread_function_call Run(void *args);
-
-    TimeCore();
-    ~TimeCore();
-};
+void runTimeCore();
 }
 
 

@@ -35,26 +35,15 @@
 
 namespace r_exec {
 
-thread_ret thread_function_call ReductionCore::Run(void *args) {
-
+void runReductionCore() {
     bool run = true;
     while (run) {
-
         P<_ReductionJob> j = _Mem::Get()->popReductionJob();
         if (j == NULL)
             break;
         run = j->update(Now());
         j = NULL;
     }
-
-    thread_ret_val(0);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-ReductionCore::ReductionCore(): Thread() {
-}
-
-ReductionCore::~ReductionCore() {
-}
-}
+} // namespace r_exec

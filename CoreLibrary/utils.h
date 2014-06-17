@@ -104,27 +104,6 @@ public:
     template<typename T> T getFunction(const char *functionName);
 };
 
-class core_dll Thread {
-private:
-    thread _thread;
-    bool is_meaningful;
-protected:
-    Thread();
-public:
-    template<class T> static T *New(thread_function f, void *args);
-    static void TerminateAndWait(Thread **threads, uint64 threadCount);
-    static void TerminateAndWait(Thread *_thread);
-    static void Wait(Thread **threads, uint64 threadCount);
-    static void Wait(Thread *_thread);
-    static void Sleep(int64 ms);
-    static void Sleep(); // inifnite
-    virtual ~Thread();
-    void start(thread_function f);
-    void suspend();
-    void resume();
-    void terminate();
-};
-
 class core_dll TimeProbe { // requires Time::Init()
 private:
     int64 cpu_counts;
@@ -141,7 +120,7 @@ private:
     static float64 Period;
     static int64 InitTime;
 public:
-    static void Init(uint64 r); // detects the hardware timing capabilities; r: time resolution in us (on windows xp: max ~1000; use 1000, 2000, 5000 or 10000)
+    static void Init(); // detects the hardware timing capabilities
     static uint64 Get(); // in us since 01/01/1970
 
     static std::string ToString_seconds(uint64 t); // seconds:milliseconds:microseconds since 01/01/1970.
@@ -235,26 +214,34 @@ public:
 };
 
 static std::mutex s_debugSection;
+static bool s_debugEnabled = false;
 
 /// Thread safe debug output
 class DebugStream
 {
 public:
     inline DebugStream(std::string area) {
+        if (!s_debugEnabled) return;
+
         s_debugSection.lock();
         std::cout << "\033[1;34m" << area << "\033[1;37m>\033[0m";
     }
 
 
     ~DebugStream() {
+        if (!s_debugEnabled) return;
         std::cout << std::endl;
         s_debugSection.unlock();
     }
 
-    inline DebugStream &operator<<(std::string output) { std::cout << " \033[1;32m" << output << "\033[0m"; return *this; }
+    inline DebugStream &operator<<(std::string output) {
+        if (!s_debugEnabled) return *this;
+        std::cout << " \033[1;32m" << output << "\033[0m"; return *this;
+    }
     inline DebugStream &operator<<(uint64_t output) { *this << std::to_string(output); return *this; }
     inline DebugStream &operator<<(const char *output) { *this << std::string(output); return *this; }
 };
+
 
 } //namespace core
 

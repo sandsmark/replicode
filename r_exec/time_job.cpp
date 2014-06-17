@@ -35,7 +35,7 @@
 
 namespace r_exec {
 
-TimeJob::TimeJob(uint64 target_time): _Object(), target_time(target_time) {
+TimeJob::TimeJob(uint64_t target_time): _Object(), target_time(target_time) {
 }
 
 bool TimeJob::is_alive() const {
@@ -55,8 +55,7 @@ UpdateJob::UpdateJob(Group *g, uint64 ijt): TimeJob(ijt) {
     group = g;
 }
 
-bool UpdateJob::update(uint64 &next_target) {
-
+bool UpdateJob::update() {
     group->update(target_time);
     return true;
 }
@@ -83,7 +82,7 @@ bool SignalingJob::is_alive() const {
 AntiPGMSignalingJob::AntiPGMSignalingJob(View *v, uint64 ijt): SignalingJob(v, ijt) {
 }
 
-bool AntiPGMSignalingJob::update(uint64 &next_target) {
+bool AntiPGMSignalingJob::update() {
 
     if (is_alive())
         ((AntiPGMController *)view->controller)->signal_anti_pgm();
@@ -100,7 +99,7 @@ void AntiPGMSignalingJob::report(int64 lag) const
 InputLessPGMSignalingJob::InputLessPGMSignalingJob(View *v, uint64 ijt): SignalingJob(v, ijt) {
 }
 
-bool InputLessPGMSignalingJob::update(uint64 &next_target) {
+bool InputLessPGMSignalingJob::update() {
 
     if (is_alive())
         ((InputLessPGMController *)view->controller)->signal_input_less_pgm();
@@ -119,7 +118,7 @@ InjectionJob::InjectionJob(View *v, uint64 ijt): TimeJob(ijt) {
     view = v;
 }
 
-bool InjectionJob::update(uint64 &next_target) {
+bool InjectionJob::update() {
 
     _Mem::Get()->inject(view);
     return true;
@@ -137,7 +136,7 @@ EInjectionJob::EInjectionJob(View *v, uint64 ijt): TimeJob(ijt) {
     view = v;
 }
 
-bool EInjectionJob::update(uint64 &next_target) {
+bool EInjectionJob::update() {
 
     _Mem::Get()->inject_existing_object(view, view->object, view->get_host());
     return true;
@@ -155,7 +154,7 @@ SaliencyPropagationJob::SaliencyPropagationJob(Code *o, double sln_change, doubl
     object = o;
 }
 
-bool SaliencyPropagationJob::update(uint64 &next_target) {
+bool SaliencyPropagationJob::update() {
 
     if (!object->is_invalidated())
         _Mem::Get()->propagate_sln(object, sln_change, source_sln_thr);
@@ -172,7 +171,7 @@ void SaliencyPropagationJob::report(int64 lag) const {
 ShutdownTimeCore::ShutdownTimeCore(): TimeJob(0) {
 }
 
-bool ShutdownTimeCore::update(uint64 &next_target) {
+bool ShutdownTimeCore::update() {
 
     return false;
 }
@@ -182,11 +181,10 @@ bool ShutdownTimeCore::update(uint64 &next_target) {
 PerfSamplingJob::PerfSamplingJob(uint64 start, uint64 period): TimeJob(start), period(period) {
 }
 
-bool PerfSamplingJob::update(uint64 &next_target) {
+bool PerfSamplingJob::update() {
 
     _Mem::Get()->inject_perf_stats();
     target_time += period;
-    next_target = target_time;
     return true;
 }
 

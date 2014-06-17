@@ -418,23 +418,19 @@ void SGMonitor::commit() { // the purpose is to invalidate damaging simulations 
     }
 }
 
-bool SGMonitor::reduce(_Fact *input) {
-
+bool SGMonitor::reduce(_Fact *input)
+{
     if (target->is_invalidated())
         return true;
 
     _Fact *_input;
     Pred *prediction = input->get_pred();
     if (prediction) { // input is f0->pred->f1->object.
-
         _input = prediction->get_target(); // _input is f1->obj.
-
         Sim *sim = prediction->get_simulation(target);
         if (sim) {
-
             Code *outcome = _input->get_reference(0);
             if (outcome->code(0).asOpcode() == Opcodes::Success) { // _input is f1->success or |f1->success.
-
                 _Fact *f_success = (_Fact *)outcome->get_reference(SUCCESS_OBJ);
                 Goal *affected_goal = f_success->get_goal();
                 if (affected_goal) {
@@ -493,19 +489,17 @@ bool SRMonitor::signal(bool simulation) {
         return true;
 
     if (simulation) {
-
         if (((PrimaryMDLController *)controller)->check_simulated_imdl(target, bindings, target->get_goal()->sim->root))
             ((PMDLController *)controller)->register_simulated_goal_outcome(target, true, target); // report a simulated success.
     } else {
-
         if (((PrimaryMDLController *)controller)->check_simulated_imdl(target, bindings, NULL))
             ((PMDLController *)controller)->register_simulated_goal_outcome(target, false, NULL); // report a simulated failure.
     }
     return false;
 }
 
-bool SRMonitor::reduce(_Fact *input) {
-
+bool SRMonitor::reduce(_Fact *input)
+{
     if (target->is_invalidated())
         return true;
 
@@ -534,8 +528,8 @@ bool SRMonitor::reduce(_Fact *input) {
     return false;
 }
 
-void SRMonitor::update(uint64 &next_target) {
-
+void SRMonitor::update(uint64 &next_target)
+{
     if (!target->is_invalidated())
         commit();
     ((PMDLController *)controller)->remove_r_monitor(this);

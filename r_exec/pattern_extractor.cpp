@@ -391,7 +391,7 @@ void _TPX::inject_hlps(uint64 analysis_starting_time) {
 
         P<TDecompiler> td = new TDecompiler(1, header);
         td->add_objects(tmp);
-        td->decompile();
+        td->runDecompiler();
 
         uint64 analysis_end = Now();
         uint64 d = analysis_end - analysis_starting_time;
@@ -407,7 +407,7 @@ void _TPX::inject_hlps(uint64 analysis_starting_time) {
         td = new TDecompiler(1, header);
         td->add_objects(mdls);
         inject_hlps();
-        td->decompile();
+        td->runDecompiler();
     } else
         inject_hlps();
 

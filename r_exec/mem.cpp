@@ -116,22 +116,6 @@ std::ostream &_Mem::Output(TraceLevel l) {
     return (_Mem::Get()->debug_streams[l] == NULL ? std::cout : * (_Mem::Get()->debug_streams[l]));
 }
 
-void _Mem::reset() {
-
-    uint64 i;
-    for (i = 0; i < reduction_core_count; ++i)
-        delete reduction_cores[i];
-    delete[] reduction_cores;
-    for (i = 0; i < time_core_count; ++i)
-        delete time_cores[i];
-    delete[] time_cores;
-
-    delete reduction_job_queue;
-    delete time_job_queue;
-
-    delete stop_sem;
-}
-
 ////////////////////////////////////////////////////////////////
 
 Code *_Mem::get_root() const {
@@ -167,14 +151,14 @@ _Mem::State _Mem::check_state() {
 void _Mem::start_core() {
     std::lock_guard<std::mutex> guard(m_coreCountMutex);
     if (++core_count == 1)
-        stop_sem->acquire();
+        m_stopMutex.lock();
 }
 
 void _Mem::shutdown_core()
 {
     std::lock_guard<std::mutex> guard(m_coreCountMutex);
     if (--core_count == 0)
-        stop_sem->release();
+        m_stopMutex.unlock();
 }
 
 ////////////////////////////////////////////////////////////////
@@ -186,15 +170,8 @@ void _Mem::store(Code *object) {
     object->set_stroage_index(location);
 }
 
-bool _Mem::load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 stdout_oid, uint64 self_oid) { // no cov at init time.
-
-    uint64 i;
-    reduction_cores = new ReductionCore *[reduction_core_count];
-    for (i = 0; i < reduction_core_count; ++i)
-        reduction_cores[i] = new ReductionCore();
-    time_cores = new TimeCore *[time_core_count];
-    for (i = 0; i < time_core_count; ++i)
-        time_cores[i] = new TimeCore();
+bool _Mem::load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 stdout_oid, uint64 self_oid)
+{
 
     Utils::SetReferenceValues(base_period, float_tolerance, time_tolerance);
 
@@ -283,7 +260,6 @@ uint64 _Mem::start() {
         return 0;
 
     core_count = 0;
-    stop_sem = new Semaphore(1, 1);
 
     time_job_queue = new PipeNN<P<TimeJob>, 1024>();
     reduction_job_queue = new PipeNN<P<_ReductionJob>, 1024>();
@@ -358,10 +334,12 @@ uint64 _Mem::start() {
     P<TimeJob> j = new PerfSamplingJob(now + perf_sampling_period, perf_sampling_period);
     time_job_queue->push(j);
 
-    for (i = 0; i < reduction_core_count; ++i)
-        reduction_cores[i]->start(ReductionCore::Run);
-    for (i = 0; i < time_core_count; ++i)
-        time_cores[i]->start(TimeCore::Run);
+    for (i = 0; i < reduction_core_count; ++i) {
+        m_coreThreads.push_back(std::thread(&r_exec::runReductionCore));
+    }
+    for (i = 0; i < time_core_count; ++i) {
+        m_coreThreads.push_back(std::thread(&r_exec::runTimeCore));
+    }
 
     for (uint64 i = 0; i < initial_reduction_jobs.size(); ++i)
         initial_reduction_jobs[i].second->inject_reduction_jobs(initial_reduction_jobs[i].first);
@@ -371,7 +349,7 @@ uint64 _Mem::start() {
 
 void _Mem::stop()
 {
-    std::lock_guard<std::mutex> guard(m_stateMutex);
+    m_stateMutex.lock();
     if (state != RUNNING) {
         return;
     }
@@ -385,16 +363,15 @@ void _Mem::stop()
         time_job_queue->push(t = new ShutdownTimeCore());
 
     state = STOPPED;
+    m_stateMutex.unlock();
 
-    for (i = 0; i < time_core_count; ++i)
-        Thread::Wait(time_cores[i]);
+    for (i = 0; i < m_coreThreads.size(); ++i) {
+        m_coreThreads[i].join();
+    }
 
-    for (i = 0; i < reduction_core_count; ++i)
-        Thread::Wait(reduction_cores[i]);
+    m_stopMutex.lock(); // wait for delegates.
 
-    stop_sem->acquire(); // wait for delegates.
-
-    reset();
+    m_coreThreads.clear();
 }
 
 ////////////////////////////////////////////////////////////////
@@ -654,67 +631,6 @@ void _Mem::propagate_sln(Code *object, double change, double source_sln_thr) {
     object->rel_views();
 }
 
-//DEPRECATED///////////////////////////////////////////////////
-
-/*r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const char *user_operator_library_path,
- uint64 (*time_base)(),
- const char *seed_path,
- const char *source_file_name)
-{
- r_exec::Init(user_operator_library_path,time_base,seed_path );
-
- srand(r_exec::Now());
- Random::Init();
-
- std::string error;
- r_exec::Compile(source_file_name,error);
-
- r_exec::Mem<r_exec::LObject> *mem = new r_exec::Mem<r_exec::LObject>();
-
- r_code::vector<r_code::Code *> ram_objects;
- r_exec::Seed.get_objects(mem,ram_objects);
-
- mem->init( 100000, // base period.
- 3, // reduction core count.
- 1, // time core count.
- 0.9, // mdl inertia sr thr.
- 10, // mdl inertia cnt thr.
- 0.1, // tpx_dsr_thr.
- 25000, // min_sim time horizon
- 100000, // max_sim time horizon
- 0.3, // sim time horizon
- 500000, // tpx time horizon
- 250000, // perf sampling period
- 0.1, // float tolerance.
- 10000, // time tolerance.
- 3600000,// primary thz.
- 7200000,// secondary thz.
- false, // debug.
- 1000, // ntf marker resilience.
- 1000, // goal pred success resilience.
- 2); // probe level.
-
- uint64 stdin_oid;
- std::string stdin_symbol("stdin");
- uint64 stdout_oid;
- std::string stdout_symbol("stdout");
- uint64 self_oid;
- std::string self_symbol("self");
- UNORDERED_MAP<uint64,std::string>::const_iterator n;
- for(n=r_exec::Seed.object_names.symbols.begin();n!=r_exec::Seed.object_names.symbols.end();++n){
-
- if(n->second==stdin_symbol)
- stdin_oid=n->first;
- else if(n->second==stdout_symbol)
- stdout_oid=n->first;
- else if(n->second==self_symbol)
- self_oid=n->first;
- }
-
- mem->load(ram_objects.as_std(),stdin_oid,stdout_oid,self_oid);
-
- return mem;
-}*/
 ////////////////////////////////////////////////////////////////
 
 void _Mem::unpack_hlp(Code *hlp) const { // produces a new object (featuring a set of pattern objects instread of a set of embedded pattern expressions) and add it as a hidden reference to the original (still packed) hlp.
@@ -1045,4 +961,5 @@ void MemVolatile::bind(View *view)
     object->views.insert(view);
     object->set_oid(get_oid());
 }
-}
+
+} //namespace r_core

@@ -86,10 +86,9 @@ bool Compile(const char* filename, std::string &error, bool compile_metadata) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-thread_ret TDecompiler::Decompile(void *args) {
-
-    P<TDecompiler> _this = (TDecompiler *)args;
-    _this->spawned = 1;
+void TDecompiler::decompile()
+{
+    this->spawned = 1;
 
     r_comp::Decompiler decompiler;
     decompiler.init(getMetadata());
@@ -97,18 +96,18 @@ thread_ret TDecompiler::Decompile(void *args) {
     std::vector<SysObject *> imported_objects;
 
     r_comp::Image *image = new r_comp::Image();
-    image->add_objects(_this->objects, imported_objects);
+    image->add_objects(this->objects, imported_objects);
     image->object_names.symbols = getSeed()->object_names.symbols;
 
     std::ostringstream decompiled_code;
     decompiler.decompile(image, &decompiled_code, Utils::GetTimeReference(), imported_objects);
 
 #ifdef WINDOWS
-    PipeOStream::Get(_this->ostream_id - 1) << _this->header.c_str();
-    PipeOStream::Get(_this->ostream_id - 1) << decompiled_code.str().c_str();
+    PipeOStream::Get(this->ostream_id - 1) << this->header.c_str();
+    PipeOStream::Get(this->ostream_id - 1) << decompiled_code.str().c_str();
 #else
-    debug("tdecompiler") << _this->header;
-    debug("tdecompiler") << decompiled_code.str().c_str();
+    debug("tdecompiler") << this->header;
+    debug("tdecompiler") << decompiled_code.str();
 #endif//WINDOWS
 
     thread_ret_val(0);
@@ -144,10 +143,9 @@ void TDecompiler::add_objects(const std::vector<P<Code> > &objects) {
         this->objects.push_back(*o);
 }
 
-void TDecompiler::decompile() {
-
-    _thread = Thread::New<_Thread>(Decompile, this);
-    while (spawned == 0);
+void TDecompiler::runDecompiler()
+{
+    _thread = new std::thread(&r_exec::TDecompiler::decompile, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

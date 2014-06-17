@@ -53,8 +53,8 @@ template<class O, class S> Mem<O, S>::~Mem() {
 
 ////////////////////////////////////////////////////////////////
 
-template<class O, class S> r_code::Code *Mem<O, S>::build_object(r_code::SysObject *source) const {
-
+template<class O, class S> r_code::Code *Mem<O, S>::build_object(r_code::SysObject *source) const
+{
     Atom head = source->code[0];
     switch (head.getDescriptor()) {
     case Atom::GROUP:

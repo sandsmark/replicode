@@ -40,10 +40,10 @@ namespace r_exec {
 class r_exec_dll TimeJob:
     public _Object {
 protected:
-    TimeJob(uint64 target_time);
+    TimeJob(uint64_t target_time);
 public:
-    int64 target_time; // absolute deadline; 0 means ASAP.
-    virtual bool update(uint64 &next_target) = 0; // next_target: absolute deadline; 0 means no more waiting; return false to shutdown the time core.
+    uint64_t target_time; // absolute deadline; 0 means ASAP.
+    virtual bool update() = 0; // next_target: absolute deadline; 0 means no more waiting; return false to shutdown the time core.
     virtual bool is_alive() const;
     virtual void report(int64 lag) const;
 };
@@ -53,7 +53,7 @@ class r_exec_dll UpdateJob:
 public:
     P<Group> group;
     UpdateJob(Group *g, uint64 ijt);
-    bool update(uint64 &next_target);
+    bool update();
     void report(int64 lag) const;
 };
 
@@ -70,7 +70,7 @@ class r_exec_dll AntiPGMSignalingJob:
     public SignalingJob {
 public:
     AntiPGMSignalingJob(View *v, uint64 ijt);
-    bool update(uint64 &next_target);
+    bool update();
     void report(int64 lag) const;
 };
 
@@ -78,7 +78,7 @@ class r_exec_dll InputLessPGMSignalingJob:
     public SignalingJob {
 public:
     InputLessPGMSignalingJob(View *v, uint64 ijt);
-    bool update(uint64 &next_target);
+    bool update();
     void report(int64 lag) const;
 };
 
@@ -87,7 +87,7 @@ class r_exec_dll InjectionJob:
 public:
     P<View> view;
     InjectionJob(View *v, uint64 ijt);
-    bool update(uint64 &next_target);
+    bool update();
     void report(int64 lag) const;
 };
 
@@ -96,7 +96,7 @@ class r_exec_dll EInjectionJob:
 public:
     P<View> view;
     EInjectionJob(View *v, uint64 ijt);
-    bool update(uint64 &next_target);
+    bool update();
     void report(int64 lag) const;
 };
 
@@ -107,7 +107,7 @@ public:
     double sln_change;
     double source_sln_thr;
     SaliencyPropagationJob(Code *o, double sln_change, double source_sln_thr, uint64 ijt);
-    bool update(uint64 &next_target);
+    bool update();
     void report(int64 lag) const;
 };
 
@@ -115,7 +115,7 @@ class r_exec_dll ShutdownTimeCore:
     public TimeJob {
 public:
     ShutdownTimeCore();
-    bool update(uint64 &next_target);
+    bool update();
 };
 
 template<class M> class MonitoringJob:
@@ -123,9 +123,8 @@ template<class M> class MonitoringJob:
 public:
     P<M> monitor;
     MonitoringJob(M *monitor, uint64 deadline): TimeJob(deadline), monitor(monitor) {}
-    bool update(uint64 &next_target) {
-
-        monitor->update(next_target);
+    bool update() {
+        monitor->update(target_time);
         return true;
     }
     bool is_alive() const {
@@ -143,7 +142,7 @@ public:
     uint64 period;
     PerfSamplingJob(uint64 start, uint64 period);
     bool is_alive() const;
-    bool update(uint64 &next_target);
+    bool update();
 };
 }
 

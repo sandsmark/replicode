@@ -47,8 +47,7 @@
 
 #include <algorithm>
 #include <cctype>
-#include <ctime>
-
+#include <chrono>
 
 #define R250_IA (sizeof(uint64)*103)
 #define R250_IB (sizeof(uint64)*R250_LEN-R250_IA)
@@ -160,115 +159,6 @@ SharedLibrary *SharedLibrary::load(const char *fileName) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Thread::TerminateAndWait(Thread **threads, uint64 threadCount) {
-    if (!threads)
-        return;
-    for (uint64 i = 0; i < threadCount; i++) {
-        threads[i]->terminate();
-        Thread::Wait(threads[i]);
-    }
-}
-
-void Thread::TerminateAndWait(Thread *_thread) {
-    if (!_thread)
-        return;
-    _thread->terminate();
-    Thread::Wait(_thread);
-}
-
-void Thread::Wait(Thread **threads, uint64 threadCount) {
-
-    if (!threads)
-        return;
-#if defined WINDOWS
-    for (uint64 i = 0; i < threadCount; i++)
-        WaitForSingleObject(threads[i]->_thread, INFINITE);
-#elif defined LINUX
-    for (uint64 i = 0; i < threadCount; i++)
-        pthread_join(threads[i]->_thread, NULL);
-#endif
-}
-
-void Thread::Wait(Thread *_thread) {
-
-    if (!_thread)
-        return;
-#if defined WINDOWS
-    WaitForSingleObject(_thread->_thread, INFINITE);
-#elif defined LINUX
-    pthread_join(_thread->_thread, NULL);
-#endif
-}
-
-void Thread::Sleep(int64 ms) {
-#if defined WINDOWS
-    ::Sleep((uint64)ms);
-#elif defined LINUX
-    struct timespec to_sleep = { ms / 1000, // seconds
-               (ms % 1000) * 1000
-    }; // nanoseconds
-    while (nanosleep(&to_sleep, &to_sleep) && errno == EINTR) {} // we need to do this because signals (like timer interrupts) will make *sleep() calls return
-#endif
-}
-
-void Thread::Sleep() {
-#if defined WINDOWS
-    ::Sleep(INFINITE);
-#elif defined LINUX
-    while (true)
-        sleep(1000);
-#endif
-}
-
-Thread::Thread(): is_meaningful(false) {
-    _thread = 0;
-}
-
-Thread::~Thread() {
-#if defined WINDOWS
-// ExitThread(0);
-    if (is_meaningful)
-        CloseHandle(_thread);
-#elif defined LINUX
-// delete(_thread);
-#endif
-}
-
-void Thread::start(thread_function f) {
-#if defined WINDOWS
-    _thread = CreateThread(NULL, 65536, f, this, 0, NULL); // 64KB: minimum initial stack size
-#elif defined LINUX
-    pthread_create(&_thread, NULL, f, this);
-#endif
-    is_meaningful = true;
-}
-
-void Thread::suspend() {
-#if defined WINDOWS
-    SuspendThread(_thread);
-#elif defined LINUX
-    pthread_kill(_thread, SIGSTOP);
-#endif
-}
-
-void Thread::resume() {
-#if defined WINDOWS
-    ResumeThread(_thread);
-#elif defined LINUX
-    pthread_kill(_thread, SIGCONT);
-#endif
-}
-
-void Thread::terminate() {
-#if defined WINDOWS
-    TerminateThread(_thread, 0);
-#elif defined LINUX
-    pthread_cancel(_thread);
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 void TimeProbe::set() {
 
     cpu_counts = getCounts();
@@ -312,45 +202,18 @@ float64 Time::Period;
 
 int64 Time::InitTime;
 
-void Time::Init(uint64 r) {
-#if defined WINDOWS
-    NTSTATUS nts;
-    HMODULE NTDll =::LoadLibrary("NTDLL");
-    ULONG actualResolution = 0;
-    if (NTDll) {
-
-        NSTR pNSTR = (NSTR)::GetProcAddress(NTDll, "NtSetTimerResolution"); // undocumented win xp sys internals
-        if (pNSTR)
-            nts = (*pNSTR)(10 * r, true, &actualResolution); // in 100 ns units
-    }
-    LARGE_INTEGER f;
-    QueryPerformanceFrequency(&f);
-    Period = 1000000.0 / f.QuadPart; // in us
-    struct _timeb local_time;
-    _ftime(&local_time);
-    InitTime = (int64)(local_time.time * 1000 + local_time.millitm) * 1000; // in us
-#elif defined LINUX
-// we are actually setup a timer resolution of 1ms
-// we can simulate this by performing a gettimeofday call
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    InitTime = (((int64)tv.tv_sec) * 1000000) + (int64)tv.tv_usec;
-    Period = 1; // we measure all time in us anyway, so conversion is 1-to-1
-#endif
+void Time::Init() {
+    InitTime = Get();
+    Period = 1;
+    //Period = (std::chrono::steady_clock::period.num / 1000.0) / std::chrono::steady_clock::period.den;
+/*    Period = (float64)std::chrono::high_resolution_clock::period::num
+            / (float64)std::chrono::high_resolution_clock::period::den;
+    Period *= 1000;
+    debug("time") << "time resolution:" << Period << std::chrono::high_resolution_clock::period::num << std::chrono::high_resolution_clock::period::den;*/
 }
 
 uint64 Time::Get() {
-#if defined WINDOWS
-    LARGE_INTEGER counter;
-    QueryPerformanceCounter(&counter);
-    return (uint64)(InitTime + counter.QuadPart * Period);
-#elif defined LINUX
-    timeval perfCount;
-    struct timezone tmzone;
-    gettimeofday(&perfCount, &tmzone);
-    int64 r = (((int64)perfCount.tv_sec) * 1000000) + (int64)perfCount.tv_usec;
-    return r;
-#endif
+    return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
 std::string Time::ToString_seconds(uint64 t) {

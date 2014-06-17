@@ -41,6 +41,7 @@
 
 #include "dll.h"
 
+#include <thread>
 
 namespace r_exec {
 
@@ -66,17 +67,13 @@ class r_exec_dll TDecompiler:
     public _Object {
 private:
     static const uint64 ObjectsInitialSize = 16;
-    static thread_ret thread_function_call Decompile(void *args);
-
-    class _Thread:
-        public Thread {
-    };
+    void decompile();
 
 
     uint64 ostream_id; // 0 is std::cout.
     std::string header;
     r_code::list<P<Code> > objects;
-    _Thread *_thread;
+    std::thread *_thread;
     volatile uint64 spawned;
 
 public:
@@ -86,7 +83,7 @@ public:
     void add_object(Code *object);
     void add_objects(const r_code::list<P<Code> > &objects);
     void add_objects(const std::vector<P<Code> > &objects);
-    void decompile();
+    void runDecompiler();
 };
 
 // Spawns an instance of output_window.exe (see output_window project) and opens a pipe between the main process and output_window.
