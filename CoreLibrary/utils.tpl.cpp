@@ -53,7 +53,7 @@ template<typename T> T SharedLibrary::getFunction(const char *functionName) {
     }
 #elif defined LINUX
     if (library) {
-        function = (T)dlsym(library, functionName);
+        function = T(dlsym(library, functionName));
         if (!function) {
             std::cout << "> Error: unable to find symbol " << functionName << " :" << dlerror() << std::endl;
         }
