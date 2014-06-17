@@ -286,7 +286,33 @@ public:
 
     double operator()(uint64 range); // returns a value in [0,range].
 };
-}
+
+
+static CriticalSection s_debugSection;
+
+/// Thread safe debug output
+class DebugStream
+{
+public:
+    inline DebugStream(std::string area) {
+        s_debugSection.enter();
+        std::cout << "\033[1;34m" << area << "\033[1;37m>\033[0m";
+    }
+
+
+    ~DebugStream() {
+        std::cout << std::endl;
+        s_debugSection.leave();
+    }
+
+    inline DebugStream &operator<<(std::string output) { std::cout << " \033[1;32m" << output << "\033[0m"; return *this; }
+    inline DebugStream &operator<<(uint64_t output) { *this << std::to_string(output); return *this; }
+    inline DebugStream &operator<<(const char *output) { *this << std::string(output); return *this; }
+};
+
+} //namespace core
+
+static inline core::DebugStream debug(std::string area) { return core::DebugStream(area); }
 
 #include "utils.tpl.cpp"
 

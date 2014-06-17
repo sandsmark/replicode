@@ -40,7 +40,7 @@ void Init(OpcodeRetriever r) {
 
     Operators::Init(r);
 
-    std::cout << "> usr operators initialized" << std::endl;
+    debug("user operators") << "usr operators initialized";
 }
 
 uint16 GetOperatorCount() {

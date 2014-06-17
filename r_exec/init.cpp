@@ -71,7 +71,7 @@ SharedLibrary userOperatorLibrary;
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool Compile(const char* filename, std::string &error, bool compile_metadata) {
-    std::cout << "> compiling file: " << filename << std::endl;
+    debug("init") << "compiling file: " << filename;
     r_comp::RepliStruct *root = r_exec::Preprocessor.process(filename, error, compile_metadata ? getMetadata() : NULL);
     if (!root) {
         error.insert(0, std::to_string(r_exec::Preprocessor.root->line) + ": Preprocessor ");
@@ -107,8 +107,8 @@ thread_ret TDecompiler::Decompile(void *args) {
     PipeOStream::Get(_this->ostream_id - 1) << _this->header.c_str();
     PipeOStream::Get(_this->ostream_id - 1) << decompiled_code.str().c_str();
 #else
-    std::cout << _this->header.c_str();
-    std::cout << decompiled_code.str().c_str();
+    debug("tdecompiler") << _this->header;
+    debug("tdecompiler") << decompiled_code.str().c_str();
 #endif//WINDOWS
 
     thread_ret_val(0);
@@ -474,7 +474,7 @@ bool Init(const char *user_operator_library_path,
         Callbacks::Register(_callback_name, callback);
     }
 
-    std::cout << "> user-defined operator library " << user_operator_library_path << " loaded" << std::endl;
+    debug("init") << "user-defined operator library" << user_operator_library_path << "loaded";
 
     return true;
 }

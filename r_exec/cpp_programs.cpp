@@ -40,11 +40,7 @@ void CPPPrograms::Register(std::string &pgm_name, Program pgm) {
 }
 
 CPPPrograms::Program CPPPrograms::Get(std::string &pgm_name) {
-    for(auto kv : Programs) {
-        std::cout << kv.first << std::endl;
-    }
     UNORDERED_MAP<std::string, Program>::const_iterator it = Programs.find(pgm_name);
-    std::cout << it->second << std::endl;
     if (it != Programs.end())
         return it->second;
     return NULL;

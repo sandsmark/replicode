@@ -29,10 +29,9 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_code.h"
-#include <iostream>
+#include <CoreLibrary/utils.h>
 
-
-void Init() {
-
-    std::cout << "r_code library loaded" << std::endl;
+void Init()
+{
+    debug("r_code") << "r_code library loaded";
 }

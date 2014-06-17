@@ -33,6 +33,7 @@
 #include <r_exec/init.h>
 #include <r_code/image_impl.h>
 #include "settings.h"
+//#include "CoreLibrary/utils.h"
 
 
 //#define DECOMPILE_ONE_BY_ONE
@@ -124,7 +125,7 @@ void test_injection(r_exec::_Mem *mem, double n) {
 
     uint64 t1 = r_exec::Now();
     uint64 t2 = t1 - t0;
-    std::cout << "for-loop total time: " << t2 << std::endl;
+    debug("main") << "for-loop total time: " << t2;
     /* uint64 acc=0;
     for(uint64 i=0;i<n;++i){
     acc+=v1[i];
@@ -153,14 +154,14 @@ void test_injection(r_exec::_Mem *mem, double n) {
     */
 }
 
-void test_many_injections(r_exec::_Mem *mem, uint64 sampling_period_ms, uint64 nRuns, double nObjects) {
+void test_many_injections(r_exec::_Mem *mem, uint64 sampling_period_ms, uint64_t nRuns, double nObjects) {
     for (; nRuns; --nRuns) {
         uint64 start = r_exec::Now();
-        std::cout << nRuns << '\t';
+        debug("test many injections") << "number of runs:" << nRuns;
         test_injection(mem, nObjects);
         uint64 taken_ms = (r_exec::Now() - start) / 1000;
         if (taken_ms > sampling_period_ms)
-            std::cout << "Good grief! I exceeded the sampling period!" << std::endl;
+            debug("test many injections") << "Good grief! I exceeded the sampling period!";
         else
             Thread::Sleep(sampling_period_ms - taken_ms);
     }
@@ -190,9 +191,9 @@ void decompile(Decompiler &decompiler, r_comp::Image *image, uint64 time_offset,
     std::ostringstream decompiled_code;
     uint64 object_count = decompiler.decompile(image, &decompiled_code, time_offset, ignore_named_objects);
 //uint64 object_count=image->code_segment.objects.size();
-    std::cout << "\n\n> DECOMPILATION\n\n" << decompiled_code.str() << std::endl;
-    std::cout << "> image taken at: " << Time::ToString_year(image->timestamp) << std::endl;
-    std::cout << "> " << object_count << " objects\n";
+    debug("main") << "decompilation:\n" << decompiled_code.str();
+    debug("main") << "image taken at:" << Time::ToString_year(image->timestamp);
+    debug("main") << object_count << "objects";
 #endif
 }
 
@@ -245,24 +246,20 @@ int main(int argc, char **argv) {
     }
 
 
-    std::cout << "> REPLICODE 1.0" << std::endl
-              << "> Part of the AERA/HUMANOBS project" << std::endl;
-    std::cout << "> Initializing with user operator library and user class code..." << std::endl;
+    debug("main") << "Initializing with user operator library and user class code...";
     if (!r_exec::Init(settings.usr_operator_path.c_str(), Time::Get, settings.usr_class_path.c_str()))
         return 2;
 
     srand(r_exec::Now());
     //Random::Init();
 
-    std::cout << "> compiling source..." << std::endl;
+    debug("main") << "compiling source...";
     std::string error;
     if (!r_exec::Compile(settings.source_file_name.c_str(), error)) {
-
         std::cerr << " <- " << error << std::endl;
         return 3;
     } else {
-
-        std::cout << "> ... source compiled!" << std::endl;
+        debug("main") << "source compiled!";
 
 #ifdef WINDOWS
         r_exec::PipeOStream::Open(settings.debug_windows);
@@ -324,7 +321,7 @@ int main(int argc, char **argv) {
             return 4;
         uint64 starting_time = mem->start();
 
-        std::cout << "> running for " << settings.run_time << " ms" << std::endl;
+        debug("main") << "running for " << settings.run_time << " ms";
         Thread::Sleep(settings.run_time);
 
         /*Thread::Sleep(settings.run_time/2);
@@ -334,7 +331,7 @@ int main(int argc, char **argv) {
         argc > 4 ? atoi(argv[4]) : 66); // number of objects per batch
         Thread::Sleep(settings.run_time/2);*/
 
-        std::cout << std::endl << "> shutting rMem down..." << std::endl;
+        debug("main") << "shutting rMem down...";
         mem->stop();
 
         if (settings.get_objects) {

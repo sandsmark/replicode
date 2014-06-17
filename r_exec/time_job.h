@@ -133,8 +133,7 @@ public:
         return monitor->is_alive();
     }
     void report(int64 lag) const {
-
-        std::cout << "> late monitoring: " << lag << " us behind." << std::endl;
+        debug("monitoring job") << "late:" << lag << "us behind.";
     }
 };
 

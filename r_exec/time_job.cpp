@@ -43,9 +43,9 @@ bool TimeJob::is_alive() const {
     return true;
 }
 
-void TimeJob::report(int64 lag) const {
-
-    std::cout << "> late generic: " << lag << " us behind." << std::endl;
+void TimeJob::report(int64 lag) const
+{
+    debug("time job") << "late generic: " << lag << " us behind.";
 }
 
 ////////////////////////////////////////////////////////////
@@ -61,9 +61,9 @@ bool UpdateJob::update(uint64 &next_target) {
     return true;
 }
 
-void UpdateJob::report(int64 lag) const {
-
-    std::cout << "> late update: " << lag << " us behind." << std::endl;
+void UpdateJob::report(int64 lag) const
+{
+    debug("update job") << "late:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
@@ -90,9 +90,9 @@ bool AntiPGMSignalingJob::update(uint64 &next_target) {
     return true;
 }
 
-void AntiPGMSignalingJob::report(int64 lag) const {
-
-    std::cout << "> late |pgm signaling: " << lag << " us behind." << std::endl;
+void AntiPGMSignalingJob::report(int64 lag) const
+{
+    debug("anti-program signaling job") << "signaling:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
@@ -107,9 +107,9 @@ bool InputLessPGMSignalingJob::update(uint64 &next_target) {
     return true;
 }
 
-void InputLessPGMSignalingJob::report(int64 lag) const {
-
-    std::cout << "> late input-less pgm signaling: " << lag << " us behind." << std::endl;
+void InputLessPGMSignalingJob::report(int64 lag) const
+{
+    debug("input-less program signaling job") << "late:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
@@ -125,9 +125,9 @@ bool InjectionJob::update(uint64 &next_target) {
     return true;
 }
 
-void InjectionJob::report(int64 lag) const {
-
-    std::cout << "> late injection: " << lag << " us behind." << std::endl;
+void InjectionJob::report(int64 lag) const
+{
+    debug("injection job") << "late:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
@@ -143,9 +143,9 @@ bool EInjectionJob::update(uint64 &next_target) {
     return true;
 }
 
-void EInjectionJob::report(int64 lag) const {
-
-    std::cout << "> late injection: " << lag << " us behind." << std::endl;
+void EInjectionJob::report(int64 lag) const
+{
+    debug("einjection job") << "late:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
@@ -164,7 +164,7 @@ bool SaliencyPropagationJob::update(uint64 &next_target) {
 
 void SaliencyPropagationJob::report(int64 lag) const {
 
-    std::cout << "> late sln propagation: " << lag << " us behind." << std::endl;
+    debug("saliency propagation job") << "late:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////

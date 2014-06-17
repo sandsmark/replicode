@@ -1432,9 +1432,6 @@ bool Compiler::read_reference(RepliStruct *node, uint16 write_index, uint16 &ext
     }
     if (global_reference(node, index, t)) { // index is the index held by a reference pointer
         if (write) {
-            if (index == 3) {
-                std::cout << "3: " << node->cmd << "\n";
-            }
             current_object->code[write_index] = Atom::RPointer(index);
         }
         return true;
@@ -1493,9 +1490,6 @@ bool Compiler::read_reference(RepliStruct *node, uint16 write_index, uint16 &ext
         if (write) {
             current_object->code[write_index] = Atom::IPointer(extent_index);
             current_object->code[extent_index++] = Atom::CPointer(v.size());
-            if (v[0] == 3) {
-                std::cout << "3: " << node->cmd << "\n";
-            }
             current_object->code[extent_index++] = Atom::RPointer(v[0]);
             for (uint16 i = 1; i < v.size(); ++i) {
                 switch (v[i]) {
