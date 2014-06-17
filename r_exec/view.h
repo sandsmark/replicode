@@ -156,6 +156,8 @@ public:
 
     void delete_from_object();
     void delete_from_group();
+private:
+    std::mutex m_groupMutex;
 };
 
 class r_exec_dll NotificationView:

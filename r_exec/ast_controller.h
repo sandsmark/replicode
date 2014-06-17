@@ -64,6 +64,9 @@ public:
 
     void take_input(r_exec::View *input);
     void reduce(View *input);
+
+private:
+    std::mutex m_mutex;
 };
 
 // For SYNC_PERIODIC targets.

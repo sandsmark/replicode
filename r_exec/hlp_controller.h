@@ -82,7 +82,7 @@ protected:
 
     template<class E> class Cache {
     public:
-        CriticalSection CS;
+        std::mutex mutex;
         r_code::list<E> evidences;
     };
 
@@ -92,7 +92,7 @@ protected:
     template<class E> void _store_evidence(Cache<E> *cache, _Fact *evidence) {
 
         E e(evidence);
-        cache->CS.enter();
+        std::lock_guard<std::mutex> guard(cache->mutex);
         uint64 now = r_exec::Now();
         typename r_code::list<E>::const_iterator _e;
         for (_e = cache->evidences.begin(); _e != cache->evidences.end();) {
@@ -103,7 +103,6 @@ protected:
                 ++_e;
         }
         cache->evidences.push_front(e);
-        cache->CS.leave();
     }
 
     P<HLPBindingMap> bindings;

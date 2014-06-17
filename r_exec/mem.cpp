@@ -159,27 +159,22 @@ Code *_Mem::get_self() const {
 _Mem::State _Mem::check_state() {
 
     State s;
-    stateCS.enter();
+    std::lock_guard<std::mutex> guard(m_stateMutex);
     s = state;
-    stateCS.leave();
-
     return s;
 }
 
 void _Mem::start_core() {
-
-    core_countCS.enter();
+    std::lock_guard<std::mutex> guard(m_coreCountMutex);
     if (++core_count == 1)
         stop_sem->acquire();
-    core_countCS.leave();
 }
 
-void _Mem::shutdown_core() {
-
-    core_countCS.enter();
+void _Mem::shutdown_core()
+{
+    std::lock_guard<std::mutex> guard(m_coreCountMutex);
     if (--core_count == 0)
         stop_sem->release();
-    core_countCS.leave();
 }
 
 ////////////////////////////////////////////////////////////////
@@ -374,12 +369,10 @@ uint64 _Mem::start() {
     return now;
 }
 
-void _Mem::stop() {
-
-    stateCS.enter();
+void _Mem::stop()
+{
+    std::lock_guard<std::mutex> guard(m_stateMutex);
     if (state != RUNNING) {
-
-        stateCS.leave();
         return;
     }
 
@@ -392,7 +385,6 @@ void _Mem::stop() {
         time_job_queue->push(t = new ShutdownTimeCore());
 
     state = STOPPED;
-    stateCS.leave();
 
     for (i = 0; i < time_core_count; ++i)
         Thread::Wait(time_cores[i]);
@@ -585,29 +577,27 @@ void _Mem::inject_notification(View *view, bool lock) { // no notification for n
 
 ////////////////////////////////////////////////////////////////
 
-void _Mem::register_reduction_job_latency(uint64 latency) {
-
-    reduction_jobCS.enter();
+void _Mem::register_reduction_job_latency(uint64 latency)
+{
+    std::lock_guard<std::mutex> guard(m_reductionJobMutex);
     ++reduction_job_count;
     reduction_job_avg_latency += latency;
-    reduction_jobCS.leave();
 }
-void _Mem::register_time_job_latency(uint64 latency) {
 
-    time_jobCS.enter();
+void _Mem::register_time_job_latency(uint64 latency)
+{
+    std::lock_guard<std::mutex> guard(m_timeJobMutex);
     ++time_job_count;
     time_job_avg_latency += latency;
-    time_jobCS.leave();
 }
 
-void _Mem::inject_perf_stats() {
-
-    reduction_jobCS.enter();
-    time_jobCS.enter();
+void _Mem::inject_perf_stats()
+{
+    m_reductionJobMutex.lock();
+    m_timeJobMutex.lock();
 
     int64 d_reduction_job_avg_latency;
     if (reduction_job_count > 0) {
-
         reduction_job_avg_latency /= reduction_job_count;
         d_reduction_job_avg_latency = reduction_job_avg_latency - _reduction_job_avg_latency;
     } else
@@ -615,7 +605,6 @@ void _Mem::inject_perf_stats() {
 
     int64 d_time_job_avg_latency;
     if (time_job_count > 0) {
-
         time_job_avg_latency /= time_job_count;
         d_time_job_avg_latency = time_job_avg_latency - _time_job_avg_latency;
     } else
@@ -628,8 +617,8 @@ void _Mem::inject_perf_stats() {
     _reduction_job_avg_latency = reduction_job_avg_latency;
     _time_job_avg_latency = time_job_avg_latency;
 
-    time_jobCS.leave();
-    reduction_jobCS.leave();
+    m_timeJobMutex.unlock();
+    m_reductionJobMutex.unlock();
 
 // inject f->perf in stdin.
     uint64 now = Now();
@@ -999,17 +988,14 @@ void MemStatic::bind(View *view) {
 
     Code *object = view->object;
     object->views.insert(view);
-    objectsCS.enter();
+    std::lock_guard<std::mutex> guard(m_objectsMutex);
     object->set_oid(++last_oid);
     if (object->code(0).getDescriptor() == Atom::NULL_PROGRAM) {
-
-        objectsCS.leave();
         return;
     }
     int64 location;
     objects.push_back(object, location);
     object->set_stroage_index(location);
-    objectsCS.leave();
 }
 void MemStatic::set_last_oid(int64 oid) {
 
@@ -1021,9 +1007,8 @@ void MemStatic::delete_object(r_code::Code *object) { // called only if the obje
     if (deleted)
         return;
 
-    objectsCS.enter();
+    std::lock_guard<std::mutex> guard(m_objectsMutex);
     objects.erase(object->get_storage_index());
-    objectsCS.leave();
 }
 
 r_comp::Image *MemStatic::get_objects() {
@@ -1031,9 +1016,8 @@ r_comp::Image *MemStatic::get_objects() {
     r_comp::Image *image = new r_comp::Image();
     image->timestamp = Now();
 
-    objectsCS.enter();
+    std::lock_guard<std::mutex> guard(m_objectsMutex);
     image->add_objects(objects);
-    objectsCS.leave();
 
     return image;
 }

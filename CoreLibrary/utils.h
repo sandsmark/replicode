@@ -52,6 +52,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <time.h>
+#include <mutex>
 // #undef HANDLE
 // #define HANDLE pthread_cond_t*
 #endif
@@ -165,31 +166,6 @@ public:
     void reset();
 };
 
-class core_dll Mutex {
-private:
-    mutex m;
-protected:
-    static const uint64 Infinite;
-public:
-    Mutex();
-    ~Mutex();
-    bool acquire(uint64 timeout = Infinite); // returns true if timedout
-    void release();
-};
-
-class core_dll CriticalSection {
-private:
-    critical_section cs;
-#ifdef DEBUG
-    void *storedBt[20];
-#endif
-public:
-    CriticalSection();
-    ~CriticalSection();
-    void enter();
-    void leave();
-};
-
 class core_dll Timer {
 private:
 #if defined WINDOWS
@@ -275,34 +251,21 @@ public:
     static std::string Uint2String(uint64 i);
 };
 
-class core_dll Random {
-private:
-    static int64 r250_index;
-    static int64 r521_index;
-    static uint64 r250_buffer[R250_LEN];
-    static uint64 r521_buffer[R521_LEN];
-public:
-    static void Init();
-
-    double operator()(uint64 range); // returns a value in [0,range].
-};
-
-
-static CriticalSection s_debugSection;
+static std::mutex s_debugSection;
 
 /// Thread safe debug output
 class DebugStream
 {
 public:
     inline DebugStream(std::string area) {
-        s_debugSection.enter();
+        s_debugSection.lock();
         std::cout << "\033[1;34m" << area << "\033[1;37m>\033[0m";
     }
 
 
     ~DebugStream() {
         std::cout << std::endl;
-        s_debugSection.leave();
+        s_debugSection.unlock();
     }
 
     inline DebugStream &operator<<(std::string output) { std::cout << " \033[1;32m" << output << "\033[0m"; return *this; }

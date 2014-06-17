@@ -160,23 +160,21 @@ ModelBase::ModelBase() {
     Singleton = this;
 }
 
-void ModelBase::trim_objects() {
-
-    mdlCS.enter();
+void ModelBase::trim_objects()
+{
+    std::lock_guard<std::mutex> guard(m_mdlMutex);
     uint64 now = Now();
     MdlSet::iterator m;
     for (m = black_list.begin(); m != black_list.end();) {
-
         if (now - (*m).touch_time >= thz)
             m = black_list.erase(m);
         else
             ++m;
     }
-    mdlCS.leave();
 }
 
-void ModelBase::load(Code *mdl) { // mdl is already packed.
-
+void ModelBase::load(Code *mdl)
+{
     MEntry e(mdl, true);
     if (mdl->views.size() > 0) // no need to lock at load time.
         white_list.insert(e);
@@ -184,28 +182,26 @@ void ModelBase::load(Code *mdl) { // mdl is already packed.
         black_list.insert(e);
 }
 
-void ModelBase::get_models(r_code::list<P<Code> > &models) {
-
-    mdlCS.enter();
+void ModelBase::get_models(r_code::list<P<Code> > &models)
+{
+    std::lock_guard<std::mutex> guard(m_mdlMutex);
     MdlSet::iterator m;
     for (m = white_list.begin(); m != white_list.end(); ++m)
         models.push_back((*m).mdl);
     for (m = black_list.begin(); m != black_list.end(); ++m)
         models.push_back((*m).mdl);
-    mdlCS.leave();
 }
 
-Code *ModelBase::check_existence(Code *mdl) {
-
+Code *ModelBase::check_existence(Code *mdl)
+{
     MEntry e(mdl, false);
-    mdlCS.enter();
+    std::lock_guard<std::mutex> guard(m_mdlMutex);
     MdlSet::iterator m = black_list.find(e);
     if (m != black_list.end()) {
         ModelBase::MEntry mEntry = *m;
         black_list.erase(m);
         mEntry.touch_time = Now();
         black_list.emplace(mEntry);
-        mdlCS.leave();
         return NULL;
     }
     m = white_list.find(e);
@@ -214,26 +210,23 @@ Code *ModelBase::check_existence(Code *mdl) {
         white_list.erase(m);
         mEntry.touch_time = Now();
         white_list.emplace(mEntry);
-        mdlCS.leave();
         return (*m).mdl;
     }
     _Mem::Get()->pack_hlp(e.mdl);
     white_list.insert(e);
-    mdlCS.leave();
     return mdl;
 }
 
-void ModelBase::check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1) { // m0 and m1 unpacked.
-
+void ModelBase::check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1)
+{
     MEntry e_m0(m0, false);
-    mdlCS.enter();
+    std::lock_guard<std::mutex> guard(m_mdlMutex);
     MdlSet::iterator m = black_list.find(e_m0);
     if (m != black_list.end()) {
         ModelBase::MEntry mEntry = *m;
         black_list.erase(m);
         mEntry.touch_time = Now();
         black_list.emplace(mEntry);
-        mdlCS.leave();
         _m0 = _m1 = NULL;
         return;
     }
@@ -256,7 +249,6 @@ void ModelBase::check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1) { //
         black_list.erase(m);
         mEntry.touch_time = Now();
         black_list.emplace(mEntry);
-        mdlCS.leave();
         _m1 = NULL;
         return;
     }
@@ -266,7 +258,6 @@ void ModelBase::check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1) { //
         white_list.erase(m);
         mEntry.touch_time = Now();
         white_list.emplace(mEntry);
-        mdlCS.leave();
         _m1 = (*m).mdl;
         return;
     }
@@ -277,24 +268,21 @@ void ModelBase::check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1) { //
     }
     _Mem::Get()->pack_hlp(m1);
     white_list.insert(e_m1);
-    mdlCS.leave();
     _m1 = m1;
 }
 
-void ModelBase::register_mdl_failure(Code *mdl) { // mdl is packed.
+void ModelBase::register_mdl_failure(Code *mdl) {
 
     MEntry e(mdl, true);
-    mdlCS.enter();
+    std::lock_guard<std::mutex> guard(m_mdlMutex);
     white_list.erase(e);
     black_list.insert(e);
-    mdlCS.leave();
 }
 
-void ModelBase::register_mdl_timeout(Code *mdl) { // mdl is packed.
-
+void ModelBase::register_mdl_timeout(Code *mdl)
+{
     MEntry e(mdl, true);
-    mdlCS.enter();
+    std::lock_guard<std::mutex> guard(m_mdlMutex);
     white_list.erase(e);
-    mdlCS.leave();
 }
 }

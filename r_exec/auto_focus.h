@@ -130,6 +130,8 @@ public:
     View *inject_input(View *input); // inject a filtered input into the output groups starting from 0; return the view injected in the primary group.
     void inject_input(View *input, uint64_t start); // inject an unfiltered input into the output groups starting from start.
     void inject_input(View *input, _Fact *abstract_input, BindingMap *bm); // inject a filtered input into the output groups.
+
+    /// inject in the primary group; models will be injected in the secondary group automatically.
     void inject_hlps(const std::vector<P<Code> > &hlps) const; // called by TPX; hlp is a mdl or a cst.
 
     bool decompile_models() const {
@@ -145,7 +147,9 @@ public:
         return output_groups[0];
     }
 
+    /// copy inputs so they can be flagged independently by the tpxs that share the cross buffer
     void copy_cross_buffer(r_code::list<Input> &destination);
+
     time_buffer<CInput, CInput::IsInvalidated> &get_cache() {
         return cache;
     }

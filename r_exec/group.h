@@ -48,8 +48,7 @@ class HLPController;
 // all views: accessed by Mem::update and reduction cores.
 // viewing_groups: accessed by Mem::injectNow and Mem::update.
 class r_exec_dll Group:
-    public LObject,
-    public CriticalSection {
+    public LObject {
 private:
 // Ctrl values.
     uint64 sln_thr_changes;
@@ -101,6 +100,7 @@ private:
     bool is_active_pgm(View *view);
     bool is_eligible_input(View *view);
 
+    /// the view can hold anything but groups and notifications.
     void inject(View *view);
 
     void notifyNew(View *view);
@@ -128,6 +128,7 @@ private:
     void _initiate_sln_propagation(Code *object, double change, double source_sln_thr, std::vector<Code *> &path) const;
     void _propagate_sln(Code *object, double change, double source_sln_thr, std::vector<Code *> &path) const;
 public:
+    std::mutex mutex;
 // xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
 // Active overlays are to be found in xxx_ipgm_views.
     UNORDERED_MAP<uint64, P<View> > ipgm_views;
@@ -396,6 +397,8 @@ public:
 
     void inject_new_object(View *view);
     void inject_existing_object(View *view);
+
+    /// the view holds a group.
     void inject_group(View *view);
     void inject_notification(View *view, bool lock);
     void inject_hlps(std::vector<View *> &views);

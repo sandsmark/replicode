@@ -84,6 +84,7 @@ class CSTController:
     public HLPController {
 private:
     Group *secondary_host;
+    std::mutex m_mutex;
 
     void abduce(HLPBindingMap *bm, Fact *super_goal); // super_goal is f->g->f->icst.
     void inject_goal(HLPBindingMap *bm,

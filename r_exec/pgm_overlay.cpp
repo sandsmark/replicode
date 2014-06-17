@@ -309,19 +309,17 @@ bool InputLessPGMOverlay::inject_productions() {
                     case IPGMContext::TYPE_VIEW: { // add the target and value to the group's pending operations.
 
                         Group *g = (Group *)object;
-                        g->enter();
+                        std::lock_guard<std::mutex> guard(g->mutex);
                         g->pending_operations.push_back(new Group::Mod(view_oid, member_index, value));
-                        g->leave();
                         break;
                     } case IPGMContext::TYPE_OBJECT:
                         ((Code *)object)->mod(member_index, value); // protected internally.
                         break;
-                    case IPGMContext::TYPE_GROUP:
-                        ((Group *)object)->enter();
+                    case IPGMContext::TYPE_GROUP: {
+                        std::lock_guard<std::mutex> guard(((Group *)object)->mutex);
                         ((Group *)object)->mod(member_index, value);
-                        ((Group *)object)->leave();
                         break;
-                    default:
+                    } default:
                         rollback();
                         productions.clear();
                         return false;
@@ -340,20 +338,18 @@ bool InputLessPGMOverlay::inject_productions() {
                     double value = (*args.getChild(2))[0].asDouble();
                     switch (object_type) {
                     case IPGMContext::TYPE_VIEW: { // add the target and value to the group's pending operations.
-
                         Group *g = (Group *)object;
-                        g->enter();
+                        std::lock_guard<std::mutex> guard(g->mutex);
                         g->pending_operations.push_back(new Group::Set(view_oid, member_index, value));
-                        g->leave();
                         break;
                     } case IPGMContext::TYPE_OBJECT:
                         ((Code *)object)->set(member_index, value); // protected internally.
                         break;
-                    case IPGMContext::TYPE_GROUP:
-                        ((Group *)object)->enter();
+                    case IPGMContext::TYPE_GROUP: {
+                        std::lock_guard<std::mutex> guard(((Group *)object)->mutex);
                         ((Group *)object)->set(member_index, value);
-                        ((Group *)object)->leave();
                         break;
+                    }
                     }
                 }
             } else if (function[0].asOpcode() == Opcodes::NewClass) { // TODO

@@ -44,9 +44,7 @@ namespace core {
 // N1: N writers, 1 reader
 // NN: N writers, N readers
 #ifdef PIPE_1
-template<typename T, uint64 _S> class Pipe11:
-    public Semaphore,
-    public CriticalSection {
+template<typename T, uint64 _S> class Pipe11 : public Semaphore {
 private:
     class Block {
     public:
@@ -65,8 +63,10 @@ private:
     Block *last;
     Block *spare;
 protected:
+    /// leaves spare as is
     void _clear();
     T _pop();
+    std::mutex m_mutex;
 public:
     Pipe11();
     ~Pipe11();
@@ -78,7 +78,7 @@ public:
 template<typename T, uint64 _S> class Pipe1N:
     public Pipe11<T, _S> {
 private:
-    CriticalSection popCS;
+    std::mutex m_popMutex;
 public:
     Pipe1N();
     ~Pipe1N();
@@ -89,7 +89,7 @@ public:
 template<typename T, uint64 _S> class PipeN1:
     public Pipe11<T, _S> {
 private:
-    CriticalSection pushCS;
+    std::mutex m_pushMutex;
 public:
     PipeN1();
     ~PipeN1();
@@ -100,8 +100,8 @@ public:
 template<typename T, uint64 _S> class PipeNN:
     public Pipe11<T, _S> {
 private:
-    CriticalSection pushCS;
-    CriticalSection popCS;
+    std::mutex m_pushMutex;
+    std::mutex m_popMutex;
 public:
     PipeNN();
     ~PipeNN();

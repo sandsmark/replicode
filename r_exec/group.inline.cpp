@@ -30,15 +30,15 @@
 
 namespace r_exec {
 
-inline Group::Group(r_code::Mem *m): LObject(m), CriticalSection() {
-
+inline Group::Group(r_code::Mem *m): LObject(m)
+{
     reset_ctrl_values();
     reset_stats();
     reset_decay_values();
 }
 
-inline Group::Group(r_code::SysObject *source): LObject(source), CriticalSection() {
-
+inline Group::Group(r_code::SysObject *source): LObject(source)
+{
     reset_ctrl_values();
     reset_stats();
     reset_decay_values();
@@ -57,10 +57,9 @@ inline bool Group::invalidate() {
 // unregister from all groups it views.
     UNORDERED_MAP<uint64, P<View> >::const_iterator gv;
     for (gv = group_views.begin(); gv != group_views.end(); ++gv) {
-
-        ((Group *)gv->second->object)->enter();
-        ((Group *)gv->second->object)->viewing_groups.erase(this);
-        ((Group *)gv->second->object)->leave();
+        Group *group = (Group *)gv->second->object;
+        std::lock_guard<std::mutex> guard(group->mutex);
+        group->viewing_groups.erase(this);
     }
     /* We keep the group intact: the only thing is now the group will not be updated anymore.
     // remove all views that are hosted by this group.

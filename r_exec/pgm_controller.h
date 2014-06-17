@@ -57,7 +57,11 @@ public:
     InputLessPGMController(r_code::View *ipgm_view);
     ~InputLessPGMController();
 
+     /// next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
     void signal_input_less_pgm();
+
+private:
+    std::mutex m_hostMutex;
 };
 
 // Controller for programs with inputs.
@@ -79,6 +83,7 @@ class r_exec_dll AntiPGMController:
     public _PGMController {
 private:
     bool successful_match;
+    std::mutex m_hostMutex;
 
     void push_new_signaling_job();
 public:
@@ -89,6 +94,7 @@ public:
     void reduce(r_exec::View *input);
     void signal_anti_pgm();
 
+    /// one anti overlay matched all its inputs, timings and guards.
     void restart();
 };
 }

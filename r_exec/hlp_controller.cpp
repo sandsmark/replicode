@@ -56,50 +56,46 @@ void HLPController::invalidate() {
     controllers.clear();
 }
 
-void HLPController::add_requirement(bool strong) {
-
-    reductionCS.enter();
+void HLPController::add_requirement(bool strong)
+{
+    std::lock_guard<std::mutex> guard(m_reductionMutex);
     if (strong)
         ++strong_requirement_count;
     else
         ++weak_requirement_count;
     ++requirement_count;
-    reductionCS.leave();
 }
 
-void HLPController::remove_requirement(bool strong) {
-
-    reductionCS.enter();
+void HLPController::remove_requirement(bool strong)
+{
+    std::lock_guard<std::mutex> guard(m_reductionMutex);
     if (strong)
         --strong_requirement_count;
     else
         --weak_requirement_count;
     --requirement_count;
-    reductionCS.leave();
 }
 
-uint64 HLPController::get_requirement_count(uint64 &weak_requirement_count, uint64 &strong_requirement_count) {
-
+uint64 HLPController::get_requirement_count(uint64 &weak_requirement_count, uint64 &strong_requirement_count)
+{
     uint64 r_c;
-    reductionCS.enter();
+    std::lock_guard<std::mutex> guard(m_reductionMutex);
     r_c = requirement_count;
     weak_requirement_count = this->weak_requirement_count;
     strong_requirement_count = this->strong_requirement_count;
-    reductionCS.leave();
     return r_c;
 }
 
-uint64 HLPController::get_requirement_count() {
-
+uint64 HLPController::get_requirement_count()
+{
     uint64 r_c;
-    reductionCS.enter();
+    std::lock_guard<std::mutex> guard(m_reductionMutex);
     r_c = requirement_count;
-    reductionCS.leave();
     return r_c;
 }
 
-uint16 HLPController::get_out_group_count() const {
-
+uint16 HLPController::get_out_group_count() const
+{
     return getObject()->code(getObject()->code(HLP_OUT_GRPS).asIndex()).getAtomCount();
 }
 
@@ -134,47 +130,36 @@ void HLPController::inject_prediction(Fact *prediction, double confidence) const
 MatchResult HLPController::check_evidences(_Fact *target, _Fact *&evidence) {
 
     MatchResult r = MATCH_FAILURE;
-    evidences.CS.enter();
+    std::lock_guard<std::mutex> guard(evidences.mutex);
     uint64 now = Now();
     r_code::list<EEntry>::const_iterator e;
     for (e = evidences.evidences.begin(); e != evidences.evidences.end();) {
-
         if ((*e).is_too_old(now)) // garbage collection. // garbage collection.
             e = evidences.evidences.erase(e);
         else {
-
             if ((r = (*e).evidence->is_evidence(target)) != MATCH_FAILURE) {
-
                 evidence = (*e).evidence;
-                evidences.CS.leave();
                 return r;
             }
             ++e;
         }
     }
     evidence = NULL;
-    evidences.CS.leave();
     return r;
 }
 
 MatchResult HLPController::check_predicted_evidences(_Fact *target, _Fact *&evidence) {
-
     MatchResult r = MATCH_FAILURE;
-    predicted_evidences.CS.enter();
+    std::lock_guard<std::mutex> guard(predicted_evidences.mutex);
     uint64 now = Now();
     r_code::list<PEEntry>::const_iterator e;
     for (e = predicted_evidences.evidences.begin(); e != predicted_evidences.evidences.end();) {
-
         if ((*e).is_too_old(now)) // garbage collection. // garbage collection.
             e = predicted_evidences.evidences.erase(e);
         else {
-
             if ((r = (*e).evidence->is_evidence(target)) != MATCH_FAILURE) {
-
                 if (target->get_cfd() < (*e).evidence->get_cfd()) {
-
                     evidence = (*e).evidence;
-                    predicted_evidences.CS.leave();
                     return r;
                 } else
                     r = MATCH_FAILURE;
@@ -183,7 +168,6 @@ MatchResult HLPController::check_predicted_evidences(_Fact *target, _Fact *&evid
         }
     }
     evidence = NULL;
-    predicted_evidences.CS.leave();
     return r;
 }
 

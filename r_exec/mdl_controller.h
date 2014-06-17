@@ -114,7 +114,7 @@ protected:
 
     class RCache {
     public:
-        CriticalSection CS;
+        std::mutex mutex;
         r_code::list<REntry> positive_evidences;
         r_code::list<REntry> negative_evidences;
     };
@@ -124,7 +124,7 @@ protected:
 
     void _store_requirement(r_code::list<REntry> *cache, REntry &e);
 
-    CriticalSection p_monitorsCS;
+    std::mutex m_monitorMutex;
     r_code::list<P<PMonitor> > p_monitors;
 
     P<Code> lhs;
@@ -145,7 +145,7 @@ protected:
 
     double get_cfd() const;
 
-    CriticalSection active_requirementsCS;
+    std::mutex m_activeRequirementsMutex;
     UNORDERED_MAP<P<_Fact>, RequirementsPair, PHash<_Fact> > active_requirements; // P<_Fact>: f1 as in f0->pred->f1->imdl; requirements having allowed the production of prediction; first: wr, second: sr.
 
     template<class C> void reduce_cache(Fact *f_p_f_imdl, MDLController *controller) { // fwd; controller is the controller of the requirement which produced f_p_f_imdl.
@@ -155,8 +155,7 @@ protected:
     }
 
     template<class E> void reduce_cache(Cache<E> *cache, Fact *f_p_f_imdl, MDLController *controller) {
-
-        cache->CS.enter();
+        std::lock_guard<std::mutex> guard(cache->mutex);
         uint64 now = Now();
         typename r_code::list<E>::const_iterator _e;
         for (_e = cache->evidences.begin(); _e != cache->evidences.end();) {
@@ -170,9 +169,9 @@ protected:
                 ++_e;
             }
         }
-        cache->CS.leave();
     }
 
+     /// predictions are admissible inputs (for checking predicted counter-evidences).
     bool monitor_predictions(_Fact *input);
 
     MDLController(r_code::View *view);
@@ -215,7 +214,7 @@ public:
 class PMDLController:
     public MDLController {
 protected:
-    CriticalSection g_monitorsCS;
+    std::mutex m_gMonitorsMutex;
     r_code::list<P<_GMonitor> > g_monitors;
     r_code::list<P<_GMonitor> > r_monitors;
 
@@ -309,10 +308,10 @@ class PrimaryMDLController:
 private:
     SecondaryMDLController *secondary;
 
-    CriticalSection codeCS;
-    CriticalSection last_match_timeCS;
+    std::mutex m_codeMutex;
+    std::mutex m_lastMatchTimeMutex;
 
-    CriticalSection assumptionsCS;
+    std::mutex m_assumptionsMutex;
     r_code::list<P<Code> > assumptions; // produced by the model; garbage collection at reduce(9 time..
 
     void rate_model(bool success);
@@ -365,8 +364,9 @@ class SecondaryMDLController:
 private:
     PrimaryMDLController *primary;
 
-    CriticalSection codeCS;
-    CriticalSection last_match_timeCS;
+    std::mutex m_codeMutex;
+    std::mutex m_lastMatchTimeMutex;
+
 
     void rate_model(); // record successes only.
     void kill_views(); // force res in both primary/secondary to 0.

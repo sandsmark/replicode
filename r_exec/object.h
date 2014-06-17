@@ -54,9 +54,9 @@ private:
 
     volatile uint64 invalidated; // must be aligned on 32 bits.
 
-    CriticalSection psln_thr_sem;
-    CriticalSection views_sem;
-    CriticalSection markers_sem;
+    std::mutex m_pslnThrMutex;
+    std::mutex m_viewsMutex;
+    std::mutex m_markersMutex;
 protected:
     Object();
     Object(r_code::Mem *mem);
@@ -76,16 +76,16 @@ public:
     double get_psln_thr();
 
     void acq_views() {
-        views_sem.enter();
+        m_viewsMutex.lock();
     }
     void rel_views() {
-        views_sem.leave();
+        m_viewsMutex.unlock();
     }
     void acq_markers() {
-        markers_sem.enter();
+        m_markersMutex.lock();
     }
     void rel_markers() {
-        markers_sem.leave();
+        m_markersMutex.unlock();
     }
 
 // Target psln_thr only.

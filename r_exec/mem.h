@@ -106,14 +106,14 @@ protected:
     uint64 time_job_avg_latency; // latency: deadline-the time the job is popped from the pipe; if <0, not registered (as it is too late for action); the higher the better.
     uint64 _time_job_avg_latency; // previous value.
 
-    CriticalSection time_jobCS;
-    CriticalSection reduction_jobCS;
+    std::mutex m_reductionJobMutex;
+    std::mutex m_timeJobMutex;
 
     uint64 core_count;
-    CriticalSection core_countCS;
+    std::mutex m_coreCountMutex;
 
     State state;
-    CriticalSection stateCS;
+    std::mutex m_stateMutex;
     Semaphore *stop_sem; // blocks the rMem until all cores terminate.
 
     r_code::list<P<Code> > objects; // store objects in order of injection: holds the initial objects (and dynamically created ones if MemStatic is used).
@@ -310,7 +310,7 @@ public:
 class r_exec_dll MemStatic:
     public _Mem {
 private:
-    CriticalSection objectsCS; // protects last_oid and objects.
+    std::mutex m_objectsMutex; // protects last_oid and objects.
     uint64 last_oid;
     void bind(View *view); // assigns an oid, stores view->object in objects if needed.
     void set_last_oid(int64 oid);

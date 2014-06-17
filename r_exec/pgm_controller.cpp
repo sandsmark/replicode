@@ -36,27 +36,28 @@
 
 namespace r_exec {
 
-_PGMController::_PGMController(r_code::View *ipgm_view): OController(ipgm_view) {
-
+_PGMController::_PGMController(r_code::View *ipgm_view): OController(ipgm_view)
+{
     run_once = !ipgm_view->object->code(IPGM_RUN).asBoolean();
 }
 
-_PGMController::~_PGMController() {
+_PGMController::~_PGMController()
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-InputLessPGMController::InputLessPGMController(r_code::View *ipgm_view): _PGMController(ipgm_view) {
-
+InputLessPGMController::InputLessPGMController(r_code::View *ipgm_view): _PGMController(ipgm_view)
+{
     overlays.push_back(new InputLessPGMOverlay(this));
 }
 
 InputLessPGMController::~InputLessPGMController() {
 }
 
-void InputLessPGMController::signal_input_less_pgm() { // next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
-
-    reductionCS.enter();
+void InputLessPGMController::signal_input_less_pgm()
+{
+    std::lock_guard<std::mutex> reductionGuard(m_reductionMutex);
     if (overlays.size()) {
 
         InputLessPGMOverlay *overlay = (InputLessPGMOverlay *)overlays.front();
@@ -68,20 +69,16 @@ void InputLessPGMController::signal_input_less_pgm() { // next job will be pushe
             if (is_alive()) {
 
                 Group *host = getView()->get_host();
-                host->enter();
+                std::lock_guard<std::mutex> guard(m_hostMutex);
                 if (host->get_c_act() > host->get_c_act_thr() && // c-active group.
                         host->get_c_sln() > host->get_c_sln_thr()) { // c-salient group.
 
-                    host->leave();
-
                     TimeJob *next_job = new InputLessPGMSignalingJob((r_exec::View*)view, Now() + tsc);
                     _Mem::Get()->pushTimeJob(next_job);
-                } else
-                    host->leave();
+                }
             }
         }
     }
-    reductionCS.leave();
 
     if (run_once)
         invalidate();
@@ -89,34 +86,33 @@ void InputLessPGMController::signal_input_less_pgm() { // next job will be pushe
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-PGMController::PGMController(r_code::View *ipgm_view): _PGMController(ipgm_view) {
-
+PGMController::PGMController(r_code::View *ipgm_view): _PGMController(ipgm_view)
+{
     overlays.push_back(new PGMOverlay(this));
 }
 
 PGMController::~PGMController() {
 }
 
-void PGMController::notify_reduction() {
-
+void PGMController::notify_reduction()
+{
     if (run_once)
         invalidate();
 }
 
-void PGMController::take_input(r_exec::View *input) {
-
+void PGMController::take_input(r_exec::View *input)
+{
     Controller::__take_input<PGMController>(input);
 }
 
-void PGMController::reduce(r_exec::View *input) {
-
+void PGMController::reduce(r_exec::View *input)
+{
     r_code::list<P<Overlay> >::const_iterator o;
 //uint64 oid=input->object->get_oid();
 //uint64 t=Now()-Utils::GetTimeReference();
 //std::cout<<Time::ToString_seconds(t)<<" got "<<oid<<" "<<input->get_sync()<<std::endl;
     if (tsc > 0) {
-
-        reductionCS.enter();
+        std::lock_guard<std::mutex> guard(m_reductionMutex);
         uint64 now = Now(); // call must be located after the CS.enter() since (*o)->reduce() may update (*o)->birth_time.
 //uint64 t=now-Utils::GetTimeReference();
         for (o = overlays.begin(); o != overlays.end();) {
@@ -144,12 +140,9 @@ void PGMController::reduce(r_exec::View *input) {
                 }
             }
         }
-        reductionCS.leave();
     } else {
-
-        reductionCS.enter();
+        std::lock_guard<std::mutex> guard(m_reductionMutex);
         for (o = overlays.begin(); o != overlays.end();) {
-
             if ((*o)->is_invalidated())
                 o = overlays.erase(o);
             else {
@@ -163,35 +156,33 @@ void PGMController::reduce(r_exec::View *input) {
             }
 
         }
-        reductionCS.leave();
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-AntiPGMController::AntiPGMController(r_code::View *ipgm_view): _PGMController(ipgm_view), successful_match(false) {
-
+AntiPGMController::AntiPGMController(r_code::View *ipgm_view): _PGMController(ipgm_view), successful_match(false)
+{
     overlays.push_back(new AntiPGMOverlay(this));
 }
 
-AntiPGMController::~AntiPGMController() {
+AntiPGMController::~AntiPGMController()
+{
 }
 
-void AntiPGMController::take_input(r_exec::View *input) {
-
+void AntiPGMController::take_input(r_exec::View *input)
+{
     Controller::__take_input<AntiPGMController>(input);
 }
 
-void AntiPGMController::reduce(r_exec::View *input) {
-
-    reductionCS.enter();
+void AntiPGMController::reduce(r_exec::View *input)
+{
+    std::lock_guard<std::mutex> guard(m_reductionMutex);
     r_code::list<P<Overlay> >::const_iterator o;
     for (o = overlays.begin(); o != overlays.end();) {
-
-        if ((*o)->is_invalidated())
+        if ((*o)->is_invalidated()) {
             o = overlays.erase(o);
-        else {
-
+        } else {
             Overlay *offspring = (*o)->reduce(input);
             if (successful_match) { // the controller has been restarted: reset the overlay and kill all others
 
@@ -207,12 +198,11 @@ void AntiPGMController::reduce(r_exec::View *input) {
                 overlays.push_front(offspring);
         }
     }
-    reductionCS.leave();
 }
 
-void AntiPGMController::signal_anti_pgm() {
-
-    reductionCS.enter();
+void AntiPGMController::signal_anti_pgm()
+{
+    std::lock_guard<std::mutex> guard(m_reductionMutex);
     if (successful_match) // a signaling job has been spawn in restart(): we are here in an old job during which a positive match occurred: do nothing.
         successful_match = false;
     else { // no positive match during this job: inject productions and restart.
@@ -226,30 +216,27 @@ void AntiPGMController::signal_anti_pgm() {
             overlays.push_back(overlay);
         }
     }
-    reductionCS.leave();
 
     if (run_once)
         invalidate();
 }
 
-void AntiPGMController::restart() { // one anti overlay matched all its inputs, timings and guards.
-
+void AntiPGMController::restart()
+{
     push_new_signaling_job();
     successful_match = true;
 }
 
-void AntiPGMController::push_new_signaling_job() {
-
+void AntiPGMController::push_new_signaling_job()
+{
     Group *host = getView()->get_host();
-    host->enter();
+    std::lock_guard<std::mutex> guard(m_hostMutex);
     if (getView()->get_act() > host->get_act_thr() && // active ipgm.
             host->get_c_act() > host->get_c_act_thr() && // c-active group.
             host->get_c_sln() > host->get_c_sln_thr()) { // c-salient group.
 
-        host->leave();
         TimeJob *next_job = new AntiPGMSignalingJob((r_exec::View*)view, Now() + Utils::GetTimestamp<Code>(getObject(), IPGM_TSC));
         _Mem::Get()->pushTimeJob(next_job);
-    } else
-        host->leave();
+    }
 }
 }

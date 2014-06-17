@@ -35,7 +35,6 @@ namespace core {
 
 #ifdef PIPE_1
 template<typename T, uint64 _S> Pipe11<T, _S>::Pipe11(): Semaphore(0, 65535) {
-
     head = tail = -1;
     first = last = new Block(NULL);
     spare = NULL;
@@ -48,23 +47,21 @@ template<typename T, uint64 _S> Pipe11<T, _S>::~Pipe11() {
         delete spare;
 }
 
-template<typename T, uint64 _S> inline void Pipe11<T, _S>::_clear() { // leaves spare as is
-
-    enter();
+template<typename T, uint64 _S> inline void Pipe11<T, _S>::_clear()
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
     reset();
     if (first->next)
         delete first->next;
     first->next = NULL;
     head = tail = -1;
-    leave();
 }
 
-template<typename T, uint64 _S> inline T Pipe11<T, _S>::_pop() {
-
+template<typename T, uint64 _S> inline T Pipe11<T, _S>::_pop()
+{
     T t = first->buffer[head];
     if (++head == _S) {
-
-        enter();
+        std::lock_guard<std::mutex> guard(m_mutex);
         if (first == last)
             head = tail = -1; // stay in the same block; next push will reset head and tail to 0
         else {
@@ -83,14 +80,13 @@ template<typename T, uint64 _S> inline T Pipe11<T, _S>::_pop() {
             }
             head = 0;
         }
-        leave();
     }
     return t;
 }
 
-template<typename T, uint64 _S> inline void Pipe11<T, _S>::push(T &t) {
-
-    enter();
+template<typename T, uint64 _S> inline void Pipe11<T, _S>::push(T &t)
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
     if (++tail == 0)
         head = 0;
     uint64 index = tail;
@@ -107,14 +103,13 @@ template<typename T, uint64 _S> inline void Pipe11<T, _S>::push(T &t) {
         tail = 0;
         index = tail;
     }
-    leave();
 
     last->buffer[index] = t;
     release();
 }
 
-template<typename T, uint64 _S> inline T Pipe11<T, _S>::pop() {
-
+template<typename T, uint64 _S> inline T Pipe11<T, _S>::pop()
+{
     Semaphore::acquire();
     return _pop();
 }
@@ -132,19 +127,17 @@ template<typename T, uint64 _S> Pipe1N<T, _S>::Pipe1N() {
 template<typename T, uint64 _S> Pipe1N<T, _S>::~Pipe1N() {
 }
 
-template<typename T, uint64 _S> void Pipe1N<T, _S>::clear() {
-
-    popCS.enter();
+template<typename T, uint64 _S> void Pipe1N<T, _S>::clear()
+{
+    std::lock_guard<std::mutex> guard(m_popMutex);
     Pipe11<T, _S>::_clear();
-    popCS.leave();
 }
 
-template<typename T, uint64 _S> T Pipe1N<T, _S>::pop() {
-
+template<typename T, uint64 _S> T Pipe1N<T, _S>::pop()
+{
     Semaphore::acquire();
-    popCS.enter();
+    std::lock_guard<std::mutex> guard(m_popMutex);
     T t = Pipe11<T, _S>::_pop();
-    popCS.leave();
     return t;
 }
 
@@ -156,18 +149,16 @@ template<typename T, uint64 _S> PipeN1<T, _S>::PipeN1() {
 template<typename T, uint64 _S> PipeN1<T, _S>::~PipeN1() {
 }
 
-template<typename T, uint64 _S> void PipeN1<T, _S>::clear() {
-
-    pushCS.enter();
+template<typename T, uint64 _S> void PipeN1<T, _S>::clear()
+{
+    std::lock_guard<std::mutex> guard(m_pushMutex);
     Pipe11<T, _S>::_clear();
-    pushCS.leave();
 }
 
-template<typename T, uint64 _S> void PipeN1<T, _S>::push(T &t) {
-
-    pushCS.enter();
+template<typename T, uint64 _S> void PipeN1<T, _S>::push(T &t)
+{
+    std::lock_guard<std::mutex> guard(m_pushMutex);
     Pipe11<T, _S>::push(t);
-    pushCS.leave();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -178,28 +169,24 @@ template<typename T, uint64 _S> PipeNN<T, _S>::PipeNN() {
 template<typename T, uint64 _S> PipeNN<T, _S>::~PipeNN() {
 }
 
-template<typename T, uint64 _S> void PipeNN<T, _S>::clear() {
-
-    pushCS.enter();
-    popCS.enter();
+template<typename T, uint64 _S> void PipeNN<T, _S>::clear()
+{
+    std::lock_guard<std::mutex> popGuard(m_popMutex);
+    std::lock_guard<std::mutex> pushGuard(m_pushMutex);
     Pipe11<T, _S>::_clear();
-    popCS.leave();
-    pushCS.leave();
 }
 
-template<typename T, uint64 _S> void PipeNN<T, _S>::push(T &t) {
-
-    pushCS.enter();
+template<typename T, uint64 _S> void PipeNN<T, _S>::push(T &t)
+{
+    std::lock_guard<std::mutex> guard(m_pushMutex);
     Pipe11<T, _S>::push(t);
-    pushCS.leave();
 }
 
-template<typename T, uint64 _S> T PipeNN<T, _S>::pop() {
-
+template<typename T, uint64 _S> T PipeNN<T, _S>::pop()
+{
     Semaphore::acquire();
-    popCS.enter();
+    std::lock_guard<std::mutex> guard(m_popMutex);
     T t = Pipe11<T, _S>::_pop();
-    popCS.leave();
     return t;
 }
 #elif defined PIPE_2

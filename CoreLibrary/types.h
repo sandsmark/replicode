@@ -198,8 +198,6 @@ typedef thread_ret(*thread_function)(void *);
 typedef int socket;
 typedef struct sockaddr SOCKADDR;
 typedef sem_t semaphore;
-typedef pthread_mutex_t mutex;
-typedef pthread_mutex_t critical_section;
 typedef timer_t timer;
 #define signal_handler_function_call
 typedef sighandler_t signal_handler;

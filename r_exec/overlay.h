@@ -56,7 +56,7 @@ protected:
 
     r_code::View *view;
 
-    CriticalSection reductionCS;
+    std::mutex m_reductionMutex;
 
     virtual void take_input(r_exec::View *input) {}
     template<class C> void __take_input(r_exec::View *input); // utility: to be called by sub-classes.

@@ -292,8 +292,8 @@ void CSTController::take_input(r_exec::View *input) {
     }
 }
 
-void CSTController::reduce(r_exec::View *input) {
-
+void CSTController::reduce(r_exec::View *input)
+{
     if (is_orphan())
         return;
 
@@ -319,7 +319,7 @@ void CSTController::reduce(r_exec::View *input) {
         bool match = false;
         CSTOverlay *offspring;
         r_code::list<P<Overlay> >::const_iterator o;
-        reductionCS.enter();
+        std::lock_guard<std::mutex> guard(m_reductionMutex);
         uint64 now = Now();
         for (o = overlays.begin(); o != overlays.end();) {
 
@@ -338,7 +338,6 @@ void CSTController::reduce(r_exec::View *input) {
                     ++o;
             }
         }
-        reductionCS.leave();
 
         check_last_match_time(match);
     }

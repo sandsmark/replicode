@@ -28,8 +28,9 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#define UNDEFINED_OID 0xFFFFFFFF
+#include <mutex>
 
+#define UNDEFINED_OID 0xFFFFFFFF
 
 namespace r_exec {
 
@@ -80,11 +81,10 @@ template<class C, class U> void Object<C, U>::compute_hash_value() {
     hash_value |= this->references_size() & 0x000000FF; // 8 bits for the reference set size.
 }
 
-template<class C, class U> double Object<C, U>::get_psln_thr() {
-
-    psln_thr_sem.enter();
+template<class C, class U> double Object<C, U>::get_psln_thr()
+{
+    std::lock_guard<std::mutex> guard(m_pslnThrMutex);
     double r = this->code(this->code(0).getAtomCount()).asDouble(); // psln is always the last member of an object.
-    psln_thr_sem.leave();
     return r;
 }
 
@@ -98,9 +98,8 @@ template<class C, class U> void Object<C, U>::mod(uint16 member_index, double va
     else if (v > 1)
         v = 1;
 
-    psln_thr_sem.enter();
+    std::lock_guard<std::mutex> guard(m_pslnThrMutex);
     this->code(member_index) = Atom::Float(v);
-    psln_thr_sem.leave();
 }
 
 template<class C, class U> void Object<C, U>::set(uint16 member_index, double value) {
@@ -108,9 +107,8 @@ template<class C, class U> void Object<C, U>::set(uint16 member_index, double va
     if (member_index != this->code_size() - 1)
         return;
 
-    psln_thr_sem.enter();
+    std::lock_guard<std::mutex> guard(m_pslnThrMutex);
     this->code(member_index) = Atom::Float(value);
-    psln_thr_sem.leave();
 }
 
 template<class C, class U> View *Object<C, U>::get_view(Code *group, bool lock) {

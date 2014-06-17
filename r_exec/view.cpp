@@ -40,15 +40,14 @@ const double PLUS_INFINITY = std::numeric_limits<float>::infinity();
 
 namespace r_exec {
 
-CriticalSection OIDCS;
+std::mutex oidMutex;
 
 uint64 View::LastOID = 0;
 
-uint64 View::GetOID() {
-
-    OIDCS.enter();
+uint64 View::GetOID()
+{
+    std::lock_guard<std::mutex> guard(oidMutex);
     uint64 oid = LastOID++;
-    OIDCS.leave();
     return oid;
 }
 
@@ -249,12 +248,11 @@ void View::delete_from_object() {
     }
 }
 
-void View::delete_from_group() {
-
+void View::delete_from_group()
+{
     Group *g = get_host();
-    g->enter();
+    std::lock_guard<std::mutex> guard(g->mutex);
     g->delete_view(this);
-    g->leave();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -258,12 +258,12 @@ void AutoFocusController::take_input(r_exec::View *input) {
         Controller::__take_input<AutoFocusController>(input);// std::cout<<"A/F::TI: "<<get_host()->get_oid()<<" > "<<input->object->get_oid()<<std::endl;
 }
 
-void AutoFocusController::reduce(r_exec::View *input) {
-
+void AutoFocusController::reduce(r_exec::View *input)
+{
     Code *input_object = input->object;
     uint16 opcode = input_object->code(0).asOpcode();
 
-    reductionCS.enter();
+    std::lock_guard<std::mutex> guard(m_reductionMutex);
 
     if (opcode == Opcodes::MkRdx) {
 
@@ -348,12 +348,10 @@ void AutoFocusController::reduce(r_exec::View *input) {
             }
         }
     }
-
-    reductionCS.leave();
 }
 
-void AutoFocusController::inject_hlps(const std::vector<P<Code> > &hlps) const { // inject in the primary group; models will be injected in the secondary group automatically.
-
+void AutoFocusController::inject_hlps(const std::vector<P<Code> > &hlps) const
+{
     std::vector<View *> views;
 
     uint64 now = Now();
@@ -369,12 +367,12 @@ void AutoFocusController::inject_hlps(const std::vector<P<Code> > &hlps) const {
     _Mem::Get()->inject_hlps(views, output_groups[0]);
 }
 
-void AutoFocusController::copy_cross_buffer(r_code::list<Input> &destination) { // copy inputs so they can be flagged independently by the tpxs that share the cross buffer.
-
-    reductionCS.enter();
+void AutoFocusController::copy_cross_buffer(r_code::list<Input> &destination)
+{
+    std::lock_guard<std::mutex> guard(m_reductionMutex);
     time_buffer<Input, Input::IsInvalidated>::iterator i;
-    for (i = cross_buffer.begin(Now()); i != cross_buffer.end(); ++i)
+    for (i = cross_buffer.begin(Now()); i != cross_buffer.end(); ++i) {
         destination.push_back(Input(*i));
-    reductionCS.leave();
+    }
 }
 }

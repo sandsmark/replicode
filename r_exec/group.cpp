@@ -483,14 +483,11 @@ bool Group::load(View *view, Code *object) {
     return true;
 }
 
-void Group::update(uint64 planned_time) {
-
-    enter();
-
+void Group::update(uint64 planned_time)
+{
+    std::lock_guard<std::mutex> guard(mutex);
     if (this != _Mem::Get()->get_root() && views.size() == 0) {
-
         invalidate();
-        leave();
         return;
     }
 
@@ -596,8 +593,6 @@ void Group::update(uint64 planned_time) {
         P<TimeJob> j = new UpdateJob(this, planned_time + get_upr()*Utils::GetBasePeriod());
         _Mem::Get()->pushTimeJob(j);
     }
-
-    leave();
 
 //if(get_secondary_group()!=NULL)
 //if(this==_Mem::Get()->get_stdin())
@@ -773,9 +768,9 @@ void Group::_propagate_sln(Code *object, double change, double source_sln_thr, s
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Group::inject_hlps(std::vector<View *> &views) {
-
-    enter();
+void Group::inject_hlps(std::vector<View *> &views)
+{
+    std::lock_guard<std::mutex> guard(mutex);
 
     std::vector<View *>::const_iterator view;
     for (view = views.begin(); view != views.end(); ++view) {
@@ -813,13 +808,11 @@ void Group::inject_hlps(std::vector<View *> &views) {
                 (*view)->controller->_take_input(*v); // view will be copied.
         }
     }
-
-    leave();
 }
 
-void Group::inject(View *view) { // the view can hold anything but groups and notifications.
-
-    enter();
+void Group::inject(View *view)
+{
+    std::lock_guard<std::mutex> guard(mutex);
 
     Atom a = view->object->code(0);
     uint64 now = Now();
@@ -855,7 +848,6 @@ void Group::inject(View *view) { // the view can hold anything but groups and no
         std::string str = Utils::GetString<Code>(view->object, ICPP_PGM_NAME);
         Controller *c = CPPPrograms::New(str, view);
         if (!c) {
-            leave();
             return;
         }
         view->controller = c;
@@ -938,7 +930,6 @@ void Group::inject(View *view) { // the view can hold anything but groups and no
         inject_reduction_jobs(view);
     }
 
-    leave();
 //if(get_oid()==2)
 // std::cout<<Utils::RelativeTime(Now())<<" stdin <- "<<view->object->get_oid()<<std::endl;
 }
@@ -980,7 +971,7 @@ void Group::inject_existing_object(View *view) { // the view can hold anything b
 
         object->rel_views();
 
-        enter();
+        std::lock_guard<std::mutex> guard(mutex);
 
         pending_operations.push_back(new Group::Set(existing_view->get_oid(), VIEW_RES, view->get_res()));
         pending_operations.push_back(new Group::Set(existing_view->get_oid(), VIEW_SLN, view->get_sln()));
@@ -1010,14 +1001,12 @@ void Group::inject_existing_object(View *view) { // the view can hold anything b
             newly_salient_views.insert(view);
             inject_reduction_jobs(view);
         }
-
-        leave();
     }
 }
 
-void Group::inject_group(View *view) { // the view holds a group.
-
-    enter();
+void Group::inject_group(View *view)
+{
+    std::lock_guard<std::mutex> guard(mutex);
 
     group_views[view->get_oid()] = view;
 
@@ -1029,8 +1018,6 @@ void Group::inject_group(View *view) { // the view holds a group.
         inject_reduction_jobs(view);
     }
 
-    leave();
-
     if (((Group *)view->object)->get_upr() > 0) // inject the next update job for the group.
         _Mem::Get()->pushTimeJob(new UpdateJob((Group *)view->object, ((Group *)view->object)->get_next_upr_time(Now())));
 
@@ -1040,7 +1027,7 @@ void Group::inject_group(View *view) { // the view holds a group.
 void Group::inject_notification(View *view, bool lock) {
 
     if (lock)
-        enter();
+        mutex.lock();
 
     notification_views[view->get_oid()] = view;
 
@@ -1058,7 +1045,7 @@ void Group::inject_notification(View *view, bool lock) {
         inject_reduction_jobs(view);
 
     if (lock)
-        leave();
+        mutex.unlock();
 }
 
 void Group::inject_reduction_jobs(View *view) { // group is assumed to be c-salient; already protected.

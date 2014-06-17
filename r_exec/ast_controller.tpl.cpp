@@ -46,8 +46,8 @@ template<class U> ASTController<U>::ASTController(AutoFocusController *auto_focu
 template<class U> ASTController<U>::~ASTController() {
 }
 
-template<class U> void ASTController<U>::take_input(r_exec::View *input) {
-
+template<class U> void ASTController<U>::take_input(r_exec::View *input)
+{
     if (is_invalidated())
         return;
 
@@ -62,8 +62,8 @@ template<class U> void ASTController<U>::take_input(r_exec::View *input) {
     }
 }
 
-template<class U> void ASTController<U>::reduce(View *input) {
-
+template<class U> void ASTController<U>::reduce(View *input)
+{
     if (is_invalidated())
         return;
 
@@ -72,12 +72,10 @@ template<class U> void ASTController<U>::reduce(View *input) {
         return;
     }
 //uint64 t0=Now();
-    reductionCS.enter();
+    std::lock_guard<std::mutex> guard(m_reductionMutex);
 
-    if (input_object == target) {
-
+    if (input_object == target){
         tpx->store_input(input);
-        reductionCS.leave();
         return;
     }
 
@@ -93,14 +91,11 @@ template<class U> void ASTController<U>::reduce(View *input) {
         case MATCH_FAILURE:
             break;
         }
-
-        reductionCS.leave();
         return;
     }
 //std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got "<<input->object->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
     ((U *)this)->reduce(input, input_object);
 
-    reductionCS.leave();
 //uint64 t1=Now();
 //std::cout<<"ASTC: "<<t1-t0<<std::endl;
 }
