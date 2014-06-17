@@ -647,6 +647,7 @@ Timer::Timer() {
     sa.sa_sigaction = timer_signal_handler;
     sigaction(SIGRTMIN, &sa, NULL);
 
+    memset(&timer_event, 0, sizeof(sigevent));
     timer_event.sigev_notify = SIGEV_SIGNAL;
     timer_event.sigev_signo = SIGRTMIN;
     timer_event.sigev_value.sival_ptr = (void *)&sematex;
