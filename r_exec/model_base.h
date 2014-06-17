@@ -56,16 +56,16 @@ private:
     class MEntry {
     private:
         static bool Match(Code *lhs, Code *rhs);
-        static uint32 _ComputeHashCode(_Fact *component); // use for lhs/rhs.
+        static uint64 _ComputeHashCode(_Fact *component); // use for lhs/rhs.
     public:
-        static uint32 ComputeHashCode(Code *mdl, bool packed);
+        static uint64 ComputeHashCode(Code *mdl, bool packed);
 
         MEntry();
         MEntry(Code *mdl, bool packed);
 
         P<Code> mdl;
         uint64 touch_time; // last time the mdl was successfully compared to.
-        uint32 hash_code;
+        uint64 hash_code;
 
         bool match(const MEntry &e) const;
 

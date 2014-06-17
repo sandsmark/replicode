@@ -54,8 +54,8 @@ private:
 
     Class current_class; // the sys-class currently parsed.
     ImageObject *current_object; // the sys-object currently parsed.
-    uint32 current_object_index; // ordinal of the current sys-object in the code segment.
-    int32 current_view_index; // ordinal of a view in the sys-object's view set.
+    uint64 current_object_index; // ordinal of the current sys-object in the code segment.
+    int64 current_view_index; // ordinal of a view in the sys-object's view set.
 
     r_comp::Image *_image;
     r_comp::Metadata *_metadata;
@@ -117,7 +117,7 @@ private:
     bool global_reference(RepliStruct *node, uint16 &index, const ReturnType t); // no conformance: return type==ANY.
     bool hlp_reference(RepliStruct *node, uint16 &index);
     bool this_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t); // ex: this.res.
-    bool local_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t, uint16 &cast_opcode); // ex: p.res where p is a label/variable declared within the object; cast_opcode=0x0FFF if no cast.
+    bool local_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t, uint32_t &cast_opcode); // ex: p.res where p is a label/variable declared within the object; cast_opcode=0x0FFF if no cast.
     bool global_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t); // ex: p.res where p is a label/variable declared outside the object.
     bool object(RepliStruct *node, Class &p); // looks first in sys_objects, then in objects.
     bool object(RepliStruct *node, const Class &p); // must conform to p.

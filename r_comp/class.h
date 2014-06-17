@@ -53,7 +53,7 @@ public:
     bool is_pattern(Metadata *metadata) const;
     bool is_fact(Metadata *metadata) const;
     bool get_member_index(Metadata *metadata, std::string &name, uint16 &index, Class *&p) const;
-    std::string get_member_name(uint32 index); // for decompilation
+    std::string get_member_name(uint64 index); // for decompilation
     ReturnType get_member_type(const uint16 index);
     Class *get_member_class(Metadata *metadata, const std::string &name);
     Atom atom;

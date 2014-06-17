@@ -94,14 +94,14 @@ void CSTOverlay::inject_production() {
             ((CSTController *)controller)->inject_prediction(f_p_f_icst, lowest_cfd, time_to_live); // inject a f->pred->icst in the primary group, no rdx.
 
             OUTPUT(CST_OUT) << Utils::RelativeTime(Now()) << "				" << f_p_f_icst->get_oid() << " pred icst[" << controller->getObject()->get_oid() << "][";
-            for (uint32 i = 0; i < inputs.size(); ++i)
+            for (uint64 i = 0; i < inputs.size(); ++i)
                 OUTPUT(CST_OUT) << " " << inputs[i]->get_oid();
             OUTPUT(CST_OUT) << std::endl;
         } else {
             ((CSTController *)controller)->inject_icst(f_icst, lowest_cfd, time_to_live); // inject f->icst in the primary and secondary groups, and in the output groups.
 
             OUTPUT(CST_OUT) << Utils::RelativeTime(Now()) << "				" << f_icst->get_oid() << " icst[" << controller->getObject()->get_oid() << "][";
-            for (uint32 i = 0; i < inputs.size(); ++i)
+            for (uint64 i = 0; i < inputs.size(); ++i)
                 OUTPUT(CST_OUT) << " " << inputs[i]->get_oid();
             OUTPUT(CST_OUT) << "]" << std::endl;
         }
@@ -131,7 +131,7 @@ void CSTOverlay::update(HLPBindingMap *map, _Fact *input, _Fact *bound_pattern) 
 
     bindings = map;
     inputs.push_back(input);
-    float32 last_cfd;
+    double last_cfd;
     Pred *prediction = input->get_pred();
     if (prediction) {
 
@@ -350,7 +350,7 @@ void CSTController::abduce(HLPBindingMap *bm, Fact *super_goal) { // super_goal 
     _Fact *super_goal_target = g->get_target();
     bool opposite = (super_goal_target->is_anti_fact());
 
-    float32 confidence = super_goal_target->get_cfd();
+    double confidence = super_goal_target->get_cfd();
 
     Sim *sim = g->sim;
 
@@ -389,7 +389,7 @@ void CSTController::inject_goal(HLPBindingMap *bm,
                                 _Fact *sub_goal_target, // f1.
                                 Sim *sim,
                                 uint64 now,
-                                float32 confidence,
+                                double confidence,
                                 Code *group) const {
 
     sub_goal_target->set_cfd(confidence);
@@ -429,14 +429,14 @@ Fact *CSTController::get_f_icst(HLPBindingMap *bindings, std::vector<P<_Fact> > 
     return f_icst;
 }
 
-bool CSTController::inject_prediction(Fact *prediction, float32 confidence, uint64 time_to_live) const { // prediction: f->pred->f->target.
+bool CSTController::inject_prediction(Fact *prediction, double confidence, uint64 time_to_live) const { // prediction: f->pred->f->target.
 
     uint64 now = Now();
     Group *primary_host = get_host();
-    float32 sln_thr = primary_host->code(GRP_SLN_THR).asFloat();
+    double sln_thr = primary_host->code(GRP_SLN_THR).asDouble();
     if (confidence > sln_thr) { // do not inject if cfd is too low.
 
-        int32 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
+        int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
         View *view = new View(View::SYNC_ONCE, now, confidence, resilience, primary_host, primary_host, prediction); // SYNC_ONCE,res=resilience.
         _Mem::Get()->inject(view);
         return true;
@@ -444,11 +444,11 @@ bool CSTController::inject_prediction(Fact *prediction, float32 confidence, uint
         return false;
 }
 
-void CSTController::inject_icst(Fact *production, float32 confidence, uint64 time_to_live) const { // production: f->icst.
+void CSTController::inject_icst(Fact *production, double confidence, uint64 time_to_live) const { // production: f->icst.
 
     uint64 now = Now();
     Group *primary_host = get_host();
-    float32 sln_thr = primary_host->code(GRP_SLN_THR).asFloat();
+    double sln_thr = primary_host->code(GRP_SLN_THR).asDouble();
     if (confidence > sln_thr) {
 
         View *view = new View(View::SYNC_ONCE, now, 1, Utils::GetResilience(now, time_to_live, primary_host->get_upr()*Utils::GetBasePeriod()), primary_host, primary_host, production);
@@ -462,7 +462,7 @@ void CSTController::inject_icst(Fact *production, float32 confidence, uint64 tim
         }
     }
 
-    sln_thr = secondary_host->code(GRP_SLN_THR).asFloat();
+    sln_thr = secondary_host->code(GRP_SLN_THR).asDouble();
     if (confidence > sln_thr) {
 
         View *view = new View(View::SYNC_ONCE, now, 1, Utils::GetResilience(now, time_to_live, secondary_host->get_upr()*Utils::GetBasePeriod()), secondary_host, primary_host, production);

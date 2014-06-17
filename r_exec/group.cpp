@@ -53,9 +53,9 @@ inline bool Group::is_eligible_input(View *view) {
            get_c_act() > get_c_act_thr(); // active ipgm/icpp_pgm/cst/mdl in a c-salient and c-active group.
 }
 
-View *Group::get_view(uint32 OID) {
+View *Group::get_view(uint64 OID) {
 
-    UNORDERED_MAP<uint32, P<View> >::const_iterator it = other_views.find(OID);
+    UNORDERED_MAP<uint64, P<View> >::const_iterator it = other_views.find(OID);
     if (it != other_views.end())
         return it->second;
     it = group_views.find(OID);
@@ -131,17 +131,17 @@ void Group::update_stats() {
         --decay_periods_to_go;
 
 // auto restart: iff dcy_auto==1.
-    if (code(GRP_DCY_AUTO).asFloat()) {
-
-        float32 period = code(GRP_DCY_PRD).asFloat();
-        if (decay_periods_to_go <= 0 && period > 0)
+    if (Utils::Equal(code(GRP_DCY_AUTO).asDouble(), 1)) {
+        double period = code(GRP_DCY_PRD).asDouble();
+        if (decay_periods_to_go <= 0 && period > 0) {
             decay_periods_to_go = period;
+        }
     }
 
     if (sln_updates)
-        avg_sln = avg_sln / (float32)sln_updates;
+        avg_sln = avg_sln / (double)sln_updates;
     if (act_updates)
-        avg_act = avg_act / (float32)act_updates;
+        avg_act = avg_act / (double)act_updates;
 
     code(GRP_AVG_SLN) = Atom::Float(avg_sln);
     code(GRP_AVG_ACT) = Atom::Float(avg_act);
@@ -154,7 +154,7 @@ void Group::update_stats() {
 
         FOR_ALL_NON_NTF_VIEWS_BEGIN(this, v)
 
-        float32 change = v->second->update_sln_delta();
+        double change = v->second->update_sln_delta();
         if (fabs(change) > get_sln_chg_thr()) {
 
             uint16 ntf_grp_count = get_ntf_grp_count();
@@ -169,7 +169,7 @@ void Group::update_stats() {
 
         FOR_ALL_NON_NTF_VIEWS_BEGIN(this, v)
 
-        float32 change = v->second->update_act_delta();
+        double change = v->second->update_act_delta();
         if (fabs(change) > get_act_chg_thr()) {
 
             uint16 ntf_grp_count = get_ntf_grp_count();
@@ -190,22 +190,22 @@ void Group::reset_decay_values() {
     decay_target = -1;
 }
 
-float32 Group::update_sln_thr() {
+double Group::update_sln_thr() {
 
-    float32 percentage = code(GRP_DCY_PER).asFloat();
-    float32 period = code(GRP_DCY_PRD).asFloat();
+    double percentage = code(GRP_DCY_PER).asDouble();
+    double period = code(GRP_DCY_PRD).asDouble();
     if (percentage == 0 || period == 0)
         reset_decay_values();
     else {
 
-        float32 percentage_per_period = percentage / period;
-        if (percentage_per_period != decay_percentage_per_period || code(GRP_DCY_TGT).asFloat() != decay_target) { // recompute decay.
+        double percentage_per_period = percentage / period;
+        if (percentage_per_period != decay_percentage_per_period || code(GRP_DCY_TGT).asDouble() != decay_target) { // recompute decay.
 
             decay_periods_to_go = period;
             decay_percentage_per_period = percentage_per_period;
-            decay_target = code(GRP_DCY_TGT).asFloat();
+            decay_target = code(GRP_DCY_TGT).asDouble();
 
-            if (code(GRP_DCY_TGT).asFloat() == 0) {
+            if (code(GRP_DCY_TGT).asDouble() == 0) {
 
                 sln_thr_decay = 0;
                 sln_decay = percentage_per_period;
@@ -225,7 +225,7 @@ float32 Group::update_sln_thr() {
 
     if (sln_thr_changes) {
 
-        float32 new_sln_thr = get_sln_thr() + acc_sln_thr / sln_thr_changes;
+        double new_sln_thr = get_sln_thr() + acc_sln_thr / sln_thr_changes;
         if (new_sln_thr < 0)
             new_sln_thr = 0;
         else if (new_sln_thr > 1)
@@ -237,11 +237,11 @@ float32 Group::update_sln_thr() {
     return get_sln_thr();
 }
 
-float32 Group::update_act_thr() {
+double Group::update_act_thr() {
 
     if (act_thr_changes) {
 
-        float32 new_act_thr = get_act_thr() + acc_act_thr / act_thr_changes;
+        double new_act_thr = get_act_thr() + acc_act_thr / act_thr_changes;
         if (new_act_thr < 0)
             new_act_thr = 0;
         else if (new_act_thr > 1)
@@ -253,11 +253,11 @@ float32 Group::update_act_thr() {
     return get_act_thr();
 }
 
-float32 Group::update_vis_thr() {
+double Group::update_vis_thr() {
 
     if (vis_thr_changes) {
 
-        float32 new_vis_thr = get_vis_thr() + acc_vis_thr / vis_thr_changes;
+        double new_vis_thr = get_vis_thr() + acc_vis_thr / vis_thr_changes;
         if (new_vis_thr < 0)
             new_vis_thr = 0;
         else if (new_vis_thr > 1)
@@ -269,11 +269,11 @@ float32 Group::update_vis_thr() {
     return get_vis_thr();
 }
 
-float32 Group::update_c_sln() {
+double Group::update_c_sln() {
 
     if (c_sln_changes) {
 
-        float32 new_c_sln = get_c_sln() + acc_c_sln / c_sln_changes;
+        double new_c_sln = get_c_sln() + acc_c_sln / c_sln_changes;
         if (new_c_sln < 0)
             new_c_sln = 0;
         else if (new_c_sln > 1)
@@ -285,11 +285,11 @@ float32 Group::update_c_sln() {
     return get_c_sln();
 }
 
-float32 Group::update_c_act() {
+double Group::update_c_act() {
 
     if (c_act_changes) {
 
-        float32 new_c_act = get_c_act() + acc_c_act / c_act_changes;
+        double new_c_act = get_c_act() + acc_c_act / c_act_changes;
         if (new_c_act < 0)
             new_c_act = 0;
         else if (new_c_act > 1)
@@ -301,11 +301,11 @@ float32 Group::update_c_act() {
     return get_c_act();
 }
 
-float32 Group::update_c_sln_thr() {
+double Group::update_c_sln_thr() {
 
     if (c_sln_thr_changes) {
 
-        float32 new_c_sln_thr = get_c_sln_thr() + acc_c_sln_thr / c_sln_thr_changes;
+        double new_c_sln_thr = get_c_sln_thr() + acc_c_sln_thr / c_sln_thr_changes;
         if (new_c_sln_thr < 0)
             new_c_sln_thr = 0;
         else if (new_c_sln_thr > 1)
@@ -317,11 +317,11 @@ float32 Group::update_c_sln_thr() {
     return get_c_sln_thr();
 }
 
-float32 Group::update_c_act_thr() {
+double Group::update_c_act_thr() {
 
     if (c_act_thr_changes) {
 
-        float32 new_c_act_thr = get_c_act_thr() + acc_c_act_thr / c_act_thr_changes;
+        double new_c_act_thr = get_c_act_thr() + acc_c_act_thr / c_act_thr_changes;
         if (new_c_act_thr < 0)
             new_c_act_thr = 0;
         else if (new_c_act_thr > 1)
@@ -333,7 +333,7 @@ float32 Group::update_c_act_thr() {
     return get_c_act_thr();
 }
 
-float32 Group::update_res(View *v) {
+double Group::update_res(View *v) {
 
     if (v->object->is_invalidated())
         return 0;
@@ -347,12 +347,12 @@ float32 Group::update_res(View *v) {
     return res;
 }
 
-float32 Group::update_sln(View *v) {
+double Group::update_sln(View *v) {
 
     if (decay_periods_to_go > 0 && sln_decay != 0)
         v->mod_sln(v->get_sln()*sln_decay);
 
-    float32 sln = v->update_sln(get_low_sln_thr(), get_high_sln_thr());
+    double sln = v->update_sln(get_low_sln_thr(), get_high_sln_thr());
     avg_sln += sln;
     if (sln > high_sln)
         high_sln = sln;
@@ -378,9 +378,9 @@ float32 Group::update_sln(View *v) {
     return sln;
 }
 
-float32 Group::update_act(View *v) {
+double Group::update_act(View *v) {
 
-    float32 act = v->update_act(get_low_act_thr(), get_high_act_thr());
+    double act = v->update_act(get_low_act_thr(), get_high_act_thr());
     avg_act += act;
     if (act > high_act)
         high_act = act;
@@ -471,7 +471,7 @@ bool Group::load(View *view, Code *object) {
             c->gain_activation();
         break;
     } case Atom::MARKER: // populate the marker set of the referenced objects.
-        for (uint32 i = 0; i < object->references_size(); ++i)
+        for (uint64 i = 0; i < object->references_size(); ++i)
             object->get_reference(i)->markers.push_back(object);
         other_views[view->get_oid()] = view;
         break;
@@ -502,7 +502,7 @@ void Group::update(uint64 planned_time) {
     newly_salient_views.clear();
 
 // execute pending operations.
-    for (uint32 i = 0; i < pending_operations.size(); ++i) {
+    for (uint64 i = 0; i < pending_operations.size(); ++i) {
 
         pending_operations[i]->execute(this);
         delete pending_operations[i];
@@ -531,7 +531,7 @@ void Group::update(uint64 planned_time) {
             continue;
         }
 
-        float32 res = update_res(v->second); // update resilience: decrement res by 1 in addition to the accumulated changes.
+        double res = update_res(v->second); // update resilience: decrement res by 1 in addition to the accumulated changes.
         if (res > 0) {
 
             _update_saliency(&state, v->second); // apply decay.
@@ -569,7 +569,7 @@ void Group::update(uint64 planned_time) {
 
     if (state.is_c_active && state.is_c_salient) { // build signaling jobs for new ipgms.
 
-        for (uint32 i = 0; i < new_controllers.size(); ++i) {
+        for (uint64 i = 0; i < new_controllers.size(); ++i) {
 
             switch (new_controllers[i]->getObject()->code(0).getDescriptor()) {
             case Atom::INSTANTIATED_ANTI_PROGRAM: { // inject signaling jobs for |ipgm (tsc).
@@ -606,9 +606,9 @@ void Group::update(uint64 planned_time) {
 
 void Group::_update_saliency(GroupState *state, View *view) {
 
-    float32 view_old_sln = view->get_sln();
+    double view_old_sln = view->get_sln();
     bool wiew_was_salient = view_old_sln > state->former_sln_thr;
-    float32 view_new_sln = update_sln(view);
+    double view_new_sln = update_sln(view);
     bool wiew_is_salient = view_new_sln > get_sln_thr();
 
     if (state->is_c_salient) {
@@ -709,7 +709,7 @@ void Group::_update_activation(GroupState *state, View *view) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Group::_initiate_sln_propagation(Code *object, float32 change, float32 source_sln_thr) const {
+void Group::_initiate_sln_propagation(Code *object, double change, double source_sln_thr) const {
 
     if (fabs(change) > object->get_psln_thr()) {
 
@@ -731,12 +731,12 @@ void Group::_initiate_sln_propagation(Code *object, float32 change, float32 sour
     }
 }
 
-void Group::_initiate_sln_propagation(Code *object, float32 change, float32 source_sln_thr, std::vector<Code *> &path) const {
+void Group::_initiate_sln_propagation(Code *object, double change, double source_sln_thr, std::vector<Code *> &path) const {
 
     if (fabs(change) > object->get_psln_thr()) {
 
 // prevent loops.
-        for (uint32 i = 0; i < path.size(); ++i)
+        for (uint64 i = 0; i < path.size(); ++i)
             if (path[i] == object)
                 return;
         path.push_back(object);
@@ -754,13 +754,13 @@ void Group::_initiate_sln_propagation(Code *object, float32 change, float32 sour
     }
 }
 
-void Group::_propagate_sln(Code *object, float32 change, float32 source_sln_thr, std::vector<Code *> &path) const {
+void Group::_propagate_sln(Code *object, double change, double source_sln_thr, std::vector<Code *> &path) const {
 
     if (object == _Mem::Get()->get_root())
         return;
 
 // prevent loops.
-    for (uint32 i = 0; i < path.size(); ++i)
+    for (uint64 i = 0; i < path.size(); ++i)
         if (path[i] == object)
             return;
     path.push_back(object);
@@ -947,7 +947,7 @@ void Group::inject_new_object(View *view) { // the view can hold anything but gr
 //uint64 t0=Now();
     switch (view->object->code(0).getDescriptor()) {
     case Atom::MARKER: // the marker does not exist yet: add it to the mks of its references.
-        for (uint32 i = 0; i < view->object->references_size(); ++i) {
+        for (uint64 i = 0; i < view->object->references_size(); ++i) {
 
             Code *ref = view->object->get_reference(i);
             ref->acq_markers();
@@ -1044,7 +1044,7 @@ void Group::inject_notification(View *view, bool lock) {
 
     notification_views[view->get_oid()] = view;
 
-    for (uint32 i = 0; i < view->object->references_size(); ++i) {
+    for (uint64 i = 0; i < view->object->references_size(); ++i) {
 
         Code *ref = view->object->get_reference(i);
         ref->acq_markers();
@@ -1174,7 +1174,7 @@ void Group::delete_view(View *v) {
         }
 }
 
-void Group::delete_view(UNORDERED_MAP<uint32, P<View> >::const_iterator &v) {
+void Group::delete_view(UNORDERED_MAP<uint64, P<View> >::const_iterator &v) {
 
     if (v->second->isNotification())
         v = notification_views.erase(v);
@@ -1252,7 +1252,7 @@ void Group::inject_secondary_mdl_controller(View *view) {
 
 uint64 Group::get_next_upr_time(uint64 now) const {
 
-    uint32 __upr = get_upr();
+    uint64 __upr = get_upr();
     if (__upr == 0)
         return Utils::MaxTime;
     uint64 _upr = __upr * Utils::GetBasePeriod();
@@ -1262,7 +1262,7 @@ uint64 Group::get_next_upr_time(uint64 now) const {
 
 uint64 Group::get_prev_upr_time(uint64 now) const {
 
-    uint32 __upr = get_upr();
+    uint64 __upr = get_upr();
     if (__upr == 0)
         return Utils::MaxTime;
     uint64 _upr = __upr * Utils::GetBasePeriod();

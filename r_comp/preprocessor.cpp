@@ -61,7 +61,7 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
 
     root->reset(); // trims root from previously preprocessed objects.
 
-    uint32 a = 0, b = 0;
+    uint64 a = 0, b = 0;
     if (root->parse(&stream, a, b) < 0) {
         error = root->printError();
         stream.close();
@@ -73,7 +73,7 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
         return 0;
     }
 
-    int32 pass = 0, total = 0, count;
+    int64 pass = 0, total = 0, count;
     while ((count = root->process()) > 0) {
 
         total += count;
@@ -137,14 +137,14 @@ bool Preprocessor::isSet(std::string class_name)
 
 void Preprocessor::instantiateClass(RepliStruct *tpl_class, std::vector<RepliStruct *> &tpl_args, std::string &instantiated_class_name) {
 
-    static uint32 LastClassID = 0;
+    static uint64 LastClassID = 0;
 // remove the trailing [].
     std::string sset = "[]";
     instantiated_class_name = tpl_class->cmd;
     instantiated_class_name = instantiated_class_name.substr(0, instantiated_class_name.length() - sset.length());
 // append an ID to the tpl class name.
     char buffer[255];
-    sprintf(buffer, "%d", LastClassID++);
+    sprintf(buffer, "%lu", LastClassID++);
     instantiated_class_name += buffer;
 
     std::vector<StructureMember> members;

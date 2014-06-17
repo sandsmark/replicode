@@ -52,7 +52,7 @@ template<class C, class U> class Object:
 private:
     size_t hash_value;
 
-    volatile uint32 invalidated; // must be aligned on 32 bits.
+    volatile uint64 invalidated; // must be aligned on 32 bits.
 
     CriticalSection psln_thr_sem;
     CriticalSection views_sem;
@@ -73,7 +73,7 @@ public:
 
     void compute_hash_value();
 
-    float32 get_psln_thr();
+    double get_psln_thr();
 
     void acq_views() {
         views_sem.enter();
@@ -89,8 +89,8 @@ public:
     }
 
 // Target psln_thr only.
-    void set(uint16 member_index, float32 value);
-    void mod(uint16 member_index, float32 value);
+    void set(uint16 member_index, double value);
+    void mod(uint16 member_index, double value);
 
     View *get_view(Code *group, bool lock); // returns the found view if any, NULL otherwise.
 

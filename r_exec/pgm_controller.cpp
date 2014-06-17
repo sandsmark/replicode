@@ -111,7 +111,7 @@ void PGMController::take_input(r_exec::View *input) {
 void PGMController::reduce(r_exec::View *input) {
 
     r_code::list<P<Overlay> >::const_iterator o;
-//uint32 oid=input->object->get_oid();
+//uint64 oid=input->object->get_oid();
 //uint64 t=Now()-Utils::GetTimeReference();
 //std::cout<<Time::ToString_seconds(t)<<" got "<<oid<<" "<<input->get_sync()<<std::endl;
     if (tsc > 0) {

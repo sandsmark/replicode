@@ -114,7 +114,7 @@ thread_ret TDecompiler::Decompile(void *args) {
     thread_ret_val(0);
 }
 
-TDecompiler::TDecompiler(uint32 ostream_id, std::string header): _Object(), ostream_id(ostream_id), header(header), _thread(NULL), spawned(0) {
+TDecompiler::TDecompiler(uint64 ostream_id, std::string header): _Object(), ostream_id(ostream_id), header(header), _thread(NULL), spawned(0) {
 
     objects.reserve(ObjectsInitialSize);
 }
@@ -229,8 +229,8 @@ PipeOStream &PipeOStream::operator <<(std::string &s) {
     if (pipe_read == 0)
         return *this;
 
-    uint32 to_write = s.length();
-    uint32 written;
+    uint64 to_write = s.length();
+    uint64 written;
 
     WriteFile(pipe_write, s.c_str(), to_write, &written, NULL);
 
@@ -241,8 +241,8 @@ PipeOStream& PipeOStream::operator <<(const char *s) {
     if (pipe_read == 0)
         return *this;
 
-    uint32 to_write = strlen(s);
-    uint32 written;
+    uint64 to_write = strlen(s);
+    uint64 written;
 
     WriteFile(pipe_write, s, to_write, &written, NULL);
     return *this;

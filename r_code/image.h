@@ -82,12 +82,12 @@ namespace r_code {
 // class ImageImpl{
 // protected:
 // uin64 get_timestamp() const;
-// uint32 map_size() const;
-// uint32 code_size() const;
+// uint64 map_size() const;
+// uint64 code_size() const;
 // word32 *data(); // [object map|code segment|reloc segment]
 // public:
-// void *operator new(size_t,uint32 data_size);
-// ImageImpl(uint32 map_size,uint32 code_size);
+// void *operator new(size_t,uint64 data_size);
+// ImageImpl(uint64 map_size,uint64 code_size);
 // ~ImageImpl();
 // };
 
@@ -105,7 +105,7 @@ public:
 
     size_t get_size() const; // size of data in word32
     size_t getObjectCount() const;
-    uintptr_t *getObject(uint32 i); // points to the code size of the object; the first atom is at getObject()+2
+    uintptr_t *getObject(size_t i); // points to the code size of the object; the first atom is at getObject()+2
     uintptr_t *getCodeSegment(); // equals getObject(0)
     size_t getCodeSegmentSize() const;
 

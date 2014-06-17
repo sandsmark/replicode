@@ -65,7 +65,7 @@ bool Compile(const char* filename, string& error, bool compile_metadata = false)
 class r_exec_dll TDecompiler:
     public _Object {
 private:
-    static const uint32 ObjectsInitialSize = 16;
+    static const uint64 ObjectsInitialSize = 16;
     static thread_ret thread_function_call Decompile(void *args);
 
     class _Thread:
@@ -73,14 +73,14 @@ private:
     };
 
 
-    uint32 ostream_id; // 0 is std::cout.
+    uint64 ostream_id; // 0 is std::cout.
     std::string header;
     r_code::list<P<Code> > objects;
     _Thread *_thread;
-    volatile uint32 spawned;
+    volatile uint64 spawned;
 
 public:
-    TDecompiler(uint32 ostream_id, std::string header);
+    TDecompiler(uint64 ostream_id, std::string header);
     ~TDecompiler();
 
     void add_object(Code *object);

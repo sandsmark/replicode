@@ -150,7 +150,7 @@ void EInjectionJob::report(int64 lag) const {
 
 ////////////////////////////////////////////////////////////
 
-SaliencyPropagationJob::SaliencyPropagationJob(Code *o, float32 sln_change, float32 source_sln_thr, uint64 ijt): TimeJob(ijt), sln_change(sln_change), source_sln_thr(source_sln_thr) {
+SaliencyPropagationJob::SaliencyPropagationJob(Code *o, double sln_change, double source_sln_thr, uint64 ijt): TimeJob(ijt), sln_change(sln_change), source_sln_thr(source_sln_thr) {
 
     object = o;
 }
@@ -179,7 +179,7 @@ bool ShutdownTimeCore::update(uint64 &next_target) {
 
 ////////////////////////////////////////////////////////////
 
-PerfSamplingJob::PerfSamplingJob(uint64 start, uint32 period): TimeJob(start), period(period) {
+PerfSamplingJob::PerfSamplingJob(uint64 start, uint64 period): TimeJob(start), period(period) {
 }
 
 bool PerfSamplingJob::update(uint64 &next_target) {

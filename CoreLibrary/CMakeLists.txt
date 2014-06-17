@@ -6,7 +6,6 @@ set(CoreLibrary_SRC
 
 set(CoreLibrary_HDR
     base.h
-    pipe.h
     types.h
     utils.h
     xml_parser.h

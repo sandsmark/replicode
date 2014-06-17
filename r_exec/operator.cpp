@@ -71,10 +71,10 @@ bool rnd(const Context &context, uint16 &index) {
         return false;
     }
 
-    /*Random r;float32 rng=range[0].asFloat();
-    float32 result=r(range[0].asFloat());
+    /*Random r;double rng=range[0].asFloat();
+    double result=r(range[0].asFloat());
     result/=ULONG_MAX;*/
-    float32 result = (((float32)(rand() % 100)) / 100) * range[0].asFloat();
+    double result = (((double)(rand() % 100)) / 100) * range[0].asDouble();
     index = context.setAtomicResult(Atom::Float(result));
     return true;
 }
@@ -111,7 +111,7 @@ bool gtr(const Context &context, uint16 &index) {
 
         if (rhs[0].isFloat()) {
 
-            bool r = lhs[0].asFloat() > rhs[0].asFloat();
+            bool r = lhs[0].asDouble() > rhs[0].asDouble();
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
         }
@@ -140,7 +140,7 @@ bool lsr(const Context &context, uint16 &index) {
 
         if (rhs[0].isFloat()) {
 
-            bool r = lhs[0].asFloat() < rhs[0].asFloat();
+            bool r = lhs[0].asDouble() < rhs[0].asDouble();
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
         }
@@ -169,7 +169,7 @@ bool gte(const Context &context, uint16 &index) {
 
         if (rhs[0].isFloat()) {
 
-            bool r = lhs[0].asFloat() >= rhs[0].asFloat();
+            bool r = lhs[0].asDouble() >= rhs[0].asDouble();
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
         }
@@ -198,7 +198,7 @@ bool lse(const Context &context, uint16 &index) {
 
         if (rhs[0].isFloat()) {
 
-            bool r = lhs[0].asFloat() <= rhs[0].asFloat();
+            bool r = lhs[0].asDouble() <= rhs[0].asDouble();
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
         }
@@ -239,13 +239,13 @@ bool add(const Context &context, uint16 &index) {
                 return true;
             }
 
-            index = context.setAtomicResult(Atom::Float(lhs[0].asFloat() + rhs[0].asFloat()));
+            index = context.setAtomicResult(Atom::Float(lhs[0].asDouble() + rhs[0].asDouble()));
             return true;
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
 
             if (lhs[0] != Atom::PlusInfinity()) {
 
-                index = context.setTimestampResult(Utils::GetTimestamp(&rhs[0]) + lhs[0].asFloat());
+                index = context.setTimestampResult(Utils::GetTimestamp(&rhs[0]) + lhs[0].asDouble());
                 return true;
             }
         }
@@ -259,7 +259,7 @@ bool add(const Context &context, uint16 &index) {
 
             if (rhs[0] != Atom::PlusInfinity()) {
 
-                index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) + rhs[0].asFloat());
+                index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) + rhs[0].asDouble());
                 return true;
             }
         }
@@ -292,7 +292,7 @@ bool sub(const Context &context, uint16 &index) {
                 return true;
             }
 
-            index = context.setAtomicResult(Atom::Float(lhs[0].asFloat() - rhs[0].asFloat()));
+            index = context.setAtomicResult(Atom::Float(lhs[0].asDouble() - rhs[0].asDouble()));
             return true;
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
@@ -305,7 +305,7 @@ bool sub(const Context &context, uint16 &index) {
 
             if (rhs[0] != Atom::PlusInfinity()) {
 
-                index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) - rhs[0].asFloat());
+                index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) - rhs[0].asDouble());
                 return true;
             }
         }
@@ -334,13 +334,13 @@ bool mul(const Context &context, uint16 &index) {
                     return true;
                 }
 
-                if (rhs[0].asFloat() > 0) {
+                if (rhs[0].asDouble() > 0) {
 
                     index = context.setAtomicResult(Atom::PlusInfinity());
                     return true;
                 }
 
-                if (rhs[0].asFloat() <= 0) {
+                if (rhs[0].asDouble() <= 0) {
 
                     index = context.setAtomicResult(Atom::Float(0));
                     return true;
@@ -349,31 +349,31 @@ bool mul(const Context &context, uint16 &index) {
 
             if (rhs[0] == Atom::PlusInfinity()) {
 
-                if (lhs[0].asFloat() > 0) {
+                if (lhs[0].asDouble() > 0) {
 
                     index = context.setAtomicResult(Atom::PlusInfinity());
                     return true;
                 }
 
-                if (lhs[0].asFloat() <= 0) {
+                if (lhs[0].asDouble() <= 0) {
 
                     index = context.setAtomicResult(Atom::Float(0));
                     return true;
                 }
             }
 
-            index = context.setAtomicResult(Atom::Float(lhs[0].asFloat() * rhs[0].asFloat()));
+            index = context.setAtomicResult(Atom::Float(lhs[0].asDouble() * rhs[0].asDouble()));
             return true;
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
 
-            index = context.setAtomicResult(Atom::Float(Utils::GetTimestamp(&rhs[0]) * lhs[0].asFloat()));
+            index = context.setAtomicResult(Atom::Float(Utils::GetTimestamp(&rhs[0]) * lhs[0].asDouble()));
             return true;
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
 
         if (rhs[0].isFloat()) {
 
-            index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) * rhs[0].asFloat());
+            index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) * rhs[0].asDouble());
             return true;
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
 
@@ -397,7 +397,7 @@ bool div(const Context &context, uint16 &index) {
 
         if (rhs[0].isFloat()) {
 
-            if (rhs[0].asFloat() != 0) {
+            if (rhs[0].asDouble() != 0) {
 
                 if (lhs[0] == Atom::PlusInfinity()) {
 
@@ -407,13 +407,13 @@ bool div(const Context &context, uint16 &index) {
                         return true;
                     }
 
-                    if (rhs[0].asFloat() > 0) {
+                    if (rhs[0].asDouble() > 0) {
 
                         index = context.setAtomicResult(Atom::PlusInfinity());
                         return true;
                     }
 
-                    if (rhs[0].asFloat() <= 0) {
+                    if (rhs[0].asDouble() <= 0) {
 
                         index = context.setAtomicResult(Atom::Float(0));
                         return true;
@@ -422,20 +422,20 @@ bool div(const Context &context, uint16 &index) {
 
                 if (rhs[0] == Atom::PlusInfinity()) {
 
-                    if (lhs[0].asFloat() > 0) {
+                    if (lhs[0].asDouble() > 0) {
 
                         index = context.setAtomicResult(Atom::PlusInfinity());
                         return true;
                     }
 
-                    if (lhs[0].asFloat() <= 0) {
+                    if (lhs[0].asDouble() <= 0) {
 
                         index = context.setAtomicResult(Atom::Float(0));
                         return true;
                     }
                 }
 
-                index = context.setAtomicResult(Atom::Float(lhs[0].asFloat() / rhs[0].asFloat()));
+                index = context.setAtomicResult(Atom::Float(lhs[0].asDouble() / rhs[0].asDouble()));
                 return true;
             }
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
@@ -443,7 +443,7 @@ bool div(const Context &context, uint16 &index) {
             float64 rhs_t = (float64)Utils::GetTimestamp(&rhs[0]);
             if (rhs_t != 0) {
 
-                index = context.setAtomicResult(Atom::Float(lhs[0].asFloat() / rhs_t));
+                index = context.setAtomicResult(Atom::Float(lhs[0].asDouble() / rhs_t));
                 return true;
             }
         }
@@ -451,10 +451,10 @@ bool div(const Context &context, uint16 &index) {
 
         if (rhs[0].isFloat()) {
 
-            if (rhs[0].asFloat() != 0) {
+            if (rhs[0].asDouble() != 0) {
 
                 float64 lhs_t = (float64)Utils::GetTimestamp(&lhs[0]);
-                index = context.setTimestampResult(lhs_t / rhs[0].asFloat());
+                index = context.setTimestampResult(lhs_t / rhs[0].asDouble());
                 return true;
             }
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
@@ -484,7 +484,7 @@ bool dis(const Context &context, uint16 &index) {
 
         if (rhs[0].isFloat()) {
 
-            index = context.setAtomicResult(Atom::Float(fabs(lhs[0].asFloat() - rhs[0].asFloat())));
+            index = context.setAtomicResult(Atom::Float(fabs(lhs[0].asDouble() - rhs[0].asDouble())));
             return true;
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
@@ -510,9 +510,9 @@ bool ln(const Context &context, uint16 &index) {
 
     if (arg[0].isFloat()) {
 
-        if (arg[0].asFloat() != 0) {
+        if (arg[0].asDouble() != 0) {
 
-            index = context.setAtomicResult(Atom::Float(::log(arg[0].asFloat())));
+            index = context.setAtomicResult(Atom::Float(::log(arg[0].asDouble())));
             return true;
         }
     }
@@ -529,7 +529,7 @@ bool exp(const Context &context, uint16 &index) {
 
     if (arg[0].isFloat()) {
 
-        index = context.setAtomicResult(Atom::Float(::exp(arg[0].asFloat())));
+        index = context.setAtomicResult(Atom::Float(::exp(arg[0].asDouble())));
         return true;
     }
 
@@ -545,9 +545,9 @@ bool log(const Context &context, uint16 &index) {
 
     if (arg[0].isFloat()) {
 
-        if (arg[0].asFloat() != 0) {
+        if (arg[0].asDouble() != 0) {
 
-            index = context.setAtomicResult(Atom::Float(log10(arg[0].asFloat())));
+            index = context.setAtomicResult(Atom::Float(log10(arg[0].asDouble())));
             return true;
         }
     }
@@ -564,7 +564,7 @@ bool e10(const Context &context, uint16 &index) {
 
     if (arg[0].isFloat()) {
 
-        index = context.setAtomicResult(Atom::Float(pow(10, arg[0].asFloat())));
+        index = context.setAtomicResult(Atom::Float(pow(10, arg[0].asDouble())));
         return true;
     }
 

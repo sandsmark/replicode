@@ -51,8 +51,8 @@ void Atom::trace() const {
     case VL_PTR: std::cout << "vlptr: " << std::dec << asIndex(); return;
     case R_PTR: std::cout << "rptr: " << std::dec << asIndex(); return;
     case IPGM_PTR: std::cout << "ipgm_ptr: " << std::dec << asIndex(); return;
-    case IN_OBJ_PTR: std::cout << "in_obj_ptr: " << std::dec << (uint32)asInputIndex() << " " << asIndex(); return;
-    case D_IN_OBJ_PTR: std::cout << "d_in_obj_ptr: " << std::dec << (uint32)asRelativeIndex() << " " << asIndex(); return;
+    case IN_OBJ_PTR: std::cout << "in_obj_ptr: " << std::dec << (uint64)asInputIndex() << " " << asIndex(); return;
+    case D_IN_OBJ_PTR: std::cout << "d_in_obj_ptr: " << std::dec << (uint64)asRelativeIndex() << " " << asIndex(); return;
     case OUT_OBJ_PTR: std::cout << "out_obj_ptr: " << std::dec << asIndex(); return;
     case VALUE_PTR: std::cout << "value_ptr: " << std::dec << asIndex(); return;
     case PROD_PTR: std::cout << "prod_ptr: " << std::dec << asIndex(); return;
@@ -61,8 +61,8 @@ void Atom::trace() const {
     case VIEW: std::cout << "view"; return;
     case MKS: std::cout << "mks"; return;
     case VWS: std::cout << "vws"; return;
-    case NODE: std::cout << "nid: " << std::dec << (uint32)getNodeID(); return;
-    case DEVICE: std::cout << "did: " << std::dec << (uint32)getNodeID() << " " << (uint32)getClassID() << " " << (uint32)getDeviceID(); return;
+    case NODE: std::cout << "nid: " << std::dec << (uint64)getNodeID(); return;
+    case DEVICE: std::cout << "did: " << std::dec << (uint64)getNodeID() << " " << (uint64)getClassID() << " " << (uint64)getDeviceID(); return;
     case DEVICE_FUNCTION: std::cout << "fid: " << std::dec << asOpcode(); return;
     case C_PTR: std::cout << "cptr: " << std::dec << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
     case SET: std::cout << "set: " << std::dec << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
@@ -71,7 +71,7 @@ void Atom::trace() const {
     case MARKER: std::cout << "mk: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
     case OPERATOR: std::cout << "op: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
     case STRING: std::cout << "st: " << std::dec << (uint16)getAtomCount(); Members_to_go = String_data = getAtomCount(); Char_count = (atom & 0x000000FF); return;
-    case TIMESTAMP: std::cout << "us"; Members_to_go = Timestamp_data = 2; return;
+    case TIMESTAMP: std::cout << "us"; Members_to_go = Timestamp_data = 1; return;
     case GROUP: std::cout << "grp: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
     case INSTANTIATED_PROGRAM:
     case INSTANTIATED_ANTI_PROGRAM:
@@ -100,7 +100,7 @@ void Atom::trace() const {
             std::cout << s.c_str();
         } else if (isFloat()) {
 
-            std::cout << "nb: " << std::scientific << asFloat();
+            std::cout << "nb: " << std::scientific << asDouble();
             return;
         } else
             std::cout << "undef";

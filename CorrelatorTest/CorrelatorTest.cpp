@@ -43,12 +43,12 @@
 void decompile(r_comp::Decompiler &decompiler, r_comp::Image *image, uint64 time_offset) {
 
 #ifdef DECOMPILE_ONE_BY_ONE
-    uint32 object_count = decompiler.decompile_references(image);
+    uint64 object_count = decompiler.decompile_references(image);
     std::cout << object_count << " objects in the image\n";
     while (1) {
 
         std::cout << "Which object (-1 to exit)?\n";
-        int32 index; std::cin >> index;
+        int64 index; std::cin >> index;
         if (index == -1)
             break;
         if (index >= object_count) {
@@ -64,7 +64,7 @@ void decompile(r_comp::Decompiler &decompiler, r_comp::Image *image, uint64 time
 #else
     std::cout << "\ndecompiling ...\n";
     std::ostringstream decompiled_code;
-    uint32 object_count = decompiler.decompile(image, &decompiled_code, time_offset, false);
+    uint64 object_count = decompiler.decompile(image, &decompiled_code, time_offset, false);
     std::cout << "... done\n";
     std::cout << "\n\nDECOMPILATION\n\n" << decompiled_code.str() << std::endl;
     std::cout << "Image taken at: " << Time::ToString_year(image->timestamp) << std::endl << std::endl;
@@ -72,7 +72,7 @@ void decompile(r_comp::Decompiler &decompiler, r_comp::Image *image, uint64 time
 #endif
 }
 
-int32 main(int argc, char **argv) {
+int64 main(int argc, char **argv) {
 
     core::Time::Init(1000);
 
@@ -114,9 +114,9 @@ int32 main(int argc, char **argv) {
     delete img;
 
 // Second, filter objects: retain only those which are actual inputs in stdin and store them in a time-ordered list.
-    uint32 stdin_oid;
+    uint64 stdin_oid;
     std::string stdin_str("stdin");
-    UNORDERED_MAP<uint32, std::string>::const_iterator n;
+    UNORDERED_MAP<uint64, std::string>::const_iterator n;
     for (n = _i->object_names.symbols.begin(); n != _i->object_names.symbols.end(); ++n)
         if (n->second == stdin_str) {
 
@@ -125,7 +125,7 @@ int32 main(int argc, char **argv) {
         }
 
     std::set<r_code::View *, r_code::View::Less> correlator_inputs;
-    for (uint32 i = 0; i < objects.size(); ++i) {
+    for (uint64 i = 0; i < objects.size(); ++i) {
 
         Code *object = objects[i];
         if (object->code(0).asOpcode() == r_exec::Opcodes::IPgm)

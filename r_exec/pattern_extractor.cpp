@@ -95,7 +95,7 @@ bool TPX::filter(View *input, _Fact *abstracted_input, BindingMap *bm) {
     }
     if (target_bindings->is_fully_specified())
         return false;
-    for (uint32 i = 0; i < new_maps.size(); ++i)
+    for (uint64 i = 0; i < new_maps.size(); ++i)
         if (new_maps[i]->intersect(bm)) { //std::cout<<" lvl1"<<std::endl;
             return true;
         }
@@ -152,13 +152,13 @@ _TPX::_TPX(AutoFocusController *auto_focus, _Fact *target): TPX(auto_focus, targ
 _TPX::~_TPX() {
 }
 
-void _TPX::filter_icst_components(ICST *icst, uint32 icst_index, std::vector<Component> &components) {
+void _TPX::filter_icst_components(ICST *icst, uint64 icst_index, std::vector<Component> &components) {
 
-    uint32 found_component_count = 0;
-    uint32 *found = new uint32[icst->components.size()];
-    for (uint32 j = 0; j < components.size(); ++j) {
+    uint64 found_component_count = 0;
+    uint64 *found = new uint64[icst->components.size()];
+    for (uint64 j = 0; j < components.size(); ++j) {
 
-        for (uint32 i = 0; i < icst->components.size(); ++i) {
+        for (uint64 i = 0; i < icst->components.size(); ++i) {
 
             if (components[j].discarded)
                 continue;
@@ -172,7 +172,7 @@ void _TPX::filter_icst_components(ICST *icst, uint32 icst_index, std::vector<Com
 
     if (found_component_count > 0) { // some of the icst components are already in the inputs: discard said components, keep the icst.
 
-        for (uint32 i = 0; i < found_component_count; ++i)
+        for (uint64 i = 0; i < found_component_count; ++i)
             components[found[i]].discarded = true;
     } else // none of the icst components are in the inputs; this can only happen because the icst shares one timestamp with the TPX's target: discard the icst.
         components[icst_index].discarded = true;
@@ -231,7 +231,7 @@ _Fact *_TPX::find_f_icst(_Fact *component, uint16 &component_index, Code *&cst) 
     }
 
     std::vector<Component> components; // no icst found, try to identify components to assemble a cst.
-    std::vector<uint32> icst_components;
+    std::vector<uint64> icst_components;
 
     r_code::list<Input>::const_iterator i;
     for (i = inputs.begin(); i != inputs.end(); ++i) {
@@ -249,14 +249,14 @@ _Fact *_TPX::find_f_icst(_Fact *component, uint16 &component_index, Code *&cst) 
         }
     }
 
-    for (uint32 j = 0; j < icst_components.size(); ++j) {
+    for (uint64 j = 0; j < icst_components.size(); ++j) {
 
         ICST *icst = (ICST *)components[icst_components[j]].object->get_reference(0);
         filter_icst_components(icst, j, components);
     }
 
-    uint32 actual_size = 0;
-    for (uint32 j = 0; j < components.size(); ++j) {
+    uint64 actual_size = 0;
+    for (uint64 j = 0; j < components.size(); ++j) {
 
         if (components[j].discarded)
             continue;
@@ -273,7 +273,7 @@ _Fact *_TPX::find_f_icst(_Fact *component, uint16 &component_index, Code *&cst) 
     r_code::list<Input>::iterator _i;
     for (_i = inputs.begin(); _i != inputs.end(); ++_i) { // flag the components so the tpx does not try them again.
 
-        for (uint32 j = 0; j < components.size(); ++j) {
+        for (uint64 j = 0; j < components.size(); ++j) {
 
             if (_i->input == components[j].object)
                 _i->eligible_cause = false;
@@ -394,9 +394,9 @@ void _TPX::inject_hlps(uint64 analysis_starting_time) {
         td->decompile();
 
         uint64 analysis_end = Now();
-        uint32 d = analysis_end - analysis_starting_time;
+        uint64 d = analysis_end - analysis_starting_time;
         char _timing[255];
-        snprintf(_timing, 255, "%d", d);
+        snprintf(_timing, 255, "%lu", d);
         header = Time::ToString_seconds(Now() - Utils::GetTimeReference());
         std::string s0 = (" > ");
         s0 += get_header() + std::string(":production [");
@@ -454,7 +454,7 @@ void GTPX::reduce(r_exec::View *input) { // input->object: f->success.
     _Fact *consequent = (_Fact *)input->object->get_reference(0)->get_reference(1);
     P<BindingMap> consequent_bm = new BindingMap();
 
-    for (uint32 i = 0; i < predictions.size(); ++i) { // check if some models have successfully predicted the target: if so, abort.
+    for (uint64 i = 0; i < predictions.size(); ++i) { // check if some models have successfully predicted the target: if so, abort.
 
         P<BindingMap> bm = new BindingMap(consequent_bm);
         bm->reset_fwd_timings(predictions[i]);
@@ -825,10 +825,10 @@ GuardBuilder *CTPX::find_guard_builder(_Fact *cause, _Fact *consequent, uint64 p
     uint16 opcode = cause_payload->code(0).asOpcode();
     if (opcode == Opcodes::Cmd) { // form 0.
 
-        float32 q0 = target->get_reference(0)->code(MK_VAL_VALUE).asFloat();
-        float32 q1 = consequent->get_reference(0)->code(MK_VAL_VALUE).asFloat();
+        double q0 = target->get_reference(0)->code(MK_VAL_VALUE).asDouble();
+        double q1 = consequent->get_reference(0)->code(MK_VAL_VALUE).asDouble();
 
-        float32 searched_for = q1 - q0;
+        double searched_for = q1 - q0;
         uint16 cmd_arg_set_index = cause_payload->code(CMD_ARGS).asIndex();
         uint16 cmd_arg_count = cause_payload->code(cmd_arg_set_index).getAtomCount();
         for (uint16 i = 1; i <= cmd_arg_count; ++i) {
@@ -836,7 +836,7 @@ GuardBuilder *CTPX::find_guard_builder(_Fact *cause, _Fact *consequent, uint64 p
             Atom s = cause_payload->code(cmd_arg_set_index + i);
             if (!s.isFloat())
                 continue;
-            float32 _s = s.asFloat();
+            double _s = s.asDouble();
             if (Utils::Equal(_s, searched_for))
                 return new ACGuardBuilder(period, cmd_arg_set_index + i);
         }
@@ -849,7 +849,7 @@ GuardBuilder *CTPX::find_guard_builder(_Fact *cause, _Fact *consequent, uint64 p
                 Atom s = cause_payload->code(i);
                 if (!s.isFloat())
                     continue;
-                float32 _s = s.asFloat();
+                double _s = s.asDouble();
                 if (Utils::Equal(_s, searched_for))
                     return new MCGuardBuilder(period, i);
             }
@@ -859,11 +859,11 @@ GuardBuilder *CTPX::find_guard_builder(_Fact *cause, _Fact *consequent, uint64 p
         Atom s = cause_payload->code(MK_VAL_VALUE);
         if (s.isFloat()) {
 
-            float32 _s = s.asFloat();
-            float32 q0 = target->get_reference(0)->code(MK_VAL_VALUE).asFloat();
-            float32 q1 = consequent->get_reference(0)->code(MK_VAL_VALUE).asFloat();
+            double _s = s.asDouble();
+            double q0 = target->get_reference(0)->code(MK_VAL_VALUE).asDouble();
+            double q1 = consequent->get_reference(0)->code(MK_VAL_VALUE).asDouble();
 
-            float32 searched_for = (q1 - q0) / period;
+            double searched_for = (q1 - q0) / period;
             if (Utils::Equal(_s, searched_for)) { // form 1.
 
                 uint64 offset = Utils::GetTimestamp<Code>(cause, FACT_AFTER) - Utils::GetTimestamp<Code>(target, FACT_AFTER);

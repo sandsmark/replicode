@@ -110,7 +110,7 @@ public:
 class MCGuardBuilder:
     public CmdGuardBuilder {
 public:
-    MCGuardBuilder(uint64 period, float32 cmd_arg_index);
+    MCGuardBuilder(uint64 period, double cmd_arg_index);
     ~MCGuardBuilder();
 
     void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
@@ -133,13 +133,13 @@ public:
 class ConstGuardBuilder:
     public TimingGuardBuilder {
 protected:
-    float32 constant;
+    double constant;
     uint64 offset;
 
     void _build(Code *mdl, uint16 fwd_opcode, uint16 bwd_opcode, uint16 q0, uint16 t0, uint16 t1, uint16 &write_index) const;
     void _build(Code *mdl, uint16 fwd_opcode, uint16 bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
 
-    ConstGuardBuilder(uint64 period, float32 constant, uint64 offset);
+    ConstGuardBuilder(uint64 period, double constant, uint64 offset);
 public:
     ~ConstGuardBuilder();
 };
@@ -149,7 +149,7 @@ public:
 class MGuardBuilder:
     public ConstGuardBuilder {
 public:
-    MGuardBuilder(uint64 period, float32 constant, uint64 offset);
+    MGuardBuilder(uint64 period, double constant, uint64 offset);
     ~MGuardBuilder();
 
     void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
@@ -160,7 +160,7 @@ public:
 class AGuardBuilder:
     public ConstGuardBuilder {
 public:
-    AGuardBuilder(uint64 period, float32 constant, uint64 offset);
+    AGuardBuilder(uint64 period, double constant, uint64 offset);
     ~AGuardBuilder();
 
     void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;

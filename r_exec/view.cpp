@@ -35,26 +35,26 @@
 
 #include <limits>
 
-const float32 PLUS_INFINITY = std::numeric_limits<float>::infinity();
+const double PLUS_INFINITY = std::numeric_limits<float>::infinity();
 
 
 namespace r_exec {
 
 CriticalSection OIDCS;
 
-uint32 View::LastOID = 0;
+uint64 View::LastOID = 0;
 
-uint32 View::GetOID() {
+uint64 View::GetOID() {
 
     OIDCS.enter();
-    uint32 oid = LastOID++;
+    uint64 oid = LastOID++;
     OIDCS.leave();
     return oid;
 }
 
 uint16 View::ViewOpcode;
 
-float32 View::MorphValue(float32 value, float32 source_thr, float32 destination_thr) {
+double View::MorphValue(double value, double source_thr, double destination_thr) {
 
     if (value == 0)
         return destination_thr;
@@ -63,7 +63,7 @@ float32 View::MorphValue(float32 value, float32 source_thr, float32 destination_
 
         if (destination_thr > 0) {
 
-            float32 r = value * destination_thr / source_thr;
+            double r = value * destination_thr / source_thr;
             if (r > 1) // handles precision errors.
                 r = 1;
             return r;
@@ -73,7 +73,7 @@ float32 View::MorphValue(float32 value, float32 source_thr, float32 destination_
     return destination_thr + value;
 }
 
-float32 View::MorphChange(float32 change, float32 source_thr, float32 destination_thr) { // change is always >0.
+double View::MorphChange(double change, double source_thr, double destination_thr) { // change is always >0.
 
     if (source_thr > 0) {
 
@@ -95,10 +95,10 @@ View::View(View *view, Group *group): r_code::View(), controller(NULL) {
     references[1] = source; // origin.
 
 // morph ctrl values; NB: res is not morphed as it is expressed as a multiple of the upr.
-    code(VIEW_SLN) = Atom::Float(MorphValue(view->code(VIEW_SLN).asFloat(), source->get_sln_thr(), group->get_sln_thr()));
+    code(VIEW_SLN) = Atom::Float(MorphValue(view->code(VIEW_SLN).asDouble(), source->get_sln_thr(), group->get_sln_thr()));
     switch (object->code(0).getDescriptor()) {
     case Atom::GROUP:
-        code(GRP_VIEW_VIS) = Atom::Float(MorphValue(view->code(GRP_VIEW_VIS).asFloat(), source->get_vis_thr(), group->get_vis_thr()));
+        code(GRP_VIEW_VIS) = Atom::Float(MorphValue(view->code(GRP_VIEW_VIS).asDouble(), source->get_vis_thr(), group->get_vis_thr()));
         break;
     case Atom::NULL_PROGRAM:
     case Atom::INSTANTIATED_PROGRAM:
@@ -107,7 +107,7 @@ View::View(View *view, Group *group): r_code::View(), controller(NULL) {
     case Atom::INSTANTIATED_ANTI_PROGRAM:
     case Atom::COMPOSITE_STATE:
     case Atom::MODEL:
-        code(VIEW_ACT) = Atom::Float(MorphValue(view->code(VIEW_ACT).asFloat(), source->get_act_thr(), group->get_act_thr()));
+        code(VIEW_ACT) = Atom::Float(MorphValue(view->code(VIEW_ACT).asDouble(), source->get_act_thr(), group->get_act_thr()));
         break;
     }
 
@@ -150,13 +150,13 @@ void View::reset_init_act() {
         initial_act = 0;
 }
 
-float32 View::update_res() {
+double View::update_res() {
 
-    float32 new_res = get_res();
+    double new_res = get_res();
     if (new_res == PLUS_INFINITY)
         return new_res;
     if (res_changes > 0 && acc_res != 0)
-        new_res = get_res() + (float32)acc_res / (float32)res_changes;
+        new_res = get_res() + (double)acc_res / (double)res_changes;
     if (--new_res < 0) // decremented by one on behalf of the group (at upr).
         new_res = 0;
     code(VIEW_RES) = r_code::Atom::Float(new_res);
@@ -165,11 +165,11 @@ float32 View::update_res() {
     return get_res();
 }
 
-float32 View::update_sln(float32 low, float32 high) {
+double View::update_sln(double low, double high) {
 
     if (sln_changes > 0 && acc_sln != 0) {
 
-        float32 new_sln = get_sln() + acc_sln / sln_changes;
+        double new_sln = get_sln() + acc_sln / sln_changes;
         if (new_sln < 0)
             new_sln = 0;
         else if (new_sln > 1)
@@ -179,7 +179,7 @@ float32 View::update_sln(float32 low, float32 high) {
     acc_sln = 0;
     sln_changes = 0;
 
-    float32 sln = get_sln();
+    double sln = get_sln();
     if (sln < low)
         ++periods_at_low_sln;
     else {
@@ -193,11 +193,11 @@ float32 View::update_sln(float32 low, float32 high) {
     return sln;
 }
 
-float32 View::update_act(float32 low, float32 high) {
+double View::update_act(double low, double high) {
 
     if (act_changes > 0 && acc_act != 0) {
 
-        float32 new_act = get_act() + acc_act / act_changes;
+        double new_act = get_act() + acc_act / act_changes;
         if (new_act < 0)
             new_act = 0;
         else if (new_act > 1)
@@ -207,7 +207,7 @@ float32 View::update_act(float32 low, float32 high) {
     acc_act = 0;
     act_changes = 0;
 
-    float32 act = get_act();
+    double act = get_act();
     if (act < low)
         ++periods_at_low_act;
     else {
@@ -221,11 +221,11 @@ float32 View::update_act(float32 low, float32 high) {
     return act;
 }
 
-float32 View::update_vis() {
+double View::update_vis() {
 
     if (vis_changes > 0 && acc_vis != 0) {
 
-        float32 new_vis = get_vis() + acc_vis / vis_changes;
+        double new_vis = get_vis() + acc_vis / vis_changes;
         if (new_vis < 0)
             new_vis = 0;
         else if (new_vis > 1)

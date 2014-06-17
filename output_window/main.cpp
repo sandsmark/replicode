@@ -33,11 +33,11 @@
 
 using namespace core;
 
-int32 main(int argc, char **argv) {
+int64 main(int argc, char **argv) {
 
     HANDLE pipe_read = (HANDLE)atoi(argv[1]);
 
-    uint32 read;
+    uint64 read;
     char buffer[1024];
     bool r;
     while (1) {

@@ -140,20 +140,17 @@ typedef char int8;
 typedef unsigned char uint8;
 typedef short int16;
 typedef unsigned short uint16;
-typedef float float32;
 typedef double float64;
 
 typedef word32 word;
 typedef word16 half_word;
 
 #if defined WINDOWS
-typedef long int32;
-typedef unsigned long uint32;
+typedef long int64;
+typedef unsigned long uint64;
 typedef __int64 int64;
 typedef unsigned __int64 uint64;
 #else
-typedef int int32;
-typedef unsigned int uint32;
 typedef int64_t int64;
 typedef uint64_t uint64;
 #endif
@@ -179,7 +176,7 @@ typedef uint64_t uint64;
 #if defined WINDOWS
 typedef HINSTANCE shared_object;
 typedef HANDLE thread;
-#define thread_ret core::uint32
+#define thread_ret core::uint64
 #define thread_ret_val(ret) return ret;
 typedef LPTHREAD_START_ROUTINE thread_function;
 #define thread_function_call WINAPI

@@ -51,9 +51,9 @@ typedef enum {
 class HLPController:
     public OController {
 private:
-    uint32 strong_requirement_count; // number of active strong requirements in the same group; updated dynamically.
-    uint32 weak_requirement_count; // number of active weak requirements in the same group; updated dynamically.
-    uint32 requirement_count; // sum of the two above.
+    uint64 strong_requirement_count; // number of active strong requirements in the same group; updated dynamically.
+    uint64 weak_requirement_count; // number of active weak requirements in the same group; updated dynamically.
+    uint64 requirement_count; // sum of the two above.
 protected:
     class EEntry { // evidences.
     private:
@@ -62,7 +62,7 @@ protected:
         P<_Fact> evidence;
         uint64 after;
         uint64 before;
-        float32 confidence;
+        double confidence;
 
         EEntry();
         EEntry(_Fact *evidence);
@@ -114,7 +114,7 @@ protected:
     MatchResult check_predicted_evidences(_Fact *target, _Fact *&evidence); // evidence with the match (positive or negative), NULL otherwise.
 
     bool _has_tpl_args;
-    uint32 ref_count; // used to detect _Object::refCount dropping down to 1 for hlp with tpl args.
+    uint64 ref_count; // used to detect _Object::refCount dropping down to 1 for hlp with tpl args.
     bool is_orphan(); // true when there are tpl args and no requirements: the controller cannot execute anymore.
 
     std::vector<P<HLPController> > controllers; // all controllers for models/states instantiated in the patterns; case of models: [0]==lhs, [1]==rhs.
@@ -141,8 +141,8 @@ public:
     void add_requirement(bool strong);
     void remove_requirement(bool strong);
 
-    uint32 get_requirement_count(uint32 &weak_requirement_count, uint32 &strong_requirement_count);
-    uint32 get_requirement_count();
+    uint64 get_requirement_count(uint64 &weak_requirement_count, uint64 &strong_requirement_count);
+    uint64 get_requirement_count();
 
     void store_evidence(_Fact *evidence) {
         _store_evidence<EEntry>(&evidences, evidence);
@@ -160,7 +160,7 @@ public:
         return _has_tpl_args;
     }
 
-    void inject_prediction(Fact *prediction, float32 confidence) const; // for simulated predictions.
+    void inject_prediction(Fact *prediction, double confidence) const; // for simulated predictions.
 };
 }
 

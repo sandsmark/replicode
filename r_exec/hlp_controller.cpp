@@ -78,9 +78,9 @@ void HLPController::remove_requirement(bool strong) {
     reductionCS.leave();
 }
 
-uint32 HLPController::get_requirement_count(uint32 &weak_requirement_count, uint32 &strong_requirement_count) {
+uint64 HLPController::get_requirement_count(uint64 &weak_requirement_count, uint64 &strong_requirement_count) {
 
-    uint32 r_c;
+    uint64 r_c;
     reductionCS.enter();
     r_c = requirement_count;
     weak_requirement_count = this->weak_requirement_count;
@@ -89,9 +89,9 @@ uint32 HLPController::get_requirement_count(uint32 &weak_requirement_count, uint
     return r_c;
 }
 
-uint32 HLPController::get_requirement_count() {
+uint64 HLPController::get_requirement_count() {
 
-    uint32 r_c;
+    uint64 r_c;
     reductionCS.enter();
     r_c = requirement_count;
     reductionCS.leave();
@@ -120,10 +120,10 @@ inline Group *HLPController::get_host() const {
     return (Group *)getView()->get_host();
 }
 
-void HLPController::inject_prediction(Fact *prediction, float32 confidence) const { // prediction is simulated: f->pred->f->target.
+void HLPController::inject_prediction(Fact *prediction, double confidence) const { // prediction is simulated: f->pred->f->target.
 
     Code *primary_host = get_host();
-    float32 sln_thr = primary_host->code(GRP_SLN_THR).asFloat();
+    double sln_thr = primary_host->code(GRP_SLN_THR).asDouble();
     if (confidence > sln_thr) { // do not inject if cfd is too low.
 
         View *view = new View(View::SYNC_ONCE, Now(), confidence, 1, primary_host, primary_host, prediction); // SYNC_ONCE,res=1.

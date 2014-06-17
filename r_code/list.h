@@ -43,27 +43,27 @@ namespace r_code {
 // Insertion not needed for now; not implemented.
 template<typename T> class list {
 protected:
-    static const int32 null = -1;
+    static const int64 null = -1;
 
-    class cell { // int32: to be robust WRT realloc(); this means that Ts can hold a cell index to speed up erasure.
+    class cell { // int64: to be robust WRT realloc(); this means that Ts can hold a cell index to speed up erasure.
     public:
-        int32 next;
-        int32 prev;
+        int64 next;
+        int64 prev;
         T data;
         cell(): next(null), prev(null) {}
     };
 
     std::vector<cell> cells;
 
-    int32 used_cells_head;
-    int32 used_cells_tail;
-    int32 free_cells; // backward links unused.
-    uint32 used_cell_count;
-    uint32 free_cell_count;
+    int64 used_cells_head;
+    int64 used_cells_tail;
+    int64 free_cells; // backward links unused.
+    uint64 used_cell_count;
+    uint64 free_cell_count;
 
     void push_back_free_cell(const T &t) {
 
-        int32 free = free_cells;
+        int64 free = free_cells;
         free_cells = cells[free_cells].next;
         --free_cell_count;
         cells[free].data = t;
@@ -93,7 +93,7 @@ protected:
 
     void push_front_free_cell(const T &t) {
 
-        int32 free = free_cells;
+        int64 free = free_cells;
         free_cells = cells[free_cells].next;
         --free_cell_count;
         cells[free].data = t;
@@ -121,7 +121,7 @@ protected:
         ++used_cell_count;
     }
 
-    void __erase(int32 c) {
+    void __erase(int64 c) {
 
         if (cells[c].prev != null)
             cells[cells[c].prev].next = cells[c].next;
@@ -136,19 +136,19 @@ protected:
         ++free_cell_count;
         --used_cell_count;
     }
-    int32 _erase(int32 c) {
+    int64 _erase(int64 c) {
 
-        int32 next = cells[c].next;
+        int64 next = cells[c].next;
         __erase(c);
         return next;
     }
 public:
     list(): used_cells_head(null), used_cells_tail(null), free_cells(null), used_cell_count(0), free_cell_count(0) {}
 
-    uint32 size() const {
+    uint64 size() const {
         return used_cell_count;
     }
-    void reserve(uint32 size) {
+    void reserve(uint64 size) {
         cells.reserve(size);
     }
     void clear() {
@@ -165,7 +165,7 @@ public:
             push_back_new_cell(t);
         update_used_cells_tail_state();
     }
-    void push_back(const T &t, int32 &location) {
+    void push_back(const T &t, int64 &location) {
 
         if (free_cell_count) {
 
@@ -186,7 +186,7 @@ public:
             push_front_new_cell(t);
         update_used_cells_head_state();
     }
-    void push_front(const T &t, int32 &location) {
+    void push_front(const T &t, int64 &location) {
 
         if (free_cell_count) {
 
@@ -202,8 +202,8 @@ public:
 
     class _iterator {
     protected:
-        int32 _cell;
-        _iterator(int32 c): _cell(c) {}
+        int64 _cell;
+        _iterator(int64 c): _cell(c) {}
         _iterator(): _cell(null) {}
     public:
         bool operator ==(const _iterator &i) const {
@@ -220,7 +220,7 @@ public:
         friend class list;
     private:
         const list *_list;
-        const_iterator(const list *l, int32 c): _iterator(c), _list(l) {}
+        const_iterator(const list *l, int64 c): _iterator(c), _list(l) {}
     public:
         const_iterator(): _iterator(), _list(NULL) {}
         const T &operator *() const {
@@ -257,7 +257,7 @@ public:
     protected:
         using _iterator::_cell;
         list *_list;
-        iterator(list *l, int32 c): _iterator(c), _list(l) {}
+        iterator(list *l, int64 c): _iterator(c), _list(l) {}
     public:
         iterator(): _iterator(), _list(NULL) {}
         T &operator *() const {
@@ -296,7 +296,7 @@ public:
     const_iterator erase(const_iterator &i) {
         return const_iterator(this, _erase(i._cell)); // no check for i._cell==null.
     }
-    void erase(int32 c) {
+    void erase(int64 c) {
         __erase(c); // use for random object deletion.
     }
     void remove(const T &t) {

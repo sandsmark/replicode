@@ -151,7 +151,7 @@ bool AtomValue::contains(const Atom a) const {
         return true;
 
     if (atom.isFloat() && a.isFloat())
-        return Utils::Equal(atom.asFloat(), a.asFloat());
+        return Utils::Equal(atom.asDouble(), a.asDouble());
 
     return false;
 }
@@ -244,7 +244,7 @@ bool StructureValue::contains(const Atom *s) const {
             continue;
 
         if (a.isFloat() && _a.isFloat())
-            return Utils::Equal(a.asFloat(), _a.asFloat());
+            return Utils::Equal(a.asDouble(), _a.asDouble());
 
         return false;
     }
@@ -323,7 +323,7 @@ _Fact *BindingMap::abstract_f_ihlp(_Fact *f_ihlp) const { // bindings are set al
 
     uint16 extent_index = I_HLP_ARITY + 1;
 
-    uint32 map_index = 0;
+    uint64 map_index = 0;
 
     uint16 tpl_arg_set_index = ihlp->code(I_HLP_TPL_ARGS).asIndex();
     uint16 tpl_arg_count = ihlp->code(tpl_arg_set_index).getAtomCount();
@@ -472,39 +472,39 @@ void BindingMap::init(Code *object, uint16 index) {
 
 Atom BindingMap::get_atom_variable(Atom a) {
 
-    for (uint32 i = 0; i < map.size(); ++i) {
+    for (uint64 i = 0; i < map.size(); ++i) {
 
         if (map[i]->contains(a))
             return Atom::VLPointer(i);
     }
 
-    uint32 size = map.size();
+    uint64 size = map.size();
     map.push_back(new AtomValue(this, a));
     return Atom::VLPointer(size);
 }
 
 Atom BindingMap::get_structure_variable(Code *object, uint16 index) {
 
-    for (uint32 i = 0; i < map.size(); ++i) {
+    for (uint64 i = 0; i < map.size(); ++i) {
 
         if (map[i]->contains(&object->code(index)))
             return Atom::VLPointer(i);
     }
 
-    uint32 size = map.size();
+    uint64 size = map.size();
     map.push_back(new StructureValue(this, object, index));
     return Atom::VLPointer(size);
 }
 
 Atom BindingMap::get_object_variable(Code *object) {
 
-    for (uint32 i = 0; i < map.size(); ++i) {
+    for (uint64 i = 0; i < map.size(); ++i) {
 
         if (map[i]->contains(object))
             return Atom::VLPointer(i);
     }
 
-    uint32 size = map.size();
+    uint64 size = map.size();
     map.push_back(new ObjectValue(this, object));
     return Atom::VLPointer(size);
 }
@@ -627,7 +627,7 @@ bool BindingMap::match_atom(Atom o_atom, Atom p_atom) {
         return true;
 
     if (p_atom.isFloat() && o_atom.isFloat())
-        return Utils::Equal(o_atom.asFloat(), p_atom.asFloat());
+        return Utils::Equal(o_atom.asDouble(), p_atom.asDouble());
 
     return false;
 }
@@ -653,7 +653,7 @@ void BindingMap::reset_fwd_timings(_Fact *reference_fact) { // valuate at after_
     map[fwd_before_index] = new StructureValue(this, reference_fact, reference_fact->code(FACT_BEFORE).asIndex());
 }
 
-bool BindingMap::match_timings(uint64 stored_after, uint64 stored_before, uint64 after, uint64 before, uint32 destination_after_index, uint32 destination_before_index) {
+bool BindingMap::match_timings(uint64 stored_after, uint64 stored_before, uint64 after, uint64 before, uint64 destination_after_index, uint64 destination_before_index) {
 
     if (stored_after <= after) {
 
@@ -777,17 +777,17 @@ bool BindingMap::scan_variable(uint16 id) const {
 
 bool BindingMap::intersect(BindingMap *bm) {
 
-    for (uint32 i = 0; i < map.size();) {
+    for (uint64 i = 0; i < map.size();) {
 
-        if (fwd_after_index > 0 && i == uint32(fwd_after_index)) { // ignore fact timings.
+        if (fwd_after_index > 0 && i == uint64(fwd_after_index)) { // ignore fact timings.
 
             i += 2;
             continue;
         }
 
-        for (uint32 j = 0; j < bm->map.size();) {
+        for (uint64 j = 0; j < bm->map.size();) {
 
-            if (bm->fwd_after_index > 0 && j == uint32(bm->fwd_after_index)) { // ignore fact timings.
+            if (bm->fwd_after_index > 0 && j == uint64(bm->fwd_after_index)) { // ignore fact timings.
 
                 j += 2;
                 continue;
@@ -932,10 +932,10 @@ void HLPBindingMap::init_from_f_ihlp(const _Fact *f_ihlp) { // source is f->icst
     }
 
     uint16 val_set_index = ihlp->code(I_HLP_ARGS).asIndex() + 1;
-    uint32 i = 0;
-    for (uint32 j = first_index; j < map.size(); ++j) { // valuate args.
+    uint64 i = 0;
+    for (uint64 j = first_index; j < map.size(); ++j) { // valuate args.
 
-        if ((fwd_after_index > 0 && j == uint32(fwd_after_index)) || (fwd_before_index > 0 && j == uint32(fwd_before_index)))
+        if ((fwd_after_index > 0 && j == uint64(fwd_after_index)) || (fwd_before_index > 0 && j == uint64(fwd_before_index)))
             continue;
 
         Atom atom = ihlp->code(val_set_index + i);

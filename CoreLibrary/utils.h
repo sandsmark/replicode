@@ -72,15 +72,15 @@
 // Wrapping of OS-dependent functions
 namespace core {
 
-bool core_dll WaitForSocketReadability(socket s, int32 timeout);
-bool core_dll WaitForSocketWriteability(socket s, int32 timeout);
+bool core_dll WaitForSocketReadability(socket s, int64 timeout);
+bool core_dll WaitForSocketWriteability(socket s, int64 timeout);
 
 class core_dll Error {
 public:
-    static int32 GetLastOSErrorNumber();
-    static bool GetOSErrorMessage(char* buffer, uint32 buflen, int32 err = -1);
+    static int64 GetLastOSErrorNumber();
+    static bool GetOSErrorMessage(char* buffer, uint64 buflen, int64 err = -1);
     static bool PrintLastOSErrorMessage(const char* title);
-    static void PrintBinary(void* p, uint32 size, bool asInt, const char* title = NULL);
+    static void PrintBinary(void* p, uint64 size, bool asInt, const char* title = NULL);
 };
 
 #if defined WINDOWS
@@ -110,9 +110,9 @@ protected:
     Thread();
 public:
     template<class T> static T *New(thread_function f, void *args);
-    static void TerminateAndWait(Thread **threads, uint32 threadCount);
+    static void TerminateAndWait(Thread **threads, uint64 threadCount);
     static void TerminateAndWait(Thread *_thread);
-    static void Wait(Thread **threads, uint32 threadCount);
+    static void Wait(Thread **threads, uint64 threadCount);
     static void Wait(Thread *_thread);
     static void Sleep(int64 ms);
     static void Sleep(); // inifnite
@@ -139,7 +139,7 @@ private:
     static float64 Period;
     static int64 InitTime;
 public:
-    static void Init(uint32 r); // detects the hardware timing capabilities; r: time resolution in us (on windows xp: max ~1000; use 1000, 2000, 5000 or 10000)
+    static void Init(uint64 r); // detects the hardware timing capabilities; r: time resolution in us (on windows xp: max ~1000; use 1000, 2000, 5000 or 10000)
     static uint64 Get(); // in us since 01/01/1970
 
     static std::string ToString_seconds(uint64 t); // seconds:milliseconds:microseconds since 01/01/1970.
@@ -156,12 +156,12 @@ class core_dll Semaphore {
 private:
     semaphore s;
 protected:
-    static const uint32 Infinite;
+    static const uint64 Infinite;
 public:
-    Semaphore(uint32 initialCount, uint32 maxCount);
+    Semaphore(uint64 initialCount, uint64 maxCount);
     ~Semaphore();
-    bool acquire(uint32 timeout = Infinite); // returns true if timedout
-    void release(uint32 count = 1);
+    bool acquire(uint64 timeout = Infinite); // returns true if timedout
+    void release(uint64 count = 1);
     void reset();
 };
 
@@ -169,11 +169,11 @@ class core_dll Mutex {
 private:
     mutex m;
 protected:
-    static const uint32 Infinite;
+    static const uint64 Infinite;
 public:
     Mutex();
     ~Mutex();
-    bool acquire(uint32 timeout = Infinite); // returns true if timedout
+    bool acquire(uint64 timeout = Infinite); // returns true if timedout
     void release();
 };
 
@@ -199,13 +199,13 @@ private:
     struct SemaTex sematex;
 #endif
 protected:
-    static const uint32 Infinite;
+    static const uint64 Infinite;
 public:
     Timer();
     ~Timer();
-    void start(uint64 deadline, uint32 period = 0); // deadline in us, period in ms.
-    bool wait(uint32 timeout = Infinite); // timeout in ms; returns true if timedout.
-    bool wait(uint64 &us, uint32 timeout = Infinite); // idem; updates the us actually spent.
+    void start(uint64 deadline, uint64 period = 0); // deadline in us, period in ms.
+    bool wait(uint64 timeout = Infinite); // timeout in ms; returns true if timedout.
+    bool wait(uint64 &us, uint64 timeout = Infinite); // idem; updates the us actually spent.
 };
 
 class core_dll Event {
@@ -231,18 +231,18 @@ public:
 
 class core_dll Atomic {
 public:
-    static int32 Increment32(int32 volatile *v); // return the final value of *v
-    static int32 Decrement32(int32 volatile *v); // return the final value of *v
-    static int32 CompareAndSwap32(int32 volatile *target, int32 v1, int32 v2); // compares *target with v1, if equal, replace it with v2; return the initial value of *target
+    static int64 Increment32(int64 volatile *v); // return the final value of *v
+    static int64 Decrement32(int64 volatile *v); // return the final value of *v
+    static int64 CompareAndSwap32(int64 volatile *target, int64 v1, int64 v2); // compares *target with v1, if equal, replace it with v2; return the initial value of *target
     static int64 CompareAndSwap64(int64 volatile *target, int64 v1, int64 v2);
 // static word CompareAndSwap(word volatile *target,word v1,word v2); // uses the right version according to ARCH_xx
-    static int32 Swap32(int32 volatile *target, int32 v); // writes v at target; return the initial value of *target
+    static int64 Swap32(int64 volatile *target, int64 v); // writes v at target; return the initial value of *target
     static int64 Swap64(int64 volatile *target, int64 v); // ifndef ARCH_64, calls CompareAndSwap64(target,v,v)
 // static word Swap(word volatile *target,word v); // uses the right version according to ARCH_xx
 #if defined ARCH_64
     static int64 Increment64(int64 volatile *v);
     static int64 Decrement64(int64 volatile *v);
-    static int32 Add32(int32 volatile *target, int32 v); // adds v to *target; return the final value of *target
+    static int64 Add32(int64 volatile *target, int64 v); // adds v to *target; return the final value of *target
     static int64 Add64(int64 volatile *target, int64 v);
 #endif
 };
@@ -252,10 +252,10 @@ uint8 core_dll BSR(word data); // BitScanReverse
 class core_dll FastSemaphore: // lock-free under no contention
     public Semaphore {
 private:
-    int32 volatile count; // minus the number of waiting threads
-    const int32 maxCount; // max number of threads allowed to run
+    int64 volatile count; // minus the number of waiting threads
+    const int64 maxCount; // max number of threads allowed to run
 public:
-    FastSemaphore(uint32 initialCount, uint32 maxCount); // initialCount >=0
+    FastSemaphore(uint64 initialCount, uint64 maxCount); // initialCount >=0
     ~FastSemaphore();
     void acquire();
     void release();
@@ -277,14 +277,14 @@ public:
 
 class core_dll Random {
 private:
-    static int32 r250_index;
-    static int32 r521_index;
-    static uint32 r250_buffer[R250_LEN];
-    static uint32 r521_buffer[R521_LEN];
+    static int64 r250_index;
+    static int64 r521_index;
+    static uint64 r250_buffer[R250_LEN];
+    static uint64 r521_buffer[R521_LEN];
 public:
     static void Init();
 
-    float32 operator()(uint32 range); // returns a value in [0,range].
+    double operator()(uint64 range); // returns a value in [0,range].
 };
 }
 

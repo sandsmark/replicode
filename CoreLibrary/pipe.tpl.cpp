@@ -34,21 +34,21 @@
 namespace core {
 
 #ifdef PIPE_1
-template<typename T, uint32 _S> Pipe11<T, _S>::Pipe11(): Semaphore(0, 65535) {
+template<typename T, uint64 _S> Pipe11<T, _S>::Pipe11(): Semaphore(0, 65535) {
 
     head = tail = -1;
     first = last = new Block(NULL);
     spare = NULL;
 }
 
-template<typename T, uint32 _S> Pipe11<T, _S>::~Pipe11() {
+template<typename T, uint64 _S> Pipe11<T, _S>::~Pipe11() {
 
     delete first;
     if (spare)
         delete spare;
 }
 
-template<typename T, uint32 _S> inline void Pipe11<T, _S>::_clear() { // leaves spare as is
+template<typename T, uint64 _S> inline void Pipe11<T, _S>::_clear() { // leaves spare as is
 
     enter();
     reset();
@@ -59,7 +59,7 @@ template<typename T, uint32 _S> inline void Pipe11<T, _S>::_clear() { // leaves 
     leave();
 }
 
-template<typename T, uint32 _S> inline T Pipe11<T, _S>::_pop() {
+template<typename T, uint64 _S> inline T Pipe11<T, _S>::_pop() {
 
     T t = first->buffer[head];
     if (++head == _S) {
@@ -88,12 +88,12 @@ template<typename T, uint32 _S> inline T Pipe11<T, _S>::_pop() {
     return t;
 }
 
-template<typename T, uint32 _S> inline void Pipe11<T, _S>::push(T &t) {
+template<typename T, uint64 _S> inline void Pipe11<T, _S>::push(T &t) {
 
     enter();
     if (++tail == 0)
         head = 0;
-    uint32 index = tail;
+    uint64 index = tail;
     if (tail == _S) {
 
         if (spare) {
@@ -113,33 +113,33 @@ template<typename T, uint32 _S> inline void Pipe11<T, _S>::push(T &t) {
     release();
 }
 
-template<typename T, uint32 _S> inline T Pipe11<T, _S>::pop() {
+template<typename T, uint64 _S> inline T Pipe11<T, _S>::pop() {
 
     Semaphore::acquire();
     return _pop();
 }
 
-template<typename T, uint32 _S> inline void Pipe11<T, _S>::clear() {
+template<typename T, uint64 _S> inline void Pipe11<T, _S>::clear() {
 
     _clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, uint32 _S> Pipe1N<T, _S>::Pipe1N() {
+template<typename T, uint64 _S> Pipe1N<T, _S>::Pipe1N() {
 }
 
-template<typename T, uint32 _S> Pipe1N<T, _S>::~Pipe1N() {
+template<typename T, uint64 _S> Pipe1N<T, _S>::~Pipe1N() {
 }
 
-template<typename T, uint32 _S> void Pipe1N<T, _S>::clear() {
+template<typename T, uint64 _S> void Pipe1N<T, _S>::clear() {
 
     popCS.enter();
     Pipe11<T, _S>::_clear();
     popCS.leave();
 }
 
-template<typename T, uint32 _S> T Pipe1N<T, _S>::pop() {
+template<typename T, uint64 _S> T Pipe1N<T, _S>::pop() {
 
     Semaphore::acquire();
     popCS.enter();
@@ -150,20 +150,20 @@ template<typename T, uint32 _S> T Pipe1N<T, _S>::pop() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, uint32 _S> PipeN1<T, _S>::PipeN1() {
+template<typename T, uint64 _S> PipeN1<T, _S>::PipeN1() {
 }
 
-template<typename T, uint32 _S> PipeN1<T, _S>::~PipeN1() {
+template<typename T, uint64 _S> PipeN1<T, _S>::~PipeN1() {
 }
 
-template<typename T, uint32 _S> void PipeN1<T, _S>::clear() {
+template<typename T, uint64 _S> void PipeN1<T, _S>::clear() {
 
     pushCS.enter();
     Pipe11<T, _S>::_clear();
     pushCS.leave();
 }
 
-template<typename T, uint32 _S> void PipeN1<T, _S>::push(T &t) {
+template<typename T, uint64 _S> void PipeN1<T, _S>::push(T &t) {
 
     pushCS.enter();
     Pipe11<T, _S>::push(t);
@@ -172,13 +172,13 @@ template<typename T, uint32 _S> void PipeN1<T, _S>::push(T &t) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, uint32 _S> PipeNN<T, _S>::PipeNN() {
+template<typename T, uint64 _S> PipeNN<T, _S>::PipeNN() {
 }
 
-template<typename T, uint32 _S> PipeNN<T, _S>::~PipeNN() {
+template<typename T, uint64 _S> PipeNN<T, _S>::~PipeNN() {
 }
 
-template<typename T, uint32 _S> void PipeNN<T, _S>::clear() {
+template<typename T, uint64 _S> void PipeNN<T, _S>::clear() {
 
     pushCS.enter();
     popCS.enter();
@@ -187,14 +187,14 @@ template<typename T, uint32 _S> void PipeNN<T, _S>::clear() {
     pushCS.leave();
 }
 
-template<typename T, uint32 _S> void PipeNN<T, _S>::push(T &t) {
+template<typename T, uint64 _S> void PipeNN<T, _S>::push(T &t) {
 
     pushCS.enter();
     Pipe11<T, _S>::push(t);
     pushCS.leave();
 }
 
-template<typename T, uint32 _S> T PipeNN<T, _S>::pop() {
+template<typename T, uint64 _S> T PipeNN<T, _S>::pop() {
 
     Semaphore::acquire();
     popCS.enter();
@@ -203,7 +203,7 @@ template<typename T, uint32 _S> T PipeNN<T, _S>::pop() {
     return t;
 }
 #elif defined PIPE_2
-template<typename T, uint32 _S, typename Head, typename Tail, class P, template<typename, uint32, class> class Push, template<typename, uint32, class> class Pop> Pipe<T, _S, Head, Tail, P, Push, Pop>::Pipe(): Semaphore(0, 1) {
+template<typename T, uint64 _S, typename Head, typename Tail, class P, template<typename, uint64, class> class Push, template<typename, uint64, class> class Pop> Pipe<T, _S, Head, Tail, P, Push, Pop>::Pipe(): Semaphore(0, 1) {
 
     head = -1;
     tail = 0;
@@ -217,7 +217,7 @@ template<typename T, uint32 _S, typename Head, typename Tail, class P, template<
     _pop = new Pop<T, _S, P>(*(P *)this);
 }
 
-template<typename T, uint32 _S, typename Head, typename Tail, class P, template<typename, uint32, class> class Push, template<typename, uint32, class> class Pop> Pipe<T, _S, Head, Tail, P, Push, Pop>::~Pipe() {
+template<typename T, uint64 _S, typename Head, typename Tail, class P, template<typename, uint64, class> class Push, template<typename, uint64, class> class Pop> Pipe<T, _S, Head, Tail, P, Push, Pop>::~Pipe() {
 
     delete first;
     if (spare)
@@ -226,7 +226,7 @@ template<typename T, uint32 _S, typename Head, typename Tail, class P, template<
     delete _pop;
 }
 
-template<typename T, uint32 _S, typename Head, typename Tail, class P, template<typename, uint32, class> class Push, template<typename, uint32, class> class Pop> inline void Pipe<T, _S, Head, Tail, P, Push, Pop>::shrink() {
+template<typename T, uint64 _S, typename Head, typename Tail, class P, template<typename, uint64, class> class Push, template<typename, uint64, class> class Pop> inline void Pipe<T, _S, Head, Tail, P, Push, Pop>::shrink() {
 
     if (!spare) {
 
@@ -243,7 +243,7 @@ template<typename T, uint32 _S, typename Head, typename Tail, class P, template<
     head = -1;
 }
 
-template<typename T, uint32 _S, typename Head, typename Tail, class P, template<typename, uint32, class> class Push, template<typename, uint32, class> class Pop> inline void Pipe<T, _S, Head, Tail, P, Push, Pop>::grow() {
+template<typename T, uint64 _S, typename Head, typename Tail, class P, template<typename, uint64, class> class Push, template<typename, uint64, class> class Pop> inline void Pipe<T, _S, Head, Tail, P, Push, Pop>::grow() {
 
     if (spare) {
 
@@ -256,12 +256,12 @@ template<typename T, uint32 _S, typename Head, typename Tail, class P, template<
     tail = 0;
 }
 
-template<typename T, uint32 _S, typename Head, typename Tail, class P, template<typename, uint32, class> class Push, template<typename, uint32, class> class Pop> inline void Pipe<T, _S, Head, Tail, P, Push, Pop>::push(T &t) {
+template<typename T, uint64 _S, typename Head, typename Tail, class P, template<typename, uint64, class> class Push, template<typename, uint64, class> class Pop> inline void Pipe<T, _S, Head, Tail, P, Push, Pop>::push(T &t) {
 
     (*_push)(t);
 }
 
-template<typename T, uint32 _S, typename Head, typename Tail, class P, template<typename, uint32, class> class Push, template<typename, uint32, class> class Pop> inline T Pipe<T, _S, Head, Tail, P, Push, Pop>::pop() {
+template<typename T, uint64 _S, typename Head, typename Tail, class P, template<typename, uint64, class> class Push, template<typename, uint64, class> class Pop> inline T Pipe<T, _S, Head, Tail, P, Push, Pop>::pop() {
 
     return (*_pop)();
 }
@@ -273,33 +273,33 @@ template<class Pipe> PipeFunctor<Pipe>::PipeFunctor(Pipe &p): pipe(p) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, uint32 _S, class Pipe> Push1<T, _S, Pipe>::Push1(Pipe &p): PipeFunctor<Pipe>(p) {
+template<typename T, uint64 _S, class Pipe> Push1<T, _S, Pipe>::Push1(Pipe &p): PipeFunctor<Pipe>(p) {
 }
 
-template<typename T, uint32 _S, class Pipe> void Push1<T, _S, Pipe>::operator()(T &t) {
+template<typename T, uint64 _S, class Pipe> void Push1<T, _S, Pipe>::operator()(T &t) {
 
     pipe.last->buffer[pipe.tail] = t;
 
-    if (++pipe.tail == (int32)_S)
+    if (++pipe.tail == (int64)_S)
         pipe.grow();
 
-    int32 count = Atomic::Decrement32(&pipe.waitingList);
+    int64 count = Atomic::Decrement32(&pipe.waitingList);
     if (count >= 0) // at least one reader is waiting
         pipe.release(); // unlock one reader
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, uint32 _S, class Pipe> PushN<T, _S, Pipe>::PushN(Pipe &p): PipeFunctor<Pipe>(p), Semaphore(0, 1) {
+template<typename T, uint64 _S, class Pipe> PushN<T, _S, Pipe>::PushN(Pipe &p): PipeFunctor<Pipe>(p), Semaphore(0, 1) {
 }
 
-template<typename T, uint32 _S, class Pipe> void PushN<T, _S, Pipe>::operator()(T &t) {
+template<typename T, uint64 _S, class Pipe> void PushN<T, _S, Pipe>::operator()(T &t) {
 
-check_tail: int32 tail = Atomic::Increment32(&pipe.tail) - 1;
+check_tail: int64 tail = Atomic::Increment32(&pipe.tail) - 1;
 
-    if (tail < (int32)_S)
+    if (tail < (int64)_S)
         pipe.last->buffer[tail] = t;
-    else if (tail == (int32)_S) {
+    else if (tail == (int64)_S) {
 
         pipe.grow(); // tail set to 0
 
@@ -314,23 +314,23 @@ check_tail: int32 tail = Atomic::Increment32(&pipe.tail) - 1;
         goto check_tail;
     }
 
-    int32 count = Atomic::Decrement32(&pipe.waitingList);
+    int64 count = Atomic::Decrement32(&pipe.waitingList);
     if (count >= 0) // at least one reader is waiting
         pipe.release(); // unlock one reader
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, uint32 _S, class Pipe> Pop1<T, _S, Pipe>::Pop1(Pipe &p): PipeFunctor<Pipe>(p) {
+template<typename T, uint64 _S, class Pipe> Pop1<T, _S, Pipe>::Pop1(Pipe &p): PipeFunctor<Pipe>(p) {
 }
 
-template<typename T, uint32 _S, class Pipe> T Pop1<T, _S, Pipe>::operator()() {
+template<typename T, uint64 _S, class Pipe> T Pop1<T, _S, Pipe>::operator()() {
 
-    int32 count = Atomic::Increment32(&pipe.waitingList);
+    int64 count = Atomic::Increment32(&pipe.waitingList);
     if (count > 0) // no free lunch
         pipe.acquire(); // wait for a push
 
-    if (pipe.head == (int32)_S - 1)
+    if (pipe.head == (int64)_S - 1)
         pipe.shrink();
 
     T t = pipe.first->buffer[++pipe.head];
@@ -340,20 +340,20 @@ template<typename T, uint32 _S, class Pipe> T Pop1<T, _S, Pipe>::operator()() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, uint32 _S, class Pipe> PopN<T, _S, Pipe>::PopN(Pipe &p): PipeFunctor<Pipe>(p), Semaphore(0, 1) {
+template<typename T, uint64 _S, class Pipe> PopN<T, _S, Pipe>::PopN(Pipe &p): PipeFunctor<Pipe>(p), Semaphore(0, 1) {
 }
 
-template<typename T, uint32 _S, class Pipe> T PopN<T, _S, Pipe>::operator()() {
+template<typename T, uint64 _S, class Pipe> T PopN<T, _S, Pipe>::operator()() {
 
-    int32 count = Atomic::Increment32(&pipe.waitingList);
+    int64 count = Atomic::Increment32(&pipe.waitingList);
     if (count > 0) // no free lunch
         pipe.acquire(); // wait for a push
 
-check_head: int32 head = Atomic::Increment32(&pipe.head);
-    if (head < (int32)_S)
+check_head: int64 head = Atomic::Increment32(&pipe.head);
+    if (head < (int64)_S)
         return pipe.first->buffer[head];
 
-    if (head == (int32)_S) {
+    if (head == (int64)_S) {
 
         pipe.shrink(); // head set to -1
 
@@ -371,34 +371,34 @@ check_head: int32 head = Atomic::Increment32(&pipe.head);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, uint32 S> Pipe11<T, S>::Pipe11(): Pipe<T, S, int32, int32, Pipe11<T, S>, Push1, Pop1>() {
+template<typename T, uint64 S> Pipe11<T, S>::Pipe11(): Pipe<T, S, int64, int64, Pipe11<T, S>, Push1, Pop1>() {
 }
 
-template<typename T, uint32 S> Pipe11<T, S>::~Pipe11() {
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<typename T, uint32 S> Pipe1N<T, S>::Pipe1N(): Pipe<T, S, int32, int32 volatile, Pipe1N, Push1, PopN>() {
-}
-
-template<typename T, uint32 S> Pipe1N<T, S>::~Pipe1N() {
+template<typename T, uint64 S> Pipe11<T, S>::~Pipe11() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, uint32 S> PipeN1<T, S>::PipeN1(): Pipe<T, S, int32 volatile, int32, PipeN1, PushN, Pop1>() {
+template<typename T, uint64 S> Pipe1N<T, S>::Pipe1N(): Pipe<T, S, int64, int64 volatile, Pipe1N, Push1, PopN>() {
 }
 
-template<typename T, uint32 S> PipeN1<T, S>::~PipeN1() {
+template<typename T, uint64 S> Pipe1N<T, S>::~Pipe1N() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T, uint32 S> PipeNN<T, S>::PipeNN(): Pipe<T, S, int32 volatile, int32 volatile, PipeNN, PushN, PopN>() {
+template<typename T, uint64 S> PipeN1<T, S>::PipeN1(): Pipe<T, S, int64 volatile, int64, PipeN1, PushN, Pop1>() {
 }
 
-template<typename T, uint32 S> PipeNN<T, S>::~PipeNN() {
+template<typename T, uint64 S> PipeN1<T, S>::~PipeN1() {
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename T, uint64 S> PipeNN<T, S>::PipeNN(): Pipe<T, S, int64 volatile, int64 volatile, PipeNN, PushN, PopN>() {
+}
+
+template<typename T, uint64 S> PipeNN<T, S>::~PipeNN() {
 }
 #endif
 }

@@ -41,30 +41,30 @@ public:
     std::string source_file_name;
 
 // Init.
-    core::uint32 base_period;
-    core::uint32 reduction_core_count;
-    core::uint32 time_core_count;
+    core::uint64 base_period;
+    core::uint64 reduction_core_count;
+    core::uint64 time_core_count;
 
 // System.
-    core::float32 mdl_inertia_sr_thr;
-    core::uint32 mdl_inertia_cnt_thr;
-    core::float32 tpx_dsr_thr;
-    core::uint32 min_sim_time_horizon;
-    core::uint32 max_sim_time_horizon;
-    core::float32 sim_time_horizon;
-    core::uint32 tpx_time_horizon;
-    core::uint32 perf_sampling_period;
-    core::float32 float_tolerance;
-    core::uint32 time_tolerance;
-    core::uint64 primary_thz;
-    core::uint64 secondary_thz;
+    double mdl_inertia_sr_thr;
+    uint64_t mdl_inertia_cnt_thr;
+    double tpx_dsr_thr;
+    uint64_t min_sim_time_horizon;
+    uint64_t max_sim_time_horizon;
+    double sim_time_horizon;
+    uint64_t tpx_time_horizon;
+    uint64_t perf_sampling_period;
+    double float_tolerance;
+    uint64_t time_tolerance;
+    uint64_t primary_thz;
+    uint64_t secondary_thz;
 
 // Debug.
     bool debug;
-    core::uint32 ntf_mk_resilience;
-    core::uint32 goal_pred_success_resilience;
-    core::uint32 debug_windows;
-    core::uint32 trace_levels;
+    uint64_t ntf_mk_resilience;
+    uint64_t goal_pred_success_resilience;
+    uint64_t debug_windows;
+    uint64_t trace_levels;
     bool get_objects;
     bool decompile_objects;
     bool decompile_to_file;
@@ -75,8 +75,8 @@ public:
     bool test_objects;
 
 //Run.
-    core::uint32 run_time;
-    core::uint32 probe_level;
+    uint64_t run_time;
+    uint64_t probe_level;
     bool get_models;
     bool decompile_models;
     bool ignore_named_models;
@@ -164,7 +164,7 @@ public:
 
             this->debug = (strcmp(_debug, "yes") == 0);
             debug_windows = atoi(_debug_windows);
-            sscanf(_trace_levels, "%x", &trace_levels);
+            sscanf(_trace_levels, "%lx", &trace_levels);
 
             core::XMLNode resilience = debug.getChildNode("Resilience");
             if (!!resilience) {

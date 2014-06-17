@@ -37,24 +37,24 @@
 namespace r_code {
 
 uint64 Utils::TimeReference = 0;
-uint32 Utils::BasePeriod = 0;
-float32 Utils::FloatTolerance = 0;
-uint32 Utils::TimeTolerance = 0;
+uint64 Utils::BasePeriod = 0;
+double Utils::FloatTolerance = 0;
+uint64 Utils::TimeTolerance = 0;
 
 uint64 Utils::GetTimeReference() {
     return TimeReference;
 }
-uint32 Utils::GetBasePeriod() {
+uint64 Utils::GetBasePeriod() {
     return BasePeriod;
 }
-uint32 Utils::GetFloatTolerance() {
+uint64 Utils::GetFloatTolerance() {
     return FloatTolerance;
 }
-uint32 Utils::GetTimeTolerance() {
+uint64 Utils::GetTimeTolerance() {
     return TimeTolerance;
 }
 
-void Utils::SetReferenceValues(uint32 base_period, float32 float_tolerance, uint32 time_tolerance) {
+void Utils::SetReferenceValues(uint64_t base_period, double float_tolerance, double time_tolerance) {
 
     BasePeriod = base_period;
     FloatTolerance = float_tolerance;
@@ -66,7 +66,7 @@ void Utils::SetTimeReference(uint64 time_reference) {
     TimeReference = time_reference;
 }
 
-bool Utils::Equal(float32 l, float32 r) {
+bool Utils::Equal(double l, double r) {
 
     if (l == r)
         return true;
@@ -75,27 +75,24 @@ bool Utils::Equal(float32 l, float32 r) {
 
 bool Utils::Synchronous(uint64 l, uint64 r) {
 
-    return uint32_t(abs((int32)(l - r))) < TimeTolerance;
+    return uint64_t(abs((int64)(l - r))) < TimeTolerance;
 }
 
-uint64 Utils::GetTimestamp(const Atom *iptr) {
-
-    uint64 high = iptr[1].atom;
-    return high << 32 | iptr[2].atom;
+uint64 Utils::GetTimestamp(const Atom *iptr)
+{
+    return iptr[1].atom;
 }
 
 void Utils::SetTimestamp(Atom *iptr, uint64 t) {
 
     iptr[0] = Atom::Timestamp();
-    iptr[1].atom = t >> 32;
-    iptr[2].atom = t & 0x00000000FFFFFFFF;
+    iptr[1].atom = t;
 }
 
-void Utils::SetTimestamp(Code *object, uint16 index, uint64 t) {
+void Utils::SetTimestamp(Code *object, uint32_t index, uint64 t) {
 
     object->code(index) = Atom::Timestamp();
-    object->code(++index) = Atom(t >> 32);
-    object->code(++index) = Atom(t & 0x00000000FFFFFFFF);
+    object->code(++index) = Atom(t);
 }
 
 std::string Utils::GetString(const Atom *iptr) {
@@ -114,13 +111,13 @@ void Utils::SetString(Atom *iptr, const std::string &s) {
     uint8 l = (uint8)s.length();
     uint8 index = 0;
     iptr[index] = Atom::String(l);
-    uint32 _st = 0;
+    uint64_t _st = 0;
     int8 shift = 0;
     for (uint8 i = 0; i < l; ++i) {
 
         _st |= s[i] << shift;
         shift += 8;
-        if (shift == 32) {
+        if (shift == 64) {
 
             iptr[++index] = _st;
             _st = 0;
@@ -131,7 +128,7 @@ void Utils::SetString(Atom *iptr, const std::string &s) {
         iptr[++index] = _st;
 }
 
-int32 Utils::GetResilience(uint64 now, uint64 time_to_live, uint64 upr) {
+int64 Utils::GetResilience(uint64 now, uint64 time_to_live, uint64 upr) {
 
     if (time_to_live == 0 || upr == 0)
         return 1;
@@ -143,14 +140,14 @@ int32 Utils::GetResilience(uint64 now, uint64 time_to_live, uint64 upr) {
     return next_upr - last_upr;
 }
 
-int32 Utils::GetResilience(float32 resilience, float32 origin_upr, float32 destination_upr) {
+int64_t Utils::GetGroupResilience(double resilience, double origin_upr, double destination_upr) {
 
     if (origin_upr == 0)
         return 1;
     if (destination_upr <= origin_upr)
         return 1;
-    float32 r = origin_upr / destination_upr;
-    float32 res = resilience * r;
+    double r = origin_upr / destination_upr;
+    double res = resilience * r;
     if (res < 1)
         return 1;
     return res;

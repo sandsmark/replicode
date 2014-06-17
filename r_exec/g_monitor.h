@@ -48,7 +48,7 @@ protected:
     P<Fact> f_imdl;
     SimMode sim_mode;
 
-    uint32 volatile simulating; // 32 bits alignment.
+    uint64 volatile simulating; // 32 bits alignment.
 
     typedef std::list<std::pair<P<Goal>, P<Sim> > > SolutionList;
 

@@ -39,9 +39,9 @@ namespace r_exec {
  class Range:
  public _Object{
  public:
- virtual void add(BindingMap *bm,uint32 i)=0;
- virtual void remove(BindingMap *bm,uint32 i)=0;
- virtual bool contains(BindingMap *bm,uint32 i) const=0;
+ virtual void add(BindingMap *bm,uint64 i)=0;
+ virtual void remove(BindingMap *bm,uint64 i)=0;
+ virtual bool contains(BindingMap *bm,uint64 i) const=0;
  };
 
  // Discrete range.
@@ -61,13 +61,13 @@ namespace r_exec {
  return values.find(value)!=values.end();
  }
  public:
- void add(BindingMap *bm,uint32 i){}
- void remove(BindingMap *bm,uint32 i){}
- bool contains(BindingMap *bm,uint32 i) const{ return false; }
+ void add(BindingMap *bm,uint64 i){}
+ void remove(BindingMap *bm,uint64 i){}
+ bool contains(BindingMap *bm,uint64 i) const{ return false; }
  };
 
  // Continuous range.
- // Use for numerical intervals (float32 or uint64).
+ // Use for numerical intervals (double or uint64).
  template<typename T> class CRange:
  public Range{
  private:
@@ -102,9 +102,9 @@ namespace r_exec {
  return false;
  }
  public:
- void add(BindingMap *bm,uint32 i){}
- void remove(BindingMap *bm,uint32 i){}
- bool contains(BindingMap *bm,uint32 i) const{ return false; }
+ void add(BindingMap *bm,uint64 i){}
+ void remove(BindingMap *bm,uint64 i){}
+ bool contains(BindingMap *bm,uint64 i) const{ return false; }
  };
 
  // Last hidden reference of a model.

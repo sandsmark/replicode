@@ -42,7 +42,7 @@ using namespace r_comp;
 r_exec::View *build_view(uint64 time, Code* rstdin) { // this is application dependent WRT view->sync.
 
     r_exec::View *view = new r_exec::View();
-    const uint32 arity = VIEW_ARITY; // reminder: opcode not included in the arity.
+    const uint64 arity = VIEW_ARITY; // reminder: opcode not included in the arity.
     uint16 write_index = 0;
     uint16 extent_index = arity + 1;
 
@@ -61,7 +61,7 @@ r_exec::View *build_view(uint64 time, Code* rstdin) { // this is application dep
     return view;
 }
 
-Code *make_object(r_exec::_Mem *mem, Code* rstdin, float32 i) {
+Code *make_object(r_exec::_Mem *mem, Code* rstdin, double i) {
 
     Code *object = new r_exec::LObject(mem);
 //object->code(0)=Atom::Marker(r_exec::GetOpcode("mk.val"),4); // Caveat: arity does not include the opcode.
@@ -77,7 +77,7 @@ Code *make_object(r_exec::_Mem *mem, Code* rstdin, float32 i) {
     return object;
 }
 
-void test_injection(r_exec::_Mem *mem, float32 n) {
+void test_injection(r_exec::_Mem *mem, double n) {
 
     Code* rstdin = mem->get_stdin();
 
@@ -96,7 +96,7 @@ void test_injection(r_exec::_Mem *mem, float32 n) {
 
     uint64 t0 = r_exec::Now();
 
-    for (float32 i = 0; i < n; ++i) {
+    for (double i = 0; i < n; ++i) {
 // tt1 = r_exec::Now();
         Code* object = make_object(mem, rstdin, i);
 
@@ -126,26 +126,26 @@ void test_injection(r_exec::_Mem *mem, float32 n) {
     uint64 t2 = t1 - t0;
     std::cout << "for-loop total time: " << t2 << std::endl;
     /* uint64 acc=0;
-    for(uint32 i=0;i<n;++i){
+    for(uint64 i=0;i<n;++i){
     acc+=v1[i];
     std::cout<<v1[i]<<'\t';
     }
     std::cout<<"\nfor-loop accumulated time make_object: "<<acc<< std::endl;
     acc=0;
-    for(uint32 i=0;i<n;++i){
+    for(uint64 i=0;i<n;++i){
     acc+=v2[i];
     // std::cout<<v2[i]<<'/'<<mem->timings_report[i]<<'\t';
     std::cout<<v2[i]<<'\t';
     }
     std::cout<<"\nfor-loop accumulated time new Fact : "<<acc<< std::endl;
     acc=0;
-    for(uint32 i=0;i<n;++i){
+    for(uint64 i=0;i<n;++i){
     acc+=v3[i];
     std::cout<<v3[i]<<'\t';
     }
     std::cout<<"\nfor-loop accumulated time build_view : "<<acc<< std::endl;
     acc=0;
-    for(uint32 i=0;i<n;++i){
+    for(uint64 i=0;i<n;++i){
     acc+=v4[i];
     std::cout<<v4[i]<<'\t';
     }
@@ -153,7 +153,7 @@ void test_injection(r_exec::_Mem *mem, float32 n) {
     */
 }
 
-void test_many_injections(r_exec::_Mem *mem, uint32 sampling_period_ms, uint32 nRuns, float32 nObjects) {
+void test_many_injections(r_exec::_Mem *mem, uint64 sampling_period_ms, uint64 nRuns, double nObjects) {
     for (; nRuns; --nRuns) {
         uint64 start = r_exec::Now();
         std::cout << nRuns << '\t';
@@ -169,12 +169,12 @@ void test_many_injections(r_exec::_Mem *mem, uint32 sampling_period_ms, uint32 n
 void decompile(Decompiler &decompiler, r_comp::Image *image, uint64 time_offset, bool ignore_named_objects) {
 
 #ifdef DECOMPILE_ONE_BY_ONE
-    uint32 object_count = decompiler.decompile_references(image);
+    uint64 object_count = decompiler.decompile_references(image);
     std::cout << object_count << " objects in the image\n";
     while (1) {
 
         std::cout << "> which object (-1 to exit)?\n";
-        int32 index; std::cin >> index;
+        int64 index; std::cin >> index;
         if (index == -1)
             break;
         if (index >= object_count) {
@@ -188,8 +188,8 @@ void decompile(Decompiler &decompiler, r_comp::Image *image, uint64 time_offset,
     }
 #else
     std::ostringstream decompiled_code;
-    uint32 object_count = decompiler.decompile(image, &decompiled_code, time_offset, ignore_named_objects);
-//uint32 object_count=image->code_segment.objects.size();
+    uint64 object_count = decompiler.decompile(image, &decompiled_code, time_offset, ignore_named_objects);
+//uint64 object_count=image->code_segment.objects.size();
     std::cout << "\n\n> DECOMPILATION\n\n" << decompiled_code.str() << std::endl;
     std::cout << "> image taken at: " << Time::ToString_year(image->timestamp) << std::endl;
     std::cout << "> " << object_count << " objects\n";
@@ -224,7 +224,7 @@ void write_to_file(r_comp::Image *image, std::string &image_path, Decompiler *de
     }
 }
 
-int32 main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
     core::Time::Init(1000);
 
@@ -239,7 +239,7 @@ int32 main(int argc, char **argv) {
         return 2;
 
     srand(r_exec::Now());
-    Random::Init();
+    //Random::Init();
 
     std::cout << "> compiling source..." << std::endl;
     std::string error;
@@ -290,11 +290,11 @@ int32 main(int argc, char **argv) {
                   settings.probe_level,
                   settings.trace_levels);
 
-        uint32 stdin_oid;
+        uint64 stdin_oid;
         std::string stdin_symbol("stdin");
-        uint32 stdout_oid;
+        uint64 stdout_oid;
         std::string stdout_symbol("stdout");
-        uint32 self_oid;
+        uint64 self_oid;
         std::string self_symbol("self");
         UNORDERED_MAP<uintptr_t, std::string>::const_iterator n;
         for (n = r_exec::getSeed()->object_names.symbols.begin(); n != r_exec::getSeed()->object_names.symbols.end(); ++n) {

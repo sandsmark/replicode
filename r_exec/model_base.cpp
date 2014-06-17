@@ -34,9 +34,9 @@
 
 namespace r_exec {
 
-uint32 ModelBase::MEntry::_ComputeHashCode(_Fact *component) { // 14 bits: [fact or |fact (1)|type (3)|data (10)].
+uint64 ModelBase::MEntry::_ComputeHashCode(_Fact *component) { // 14 bits: [fact or |fact (1)|type (3)|data (10)].
 
-    uint32 hash_code;
+    uint64 hash_code;
     if (component->is_fact())
         hash_code = 0x00000000;
     else
@@ -70,9 +70,9 @@ uint32 ModelBase::MEntry::_ComputeHashCode(_Fact *component) { // 14 bits: [fact
     return hash_code;
 }
 
-uint32 ModelBase::MEntry::ComputeHashCode(Code *mdl, bool packed) {
+uint64 ModelBase::MEntry::ComputeHashCode(Code *mdl, bool packed) {
 
-    uint32 hash_code = (mdl->code(mdl->code(HLP_TPL_ARGS).asIndex()).getAtomCount() << 28);
+    uint64 hash_code = (mdl->code(mdl->code(HLP_TPL_ARGS).asIndex()).getAtomCount() << 28);
     _Fact *lhs;
     _Fact *rhs;
     if (packed) {

@@ -299,12 +299,12 @@ bool InputLessPGMOverlay::inject_productions() {
                 void *object;
                 IPGMContext::ObjectType object_type;
                 int16 member_index;
-                uint32 view_oid;
+                uint64 view_oid;
                 args.getChild(1).getMember(object, view_oid, object_type, member_index); // args.getChild(1) is an iptr.
 
                 if (object) {
 
-                    float32 value = (*args.getChild(2))[0].asFloat();
+                    double value = (*args.getChild(2))[0].asDouble();
                     switch (object_type) {
                     case IPGMContext::TYPE_VIEW: { // add the target and value to the group's pending operations.
 
@@ -332,12 +332,12 @@ bool InputLessPGMOverlay::inject_productions() {
                 void *object;
                 IPGMContext::ObjectType object_type;
                 int16 member_index;
-                uint32 view_oid;
+                uint64 view_oid;
                 args.getChild(1).getMember(object, view_oid, object_type, member_index); // args.getChild(1) is an iptr.
 
                 if (object) {
 
-                    float32 value = (*args.getChild(2))[0].asFloat();
+                    double value = (*args.getChild(2))[0].asDouble();
                     switch (object_type) {
                     case IPGMContext::TYPE_VIEW: { // add the target and value to the group's pending operations.
 
@@ -366,7 +366,7 @@ bool InputLessPGMOverlay::inject_productions() {
 
             } else if (function[0].asOpcode() == Opcodes::Prb) { // args:[probe_level,callback_name,msg,set of objects].
 
-                float32 probe_lvl = (*args.getChild(1))[0].asFloat();
+                double probe_lvl = (*args.getChild(1))[0].asDouble();
                 if (probe_lvl < _Mem::Get()->get_probe_level()) {
 
                     std::string callback_name = Utils::GetString(&(*args.getChild(2))[0]);
@@ -510,7 +510,7 @@ bool PGMOverlay::is_invalidated() {
 
     if (is_volatile) {
 
-        for (uint32 i = 0; i < input_views.size(); ++i) {
+        for (uint64 i = 0; i < input_views.size(); ++i) {
 
             if (input_views[i]->object->is_invalidated())
                 return (invalidated = 1);

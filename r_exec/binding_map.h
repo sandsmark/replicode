@@ -180,7 +180,7 @@ class r_exec_dll BindingMap:
 protected:
     std::vector<P<Value> > map; // indexed by vl-ptrs.
 
-    uint32 unbound_values;
+    uint64 unbound_values;
 
     void add_unbound_value(uint8 id);
 
@@ -188,7 +188,7 @@ protected:
     int16 fwd_after_index; // tpl args (if any) are located before fwd_after_index.
     int16 fwd_before_index;
 
-    bool match_timings(uint64 stored_after, uint64 stored_before, uint64 after, uint64 before, uint32 destination_after_index, uint32 destination_before_index);
+    bool match_timings(uint64 stored_after, uint64 stored_before, uint64 after, uint64 before, uint64 destination_after_index, uint64 destination_before_index);
     bool match_fwd_timings(const _Fact *f_object, const _Fact *f_pattern);
     bool match(const Code *object, uint16 o_base_index, uint16 o_index, const Code *pattern, uint16 p_index, uint16 o_arity);
 

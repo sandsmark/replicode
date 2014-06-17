@@ -9,9 +9,9 @@
 namespace r_comp {
 
 UNORDERED_MAP<std::string, RepliMacro *> RepliStruct::RepliMacros;
-UNORDERED_MAP<std::string, int32_t> RepliStruct::Counters;
+UNORDERED_MAP<std::string, int64_t> RepliStruct::Counters;
 std::list<RepliCondition *> RepliStruct::Conditions;
-uint32_t RepliStruct::GlobalLine = 1;
+uint64_t RepliStruct::GlobalLine = 1;
 std::string RepliStruct::GlobalFilename;
 
 RepliStruct::RepliStruct(RepliStruct::Type type) {
@@ -44,9 +44,9 @@ void RepliStruct::reset() {
     }
 }
 
-uint32_t RepliStruct::getIndent(std::istream *stream) {
+uint64_t RepliStruct::getIndent(std::istream *stream) {
 
-    uint32_t count = 0;
+    uint64_t count = 0;
     while (!stream->eof()) {
         switch (stream->get()) {
         case '\n':
@@ -65,14 +65,14 @@ uint32_t RepliStruct::getIndent(std::istream *stream) {
     return count / 3;
 }
 
-int32_t RepliStruct::parse(std::istream *stream, uint32_t &curIndent, uint32_t &prevIndent, int32_t paramExpect) {
+int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &prevIndent, int64_t paramExpect) {
 
     char c = 0, lastc = 0, lastcc, tc;
     std::string str, label;
     RepliStruct* subStruct;
 
-    int32_t paramCount = 0;
-    int32_t returnIndent = 0;
+    int64_t paramCount = 0;
+    int64_t returnIndent = 0;
 
     bool inComment = false;
     bool expectSet = false;
@@ -439,7 +439,7 @@ int32_t RepliStruct::parse(std::istream *stream, uint32_t &curIndent, uint32_t &
 }
 
 
-bool RepliStruct::parseDirective(std::istream *stream, uint32_t &curIndent, uint32_t &prevIndent) {
+bool RepliStruct::parseDirective(std::istream *stream, uint64_t &curIndent, uint64_t &prevIndent) {
 
     std::string str = "!";
 // RepliStruct* subStruct;
@@ -511,8 +511,8 @@ bool RepliStruct::parseDirective(std::istream *stream, uint32_t &curIndent, uint
 }
 
 
-int32_t RepliStruct::process() {
-    int32_t changes = 0, count;
+int64_t RepliStruct::process() {
+    int64_t changes = 0, count;
     RepliStruct *structure, *newStruct, *tempStruct;
     RepliMacro* macro;
     RepliCondition* cond;
@@ -683,7 +683,7 @@ RepliStruct *RepliStruct::loadReplicodeFile(const std::string &filename) {
         return newRoot;
     }
 // create new Root structure
-    uint32_t a = 0, b = 0;
+    uint64_t a = 0, b = 0;
     if (newRoot->parse(&loadStream, a, b) < 0) {
 // error is already recorded in newRoot
     }
@@ -868,7 +868,7 @@ RepliMacro::~RepliMacro() {
     dest = NULL;
 }
 
-uint32_t RepliMacro::argCount() {
+uint64_t RepliMacro::argCount() {
 
     if (src == NULL)
         return 0;
@@ -969,7 +969,7 @@ bool RepliCondition::reverse() {
     return true;
 }
 
-bool RepliCondition::isActive(UNORDERED_MAP<std::string, RepliMacro *> &RepliMacros, UNORDERED_MAP<std::string, int32_t> &Counters) {
+bool RepliCondition::isActive(UNORDERED_MAP<std::string, RepliMacro *> &RepliMacros, UNORDERED_MAP<std::string, int64_t> &Counters) {
 
     bool foundIt = (RepliMacros.find(name) != RepliMacros.end());
 

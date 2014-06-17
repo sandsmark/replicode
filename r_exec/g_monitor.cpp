@@ -156,8 +156,8 @@ void GMonitor::commit() { // the purpose is to invalidate damaging simulations; 
             best_sol = (*sol).second;
         else {
 
-            float32 s = (*sol).second->sol_cfd / ((*sol).second->sol_before - now);
-            float32 _s = best_sol->sol_cfd / (best_sol->sol_before - now);
+            double s = (*sol).second->sol_cfd / ((*sol).second->sol_before - now);
+            double _s = best_sol->sol_cfd / (best_sol->sol_before - now);
             if (s > _s)
                 best_sol = (*sol).second;
         }

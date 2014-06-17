@@ -47,28 +47,28 @@ class LObject;
 class r_exec_dll View:
     public r_code::View {
 private:
-    static uint32 LastOID;
-    static uint32 GetOID();
+    static uint64 LastOID;
+    static uint64 GetOID();
 
 // Ctrl values.
-    uint32 sln_changes;
-    float32 acc_sln;
-    uint32 act_changes;
-    float32 acc_act;
-    uint32 vis_changes;
-    float32 acc_vis;
-    uint32 res_changes;
-    float32 acc_res;
+    uint64 sln_changes;
+    double acc_sln;
+    uint64 act_changes;
+    double acc_act;
+    uint64 vis_changes;
+    double acc_vis;
+    uint64 res_changes;
+    double acc_res;
     void reset_ctrl_values();
 
 // Monitoring
-    float32 initial_sln;
-    float32 initial_act;
+    double initial_sln;
+    double initial_act;
 
     void init(SyncMode sync,
               uint64 ijt,
-              float32 sln,
-              int32 res,
+              double sln,
+              int64 res,
               r_code::Code *host,
               r_code::Code *origin,
               r_code::Code *object);
@@ -80,13 +80,13 @@ public:
 
     P<Controller> controller; // built upon injection of the view (if the object is an ipgm/icpp_pgm/cst/mdl).
 
-    static float32 MorphValue(float32 value, float32 source_thr, float32 destination_thr);
-    static float32 MorphChange(float32 change, float32 source_thr, float32 destination_thr);
+    static double MorphValue(double value, double source_thr, double destination_thr);
+    static double MorphChange(double change, double source_thr, double destination_thr);
 
-    uint32 periods_at_low_sln;
-    uint32 periods_at_high_sln;
-    uint32 periods_at_low_act;
-    uint32 periods_at_high_act;
+    uint64 periods_at_low_sln;
+    uint64 periods_at_high_sln;
+    uint64 periods_at_low_act;
+    uint64 periods_at_high_act;
 
     View();
     View(r_code::SysView *source, r_code::Code *object);
@@ -94,36 +94,36 @@ public:
     View(const View *view, bool new_OID = false); // simple copy.
     View(SyncMode sync,
          uint64 ijt,
-         float32 sln,
-         int32 res,
+         double sln,
+         int64 res,
          Code *host,
          Code *origin,
          Code *object); // regular view; res set to -1 means forever.
     View(SyncMode sync,
          uint64 ijt,
-         float32 sln,
-         int32 res,
+         double sln,
+         int64 res,
          Code *host,
          Code *origin,
          Code *object,
-         float32 act); // pgm/mdl view; res set to -1 means forever.
+         double act); // pgm/mdl view; res set to -1 means forever.
     ~View();
 
     void reset();
     void set_object(r_code::Code *object);
 
-    uint32 get_oid() const;
+    uint64 get_oid() const;
 
     virtual bool isNotification() const;
 
     Group *get_host();
 
     SyncMode get_sync();
-    float32 get_res();
-    float32 get_sln();
-    float32 get_act();
+    double get_res();
+    double get_sln();
+    double get_act();
     bool get_cov();
-    float32 get_vis();
+    double get_vis();
     uintptr_t &ctrl0() {
         return _code[VIEW_CTRL_0].atom; // use only for non-group views.
     }
@@ -131,28 +131,28 @@ public:
         return _code[VIEW_CTRL_1].atom; // idem.
     }
 
-    void mod_res(float value);
-    void set_res(float value);
-    void mod_sln(float32 value);
-    void set_sln(float32 value);
-    void mod_act(float32 value);
-    void set_act(float32 value);
-    void mod_vis(float32 value);
-    void set_vis(float32 value);
+    void mod_res(double value);
+    void set_res(double value);
+    void mod_sln(double value);
+    void set_sln(double value);
+    void mod_act(double value);
+    void set_act(double value);
+    void mod_vis(double value);
+    void set_vis(double value);
 
-    float32 update_res();
-    float32 update_sln(float32 low, float32 high);
-    float32 update_act(float32 low, float32 high);
-    float32 update_vis();
+    double update_res();
+    double update_sln(double low, double high);
+    double update_act(double low, double high);
+    double update_vis();
 
-    float32 update_sln_delta();
-    float32 update_act_delta();
+    double update_sln_delta();
+    double update_act_delta();
 
-    void force_res(float32 value); // unmediated.
+    void force_res(double value); // unmediated.
 
 // Target res, sln, act, vis.
-    void mod(uint16 member_index, float32 value);
-    void set(uint16 member_index, float32 value);
+    void mod(uint16 member_index, double value);
+    void set(uint16 member_index, double value);
 
     void delete_from_object();
     void delete_from_group();

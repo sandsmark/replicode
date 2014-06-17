@@ -65,26 +65,26 @@ public:
 
         r_comp::Image *image = r_exec::_Mem::Get()->get_objects();
 
-        uint32 object_count = decompiler.decompile_references(image);
+        uint64 object_count = decompiler.decompile_references(image);
 
 // from here on is different, by Bas
         static void* inst;
         struct OID2string {
             r_comp::Decompiler& decompiler;
             r_code::vector<r_code::SysObject*>& objects;
-            uint32& object_count;
+            uint64& object_count;
             uint64& time_offset;
 
-            OID2string(r_comp::Decompiler& d, r_code::vector<r_code::SysObject*>& o, uint32& c, uint64& t):
+            OID2string(r_comp::Decompiler& d, r_code::vector<r_code::SysObject*>& o, uint64& c, uint64& t):
                 decompiler(d), objects(o), object_count(c), time_offset(t) {
                 inst = this;
             }
 
-            static std::string wrapper(uint32 id) {
+            static std::string wrapper(uint64 id) {
                 return ((OID2string*)inst)->impl(id);
             }
 
-            std::string impl(uint32 id) {
+            std::string impl(uint64 id) {
                 for (uint16 j = 0; j < object_count; ++j)
                     if (objects[j]->oid == id) {
                         std::ostringstream decompiled_code;
@@ -112,7 +112,7 @@ public:
     r_comp::Image *image=((r_exec::Mem<r_exec::LObject> *)mem)->getImage();
     mem->resume();
 
-    uint32 object_count=decompiler.decompile_references(image);
+    uint64 object_count=decompiler.decompile_references(image);
     std::cout<<object_count<<" objects in the image\n";
     for(uint16 i=0;i<correlator->episode.size();++i){ // episode is ordered by injection times.
 
@@ -216,7 +216,7 @@ CorrelatorOutput* Correlator::get_output(bool useEntireHistory) {
 }
 
 // not yet implemented
-void Correlator::dump(std::ostream& out, std::string(*oid2str)(uint32)) const {
+void Correlator::dump(std::ostream& out, std::string(*oid2str)(uint64)) const {
 
 // ::dump(episode, enc2obj, out, oid2str);
 }
@@ -225,12 +225,12 @@ void Correlator::dump(std::ostream& out, std::string(*oid2str)(uint32)) const {
 
 uint16 Correlator::NUM_BLOCKS = 8;
 uint16 Correlator::CELLS_PER_BLOCK = 1;
-uint32 Correlator::NUM_EPOCHS = 2000;
+uint64 Correlator::NUM_EPOCHS = 2000;
 float64 Correlator::TRAIN_TIME_SEC = 600;
 float64 Correlator::MSE_THR = 0.001;
 float64 Correlator::LEARNING_RATE = 0.001;
 float64 Correlator::MOMENTUM = 0.01;
-uint32 Correlator::SLICE_SIZE = 5;
+uint64 Correlator::SLICE_SIZE = 5;
 float64 Correlator::OBJECT_THR = 0.5;
 float64 Correlator::RULE_THR = 0.5;
 
@@ -252,11 +252,11 @@ static void makeNoislessInputs(Episode::const_iterator first, Episode::const_ite
 
     result.assign(std::distance(first, last) - noise.size(), LSTMState(32));
 
-    uint32 i = 0;
+    uint64 i = 0;
     for (Episode::const_iterator it = first; it != last; ++it) {
         enc_t code = *it;
         if (noise.find(code) == noise.end()) {
-            for (uint32 j = 0, b = 1 << 31; j < 32; ++j, b >>= 1)
+            for (uint64 j = 0, b = 1 << 31; j < 32; ++j, b >>= 1)
                 result[i][j] = code & b ? 1 : 0;
             ++i;
         }
@@ -485,12 +485,12 @@ enc_t Correlator::encode(OID_t id, bool& is_new) {
     static uint8 NUM_ONES = INIT_NUM_ONES; // #ones we want in the encoding
     static uint8 NUM_POS = NUM_ONES; // #positions to flip
     static enc_t INIT_CODE = 0; // either 0 of 0xFFFFFFFF
-// const static uint32 BINOMIALS[] = {1, 32, 496, 4960, 35960, 201376,
+// const static uint64 BINOMIALS[] = {1, 32, 496, 4960, 35960, 201376,
 // 906192, 3365856, 10518300, 28048800, 64512240, 129024480,
 // 225792840, 347373600, 471435600, 565722720, 601080390};
 // cumulative binomials of 32 above <index>
 // Mathematica: Accumulate[Binomial[32, Range[0, 31]]]
-    const static uint32 CUML_BINS[] = {1, 33, 529, 5489, 41449, 242825,
+    const static uint64 CUML_BINS[] = {1, 33, 529, 5489, 41449, 242825,
                                        1149017, 4514873, 15033173, 43081973, 107594213, 236618693,
                                        462411533, 809785133, 1281220733, 1846943453, 2448023843,
                                        3013746563, 3485182163, 3832555763, 4058348603, 4187373083,
@@ -498,7 +498,7 @@ enc_t Correlator::encode(OID_t id, bool& is_new) {
                                        4294925847, 4294961807, 4294966767, 4294967263, 4294967295
                                       };
 // used to determine when to use more ones in encodings
-    static uint32 MAX_SIZE = CUML_BINS[NUM_ONES] -
+    static uint64 MAX_SIZE = CUML_BINS[NUM_ONES] -
                              (INIT_NUM_ONES > 0 ? CUML_BINS[INIT_NUM_ONES - 1] : 0);
 
 // first, check if we already have an encoding
@@ -542,14 +542,14 @@ enc_t Correlator::encode(OID_t id, bool& is_new) {
 
 // extracts rules of the form Target <= {(Src_1,Dt_1),..,(Src_n,Dt_n)}
 // for deltaTimes Dt_1 < .. < Dt_n
-void Correlator::extract_rules(JacobianRules& rules, uint32 episode_size) {
+void Correlator::extract_rules(JacobianRules& rules, uint64 episode_size) {
 
-    uint32 num_calls = episode_size - SLICE_SIZE;
+    uint64 num_calls = episode_size - SLICE_SIZE;
     rules.reserve(num_calls);
     JacobianSlice slice(SLICE_SIZE, LSTMState(32));
 
 
-    for (int32 t = num_calls - 1; t >= 0; --t) {
+    for (int64 t = num_calls - 1; t >= 0; --t) {
 
 // perform sensitivity analysis
         corcor.getJacobian(t, t + SLICE_SIZE, slice);

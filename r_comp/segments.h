@@ -52,7 +52,7 @@ public:
 
 // All classes below map components of r_code::Image into r_comp::Image.
 // Both images are equivalent, the latter being easier to work with (uses vectors instead of a contiguous structure, that is r_code::Image::data).
-// All read(word32*,uint32)/write(word32*) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
+// All read(word32*,uint64)/write(word32*) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
 
 class dll_export Metadata {
 private:

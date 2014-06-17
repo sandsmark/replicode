@@ -53,7 +53,7 @@ class CSTOverlay:
     public HLPOverlay {
 protected:
     uint64 match_deadline; // before deadline after the last match.
-    float32 lowest_cfd; // among the inputs (forward chaining).
+    double lowest_cfd; // among the inputs (forward chaining).
 
     std::vector<P<_Fact> > inputs;
 
@@ -91,7 +91,7 @@ private:
                      _Fact *sub_goal_target, // f1.
                      Sim *sim,
                      uint64 now,
-                     float32 confidence,
+                     double confidence,
                      Code *group) const;
 
     void kill_views();
@@ -106,8 +106,8 @@ public:
     Fact *get_f_ihlp(HLPBindingMap *bindings, bool wr_enabled) const;
     Fact *get_f_icst(HLPBindingMap *bindings, std::vector<P<_Fact> > *inputs) const;
 
-    void inject_icst(Fact *production, float32 confidence, uint64 time_to_live) const; // here, resilience=time to live, in us.
-    bool inject_prediction(Fact *prediction, float32 confidence, uint64 time_to_live) const; // here, resilience=time to live, in us; returns true if the prediction has actually been injected.
+    void inject_icst(Fact *production, double confidence, uint64 time_to_live) const; // here, resilience=time to live, in us.
+    bool inject_prediction(Fact *prediction, double confidence, uint64 time_to_live) const; // here, resilience=time to live, in us; returns true if the prediction has actually been injected.
 
     void set_secondary_host(Group *host);
     Group *get_secondary_host() const;

@@ -340,7 +340,7 @@ void CmdGuardBuilder::_build(Code *mdl, uint16 fwd_opcode, uint16 bwd_opcode, _F
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-MCGuardBuilder::MCGuardBuilder(uint64 period, float32 cmd_arg_index): CmdGuardBuilder(period, cmd_arg_index) {
+MCGuardBuilder::MCGuardBuilder(uint64 period, double cmd_arg_index): CmdGuardBuilder(period, cmd_arg_index) {
 }
 
 MCGuardBuilder::~MCGuardBuilder() {
@@ -366,7 +366,7 @@ void ACGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_patte
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ConstGuardBuilder::ConstGuardBuilder(uint64 period, float32 constant, uint64 offset): TimingGuardBuilder(period), constant(constant), offset(offset) {
+ConstGuardBuilder::ConstGuardBuilder(uint64 period, double constant, uint64 offset): TimingGuardBuilder(period), constant(constant), offset(offset) {
 }
 
 ConstGuardBuilder::~ConstGuardBuilder() {
@@ -441,7 +441,7 @@ void ConstGuardBuilder::_build(Code *mdl, uint16 fwd_opcode, uint16 bwd_opcode, 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-MGuardBuilder::MGuardBuilder(uint64 period, float32 constant, uint64 offset): ConstGuardBuilder(period, constant, offset) {
+MGuardBuilder::MGuardBuilder(uint64 period, double constant, uint64 offset): ConstGuardBuilder(period, constant, offset) {
 }
 
 MGuardBuilder::~MGuardBuilder() {
@@ -454,7 +454,7 @@ void MGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_patter
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-AGuardBuilder::AGuardBuilder(uint64 period, float32 constant, uint64 offset): ConstGuardBuilder(period, constant, offset) {
+AGuardBuilder::AGuardBuilder(uint64 period, double constant, uint64 offset): ConstGuardBuilder(period, constant, offset) {
 }
 
 AGuardBuilder::~AGuardBuilder() {

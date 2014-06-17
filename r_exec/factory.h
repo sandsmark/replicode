@@ -83,13 +83,13 @@ public:
 class r_exec_dll MkSlnChg:
     public LObject {
 public:
-    MkSlnChg(r_code::Mem *m, Code *object, float32 value);
+    MkSlnChg(r_code::Mem *m, Code *object, double value);
 };
 
 class r_exec_dll MkActChg:
     public LObject {
 public:
-    MkActChg(r_code::Mem *m, Code *object, float32 value);
+    MkActChg(r_code::Mem *m, Code *object, double value);
 };
 
 class Pred;
@@ -106,7 +106,7 @@ protected:
     _Fact();
     _Fact(SysObject *source);
     _Fact(_Fact *f);
-    _Fact(uint16 opcode, Code *object, uint64 after, uint64 before, float32 confidence, float32 psln_thr);
+    _Fact(uint16 opcode, Code *object, uint64 after, uint64 before, double confidence, double psln_thr);
 public:
     static bool MatchObject(const Code *lhs, const Code *rhs);
 
@@ -126,9 +126,9 @@ public:
 
     uint64 get_after() const;
     uint64 get_before() const;
-    float32 get_cfd() const;
+    double get_cfd() const;
 
-    void set_cfd(float32 cfd);
+    void set_cfd(double cfd);
 
     Pred *get_pred() const;
     Goal *get_goal() const;
@@ -145,12 +145,12 @@ typedef enum {
 class r_exec_dll Sim:
     public _Object {
 private:
-    uint32 volatile invalidated; // 32 bits alignment.
+    uint64 volatile invalidated; // 32 bits alignment.
 public:
     Sim();
     Sim(Sim *s); // is_requirement=false (not copied).
     Sim(SimMode mode, uint64 thz, Fact *super_goal, bool opposite, Controller *root); // use for SIM_ROOT.
-    Sim(SimMode mode, uint64 thz, Fact *super_goal, bool opposite, Controller *root, Controller *sol, float32 sol_cfd, uint64 sol_deadline); // USE for SIM_MANDATORY or SIM_OPTIONAL.
+    Sim(SimMode mode, uint64 thz, Fact *super_goal, bool opposite, Controller *root, Controller *sol, double sol_cfd, uint64 sol_deadline); // USE for SIM_MANDATORY or SIM_OPTIONAL.
 
     void invalidate();
     bool is_invalidated();
@@ -164,7 +164,7 @@ public:
     P<Fact> super_goal; // of the goal the sim is attached to.
     P<Controller> root; // controller that produced the simulation branch root (SIM_ROOT): identifies the branch.
     P<Controller> sol; // controller that produced a sub-goal of the branch's root: identifies the model that can be a solution for the super-goal.
-    float32 sol_cfd; // confidence of the solution goal.
+    double sol_cfd; // confidence of the solution goal.
     uint64 sol_before; // deadline of the solution goal.
 };
 
@@ -178,7 +178,7 @@ public:
     Fact();
     Fact(SysObject *source);
     Fact(Fact *f);
-    Fact(Code *object, uint64 after, uint64 before, float32 confidence, float32 psln_thr);
+    Fact(Code *object, uint64 after, uint64 before, double confidence, double psln_thr);
 };
 
 // Caveat: as for Fact.
@@ -189,7 +189,7 @@ public:
     AntiFact();
     AntiFact(SysObject *source);
     AntiFact(AntiFact *f);
-    AntiFact(Code *object, uint64 after, uint64 before, float32 confidence, float32 psln_thr);
+    AntiFact(Code *object, uint64 after, uint64 before, double confidence, double psln_thr);
 };
 
 // Goals and predictions:
@@ -210,7 +210,7 @@ class r_exec_dll Pred:
 public:
     Pred();
     Pred(SysObject *source);
-    Pred(_Fact *target, float32 psln_thr);
+    Pred(_Fact *target, double psln_thr);
 
     bool is_invalidated();
     bool grounds_invalidated(_Fact *evidence);
@@ -229,7 +229,7 @@ class r_exec_dll Goal:
 public:
     Goal();
     Goal(SysObject *source);
-    Goal(_Fact *target, Code *actor, float32 psln_thr);
+    Goal(_Fact *target, Code *actor, double psln_thr);
 
     bool invalidate();
     bool is_invalidated();
@@ -247,7 +247,7 @@ public:
     P<Sim> sim;
     P<_Fact> ground; // f->p->f->imdl (weak requirement) that allowed backward chaining, if any.
 
-    float32 get_strength(uint64 now) const; // goal->target->cfd/(before-now).
+    double get_strength(uint64 now) const; // goal->target->cfd/(before-now).
 };
 
 class r_exec_dll MkRdx:
@@ -255,7 +255,7 @@ class r_exec_dll MkRdx:
 public:
     MkRdx();
     MkRdx(SysObject *source);
-    MkRdx(Code *imdl_fact, Code *input, Code *output, float32 psln_thr, BindingMap *binding_map); // for mdl.
+    MkRdx(Code *imdl_fact, Code *input, Code *output, double psln_thr, BindingMap *binding_map); // for mdl.
 
     P<BindingMap> bindings; // NULL when produced by programs.
 };
@@ -264,14 +264,14 @@ class r_exec_dll Success:
     public LObject {
 public:
     Success();
-    Success(_Fact *object, _Fact *evidence, float32 psln_thr);
+    Success(_Fact *object, _Fact *evidence, double psln_thr);
 };
 
 class r_exec_dll Perf:
     public LObject {
 public:
     Perf();
-    Perf(uint32 reduction_job_avg_latency, int32 d_reduction_job_avg_latency, uint32 time_job_avg_latency, int32 d_time_job_avg_latency);
+    Perf(uint64 reduction_job_avg_latency, int64 d_reduction_job_avg_latency, uint64 time_job_avg_latency, int64 d_time_job_avg_latency);
 };
 
 class r_exec_dll ICST:

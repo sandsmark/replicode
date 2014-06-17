@@ -67,31 +67,31 @@ public:
     } State;
 protected:
 // Parameters::Init.
-    uint32 base_period;
-    uint32 reduction_core_count;
-    uint32 time_core_count;
+    uint64 base_period;
+    uint64 reduction_core_count;
+    uint64 time_core_count;
 
 // Parameters::System.
-    float32 mdl_inertia_sr_thr;
-    uint32 mdl_inertia_cnt_thr;
-    float32 tpx_dsr_thr;
-    uint32 min_sim_time_horizon;
-    uint32 max_sim_time_horizon;
-    float32 sim_time_horizon;
-    uint32 tpx_time_horizon;
-    uint32 perf_sampling_period;
-    float32 float_tolerance;
-    uint32 time_tolerance;
+    double mdl_inertia_sr_thr;
+    uint64 mdl_inertia_cnt_thr;
+    double tpx_dsr_thr;
+    uint64 min_sim_time_horizon;
+    uint64 max_sim_time_horizon;
+    double sim_time_horizon;
+    uint64 tpx_time_horizon;
+    uint64 perf_sampling_period;
+    double float_tolerance;
+    uint64 time_tolerance;
     uint64 primary_thz;
     uint64 secondary_thz;
 
 // Parameters::Debug.
     bool debug;
-    uint32 ntf_mk_res;
-    uint32 goal_pred_success_res;
+    uint64 ntf_mk_res;
+    uint64 goal_pred_success_res;
 
 // Parameters::Run.
-    uint32 probe_level;
+    uint64 probe_level;
 
     PipeNN<P<_ReductionJob>, 1024> *reduction_job_queue;
     PipeNN<P<TimeJob>, 1024> *time_job_queue;
@@ -99,17 +99,17 @@ protected:
     TimeCore **time_cores;
 
 // Performance stats.
-    uint32 reduction_job_count;
+    uint64 reduction_job_count;
     uint64 reduction_job_avg_latency; // latency: popping time.-pushing time; the lower the better.
     uint64 _reduction_job_avg_latency; // previous value.
-    uint32 time_job_count;
+    uint64 time_job_count;
     uint64 time_job_avg_latency; // latency: deadline-the time the job is popped from the pipe; if <0, not registered (as it is too late for action); the higher the better.
     uint64 _time_job_avg_latency; // previous value.
 
     CriticalSection time_jobCS;
     CriticalSection reduction_jobCS;
 
-    uint32 core_count;
+    uint64 core_count;
     CriticalSection core_countCS;
 
     State state;
@@ -130,12 +130,12 @@ protected:
     void init_timings(uint64 now) const;
 
     void store(Code *object);
-    virtual void set_last_oid(int32 oid) = 0;
+    virtual void set_last_oid(int64 oid) = 0;
     virtual void bind(View *view) = 0;
 
     bool deleted;
 
-    static const uint32 DebugStreamCount = 8;
+    static const uint64 DebugStreamCount = 8;
     ostream *debug_streams[8];
 
     _Mem();
@@ -153,49 +153,49 @@ public:
 
     virtual ~_Mem();
 
-    void init(uint32 base_period,
-              uint32 reduction_core_count,
-              uint32 time_core_count,
-              float32 mdl_inertia_sr_thr,
-              uint32 mdl_inertia_cnt_thr,
-              float32 tpx_dsr_thr,
-              uint32 min_sim_time_horizon,
-              uint32 max_sim_time_horizon,
-              float32 sim_time_horizon,
-              uint32 tpx_time_horizon,
-              uint32 perf_sampling_period,
-              float32 float_tolerance,
-              uint32 time_tolerance,
-              uint32 primary_thz,
-              uint32 secondary_thz,
+    void init(uint64 base_period,
+              uint64 reduction_core_count,
+              uint64 time_core_count,
+              double mdl_inertia_sr_thr,
+              uint64 mdl_inertia_cnt_thr,
+              double tpx_dsr_thr,
+              uint64 min_sim_time_horizon,
+              uint64 max_sim_time_horizon,
+              double sim_time_horizon,
+              uint64 tpx_time_horizon,
+              uint64 perf_sampling_period,
+              double float_tolerance,
+              uint64 time_tolerance,
+              uint64 primary_thz,
+              uint64 secondary_thz,
               bool debug,
-              uint32 ntf_mk_res,
-              uint32 goal_pred_success_res,
-              uint32 probe_level,
-              uint32 traces);
+              uint64 ntf_mk_res,
+              uint64 goal_pred_success_res,
+              uint64 probe_level,
+              uint64 traces);
 
     uint64 get_probe_level() const {
         return probe_level;
     }
-    float32 get_mdl_inertia_sr_thr() const {
+    double get_mdl_inertia_sr_thr() const {
         return mdl_inertia_sr_thr;
     }
-    uint32 get_mdl_inertia_cnt_thr() const {
+    uint64 get_mdl_inertia_cnt_thr() const {
         return mdl_inertia_cnt_thr;
     }
-    float32 get_tpx_dsr_thr() const {
+    double get_tpx_dsr_thr() const {
         return tpx_dsr_thr;
     }
-    uint32 get_min_sim_time_horizon() const {
+    uint64 get_min_sim_time_horizon() const {
         return min_sim_time_horizon;
     }
-    uint32 get_max_sim_time_horizon() const {
+    uint64 get_max_sim_time_horizon() const {
         return max_sim_time_horizon;
     }
     uint64 get_sim_time_horizon(uint64 horizon) const {
         return horizon * sim_time_horizon;
     }
-    uint32 get_tpx_time_horizon() const {
+    uint64 get_tpx_time_horizon() const {
         return tpx_time_horizon;
     }
     uint64 get_primary_thz() const {
@@ -208,10 +208,10 @@ public:
     bool get_debug() const {
         return debug;
     }
-    uint32 get_ntf_mk_res() const {
+    uint64 get_ntf_mk_res() const {
         return ntf_mk_res;
     }
-    uint32 get_goal_pred_success_res(Group *host, uint64 now, uint64 time_to_live) const {
+    uint64 get_goal_pred_success_res(Group *host, uint64 now, uint64 time_to_live) const {
 
         if (debug)
             return goal_pred_success_res;
@@ -229,7 +229,7 @@ public:
     void start_core(); // called upon creation of a delegate.
     void shutdown_core(); // called upon completion of a delegate's task.
 
-    bool load(std::vector<r_code::Code *> *objects, uint32 stdin_oid, uint32 stdout_oid, uint32 self_oid); // call before start; no mod/set/eje will be executed (only inj);
+    bool load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 stdout_oid, uint64 self_oid); // call before start; no mod/set/eje will be executed (only inj);
 // return false on error.
     uint64 start(); // return the starting time.
     void stop(); // after stop() the content is cleared and one has to call load() and start() again.
@@ -251,7 +251,7 @@ public:
     void inject_notification(View *view, bool lock);
     virtual Code *check_existence(Code *object) = 0; // returns the existing object if any, or object otherwise: in the latter case, packing may occur.
 
-    void propagate_sln(Code *object, float32 change, float32 source_sln_thr);
+    void propagate_sln(Code *object, double change, double source_sln_thr);
 
 // Called by groups.
     void inject_copy(View *view, Group *destination); // for cov; NB: no cov for groups, r-groups, models, pgm or notifications.
@@ -311,9 +311,9 @@ class r_exec_dll MemStatic:
     public _Mem {
 private:
     CriticalSection objectsCS; // protects last_oid and objects.
-    uint32 last_oid;
+    uint64 last_oid;
     void bind(View *view); // assigns an oid, stores view->object in objects if needed.
-    void set_last_oid(int32 oid);
+    void set_last_oid(int64 oid);
 protected:
     MemStatic();
 public:
@@ -328,10 +328,10 @@ public:
 class r_exec_dll MemVolatile:
     public _Mem {
 private:
-    volatile int32 last_oid;
-    uint32 get_oid();
+    volatile int64 last_oid;
+    uint64 get_oid();
     void bind(View *view); // assigns an oid (atomic operation).
-    void set_last_oid(int32 oid);
+    void set_last_oid(int64 oid);
 protected:
     MemVolatile();
 public:

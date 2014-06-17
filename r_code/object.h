@@ -138,7 +138,7 @@ public:
     } SyncMode;
 
     SyncMode get_sync() const {
-        return (SyncMode)(uint32)_code[VIEW_SYNC].asFloat();
+        return (SyncMode)(uint64_t)_code[VIEW_SYNC];
     }
     uint64 get_ijt() const {
         return Utils::GetTimestamp(_code + _code[VIEW_IJT].asIndex());
@@ -172,10 +172,10 @@ public:
 class dll_export Code:
     public _Object {
 public:
-    static const int32 null_storage_index = -1;
-    static const uint32 CodeMarkersInitialSize = 8;
+    static const int64 null_storage_index = -1;
+    static const uint64 CodeMarkersInitialSize = 8;
 protected:
-    int32 storage_index; // -1: not sored; >0 index of the object in a vector-based container.
+    int64 storage_index; // -1: not sored; >0 index of the object in a vector-based container.
 
     void load(SysObject *source) {
 
@@ -188,18 +188,18 @@ protected:
         return new V(source, this);
     }
 public:
-    void set_stroage_index(int32 i) {
+    void set_stroage_index(int64 i) {
         storage_index = i;
     }
     bool is_registered() const {
         return storage_index > null_storage_index;
     }
-    int32 get_storage_index() const {
+    int64 get_storage_index() const {
         return storage_index;
     }
 
-    virtual uint32 get_oid() const = 0;
-    virtual void set_oid(uint32 oid) = 0;
+    virtual uint64_t get_oid() const = 0;
+    virtual void set_oid(uint64_t oid) = 0;
 
     virtual Atom &code(uint16 i) = 0;
     virtual Atom &code(uint16 i) const = 0;
@@ -231,7 +231,7 @@ public:
     virtual void acq_markers() {}
     virtual void rel_markers() {}
 
-    virtual float32 get_psln_thr() {
+    virtual double get_psln_thr() {
         return 1;
     }
 
@@ -240,8 +240,8 @@ public:
     }
     virtual ~Code() {}
 
-    virtual void mod(uint16 member_index, float32 value) {};
-    virtual void set(uint16 member_index, float32 value) {};
+    virtual void mod(uint16 member_index, double value) {};
+    virtual void set(uint16 member_index, double value) {};
     virtual View *get_view(Code *group, bool lock) {
         return NULL;
     }
@@ -270,7 +270,7 @@ public:
 class dll_export LObject:
     public Code {
 protected:
-    uint32 _oid;
+    uint64_t _oid;
     r_code::vector<Atom> _code;
     r_code::vector<P<Code> > _references;
 public:
@@ -286,10 +286,10 @@ public:
         return Code::build_view<View>(source);
     }
 
-    uint32 get_oid() const {
+    uint64_t get_oid() const {
         return _oid;
     }
-    void set_oid(uint32 oid) {
+    void set_oid(uint64_t oid) {
         _oid = oid;
     }
 

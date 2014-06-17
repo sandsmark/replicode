@@ -45,12 +45,12 @@ public:
     size_t size() const {
         return m_vector->size();
     }
-    T &operator [](uint32 i) {
+    T &operator [](uint64 i) {
         if (i >= size())
             m_vector->resize(i + 1);
         return m_vector->at(i);
     }
-    T &operator [](uint32 i) const {
+    T &operator [](uint64 i) const {
         return m_vector->at(i);
     }
     void push_back(T t) {

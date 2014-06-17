@@ -43,31 +43,31 @@ _Mem::_Mem(): r_code::Mem(), state(NOT_STARTED), deleted(false) {
 
 _Mem::~_Mem() {
 
-    for (uint32 i = 0; i < DebugStreamCount; ++i)
+    for (uint64 i = 0; i < DebugStreamCount; ++i)
         if (debug_streams[i] != NULL)
             delete debug_streams[i];
 }
 
-void _Mem::init(uint32 base_period,
-                uint32 reduction_core_count,
-                uint32 time_core_count,
-                float32 mdl_inertia_sr_thr,
-                uint32 mdl_inertia_cnt_thr,
-                float32 tpx_dsr_thr,
-                uint32 min_sim_time_horizon,
-                uint32 max_sim_time_horizon,
-                float32 sim_time_horizon,
-                uint32 tpx_time_horizon,
-                uint32 perf_sampling_period,
-                float32 float_tolerance,
-                uint32 time_tolerance,
-                uint32 primary_thz,
-                uint32 secondary_thz,
+void _Mem::init(uint64 base_period,
+                uint64 reduction_core_count,
+                uint64 time_core_count,
+                double mdl_inertia_sr_thr,
+                uint64 mdl_inertia_cnt_thr,
+                double tpx_dsr_thr,
+                uint64 min_sim_time_horizon,
+                uint64 max_sim_time_horizon,
+                double sim_time_horizon,
+                uint64 tpx_time_horizon,
+                uint64 perf_sampling_period,
+                double float_tolerance,
+                uint64 time_tolerance,
+                uint64 primary_thz,
+                uint64 secondary_thz,
                 bool debug,
-                uint32 ntf_mk_res,
-                uint32 goal_pred_success_res,
-                uint32 probe_level,
-                uint32 traces) {
+                uint64 ntf_mk_res,
+                uint64 goal_pred_success_res,
+                uint64 probe_level,
+                uint64 traces) {
 
     this->base_period = base_period;
 
@@ -100,8 +100,8 @@ void _Mem::init(uint32 base_period,
     reduction_job_avg_latency = _reduction_job_avg_latency = 0;
     time_job_avg_latency = _time_job_avg_latency = 0;
 
-    uint32 mask = 1;
-    for (uint32 i = 0; i < DebugStreamCount; ++i) {
+    uint64 mask = 1;
+    for (uint64 i = 0; i < DebugStreamCount; ++i) {
 
         if (traces & mask)
             debug_streams[i] = NULL;
@@ -118,7 +118,7 @@ std::ostream &_Mem::Output(TraceLevel l) {
 
 void _Mem::reset() {
 
-    uint32 i;
+    uint64 i;
     for (i = 0; i < reduction_core_count; ++i)
         delete reduction_cores[i];
     delete[] reduction_cores;
@@ -186,14 +186,14 @@ void _Mem::shutdown_core() {
 
 void _Mem::store(Code *object) {
 
-    int32 location;
+    int64 location;
     objects.push_back(object, location);
     object->set_stroage_index(location);
 }
 
-bool _Mem::load(std::vector<r_code::Code *> *objects, uint32 stdin_oid, uint32 stdout_oid, uint32 self_oid) { // no cov at init time.
+bool _Mem::load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 stdout_oid, uint64 self_oid) { // no cov at init time.
 
-    uint32 i;
+    uint64 i;
     reduction_cores = new ReductionCore *[reduction_core_count];
     for (i = 0; i < reduction_core_count; ++i)
         reduction_cores[i] = new ReductionCore();
@@ -210,7 +210,7 @@ bool _Mem::load(std::vector<r_code::Code *> *objects, uint32 stdin_oid, uint32 s
 
     set_last_oid(objects->size() - 1);
 
-    for (uint32 i = 1; i < objects->size(); ++i) { // skip root as it has no initial views.
+    for (uint64 i = 1; i < objects->size(); ++i) { // skip root as it has no initial views.
 
         Code *object = (*objects)[i];
         store(object);
@@ -295,7 +295,7 @@ uint64 _Mem::start() {
 
     std::vector<std::pair<View *, Group *> > initial_reduction_jobs;
 
-    uint32 i;
+    uint64 i;
     uint64 now = Now();
     Utils::SetTimeReference(now);
     ModelBase::Get()->set_thz(secondary_thz);
@@ -313,7 +313,7 @@ uint64 _Mem::start() {
 
         if (c_active) {
 
-            UNORDERED_MAP<uint32, P<View> >::const_iterator v;
+            UNORDERED_MAP<uint64, P<View> >::const_iterator v;
 
 // build signaling jobs for active input-less overlays.
             for (v = g->input_less_ipgm_views.begin(); v != g->input_less_ipgm_views.end(); ++v) {
@@ -368,7 +368,7 @@ uint64 _Mem::start() {
     for (i = 0; i < time_core_count; ++i)
         time_cores[i]->start(TimeCore::Run);
 
-    for (uint32 i = 0; i < initial_reduction_jobs.size(); ++i)
+    for (uint64 i = 0; i < initial_reduction_jobs.size(); ++i)
         initial_reduction_jobs[i].second->inject_reduction_jobs(initial_reduction_jobs[i].first);
 
     return now;
@@ -383,7 +383,7 @@ void _Mem::stop() {
         return;
     }
 
-    uint32 i;
+    uint64 i;
     P<_ReductionJob> r;
     for (i = 0; i < reduction_core_count; ++i)
         reduction_job_queue->push(r = new ShutdownReductionCore());
@@ -469,7 +469,7 @@ void _Mem::inject_null_program(Controller *c, Group *group, uint64 time_to_live,
     Code *null_pgm = new LObject();
     null_pgm->code(0) = Atom::NullProgram(take_past_inputs);
 
-    uint32 res = Utils::GetResilience(now, time_to_live, group->get_upr() * Utils::GetBasePeriod());
+    uint64 res = Utils::GetResilience(now, time_to_live, group->get_upr() * Utils::GetBasePeriod());
 
     View *view = new View(View::SYNC_ONCE, now, 0, res, group, NULL, null_pgm, 1);
     view->controller = c;
@@ -640,7 +640,7 @@ void _Mem::inject_perf_stats() {
 
 ////////////////////////////////////////////////////////////////
 
-void _Mem::propagate_sln(Code *object, float32 change, float32 source_sln_thr) {
+void _Mem::propagate_sln(Code *object, double change, double source_sln_thr) {
 
 // apply morphed change to views.
 // loops are prevented within one call, but not accross several upr:
@@ -658,7 +658,7 @@ void _Mem::propagate_sln(Code *object, float32 change, float32 source_sln_thr) {
     UNORDERED_SET<r_code::View *, r_code::View::Hash, r_code::View::Equal>::const_iterator it;
     for (it = object->views.begin(); it != object->views.end(); ++it) {
 
-        float32 morphed_sln_change = View::MorphChange(change, source_sln_thr, ((r_exec::View*)*it)->get_host()->get_sln_thr());
+        double morphed_sln_change = View::MorphChange(change, source_sln_thr, ((r_exec::View*)*it)->get_host()->get_sln_thr());
         if (morphed_sln_change != 0)
             ((r_exec::View*)*it)->get_host()->pending_operations.push_back(new Group::Mod(((r_exec::View*)*it)->get_oid(), VIEW_SLN, morphed_sln_change));
     }
@@ -705,13 +705,13 @@ void _Mem::propagate_sln(Code *object, float32 change, float32 source_sln_thr) {
  1000, // goal pred success resilience.
  2); // probe level.
 
- uint32 stdin_oid;
+ uint64 stdin_oid;
  std::string stdin_symbol("stdin");
- uint32 stdout_oid;
+ uint64 stdout_oid;
  std::string stdout_symbol("stdout");
- uint32 self_oid;
+ uint64 self_oid;
  std::string self_symbol("self");
- UNORDERED_MAP<uint32,std::string>::const_iterator n;
+ UNORDERED_MAP<uint64,std::string>::const_iterator n;
  for(n=r_exec::Seed.object_names.symbols.begin();n!=r_exec::Seed.object_names.symbols.end();++n){
 
  if(n->second==stdin_symbol)
@@ -1006,12 +1006,12 @@ void MemStatic::bind(View *view) {
         objectsCS.leave();
         return;
     }
-    int32 location;
+    int64 location;
     objects.push_back(object, location);
     object->set_stroage_index(location);
     objectsCS.leave();
 }
-void MemStatic::set_last_oid(int32 oid) {
+void MemStatic::set_last_oid(int64 oid) {
 
     last_oid = oid;
 }
@@ -1046,12 +1046,12 @@ MemVolatile::MemVolatile(): _Mem(), last_oid(-1) {
 MemVolatile::~MemVolatile() {
 }
 
-uint32 MemVolatile::get_oid() {
+uint64 MemVolatile::get_oid() {
 
     return Atomic::Increment32(&last_oid);
 }
 
-void MemVolatile::set_last_oid(int32 oid) {
+void MemVolatile::set_last_oid(int64 oid) {
 
     last_oid = oid;
 }

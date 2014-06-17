@@ -58,7 +58,7 @@ public:
 
     class IsInvalidated { // for storage in time_buffers.
     public:
-        bool operator()(Input &i, uint64 time_reference, uint32 thz) const {
+        bool operator()(Input &i, uint64 time_reference, uint64 thz) const {
 
             return (time_reference - i.ijt > thz);
         }
@@ -81,7 +81,7 @@ public:
 
     class IsInvalidated { // for storage in time_buffers.
     public:
-        bool operator()(CInput &i, uint64 time_reference, uint32 thz) const {
+        bool operator()(CInput &i, uint64 time_reference, uint64 thz) const {
 
             return (time_reference - i.ijt > thz);
         }
@@ -127,7 +127,7 @@ class ICST;
 class r_exec_dll _TPX:
     public TPX {
 private:
-    static const uint32 InputsInitialSize = 16;
+    static const uint64 InputsInitialSize = 16;
 protected:
     class Component { // for building csts.
     public:
@@ -142,7 +142,7 @@ protected:
     std::vector<P<Code> > csts; // new csts.
     std::vector<P<_Fact> > icsts; // new icsts.
 
-    void filter_icst_components(ICST *icst, uint32 icst_index, std::vector<Component> &components);
+    void filter_icst_components(ICST *icst, uint64 icst_index, std::vector<Component> &components);
     _Fact *_find_f_icst(_Fact *component, uint16 &component_index);
     _Fact *find_f_icst(_Fact *component, uint16 &component_index);
     _Fact *find_f_icst(_Fact *component, uint16 &component_index, Code *&cst);

@@ -61,23 +61,23 @@ class Code;
 class dll_export Utils {
 private:
     static uint64 TimeReference; // starting time.
-    static uint32 BasePeriod;
-    static float32 FloatTolerance;
-    static uint32 TimeTolerance;
+    static uint64 BasePeriod;
+    static double FloatTolerance;
+    static uint64 TimeTolerance;
 public:
     static uint64 GetTimeReference();
-    static uint32 GetBasePeriod();
-    static uint32 GetFloatTolerance();
-    static uint32 GetTimeTolerance();
-    static void SetReferenceValues(uint32 base_period, float32 float_tolerance, uint32 time_tolerance);
+    static uint64 GetBasePeriod();
+    static uint64 GetFloatTolerance();
+    static uint64 GetTimeTolerance();
+    static void SetReferenceValues(uint64_t base_period, double float_tolerance, double time_tolerance);
     static void SetTimeReference(uint64 time_reference);
 
-    static bool Equal(float32 l, float32 r);
+    static bool Equal(double l, double r);
     static bool Synchronous(uint64 l, uint64 r);
 
     static uint64 GetTimestamp(const Atom *iptr);
     static void SetTimestamp(Atom *iptr, uint64 t);
-    static void SetTimestamp(Code *object, uint16 index, uint64 t); // allocates atoms.
+    static void SetTimestamp(Code *object, uint32_t index, uint64 t); // allocates atoms.
 
     static const uint64 MaxTime = 0xFFFFFFFFFFFFFFFF;
     static const uint64 MaxTHZ = 0xFFFFFFFF;
@@ -107,7 +107,7 @@ public:
         uint8 char_count = (object->code(s_index).atom & 0x000000FF);
         buffer[char_count] = 0;
         for (int i = 0; i < char_count; i += 4) {
-            uint32 val = object->code(s_index + 1 + i / 4);
+            uint64 val = object->code(s_index + 1 + i / 4);
             buffer[i] = (val & 0x000000ff);
             buffer[i + 1] = (val & 0x0000ff00) >> 8;
             buffer[i + 2] = (val & 0x00ff0000) >> 16;
@@ -121,7 +121,7 @@ public:
         uint16 s_index = object->code(index).asIndex();
         uint8 l = (uint8)s.length();
         object->code(s_index) = Atom::String(l);
-        uint32 _st = 0;
+        uint64 _st = 0;
         int8 shift = 0;
         for (uint8 i = 0; i < l; ++i) {
 
@@ -138,8 +138,8 @@ public:
             object->code(++s_index) = _st;
     }
 
-    static int32 GetResilience(uint64 now, uint64 time_to_live, uint64 upr); // ttl: us, upr: us.
-    static int32 GetResilience(float32 resilience, float32 origin_upr, float32 destination_upr); // express the res in destination group, given the res in origin group.
+    static int64 GetResilience(uint64 now, uint64 time_to_live, uint64 upr); // ttl: us, upr: us.
+    static int64_t GetGroupResilience(double resilience, double origin_upr, double destination_upr); // express the res in destination group, given the res in origin group.
 
     static std::string RelativeTime(uint64 t);
 };

@@ -96,15 +96,15 @@ public:
     ~Decompiler();
 
     void init(r_comp::Metadata *metadata);
-    uint32 decompile(r_comp::Image *image,
+    uint64 decompile(r_comp::Image *image,
                      std::ostringstream *stream,
                      uint64 time_offset,
                      bool ignore_named_objects); // decompiles the whole image; returns the number of objects.
-    uint32 decompile(r_comp::Image *image,
+    uint64 decompile(r_comp::Image *image,
                      std::ostringstream *stream,
                      uint64 time_offset,
                      std::vector<SysObject *> &imported_objects); // idem, ignores named objects if in the imported object list.
-    uint32 decompile_references(r_comp::Image *image); // initialize a reference table so that objects can be decompiled individually; returns the number of objects.
+    uint64 decompile_references(r_comp::Image *image); // initialize a reference table so that objects can be decompiled individually; returns the number of objects.
     void decompile_object(uint16 object_index, std::ostringstream *stream, uint64 time_offset); // decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
     void decompile_object(const std::string object_name, std::ostringstream *stream, uint64 time_offset); // decompiles a single object given its name: use this function to follow references.
 };

@@ -230,7 +230,6 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
     std::string label = node->label.substr(0, node->label.size() - 1);
     _image->add_sys_object(sys_object, label);
 
-    static int counts = 0;
     return true;
 }
 
@@ -391,7 +390,7 @@ bool Compiler::this_indirection(RepliStruct *node, std::vector<int16> &v, const 
     return false;
 }
 
-bool Compiler::local_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t, uint16 &cast_opcode)
+bool Compiler::local_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType t, uint32_t &cast_opcode)
 {
     std::string name = node->cmd;
     size_t pos = name.find(".");
@@ -412,7 +411,7 @@ bool Compiler::local_indirection(RepliStruct *node, std::vector<int16> &v, const
     Class *p;
     if (it->second.cast_class.str_opcode == "undefined") { // find out if there was a cast for this reference.
         p = &it->second._class;
-        cast_opcode = 0x0FFF;
+        cast_opcode = 0x0FFFFFFF;
     } else {
         p = &it->second.cast_class;
         cast_opcode = p->atom.asOpcode();
@@ -645,7 +644,7 @@ bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16 write_i
     }
 
     if (node->args.size() != p.atom.getAtomCount()) {
-        int wildcards = 0;
+        size_t wildcards = 0;
         for(RepliStruct *n : node->args) {
             if (n->cmd == "::") wildcards++;
         }
@@ -811,14 +810,14 @@ bool Compiler::set(RepliStruct *node, const Class &p, uint16 write_index, uint16
         content_write_index = extent_index;
         extent_index += element_count;
     }
-    uint16 arity = 0xFFFF;
+    uint32_t arity = 0xFFFFFFFF;
     if (p.use_as == StructureMember::I_CLASS) { // undefined arity for unstructured sets.
         arity = p.atom.getAtomCount();
         if (write) // fill up with wildcards that will be overwritten up to ::.
             for (uint16 j = content_write_index; j < content_write_index + arity; ++j)
                 current_object->code[j] = Atom::Wildcard();
     }
-    if (node->args.size() != arity && arity != 0xFFFF) {
+    if (node->args.size() != arity && arity != 0xFFFFFFFF) {
         if (state.no_arity_check) {
             state.no_arity_check = false;
         } else {
@@ -944,7 +943,7 @@ bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint
         try {
             // Fuck the STL, all this for a string::toint();
             char *p;
-            float32 n = std::strtof(node->cmd.c_str(), &p);
+            double n = std::strtof(node->cmd.c_str(), &p);
             if (*p == 0) {
                 if (write) {
                     current_object->code[write_index] = Atom::Float(n);
@@ -1022,8 +1021,7 @@ bool Compiler::read_timestamp(RepliStruct *node, bool enforce, const Class *p, u
                 if (write) {
                     current_object->code[write_index] = Atom::IPointer(extent_index);
                     current_object->code[extent_index++] = Atom::Timestamp();
-                    current_object->code[extent_index++] = ts >> 32;
-                    current_object->code[extent_index++] = (ts & 0x00000000FFFFFFFF);
+                    current_object->code[extent_index++] = ts;
                 }
                 return true;
             }
@@ -1061,7 +1059,7 @@ bool Compiler::read_string(RepliStruct *node, bool enforce, const Class *p, uint
             uint16 l = (uint16)str.length(); // TODO: check string length
             current_object->code[write_index] = Atom::IPointer(extent_index);
             current_object->code[extent_index++] = Atom::String(l);
-            uint32 _st = 0;
+            uint64_t _st = 0;
             int8 shift = 0;
             for (uint16 i = 0; i < l; ++i) {
                 _st |= str[i] << shift;
@@ -1321,8 +1319,8 @@ bool Compiler::read_nil_us(RepliStruct *node, uint16 write_index, uint16 &extent
         if (write) {
             current_object->code[write_index] = Atom::IPointer(extent_index);
             current_object->code[extent_index++] = Atom::UndefinedTimestamp();
-            current_object->code[extent_index++] = 0xFFFFFFFF;
-            current_object->code[extent_index++] = 0xFFFFFFFF;
+            current_object->code[extent_index++] = 0xFFFFFFFFFFFFFFFF;
+            current_object->code[extent_index++] = 0xFFFFFFFFFFFFFFFF;
         }
         return true;
     }
@@ -1433,8 +1431,12 @@ bool Compiler::read_reference(RepliStruct *node, uint16 write_index, uint16 &ext
         return true;
     }
     if (global_reference(node, index, t)) { // index is the index held by a reference pointer
-        if (write)
+        if (write) {
+            if (index == 3) {
+                std::cout << "3: " << node->cmd << "\n";
+            }
             current_object->code[write_index] = Atom::RPointer(index);
+        }
         return true;
     }
     std::vector<int16> v;
@@ -1462,7 +1464,7 @@ bool Compiler::read_reference(RepliStruct *node, uint16 write_index, uint16 &ext
         }
         return true;
     }
-    uint16 cast_opcode;
+    uint32_t cast_opcode;
     if (local_indirection(node, v, t, cast_opcode)) {
         if (write) {
             current_object->code[write_index] = Atom::IPointer(extent_index);
@@ -1491,6 +1493,9 @@ bool Compiler::read_reference(RepliStruct *node, uint16 write_index, uint16 &ext
         if (write) {
             current_object->code[write_index] = Atom::IPointer(extent_index);
             current_object->code[extent_index++] = Atom::CPointer(v.size());
+            if (v[0] == 3) {
+                std::cout << "3: " << node->cmd << "\n";
+            }
             current_object->code[extent_index++] = Atom::RPointer(v[0]);
             for (uint16 i = 1; i < v.size(); ++i) {
                 switch (v[i]) {

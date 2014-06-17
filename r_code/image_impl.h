@@ -54,9 +54,9 @@ protected:
     uintptr_t &data(size_t i);
     uintptr_t &data(size_t i) const;
 public:
-    void *operator new(size_t, uint32 data_size);
+    void *operator new(size_t, uint64 data_size);
     void operator delete(void *o);
-    ImageImpl(uint64 timestamp, uint32 map_size, uint32 code_size, uint32 names_size);
+    ImageImpl(uint64 timestamp, uint64 map_size, uint64 code_size, uint64 names_size);
     ~ImageImpl();
 };
 }

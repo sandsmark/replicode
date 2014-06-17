@@ -84,7 +84,7 @@ namespace	r_code{
 		return	this->map_size();
 	}
 
-	template<class	I>	uintptr_t	*Image<I>::getObject(uint32	i){
+    template<class	I>	uintptr_t	*Image<I>::getObject(size_t	i){
 
 		return	this->data()+this->data(i);
 	}

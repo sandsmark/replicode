@@ -104,9 +104,9 @@ class r_exec_dll SaliencyPropagationJob:
     public TimeJob {
 public:
     P<Code> object;
-    float32 sln_change;
-    float32 source_sln_thr;
-    SaliencyPropagationJob(Code *o, float32 sln_change, float32 source_sln_thr, uint64 ijt);
+    double sln_change;
+    double source_sln_thr;
+    SaliencyPropagationJob(Code *o, double sln_change, double source_sln_thr, uint64 ijt);
     bool update(uint64 &next_target);
     void report(int64 lag) const;
 };
@@ -141,8 +141,8 @@ public:
 class r_exec_dll PerfSamplingJob:
     public TimeJob {
 public:
-    uint32 period;
-    PerfSamplingJob(uint64 start, uint32 period);
+    uint64 period;
+    PerfSamplingJob(uint64 start, uint64 period);
     bool is_alive() const;
     bool update(uint64 &next_target);
 };

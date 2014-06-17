@@ -108,7 +108,7 @@ void StructureMember::write(uintptr_t *storage) const {
         storage[0] = R_SET;
     else if (_read == &Compiler::read_class)
         storage[0] = R_CLASS;
-    uint32 offset = 1;
+    uint64_t offset = 1;
     storage[offset++] = type;
     r_code::Write(storage + offset, _class);
     offset += r_code::GetSize(_class);
@@ -131,7 +131,7 @@ void StructureMember::read(uintptr_t* storage) {
     case R_SET: _read = &Compiler::read_set; break;
     case R_CLASS: _read = &Compiler::read_class; break;
     }
-    uint32 offset = 1;
+    uint64_t offset = 1;
     type = (ReturnType)storage[offset++];
     r_code::Read(storage + offset, _class);
     offset += r_code::GetSize(_class);
@@ -139,9 +139,9 @@ void StructureMember::read(uintptr_t* storage) {
     r_code::Read(storage + offset, name);
 }
 
-uint32 StructureMember::get_size() { // see segments.cpp for the RAM layout
+size_t StructureMember::get_size() { // see segments.cpp for the RAM layout
 
-    uint32 size = 3; // read ID, return type, iteration
+    size_t size = 3; // read ID, return type, iteration
     size += r_code::GetSize(_class);
     size += r_code::GetSize(name);
     return size;

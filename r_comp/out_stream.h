@@ -63,7 +63,7 @@ public:
         *stream << t;
         return *this;
     }
-    template<typename T> OutStream &insert(uint32 index, const T &t) { // inserts before code_indexes_to_stream_indexes[index]
+    template<typename T> OutStream &insert(uint64 index, const T &t) { // inserts before code_indexes_to_stream_indexes[index]
         uint16 stream_index = code_indexes_to_stream_indexes[index];
         stream->seekp(positions[stream_index]);
         std::string s = stream->str().substr(positions[stream_index]);

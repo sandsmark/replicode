@@ -124,11 +124,11 @@ void Decompiler::init(r_comp::Metadata *metadata) {
     }
 }
 
-uint32 Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream, uint64 time_offset, bool ignore_named_objects) {
+uint64 Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream, uint64 time_offset, bool ignore_named_objects) {
 
     this->ignore_named_objects = ignore_named_objects;
 
-    uint32 object_count = decompile_references(image);
+    uint64 object_count = decompile_references(image);
 
     for (uint16 i = 0; i < image->code_segment.objects.size(); ++i)
         decompile_object(i, stream, time_offset);
@@ -136,13 +136,13 @@ uint32 Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream, u
     return object_count;
 }
 
-uint32 Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream, uint64 time_offset, std::vector<SysObject *> &imported_objects) {
+uint64 Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream, uint64 time_offset, std::vector<SysObject *> &imported_objects) {
 
     partial_decompilation = true;
     ignore_named_objects = true;
     this->imported_objects = imported_objects;
 
-    uint32 object_count = decompile_references(image);
+    uint64 object_count = decompile_references(image);
 
     for (uint16 i = 0; i < image->code_segment.objects.size(); ++i)
         decompile_object(i, stream, time_offset);
@@ -150,7 +150,7 @@ uint32 Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream, u
     return object_count;
 }
 
-uint32 Decompiler::decompile_references(r_comp::Image *image) {
+uint64 Decompiler::decompile_references(r_comp::Image *image) {
 
     UNORDERED_MAP<const Class *, uint16> object_ID_per_class;
     UNORDERED_MAP<std::string, Class>::const_iterator it;
@@ -219,7 +219,7 @@ void Decompiler::decompile_object(uint16 object_index, std::ostringstream *strea
     } else { // decompiling on-the-fly: ignore named objects only if imported.
 
         bool imported = false;
-        for (uint32 i = 0; i < imported_objects.size(); ++i) {
+        for (uint64 i = 0; i < imported_objects.size(); ++i) {
 
             if (sys_object == imported_objects[i]) {
 
@@ -655,15 +655,13 @@ void Decompiler::write_any(uint16 read_index, bool &after_tail_wildcard, bool ap
     Atom a = current_object->code[read_index];
 
     if (a.isFloat()) {
-
-        if (a.atom == 0x3FFFFFFF)
+        if (a.atom == 0x3FFFFFFFFFFFFFFF)
             out_stream->push("|nb", read_index);
         else if (a == Atom::PlusInfinity())
             out_stream->push("forever", read_index);
         else {
-
             *out_stream << std::dec;
-            out_stream->push(a.asFloat(), read_index);
+            out_stream->push(a.asDouble(), read_index);
         }
         return;
     }
@@ -771,7 +769,7 @@ void Decompiler::write_any(uint16 read_index, bool &after_tail_wildcard, bool ap
                     opcode = cast_opcode;
                 break;
             } case Atom::R_PTR: {
-                uint32 object_index = current_object->references[atom.asIndex()];
+                uint64 object_index = current_object->references[atom.asIndex()];
                 out_stream->push(get_object_name(object_index), read_index);
                 opcode = image->code_segment.objects[object_index]->code[0].asOpcode();
                 break;

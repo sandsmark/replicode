@@ -40,18 +40,18 @@ using namespace core;
 namespace r_code {
 
 // Time limited buffer.
-// T is expected a function: bool is_invalidated(uint64 time_reference,uint32 thz) const where time_reference and thz are valuated with the buffer's own.
+// T is expected a function: bool is_invalidated(uint64 time_reference,uint64 thz) const where time_reference and thz are valuated with the buffer's own.
 template<typename T, class IsInvalidated> class time_buffer:
     public list<T> {
 protected:
     using list<T>::used_cells_head;
 //using list<T>::_cells;
-    uint32 thz; // time horizon.
+    uint64 thz; // time horizon.
     uint64 time_reference;
 public:
     time_buffer() : list<T>(), thz(Utils::MaxTHZ) {}
 
-    void set_thz(uint32 thz) {
+    void set_thz(uint64 thz) {
         this->thz = thz;
     }
 
@@ -60,7 +60,7 @@ public:
     private:
         time_buffer *buffer;
         uintptr_t _cell;
-        iterator(time_buffer *b, int32 c): buffer(b), _cell(c) {}
+        iterator(time_buffer *b, int64 c): buffer(b), _cell(c) {}
     public:
         iterator(): buffer(nullptr), _cell(0) {}
         T &operator *() const {

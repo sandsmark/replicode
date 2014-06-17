@@ -80,19 +80,19 @@ template<class C, class U> void Object<C, U>::compute_hash_value() {
     hash_value |= this->references_size() & 0x000000FF; // 8 bits for the reference set size.
 }
 
-template<class C, class U> float32 Object<C, U>::get_psln_thr() {
+template<class C, class U> double Object<C, U>::get_psln_thr() {
 
     psln_thr_sem.enter();
-    float32 r = this->code(this->code(0).getAtomCount()).asFloat(); // psln is always the last member of an object.
+    double r = this->code(this->code(0).getAtomCount()).asDouble(); // psln is always the last member of an object.
     psln_thr_sem.leave();
     return r;
 }
 
-template<class C, class U> void Object<C, U>::mod(uint16 member_index, float32 value) {
+template<class C, class U> void Object<C, U>::mod(uint16 member_index, double value) {
 
     if (member_index != this->code_size() - 1)
         return;
-    float32 v = this->code(member_index).asFloat() + value;
+    double v = this->code(member_index).asDouble() + value;
     if (v < 0)
         v = 0;
     else if (v > 1)
@@ -103,7 +103,7 @@ template<class C, class U> void Object<C, U>::mod(uint16 member_index, float32 v
     psln_thr_sem.leave();
 }
 
-template<class C, class U> void Object<C, U>::set(uint16 member_index, float32 value) {
+template<class C, class U> void Object<C, U>::set(uint16 member_index, double value) {
 
     if (member_index != this->code_size() - 1)
         return;

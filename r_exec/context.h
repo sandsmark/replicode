@@ -80,7 +80,7 @@ private:
                                           uint16 write_index,
                                           uint16 &extent_index,
                                           bool dereference_cptr,
-                                          int32 pgm_index) const { // assumes the context is a structure; C: Object or View.
+                                          int64 pgm_index) const { // assumes the context is a structure; C: Object or View.
 
         if ((*this)[0].getDescriptor() == Atom::OPERATOR && Operator::Get((*this)[0].asOpcode()).is_syn()) { // (\ (expression ...)).
 
@@ -130,7 +130,7 @@ private:
                     }
                 } else { // if a pgm is being copied, indicate the starting index of the pgm so that we can turn on code patching and know if a cptr is referencing code inside the pgm (in that case it will not be dereferenced).
 
-                    int32 _pgm_index;
+                    int64 _pgm_index;
                     if (pgm_index >= 0)
                         _pgm_index = pgm_index;
                     else if ((*this)[0].getDescriptor() == Atom::OBJECT && ((*this)[0].asOpcode() == Opcodes::Pgm || (*this)[0].asOpcode() == Opcodes::AntiPgm))
@@ -153,7 +153,7 @@ private:
                                        uint16 write_index,
                                        uint16 &extent_index,
                                        bool dereference_cptr,
-                                       int32 pgm_index) const {
+                                       int64 pgm_index) const {
 
         switch ((*this)[0].getDescriptor()) {
         case Atom::I_PTR:
@@ -433,7 +433,7 @@ public:
     } ObjectType;
 
 // To retrieve objects, groups and views in mod/set expressions; views are copied.
-    void getMember(void *&object, uint32 &view_oid, ObjectType &object_type, int16 &member_index) const;
+    void getMember(void *&object, uint64 &view_oid, ObjectType &object_type, int16 &member_index) const;
 
 // 'this' is a context on a pattern skeleton.
     bool match(const IPGMContext &input) const;

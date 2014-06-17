@@ -55,12 +55,12 @@ private:
 
     class Rating {
     public:
-        uint32 evidences;
-        uint32 positive_evidences;
-        float32 SR;
-        float32 dSR;
+        uint64_t evidences;
+        uint64_t positive_evidences;
+        double SR;
+        double dSR;
 
-        static bool DSR(float32 dSR) {
+        static bool DSR(double dSR) {
 
             return dSR > 0 && dSR < _Mem::Get()->get_tpx_dsr_thr();
         }
@@ -89,8 +89,8 @@ private:
     RatingMap goal_ratings;
     RatingMap prediction_ratings;
 
-    static const uint32 CacheInitialSize = 128;
-    static const uint32 CrossBufferInitialSize = 1024;
+    static const size_t CacheInitialSize = 128;
+    static const size_t CrossBufferInitialSize = 1024;
 
     time_buffer<CInput, CInput::IsInvalidated> cache; // contains all inputs we don't no yet if they are relevant or not; thz==sampling period.
     time_buffer<Input, Input::IsInvalidated> cross_buffer; // contains all relevant inputs.
@@ -128,7 +128,7 @@ public:
     void reduce(r_exec::View *input);
 
     View *inject_input(View *input); // inject a filtered input into the output groups starting from 0; return the view injected in the primary group.
-    void inject_input(View *input, uint32 start); // inject an unfiltered input into the output groups starting from start.
+    void inject_input(View *input, uint64_t start); // inject an unfiltered input into the output groups starting from start.
     void inject_input(View *input, _Fact *abstract_input, BindingMap *bm); // inject a filtered input into the output groups.
     void inject_hlps(const std::vector<P<Code> > &hlps) const; // called by TPX; hlp is a mdl or a cst.
 

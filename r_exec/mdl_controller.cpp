@@ -152,7 +152,7 @@ Overlay *PrimaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLController
 
 bool PrimaryMDLOverlay::check_simulated_chaining(HLPBindingMap *bm, Fact *f_imdl, Pred *prediction) {
 
-    for (uint32 i = 0; i < prediction->simulations.size(); ++i) {
+    for (uint64 i = 0; i < prediction->simulations.size(); ++i) {
 
         switch (((MDLController *)controller)->retrieve_simulated_imdl_fwd(bm, f_imdl, prediction->simulations[i]->root)) {
         case NO_R:
@@ -292,9 +292,9 @@ MDLController::MDLController(r_code::View *view): HLPController(view) {
     _is_cmd = (lhs_ihlp->code(0).asOpcode() == Opcodes::Cmd);
 }
 
-float32 MDLController::get_cfd() const {
+double MDLController::get_cfd() const {
 
-    return get_core_object()->code(MDL_SR).asFloat();
+    return get_core_object()->code(MDL_SR).asDouble();
 }
 
 bool MDLController::monitor_predictions(_Fact *input) { // predictions are admissible inputs (for checking predicted counter-evidences).
@@ -387,9 +387,9 @@ void MDLController::_store_requirement(r_code::list<REntry> *cache, REntry &e) {
 
 ChainingStatus MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl, Controller *root) {
 
-    uint32 wr_count;
-    uint32 sr_count;
-    uint32 r_count = get_requirement_count(wr_count, sr_count);
+    uint64 wr_count;
+    uint64 sr_count;
+    uint64 r_count = get_requirement_count(wr_count, sr_count);
     if (!r_count)
         return NO_R;
     ChainingStatus r;
@@ -457,7 +457,7 @@ ChainingStatus MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap *bm, Fac
         } else { // some strong req. and some weak req.: true if among the entries complying with timings and bindings, the youngest |f->imdl is weaker than the youngest f->imdl.
 
             r = WR_DISABLED;
-            float32 negative_cfd = 0;
+            double negative_cfd = 0;
             requirements.CS.enter();
             uint64 now = Now();
             r_code::list<REntry>::const_iterator e;
@@ -517,9 +517,9 @@ ChainingStatus MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap *bm, Fac
 
 ChainingStatus MDLController::retrieve_simulated_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl, Controller *root) {
 
-    uint32 wr_count;
-    uint32 sr_count;
-    uint32 r_count = get_requirement_count(wr_count, sr_count);
+    uint64 wr_count;
+    uint64 sr_count;
+    uint64 r_count = get_requirement_count(wr_count, sr_count);
     if (!r_count)
         return NO_R;
     ChainingStatus r;
@@ -583,7 +583,7 @@ ChainingStatus MDLController::retrieve_simulated_imdl_bwd(HLPBindingMap *bm, Fac
         } else { // some strong req. and some weak req.: true if among the entries complying with timings and bindings, the youngest |f->imdl is weaker than the youngest f->imdl.
 
             r = WR_DISABLED;
-            float32 negative_cfd = 0;
+            double negative_cfd = 0;
             requirements.CS.enter();
             uint64 now = Now();
             r_code::list<REntry>::const_iterator e;
@@ -639,9 +639,9 @@ ChainingStatus MDLController::retrieve_simulated_imdl_bwd(HLPBindingMap *bm, Fac
 
 ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl, RequirementsPair &r_p, Fact *&ground, MDLController *req_controller, bool &wr_enabled) { // wr_enabled: true if there is at least one wr stronger than at least one sr.
 
-    uint32 wr_count;
-    uint32 sr_count;
-    uint32 r_count = get_requirement_count(wr_count, sr_count);
+    uint64 wr_count;
+    uint64 sr_count;
+    uint64 r_count = get_requirement_count(wr_count, sr_count);
     ground = NULL;
     if (!r_count)
         return NO_R;
@@ -737,7 +737,7 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
 
             r = NO_R;
             requirements.CS.enter();
-            float32 negative_cfd = 0;
+            double negative_cfd = 0;
             uint64 now = Now();
 
             r_code::list<REntry>::const_iterator e;
@@ -770,7 +770,7 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
             if (ground != NULL) { // an imdl triggered the reduction of the cache.
 
                 requirements.CS.leave();
-                float32 confidence = ground->get_pred()->get_target()->get_cfd();
+                double confidence = ground->get_pred()->get_target()->get_cfd();
                 if (confidence >= negative_cfd) {
 
                     r = WR_ENABLED;
@@ -822,9 +822,9 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
 
 ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl, Fact *&ground) {
 
-    uint32 wr_count;
-    uint32 sr_count;
-    uint32 r_count = get_requirement_count(wr_count, sr_count);
+    uint64 wr_count;
+    uint64 sr_count;
+    uint64 r_count = get_requirement_count(wr_count, sr_count);
     ground = NULL;
     if (!r_count)
         return NO_R;
@@ -886,7 +886,7 @@ ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl,
         } else { // some strong req. and some weak req.: true if among the entries complying with timings and bindings, the youngest |f->imdl is weaker than the youngest f->imdl.
 
             r = WR_DISABLED;
-            float32 negative_cfd = 0;
+            double negative_cfd = 0;
             requirements.CS.enter();
             uint64 now = Now();
             r_code::list<REntry>::const_iterator e;
@@ -986,7 +986,7 @@ void PMDLController::inject_goal(HLPBindingMap *bm, Fact *goal, Fact *f_imdl) co
     Group *primary_grp = get_host();
     uint64 before = goal->get_before();
     uint64 now = Now();
-    int32 resilience = _Mem::Get()->get_goal_pred_success_res(primary_grp, now, before - now);
+    int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_grp, now, before - now);
 
     View *view = new View(View::SYNC_ONCE, now, 1, resilience, primary_grp, primary_grp, goal); // SYNC_ONCE,res=resilience.
     _Mem::Get()->inject(view);
@@ -1007,7 +1007,7 @@ void PMDLController::inject_simulation(Fact *goal_pred) const { // f->pred->f->o
     Group *primary_grp = get_host();
     uint64 before = ((_Fact *)goal_pred->get_reference(0)->get_reference(0))->get_before();
     uint64 now = Now();
-    int32 resilience = _Mem::Get()->get_goal_pred_success_res(primary_grp, now, before - now);
+    int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_grp, now, before - now);
 
     View *view = new View(View::SYNC_ONCE, now, 1, resilience, primary_grp, primary_grp, goal_pred); // SYNC_ONCE,res=resilience.
     _Mem::Get()->inject(view);
@@ -1063,12 +1063,12 @@ void PMDLController::register_predicted_goal_outcome(Fact *goal, HLPBindingMap *
 
 inline uint64 PMDLController::get_sim_thz(uint64 now, uint64 deadline) const {
 
-    uint32 min_sim_thz = _Mem::Get()->get_min_sim_time_horizon(); // time allowance for the simulated predictions to flow upward.
+    uint64 min_sim_thz = _Mem::Get()->get_min_sim_time_horizon(); // time allowance for the simulated predictions to flow upward.
     uint64 sim_thz = _Mem::Get()->get_sim_time_horizon(deadline - now);
     if (sim_thz > min_sim_thz) {
 
         sim_thz -= min_sim_thz;
-        uint32 max_sim_thz = _Mem::Get()->get_max_sim_time_horizon();
+        uint64 max_sim_thz = _Mem::Get()->get_max_sim_time_horizon();
         if (sim_thz > max_sim_thz)
             sim_thz = max_sim_thz;
         return sim_thz;
@@ -1100,8 +1100,8 @@ void TopLevelMDLController::reduce(r_exec::View *input) { // no lock.
     if (goal && goal->is_drive()) {
 
         _Fact *goal_target = goal->get_target(); // goal_target is f->object.
-        float32 confidence = get_cfd() * goal_target->get_cfd(); // reading SR is atomic.
-        if (confidence <= get_host()->code(GRP_SLN_THR).asFloat()) // cfd is too low for any sub-goal to be injected.
+        double confidence = get_cfd() * goal_target->get_cfd(); // reading SR is atomic.
+        if (confidence <= get_host()->code(GRP_SLN_THR).asDouble()) // cfd is too low for any sub-goal to be injected.
             return;
 
         P<HLPBindingMap> bm = new HLPBindingMap(bindings);
@@ -1128,7 +1128,7 @@ void TopLevelMDLController::reduce(r_exec::View *input) { // no lock.
     }
 }
 
-void TopLevelMDLController::abduce(HLPBindingMap *bm, Fact *super_goal, float32 confidence) { // super_goal is a drive.
+void TopLevelMDLController::abduce(HLPBindingMap *bm, Fact *super_goal, double confidence) { // super_goal is a drive.
 
     if (evaluate_bwd_guards(bm)) { // bm may be updated.
 
@@ -1186,7 +1186,7 @@ void TopLevelMDLController::abduce_lhs(HLPBindingMap *bm,
 void TopLevelMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl, bool chaining_was_allowed, RequirementsPair &r_p, Fact *ground) { // no prediction here.
 }
 
-void TopLevelMDLController::register_pred_outcome(Fact *f_pred, bool success, _Fact *evidence, float32 confidence, bool rate_failures) {
+void TopLevelMDLController::register_pred_outcome(Fact *f_pred, bool success, _Fact *evidence, double confidence, bool rate_failures) {
 }
 
 void TopLevelMDLController::register_goal_outcome(Fact *goal, bool success, _Fact *evidence) const {
@@ -1221,7 +1221,7 @@ void TopLevelMDLController::register_goal_outcome(Fact *goal, bool success, _Fac
     for (uint16 i = 0; i < out_group_count; ++i) { // inject notification in out groups (drives host excepted).
 
         Group *out_group = (Group *)get_out_group(i);
-        int32 resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
+        int64 resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
         View *view = new View(View::SYNC_ONCE, now, 1, resilience, out_group, primary_host, f_goal_success);
         _Mem::Get()->inject(view);
 
@@ -1262,7 +1262,7 @@ void TopLevelMDLController::register_simulated_goal_outcome(Fact *goal, bool suc
 
     Code *success_object = new Success(goal, evidence, 1);
     Pred *evidence_pred = evidence->get_pred();
-    float32 confidence = evidence_pred->get_target()->get_cfd();
+    double confidence = evidence_pred->get_target()->get_cfd();
     uint64 now = Now();
     _Fact *f_success_object;
     if (success)
@@ -1277,7 +1277,7 @@ void TopLevelMDLController::register_simulated_goal_outcome(Fact *goal, bool suc
     Fact *f_pred = new Fact(pred, now, now, 1, 1);
 
     Group *primary_host = get_host();
-    int32 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, 0);
+    int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, 0);
     View *view = new View(View::SYNC_ONCE, now, 1, resilience, primary_host, primary_host, f_pred);
     _Mem::Get()->inject(view); // inject in the primary group.
 }
@@ -1346,7 +1346,7 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
     _Fact *bound_rhs = (_Fact *)bm->bind_pattern(rhs); // fact or |fact.
 
     bool simulation;
-    float32 confidence;
+    double confidence;
     Pred *prediction = input->get_pred();
     if (prediction) { // the input was a prediction.
 
@@ -1402,7 +1402,7 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
 
                 Fact *pred_f_imdl = new Fact(new Pred(f_imdl, 1), now, now, 1, 1);
                 inject_prediction(production, pred_f_imdl, confidence, before - now, NULL);
-                OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << ": " << input->get_oid() << " -> " << production->get_oid() << " pred " << bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asFloat() << std::endl;
+                OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << ": " << input->get_oid() << " -> " << production->get_oid() << " pred " << bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asDouble() << std::endl;
             } else {
 
                 Code *mk_rdx = new MkRdx(f_imdl, (Code *)input, production, 1, bindings);
@@ -1412,7 +1412,7 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
                 Group *secondary_host = secondary->getView()->get_host(); // inject f_imdl in secondary group.
                 View *view = new View(View::SYNC_ONCE, now, confidence, 1, getView()->get_host(), secondary_host, f_imdl); // SYNC_ONCE,res=resilience.
                 _Mem::Get()->inject(view);
-                OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << ": " << input->get_oid() << " -> " << production->get_oid() << " pred " << bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asFloat() << std::endl;
+                OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << ": " << input->get_oid() << " -> " << production->get_oid() << " pred " << bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asDouble() << std::endl;
             }
         }
     } else { // no monitoring for simulated predictions.
@@ -1423,14 +1423,14 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
     }
 }
 
-bool PrimaryMDLController::inject_prediction(Fact *prediction, Fact *f_imdl, float32 confidence, uint64 time_to_live, Code *mk_rdx) const { // prediction: f->pred->f->target.
+bool PrimaryMDLController::inject_prediction(Fact *prediction, Fact *f_imdl, double confidence, uint64 time_to_live, Code *mk_rdx) const { // prediction: f->pred->f->target.
 
     uint64 now = Now();
     Group *primary_host = get_host();
-    float32 sln_thr = primary_host->code(GRP_SLN_THR).asFloat();
+    double sln_thr = primary_host->code(GRP_SLN_THR).asDouble();
     if (confidence > sln_thr) { // do not inject if cfd is too low.
 
-        int32 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
+        int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
         View *view = new View(View::SYNC_ONCE, now, confidence, resilience, primary_host, primary_host, prediction); // SYNC_ONCE,res=resilience.
         _Mem::Get()->inject(view);
 
@@ -1480,9 +1480,9 @@ void PrimaryMDLController::reduce(r_exec::View *input) { // no lock.
     if (goal && goal->is_self_goal() && !goal->is_drive()) {
 
         _Fact *goal_target = goal->get_target(); // goal_target is f->object.
-        float32 confidence = get_cfd() * goal_target->get_cfd(); // reading SR is atomic.
+        double confidence = get_cfd() * goal_target->get_cfd(); // reading SR is atomic.
         Code *host = get_host();
-        if (confidence <= host->code(GRP_SLN_THR).asFloat()) // cfd is too low for any sub-goal to be injected.
+        if (confidence <= host->code(GRP_SLN_THR).asDouble()) // cfd is too low for any sub-goal to be injected.
             return;
 
         P<HLPBindingMap> bm = new HLPBindingMap(bindings);
@@ -1531,7 +1531,7 @@ void PrimaryMDLController::reduce_batch(Fact *f_p_f_imdl, MDLController *control
     reduce_cache<PEEntry>(&predicted_evidences, f_p_f_imdl, controller);
 }
 
-void PrimaryMDLController::abduce(HLPBindingMap *bm, Fact *super_goal, bool opposite, float32 confidence) { // goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
+void PrimaryMDLController::abduce(HLPBindingMap *bm, Fact *super_goal, bool opposite, double confidence) { // goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
 
     if (!abduction_allowed(bm))
         return;
@@ -1539,7 +1539,7 @@ void PrimaryMDLController::abduce(HLPBindingMap *bm, Fact *super_goal, bool oppo
     P<Fact> f_imdl = get_f_ihlp(bm, false);
     Sim *sim = super_goal->get_goal()->sim;
     uint64 sim_thz = sim->thz >> 1; // 0 if super-goal had not time for simulation, else use half the thz (in case there are some requirments to simulate: they'll use the other half).
-    uint32 min_sim_thz = _Mem::Get()->get_min_sim_time_horizon() >> 1; // time allowance for the simulated predictions to flow upward.
+    uint64 min_sim_thz = _Mem::Get()->get_min_sim_time_horizon() >> 1; // time allowance for the simulated predictions to flow upward.
 
     Sim *sub_sim;
     if (sim_thz > min_sim_thz) {
@@ -1616,7 +1616,7 @@ void PrimaryMDLController::abduce(HLPBindingMap *bm, Fact *super_goal, bool oppo
     }
 }
 
-void PrimaryMDLController::abduce_lhs(HLPBindingMap *bm, Fact *super_goal, Fact *f_imdl, bool opposite, float32 confidence, Sim *sim, Fact *ground, bool set_before) { // goal is f->g->f->object or f->g->|f->object; called concurrently by reduce() and _GMonitor::update().
+void PrimaryMDLController::abduce_lhs(HLPBindingMap *bm, Fact *super_goal, Fact *f_imdl, bool opposite, double confidence, Sim *sim, Fact *ground, bool set_before) { // goal is f->g->f->object or f->g->|f->object; called concurrently by reduce() and _GMonitor::update().
 
     if (evaluate_bwd_guards(bm)) { // bm may be updated.
 
@@ -1666,7 +1666,7 @@ void PrimaryMDLController::abduce_lhs(HLPBindingMap *bm, Fact *super_goal, Fact 
     }
 }
 
-void PrimaryMDLController::abduce_imdl(HLPBindingMap *bm, Fact *super_goal, Fact *f_imdl, bool opposite, float32 confidence, Sim *sim) { // goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
+void PrimaryMDLController::abduce_imdl(HLPBindingMap *bm, Fact *super_goal, Fact *f_imdl, bool opposite, double confidence, Sim *sim) { // goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
 
     f_imdl->set_cfd(confidence);
 
@@ -1680,7 +1680,7 @@ void PrimaryMDLController::abduce_imdl(HLPBindingMap *bm, Fact *super_goal, Fact
     OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << " " << getObject()->get_oid() << " -> " << f_sub_goal->get_oid() << " goal imdl " << f_sub_goal->get_reference(0)->get_reference(0)->get_oid() << "[" << Utils::RelativeTime(sub_goal->get_target()->get_after()) << "," << Utils::RelativeTime(sub_goal->get_target()->get_before()) << "[\n";
 }
 
-void PrimaryMDLController::abduce_simulated_lhs(HLPBindingMap *bm, Fact *super_goal, Fact *f_imdl, bool opposite, float32 confidence, Sim *sim) { // goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
+void PrimaryMDLController::abduce_simulated_lhs(HLPBindingMap *bm, Fact *super_goal, Fact *f_imdl, bool opposite, double confidence, Sim *sim) { // goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
 
     if (evaluate_bwd_guards(bm)) { // bm may be updated.
 
@@ -1726,7 +1726,7 @@ void PrimaryMDLController::abduce_simulated_lhs(HLPBindingMap *bm, Fact *super_g
     }
 }
 
-void PrimaryMDLController::abduce_simulated_imdl(HLPBindingMap *bm, Fact *super_goal, Fact *f_imdl, bool opposite, float32 confidence, Sim *sim) { // goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
+void PrimaryMDLController::abduce_simulated_imdl(HLPBindingMap *bm, Fact *super_goal, Fact *f_imdl, bool opposite, double confidence, Sim *sim) { // goal is f->g->f->object or f->g->|f->object; called concurrently by redcue() and _GMonitor::update().
 
     f_imdl->set_cfd(confidence);
 
@@ -1792,7 +1792,7 @@ bool PrimaryMDLController::check_simulated_imdl(Fact *goal, HLPBindingMap *bm, C
     }
 }
 
-inline void PrimaryMDLController::predict_simulated_lhs(HLPBindingMap *bm, bool opposite, float32 confidence, Sim *sim) {
+inline void PrimaryMDLController::predict_simulated_lhs(HLPBindingMap *bm, bool opposite, double confidence, Sim *sim) {
 
     _Fact *bound_lhs = (_Fact *)bm->bind_pattern(get_lhs());
     if (opposite)
@@ -1811,7 +1811,7 @@ inline void PrimaryMDLController::predict_simulated_evidence(_Fact *evidence, Si
     inject_simulation(new Fact(pred, now, now, 1, 1));
 }
 
-void PrimaryMDLController::register_pred_outcome(Fact *f_pred, bool success, _Fact *evidence, float32 confidence, bool rate_failures) {
+void PrimaryMDLController::register_pred_outcome(Fact *f_pred, bool success, _Fact *evidence, double confidence, bool rate_failures) {
 
     f_pred->invalidate();
 
@@ -1843,7 +1843,7 @@ void PrimaryMDLController::register_pred_outcome(Fact *f_pred, bool success, _Fa
     for (uint16 i = 0; i < out_group_count; ++i) { // inject notification in out groups.
 
         Group *out_group = (Group *)get_out_group(i);
-        int32 resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
+        int64 resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
         View *view = new View(View::SYNC_ONCE, now, 1, resilience, out_group, primary_host, f_success_object);
         _Mem::Get()->inject(view);
 
@@ -1866,13 +1866,13 @@ void PrimaryMDLController::register_req_outcome(Fact *f_pred, bool success, bool
     UNORDERED_MAP<P<_Fact>, RequirementsPair, PHash<_Fact> >::const_iterator r = active_requirements.find(f_pred);
     if (r != active_requirements.end()) { // some requirements were controlling the prediction: give feedback.
 
-        for (uint32 i = 0; i < r->second.first.controllers.size(); ++i) {
+        for (uint64 i = 0; i < r->second.first.controllers.size(); ++i) {
 
             MDLController *c = r->second.first.controllers[i];
             if (!c->is_invalidated())
                 c->register_req_outcome(r->second.first.f_imdl, success, r->second.first.chaining_was_allowed);
         }
-        for (uint32 i = 0; i < r->second.second.controllers.size(); ++i) {
+        for (uint64 i = 0; i < r->second.second.controllers.size(); ++i) {
 
             MDLController *c = r->second.second.controllers[i];
             if (!c->is_invalidated())
@@ -1913,14 +1913,14 @@ void PrimaryMDLController::register_goal_outcome(Fact *goal, bool success, _Fact
     }
 
     Group *primary_host = get_host();
-//int32 resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
+//int64 resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
 //View *view=new View(true,now,1,resilience,primary_host,primary_host,f_success_object);
 
     uint16 out_group_count = get_out_group_count();
     for (uint16 i = 0; i < out_group_count; ++i) { // inject notification in out groups.
 
         Group *out_group = (Group *)get_out_group(i);
-        int32 resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
+        int64 resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
         View *view = new View(View::SYNC_ONCE, now, 1, resilience, out_group, primary_host, f_success_object);
         _Mem::Get()->inject(view);
 
@@ -1947,7 +1947,7 @@ void PrimaryMDLController::register_simulated_goal_outcome(Fact *goal, bool succ
     Fact *f_pred = new Fact(pred, now, now, 1, 1);
 
     Group *primary_host = get_host();
-    int32 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, 0);
+    int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, 0);
     View *view = new View(View::SYNC_ONCE, now, 1, resilience, primary_host, primary_host, f_pred);
 }
 
@@ -1962,22 +1962,22 @@ void PrimaryMDLController::rate_model(bool success) {
         return;
     }
 
-    float32 strength = model->code(MDL_STRENGTH).asFloat();
-    float32 instance_count = model->code(MDL_CNT).asFloat();
-    float32 success_count = model->code(MDL_SR).asFloat() * instance_count;
+    double strength = model->code(MDL_STRENGTH).asDouble();
+    double instance_count = model->code(MDL_CNT).asDouble();
+    double success_count = model->code(MDL_SR).asDouble() * instance_count;
 
     ++instance_count;
     model->code(MDL_DSR) = model->code(MDL_SR);
 
-    float32 success_rate;
+    double success_rate;
     if (success) { // leave the model active in the primary group.
 
         ++success_count;
         success_rate = success_count / instance_count;
-        uint32 instance_count_base = _Mem::Get()->get_mdl_inertia_cnt_thr();
+        uint64 instance_count_base = _Mem::Get()->get_mdl_inertia_cnt_thr();
         if (success_rate >= _Mem::Get()->get_mdl_inertia_sr_thr() && instance_count >= instance_count_base) { // make the model strong if not already; trim the instance count to reduce the rating's inertia.
 
-            instance_count = (uint32)(1 / success_rate);
+            instance_count = (uint64)(1 / success_rate);
             success_rate = 1;
             model->code(MDL_STRENGTH) = Atom::Float(1);
         }
@@ -2018,15 +2018,15 @@ void PrimaryMDLController::assume(_Fact *input) {
         return;
 
     Code *model = get_core_object();
-    if (model->code(MDL_STRENGTH).asFloat() == 0) // only strong models compute assumptions.
+    if (model->code(MDL_STRENGTH).asDouble() == 0) // only strong models compute assumptions.
         return;
 
     if (input->get_pred()) // discard predictions.
         return;
 
-    float32 confidence = get_cfd() * input->get_cfd(); // reading SR is atomic.
+    double confidence = get_cfd() * input->get_cfd(); // reading SR is atomic.
     Code *host = get_host();
-    if (confidence <= host->code(GRP_SLN_THR).asFloat()) // cfd is too low for any assumption to be injected.
+    if (confidence <= host->code(GRP_SLN_THR).asDouble()) // cfd is too low for any assumption to be injected.
         return;
 
     P<HLPBindingMap> bm = new HLPBindingMap(bindings);
@@ -2044,7 +2044,7 @@ void PrimaryMDLController::assume(_Fact *input) {
     }
 }
 
-void PrimaryMDLController::assume_lhs(HLPBindingMap *bm, bool opposite, _Fact *input, float32 confidence) { // produce an assumption and inject in primary; no rdx.
+void PrimaryMDLController::assume_lhs(HLPBindingMap *bm, bool opposite, _Fact *input, double confidence) { // produce an assumption and inject in primary; no rdx.
 
     P<Fact> f_imdl = get_f_ihlp(bm, false);
     Fact *ground;
@@ -2075,7 +2075,7 @@ void PrimaryMDLController::assume_lhs(HLPBindingMap *bm, bool opposite, _Fact *i
         time_to_live = before - now;
     else
         time_to_live = 0;
-    int32 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
+    int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
     View *view = new View(View::SYNC_ONCE, now, confidence, resilience, primary_host, primary_host, bound_lhs); // SYNC_ONCE,res=resilience.
     _Mem::Get()->inject(view);
     OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << " -> " << bound_lhs->get_oid() << " asmp" << std::endl;
@@ -2212,15 +2212,15 @@ void SecondaryMDLController::rate_model() { // acknowledge successes only; the p
         return;
     }
 
-    uint32 instance_count = model->code(MDL_CNT).asFloat();
-    uint32 success_count = model->code(MDL_SR).asFloat() * instance_count;
+    uint64 instance_count = model->code(MDL_CNT).asDouble();
+    uint64 success_count = model->code(MDL_SR).asDouble() * instance_count;
 
     ++instance_count;
     model->code(MDL_DSR) = model->code(MDL_SR);
     model->code(MDL_CNT) = Atom::Float(instance_count);
 
     ++success_count;
-    float32 success_rate = success_count / instance_count; // no trimming.
+    double success_rate = success_count / instance_count; // no trimming.
     model->code(MDL_SR) = Atom::Float(success_rate);
 
     if (success_rate > primary->getView()->get_host()->get_act_thr()) {
@@ -2237,7 +2237,7 @@ void SecondaryMDLController::rate_model() { // acknowledge successes only; the p
     }
 }
 
-void SecondaryMDLController::register_pred_outcome(Fact *f_pred, bool success, _Fact *evidence, float32 confidence, bool rate_failures) { // success==false means executed in the thread of a time core; otherwise, executed in the same thread as for Controller::reduce().
+void SecondaryMDLController::register_pred_outcome(Fact *f_pred, bool success, _Fact *evidence, double confidence, bool rate_failures) { // success==false means executed in the thread of a time core; otherwise, executed in the same thread as for Controller::reduce().
 
     register_req_outcome(f_pred, success, rate_failures);
 }
@@ -2252,7 +2252,7 @@ void SecondaryMDLController::register_req_outcome(Fact *f_imdl, bool success, bo
         UNORDERED_MAP<P<_Fact>, RequirementsPair, PHash<_Fact> >::const_iterator r = active_requirements.find(f_imdl);
         if (r != active_requirements.end()) { // some requirements were controlling the prediction: give feedback.
 
-            for (uint32 i = 0; i < r->second.first.controllers.size(); ++i) {
+            for (uint64 i = 0; i < r->second.first.controllers.size(); ++i) {
 
                 if (!r->second.first.controllers[i]->is_invalidated())
                     r->second.first.controllers[i]->register_req_outcome(r->second.first.f_imdl, success, r->second.first.chaining_was_allowed);

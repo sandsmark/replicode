@@ -88,7 +88,7 @@ bool Class::get_member_index(Metadata *metadata, std::string &name, uint16 &inde
     return false;
 }
 
-std::string Class::get_member_name(uint32 index) {
+std::string Class::get_member_name(uint64 index) {
 
     return things_to_read[has_offset() ? index - 1 : index].name;
 }
@@ -110,11 +110,11 @@ void Class::write(uintptr_t *storage) {
 
     storage[0] = atom.atom;
     r_code::Write(storage + 1, str_opcode);
-    uint32 offset = 1 + r_code::GetSize(str_opcode);
+    uint64 offset = 1 + r_code::GetSize(str_opcode);
     storage[offset++] = type;
     storage[offset++] = use_as;
     storage[offset++] = things_to_read.size();
-    for (uint32 i = 0; i < things_to_read.size(); ++i) {
+    for (uint64 i = 0; i < things_to_read.size(); ++i) {
 
         things_to_read[i].write(storage + offset);
         offset += things_to_read[i].get_size();
@@ -125,11 +125,11 @@ void Class::read(uintptr_t* storage) {
 
     atom = storage[0];
     r_code::Read(storage + 1, str_opcode);
-    uint32 offset = 1 + r_code::GetSize(str_opcode);
+    uint64 offset = 1 + r_code::GetSize(str_opcode);
     type = (ReturnType)storage[offset++];
     use_as = (StructureMember::Iteration)storage[offset++];
-    uint32 member_count = storage[offset++];
-    for (uint32 i = 0; i < member_count; ++i) {
+    uint64 member_count = storage[offset++];
+    for (uint64 i = 0; i < member_count; ++i) {
 
         StructureMember m;
         m.read(storage + offset);

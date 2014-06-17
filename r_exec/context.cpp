@@ -366,7 +366,7 @@ dereference:
         overlay->values[write_index] = head;
 }
 
-void IPGMContext::getMember(void *&object, uint32 &view_oid, ObjectType &object_type, int16 &member_index) const {
+void IPGMContext::getMember(void *&object, uint64 &view_oid, ObjectType &object_type, int16 &member_index) const {
 
     if ((*this)[0].getDescriptor() != Atom::I_PTR) { // ill-formed mod/set expression.
 
@@ -418,7 +418,7 @@ void IPGMContext::getMember(void *&object, uint32 &view_oid, ObjectType &object_
             object = (Group *)c[VIEW_CODE_MAX_SIZE].atom; // first reference of grp in a view stored in athe value array.
         else
             object = c.view->get_host();
-        view_oid = c[VIEW_OID].atom; // oid is hidden at the end of the view code; stored directly as a uint32.
+        view_oid = c[VIEW_OID].atom; // oid is hidden at the end of the view code; stored directly as a uint64.
         object_type = TYPE_VIEW;
         break;
     default: // atomic value or ill-formed mod/set expression.

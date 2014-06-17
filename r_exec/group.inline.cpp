@@ -55,7 +55,7 @@ inline bool Group::invalidate() {
         return true;
 
 // unregister from all groups it views.
-    UNORDERED_MAP<uint32, P<View> >::const_iterator gv;
+    UNORDERED_MAP<uint64, P<View> >::const_iterator gv;
     for (gv = group_views.begin(); gv != group_views.end(); ++gv) {
 
         ((Group *)gv->second->object)->enter();
@@ -82,218 +82,218 @@ inline bool Group::invalidate() {
     return false;
 }
 
-inline uint32 Group::get_upr() const {
+inline uint64 Group::get_upr() const {
 
-    return code(GRP_UPR).asFloat();
+    return code(GRP_UPR);
 }
 
-inline float32 Group::get_sln_thr() const {
+inline double Group::get_sln_thr() const {
 
-    return code(GRP_SLN_THR).asFloat();
+    return code(GRP_SLN_THR).asDouble();
 }
 
-inline float32 Group::get_act_thr() const {
+inline double Group::get_act_thr() const {
 
-    return code(GRP_ACT_THR).asFloat();
+    return code(GRP_ACT_THR).asDouble();
 }
 
-inline float32 Group::get_vis_thr() const {
+inline double Group::get_vis_thr() const {
 
-    return code(GRP_VIS_THR).asFloat();
+    return code(GRP_VIS_THR).asDouble();
 }
 
-inline float32 Group::get_c_sln_thr() const {
+inline double Group::get_c_sln_thr() const {
 
-    return code(GRP_C_SLN_THR).asFloat();
+    return code(GRP_C_SLN_THR).asDouble();
 }
 
-inline float32 Group::get_c_act_thr() const {
+inline double Group::get_c_act_thr() const {
 
-    return code(GRP_C_ACT_THR).asFloat();
+    return code(GRP_C_ACT_THR).asDouble();
 }
 
-inline float32 Group::get_c_sln() const {
+inline double Group::get_c_sln() const {
 
-    return code(GRP_C_SLN).asFloat();
+    return code(GRP_C_SLN).asDouble();
 }
 
-inline float32 Group::get_c_act() const {
+inline double Group::get_c_act() const {
 
-    return code(GRP_C_ACT).asFloat();
+    return code(GRP_C_ACT).asDouble();
 }
 
-inline void Group::mod_sln_thr(float32 value) {
+inline void Group::mod_sln_thr(double value) {
 
     ++sln_thr_changes;
     acc_sln_thr += value;
 }
 
-inline void Group::set_sln_thr(float32 value) {
+inline void Group::set_sln_thr(double value) {
 
     ++sln_thr_changes;
     acc_sln_thr += value - get_sln_thr();
 }
 
-inline void Group::mod_act_thr(float32 value) {
+inline void Group::mod_act_thr(double value) {
 
     ++act_thr_changes;
     acc_act_thr += value;
 }
 
-inline void Group::set_act_thr(float32 value) {
+inline void Group::set_act_thr(double value) {
 
     ++act_thr_changes;
     acc_act_thr += value - get_act_thr();
 }
 
-inline void Group::mod_vis_thr(float32 value) {
+inline void Group::mod_vis_thr(double value) {
 
     ++vis_thr_changes;
     acc_vis_thr += value;
 }
 
-inline void Group::set_vis_thr(float32 value) {
+inline void Group::set_vis_thr(double value) {
 
     ++vis_thr_changes;
     acc_vis_thr += value - get_vis_thr();
 }
 
-inline void Group::mod_c_sln(float32 value) {
+inline void Group::mod_c_sln(double value) {
 
     ++c_sln_changes;
     acc_c_sln += value;
 }
 
-inline void Group::set_c_sln(float32 value) {
+inline void Group::set_c_sln(double value) {
 
     ++c_sln_changes;
     acc_c_sln += value - get_c_sln();
 }
 
-inline void Group::mod_c_act(float32 value) {
+inline void Group::mod_c_act(double value) {
 
     ++c_act_changes;
     acc_c_act += value;
 }
 
-inline void Group::set_c_act(float32 value) {
+inline void Group::set_c_act(double value) {
 
     ++c_act_changes;
     acc_c_act += value - get_c_act();
 }
 
-inline void Group::mod_c_sln_thr(float32 value) {
+inline void Group::mod_c_sln_thr(double value) {
 
     ++c_sln_thr_changes;
     acc_c_sln_thr += value;
 }
 
-inline void Group::set_c_sln_thr(float32 value) {
+inline void Group::set_c_sln_thr(double value) {
 
     ++c_sln_thr_changes;
     acc_c_sln_thr += value - get_c_sln_thr();
 }
 
-inline void Group::mod_c_act_thr(float32 value) {
+inline void Group::mod_c_act_thr(double value) {
 
     ++c_act_thr_changes;
     acc_c_act_thr += value;
 }
 
-inline void Group::set_c_act_thr(float32 value) {
+inline void Group::set_c_act_thr(double value) {
 
     ++c_act_thr_changes;
     acc_c_act_thr += value - get_c_act_thr();
 }
 
-inline float32 Group::get_sln_chg_thr() {
+inline double Group::get_sln_chg_thr() {
 
-    return code(GRP_SLN_CHG_THR).asFloat();
+    return code(GRP_SLN_CHG_THR).asDouble();
 }
 
-inline float32 Group::get_sln_chg_prd() {
+inline double Group::get_sln_chg_prd() {
 
-    return code(GRP_SLN_CHG_PRD).asFloat();
+    return code(GRP_SLN_CHG_PRD).asDouble();
 }
 
-inline float32 Group::get_act_chg_thr() {
+inline double Group::get_act_chg_thr() {
 
-    return code(GRP_ACT_CHG_THR).asFloat();
+    return code(GRP_ACT_CHG_THR).asDouble();
 }
 
-inline float32 Group::get_act_chg_prd() {
+inline double Group::get_act_chg_prd() {
 
-    return code(GRP_ACT_CHG_PRD).asFloat();
+    return code(GRP_ACT_CHG_PRD).asDouble();
 }
 
-inline float32 Group::get_avg_sln() {
+inline double Group::get_avg_sln() {
 
-    return code(GRP_AVG_SLN).asFloat();
+    return code(GRP_AVG_SLN).asDouble();
 }
 
-inline float32 Group::get_high_sln() {
+inline double Group::get_high_sln() {
 
-    return code(GRP_HIGH_SLN).asFloat();
+    return code(GRP_HIGH_SLN).asDouble();
 }
 
-inline float32 Group::get_low_sln() {
+inline double Group::get_low_sln() {
 
-    return code(GRP_LOW_SLN).asFloat();
+    return code(GRP_LOW_SLN).asDouble();
 }
 
-inline float32 Group::get_avg_act() {
+inline double Group::get_avg_act() {
 
-    return code(GRP_AVG_ACT).asFloat();
+    return code(GRP_AVG_ACT).asDouble();
 }
 
-inline float32 Group::get_high_act() {
+inline double Group::get_high_act() {
 
-    return code(GRP_HIGH_ACT).asFloat();
+    return code(GRP_HIGH_ACT).asDouble();
 }
 
-inline float32 Group::get_low_act() {
+inline double Group::get_low_act() {
 
-    return code(GRP_LOW_ACT).asFloat();
+    return code(GRP_LOW_ACT).asDouble();
 }
 
-inline float32 Group::get_high_sln_thr() {
+inline double Group::get_high_sln_thr() {
 
-    return code(GRP_HIGH_SLN_THR).asFloat();
+    return code(GRP_HIGH_SLN_THR).asDouble();
 }
 
-inline float32 Group::get_low_sln_thr() {
+inline double Group::get_low_sln_thr() {
 
-    return code(GRP_LOW_SLN_THR).asFloat();
+    return code(GRP_LOW_SLN_THR).asDouble();
 }
 
-inline float32 Group::get_sln_ntf_prd() {
+inline double Group::get_sln_ntf_prd() {
 
-    return code(GRP_SLN_NTF_PRD).asFloat();
+    return code(GRP_SLN_NTF_PRD).asDouble();
 }
 
-inline float32 Group::get_high_act_thr() {
+inline double Group::get_high_act_thr() {
 
-    return code(GRP_HIGH_ACT_THR).asFloat();
+    return code(GRP_HIGH_ACT_THR).asDouble();
 }
 
-inline float32 Group::get_low_act_thr() {
+inline double Group::get_low_act_thr() {
 
-    return code(GRP_LOW_ACT_THR).asFloat();
+    return code(GRP_LOW_ACT_THR).asDouble();
 }
 
-inline float32 Group::get_act_ntf_prd() {
+inline double Group::get_act_ntf_prd() {
 
-    return code(GRP_ACT_NTF_PRD).asFloat();
+    return code(GRP_ACT_NTF_PRD).asDouble();
 }
 
-inline float32 Group::get_low_res_thr() {
+inline double Group::get_low_res_thr() {
 
-    return code(GRP_LOW_RES_THR).asFloat();
+    return code(GRP_LOW_RES_THR).asDouble();
 }
 
-inline float32 Group::get_ntf_new() {
+inline double Group::get_ntf_new() {
 
-    return code(GRP_NTF_NEW).asFloat();
+    return code(GRP_NTF_NEW).asDouble();
 }
 
 inline uint16 Group::get_ntf_grp_count() {
@@ -310,17 +310,17 @@ inline Group *Group::get_ntf_grp(uint16 i) {
     return (Group *)get_reference(index);
 }
 
-inline void Group::_mod_0_positive(uint16 member_index, float32 value) {
+inline void Group::_mod_0_positive(uint16 member_index, double value) {
 
-    float32 v = code(member_index).asFloat() + value;
+    double v = code(member_index).asDouble() + value;
     if (v < 0)
         v = 0;
     code(member_index) = Atom::Float(v);
 }
 
-inline void Group::_mod_0_plus1(uint16 member_index, float32 value) {
+inline void Group::_mod_0_plus1(uint16 member_index, double value) {
 
-    float32 v = code(member_index).asFloat() + value;
+    double v = code(member_index).asDouble() + value;
     if (v < 0)
         v = 0;
     else if (v > 1)
@@ -328,9 +328,9 @@ inline void Group::_mod_0_plus1(uint16 member_index, float32 value) {
     code(member_index) = Atom::Float(v);
 }
 
-inline void Group::_mod_minus1_plus1(uint16 member_index, float32 value) {
+inline void Group::_mod_minus1_plus1(uint16 member_index, double value) {
 
-    float32 v = code(member_index).asFloat() + value;
+    double v = code(member_index).asDouble() + value;
     if (v < -1)
         v = -1;
     else if (v > 1)
@@ -338,7 +338,7 @@ inline void Group::_mod_minus1_plus1(uint16 member_index, float32 value) {
     code(member_index) = Atom::Float(v);
 }
 
-inline void Group::_set_0_positive(uint16 member_index, float32 value) {
+inline void Group::_set_0_positive(uint16 member_index, double value) {
 
     if (value < 0)
         code(member_index) = Atom::Float(0);
@@ -346,7 +346,7 @@ inline void Group::_set_0_positive(uint16 member_index, float32 value) {
         code(member_index) = Atom::Float(value);
 }
 
-inline void Group::_set_0_plus1(uint16 member_index, float32 value) {
+inline void Group::_set_0_plus1(uint16 member_index, double value) {
 
     if (value < 0)
         code(member_index) = Atom::Float(0);
@@ -356,7 +356,7 @@ inline void Group::_set_0_plus1(uint16 member_index, float32 value) {
         code(member_index) = Atom::Float(value);
 }
 
-inline void Group::_set_minus1_plus1(uint16 member_index, float32 value) {
+inline void Group::_set_minus1_plus1(uint16 member_index, double value) {
 
     if (value < -1)
         code(member_index) = Atom::Float(-1);
@@ -366,13 +366,13 @@ inline void Group::_set_minus1_plus1(uint16 member_index, float32 value) {
         code(member_index) = Atom::Float(value);
 }
 
-inline void Group::_set_0_1(uint16 member_index, float32 value) {
+inline void Group::_set_0_1(uint16 member_index, double value) {
 
     if (value == 0 || value == 1)
         code(member_index) = Atom::Float(value);
 }
 
-inline void Group::mod(uint16 member_index, float32 value) {
+inline void Group::mod(uint16 member_index, double value) {
 
     switch (member_index) {
     case GRP_UPR:
@@ -419,7 +419,7 @@ inline void Group::mod(uint16 member_index, float32 value) {
     }
 }
 
-inline void Group::set(uint16 member_index, float32 value) {
+inline void Group::set(uint16 member_index, double value) {
 
     switch (member_index) {
     case GRP_UPR:

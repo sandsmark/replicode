@@ -58,8 +58,8 @@ inline View::View(const View *view, bool new_OID): r_code::View(), controller(NU
 
 inline View::View(SyncMode sync,
                   uint64 ijt,
-                  float32 sln,
-                  int32 res,
+                  double sln,
+                  int64 res,
                   Code *destination,
                   Code *origin,
                   Code *object): r_code::View(), controller(NULL) {
@@ -70,12 +70,12 @@ inline View::View(SyncMode sync,
 
 inline View::View(SyncMode sync,
                   uint64 ijt,
-                  float32 sln,
-                  int32 res,
+                  double sln,
+                  int64 res,
                   Code *destination,
                   Code *origin,
                   Code *object,
-                  float32 act): r_code::View(), controller(NULL) {
+                  double act): r_code::View(), controller(NULL) {
 
     code(VIEW_OPCODE) = Atom::SSet(Opcodes::PgmView, PGM_VIEW_ARITY);
     init(sync, ijt, sln, res, destination, origin, object);
@@ -84,8 +84,8 @@ inline View::View(SyncMode sync,
 
 inline void View::init(SyncMode sync,
                        uint64 ijt,
-                       float32 sln,
-                       int32 res,
+                       double sln,
+                       int64 res,
                        Code *destination,
                        Code *origin,
                        Code *object) {
@@ -120,7 +120,7 @@ inline void View::reset() {
     reset_init_act();
 }
 
-inline uint32 View::get_oid() const {
+inline uint64 View::get_oid() const {
 
     return _code[VIEW_OID].atom;
 }
@@ -131,33 +131,33 @@ inline bool View::isNotification() const {
 }
 
 inline Group *View::get_host() {
-    uint32 host_reference = code(VIEW_HOST).asIndex();
+    uint64 host_reference = code(VIEW_HOST).asIndex();
     return (Group *)references[host_reference];
 }
 
 inline View::SyncMode View::get_sync() {
 
-    return (SyncMode)(uint32)code(VIEW_SYNC).asFloat();
+    return (SyncMode)(uint64)code(VIEW_SYNC).asDouble();
 }
 
-inline float32 View::get_res() {
+inline double View::get_res() {
 
-    return code(VIEW_RES).asFloat();
+    return code(VIEW_RES).asDouble();
 }
 
-inline float32 View::get_sln() {
+inline double View::get_sln() {
 
-    return code(VIEW_SLN).asFloat();
+    return code(VIEW_SLN).asDouble();
 }
 
-inline float32 View::get_act() {
+inline double View::get_act() {
 
-    return code(VIEW_ACT).asFloat();
+    return code(VIEW_ACT).asDouble();
 }
 
-inline float32 View::get_vis() {
+inline double View::get_vis() {
 
-    return code(GRP_VIEW_VIS).asFloat();
+    return code(GRP_VIEW_VIS).asDouble();
 }
 
 inline bool View::get_cov() {
@@ -167,7 +167,7 @@ inline bool View::get_cov() {
     return false;
 }
 
-inline void View::mod_res(float32 value) {
+inline void View::mod_res(double value) {
 
     if (code(VIEW_RES) == Atom::PlusInfinity())
         return;
@@ -175,7 +175,7 @@ inline void View::mod_res(float32 value) {
     ++res_changes;
 }
 
-inline void View::set_res(float32 value) {
+inline void View::set_res(double value) {
 
     if (code(VIEW_RES) == Atom::PlusInfinity())
         return;
@@ -183,63 +183,63 @@ inline void View::set_res(float32 value) {
     ++res_changes;
 }
 
-inline void View::mod_sln(float32 value) {
+inline void View::mod_sln(double value) {
 
     acc_sln += value;
     ++sln_changes;
 }
 
-inline void View::set_sln(float32 value) {
+inline void View::set_sln(double value) {
 
     acc_sln += value - get_sln();
     ++sln_changes;
 }
 
-inline void View::mod_act(float32 value) {
+inline void View::mod_act(double value) {
 
     acc_act += value;
     ++act_changes;
 }
 
-inline void View::set_act(float32 value) {
+inline void View::set_act(double value) {
 
     acc_act += value - get_act();
     ++act_changes;
 }
 
-inline void View::mod_vis(float32 value) {
+inline void View::mod_vis(double value) {
 
     acc_vis += value;
     ++vis_changes;
 }
 
-inline void View::set_vis(float32 value) {
+inline void View::set_vis(double value) {
 
     acc_vis += value - get_vis();
     ++vis_changes;
 }
 
-inline float32 View::update_sln_delta() {
+inline double View::update_sln_delta() {
 
-    float32 delta = get_sln() - initial_sln;
+    double delta = get_sln() - initial_sln;
     initial_sln = get_sln();
     return delta;
 }
 
-inline float32 View::update_act_delta() {
+inline double View::update_act_delta() {
 
-    float32 act = get_act();
-    float32 delta = act - initial_act;
+    double act = get_act();
+    double delta = act - initial_act;
     initial_act = act;
     return delta;
 }
 
-inline void View::force_res(float32 value) {
+inline void View::force_res(double value) {
 
     code(VIEW_RES) = Atom::Float(value);
 }
 
-inline void View::mod(uint16 member_index, float32 value) {
+inline void View::mod(uint16 member_index, double value) {
 
     switch (member_index) {
     case VIEW_SLN:
@@ -257,7 +257,7 @@ inline void View::mod(uint16 member_index, float32 value) {
     }
 }
 
-inline void View::set(uint16 member_index, float32 value) {
+inline void View::set(uint16 member_index, double value) {
 
     switch (member_index) {
     case VIEW_SLN:

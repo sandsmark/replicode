@@ -11,9 +11,9 @@ class RepliCondition;
 class RepliStruct {
 public:
     static UNORDERED_MAP<std::string, RepliMacro *> RepliMacros;
-    static UNORDERED_MAP<std::string, int32_t> Counters;
+    static UNORDERED_MAP<std::string, int64_t> Counters;
     static std::list<RepliCondition *> Conditions;
-    static uint32_t GlobalLine;
+    static uint64_t GlobalLine;
     static std::string GlobalFilename;
 
     enum Type {Root, Structure, Set, Atom, Directive, Condition, Development};
@@ -23,7 +23,7 @@ public:
     std::string label;
     std::string error;
     std::string fileName;
-    uint32_t line;
+    uint64_t line;
     std::vector<RepliStruct *> args;
     RepliStruct *parent;
 
@@ -32,10 +32,10 @@ public:
 
     void reset(); // remove rags that are objects.
 
-    uint32_t getIndent(std::istream *stream);
-    int32_t parse(std::istream *stream, uint32_t &curIndent, uint32_t &prevIndent, int32_t paramExpect = 0);
-    bool parseDirective(std::istream *stream, uint32_t &curIndent, uint32_t &prevIndent);
-    int32_t process();
+    uint64_t getIndent(std::istream *stream);
+    int64_t parse(std::istream *stream, uint64_t &curIndent, uint64_t &prevIndent, int64_t paramExpect = 0);
+    bool parseDirective(std::istream *stream, uint64_t &curIndent, uint64_t &prevIndent);
+    int64_t process();
 
     RepliStruct *findAtom(const std::string &name);
     RepliStruct *loadReplicodeFile(const std::string &filename);
@@ -61,7 +61,7 @@ public:
     RepliMacro(const std::string &name, RepliStruct *src, RepliStruct *dest);
     ~RepliMacro();
 
-    uint32_t argCount();
+    uint64_t argCount();
     RepliStruct *expandMacro(RepliStruct *oldStruct);
 };
 
@@ -73,7 +73,7 @@ public:
     RepliCondition(const std::string &name, bool reversed);
     ~RepliCondition();
     bool reverse();
-    bool isActive(UNORDERED_MAP<std::string, RepliMacro*> &RepliMacros, UNORDERED_MAP<std::string, int32_t> &Counters);
+    bool isActive(UNORDERED_MAP<std::string, RepliMacro*> &RepliMacros, UNORDERED_MAP<std::string, int64_t> &Counters);
 };
 
 

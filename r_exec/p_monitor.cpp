@@ -80,7 +80,7 @@ bool PMonitor::reduce(_Fact *input) { // input is always an actual fact.
             return false;
         }
     } else {
-//uint32 oid=input->get_oid();
+//uint64 oid=input->get_oid();
         switch (((Fact *)input)->is_evidence(prediction_target)) {
         case MATCH_SUCCESS_POSITIVE:
 //std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<prediction_target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" positive\n";

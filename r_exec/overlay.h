@@ -49,8 +49,8 @@ class View;
 class r_exec_dll Controller:
     public _Object {
 protected:
-    volatile uint32 invalidated; // 32 bit alignment.
-    volatile uint32 activated; // 32 bit alignment.
+    volatile uint64 invalidated; // 32 bit alignment.
+    volatile uint64 activated; // 32 bit alignment.
 
     uint64 tsc;
 
@@ -118,7 +118,7 @@ class r_exec_dll Overlay:
     friend class IPGMContext;
     friend class HLPContext;
 protected:
-    volatile uint32 invalidated;
+    volatile uint64 invalidated;
 
     Controller *controller;
 

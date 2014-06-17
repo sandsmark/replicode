@@ -102,7 +102,7 @@ public:
 
     void write(uintptr_t *storage) const;
     void read(uintptr_t *storage);
-    uint32 get_size();
+    size_t get_size();
 };
 }
 

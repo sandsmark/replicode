@@ -50,15 +50,15 @@
 #include <ctime>
 
 
-#define R250_IA (sizeof(uint32)*103)
-#define R250_IB (sizeof(uint32)*R250_LEN-R250_IA)
-#define R521_IA (sizeof(uint32)*168)
-#define R521_IB (sizeof(uint32)*R521_LEN-R521_IA)
+#define R250_IA (sizeof(uint64)*103)
+#define R250_IB (sizeof(uint64)*R250_LEN-R250_IA)
+#define R521_IA (sizeof(uint64)*168)
+#define R521_IB (sizeof(uint64)*R521_LEN-R521_IA)
 
 namespace core {
 
 #if defined LINUX
-bool CalcTimeout(struct timespec &timeout, uint32 ms) {
+bool CalcTimeout(struct timespec &timeout, uint64 ms) {
 
     struct timeval now;
     if (gettimeofday(&now, NULL) != 0)
@@ -82,11 +82,11 @@ uint64 GetTime() {
 }
 #endif
 
-void Error::PrintBinary(void* p, uint32 size, bool asInt, const char* title) {
+void Error::PrintBinary(void* p, uint64 size, bool asInt, const char* title) {
     if (title != NULL)
-        printf("--- %s %u ---\n", title, size);
+        printf("--- %s %lu ---\n", title, size);
     unsigned char c;
-    for (uint32 n = 0; n < size; n++) {
+    for (uint64 n = 0; n < size; n++) {
         c = *(((unsigned char*)p) + n);
         if (asInt)
             printf("[%u] ", (unsigned int)c);
@@ -159,10 +159,10 @@ SharedLibrary *SharedLibrary::load(const char *fileName) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Thread::TerminateAndWait(Thread **threads, uint32 threadCount) {
+void Thread::TerminateAndWait(Thread **threads, uint64 threadCount) {
     if (!threads)
         return;
-    for (uint32 i = 0; i < threadCount; i++) {
+    for (uint64 i = 0; i < threadCount; i++) {
         threads[i]->terminate();
         Thread::Wait(threads[i]);
     }
@@ -175,15 +175,15 @@ void Thread::TerminateAndWait(Thread *_thread) {
     Thread::Wait(_thread);
 }
 
-void Thread::Wait(Thread **threads, uint32 threadCount) {
+void Thread::Wait(Thread **threads, uint64 threadCount) {
 
     if (!threads)
         return;
 #if defined WINDOWS
-    for (uint32 i = 0; i < threadCount; i++)
+    for (uint64 i = 0; i < threadCount; i++)
         WaitForSingleObject(threads[i]->_thread, INFINITE);
 #elif defined LINUX
-    for (uint32 i = 0; i < threadCount; i++)
+    for (uint64 i = 0; i < threadCount; i++)
         pthread_join(threads[i]->_thread, NULL);
 #endif
 }
@@ -201,7 +201,7 @@ void Thread::Wait(Thread *_thread) {
 
 void Thread::Sleep(int64 ms) {
 #if defined WINDOWS
-    ::Sleep((uint32)ms);
+    ::Sleep((uint64)ms);
 #elif defined LINUX
     struct timespec to_sleep = { ms / 1000, // seconds
                (ms % 1000) * 1000
@@ -311,7 +311,7 @@ float64 Time::Period;
 
 int64 Time::InitTime;
 
-void Time::Init(uint32 r) {
+void Time::Init(uint64 r) {
 #if defined WINDOWS
     NTSTATUS nts;
     HMODULE NTDll =::LoadLibrary("NTDLL");
@@ -416,17 +416,17 @@ uint8 Host::Name(char *name) {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if defined WINDOWS
-const uint32 Semaphore::Infinite = INFINITE;
+const uint64 Semaphore::Infinite = INFINITE;
 #elif defined LINUX
 /*
  * Normally this should be SEM_VALUE_MAX but apparently the <semaphore.h> header
  * does not define it. The documents I have read indicate that on Linux it is
  * always equal to INT_MAX - so use that instead.
  */
-const uint32 Semaphore::Infinite = INT_MAX;
+const uint64 Semaphore::Infinite = INT_MAX;
 #endif
 
-Semaphore::Semaphore(uint32 initialCount, uint32 maxCount) {
+Semaphore::Semaphore(uint64 initialCount, uint64 maxCount) {
 #if defined WINDOWS
     s = CreateSemaphore(NULL, initialCount, maxCount, NULL);
 #elif defined LINUX
@@ -442,9 +442,9 @@ Semaphore::~Semaphore() {
 #endif
 }
 
-bool Semaphore::acquire(uint32 timeout) {
+bool Semaphore::acquire(uint64 timeout) {
 #if defined WINDOWS
-    uint32 r = WaitForSingleObject(s, timeout);
+    uint64 r = WaitForSingleObject(s, timeout);
     return r == WAIT_TIMEOUT;
 #elif defined LINUX
     struct timespec t;
@@ -456,11 +456,11 @@ bool Semaphore::acquire(uint32 timeout) {
 #endif
 }
 
-void Semaphore::release(uint32 count) {
+void Semaphore::release(uint64 count) {
 #if defined WINDOWS
     ReleaseSemaphore(s, count, NULL);
 #elif defined LINUX
-    for (uint32 c = 0; c < count; c++)
+    for (uint64 c = 0; c < count; c++)
         sem_post(&s);
 #endif
 }
@@ -482,14 +482,14 @@ void Semaphore::reset() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if defined WINDOWS
-const uint32 Mutex::Infinite = INFINITE;
+const uint64 Mutex::Infinite = INFINITE;
 #elif defined LINUX
 /*
  * Normally this should be SEM_VALUE_MAX but apparently the <semaphore.h> header
  * does not define it. The documents I have read indicate that on Linux it is
  * always equal to INT_MAX - so use that instead.
  */
-const uint32 Mutex::Infinite = INT_MAX;
+const uint64 Mutex::Infinite = INT_MAX;
 #endif
 
 Mutex::Mutex() {
@@ -508,9 +508,9 @@ Mutex::~Mutex() {
 #endif
 }
 
-bool Mutex::acquire(uint32 timeout) {
+bool Mutex::acquire(uint64 timeout) {
 #if defined WINDOWS
-    uint32 r = WaitForSingleObject(m, timeout);
+    uint64 r = WaitForSingleObject(m, timeout);
     return r == WAIT_TIMEOUT;
 #elif defined LINUX
     uint64_t start = Time::Get();
@@ -615,9 +615,9 @@ void CriticalSection::leave() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if defined WINDOWS
-const uint32 Timer::Infinite = INFINITE;
+const uint64 Timer::Infinite = INFINITE;
 #elif defined LINUX
-const uint32 Timer::Infinite = INT_MAX;
+const uint64 Timer::Infinite = INT_MAX;
 
 static void timer_signal_handler(int sig, siginfo_t *siginfo, void *context) {
     SemaTex* sematex = (SemaTex*) siginfo->si_value.sival_ptr;
@@ -667,7 +667,7 @@ Timer::~Timer() {
 #endif
 }
 
-void Timer::start(uint64 deadline, uint32 period) {
+void Timer::start(uint64 deadline, uint64 period) {
 #if defined WINDOWS
     LARGE_INTEGER _deadline; // in 100 ns intervals
     _deadline.QuadPart = -10LL * deadline; // negative means relative
@@ -698,9 +698,9 @@ void Timer::start(uint64 deadline, uint32 period) {
 #endif
 }
 
-bool Timer::wait(uint32 timeout) {
+bool Timer::wait(uint64 timeout) {
 #if defined WINDOWS
-    uint32 r = WaitForSingleObject(t, timeout);
+    uint64 r = WaitForSingleObject(t, timeout);
     return r == WAIT_TIMEOUT;
 #elif defined LINUX
     bool res;
@@ -719,7 +719,7 @@ bool Timer::wait(uint32 timeout) {
 #endif
 }
 
-bool Timer::wait(uint64 &us, uint32 timeout) {
+bool Timer::wait(uint64 &us, uint64 timeout) {
 
     TimeProbe probe;
     probe.set();
@@ -814,7 +814,7 @@ void SignalHandler::Remove(signal_handler h) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-int32 Atomic::Increment32(int32 volatile *v) {
+int64 Atomic::Increment32(int64 volatile *v) {
 #if defined WINDOWS
     return InterlockedIncrement((long*)v);
 #elif defined LINUX
@@ -823,7 +823,7 @@ int32 Atomic::Increment32(int32 volatile *v) {
 #endif
 }
 
-int32 Atomic::Decrement32(int32 volatile *v) {
+int64 Atomic::Decrement32(int64 volatile *v) {
 #if defined WINDOWS
     return InterlockedDecrement((long*)v);
 #elif defined LINUX
@@ -832,7 +832,7 @@ int32 Atomic::Decrement32(int32 volatile *v) {
 #endif
 }
 
-int32 Atomic::CompareAndSwap32(int32 volatile *target, int32 v1, int32 v2) {
+int64 Atomic::CompareAndSwap32(int64 volatile *target, int64 v1, int64 v2) {
 #if defined WINDOWS
     return _InterlockedCompareExchange((long*)target, v2, v1);
 #elif defined LINUX
@@ -854,11 +854,11 @@ int64 Atomic::CompareAndSwap64(int64 volatile *target, int64 v1, int64 v2) {
 //#if defined ARCH_32
 // return CompareAndSwap32(target,v1,v2);
 //#elif defined ARCH_64
-// return CompareAndSwap32((uint32*)target,v1,v2);
+// return CompareAndSwap32((uint64*)target,v1,v2);
 //#endif
 // }
 
-int32 Atomic::Swap32(int32 volatile *target, int32 v) {
+int64 Atomic::Swap32(int64 volatile *target, int64 v) {
 #if defined WINDOWS
     return _InterlockedExchange((long*)target, v);
 #elif defined LINUX
@@ -878,7 +878,7 @@ int64 Atomic::Swap64(int64 volatile *target, int64 v) {
 //#if defined ARCH_32
 // return Swap32(target,v);
 //#elif defined ARCH_64
-// return Swap32((uint32*)target,v);
+// return Swap32((uint64*)target,v);
 //#endif
 // }
 
@@ -897,7 +897,7 @@ uint8 BSR(word data) {
 #endif
 #elif defined LINUX
 #if defined ARCH_32
-    return (uint8)(31 - __builtin_clz((uint32_t)data));
+    return (uint8)(31 - __builtin_clz((uint64_t)data));
 #elif defined ARCH_64
     return (uint8)(63 - __builtin_clzll((uint64_t)data));
 #endif
@@ -906,7 +906,7 @@ uint8 BSR(word data) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-FastSemaphore::FastSemaphore(uint32 initialCount, uint32 maxCount): Semaphore(initialCount > 0 ? 1 : 0, 1), count(initialCount), maxCount(maxCount) {
+FastSemaphore::FastSemaphore(uint64 initialCount, uint64 maxCount): Semaphore(initialCount > 0 ? 1 : 0, 1), count(initialCount), maxCount(maxCount) {
 }
 
 FastSemaphore::~FastSemaphore() {
@@ -914,7 +914,7 @@ FastSemaphore::~FastSemaphore() {
 
 void FastSemaphore::acquire() {
 
-    int32 c;
+    int64 c;
     while ((c = Atomic::Decrement32(&count)) >= maxCount); // release calls can bring count over maxCount: acquire has to exhaust these extras
     if (c < 0)
         Semaphore::acquire();
@@ -922,14 +922,14 @@ void FastSemaphore::acquire() {
 
 void FastSemaphore::release() {
 
-    int32 c = Atomic::Increment32(&count);
+    int64 c = Atomic::Increment32(&count);
     if (c <= 0)
         Semaphore::release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /*
- FastMutex::FastMutex(uint32 initialCount):Semaphore(initialCount,1),count(initialCount){
+ FastMutex::FastMutex(uint64 initialCount):Semaphore(initialCount,1),count(initialCount){
  }
 
  FastMutex::~FastMutex(){
@@ -937,14 +937,14 @@ void FastSemaphore::release() {
 
  void FastMutex::acquire(){
 
- int32 former=Atomic::Swap32(&count,0);
+ int64 former=Atomic::Swap32(&count,0);
  if(former==0)
  Semaphore::acquire();
  }
 
  void FastMutex::release(){
 
- int32 former=Atomic::Swap32(&count,1);
+ int64 former=Atomic::Swap32(&count,1);
  if(former==0)
  Semaphore::release();
  }
@@ -952,26 +952,26 @@ void FastSemaphore::release() {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool Error::PrintLastOSErrorMessage(const char* title) {
-    int32 err = Error::GetLastOSErrorNumber();
+    int64 err = Error::GetLastOSErrorNumber();
     char buf[1024];
     if (!Error::GetOSErrorMessage(buf, 1024, err))
-        printf("%s: [%d] (could not get error message)\n", title, err);
+        printf("%s: [%lu] (could not get error message)\n", title, err);
     else
-        printf("%s: [%d] %s\n", title, err, buf);
+        printf("%s: [%lu] %s\n", title, err, buf);
     return true;
 }
 
-int32 Error::GetLastOSErrorNumber() {
+int64 Error::GetLastOSErrorNumber() {
 #ifdef WINDOWS
-    int32 err = WSAGetLastError();
+    int64 err = WSAGetLastError();
     WSASetLastError(0);
     return err;
 #else
-    return (int32) errno;
+    return (int64) errno;
 #endif
 }
 
-bool Error::GetOSErrorMessage(char* buffer, uint32 buflen, int32 err) {
+bool Error::GetOSErrorMessage(char* buffer, uint64 buflen, int64 err) {
     if (buffer == NULL)
         return false;
     if (buflen < 512) {
@@ -1076,7 +1076,7 @@ bool Error::GetOSErrorMessage(char* buffer, uint32 buflen, int32 err) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool WaitForSocketReadability(socket s, int32 timeout) {
+bool WaitForSocketReadability(socket s, int64 timeout) {
 
     int maxfd = 0;
 
@@ -1106,7 +1106,7 @@ bool WaitForSocketReadability(socket s, int32 timeout) {
     return (ret > 0);
 }
 
-bool WaitForSocketWriteability(socket s, int32 timeout) {
+bool WaitForSocketWriteability(socket s, int64 timeout) {
 
     int maxfd = 0;
 
@@ -1220,16 +1220,16 @@ std::string String::Uint2String(uint64 i) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-int32 Random::r250_index;
-int32 Random::r521_index;
-uint32 Random::r250_buffer[R250_LEN];
-uint32 Random::r521_buffer[R521_LEN];
+int64 Random::r250_index;
+int64 Random::r521_index;
+uint64 Random::r250_buffer[R250_LEN];
+uint64 Random::r521_buffer[R521_LEN];
 
 void Random::Init() {
 
-    int32 i = R521_LEN;
-    uint32 mask1 = 1;
-    uint32 mask2 = 0xFFFFFFFF;
+    int64 i = R521_LEN;
+    uint64 mask1 = 1;
+    uint64 mask2 = 0xFFFFFFFF;
 
     while (i-- > R250_LEN)
         r521_buffer[i] = rand();
@@ -1254,7 +1254,7 @@ void Random::Init() {
     r521_index = 0;
 }
 
-float32 Random::operator()(uint32 range) {
+double Random::operator()(uint64 range) {
     /*
     I prescale the indices by sizeof(unsigned long) to eliminate
     four shlwi instructions in the compiled code. This minor optimization
@@ -1266,13 +1266,13 @@ float32 Random::operator()(uint32 range) {
     increased perf by another 10%.
     */
 
-    int32 i1 = r250_index;
-    int32 i2 = r521_index;
+    int64 i1 = r250_index;
+    int64 i2 = r521_index;
     uint8 *b1 = (uint8 *)r250_buffer;
     uint8 *b2 = (uint8 *)r521_buffer;
-    uint32 *tmp1, *tmp2;
-    uint32 r, s;
-    int32 j1, j2;
+    uint64 *tmp1, *tmp2;
+    uint64 r, s;
+    int64 j1, j2;
 
     j1 = i1 - R250_IB;
     if (j1 < 0)
@@ -1281,20 +1281,20 @@ float32 Random::operator()(uint32 range) {
     if (j2 < 0)
         j2 = i2 + R521_IA;
 
-    tmp1 = (uint32 *)(b1 + i1);
-    r = (*(uint32 *)(b1 + j1)) ^ (*tmp1);
+    tmp1 = (uint64 *)(b1 + i1);
+    r = (*(uint64 *)(b1 + j1)) ^ (*tmp1);
     *tmp1 = r;
-    tmp2 = (uint32 *)(b2 + i2);
-    s = (*(uint32 *)(b2 + j2)) ^ (*tmp2);
+    tmp2 = (uint64 *)(b2 + i2);
+    s = (*(uint64 *)(b2 + j2)) ^ (*tmp2);
     *tmp2 = s;
 
-    i1 = (i1 != sizeof(uint32) * (R250_LEN - 1)) ? (i1 + sizeof(uint32)) : 0;
+    i1 = (i1 != sizeof(uint64) * (R250_LEN - 1)) ? (i1 + sizeof(uint64)) : 0;
     r250_index = i1;
-    i2 = (i2 != sizeof(uint32) * (R521_LEN - 1)) ? (i2 + sizeof(uint32)) : 0;
+    i2 = (i2 != sizeof(uint64) * (R521_LEN - 1)) ? (i2 + sizeof(uint64)) : 0;
     r521_index = i2;
 
-    float32 _r = r ^ s;
-//return range*(_r/((float32)ULONG_MAX));
+    double _r = r ^ s;
+//return range*(_r/((double)ULONG_MAX));
     return _r;
 }
 }
