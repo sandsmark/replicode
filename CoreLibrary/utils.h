@@ -95,7 +95,9 @@ public:
         std::cout << " \033[1;32m" << output << "\033[0m"; return *this;
     }
     inline DebugStream &operator<<(uint64_t output) { *this << std::to_string(output); return *this; }
+    inline DebugStream &operator<<(int64_t output) { *this << std::to_string(output); return *this; }
     inline DebugStream &operator<<(const char *output) { *this << std::string(output); return *this; }
+    inline DebugStream &operator<<(bool output) { *this << (output ? "true" : "false"); return *this; }
 };
 
 

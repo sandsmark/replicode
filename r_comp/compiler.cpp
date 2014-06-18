@@ -45,6 +45,7 @@ bool startsWith(const std::string &haystack, const std::string &needle)
 
 bool endsWith(const std::string &haystack, const std::string &needle)
 {
+    if (haystack.length() < needle.length()) return false;
     return (haystack.rfind(needle) == (haystack.length() - needle.length()));
 }
 
@@ -63,7 +64,7 @@ void Compiler::restore_state(State s) {
 
 std::string Compiler::getError()
 {
-    return error + " at " + m_errorFile + ":" + std::to_string(m_errorLine);
+    return m_errorFile + ":" + std::to_string(m_errorLine) + ": " + error;
 }
 
 void Compiler::set_error(const std::string &s, RepliStruct *node)
@@ -73,7 +74,6 @@ void Compiler::set_error(const std::string &s, RepliStruct *node)
         m_errorLine = node->line;
         err = true;
         error = s;
-        assert(0);
     }
 }
 
