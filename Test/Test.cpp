@@ -228,8 +228,6 @@ void write_to_file(r_comp::Image *image, std::string &image_path, Decompiler *de
 
 int main(int argc, char **argv)
 {
-    core::Time::Init();
-
     Settings settings;
     if (argc == 2) {
         if (!settings.load(argv[1])) {
@@ -249,7 +247,11 @@ int main(int argc, char **argv)
     core::s_debugEnabled = settings.debug;
 
     debug("main") << "Initializing with user operator library and user class code...";
-    if (!r_exec::Init(settings.usr_operator_path.c_str(), Time::Get, settings.usr_class_path.c_str()))
+    using namespace std::chrono;
+    if (!r_exec::Init(settings.usr_operator_path.c_str(),
+                      []() -> uint64_t { return duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count(); },
+                      //Time::Get,
+                      settings.usr_class_path.c_str()))
         return 2;
 
     srand(r_exec::Now());

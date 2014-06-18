@@ -30,7 +30,7 @@
 
 #include "../r_code/utils.h"
 #include "opcodes.h"
-
+#include <string.h>
 
 namespace r_exec {
 

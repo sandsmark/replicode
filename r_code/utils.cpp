@@ -32,7 +32,7 @@
 #include "object.h"
 
 #include <math.h>
-
+#include <string.h>
 
 namespace r_code {
 
@@ -153,8 +153,8 @@ int64_t Utils::GetGroupResilience(double resilience, double origin_upr, double d
     return res;
 }
 
-std::string Utils::RelativeTime(uint64 t) {
-
+std::string Utils::RelativeTime(uint64 t)
+{
     return Time::ToString_seconds(t - TimeReference);
 }
 }

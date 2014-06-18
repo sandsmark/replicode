@@ -46,8 +46,6 @@ namespace r_exec {
 
 dll_export uint64(*Now)();
 
-//dll_export r_comp::Metadata Metadata;
-//dll_export r_comp::Image Seed;
 r_comp::Metadata* getMetadata()
 {
     static r_comp::Metadata metadata;
@@ -492,7 +490,7 @@ bool Init(const char *user_operator_library_path,
 }
 
 bool Init(const char *user_operator_library_path,
-          uint64(*time_base)(),
+          uint64_t(*time_base)(),
           const r_comp::Metadata &metadata,
           const r_comp::Image &seed) {
 

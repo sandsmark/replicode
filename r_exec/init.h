@@ -121,12 +121,12 @@ public:
 // Initialize Now, compile user.classes.replicode, builds the Seed and loads the user-defined operators.
 // Return false in case of a problem (e.g. file not found, operator not found, etc.).
 bool r_exec_dll Init(const char *user_operator_library_path,
-                     uint64(*time_base)(),
+                     uint64_t(*time_base)(),
                      const char *seed_path);
 
 // Alternate taking a ready-made metadata and seed (will be copied into Metadata and Seed).
 bool r_exec_dll Init(const char *user_operator_library_path,
-                     uint64(*time_base)(),
+                     uint64_t(*time_base)(),
                      const r_comp::Metadata &metadata,
                      const r_comp::Image &seed);
 

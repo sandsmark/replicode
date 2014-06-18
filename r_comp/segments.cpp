@@ -31,6 +31,7 @@
 #include "segments.h"
 
 #include <iostream>
+#include <string.h>
 
 
 namespace r_comp {

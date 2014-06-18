@@ -34,7 +34,7 @@
 
 #include <iostream>
 #include <cmath>
-
+#include <string.h>
 
 void Init(OpcodeRetriever r) {
 

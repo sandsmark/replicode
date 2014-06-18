@@ -521,7 +521,7 @@ int64_t RepliStruct::process() {
 // expand Counters in all structures
     if (Counters.find(cmd) != Counters.end()) {
 // expand the counter
-        cmd = core::String::Int2String(Counters[cmd]++);
+        cmd = std::to_string(Counters[cmd]++);
         changes++;
     }
 // expand Macros in all structures
@@ -661,7 +661,7 @@ int64_t RepliStruct::process() {
 // expand Counters in all structures
         if (Counters.find(structure->cmd) != Counters.end()) {
 // expand the counter
-            structure->cmd = core::String::Int2String(Counters[structure->cmd]++);
+            structure->cmd = std::to_string(Counters[structure->cmd]++);
             changes++;
         }
     }
@@ -895,7 +895,7 @@ RepliStruct *RepliMacro::expandMacro(RepliStruct *oldStruct) {
     }
 
     if ((src->args.size() > 0) && (src->args.size() != oldStruct->args.size())) {
-        error += "Macro '" + name + "' requires " + core::String::Int2String(src->args.size()) + " arguments, cannot expand structure with " + core::String::Int2String(oldStruct->args.size()) + " arguments. ";
+        error += "Macro '" + name + "' requires " + std::to_string(src->args.size()) + " arguments, cannot expand structure with " + std::to_string(oldStruct->args.size()) + " arguments. ";
         return NULL;
     }
 

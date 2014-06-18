@@ -38,6 +38,16 @@ namespace r_comp {
 
 static bool Output = true;
 
+bool startsWith(const std::string &haystack, const std::string &needle)
+{
+    return (haystack.find(needle) == 0);
+}
+
+bool endsWith(const std::string &haystack, const std::string &needle)
+{
+    return (haystack.rfind(needle) == (haystack.length() - needle.length()));
+}
+
 Compiler::Compiler(): error(std::string("")), current_object(NULL)  {
 }
 
@@ -336,7 +346,7 @@ bool Compiler::hlp_reference(RepliStruct *node, uint16 &index)
 
 bool Compiler::this_indirection(RepliStruct *node, std::vector<int16> &v, const ReturnType returnType)
 {
-    if (!String::StartsWith(node->cmd, "this.")) {
+    if (!startsWith(node->cmd, "this.")) {
         return false;
     }
     Class *p; // in general, p starts as the current_class; exception: in pgm, this refers to the instantiated program.
@@ -569,7 +579,7 @@ bool Compiler::sys_object(RepliStruct *node, const Class &p)
 
 bool Compiler::marker(RepliStruct *node, Class &p)
 {
-    if (!String::StartsWith(node->cmd, "mk.")) {
+    if (!startsWith(node->cmd, "mk.")) {
         return false;
     }
 
@@ -939,7 +949,7 @@ bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint
         return true;
     }
 
-    if (node->cmd != "" && !String::StartsWith(node->cmd, "0x") && !String::EndsWith(node->cmd, "us")) { // Make sure it isn't a hex num or a timestamp
+    if (node->cmd != "" && !startsWith(node->cmd, "0x") && !endsWith(node->cmd, "us")) { // Make sure it isn't a hex num or a timestamp
         try {
             // Fuck the STL, all this for a string::toint();
             char *p;
@@ -1012,7 +1022,7 @@ bool Compiler::read_timestamp(RepliStruct *node, bool enforce, const Class *p, u
     if (read_tail_wildcard(node, write_index, extent_index, write))
         return true;
 
-    if (String::EndsWith(node->cmd, "us")) {
+    if (endsWith(node->cmd, "us")) {
         std::string number = node->cmd.substr(0, node->cmd.find("us"));
         try {
             char *p;
@@ -1101,7 +1111,7 @@ bool Compiler::read_node(RepliStruct *node, bool enforce, const Class *p, uint16
     if (read_tail_wildcard(node, write_index, extent_index, write))
         return true;
 
-    if (String::StartsWith(node->cmd, "0x")) {
+    if (startsWith(node->cmd, "0x")) {
         try {
             char *p;
             uintptr_t h = std::strtoll(node->cmd.c_str(), &p, 16);
@@ -1140,7 +1150,7 @@ bool Compiler::read_device(RepliStruct *node, bool enforce, const Class *p, uint
     if (read_tail_wildcard(node, write_index, extent_index, write))
         return true;
 
-    if (String::StartsWith(node->cmd, "0x")) {
+    if (startsWith(node->cmd, "0x")) {
         try {
             char *p;
             uintptr_t h = std::strtoll(node->cmd.c_str(), &p, 16);
@@ -1390,7 +1400,7 @@ bool Compiler::read_nil_st(RepliStruct *node, uint16 write_index, uint16 &extent
 }
 
 bool Compiler::read_variable(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write, const Class p) {
-    if (!String::EndsWith(node->cmd, ":") || String::StartsWith(node->cmd, ":") || node->type != RepliStruct::Atom) {
+    if (!endsWith(node->cmd, ":") || startsWith(node->cmd, ":") || node->type != RepliStruct::Atom) {
         return false;
     }
     if (!state.pattern_lvl) {
