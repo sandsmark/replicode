@@ -44,6 +44,7 @@ void delegatedCoreWait(P<TimeJob> job)
 
     std::this_thread::sleep_until(steady_clock::time_point(microseconds(job->target_time)));
 
+    bool run = true;
     do {
         if (!job->is_alive()) {
             break;
@@ -56,12 +57,12 @@ void delegatedCoreWait(P<TimeJob> job)
         int64_t lag = Now() - job->target_time;
 
         if (lag == 0) { // right on time: do the job.
-            job->update();
+            run = job->update();
         } else if (lag > 0) { // late.
-            job->update();
+            run = job->update();
             job->report(lag);
         }
-    } while(job->target_time != 0);
+    } while(job->target_time != 0 && run);
 
     _Mem::Get()->shutdown_core();
 }
@@ -103,7 +104,7 @@ void runTimeCore()
                     std::thread *delegatedCoreThread = new std::thread(delegatedCoreWait, job);
                     delegatedCoreThread->detach();
                     _Mem::Get()->register_time_job_latency(-lag);
-                    next_target = 0;
+                    break; // get a new job
                 } else { // late: do the job and report.
                     run = job->update();
                     job->report(lag);
