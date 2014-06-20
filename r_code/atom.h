@@ -93,7 +93,7 @@ public:
     } Type;
 
 // encoders
-    static Atom Float(float f); // IEEE 754 32 bits encoding; shifted by 1 to the right (loss of precison).
+    static Atom Float(double f); // IEEE 754 64 bits encoding; shifted by 1 to the right (loss of precison).
     static Atom PlusInfinity();
     static Atom MinusInfinity();
     static Atom UndefinedFloat();

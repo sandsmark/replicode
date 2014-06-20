@@ -81,9 +81,9 @@ inline bool Group::invalidate() {
     return false;
 }
 
-inline uint64 Group::get_upr() const {
-
-    return code(GRP_UPR);
+inline uint64 Group::get_upr() const
+{
+    return code(GRP_UPR).asDouble();
 }
 
 inline double Group::get_sln_thr() const {

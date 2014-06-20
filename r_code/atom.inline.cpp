@@ -3,9 +3,9 @@
 
 namespace r_code {
 
-inline Atom Atom::Float(float f)
+inline Atom Atom::Float(double f)
 {
-    uintptr_t a = *reinterpret_cast<uintptr_t *>(&f);
+    uint64_t a = *reinterpret_cast<uint64_t *>(&f);
     return Atom(a >> 1);
 }
 
