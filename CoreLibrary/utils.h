@@ -49,7 +49,6 @@ public:
     template<typename T> T getFunction(const char *functionName);
 };
 
-
 class core_dll Time { // TODO: make sure time stamps are consistent when computed by different cores
 public:
     static std::string ToString_seconds(uint64 t); // seconds:milliseconds:microseconds since 01/01/1970.
@@ -69,41 +68,7 @@ public:
     void reset();
 };
 
-
-static std::mutex s_debugSection;
-static bool s_debugEnabled = false;
-
-/// Thread safe debug output
-class DebugStream
-{
-public:
-    inline DebugStream(std::string area) {
-        if (!s_debugEnabled) return;
-
-        s_debugSection.lock();
-        std::cout << "\033[1;34m" << area << "\033[1;37m>\033[0m";
-    }
-
-    ~DebugStream() {
-        if (!s_debugEnabled) return;
-        std::cout << std::endl;
-        s_debugSection.unlock();
-    }
-
-    inline DebugStream &operator<<(std::string output) {
-        if (!s_debugEnabled) return *this;
-        std::cout << " \033[1;32m" << output << "\033[0m"; return *this;
-    }
-    inline DebugStream &operator<<(uint64_t output) { *this << std::to_string(output); return *this; }
-    inline DebugStream &operator<<(int64_t output) { *this << std::to_string(output); return *this; }
-    inline DebugStream &operator<<(const char *output) { *this << std::string(output); return *this; }
-    inline DebugStream &operator<<(bool output) { *this << (output ? "true" : "false"); return *this; }
-};
-
-
-} //namespace core
-
-static inline core::DebugStream debug(std::string area) { return core::DebugStream(area); }
+} // namespace core
 
 #include "utils.tpl.cpp"
 

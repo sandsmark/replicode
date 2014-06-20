@@ -31,6 +31,7 @@
 #include <iostream>
 #include "atom.h"
 #include "CoreLibrary/utils.h"
+#include "CoreLibrary/debug.h"
 
 
 namespace r_code{

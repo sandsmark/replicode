@@ -45,7 +45,7 @@ bool TimeJob::is_alive() const {
 
 void TimeJob::report(int64 lag) const
 {
-    debug("time job") << "late generic: " << lag << " us behind.";
+    debug("time job") << "late generic:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
@@ -62,7 +62,7 @@ bool UpdateJob::update() {
 
 void UpdateJob::report(int64 lag) const
 {
-    debug("update job") << "late:" << lag << "us behind.";
+    debug("update job") << "job" << this << "is late:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////

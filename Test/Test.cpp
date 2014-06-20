@@ -244,8 +244,6 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    core::s_debugEnabled = settings.debug;
-
     debug("main") << "Initializing with user operator library and user class code...";
     using namespace std::chrono;
     if (!r_exec::Init(settings.usr_operator_path.c_str(),
@@ -325,7 +323,7 @@ int main(int argc, char **argv)
             return 4;
         uint64 starting_time = mem->start();
 
-        debug("main") << "running for " << settings.run_time << " ms";
+        debug("main") << "running for" << settings.run_time << "ms";
         std::this_thread::sleep_for(std::chrono::milliseconds(settings.run_time));
 
         /*Thread::Sleep(settings.run_time/2);

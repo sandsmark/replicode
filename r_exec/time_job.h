@@ -33,7 +33,7 @@
 
 #include "group.h"
 #include "pgm_overlay.h"
-
+#include "CoreLibrary/debug.h"
 
 namespace r_exec {
 
