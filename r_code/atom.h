@@ -50,6 +50,7 @@ private: // trace utilities.
     static uint8 String_data;
     static uint8 Char_count;
     void write_indents() const;
+
 public:
     typedef enum {
         NIL = 0x80,

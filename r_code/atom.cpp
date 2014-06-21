@@ -99,7 +99,6 @@ void Atom::trace() const {
             }
             std::cout << s.c_str();
         } else if (isFloat()) {
-
             std::cout << "nb: " << std::scientific << asDouble();
             return;
         } else
