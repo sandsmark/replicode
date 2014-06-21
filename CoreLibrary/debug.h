@@ -8,7 +8,7 @@ static std::mutex s_debugSection;
 class DebugStream
 {
 public:
-    inline DebugStream(std::string area) {
+    inline DebugStream(const std::string area) {
         s_debugSection.lock();
         std::cout << "\033[1;34m" << area << "\033[1;37m>\033[1;32m";
     }
@@ -18,14 +18,17 @@ public:
         s_debugSection.unlock();
     }
 
-    inline DebugStream &operator<<(const std::string output) { std::cout << " " << output ; return *this; }
-    inline DebugStream &operator<<(const uint64_t output) { std::cout << " " << output; return *this; }
-    inline DebugStream &operator<<(const int64_t output) { std::cout << " " << output; return *this; }
-    inline DebugStream &operator<<(const char *output) { std::cout << " " << output; return *this; }
-    inline DebugStream &operator<<(const void *output) { std::cout << std::hex <<  " 0x" <<  (uint64_t)output << std::dec; return *this; }
-    inline DebugStream &operator<<(const bool output) { std::cout << (output ? " true" : " false"); return *this; }
+    inline const DebugStream &operator<<(const std::string output) const { std::cout << " " << output ; return *this; }
+    inline const DebugStream &operator<<(const uint64_t output) const { std::cout << " " << output; return *this; }
+    inline const DebugStream &operator<<(const int64_t output) const { std::cout << " " << output; return *this; }
+    inline const DebugStream &operator<<(const uint32_t output) const { std::cout << " " << output; return *this; }
+    inline const DebugStream &operator<<(const uint16_t output) const { std::cout << " " << output; return *this; }
+    inline const DebugStream &operator<<(const uint8_t output) const { std::cout << " " << (uint64_t)output; return *this; }
+    inline const DebugStream &operator<<(const char *output) const { std::cout << " " << output; return *this; }
+    inline const DebugStream &operator<<(const void *output) const { std::cout << std::hex <<  " 0x" <<  (uint64_t)output << std::dec; return *this; }
+    inline const DebugStream &operator<<(const bool output) const { std::cout << (output ? " true" : " false"); return *this; }
 };
 
-static inline DebugStream debug(std::string area) { return DebugStream(area); }
+static inline const DebugStream debug(const std::string area) { return DebugStream(area); }
 
 #endif // DEBUG_H
