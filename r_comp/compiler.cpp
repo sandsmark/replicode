@@ -953,7 +953,7 @@ bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint
         try {
             // Fuck the STL, all this for a string::toint();
             char *p;
-            double n = std::strtof(node->cmd.c_str(), &p);
+            double n = std::strtod(node->cmd.c_str(), &p);
             if (*p == 0) {
                 if (write) {
                     current_object->code[write_index] = Atom::Float(n);

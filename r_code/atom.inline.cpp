@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 #include "atom.h"
 
 namespace r_code {
@@ -11,12 +12,12 @@ inline Atom Atom::Float(double f)
 
 inline Atom Atom::PlusInfinity()
 {
-    return Atom(0x7FF0000000000000);
+    return Atom::Float(std::numeric_limits<double>::infinity());
 }
 
 inline Atom Atom::MinusInfinity()
 {
-    return Atom(0xFFF0000000000000);
+    return Atom::Float(-std::numeric_limits<double>::infinity());
 }
 
 inline Atom Atom::UndefinedFloat()

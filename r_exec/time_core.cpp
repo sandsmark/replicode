@@ -91,9 +91,7 @@ void runTimeCore()
                 break;
             }
 
-            uint64_t target = job->target_time;
-            uint64_t next_target = 0;
-            if (target == 0) {// means ASAP. Control jobs (shutdown) are caught here.
+            if (job->target_time == 0) {// means ASAP. Control jobs (shutdown) are caught here.
                 run = job->update();
             } else {
                 int64_t lag = Now() - job->target_time;
