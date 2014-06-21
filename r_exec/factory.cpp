@@ -182,7 +182,6 @@ _Fact *_Fact::get_absentee() const {
 }
 
 bool _Fact::is_invalidated() {
-
     if (LObject::is_invalidated())
         return true;
     if (get_reference(0)->is_invalidated()) {

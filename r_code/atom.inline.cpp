@@ -366,7 +366,7 @@ inline uint8 Atom::getDeviceID() const
 
 inline uint8 Atom::asAssignmentIndex() const
 {
-    return (atom & 0x00FFF0000) >> 28;
+    return (atom & 0x00FFF0000000) >> 28;
 }
 
 inline uint8 Atom::getAtomCount() const

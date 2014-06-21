@@ -252,7 +252,8 @@ bool Compiler::read(RepliStruct *node, const StructureMember &m, bool enforce, u
     return (this->*m.read())(node, enforce, NULL, write_index, extent_index, write);
 }
 
-bool Compiler::getGlobalReferenceIndex(const std::string reference_name, const ReturnType t, ImageObject *object, uint16 &index, Class *&_class) {
+bool Compiler::getGlobalReferenceIndex(const std::string reference_name, const ReturnType t, ImageObject *object, uint16 &index, Class *&_class)
+{
     UNORDERED_MAP<std::string, Reference>::iterator it = global_references.find(reference_name);
 
     if (it != global_references.end() && (t == ANY || (t != ANY && it->second._class.type == t))) {
@@ -298,22 +299,20 @@ uint32_t Compiler::add_hlp_reference(std::string reference_name) {
     return hlp_references.size() - 1;
 }
 
-uint32_t Compiler::get_hlp_reference(std::string reference_name) {
+uint8_t Compiler::get_hlp_reference(std::string reference_name)
+{
     for (uint32_t i = 0; i < hlp_references.size(); ++i) {
         if (reference_name == hlp_references[i]) {
             return i;
         }
     }
-    return 0xFFFFFFFF;
+    return 0xFF;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool Compiler::local_reference(RepliStruct *node, uint16 &index, const ReturnType t)
 {
-    if (node->type != RepliStruct::Set) {
-        return false;
-    }
     UNORDERED_MAP<std::string, Reference>::iterator it = local_references.find(node->cmd);
     if (it != local_references.end() && (t == ANY || (t != ANY && it->second._class.type == t))) {
         index = it->second.index;
@@ -621,10 +620,13 @@ bool Compiler::function(RepliStruct *node, Class &p)
 bool Compiler::expression_head(RepliStruct *node, Class &p, const ReturnType t)
 {
     if (t == ANY) {
-        if (!object(node, p))
-            if (!marker(node, p))
-                if (!op(node, p, ANY))
+        if (!object(node, p)) {
+            if (!marker(node, p)) {
+                if (!op(node, p, ANY)) {
                     return false;
+                }
+            }
+        }
     } else if (!op(node, p, t)) {
         return false;
     }
@@ -702,11 +704,11 @@ bool Compiler::expression(RepliStruct *node, const ReturnType t, uint16 write_in
             return false;
         }
     }
-    uint16 tail_write_index = 0;
+    uint8 tail_write_index = 0;
     if (write) {
         if (lbl && in_hlp) {
-            uint32_t variable_index = get_hlp_reference(label);
-            if (variable_index == 0xFFFFFFFF) {
+            uint8_t variable_index = get_hlp_reference(label);
+            if (variable_index == 0xFF) {
                 set_error(" error: undeclared variable", node);
                 return false;
             }
@@ -744,7 +746,7 @@ bool Compiler::expression(RepliStruct *node, const Class &p, uint16 write_index,
     if (write) {
         if (lbl && in_hlp) {
             uint32_t variable_index = get_hlp_reference(label);
-            if (variable_index == 0xFFFFFFFF) {
+            if (variable_index == 0xFF) {
                 set_error(" error: undeclared variable", node);
                 return false;
             }
@@ -763,6 +765,10 @@ bool Compiler::expression(RepliStruct *node, const Class &p, uint16 write_index,
 
 bool Compiler::set(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write)
 {
+    if (node->type != RepliStruct::Set) {
+        return false;
+    }
+
     bool lbl = false;
     std::string label;
     if (node->label != "") {

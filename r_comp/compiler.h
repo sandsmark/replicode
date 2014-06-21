@@ -90,7 +90,7 @@ private:
     bool in_hlp;
     std::vector<std::string> hlp_references;
     uint32_t add_hlp_reference(std::string reference_name);
-    uint32_t get_hlp_reference(std::string reference_name);
+    uint8_t get_hlp_reference(std::string reference_name);
 
 // Utility.
     bool read_nil(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write);
