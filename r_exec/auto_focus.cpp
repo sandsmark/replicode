@@ -32,7 +32,7 @@
 #include "ast_controller.h"
 #include "overlay.inline.cpp"
 #include "reduction_job.tpl.cpp"
-
+#include "CoreLibrary/debug.h"
 
 namespace r_exec {
 
@@ -179,14 +179,14 @@ inline View *AutoFocusController::inject_input(View *input) {
     }
 
     if (_trace_injections) {
-
-        std::cout << Utils::RelativeTime(Now()) << " A/F -> " << input->object->get_oid() << "|" << primary_view->object->get_oid();
+        std::string type;
         switch (input->get_sync()) {
-        case View::SYNC_HOLD: std::cout << " (h)"; break;
-        case View::SYNC_ONCE: std::cout << " (o)"; break;
-        case View::SYNC_PERIODIC: std::cout << " (p)"; break;
-        case View::SYNC_AXIOM: std::cout << " (a)"; break;
-        } std::cout << std::endl;
+        case View::SYNC_HOLD: type = "(hold)"; break;
+        case View::SYNC_ONCE: type = "(once)"; break;
+        case View::SYNC_PERIODIC: type = "(periodic)"; break;
+        case View::SYNC_AXIOM: type = "(axiom)"; break;
+        }
+        ::debug("auto_focus") << Utils::RelativeTime(Now()) << "A/F ->" << input->object->get_oid() << "|" << primary_view->object->get_oid() << type;
     }
 
     return primary_view;
