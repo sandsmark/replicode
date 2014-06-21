@@ -289,20 +289,22 @@ bool Compiler::addLocalReference(const std::string reference_name, const uint16 
     return true;
 }
 
-uint8 Compiler::add_hlp_reference(std::string reference_name) {
+uint32_t Compiler::add_hlp_reference(std::string reference_name) {
 
-    for (uint8 i = 0; i < hlp_references.size(); ++i)
+    for (uint32_t i = 0; i < hlp_references.size(); ++i)
         if (reference_name == hlp_references[i])
             return i;
     hlp_references.push_back(reference_name);
     return hlp_references.size() - 1;
 }
 
-uint8 Compiler::get_hlp_reference(std::string reference_name) {
-    for (uint8 i = 0; i < hlp_references.size(); ++i)
-        if (reference_name == hlp_references[i])
+uint32_t Compiler::get_hlp_reference(std::string reference_name) {
+    for (uint32_t i = 0; i < hlp_references.size(); ++i) {
+        if (reference_name == hlp_references[i]) {
             return i;
-    return 0xFF;
+        }
+    }
+    return 0xFFFFFFFF;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -703,8 +705,8 @@ bool Compiler::expression(RepliStruct *node, const ReturnType t, uint16 write_in
     uint16 tail_write_index = 0;
     if (write) {
         if (lbl && in_hlp) {
-            uint8 variable_index = get_hlp_reference(label);
-            if (variable_index == 0xFF) {
+            uint32_t variable_index = get_hlp_reference(label);
+            if (variable_index == 0xFFFFFFFF) {
                 set_error(" error: undeclared variable", node);
                 return false;
             }
@@ -741,8 +743,8 @@ bool Compiler::expression(RepliStruct *node, const Class &p, uint16 write_index,
     uint16 tail_write_index = 0;
     if (write) {
         if (lbl && in_hlp) {
-            uint8 variable_index = get_hlp_reference(label);
-            if (variable_index == 0xFF) {
+            uint32_t variable_index = get_hlp_reference(label);
+            if (variable_index == 0xFFFFFFFF) {
                 set_error(" error: undeclared variable", node);
                 return false;
             }
@@ -821,6 +823,7 @@ bool Compiler::set(RepliStruct *node, const Class &p, uint16 write_index, uint16
         extent_index += element_count;
     }
     uint32_t arity = 0xFFFFFFFF;
+
     if (p.use_as == StructureMember::I_CLASS) { // undefined arity for unstructured sets.
         arity = p.atom.getAtomCount();
         if (write) // fill up with wildcards that will be overwritten up to ::.
@@ -1114,7 +1117,7 @@ bool Compiler::read_node(RepliStruct *node, bool enforce, const Class *p, uint16
     if (startsWith(node->cmd, "0x")) {
         try {
             char *p;
-            uintptr_t h = std::strtoll(node->cmd.c_str(), &p, 16);
+            uint64_t h = std::strtoll(node->cmd.c_str(), &p, 16);
             if (*p == 0) {
                 if (Atom(h).getDescriptor() == Atom::NODE) {
                     if (write)
@@ -1191,8 +1194,9 @@ bool Compiler::read_function(RepliStruct *node, bool enforce, const Class *p, ui
 
     Class _p;
     if (function(node, _p)) { // TODO: _p shall be used to parse the args in the embedding expression
-        if (write)
+        if (write) {
             current_object->code[write_index] = _p.atom;
+        }
         return true;
     }
     State s = save_state();
@@ -1212,7 +1216,6 @@ bool Compiler::read_expression(RepliStruct *node, bool enforce, const Class *p, 
     if (read_nil(node, write_index, extent_index, write))
         return true;
     if (p && p->str_opcode != Class::Expression) {
-
         if (read_variable(node, write_index, extent_index, write, *p))
             return true;
         if (read_reference(node, write_index, extent_index, write, p->type))
@@ -1278,12 +1281,15 @@ bool Compiler::read_class(RepliStruct *node, bool enforce, const Class *p, uint1
     if (node->label != "") {
         std::string label = node->label.substr(0, node->label.size() - 1);
         Class _p;
-        if (!object(node, _p))
-            if (!marker(node, _p))
+        if (!object(node, _p)) {
+            if (!marker(node, _p)) {
                 return false;
+            }
+        }
         local_references[label] = Reference(write_index, _p, Class());
-        if (write)
+        if (write) {
             current_object->code[write_index] = _p.atom;
+        }
         return true;
     }
     return false;
@@ -1316,8 +1322,9 @@ bool Compiler::read_nil_set(RepliStruct *node, uint16 write_index, uint16 &exten
 bool Compiler::read_nil_nb(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write)
 {
     if (node->cmd == "|nb") {
-        if (write)
+        if (write) {
             current_object->code[write_index] = Atom::UndefinedFloat();
+        }
         return true;
     }
     return false;
@@ -1351,8 +1358,9 @@ bool Compiler::read_forever_nb(RepliStruct *node, uint16 write_index, uint16 &ex
 bool Compiler::read_nil_nid(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write)
 {
     if (node->cmd == "|nid") {
-        if (write)
+        if (write) {
             current_object->code[write_index] = Atom::UndefinedNode();
+        }
         return true;
     }
     return false;
@@ -1361,8 +1369,9 @@ bool Compiler::read_nil_nid(RepliStruct *node, uint16 write_index, uint16 &exten
 bool Compiler::read_nil_did(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write)
 {
     if (node->cmd == "|did") {
-        if (write)
+        if (write) {
             current_object->code[write_index] = Atom::UndefinedDevice();
+        }
         return true;
     }
     return false;
@@ -1371,8 +1380,9 @@ bool Compiler::read_nil_did(RepliStruct *node, uint16 write_index, uint16 &exten
 bool Compiler::read_nil_fid(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write)
 {
     if (node->cmd == "|fid") {
-        if (write)
+        if (write) {
             current_object->code[write_index] = Atom::UndefinedDeviceFunction();
+        }
         return true;
     }
     return false;
@@ -1392,8 +1402,9 @@ bool Compiler::read_nil_bl(RepliStruct *node, uint16 write_index, uint16 &extent
 bool Compiler::read_nil_st(RepliStruct *node, uint16 write_index, uint16 &extent_index, bool write)
 {
     if (node->cmd == "|st") {
-        if (write)
+        if (write) {
             current_object->code[write_index] = Atom::UndefinedString();
+        }
         return true;
     }
     return false;
@@ -1410,7 +1421,7 @@ bool Compiler::read_variable(RepliStruct *node, uint16 write_index, uint16 &exte
 
     std::string v = node->cmd.substr(0, node->cmd.size() - 1); // strip the :
     if (in_hlp) {
-        uint8 variable_index = add_hlp_reference(v);
+        uint32_t variable_index = add_hlp_reference(v);
         if (write) {
             current_object->code[write_index] = Atom::VLPointer(variable_index);
         }
