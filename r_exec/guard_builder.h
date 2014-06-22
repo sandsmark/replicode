@@ -42,7 +42,7 @@ public:
     GuardBuilder();
     virtual ~GuardBuilder();
 
-    virtual void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
+    virtual void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 };
 
 // fwd: t2=t0+period, t3=t1+period.
@@ -50,15 +50,15 @@ public:
 class TimingGuardBuilder:
     public GuardBuilder {
 protected:
-    uint64 period;
+    uint64_t period;
 
-    void write_guard(Code *mdl, uint16 l, uint16 r, uint16 opcode, uint64 offset, uint16 &write_index, uint16 &extent_index) const;
-    void _build(Code *mdl, uint16 t0, uint16 t1, uint16 &write_index) const;
+    void write_guard(Code *mdl, uint16_t l, uint16_t r, uint16_t opcode, uint64_t offset, uint16_t &write_index, uint16_t &extent_index) const;
+    void _build(Code *mdl, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
 public:
-    TimingGuardBuilder(uint64 period);
+    TimingGuardBuilder(uint64_t period);
     virtual ~TimingGuardBuilder();
 
-    virtual void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
+    virtual void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 };
 
 // fwd: q1=q0+speed*period.
@@ -66,41 +66,41 @@ public:
 class SGuardBuilder:
     public TimingGuardBuilder {
 private:
-    uint64 offset; // period-(speed.after-t0).
+    uint64_t offset; // period-(speed.after-t0).
 
-    void _build(Code *mdl, uint16 q0, uint16 t0, uint16 t1, uint16 &write_index) const;
+    void _build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
 public:
-    SGuardBuilder(uint64 period, uint64 offset);
+    SGuardBuilder(uint64_t period, uint64_t offset);
     ~SGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
+    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 };
 
 // bwd: cmd.after=q1.after-offset, cmd.before=cmd.after+cmd_duration.
 class NoArgCmdGuardBuilder:
     public TimingGuardBuilder {
 protected:
-    uint64 offset;
-    uint64 cmd_duration;
+    uint64_t offset;
+    uint64_t cmd_duration;
 
-    void _build(Code *mdl, uint16 q0, uint16 t0, uint16 t1, uint16 &write_index) const;
+    void _build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
 public:
-    NoArgCmdGuardBuilder(uint64 period, uint64 offset, uint64 cmd_duration);
+    NoArgCmdGuardBuilder(uint64_t period, uint64_t offset, uint64_t cmd_duration);
     ~NoArgCmdGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
+    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 };
 
 // bwd: cmd.after=q1.after-period, cmd.before=q1.before-period.
 class CmdGuardBuilder:
     public TimingGuardBuilder {
 protected:
-    uint16 cmd_arg_index;
+    uint16_t cmd_arg_index;
 
-    void _build(Code *mdl, uint16 fwd_opcode, uint16 bwd_opcode, uint16 q0, uint16 t0, uint16 t1, uint16 &write_index) const;
-    void _build(Code *mdl, uint16 fwd_opcode, uint16 bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
+    void _build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
+    void _build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 
-    CmdGuardBuilder(uint64 period, uint16 cmd_arg_index);
+    CmdGuardBuilder(uint64_t period, uint16_t cmd_arg_index);
 public:
     virtual ~CmdGuardBuilder();
 };
@@ -110,10 +110,10 @@ public:
 class MCGuardBuilder:
     public CmdGuardBuilder {
 public:
-    MCGuardBuilder(uint64 period, double cmd_arg_index);
+    MCGuardBuilder(uint64_t period, double cmd_arg_index);
     ~MCGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
+    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 };
 
 // fwd: q1=q0+cmd_arg.
@@ -123,10 +123,10 @@ class ACGuardBuilder:
 private:
 
 public:
-    ACGuardBuilder(uint64 period, uint16 cmd_arg_index);
+    ACGuardBuilder(uint64_t period, uint16_t cmd_arg_index);
     ~ACGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
+    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 };
 
 // bwd: cause.after=t2-offset, cause.before=t3-offset.
@@ -134,12 +134,12 @@ class ConstGuardBuilder:
     public TimingGuardBuilder {
 protected:
     double constant;
-    uint64 offset;
+    uint64_t offset;
 
-    void _build(Code *mdl, uint16 fwd_opcode, uint16 bwd_opcode, uint16 q0, uint16 t0, uint16 t1, uint16 &write_index) const;
-    void _build(Code *mdl, uint16 fwd_opcode, uint16 bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
+    void _build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
+    void _build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 
-    ConstGuardBuilder(uint64 period, double constant, uint64 offset);
+    ConstGuardBuilder(uint64_t period, double constant, uint64_t offset);
 public:
     ~ConstGuardBuilder();
 };
@@ -149,10 +149,10 @@ public:
 class MGuardBuilder:
     public ConstGuardBuilder {
 public:
-    MGuardBuilder(uint64 period, double constant, uint64 offset);
+    MGuardBuilder(uint64_t period, double constant, uint64_t offset);
     ~MGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
+    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 };
 
 // fwd: q1=q0+constant.
@@ -160,10 +160,10 @@ public:
 class AGuardBuilder:
     public ConstGuardBuilder {
 public:
-    AGuardBuilder(uint64 period, double constant, uint64 offset);
+    AGuardBuilder(uint64_t period, double constant, uint64_t offset);
     ~AGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16 &write_index) const;
+    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 };
 }
 

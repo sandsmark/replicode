@@ -20,7 +20,7 @@
 #include <r_code/object.h>
 
 //#include "correlator.h"
-typedef uint64 timestamp_t;
+typedef uint64_t timestamp_t;
 typedef P<r_code::Code> event_t;
 
 

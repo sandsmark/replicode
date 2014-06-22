@@ -35,7 +35,7 @@
 
 
 extern "C" {
-    bool dll_export print(uint64 t, bool suspended, const char *msg, uint8 object_count, Code **objects);
+    bool dll_export print(uint64_t t, bool suspended, const char *msg, uint8_t object_count, Code **objects);
 }
 
 

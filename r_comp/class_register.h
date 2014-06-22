@@ -38,10 +38,10 @@ namespace r_comp {
 
 class dll_export ClassRegister {
 private:
-    static UNORDERED_MAP<std::string, r_code::Atom> Opcodes; // opcodes retrieved by name
+    static std::unordered_map<std::string, r_code::Atom> Opcodes; // opcodes retrieved by name
 public:
     static void LoadClasses(const char *path); // preprocesses user.classes.replicode
-    static uint16 GetOpcode(const char *class_name); // returns 0xFFFF if not defined.
+    static uint16_t GetOpcode(const char *class_name); // returns 0xFFFF if not defined.
 };
 }
 

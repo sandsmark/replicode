@@ -105,7 +105,7 @@ SysObject::SysObject(Code *source) {
     for (i = 0; i < source->code_size(); ++i)
         code[i] = source->code(i);
 
-    UNORDERED_SET<View *, View::Hash, View::Equal>::const_iterator v;
+    std::unordered_set<View *, View::Hash, View::Equal>::const_iterator v;
     source->acq_views();
     for (i = 0, v = source->views.begin(); v != source->views.end(); ++i, ++v)
         views[i] = new SysView(*v);

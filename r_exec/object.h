@@ -52,7 +52,7 @@ template<class C, class U> class Object:
 private:
     size_t hash_value;
 
-    volatile uint64 invalidated; // must be aligned on 32 bits.
+    volatile uint64_t invalidated; // must be aligned on 32 bits.
 
     std::mutex m_pslnThrMutex;
     std::mutex m_viewsMutex;
@@ -89,8 +89,8 @@ public:
     }
 
 // Target psln_thr only.
-    void set(uint16 member_index, double value);
-    void mod(uint16 member_index, double value);
+    void set(uint16_t member_index, double value);
+    void mod(uint16_t member_index, double value);
 
     View *get_view(Code *group, bool lock); // returns the found view if any, NULL otherwise.
 
@@ -113,7 +113,7 @@ public:
             if (lhs->code(0).asOpcode() == Opcodes::Ent || rhs->code(0).asOpcode() == Opcodes::Ent)
                 return lhs == rhs;
 
-            uint16 i;
+            uint16_t i;
             for (i = 0; i < lhs->references_size(); ++i)
                 if (lhs->get_reference(i) != rhs->get_reference(i))
                     return false;

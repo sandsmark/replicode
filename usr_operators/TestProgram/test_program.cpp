@@ -43,8 +43,8 @@ public:
     TestController(r_code::View *icpp_pgm_view): r_exec::Controller(icpp_pgm_view) {
 
 // Load arguments here: one float and one Boolean.
-        uint16 arg_set_index = getObject()->code(ICPP_PGM_ARGS).asIndex();
-        uint16 arg_count = getObject()->code(arg_set_index).getAtomCount();
+        uint16_t arg_set_index = getObject()->code(ICPP_PGM_ARGS).asIndex();
+        uint16_t arg_count = getObject()->code(arg_set_index).getAtomCount();
         if (arg_count != 2) {
 
             std::cerr << "test_program error: expected 2 arguments, got " << arg_count << std::endl;

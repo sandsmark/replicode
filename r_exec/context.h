@@ -52,9 +52,9 @@ private:
 
     bool is_cmd_with_cptr() const;
 
-    void addReference(Code *destination, uint16 write_index, Code *referenced_object) const {
+    void addReference(Code *destination, uint16_t write_index, Code *referenced_object) const {
 
-        for (uint16 i = 0; i < destination->references_size(); ++i)
+        for (uint16_t i = 0; i < destination->references_size(); ++i)
             if (referenced_object == destination->get_reference(i)) {
 
                 destination->code(write_index) = Atom::RPointer(i);
@@ -65,9 +65,9 @@ private:
         destination->code(write_index) = Atom::RPointer(destination->references_size() - 1);
     }
 
-    void addReference(View *destination, uint16 write_index, Code *referenced_object) const { // view references are set in order (index 0 then 1).
+    void addReference(View *destination, uint16_t write_index, Code *referenced_object) const { // view references are set in order (index 0 then 1).
 
-        uint16 r_ptr_index;
+        uint16_t r_ptr_index;
         if (destination->references[0]) // first ref already in place.
             r_ptr_index = 1;
         else
@@ -77,10 +77,10 @@ private:
     }
 
     template<class C> void copy_structure(C *destination,
-                                          uint16 write_index,
-                                          uint16 &extent_index,
+                                          uint16_t write_index,
+                                          uint16_t &extent_index,
                                           bool dereference_cptr,
-                                          int64 pgm_index) const { // assumes the context is a structure; C: Object or View.
+                                          int64_t pgm_index) const { // assumes the context is a structure; C: Object or View.
 
         if ((*this)[0].getDescriptor() == Atom::OPERATOR && Operator::Get((*this)[0].asOpcode()).is_syn()) { // (\ (expression ...)).
 
@@ -90,7 +90,7 @@ private:
 
             destination->code(write_index++) = (*this)[0];
 
-            uint16 atom_count = getChildrenCount();
+            uint16_t atom_count = getChildrenCount();
             extent_index = write_index + atom_count;
 
             switch ((*this)[0].getDescriptor()) {
@@ -113,24 +113,24 @@ private:
                     }
                 } else
                     destination->code(write_index++) = (*this)[1];
-                for (uint16 i = 2; i <= atom_count; ++i)
+                for (uint16_t i = 2; i <= atom_count; ++i)
                     destination->code(write_index++) = (*this)[i];
                 break;
             case Atom::TIMESTAMP: // copy members as is (no dereference).
-                for (uint16 i = 1; i <= atom_count; ++i)
+                for (uint16_t i = 1; i <= atom_count; ++i)
                     destination->code(write_index++) = (*this)[i];
                 break;
             default:
                 if (is_cmd_with_cptr()) {
 
-                    for (uint16 i = 1; i <= atom_count; ++i) {
+                    for (uint16_t i = 1; i <= atom_count; ++i) {
 
                         IPGMContext c = getChild(i);
                         c.copy_member(destination, write_index++, extent_index, i != 2, pgm_index);
                     }
                 } else { // if a pgm is being copied, indicate the starting index of the pgm so that we can turn on code patching and know if a cptr is referencing code inside the pgm (in that case it will not be dereferenced).
 
-                    int64 _pgm_index;
+                    int64_t _pgm_index;
                     if (pgm_index >= 0)
                         _pgm_index = pgm_index;
                     else if ((*this)[0].getDescriptor() == Atom::OBJECT && ((*this)[0].asOpcode() == Opcodes::Pgm || (*this)[0].asOpcode() == Opcodes::AntiPgm))
@@ -138,7 +138,7 @@ private:
                     else
                         _pgm_index = -1;
 
-                    for (uint16 i = 1; i <= atom_count; ++i) {
+                    for (uint16_t i = 1; i <= atom_count; ++i) {
 
                         IPGMContext c = getChild(i);
                         c.copy_member(destination, write_index++, extent_index, !(!dereference_cptr && i == 1), _pgm_index);
@@ -150,10 +150,10 @@ private:
     }
 
     template<class C> void copy_member(C *destination,
-                                       uint16 write_index,
-                                       uint16 &extent_index,
+                                       uint16_t write_index,
+                                       uint16_t &extent_index,
                                        bool dereference_cptr,
-                                       int64 pgm_index) const {
+                                       int64_t pgm_index) const {
 
         switch ((*this)[0].getDescriptor()) {
         case Atom::I_PTR:
@@ -263,16 +263,16 @@ private:
         }
     }
 
-    void copy_structure_to_value_array(bool prefix, uint16 write_index, uint16 &extent_index, bool dereference_cptr);
-    void copy_member_to_value_array(uint16 child_index, bool prefix, uint16 write_index, uint16 &extent_index, bool dereference_cptr);
+    void copy_structure_to_value_array(bool prefix, uint16_t write_index, uint16_t &extent_index, bool dereference_cptr);
+    void copy_member_to_value_array(uint16_t child_index, bool prefix, uint16_t write_index, uint16_t &extent_index, bool dereference_cptr);
 public:
     static IPGMContext GetContextFromInput(View *input, InputLessPGMOverlay *overlay) {
         return IPGMContext(input->object, input, &input->object->code(0), 0, overlay, REFERENCE);
     }
 
     IPGMContext(): _Context(NULL, 0, NULL, UNDEFINED), object(NULL), view(NULL) {} // undefined context (happens when accessing the view of an object when it has not been provided).
-    IPGMContext(Code *object, View *view, Atom *code, uint16 index, InputLessPGMOverlay *const overlay, Data data = STEM): _Context(code, index, overlay, data), object(object), view(view) {}
-    IPGMContext(Code *object, uint16 index): _Context(&object->code(0), index, NULL, REFERENCE), object(object), view(NULL) {}
+    IPGMContext(Code *object, View *view, Atom *code, uint16_t index, InputLessPGMOverlay *const overlay, Data data = STEM): _Context(code, index, overlay, data), object(object), view(view) {}
+    IPGMContext(Code *object, uint16_t index): _Context(&object->code(0), index, NULL, REFERENCE), object(object), view(NULL) {}
     IPGMContext(Code *object, Data data): _Context(&object->code(0), index, NULL, data), object(object), view(NULL) {}
 
 // _Context implementation.
@@ -286,17 +286,17 @@ public:
         return *this == *(IPGMContext *)c;
     }
 
-    Atom &get_atom(uint16 i) const {
+    Atom &get_atom(uint16_t i) const {
         return this->operator [](i);
     }
 
-    uint16 get_object_code_size() const {
+    uint16_t get_object_code_size() const {
         return object->code_size();
     }
 
-    uint16 getChildrenCount() const {
+    uint16_t getChildrenCount() const {
 
-        uint16 c;
+        uint16_t c;
         switch (data) {
         case MKS:
             object->acq_markers();
@@ -312,7 +312,7 @@ public:
             return code[index].getAtomCount();
         }
     }
-    _Context *_getChild(uint16 index) const {
+    _Context *_getChild(uint16_t index) const {
 
         IPGMContext *_c = new IPGMContext(getChild(index));
         return _c;
@@ -325,8 +325,8 @@ public:
     }
 
 // IPGM specifics.
-    bool evaluate(uint16 &result_index) const; // index is set to the index of the result, undefined in case of failure.
-    bool evaluate_no_dereference(uint16 &result_index) const;
+    bool evaluate(uint16_t &result_index) const; // index is set to the index of the result, undefined in case of failure.
+    bool evaluate_no_dereference(uint16_t &result_index) const;
 
     IPGMContext &operator =(const IPGMContext &c) {
 
@@ -341,7 +341,7 @@ public:
     bool operator ==(const IPGMContext &c) const;
     bool operator !=(const IPGMContext &c) const;
 
-    IPGMContext getChild(uint16 index) const {
+    IPGMContext getChild(uint16_t index) const {
 
         switch (data) {
         case STEM:
@@ -352,7 +352,7 @@ public:
             return IPGMContext(object, view, code, this->index + index, NULL, VIEW);
         case MKS: {
 
-            uint16 i = 0;
+            uint16_t i = 0;
             r_code::list<Code *>::const_iterator m;
             object->acq_markers();
             for (m = object->markers.begin(); i < index - 1; ++i, ++m) {
@@ -367,8 +367,8 @@ public:
             return IPGMContext(*m, 0);
         } case VWS: {
 
-            uint16 i = 0;
-            UNORDERED_SET<r_code::View *, r_code::View::Hash, r_code::View::Equal>::const_iterator v;
+            uint16_t i = 0;
+            std::unordered_set<r_code::View *, r_code::View::Hash, r_code::View::Equal>::const_iterator v;
             object->acq_views();
             for (v = object->views.begin(); i < index - 1; ++i, ++v) {
 
@@ -386,13 +386,13 @@ public:
             return IPGMContext();
         }
     }
-    Atom &operator [](uint16 i) const {
+    Atom &operator [](uint16_t i) const {
         return code[index + i];
     }
     Code *getObject() const {
         return object;
     }
-    uint16 getIndex() const {
+    uint16_t getIndex() const {
         return index;
     }
 
@@ -406,24 +406,24 @@ public:
         return data == UNDEFINED;
     }
 
-    void patch_input_code(uint16 pgm_code_index, uint16 input_index) const {
+    void patch_input_code(uint16_t pgm_code_index, uint16_t input_index) const {
         ((InputLessPGMOverlay *)overlay)->patch_input_code(pgm_code_index, input_index, 0);
     }
 
-    uint16 addProduction(Code *object, bool check_for_existence) const; // if check_for_existence==false, the object is assumed not to be new.
+    uint16_t addProduction(Code *object, bool check_for_existence) const; // if check_for_existence==false, the object is assumed not to be new.
 
-    template<class C> void copy(C *destination, uint16 write_index) const {
+    template<class C> void copy(C *destination, uint16_t write_index) const {
 
-        uint16 extent_index = 0;
+        uint16_t extent_index = 0;
         copy_structure(destination, write_index, extent_index, true, -1);
     }
 
-    template<class C> void copy(C *destination, uint16 write_index, uint16 &extent_index) const {
+    template<class C> void copy(C *destination, uint16_t write_index, uint16_t &extent_index) const {
 
         copy_structure(destination, write_index, extent_index, true, -1);
     }
 
-    void copy_to_value_array(uint16 &position);
+    void copy_to_value_array(uint16_t &position);
 
     typedef enum {
         TYPE_OBJECT = 0,
@@ -433,7 +433,7 @@ public:
     } ObjectType;
 
 // To retrieve objects, groups and views in mod/set expressions; views are copied.
-    void getMember(void *&object, uint64 &view_oid, ObjectType &object_type, int16 &member_index) const;
+    void getMember(void *&object, uint64_t &view_oid, ObjectType &object_type, int16_t &member_index) const;
 
 // 'this' is a context on a pattern skeleton.
     bool match(const IPGMContext &input) const;
@@ -444,9 +444,9 @@ public:
     }
 
 // Implementation of executive-dependent operators.
-    static bool Ins(const IPGMContext &context, uint16 &index);
-    static bool Fvw(const IPGMContext &context, uint16 &index);
-    static bool Red(const IPGMContext &context, uint16 &index);
+    static bool Ins(const IPGMContext &context, uint16_t &index);
+    static bool Fvw(const IPGMContext &context, uint16_t &index);
+    static bool Red(const IPGMContext &context, uint16_t &index);
 };
 }
 

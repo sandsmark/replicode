@@ -38,7 +38,7 @@ namespace r_exec {
 HLPContext::HLPContext(): _Context(NULL, 0, NULL, UNDEFINED) {
 }
 
-HLPContext::HLPContext(Atom *code, uint16 index, HLPOverlay *const overlay, Data data): _Context(code, index, overlay, data) {
+HLPContext::HLPContext(Atom *code, uint16_t index, HLPOverlay *const overlay, Data data): _Context(code, index, overlay, data) {
 }
 
 bool HLPContext::operator ==(const HLPContext &c) const {
@@ -51,8 +51,8 @@ bool HLPContext::operator ==(const HLPContext &c) const {
 
     if (lhs[0].isStructural()) { // both are structural.
 
-        uint16 atom_count = lhs.getChildrenCount();
-        for (uint16 i = 1; i <= atom_count; ++i)
+        uint16_t atom_count = lhs.getChildrenCount();
+        for (uint16_t i = 1; i <= atom_count; ++i)
             if (*lhs.getChild(i) != *rhs.getChild(i))
                 return false;
         return true;
@@ -83,7 +83,7 @@ HLPContext HLPContext::operator *() const {
     }
 }
 
-bool HLPContext::evaluate(uint16 &result_index) const {
+bool HLPContext::evaluate(uint16_t &result_index) const {
 
     if (data == BINDING_MAP || data == VALUE_ARRAY)
         return true;
@@ -92,7 +92,7 @@ bool HLPContext::evaluate(uint16 &result_index) const {
     return c.evaluate_no_dereference(result_index);
 }
 
-bool HLPContext::evaluate_no_dereference(uint16 &result_index) const {
+bool HLPContext::evaluate_no_dereference(uint16_t &result_index) const {
 
     switch (data) {
     case VALUE_ARRAY:
@@ -116,10 +116,10 @@ bool HLPContext::evaluate_no_dereference(uint16 &result_index) const {
             return false;
     } case Atom::OPERATOR: {
 
-        uint16 atom_count = getChildrenCount();
-        for (uint16 i = 1; i <= atom_count; ++i) {
+        uint16_t atom_count = getChildrenCount();
+        for (uint16_t i = 1; i <= atom_count; ++i) {
 
-            uint16 unused_result_index;
+            uint16_t unused_result_index;
             if (!(*getChild(i)).evaluate_no_dereference(unused_result_index))
                 return false;
         }
@@ -140,10 +140,10 @@ bool HLPContext::evaluate_no_dereference(uint16 &result_index) const {
     case Atom::SET:
     case Atom::S_SET: {
 
-        uint16 atom_count = getChildrenCount();
-        for (uint16 i = 1; i <= atom_count; ++i) {
+        uint16_t atom_count = getChildrenCount();
+        for (uint16_t i = 1; i <= atom_count; ++i) {
 
-            uint16 unused_result_index;
+            uint16_t unused_result_index;
             if (!(*getChild(i)).evaluate_no_dereference(unused_result_index))
                 return false;
         }
@@ -155,7 +155,7 @@ bool HLPContext::evaluate_no_dereference(uint16 &result_index) const {
     }
 }
 
-uint16 HLPContext::get_object_code_size() const {
+uint16_t HLPContext::get_object_code_size() const {
 
     switch (data) {
     case STEM:

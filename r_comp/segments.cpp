@@ -49,7 +49,7 @@ Metadata::Metadata() {
 
 Class *Metadata::get_class(std::string &class_name) {
 
-    UNORDERED_MAP<std::string, Class>::iterator it = classes.find(class_name);
+    std::unordered_map<std::string, Class>::iterator it = classes.find(class_name);
     if (it != classes.end())
         return &it->second;
     return NULL;
@@ -72,7 +72,7 @@ void Metadata::write(uintptr_t *data) {
     }
 
     data[offset++] = classes.size();
-    UNORDERED_MAP<std::string, Class>::iterator it = classes.begin();
+    std::unordered_map<std::string, Class>::iterator it = classes.begin();
     for (; it != classes.end(); ++it) {
 
         r_code::Write(data + offset, it->first);
@@ -232,7 +232,7 @@ uintptr_t Metadata::get_class_array_size() {
 uintptr_t Metadata::get_classes_size() {
 
     size_t size = 1; // size of the hash table
-    UNORDERED_MAP<std::string, Class>::iterator it = classes.begin();
+    std::unordered_map<std::string, Class>::iterator it = classes.begin();
     for (; it != classes.end(); ++it)
         size += r_code::GetSize(it->first) + 1; // +1: index to the class in the class array
     return size;
@@ -241,7 +241,7 @@ uintptr_t Metadata::get_classes_size() {
 uintptr_t Metadata::get_sys_classes_size() {
 
     size_t size = 1; // size of the hash table
-    UNORDERED_MAP<std::string, Class>::iterator it = sys_classes.begin();
+    std::unordered_map<std::string, Class>::iterator it = sys_classes.begin();
     for (; it != sys_classes.end(); ++it)
         size += r_code::GetSize(it->first) + 1; // +1: index to the class in the class array
     return size;
@@ -352,7 +352,7 @@ void ObjectNames::write(uintptr_t* data) {
 
     size_t index = 1;
 
-    UNORDERED_MAP<size_t, std::string>::const_iterator n;
+    std::unordered_map<size_t, std::string>::const_iterator n;
     for (n = symbols.begin(); n != symbols.end(); ++n) {
 
         data[index] = n->first;
@@ -386,7 +386,7 @@ size_t ObjectNames::get_size() {
 
     size_t size = 1; // size of symbols.
 
-    UNORDERED_MAP<uintptr_t, std::string>::const_iterator n;
+    std::unordered_map<uintptr_t, std::string>::const_iterator n;
     for (n = symbols.begin(); n != symbols.end(); ++n) {
 
         size += 2; // oid and symbol's length.
@@ -458,7 +458,7 @@ size_t Image::get_reference_count(const Code* object) const {
 
 void Image::add_object(Code *object) {
 
-    UNORDERED_MAP<Code *, size_t>::iterator it = ptrs_to_indices.find(object);
+    std::unordered_map<Code *, size_t>::iterator it = ptrs_to_indices.find(object);
     if (it != ptrs_to_indices.end()) // object already there.
         return;
 
@@ -483,7 +483,7 @@ void Image::add_object(Code *object) {
 
 SysObject *Image::add_object(Code *object, std::vector<SysObject *> &imported_objects) {
 
-    UNORDERED_MAP<Code *, size_t>::iterator it = ptrs_to_indices.find(object);
+    std::unordered_map<Code *, size_t>::iterator it = ptrs_to_indices.find(object);
     if (it != ptrs_to_indices.end()) // object already there.
         return code_segment.objects[it->second];
 
@@ -500,7 +500,7 @@ SysObject *Image::add_object(Code *object, std::vector<SysObject *> &imported_ob
             add_object(reference, imported_objects);
         else { // add the referenced object if not present in the list.
 
-            UNORDERED_MAP<Code *, size_t>::iterator it = ptrs_to_indices.find(reference);
+            std::unordered_map<Code *, size_t>::iterator it = ptrs_to_indices.find(reference);
             if (it == ptrs_to_indices.end()) {
 
                 SysObject *sys_ref = add_object(reference, imported_objects);
@@ -510,15 +510,15 @@ SysObject *Image::add_object(Code *object, std::vector<SysObject *> &imported_ob
     }
 
     object->acq_views();
-    UNORDERED_SET<View *, View::Hash, View::Equal>::const_iterator v;
+    std::unordered_set<View *, View::Hash, View::Equal>::const_iterator v;
     for (v = object->views.begin(); v != object->views.end(); ++v) { // follow the view's reference pointers and recurse.
 
-        for (uint8 j = 0; j < 2; ++j) { // 2 refs maximum per view; may be NULL.
+        for (uint8_t j = 0; j < 2; ++j) { // 2 refs maximum per view; may be NULL.
 
             Code *reference = (*v)->references[j];
             if (reference) {
 
-                UNORDERED_MAP<r_code::Code *, size_t>::const_iterator index = ptrs_to_indices.find(reference);
+                std::unordered_map<r_code::Code *, size_t>::const_iterator index = ptrs_to_indices.find(reference);
                 if (index == ptrs_to_indices.end()) {
 
                     SysObject *sys_ref = add_object(reference, imported_objects);
@@ -558,7 +558,7 @@ void Image::build_references(SysObject *sys_object, Code *object) {
     size_t reference_count = get_reference_count(object);
     for (i = 0; i < reference_count; ++i) {
 
-        UNORDERED_MAP<r_code::Code *, size_t>::const_iterator index = ptrs_to_indices.find(object->get_reference(i));
+        std::unordered_map<r_code::Code *, size_t>::const_iterator index = ptrs_to_indices.find(object->get_reference(i));
         if (index != ptrs_to_indices.end()) {
 
             referenced_object_index = index->second;
@@ -567,15 +567,15 @@ void Image::build_references(SysObject *sys_object, Code *object) {
     }
 
     object->acq_views();
-    UNORDERED_SET<View *, View::Hash, View::Equal>::const_iterator v;
+    std::unordered_set<View *, View::Hash, View::Equal>::const_iterator v;
     for (i = 0, v = object->views.begin(); v != object->views.end(); ++i, ++v) {
 
-        for (uint8 j = 0; j < 2; ++j) { // 2 refs maximum per view; may be NULL.
+        for (uint8_t j = 0; j < 2; ++j) { // 2 refs maximum per view; may be NULL.
 
             Code *reference = (*v)->references[j];
             if (reference) {
 
-                UNORDERED_MAP<r_code::Code *, size_t>::const_iterator index = ptrs_to_indices.find(reference);
+                std::unordered_map<r_code::Code *, size_t>::const_iterator index = ptrs_to_indices.find(reference);
                 if (index != ptrs_to_indices.end()) {
 
                     referenced_object_index = index->second;

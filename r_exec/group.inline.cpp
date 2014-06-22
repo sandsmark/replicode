@@ -55,7 +55,7 @@ inline bool Group::invalidate() {
         return true;
 
 // unregister from all groups it views.
-    UNORDERED_MAP<uint64, P<View> >::const_iterator gv;
+    std::unordered_map<uint64_t, P<View> >::const_iterator gv;
     for (gv = group_views.begin(); gv != group_views.end(); ++gv) {
         Group *group = (Group *)gv->second->object;
         std::lock_guard<std::mutex> guard(group->mutex);
@@ -81,7 +81,7 @@ inline bool Group::invalidate() {
     return false;
 }
 
-inline uint64 Group::get_upr() const
+inline uint64_t Group::get_upr() const
 {
     return code(GRP_UPR).asDouble();
 }
@@ -295,21 +295,21 @@ inline double Group::get_ntf_new() {
     return code(GRP_NTF_NEW).asDouble();
 }
 
-inline uint16 Group::get_ntf_grp_count() {
+inline uint16_t Group::get_ntf_grp_count() {
 
     return code(code(GRP_NTF_GRPS).asIndex()).getAtomCount();
 }
 
-inline Group *Group::get_ntf_grp(uint16 i) {
+inline Group *Group::get_ntf_grp(uint16_t i) {
 
     if (code(code(GRP_NTF_GRPS).asIndex() + i).readsAsNil())
         return this;
 
-    uint16 index = code(code(GRP_NTF_GRPS).asIndex() + i).asIndex();
+    uint16_t index = code(code(GRP_NTF_GRPS).asIndex() + i).asIndex();
     return (Group *)get_reference(index);
 }
 
-inline void Group::_mod_0_positive(uint16 member_index, double value) {
+inline void Group::_mod_0_positive(uint16_t member_index, double value) {
 
     double v = code(member_index).asDouble() + value;
     if (v < 0)
@@ -317,7 +317,7 @@ inline void Group::_mod_0_positive(uint16 member_index, double value) {
     code(member_index) = Atom::Float(v);
 }
 
-inline void Group::_mod_0_plus1(uint16 member_index, double value) {
+inline void Group::_mod_0_plus1(uint16_t member_index, double value) {
 
     double v = code(member_index).asDouble() + value;
     if (v < 0)
@@ -327,7 +327,7 @@ inline void Group::_mod_0_plus1(uint16 member_index, double value) {
     code(member_index) = Atom::Float(v);
 }
 
-inline void Group::_mod_minus1_plus1(uint16 member_index, double value) {
+inline void Group::_mod_minus1_plus1(uint16_t member_index, double value) {
 
     double v = code(member_index).asDouble() + value;
     if (v < -1)
@@ -337,7 +337,7 @@ inline void Group::_mod_minus1_plus1(uint16 member_index, double value) {
     code(member_index) = Atom::Float(v);
 }
 
-inline void Group::_set_0_positive(uint16 member_index, double value) {
+inline void Group::_set_0_positive(uint16_t member_index, double value) {
 
     if (value < 0)
         code(member_index) = Atom::Float(0);
@@ -345,7 +345,7 @@ inline void Group::_set_0_positive(uint16 member_index, double value) {
         code(member_index) = Atom::Float(value);
 }
 
-inline void Group::_set_0_plus1(uint16 member_index, double value) {
+inline void Group::_set_0_plus1(uint16_t member_index, double value) {
 
     if (value < 0)
         code(member_index) = Atom::Float(0);
@@ -355,7 +355,7 @@ inline void Group::_set_0_plus1(uint16 member_index, double value) {
         code(member_index) = Atom::Float(value);
 }
 
-inline void Group::_set_minus1_plus1(uint16 member_index, double value) {
+inline void Group::_set_minus1_plus1(uint16_t member_index, double value) {
 
     if (value < -1)
         code(member_index) = Atom::Float(-1);
@@ -365,13 +365,13 @@ inline void Group::_set_minus1_plus1(uint16 member_index, double value) {
         code(member_index) = Atom::Float(value);
 }
 
-inline void Group::_set_0_1(uint16 member_index, double value) {
+inline void Group::_set_0_1(uint16_t member_index, double value) {
 
     if (value == 0 || value == 1)
         code(member_index) = Atom::Float(value);
 }
 
-inline void Group::mod(uint16 member_index, double value) {
+inline void Group::mod(uint16_t member_index, double value) {
 
     switch (member_index) {
     case GRP_UPR:
@@ -418,7 +418,7 @@ inline void Group::mod(uint16 member_index, double value) {
     }
 }
 
-inline void Group::set(uint16 member_index, double value) {
+inline void Group::set(uint16_t member_index, double value) {
 
     switch (member_index) {
     case GRP_UPR:

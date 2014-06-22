@@ -34,11 +34,11 @@
 #include "r_exec/mem.h"
 
 
-uint16 Vec3Opcode;
+uint16_t Vec3Opcode;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool add(const r_exec::Context &context, uint16 &index) {
+bool add(const r_exec::Context &context, uint16_t &index) {
 
     r_exec::Context lhs = *context.getChild(1);
     r_exec::Context rhs = *context.getChild(2);
@@ -58,7 +58,7 @@ bool add(const r_exec::Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool sub(const r_exec::Context &context, uint16 &index) {
+bool sub(const r_exec::Context &context, uint16_t &index) {
 
     r_exec::Context lhs = *context.getChild(1);
     r_exec::Context rhs = *context.getChild(2);
@@ -78,7 +78,7 @@ bool sub(const r_exec::Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool mul(const r_exec::Context &context, uint16 &index) {
+bool mul(const r_exec::Context &context, uint16_t &index) {
 
     r_exec::Context lhs = *context.getChild(1);
     r_exec::Context rhs = *context.getChild(2);
@@ -111,7 +111,7 @@ bool mul(const r_exec::Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool dis(const r_exec::Context &context, uint16 &index) {
+bool dis(const r_exec::Context &context, uint16_t &index) {
 
     r_exec::Context lhs = *context.getChild(1);
     r_exec::Context rhs = *context.getChild(2);

@@ -38,7 +38,7 @@
 #include "utils.h"
 
 #include "CoreLibrary/base.h"
-
+#include <unordered_set>
 
 using namespace core;
 
@@ -100,7 +100,7 @@ class Object;
 class dll_export View:
     public _Object {
 private:
-    uint16 index; // for unpacking: index is the index of the view in the SysObject.
+    uint16_t index; // for unpacking: index is the index of the view in the SysObject.
 protected:
     Atom _code[VIEW_CODE_MAX_SIZE]; // dimensioned to hold the largest view (group view): head atom, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp; oid is the last word32 (not an atom).
 public:
@@ -114,7 +114,7 @@ public:
 
     View(SysView *source, Code *object) {
 
-        for (uint16 i = 0; i < source->code.size(); ++i)
+        for (uint16_t i = 0; i < source->code.size(); ++i)
             _code[i] = source->code[i];
         references[0] = references[1] = NULL;
         this->object = object;
@@ -122,10 +122,10 @@ public:
 
     virtual ~View() {}
 
-    Atom &code(uint16 i) {
+    Atom &code(uint16_t i) {
         return _code[i];
     }
-    Atom code(uint16 i) const {
+    Atom code(uint16_t i) const {
         return _code[i];
     }
 
@@ -140,10 +140,10 @@ public:
     SyncMode get_sync() const {
         return (SyncMode)(uint64_t)_code[VIEW_SYNC];
     }
-    uint64 get_ijt() const {
+    uint64_t get_ijt() const {
         return Utils::GetTimestamp(_code + _code[VIEW_IJT].asIndex());
     }
-    void set_ijt(uint64 ijt) {
+    void set_ijt(uint64_t ijt) {
         Utils::SetTimestamp(_code + _code[VIEW_IJT].asIndex(), ijt);
     }
 
@@ -172,14 +172,14 @@ public:
 class dll_export Code:
     public _Object {
 public:
-    static const int64 null_storage_index = -1;
-    static const uint64 CodeMarkersInitialSize = 8;
+    static const int64_t null_storage_index = -1;
+    static const uint64_t CodeMarkersInitialSize = 8;
 protected:
-    int64 storage_index; // -1: not sored; >0 index of the object in a vector-based container.
+    int64_t storage_index; // -1: not sored; >0 index of the object in a vector-based container.
 
     void load(SysObject *source) {
 
-        for (uint16 i = 0; i < source->code.size(); ++i)
+        for (uint16_t i = 0; i < source->code.size(); ++i)
             code(i) = source->code[i];
         set_oid(source->oid);
     }
@@ -188,26 +188,26 @@ protected:
         return new V(source, this);
     }
 public:
-    void set_stroage_index(int64 i) {
+    void set_stroage_index(int64_t i) {
         storage_index = i;
     }
     bool is_registered() const {
         return storage_index > null_storage_index;
     }
-    int64 get_storage_index() const {
+    int64_t get_storage_index() const {
         return storage_index;
     }
 
     virtual uint64_t get_oid() const = 0;
     virtual void set_oid(uint64_t oid) = 0;
 
-    virtual Atom &code(uint16 i) = 0;
-    virtual Atom &code(uint16 i) const = 0;
-    virtual uint16 code_size() const = 0;
-    virtual void resize_code(uint16 new_size) = 0;
-    virtual void set_reference(uint16 i, Code *object) = 0;
-    virtual Code *get_reference(uint16 i) const = 0;
-    virtual uint16 references_size() const = 0;
+    virtual Atom &code(uint16_t i) = 0;
+    virtual Atom &code(uint16_t i) const = 0;
+    virtual uint16_t code_size() const = 0;
+    virtual void resize_code(uint16_t new_size) = 0;
+    virtual void set_reference(uint16_t i, Code *object) = 0;
+    virtual Code *get_reference(uint16_t i) const = 0;
+    virtual uint16_t references_size() const = 0;
     virtual void clear_references() = 0;
     virtual void set_references(std::vector<P<Code> > &new_references) = 0;
 
@@ -222,7 +222,7 @@ public:
     }
 
     r_code::list<Code *> markers;
-    UNORDERED_SET<View *, View::Hash, View::Equal> views; // indexed by groups.
+    std::unordered_set<View *, View::Hash, View::Equal> views; // indexed by groups.
 
     virtual View *build_view(SysView *source) = 0;
 
@@ -240,8 +240,8 @@ public:
     }
     virtual ~Code() {}
 
-    virtual void mod(uint16 member_index, double value) {};
-    virtual void set(uint16 member_index, double value) {};
+    virtual void mod(uint16_t member_index, double value) {};
+    virtual void set(uint16_t member_index, double value) {};
     virtual View *get_view(Code *group, bool lock) {
         return NULL;
     }
@@ -256,7 +256,7 @@ public:
     void trace() const {
 
         std::cout << "--------\n";
-        for (uint16 i = 0; i < code_size(); ++i) {
+        for (uint16_t i = 0; i < code_size(); ++i) {
 
             std::cout << i << "\t";
             code(i).trace();
@@ -293,25 +293,25 @@ public:
         _oid = oid;
     }
 
-    Atom &code(uint16 i) {
+    Atom &code(uint16_t i) {
         return _code[i];
     }
-    Atom &code(uint16 i) const {
+    Atom &code(uint16_t i) const {
         return (*_code.as_std())[i];
     }
-    uint16 code_size() const {
+    uint16_t code_size() const {
         return _code.size();
     }
-    void resize_code(uint16 new_size) {
+    void resize_code(uint16_t new_size) {
         _code.as_std()->resize(new_size);
     }
-    void set_reference(uint16 i, Code *object) {
+    void set_reference(uint16_t i, Code *object) {
         _references[i] = object;
     }
-    Code *get_reference(uint16 i) const {
+    Code *get_reference(uint16_t i) const {
         return (*_references.as_std())[i];
     }
-    uint16 references_size() const {
+    uint16_t references_size() const {
         return _references.size();
     }
     void clear_references() {

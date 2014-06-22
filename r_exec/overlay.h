@@ -49,10 +49,10 @@ class View;
 class r_exec_dll Controller:
     public _Object {
 protected:
-    volatile uint64 invalidated; // 32 bit alignment.
-    volatile uint64 activated; // 32 bit alignment.
+    volatile uint64_t invalidated; // 32 bit alignment.
+    volatile uint64_t activated; // 32 bit alignment.
 
-    uint64 tsc;
+    uint64_t tsc;
 
     r_code::View *view;
 
@@ -65,7 +65,7 @@ protected:
 public:
     virtual ~Controller();
 
-    uint64 get_tsc() {
+    uint64_t get_tsc() {
         return tsc;
     }
 
@@ -118,7 +118,7 @@ class r_exec_dll Overlay:
     friend class IPGMContext;
     friend class HLPContext;
 protected:
-    volatile uint64 invalidated;
+    volatile uint64_t invalidated;
 
     Controller *controller;
 
@@ -129,14 +129,14 @@ protected:
 // a ptr to the value array if the result is larger than a single atom,
 // a ptr to an input if the result is a pattern input.
     Atom *code;
-    uint16 code_size;
-    std::vector<uint16> patch_indices; // indices where patches are applied; used for rollbacks.
-    uint16 value_commit_index; // index of the last computed value+1; used for rollbacks.
+    uint16_t code_size;
+    std::vector<uint16_t> patch_indices; // indices where patches are applied; used for rollbacks.
+    uint16_t value_commit_index; // index of the last computed value+1; used for rollbacks.
 
     void load_code();
-    void patch_code(uint16 index, Atom value);
-    uint16 get_last_patch_index();
-    void unpatch_code(uint16 patch_index);
+    void patch_code(uint16_t index, Atom value);
+    uint16_t get_last_patch_index();
+    void unpatch_code(uint16_t patch_index);
 
     void rollback(); // reset the overlay to the last commited state: unpatch code and values.
     void commit(); // empty the patch_indices and set value_commit_index to values.size().

@@ -47,7 +47,7 @@
 #define VIEW_ACT 7
 #define GRP_VIEW_COV 7
 #define GRP_VIEW_VIS 8
-#define VIEW_CTRL_0 10 // for nong-group views, this uint64 (not atom) may hold control data (ex: cache status).
+#define VIEW_CTRL_0 10 // for nong-group views, this uint64_t (not atom) may hold control data (ex: cache status).
 #define VIEW_CTRL_1 11 // idem.
 #define VIEW_OID 12
 

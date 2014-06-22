@@ -35,7 +35,7 @@ namespace r_code {
 
 size_t GetSize(const std::string &s) { // string content is aligned on 4 bytes boundaries; string length heads the structure
 
-    uint64 length = s.length() + 1; // +1 for null termination
+    uint64_t length = s.length() + 1; // +1 for null termination
     if (length % 4)
         return length / 4 + 2; // +1 for the length, +1 for alignment
     return length / 4 + 1; // +1 for the length
@@ -45,7 +45,7 @@ void Write(uintptr_t *data, const std::string &s) {
 
     data[0] = GetSize(s) - 1;
     char *content = (char *)(data + 1);
-    for (uint64 i = 0; i < s.length(); ++i)
+    for (uint64_t i = 0; i < s.length(); ++i)
         content[i] = s[i];
     content[s.length()] = '\0';
 }
@@ -53,7 +53,7 @@ void Write(uintptr_t *data, const std::string &s) {
 void Read(uintptr_t *data, std::string &s) {
 
     char *content = (char *)(data + 1);
-    for (uint64 i = 0;; ++i) {
+    for (uint64_t i = 0;; ++i) {
 
         if (content[i] != '\0')
             s += content[i];

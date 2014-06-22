@@ -46,7 +46,7 @@
 namespace r_exec {
 
 // Time base; either Time::Get or network-aware synced time.
-extern r_exec_dll uint64(*Now)();
+extern r_exec_dll uint64_t(*Now)();
 
 // Loaded once for all.
 // Results from the compilation of user.classes.replicode.
@@ -66,18 +66,18 @@ bool Compile(const char* filename, string& error, bool compile_metadata = false)
 class r_exec_dll TDecompiler:
     public _Object {
 private:
-    static const uint64 ObjectsInitialSize = 16;
+    static const uint64_t ObjectsInitialSize = 16;
     void decompile();
 
 
-    uint64 ostream_id; // 0 is std::cout.
+    uint64_t ostream_id; // 0 is std::cout.
     std::string header;
     r_code::list<P<Code> > objects;
     std::thread *_thread;
-    volatile uint64 spawned;
+    volatile uint64_t spawned;
 
 public:
-    TDecompiler(uint64 ostream_id, std::string header);
+    TDecompiler(uint64_t ostream_id, std::string header);
     ~TDecompiler();
 
     void add_object(Code *object);
@@ -92,7 +92,7 @@ public:
 // (b) shall be defined in CoreLibrary instead of here,
 // (c) the stream pool management (PipeOStream::Open(), PipeOStream::Close() and PipeOStream::Get()) shall be decoupled from this implementation (it's an IDE feature),
 // (d) PipeOStream shall be based on std::ostringstream instead of std::ostream with a refined std::stringbuf (override sync() to write in the pipe).
-#ifdef WINDOWS
+#if defined(WIN32) || defined(WIN64)
 class r_exec_dll PipeOStream:
     public std::ostream {
 private:
@@ -107,9 +107,9 @@ private:
     void init(); // create one child process and a pipe.
     PipeOStream();
 public:
-    static void Open(uint8 count); // open count streams.
+    static void Open(uint8_t count); // open count streams.
     static void Close(); // close all streams.
-    static PipeOStream &Get(uint8 id); // return NullStream if id is out of range.
+    static PipeOStream &Get(uint8_t id); // return NullStream if id is out of range.
 
     ~PipeOStream();
 
@@ -130,9 +130,9 @@ bool r_exec_dll Init(const char *user_operator_library_path,
                      const r_comp::Metadata &metadata,
                      const r_comp::Image &seed);
 
-uint16 r_exec_dll GetOpcode(const char *name); // classes, operators and functions.
+uint16_t r_exec_dll GetOpcode(const char *name); // classes, operators and functions.
 
-std::string r_exec_dll GetAxiomName(const uint16 index); // for constant objects (ex: self, position, and other axioms).
+std::string r_exec_dll GetAxiomName(const uint16_t index); // for constant objects (ex: self, position, and other axioms).
 }
 
 

@@ -80,7 +80,7 @@ bool PMonitor::reduce(_Fact *input) { // input is always an actual fact.
             return false;
         }
     } else {
-//uint64 oid=input->get_oid();
+//uint64_t oid=input->get_oid();
         switch (((Fact *)input)->is_evidence(prediction_target)) {
         case MATCH_SUCCESS_POSITIVE:
 //std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" target: "<<prediction_target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" reduced: "<<input->get_oid()<<" positive\n";
@@ -99,7 +99,7 @@ bool PMonitor::reduce(_Fact *input) { // input is always an actual fact.
     return false;
 }
 
-void PMonitor::update(uint64 &next_target) { // executed by a time core, upon reaching the expected time of occurrence of the target of the prediction.
+void PMonitor::update(uint64_t &next_target) { // executed by a time core, upon reaching the expected time of occurrence of the target of the prediction.
 
     if (!target->is_invalidated()) { // received nothing matching the target's object so far (neither positively nor negatively).
 

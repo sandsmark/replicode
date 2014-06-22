@@ -37,7 +37,6 @@
 
 
 using namespace std;
-using namespace core;
 
 namespace r_comp {
 class Image;
@@ -82,12 +81,12 @@ namespace r_code {
 // class ImageImpl{
 // protected:
 // uin64 get_timestamp() const;
-// uint64 map_size() const;
-// uint64 code_size() const;
+// uint64_t map_size() const;
+// uint64_t code_size() const;
 // word32 *data(); // [object map|code segment|reloc segment]
 // public:
-// void *operator new(size_t,uint64 data_size);
-// ImageImpl(uint64 map_size,uint64 code_size);
+// void *operator new(size_t,uint64_t data_size);
+// ImageImpl(uint64_t map_size,uint64_t code_size);
 // ~ImageImpl();
 // };
 
@@ -95,7 +94,7 @@ template<class I> class Image:
     public I {
     friend class r_comp::Image;
 public:
-    static Image<I> *Build(uint64 timestamp, size_t map_size, size_t code_size, size_t names_size);
+    static Image<I> *Build(uint64_t timestamp, size_t map_size, size_t code_size, size_t names_size);
 // file IO
     static Image<I> *Read(ifstream &stream);
     static void Write(Image<I> *image, ofstream &stream);

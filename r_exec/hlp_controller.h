@@ -51,24 +51,24 @@ typedef enum {
 class HLPController:
     public OController {
 private:
-    uint64 strong_requirement_count; // number of active strong requirements in the same group; updated dynamically.
-    uint64 weak_requirement_count; // number of active weak requirements in the same group; updated dynamically.
-    uint64 requirement_count; // sum of the two above.
+    uint64_t strong_requirement_count; // number of active strong requirements in the same group; updated dynamically.
+    uint64_t weak_requirement_count; // number of active weak requirements in the same group; updated dynamically.
+    uint64_t requirement_count; // sum of the two above.
 protected:
     class EEntry { // evidences.
     private:
         void load_data(_Fact *evidence);
     public:
         P<_Fact> evidence;
-        uint64 after;
-        uint64 before;
+        uint64_t after;
+        uint64_t before;
         double confidence;
 
         EEntry();
         EEntry(_Fact *evidence);
         EEntry(_Fact *evidence, _Fact *payload);
 
-        bool is_too_old(uint64 now) const {
+        bool is_too_old(uint64_t now) const {
             return (evidence->is_invalidated() || before < now);
         }
     };
@@ -93,7 +93,7 @@ protected:
 
         E e(evidence);
         std::lock_guard<std::mutex> guard(cache->mutex);
-        uint64 now = r_exec::Now();
+        uint64_t now = r_exec::Now();
         typename r_code::list<E>::const_iterator _e;
         for (_e = cache->evidences.begin(); _e != cache->evidences.end();) {
 
@@ -113,11 +113,11 @@ protected:
     MatchResult check_predicted_evidences(_Fact *target, _Fact *&evidence); // evidence with the match (positive or negative), NULL otherwise.
 
     bool _has_tpl_args;
-    uint64 ref_count; // used to detect _Object::refCount dropping down to 1 for hlp with tpl args.
+    uint64_t ref_count; // used to detect _Object::refCount dropping down to 1 for hlp with tpl args.
     bool is_orphan(); // true when there are tpl args and no requirements: the controller cannot execute anymore.
 
     std::vector<P<HLPController> > controllers; // all controllers for models/states instantiated in the patterns; case of models: [0]==lhs, [1]==rhs.
-    uint64 last_match_time; // last time a match occurred (fwd), regardless of its outcome.
+    uint64_t last_match_time; // last time a match occurred (fwd), regardless of its outcome.
     bool become_invalidated(); // true if one controller is invalidated or if all controllers pointing to this are invalidated.
     virtual void kill_views() {}
     virtual void check_last_match_time(bool match) = 0;
@@ -140,8 +140,8 @@ public:
     void add_requirement(bool strong);
     void remove_requirement(bool strong);
 
-    uint64 get_requirement_count(uint64 &weak_requirement_count, uint64 &strong_requirement_count);
-    uint64 get_requirement_count();
+    uint64_t get_requirement_count(uint64_t &weak_requirement_count, uint64_t &strong_requirement_count);
+    uint64_t get_requirement_count();
 
     void store_evidence(_Fact *evidence) {
         _store_evidence<EEntry>(&evidences, evidence);
@@ -152,8 +152,8 @@ public:
 
     virtual Fact *get_f_ihlp(HLPBindingMap *bindings, bool wr_enabled) const = 0;
 
-    uint16 get_out_group_count() const;
-    Code *get_out_group(uint16 i) const; // i starts at 1.
+    uint16_t get_out_group_count() const;
+    Code *get_out_group(uint16_t i) const; // i starts at 1.
     Group *get_host() const;
     bool has_tpl_args() const {
         return _has_tpl_args;

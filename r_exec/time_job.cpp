@@ -39,14 +39,14 @@ TimeJob::TimeJob(uint64_t target_time): _Object(), target_time(target_time)
 {
 }
 
-void TimeJob::report(int64 lag) const
+void TimeJob::report(int64_t lag) const
 {
     debug("time job") << "late generic:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
 
-UpdateJob::UpdateJob(Group *g, uint64 ijt): TimeJob(ijt)
+UpdateJob::UpdateJob(Group *g, uint64_t ijt): TimeJob(ijt)
 {
     group = g;
 }
@@ -57,14 +57,14 @@ bool UpdateJob::update()
     return true;
 }
 
-void UpdateJob::report(int64 lag) const
+void UpdateJob::report(int64_t lag) const
 {
     //debug("update job") << "job" << this << "is late:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
 
-SignalingJob::SignalingJob(View *v, uint64 ijt): TimeJob(ijt)
+SignalingJob::SignalingJob(View *v, uint64_t ijt): TimeJob(ijt)
 {
     view = v;
 }
@@ -76,7 +76,7 @@ bool SignalingJob::is_alive() const
 
 ////////////////////////////////////////////////////////////
 
-AntiPGMSignalingJob::AntiPGMSignalingJob(View *v, uint64 ijt): SignalingJob(v, ijt)
+AntiPGMSignalingJob::AntiPGMSignalingJob(View *v, uint64_t ijt): SignalingJob(v, ijt)
 {
 }
 
@@ -88,14 +88,14 @@ bool AntiPGMSignalingJob::update()
     return true;
 }
 
-void AntiPGMSignalingJob::report(int64 lag) const
+void AntiPGMSignalingJob::report(int64_t lag) const
 {
     debug("anti-program signaling job") << "signaling:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
 
-InputLessPGMSignalingJob::InputLessPGMSignalingJob(View *v, uint64 ijt): SignalingJob(v, ijt)
+InputLessPGMSignalingJob::InputLessPGMSignalingJob(View *v, uint64_t ijt): SignalingJob(v, ijt)
 {
 }
 
@@ -106,14 +106,14 @@ bool InputLessPGMSignalingJob::update()
     return true;
 }
 
-void InputLessPGMSignalingJob::report(int64 lag) const
+void InputLessPGMSignalingJob::report(int64_t lag) const
 {
     debug("input-less program signaling job") << "late:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
 
-InjectionJob::InjectionJob(View *v, uint64 ijt): TimeJob(ijt)
+InjectionJob::InjectionJob(View *v, uint64_t ijt): TimeJob(ijt)
 {
     view = v;
 }
@@ -124,14 +124,14 @@ bool InjectionJob::update()
     return true;
 }
 
-void InjectionJob::report(int64 lag) const
+void InjectionJob::report(int64_t lag) const
 {
     //debug("injection job") << "late:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
 
-EInjectionJob::EInjectionJob(View *v, uint64 ijt): TimeJob(ijt)
+EInjectionJob::EInjectionJob(View *v, uint64_t ijt): TimeJob(ijt)
 {
     view = v;
 }
@@ -142,14 +142,14 @@ bool EInjectionJob::update()
     return true;
 }
 
-void EInjectionJob::report(int64 lag) const
+void EInjectionJob::report(int64_t lag) const
 {
     debug("einjection job") << "late:" << lag << "us behind.";
 }
 
 ////////////////////////////////////////////////////////////
 
-SaliencyPropagationJob::SaliencyPropagationJob(Code *o, double sln_change, double source_sln_thr, uint64 ijt) :
+SaliencyPropagationJob::SaliencyPropagationJob(Code *o, double sln_change, double source_sln_thr, uint64_t ijt) :
     TimeJob(ijt), sln_change(sln_change), source_sln_thr(source_sln_thr)
 {
     object = o;
@@ -162,7 +162,7 @@ bool SaliencyPropagationJob::update()
     return true;
 }
 
-void SaliencyPropagationJob::report(int64 lag) const {
+void SaliencyPropagationJob::report(int64_t lag) const {
 
     debug("saliency propagation job") << "late:" << lag << "us behind.";
 }
@@ -180,7 +180,7 @@ bool ShutdownTimeCore::update()
 
 ////////////////////////////////////////////////////////////
 
-PerfSamplingJob::PerfSamplingJob(uint64 start, uint64 period): TimeJob(start), period(period)
+PerfSamplingJob::PerfSamplingJob(uint64_t start, uint64_t period): TimeJob(start), period(period)
 {
 }
 

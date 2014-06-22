@@ -41,9 +41,9 @@ public:
     std::string source_file_name;
 
 // Init.
-    core::uint64 base_period;
-    core::uint64 reduction_core_count;
-    core::uint64 time_core_count;
+    uint64_t base_period;
+    uint64_t reduction_core_count;
+    uint64_t time_core_count;
 
 // System.
     double mdl_inertia_sr_thr;

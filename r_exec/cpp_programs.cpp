@@ -33,14 +33,14 @@
 
 namespace r_exec {
 
-UNORDERED_MAP<std::string, CPPPrograms::Program> CPPPrograms::Programs;
+std::unordered_map<std::string, CPPPrograms::Program> CPPPrograms::Programs;
 
 void CPPPrograms::Register(std::string &pgm_name, Program pgm) {
     Programs[pgm_name] = pgm;
 }
 
 CPPPrograms::Program CPPPrograms::Get(std::string &pgm_name) {
-    UNORDERED_MAP<std::string, Program>::const_iterator it = Programs.find(pgm_name);
+    std::unordered_map<std::string, Program>::const_iterator it = Programs.find(pgm_name);
     if (it != Programs.end())
         return it->second;
     return NULL;

@@ -51,23 +51,23 @@ private:
 
     std::mutex m_mdlMutex;
 
-    uint64 thz;
+    uint64_t thz;
 
     class MEntry {
     private:
         static bool Match(Code *lhs, Code *rhs);
         /// use for lhs/rhs.
-        static uint64 _ComputeHashCode(_Fact *component);
+        static uint64_t _ComputeHashCode(_Fact *component);
     public:
-        static uint64 ComputeHashCode(Code *mdl, bool packed);
+        static uint64_t ComputeHashCode(Code *mdl, bool packed);
 
         MEntry();
         MEntry(Code *mdl, bool packed);
 
         P<Code> mdl;
         /// last time the mdl was successfully compared to.
-        uint64 touch_time;
-        uint64 hash_code;
+        uint64_t touch_time;
+        uint64_t hash_code;
 
         bool match(const MEntry &e) const;
 
@@ -86,7 +86,7 @@ private:
         };
     };
 
-    typedef UNORDERED_SET<MEntry, typename MEntry::Hash, typename MEntry::Equal> MdlSet;
+    typedef std::unordered_set<MEntry, typename MEntry::Hash, typename MEntry::Equal> MdlSet;
 
     /// mdls are already packed when inserted (they come from the white list).
     MdlSet black_list;
@@ -95,7 +95,7 @@ private:
     MdlSet white_list;
 
     /// called by _Mem::start(); set to secondary_thz.
-    void set_thz(uint64 thz) {
+    void set_thz(uint64_t thz) {
         this->thz = thz;
     }
 

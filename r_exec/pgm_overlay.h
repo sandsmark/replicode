@@ -50,13 +50,13 @@ class r_exec_dll InputLessPGMOverlay:
 protected:
     std::vector<P<Code> > productions; // receives the results of ins, inj and eje; views are retrieved (fvw) or built (reduction) in the value array.
 
-    bool evaluate(uint16 index); // evaluates the pgm_code at the specified index.
+    bool evaluate(uint16_t index); // evaluates the pgm_code at the specified index.
 
-    virtual Code *get_mk_rdx(uint16 &extent_index) const;
+    virtual Code *get_mk_rdx(uint16_t &extent_index) const;
 
     void patch_tpl_args(); // no views in tpl args; patches the ptn skeleton's first atom with IPGM_PTR with an index in the ipgm arg set; patches wildcards with similar IPGM_PTRs.
-    void patch_tpl_code(uint16 pgm_code_index, uint16 ipgm_code_index); // to recurse.
-    virtual void patch_input_code(uint16 pgm_code_index, uint16 input_index, uint16 input_code_index, int16 parent_index = -1); // defined in PGMOverlay.
+    void patch_tpl_code(uint16_t pgm_code_index, uint16_t ipgm_code_index); // to recurse.
+    virtual void patch_input_code(uint16_t pgm_code_index, uint16_t input_index, uint16_t input_code_index, int16_t parent_index = -1); // defined in PGMOverlay.
 
     InputLessPGMOverlay();
     InputLessPGMOverlay(Controller *c);
@@ -76,9 +76,9 @@ class r_exec_dll PGMOverlay:
     friend class IPGMContext;
 private:
     bool is_volatile;
-    uint64 birth_time; // used for ipgms: overlays older than ipgm->tsc are killed; birth_time set to the time of the first match, 0 if no match occurred.
+    uint64_t birth_time; // used for ipgms: overlays older than ipgm->tsc are killed; birth_time set to the time of the first match, 0 if no match occurred.
 protected:
-    r_code::list<uint16> input_pattern_indices; // stores the input patterns still waiting for a match: will be plucked upon each successful match.
+    r_code::list<uint16_t> input_pattern_indices; // stores the input patterns still waiting for a match: will be plucked upon each successful match.
     std::vector<P<r_code::View> > input_views; // copies of the inputs; vector updated at each successful match.
 
     typedef enum {
@@ -87,21 +87,21 @@ protected:
         IMPOSSIBLE = 3 // when the input's class does not even match the object class in the pattern's skeleton.
     } MatchResult;
 
-    MatchResult match(r_exec::View *input, uint16 &input_index); // delegates to _match; input_index is set to the index of the pattern that matched the input.
+    MatchResult match(r_exec::View *input, uint16_t &input_index); // delegates to _match; input_index is set to the index of the pattern that matched the input.
     bool check_guards(); // return true upon successful evaluation.
 
-    MatchResult _match(r_exec::View *input, uint16 pattern_index); // delegates to __match.
-    MatchResult __match(r_exec::View *input, uint16 pattern_index); // return SUCCESS upon a successful match, IMPOSSIBLE if the input is not of the right class, FAILURE otherwise.
+    MatchResult _match(r_exec::View *input, uint16_t pattern_index); // delegates to __match.
+    MatchResult __match(r_exec::View *input, uint16_t pattern_index); // return SUCCESS upon a successful match, IMPOSSIBLE if the input is not of the right class, FAILURE otherwise.
 
     Code *dereference_in_ptr(Atom a);
-    void patch_input_code(uint16 pgm_code_index, uint16 input_index, uint16 input_code_index, int16 parent_index = -1);
+    void patch_input_code(uint16_t pgm_code_index, uint16_t input_index, uint16_t input_code_index, int16_t parent_index = -1);
 
-    virtual Code *get_mk_rdx(uint16 &extent_index) const;
+    virtual Code *get_mk_rdx(uint16_t &extent_index) const;
 
     void init();
 
     PGMOverlay(Controller *c);
-    PGMOverlay(PGMOverlay *original, uint16 last_input_index, uint16 value_commit_index); // copy from the original and rollback.
+    PGMOverlay(PGMOverlay *original, uint16_t last_input_index, uint16_t value_commit_index); // copy from the original and rollback.
 public:
     virtual ~PGMOverlay();
 
@@ -109,10 +109,10 @@ public:
 
     virtual Overlay *reduce(r_exec::View *input); // called upon the processing of a reduction job.
 
-    r_code::Code *getInputObject(uint16 i) const;
-    r_code::View *getInputView(uint16 i) const;
+    r_code::Code *getInputObject(uint16_t i) const;
+    r_code::View *getInputView(uint16_t i) const;
 
-    uint64 get_birth_time() const {
+    uint64_t get_birth_time() const {
         return birth_time;
     }
 
@@ -127,7 +127,7 @@ class r_exec_dll AntiPGMOverlay:
     friend class AntiPGMController;
 private:
     AntiPGMOverlay(Controller *c);
-    AntiPGMOverlay(AntiPGMOverlay *original, uint16 last_input_index, uint16 value_limit);
+    AntiPGMOverlay(AntiPGMOverlay *original, uint16_t last_input_index, uint16_t value_limit);
 public:
     ~AntiPGMOverlay();
 

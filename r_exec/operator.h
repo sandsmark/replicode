@@ -53,10 +53,10 @@ public:
         return implementation;
     }
 
-    uint16 getChildrenCount() const {
+    uint16_t getChildrenCount() const {
         return implementation->getChildrenCount();
     }
-    Context getChild(uint16 index) const {
+    Context getChild(uint16_t index) const {
         return Context(implementation->_getChild(index));
     }
 
@@ -77,20 +77,20 @@ public:
         return !implementation->equal(c.get_implementation());
     }
 
-    Atom &operator [](uint16 i) const {
+    Atom &operator [](uint16_t i) const {
         return implementation->get_atom(i);
     }
 
-    uint16 setAtomicResult(Atom a) const {
+    uint16_t setAtomicResult(Atom a) const {
         return implementation->setAtomicResult(a);
     }
-    uint16 setTimestampResult(uint64 t) const {
+    uint16_t setTimestampResult(uint64_t t) const {
         return implementation->setTimestampResult(t);
     }
-    uint16 setCompoundResultHead(Atom a) const {
+    uint16_t setCompoundResultHead(Atom a) const {
         return implementation->setCompoundResultHead(a);
     }
-    uint16 addCompoundResultPart(Atom a) const {
+    uint16_t addCompoundResultPart(Atom a) const {
         return implementation->addCompoundResultPart(a);
     }
 
@@ -99,30 +99,30 @@ public:
     }
 };
 
-bool red(const Context &context, uint16 &index); // executive-dependent.
+bool red(const Context &context, uint16_t &index); // executive-dependent.
 
-bool syn(const Context &context, uint16 &index);
+bool syn(const Context &context, uint16_t &index);
 
 class Operator {
 private:
     static r_code::vector<Operator> Operators; // indexed by opcodes.
 
-    bool (*_operator)(const Context &, uint16 &);
-    bool (*_overload)(const Context &, uint16 &);
+    bool (*_operator)(const Context &, uint16_t &);
+    bool (*_overload)(const Context &, uint16_t &);
 public:
-    static void Register(uint16 opcode, bool (*op)(const Context &, uint16 &)); // first, register std operators; next register user-defined operators (may be registered as overloads).
-    static Operator Get(uint16 opcode) {
+    static void Register(uint16_t opcode, bool (*op)(const Context &, uint16_t &)); // first, register std operators; next register user-defined operators (may be registered as overloads).
+    static Operator Get(uint16_t opcode) {
         return Operators[opcode];
     }
     Operator(): _operator(NULL), _overload(NULL) {}
-    Operator(bool (*o)(const Context &, uint16 &)): _operator(o), _overload(NULL) {}
+    Operator(bool (*o)(const Context &, uint16_t &)): _operator(o), _overload(NULL) {}
     ~Operator() {}
 
-    void setOverload(bool (*o)(const Context &, uint16 &)) {
+    void setOverload(bool (*o)(const Context &, uint16_t &)) {
         _overload = o;
     }
 
-    bool operator()(const Context &context, uint16 &index) const {
+    bool operator()(const Context &context, uint16_t &index) const {
         if (_operator(context, index))
             return true;
         if (_overload)
@@ -140,32 +140,32 @@ public:
 
 // std operators ////////////////////////////////////////
 
-bool now(const Context &context, uint16 &index);
+bool now(const Context &context, uint16_t &index);
 
-bool rnd(const Context &context, uint16 &index);
+bool rnd(const Context &context, uint16_t &index);
 
-bool equ(const Context &context, uint16 &index);
-bool neq(const Context &context, uint16 &index);
-bool gtr(const Context &context, uint16 &index);
-bool lsr(const Context &context, uint16 &index);
-bool gte(const Context &context, uint16 &index);
-bool lse(const Context &context, uint16 &index);
+bool equ(const Context &context, uint16_t &index);
+bool neq(const Context &context, uint16_t &index);
+bool gtr(const Context &context, uint16_t &index);
+bool lsr(const Context &context, uint16_t &index);
+bool gte(const Context &context, uint16_t &index);
+bool lse(const Context &context, uint16_t &index);
 
-bool add(const Context &context, uint16 &index);
-bool sub(const Context &context, uint16 &index);
-bool mul(const Context &context, uint16 &index);
-bool div(const Context &context, uint16 &index);
+bool add(const Context &context, uint16_t &index);
+bool sub(const Context &context, uint16_t &index);
+bool mul(const Context &context, uint16_t &index);
+bool div(const Context &context, uint16_t &index);
 
-bool dis(const Context &context, uint16 &index);
+bool dis(const Context &context, uint16_t &index);
 
-bool ln(const Context &context, uint16 &index);
-bool exp(const Context &context, uint16 &index);
-bool log(const Context &context, uint16 &index);
-bool e10(const Context &context, uint16 &index);
+bool ln(const Context &context, uint16_t &index);
+bool exp(const Context &context, uint16_t &index);
+bool log(const Context &context, uint16_t &index);
+bool e10(const Context &context, uint16_t &index);
 
-bool ins(const Context &context, uint16 &index); // executive-dependent.
+bool ins(const Context &context, uint16_t &index); // executive-dependent.
 
-bool fvw(const Context &context, uint16 &index); // executive-dependent.
+bool fvw(const Context &context, uint16_t &index); // executive-dependent.
 }
 
 

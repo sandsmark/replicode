@@ -35,10 +35,10 @@
 
 namespace r_code {
 
-uint8 Atom::Members_to_go = 0;
-uint8 Atom::Timestamp_data = 0;
-uint8 Atom::String_data = 0;
-uint8 Atom::Char_count = 0;
+uint8_t Atom::Members_to_go = 0;
+uint8_t Atom::Timestamp_data = 0;
+uint8_t Atom::String_data = 0;
+uint8_t Atom::Char_count = 0;
 void Atom::trace() const {
 
     write_indents();
@@ -51,34 +51,34 @@ void Atom::trace() const {
     case VL_PTR: std::cout << "vlptr: " << std::dec << asIndex(); return;
     case R_PTR: std::cout << "rptr: " << std::dec << asIndex(); return;
     case IPGM_PTR: std::cout << "ipgm_ptr: " << std::dec << asIndex(); return;
-    case IN_OBJ_PTR: std::cout << "in_obj_ptr: " << std::dec << (uint64)asInputIndex() << " " << asIndex(); return;
-    case D_IN_OBJ_PTR: std::cout << "d_in_obj_ptr: " << std::dec << (uint64)asRelativeIndex() << " " << asIndex(); return;
+    case IN_OBJ_PTR: std::cout << "in_obj_ptr: " << std::dec << (uint64_t)asInputIndex() << " " << asIndex(); return;
+    case D_IN_OBJ_PTR: std::cout << "d_in_obj_ptr: " << std::dec << (uint64_t)asRelativeIndex() << " " << asIndex(); return;
     case OUT_OBJ_PTR: std::cout << "out_obj_ptr: " << std::dec << asIndex(); return;
     case VALUE_PTR: std::cout << "value_ptr: " << std::dec << asIndex(); return;
     case PROD_PTR: std::cout << "prod_ptr: " << std::dec << asIndex(); return;
-    case ASSIGN_PTR: std::cout << "assign_ptr: " << std::dec << (uint16)asAssignmentIndex() << " " << asIndex(); return;
+    case ASSIGN_PTR: std::cout << "assign_ptr: " << std::dec << (uint16_t)asAssignmentIndex() << " " << asIndex(); return;
     case THIS: std::cout << "this"; return;
     case VIEW: std::cout << "view"; return;
     case MKS: std::cout << "mks"; return;
     case VWS: std::cout << "vws"; return;
-    case NODE: std::cout << "nid: " << std::dec << (uint64)getNodeID(); return;
-    case DEVICE: std::cout << "did: " << std::dec << (uint64)getNodeID() << " " << (uint64)getClassID() << " " << (uint64)getDeviceID(); return;
+    case NODE: std::cout << "nid: " << std::dec << (uint16_t)getNodeID(); return;
+    case DEVICE: std::cout << "did: " << std::dec << (uint16_t)getNodeID() << " " << (uint16_t)getClassID() << " " << (uint16_t)getDeviceID(); return;
     case DEVICE_FUNCTION: std::cout << "fid: " << std::dec << asOpcode(); return;
-    case C_PTR: std::cout << "cptr: " << std::dec << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
-    case SET: std::cout << "set: " << std::dec << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
-    case OBJECT: std::cout << "obj: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
-    case S_SET: std::cout << "s_set: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
-    case MARKER: std::cout << "mk: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
-    case OPERATOR: std::cout << "op: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
-    case STRING: std::cout << "st: " << std::dec << (uint16)getAtomCount(); Members_to_go = String_data = getAtomCount(); Char_count = (atom & 0x000000FF); return;
+    case C_PTR: std::cout << "cptr: " << std::dec << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
+    case SET: std::cout << "set: " << std::dec << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
+    case OBJECT: std::cout << "obj: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
+    case S_SET: std::cout << "s_set: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
+    case MARKER: std::cout << "mk: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
+    case OPERATOR: std::cout << "op: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
+    case STRING: std::cout << "st: " << std::dec << (uint16_t)getAtomCount(); Members_to_go = String_data = getAtomCount(); Char_count = (atom & 0x000000FF); return;
     case TIMESTAMP: std::cout << "us"; Members_to_go = Timestamp_data = 1; return;
-    case GROUP: std::cout << "grp: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
+    case GROUP: std::cout << "grp: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
     case INSTANTIATED_PROGRAM:
     case INSTANTIATED_ANTI_PROGRAM:
     case INSTANTIATED_INPUT_LESS_PROGRAM:
-        std::cout << "ipgm: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
-    case COMPOSITE_STATE: std::cout << "cst: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
-    case MODEL: std::cout << "mdl: " << std::dec << asOpcode() << " " << (uint16)getAtomCount(); Members_to_go = getAtomCount(); return;
+        std::cout << "ipgm: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
+    case COMPOSITE_STATE: std::cout << "cst: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
+    case MODEL: std::cout << "mdl: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
     case NULL_PROGRAM: std::cout << "null pgm " << (takesPastInputs() ? "all inputs" : "new inputs"); return;
     default:
         if (Timestamp_data) {
@@ -90,7 +90,7 @@ void Atom::trace() const {
             --String_data;
             std::string s;
             char *content = (char *)&atom;
-            for (uint8 i = 0; i < 4; ++i) {
+            for (uint8_t i = 0; i < 4; ++i) {
 
                 if (Char_count-- > 0)
                     s += content[i];
@@ -116,10 +116,10 @@ void Atom::write_indents() const {
     }
 }
 
-void Atom::Trace(Atom *base, uint16 count) {
+void Atom::Trace(Atom *base, uint16_t count) {
 
     std::cout << "--------\n";
-    for (uint16 i = 0; i < count; ++i) {
+    for (uint16_t i = 0; i < count; ++i) {
 
         std::cout << i << "\t";
         base[i].trace();

@@ -48,7 +48,7 @@ public:
     P<_Fact> abstraction;
     P<_Fact> input;
     bool eligible_cause;
-    uint64 ijt; // injection time.
+    uint64_t ijt; // injection time.
 
     Input(View *input, _Fact *abstraction, BindingMap *bindings): bindings(bindings), abstraction(abstraction), input(input->object), eligible_cause(IsEligibleCause(input)), ijt(input->get_ijt()) {}
     Input(): bindings(NULL), abstraction(NULL), input(NULL), eligible_cause(false), ijt(0) {}
@@ -58,7 +58,7 @@ public:
 
     class IsInvalidated { // for storage in time_buffers.
     public:
-        bool operator()(Input &i, uint64 time_reference, uint64 thz) const {
+        bool operator()(Input &i, uint64_t time_reference, uint64_t thz) const {
 
             return (time_reference - i.ijt > thz);
         }
@@ -71,7 +71,7 @@ public:
     P<_Fact> abstraction;
     P<View> input;
     bool injected;
-    uint64 ijt; // injection time.
+    uint64_t ijt; // injection time.
     CInput(View *input, _Fact *abstraction, BindingMap *bindings): bindings(bindings), abstraction(abstraction), input(input), injected(false), ijt(input->get_ijt()) {}
     CInput(): bindings(NULL), abstraction(NULL), input(NULL), injected(false), ijt(0) {}
 
@@ -81,7 +81,7 @@ public:
 
     class IsInvalidated { // for storage in time_buffers.
     public:
-        bool operator()(CInput &i, uint64 time_reference, uint64 thz) const {
+        bool operator()(CInput &i, uint64_t time_reference, uint64_t thz) const {
 
             return (time_reference - i.ijt > thz);
         }
@@ -127,7 +127,7 @@ class ICST;
 class r_exec_dll _TPX:
     public TPX {
 private:
-    static const uint64 InputsInitialSize = 16;
+    static const uint64_t InputsInitialSize = 16;
 protected:
     class Component { // for building csts.
     public:
@@ -142,17 +142,17 @@ protected:
     std::vector<P<Code> > csts; // new csts.
     std::vector<P<_Fact> > icsts; // new icsts.
 
-    void filter_icst_components(ICST *icst, uint64 icst_index, std::vector<Component> &components);
-    _Fact *_find_f_icst(_Fact *component, uint16 &component_index);
-    _Fact *find_f_icst(_Fact *component, uint16 &component_index);
-    _Fact *find_f_icst(_Fact *component, uint16 &component_index, Code *&cst);
+    void filter_icst_components(ICST *icst, uint64_t icst_index, std::vector<Component> &components);
+    _Fact *_find_f_icst(_Fact *component, uint16_t &component_index);
+    _Fact *find_f_icst(_Fact *component, uint16_t &component_index);
+    _Fact *find_f_icst(_Fact *component, uint16_t &component_index, Code *&cst);
     Code *build_cst(const std::vector<Component> &components, BindingMap *bm, _Fact *main_component);
 
-    Code *build_mdl_head(HLPBindingMap *bm, uint16 tpl_arg_count, _Fact *lhs, _Fact *rhs, uint16 &write_index);
-    void build_mdl_tail(Code *mdl, uint16 write_index);
+    Code *build_mdl_head(HLPBindingMap *bm, uint16_t tpl_arg_count, _Fact *lhs, _Fact *rhs, uint16_t &write_index);
+    void build_mdl_tail(Code *mdl, uint16_t write_index);
 
     void inject_hlps() const;
-    void inject_hlps(uint64 analysis_starting_time);
+    void inject_hlps(uint64_t analysis_starting_time);
 
     virtual std::string get_header() const = 0;
 
@@ -176,8 +176,8 @@ private:
 
     std::vector<P<_Fact> > predictions; // successful predictions that may invalidate the need for model building.
 
-    bool build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builder, uint64 period);
-    bool build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, GuardBuilder *guard_builder, uint64 period, Code *new_cst);
+    bool build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builder, uint64_t period);
+    bool build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, GuardBuilder *guard_builder, uint64_t period, Code *new_cst);
 
     std::string get_header() const;
 public:
@@ -200,8 +200,8 @@ class r_exec_dll PTPX: // target is the prediction.
 private:
     P<Fact> f_imdl; // that produced the prediction (and for which the PTPX will find strong requirements).
 
-    bool build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builder, uint64 period);
-    bool build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, GuardBuilder *guard_builder, uint64 period, Code *new_cst);
+    bool build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builder, uint64_t period);
+    bool build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, GuardBuilder *guard_builder, uint64_t period, Code *new_cst);
 
     std::string get_header() const;
 public:
@@ -226,13 +226,13 @@ private:
     bool stored_premise;
     P<View> premise;
 
-    GuardBuilder *get_default_guard_builder(_Fact *cause, _Fact *consequent, uint64 period);
-    GuardBuilder *find_guard_builder(_Fact *cause, _Fact *consequent, uint64 period);
+    GuardBuilder *get_default_guard_builder(_Fact *cause, _Fact *consequent, uint64_t period);
+    GuardBuilder *find_guard_builder(_Fact *cause, _Fact *consequent, uint64_t period);
 
-    bool build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builder, uint64 period);
-    bool build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, GuardBuilder *guard_builder, uint64 period);
+    bool build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builder, uint64_t period);
+    bool build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, GuardBuilder *guard_builder, uint64_t period);
 
-    bool build_requirement(HLPBindingMap *bm, Code *m0, uint64 period);
+    bool build_requirement(HLPBindingMap *bm, Code *m0, uint64_t period);
 
     std::string get_header() const;
 public:

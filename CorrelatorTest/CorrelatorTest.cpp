@@ -40,15 +40,15 @@
 
 //#define DECOMPILE_ONE_BY_ONE
 
-void decompile(r_comp::Decompiler &decompiler, r_comp::Image *image, uint64 time_offset) {
+void decompile(r_comp::Decompiler &decompiler, r_comp::Image *image, uint64_t time_offset) {
 
 #ifdef DECOMPILE_ONE_BY_ONE
-    uint64 object_count = decompiler.decompile_references(image);
+    uint64_t object_count = decompiler.decompile_references(image);
     std::cout << object_count << " objects in the image\n";
     while (1) {
 
         std::cout << "Which object (-1 to exit)?\n";
-        int64 index; std::cin >> index;
+        int64_t index; std::cin >> index;
         if (index == -1)
             break;
         if (index >= object_count) {
@@ -64,7 +64,7 @@ void decompile(r_comp::Decompiler &decompiler, r_comp::Image *image, uint64 time
 #else
     std::cout << "\ndecompiling ...\n";
     std::ostringstream decompiled_code;
-    uint64 object_count = decompiler.decompile(image, &decompiled_code, time_offset, false);
+    uint64_t object_count = decompiler.decompile(image, &decompiled_code, time_offset, false);
     std::cout << "... done\n";
     std::cout << "\n\nDECOMPILATION\n\n" << decompiled_code.str() << std::endl;
     std::cout << "Image taken at: " << Time::ToString_year(image->timestamp) << std::endl << std::endl;
@@ -72,7 +72,7 @@ void decompile(r_comp::Decompiler &decompiler, r_comp::Image *image, uint64 time
 #endif
 }
 
-int64 main(int argc, char **argv) {
+int64_t main(int argc, char **argv) {
 
     core::Time::Init(1000);
 
@@ -114,9 +114,9 @@ int64 main(int argc, char **argv) {
     delete img;
 
 // Second, filter objects: retain only those which are actual inputs in stdin and store them in a time-ordered list.
-    uint64 stdin_oid;
+    uint64_t stdin_oid;
     std::string stdin_str("stdin");
-    UNORDERED_MAP<uint64, std::string>::const_iterator n;
+    std::unordered_map<uint64_t, std::string>::const_iterator n;
     for (n = _i->object_names.symbols.begin(); n != _i->object_names.symbols.end(); ++n)
         if (n->second == stdin_str) {
 
@@ -125,13 +125,13 @@ int64 main(int argc, char **argv) {
         }
 
     std::set<r_code::View *, r_code::View::Less> correlator_inputs;
-    for (uint64 i = 0; i < objects.size(); ++i) {
+    for (uint64_t i = 0; i < objects.size(); ++i) {
 
         Code *object = objects[i];
         if (object->code(0).asOpcode() == r_exec::Opcodes::IPgm)
             continue;
 
-        UNORDERED_SET<View *, View::Hash, View::Equal>::const_iterator v;
+        std::unordered_set<View *, View::Hash, View::Equal>::const_iterator v;
         for (v = object->views.begin(); v != object->views.end(); ++v) {
 
             if (!(*v)->references[0])
@@ -148,8 +148,8 @@ int64 main(int argc, char **argv) {
 // Third, feed the Correlator with the episodes, one by one.
 // Episodes are delimited with an object of the class episode_end (See user.classes.replicode).
     std::string episode_end_class_name = "episode_end";
-    uint16 episode_end_opcode = r_exec::Metadata.get_class(episode_end_class_name)->atom.asOpcode();
-    uint16 episode_count = 0;
+    uint16_t episode_end_opcode = r_exec::Metadata.get_class(episode_end_class_name)->atom.asOpcode();
+    uint16_t episode_count = 0;
 
     std::set<r_code::View *, r_code::View::Less>::const_iterator v;
     for (v = correlator_inputs.begin(); v != correlator_inputs.end(); ++v) {

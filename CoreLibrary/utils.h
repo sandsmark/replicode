@@ -38,6 +38,12 @@
 // Wrapping of OS-dependent functions
 namespace core {
 
+#if defined(WIN32) || defined(WIN64)
+typedef HINSTANCE shared_object;
+#else
+typedef void* shared_object;
+#endif
+
 class core_dll SharedLibrary {
 private:
     shared_object library;
@@ -51,8 +57,8 @@ public:
 
 class core_dll Time { // TODO: make sure time stamps are consistent when computed by different cores
 public:
-    static std::string ToString_seconds(uint64 t); // seconds:milliseconds:microseconds since 01/01/1970.
-    static std::string ToString_year(uint64 t); // day_name day_number month year hour:minutes:seconds:milliseconds:microseconds GMT since 01/01/1970.
+    static std::string ToString_seconds(uint64_t t); // seconds:milliseconds:microseconds since 01/01/1970.
+    static std::string ToString_year(uint64_t t); // day_name day_number month year hour:minutes:seconds:milliseconds:microseconds GMT since 01/01/1970.
 };
 
 } // namespace core

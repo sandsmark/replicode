@@ -38,8 +38,8 @@ namespace r_exec {
 
 _GMonitor::_GMonitor(PMDLController *controller,
                      BindingMap *bindings,
-                     uint64 deadline,
-                     uint64 sim_thz,
+                     uint64_t deadline,
+                     uint64_t sim_thz,
                      Fact *goal,
                      Fact *f_imdl): Monitor(controller,
                                  bindings,
@@ -103,8 +103,8 @@ void _GMonitor::invalidate_sim_outcomes() {
 
 GMonitor::GMonitor(PMDLController *controller,
                    BindingMap *bindings,
-                   uint64 deadline,
-                   uint64 sim_thz,
+                   uint64_t deadline,
+                   uint64_t sim_thz,
                    Fact *goal,
                    Fact *f_imdl,
                    _Fact *predicted_evidence): _GMonitor(controller,
@@ -124,7 +124,7 @@ void GMonitor::commit() { // the purpose is to invalidate damaging simulations; 
 
     Goal *monitored_goal = target->get_goal();
 
-    uint64 now = Now();
+    uint64_t now = Now();
 
     SolutionList::const_iterator sol;
 
@@ -267,7 +267,7 @@ bool GMonitor::reduce(_Fact *input) { // executed by a reduction core; invalidat
     return false;
 }
 
-void GMonitor::update(uint64 &next_target) { // executed by a time core.
+void GMonitor::update(uint64_t &next_target) { // executed by a time core.
 
     if (target->is_invalidated()) {
 
@@ -290,8 +290,8 @@ void GMonitor::update(uint64 &next_target) { // executed by a time core.
 
 RMonitor::RMonitor(PrimaryMDLController *controller,
                    BindingMap *bindings,
-                   uint64 deadline,
-                   uint64 sim_thz,
+                   uint64_t deadline,
+                   uint64_t sim_thz,
                    Fact *goal,
                    Fact *f_imdl): GMonitor(controller,
                                bindings,
@@ -354,7 +354,7 @@ bool RMonitor::reduce(_Fact *input) { // catch simulated predictions only; requi
     return false;
 }
 
-void RMonitor::update(uint64 &next_target) {
+void RMonitor::update(uint64_t &next_target) {
 
     if (target->is_invalidated()) {
 
@@ -377,7 +377,7 @@ void RMonitor::update(uint64 &next_target) {
 
 SGMonitor::SGMonitor(PrimaryMDLController *controller,
                      BindingMap *bindings,
-                     uint64 sim_thz,
+                     uint64_t sim_thz,
                      Fact *goal,
                      Fact *f_imdl): _GMonitor(controller,
                                  bindings,
@@ -394,7 +394,7 @@ void SGMonitor::commit() { // the purpose is to invalidate damaging simulations 
 
     Goal *monitored_goal = target->get_goal();
 
-    uint64 now = Now();
+    uint64_t now = Now();
 
     SolutionList::const_iterator sol;
 
@@ -459,7 +459,7 @@ bool SGMonitor::reduce(_Fact *input)
     return false;
 }
 
-void SGMonitor::update(uint64 &next_target) { // executed by a time core.
+void SGMonitor::update(uint64_t &next_target) { // executed by a time core.
 
     if (!target->is_invalidated())
         commit();
@@ -471,7 +471,7 @@ void SGMonitor::update(uint64 &next_target) { // executed by a time core.
 
 SRMonitor::SRMonitor(PrimaryMDLController *controller,
                      BindingMap *bindings,
-                     uint64 sim_thz,
+                     uint64_t sim_thz,
                      Fact *goal,
                      Fact *f_imdl): SGMonitor(controller,
                                  bindings,
@@ -528,7 +528,7 @@ bool SRMonitor::reduce(_Fact *input)
     return false;
 }
 
-void SRMonitor::update(uint64 &next_target)
+void SRMonitor::update(uint64_t &next_target)
 {
     if (!target->is_invalidated())
         commit();

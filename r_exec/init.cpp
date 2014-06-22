@@ -44,7 +44,7 @@
 
 namespace r_exec {
 
-dll_export uint64(*Now)();
+dll_export uint64_t(*Now)();
 
 r_comp::Metadata* getMetadata()
 {
@@ -59,7 +59,7 @@ r_comp::Image* getSeed()
 }
 
 
-static UNORDERED_MAP<std::string, uint16> _Opcodes;
+static std::unordered_map<std::string, uint16_t> _Opcodes;
 
 dll_export r_comp::Compiler Compiler;
 r_exec_dll r_comp::Preprocessor Preprocessor;
@@ -100,18 +100,16 @@ void TDecompiler::decompile()
     std::ostringstream decompiled_code;
     decompiler.decompile(image, &decompiled_code, Utils::GetTimeReference(), imported_objects);
 
-#ifdef WINDOWS
+#if defined(WIN32) || defined(WIN64)
     PipeOStream::Get(this->ostream_id - 1) << this->header.c_str();
     PipeOStream::Get(this->ostream_id - 1) << decompiled_code.str().c_str();
 #else
     debug("tdecompiler") << this->header;
     debug("tdecompiler") << decompiled_code.str();
-#endif//WINDOWS
-
-    thread_ret_val(0);
+#endif//win
 }
 
-TDecompiler::TDecompiler(uint64 ostream_id, std::string header): _Object(), ostream_id(ostream_id), header(header), _thread(NULL), spawned(0) {
+TDecompiler::TDecompiler(uint64_t ostream_id, std::string header): _Object(), ostream_id(ostream_id), header(header), _thread(NULL), spawned(0) {
 
     objects.reserve(ObjectsInitialSize);
 }
@@ -147,14 +145,14 @@ void TDecompiler::runDecompiler()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef WINDOWS
+#if defined(WIN32) || defined(WIN64)
 #pragma warning "TODO http://www.erack.de/download/pipe-fork.c"
 std::vector<PipeOStream *> PipeOStream::Streams;
 
 PipeOStream PipeOStream::NullStream;
 
-void PipeOStream::Open(uint8 count) {
-    for (uint8 i = 0; i < count; ++i) {
+void PipeOStream::Open(uint8_t count) {
+    for (uint8_t i = 0; i < count; ++i) {
 
         PipeOStream *p = new PipeOStream();
         p->init();
@@ -164,12 +162,12 @@ void PipeOStream::Open(uint8 count) {
 }
 
 void PipeOStream::Close() {
-    for (uint8 i = 0; i < Streams.size(); ++i)
+    for (uint8_t i = 0; i < Streams.size(); ++i)
         delete Streams[i];
     Streams.clear();
 }
 
-PipeOStream &PipeOStream::Get(uint8 id) {
+PipeOStream &PipeOStream::Get(uint8_t id) {
     if (id < Streams.size())
         return *Streams[id];
     return NullStream;
@@ -225,8 +223,8 @@ PipeOStream &PipeOStream::operator <<(std::string &s) {
     if (pipe_read == 0)
         return *this;
 
-    uint64 to_write = s.length();
-    uint64 written;
+    uint64_t to_write = s.length();
+    uint64_t written;
 
     WriteFile(pipe_write, s.c_str(), to_write, &written, NULL);
 
@@ -237,27 +235,27 @@ PipeOStream& PipeOStream::operator <<(const char *s) {
     if (pipe_read == 0)
         return *this;
 
-    uint64 to_write = strlen(s);
-    uint64 written;
+    uint64_t to_write = strlen(s);
+    uint64_t written;
 
     WriteFile(pipe_write, s, to_write, &written, NULL);
     return *this;
 }
-#endif//WINDOWS
+#endif//win
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-uint16 RetrieveOpcode(const char *name) {
+uint16_t RetrieveOpcode(const char *name) {
 
     return _Opcodes.find(name)->second;
 }
 
 bool Init(const char *user_operator_library_path,
-          uint64(*time_base)()) {
+          uint64_t(*time_base)()) {
 
     Now = time_base;
 
-    UNORDERED_MAP<std::string, r_comp::Class>::iterator it;
+    std::unordered_map<std::string, r_comp::Class>::iterator it;
     for (it = getMetadata()->classes.begin(); it != getMetadata()->classes.end(); ++it) {
 
         _Opcodes[it->first] = it->second.atom.asOpcode();
@@ -341,7 +339,7 @@ bool Init(const char *user_operator_library_path,
     Opcodes::Div = _Opcodes.find("div")->second;
 
 // load std operators.
-    uint16 operator_opcode = 0;
+    uint16_t operator_opcode = 0;
     Operator::Register(operator_opcode++, now);
     Operator::Register(operator_opcode++, rnd);
     Operator::Register(operator_opcode++, equ);
@@ -372,13 +370,13 @@ bool Init(const char *user_operator_library_path,
         exit(-1);
 
 // Operators.
-    typedef uint16(*OpcodeRetriever)(const char *);
+    typedef uint16_t(*OpcodeRetriever)(const char *);
     typedef void (*UserInit)(OpcodeRetriever);
     UserInit _Init = userOperatorLibrary.getFunction<UserInit>("Init");
     if (!_Init)
         return false;
 
-    typedef uint16(*UserGetOperatorCount)();
+    typedef uint16_t(*UserGetOperatorCount)();
     UserGetOperatorCount GetOperatorCount = userOperatorLibrary.getFunction<UserGetOperatorCount>("GetOperatorCount");
     if (!GetOperatorCount)
         return false;
@@ -390,16 +388,16 @@ bool Init(const char *user_operator_library_path,
 
     _Init(RetrieveOpcode);
 
-    typedef bool (*UserOperator)(const Context &, uint16 &);
+    typedef bool (*UserOperator)(const Context &, uint16_t &);
 
-    uint16 operatorCount = GetOperatorCount();
-    for (uint16 i = 0; i < operatorCount; ++i) {
+    uint16_t operatorCount = GetOperatorCount();
+    for (uint16_t i = 0; i < operatorCount; ++i) {
 
         char op_name[256];
         memset(op_name, 0, 256);
         GetOperatorName(op_name);
 
-        UNORDERED_MAP<std::string, uint16>::iterator it = _Opcodes.find(op_name);
+        std::unordered_map<std::string, uint16_t>::iterator it = _Opcodes.find(op_name);
         if (it == _Opcodes.end()) {
 
             std::cerr << "Operator " << op_name << " is undefined" << std::endl;
@@ -413,7 +411,7 @@ bool Init(const char *user_operator_library_path,
     }
 
 // C++ programs.
-    typedef uint16(*UserGetProgramCount)();
+    typedef uint16_t(*UserGetProgramCount)();
     UserGetProgramCount GetProgramCount = userOperatorLibrary.getFunction<UserGetProgramCount>("GetProgramCount");
     if (!GetProgramCount)
         return false;
@@ -425,8 +423,8 @@ bool Init(const char *user_operator_library_path,
 
     typedef Controller *(*UserProgram)(r_code::View *);
 
-    uint16 programCount = GetProgramCount();
-    for (uint16 i = 0; i < programCount; ++i) {
+    uint16_t programCount = GetProgramCount();
+    for (uint16_t i = 0; i < programCount; ++i) {
 
         char pgm_name[256];
         memset(pgm_name, 0, 256);
@@ -442,7 +440,7 @@ bool Init(const char *user_operator_library_path,
     }
 
 // Callbacks.
-    typedef uint16(*UserGetCallbackCount)();
+    typedef uint16_t(*UserGetCallbackCount)();
     UserGetCallbackCount GetCallbackCount = userOperatorLibrary.getFunction<UserGetCallbackCount>("GetCallbackCount");
     if (!GetCallbackCount)
         return false;
@@ -452,10 +450,10 @@ bool Init(const char *user_operator_library_path,
     if (!GetCallbackName)
         return false;
 
-    typedef bool (*UserCallback)(uint64, bool, const char *, uint8, Code **);
+    typedef bool (*UserCallback)(uint64_t, bool, const char *, uint8_t, Code **);
 
-    uint16 callbackCount = GetCallbackCount();
-    for (uint16 i = 0; i < callbackCount; ++i) {
+    uint16_t callbackCount = GetCallbackCount();
+    for (uint16_t i = 0; i < callbackCount; ++i) {
 
         char callback_name[256];
         memset(callback_name, 0, 256);
@@ -476,7 +474,7 @@ bool Init(const char *user_operator_library_path,
 }
 
 bool Init(const char *user_operator_library_path,
-          uint64(*time_base)(),
+          uint64_t(*time_base)(),
           const char *seed_path) {
 
     std::string error;
@@ -500,15 +498,15 @@ bool Init(const char *user_operator_library_path,
     return Init(user_operator_library_path, time_base);
 }
 
-uint16 GetOpcode(const char *name) {
+uint16_t GetOpcode(const char *name) {
 
-    UNORDERED_MAP<std::string, uint16>::iterator it = _Opcodes.find(name);
+    std::unordered_map<std::string, uint16_t>::iterator it = _Opcodes.find(name);
     if (it == _Opcodes.end())
         return 0xFFFF;
     return it->second;
 }
 
-std::string GetAxiomName(const uint16 index) {
+std::string GetAxiomName(const uint16_t index) {
 
     return Compiler.getObjectName(index);
 }

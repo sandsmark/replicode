@@ -43,14 +43,14 @@ void Init(OpcodeRetriever r) {
     debug("user operators") << "usr operators initialized";
 }
 
-uint16 GetOperatorCount() {
+uint16_t GetOperatorCount() {
 
     return 4;
 }
 
 void GetOperatorName(char *op_name) {
 
-    static uint16 op_index = 0;
+    static uint16_t op_index = 0;
 
     if (op_index == 0) {
 
@@ -87,14 +87,14 @@ void GetOperatorName(char *op_name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint16 GetProgramCount() {
+uint16_t GetProgramCount() {
 
     return 2;
 }
 
 void GetProgramName(char *pgm_name) {
 
-    static uint16 pgm_index = 0;
+    static uint16_t pgm_index = 0;
 
     if (pgm_index == 0) {
 
@@ -123,14 +123,14 @@ void GetProgramName(char *pgm_name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint16 GetCallbackCount() {
+uint16_t GetCallbackCount() {
 
     return 1;
 }
 
 void GetCallbackName(char *callback_name) {
 
-    static uint16 callback_index = 0;
+    static uint16_t callback_index = 0;
 
     if (callback_index == 0) {
 

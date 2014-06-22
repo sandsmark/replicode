@@ -39,17 +39,17 @@ extern "C" {
 
 // Operators //////////////////////////////////////////////////////////////////////////////
 
-    uint16 dll_export GetOperatorCount();
+    uint16_t dll_export GetOperatorCount();
     void dll_export GetOperatorName(char *op_name);
 
 // CPP Programs //////////////////////////////////////////////////////////////////////////////
 
-    uint16 dll_export GetProgramCount();
+    uint16_t dll_export GetProgramCount();
     void dll_export GetProgramName(char *pgm_name);
 
 // Callbacks //////////////////////////////////////////////////////////////////////////////
 
-    uint16 dll_export GetCallbackCount();
+    uint16_t dll_export GetCallbackCount();
     void dll_export GetCallbackName(char *callback_name);
 }
 

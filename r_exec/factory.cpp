@@ -37,7 +37,7 @@ namespace r_exec {
 
 MkNew::MkNew(r_code::Mem *m, Code *object): LObject(m) {
 
-    uint16 write_index = 0;
+    uint16_t write_index = 0;
     code(write_index++) = r_code::Atom::Marker(Opcodes::MkNew, 2);
     code(write_index++) = r_code::Atom::RPointer(0); // object.
     code(write_index++) = r_code::Atom::Float(0); // psln_thr.
@@ -48,7 +48,7 @@ MkNew::MkNew(r_code::Mem *m, Code *object): LObject(m) {
 
 MkLowRes::MkLowRes(r_code::Mem *m, Code *object): LObject(m) {
 
-    uint16 write_index = 0;
+    uint16_t write_index = 0;
     code(write_index++) = r_code::Atom::Marker(Opcodes::MkLowRes, 2);
     code(write_index++) = r_code::Atom::RPointer(0); // object.
     code(write_index++) = r_code::Atom::Float(0); // psln_thr.
@@ -59,7 +59,7 @@ MkLowRes::MkLowRes(r_code::Mem *m, Code *object): LObject(m) {
 
 MkLowSln::MkLowSln(r_code::Mem *m, Code *object): LObject(m) {
 
-    uint16 write_index = 0;
+    uint16_t write_index = 0;
     code(write_index++) = r_code::Atom::Marker(Opcodes::MkLowSln, 2);
     code(write_index++) = r_code::Atom::RPointer(0); // object.
     code(write_index++) = r_code::Atom::Float(0); // psln_thr.
@@ -70,7 +70,7 @@ MkLowSln::MkLowSln(r_code::Mem *m, Code *object): LObject(m) {
 
 MkHighSln::MkHighSln(r_code::Mem *m, Code *object): LObject(m) {
 
-    uint16 write_index = 0;
+    uint16_t write_index = 0;
     code(write_index++) = r_code::Atom::Marker(Opcodes::MkHighSln, 2);
     code(write_index++) = r_code::Atom::RPointer(0); // object.
     code(write_index++) = r_code::Atom::Float(0); // psln_thr.
@@ -81,7 +81,7 @@ MkHighSln::MkHighSln(r_code::Mem *m, Code *object): LObject(m) {
 
 MkLowAct::MkLowAct(r_code::Mem *m, Code *object): LObject(m) {
 
-    uint16 write_index = 0;
+    uint16_t write_index = 0;
     code(write_index++) = r_code::Atom::Marker(Opcodes::MkLowAct, 2);
     code(write_index++) = r_code::Atom::RPointer(0); // object.
     code(write_index++) = r_code::Atom::Float(0); // psln_thr.
@@ -92,7 +92,7 @@ MkLowAct::MkLowAct(r_code::Mem *m, Code *object): LObject(m) {
 
 MkHighAct::MkHighAct(r_code::Mem *m, Code *object): LObject(m) {
 
-    uint16 write_index = 0;
+    uint16_t write_index = 0;
     code(write_index++) = r_code::Atom::Marker(Opcodes::MkHighAct, 2);
     code(write_index++) = r_code::Atom::RPointer(0); // object.
     code(write_index++) = r_code::Atom::Float(0); // psln_thr.
@@ -103,7 +103,7 @@ MkHighAct::MkHighAct(r_code::Mem *m, Code *object): LObject(m) {
 
 MkSlnChg::MkSlnChg(r_code::Mem *m, Code *object, double value): LObject(m) {
 
-    uint16 write_index = 0;
+    uint16_t write_index = 0;
     code(write_index++) = r_code::Atom::Marker(Opcodes::MkSlnChg, 3);
     code(write_index++) = r_code::Atom::RPointer(0); // object.
     code(write_index++) = r_code::Atom::Float(value); // change.
@@ -115,7 +115,7 @@ MkSlnChg::MkSlnChg(r_code::Mem *m, Code *object, double value): LObject(m) {
 
 MkActChg::MkActChg(r_code::Mem *m, Code *object, double value): LObject(m) {
 
-    uint16 write_index = 0;
+    uint16_t write_index = 0;
     code(write_index++) = r_code::Atom::Marker(Opcodes::MkActChg, 3);
     code(write_index++) = r_code::Atom::RPointer(0); // object.
     code(write_index++) = r_code::Atom::Float(value); // change.
@@ -133,13 +133,13 @@ _Fact::_Fact(SysObject *source): LObject(source) {
 
 _Fact::_Fact(_Fact *f) {
 
-    for (uint16 i = 0; i < f->code_size(); ++i)
+    for (uint16_t i = 0; i < f->code_size(); ++i)
         code(i) = f->code(i);
-    for (uint16 i = 0; i < f->references_size(); ++i)
+    for (uint16_t i = 0; i < f->references_size(); ++i)
         add_reference(f->get_reference(i));
 }
 
-_Fact::_Fact(uint16 opcode, Code *object, uint64 after, uint64 before, double confidence, double psln_thr): LObject() {
+_Fact::_Fact(uint16_t opcode, Code *object, uint64_t after, uint64_t before, double confidence, double psln_thr): LObject() {
 
     code(0) = Atom::Object(opcode, FACT_ARITY);
     code(FACT_OBJ) = Atom::RPointer(0);
@@ -194,36 +194,36 @@ bool _Fact::is_invalidated() {
 
 bool _Fact::match_timings_sync(const _Fact *evidence) const { // intervals of the form [after,before[.
 
-    uint64 after = get_after();
-    uint64 e_after = evidence->get_after();
-    uint64 e_before = evidence->get_before();
+    uint64_t after = get_after();
+    uint64_t e_after = evidence->get_after();
+    uint64_t e_before = evidence->get_before();
 
     return !(e_after > after + Utils::GetTimeTolerance() || e_before <= after);
 }
 
 bool _Fact::match_timings_overlap(const _Fact *evidence) const { // intervals of the form [after,before[.
 
-    uint64 after = get_after();
-    uint64 before = get_before();
-    uint64 e_after = evidence->get_after();
-    uint64 e_before = evidence->get_before();
+    uint64_t after = get_after();
+    uint64_t before = get_before();
+    uint64_t e_after = evidence->get_after();
+    uint64_t e_before = evidence->get_before();
 
     return !(e_after >= before || e_before <= after);
 }
 
 bool _Fact::match_timings_inclusive(const _Fact *evidence) const { // intervals of the form [after,before[.
 
-    uint64 after = get_after();
-    uint64 before = get_before();
-    uint64 e_after = evidence->get_after();
-    uint64 e_before = evidence->get_before();
+    uint64_t after = get_after();
+    uint64_t before = get_before();
+    uint64_t e_after = evidence->get_after();
+    uint64_t e_before = evidence->get_before();
 
     return (e_after <= after && e_before >= before);
 }
 
-bool _Fact::Match(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, const Code *rhs, uint16 rhs_index, uint16 lhs_arity) {
+bool _Fact::Match(const Code *lhs, uint16_t lhs_base_index, uint16_t lhs_index, const Code *rhs, uint16_t rhs_index, uint16_t lhs_arity) {
 
-    uint16 lhs_full_index = lhs_base_index + lhs_index;
+    uint16_t lhs_full_index = lhs_base_index + lhs_index;
     Atom lhs_atom = lhs->code(lhs_full_index);
     Atom rhs_atom = rhs->code(rhs_index);
     switch (lhs_atom.getDescriptor()) {
@@ -289,14 +289,14 @@ bool _Fact::MatchAtom(Atom lhs, Atom rhs) {
     return false;
 }
 
-bool _Fact::MatchStructure(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, const Code *rhs, uint16 rhs_index) {
+bool _Fact::MatchStructure(const Code *lhs, uint16_t lhs_base_index, uint16_t lhs_index, const Code *rhs, uint16_t rhs_index) {
 
-    uint16 lhs_full_index = lhs_base_index + lhs_index;
+    uint16_t lhs_full_index = lhs_base_index + lhs_index;
     Atom lhs_atom = lhs->code(lhs_full_index);
     Atom rhs_atom = rhs->code(rhs_index);
     if (lhs_atom != rhs_atom)
         return false;
-    uint16 arity = lhs_atom.getAtomCount();
+    uint16_t arity = lhs_atom.getAtomCount();
     if (arity == 0) // empty sets.
         return true;
     if (lhs_atom.getDescriptor() == Atom::TIMESTAMP)
@@ -308,7 +308,7 @@ bool _Fact::MatchObject(const Code *lhs, const Code *rhs) {
 
     if (lhs->code(0) != rhs->code(0))
         return false;
-    uint16 lhs_opcode = lhs->code(0).asOpcode();
+    uint16_t lhs_opcode = lhs->code(0).asOpcode();
     if (lhs_opcode == Opcodes::Ent ||
             lhs_opcode == Opcodes::Ont ||
             lhs_opcode == Opcodes::Mdl ||
@@ -319,7 +319,7 @@ bool _Fact::MatchObject(const Code *lhs, const Code *rhs) {
 
 bool _Fact::CounterEvidence(const Code *lhs, const Code *rhs) {
 
-    uint16 opcode = lhs->code(0).asOpcode();
+    uint16_t opcode = lhs->code(0).asOpcode();
     if (opcode == Opcodes::Ent ||
             opcode == Opcodes::Ont ||
             opcode == Opcodes::IMdl)
@@ -343,7 +343,7 @@ bool _Fact::CounterEvidence(const Code *lhs, const Code *rhs) {
             } else if (rhs_atom.isFloat())
                 return false;
 
-            uint16 lhs_desc = lhs_atom.getDescriptor();
+            uint16_t lhs_desc = lhs_atom.getDescriptor();
             if (lhs_desc != rhs_atom.getDescriptor()) // values of different types.
                 return false;
             switch (lhs_desc) {
@@ -363,7 +363,7 @@ bool _Fact::CounterEvidence(const Code *lhs, const Code *rhs) {
         if (lhs->get_reference(0) != rhs->get_reference(0)) // check if the icsts instantiate the same cst.
             return false;
 
-        for (uint64 i = 0; i < ((ICST *)lhs)->components.size(); ++i) { // compare all components 2 by 2.
+        for (uint64_t i = 0; i < ((ICST *)lhs)->components.size(); ++i) { // compare all components 2 by 2.
 
             if (CounterEvidence(((ICST *)lhs)->components[i], ((ICST *)rhs)->components[i]))
                 return true;
@@ -441,11 +441,11 @@ Goal *_Fact::get_goal() const {
     return NULL;
 }
 
-uint64 _Fact::get_after() const {
+uint64_t _Fact::get_after() const {
     return Utils::GetTimestamp<Code>(this, FACT_AFTER);
 }
 
-uint64 _Fact::get_before() const {
+uint64_t _Fact::get_before() const {
 
     return Utils::GetTimestamp<Code>(this, FACT_BEFORE);
 }
@@ -473,7 +473,7 @@ Fact::Fact(SysObject *source): _Fact(source) {
 Fact::Fact(Fact *f): _Fact(f) {
 }
 
-Fact::Fact(Code *object, uint64 after, uint64 before, double confidence, double psln_thr): _Fact(Opcodes::Fact, object, after, before, confidence, psln_thr) {
+Fact::Fact(Code *object, uint64_t after, uint64_t before, double confidence, double psln_thr): _Fact(Opcodes::Fact, object, after, before, confidence, psln_thr) {
 }
 
 ////////////////////////////////////////////////////////////////
@@ -494,7 +494,7 @@ AntiFact::AntiFact(SysObject *source): _Fact(source) {
 AntiFact::AntiFact(AntiFact *f): _Fact(f) {
 }
 
-AntiFact::AntiFact(Code *object, uint64 after, uint64 before, double confidence, double psln_thr): _Fact(Opcodes::AntiFact, object, after, before, confidence, psln_thr) {
+AntiFact::AntiFact(Code *object, uint64_t after, uint64_t before, double confidence, double psln_thr): _Fact(Opcodes::AntiFact, object, after, before, confidence, psln_thr) {
 }
 
 ////////////////////////////////////////////////////////////////
@@ -517,7 +517,7 @@ bool Pred::is_invalidated() {
 
     if (LObject::is_invalidated())
         return true;
-    for (uint64 i = 0; i < simulations.size(); ++i) {
+    for (uint64_t i = 0; i < simulations.size(); ++i) {
 
         if (simulations[i]->is_invalidated()) {
 
@@ -525,7 +525,7 @@ bool Pred::is_invalidated() {
             return true;
         }
     }
-    for (uint64 i = 0; i < grounds.size(); ++i) {
+    for (uint64_t i = 0; i < grounds.size(); ++i) {
 
         if (grounds[i]->is_invalidated()) {
 
@@ -543,7 +543,7 @@ bool Pred::is_invalidated() {
 
 bool Pred::grounds_invalidated(_Fact *evidence) {
 
-    for (uint64 i = 0; i < grounds.size(); ++i) {
+    for (uint64_t i = 0; i < grounds.size(); ++i) {
 
         switch (evidence->is_evidence(grounds[i])) {
         case MATCH_SUCCESS_NEGATIVE:
@@ -567,7 +567,7 @@ bool Pred::is_simulation() const {
 
 Sim *Pred::get_simulation(Controller *root) const {
 
-    for (uint64 i = 0; i < simulations.size(); ++i) {
+    for (uint64_t i = 0; i < simulations.size(); ++i) {
 
         if (simulations[i]->root == root)
             return simulations[i];
@@ -652,7 +652,7 @@ Code *Goal::get_actor() const {
     return get_reference(code(GOAL_ACTR).asIndex());
 }
 
-double Goal::get_strength(uint64 now) const {
+double Goal::get_strength(uint64_t now) const {
 
     _Fact *target = get_target();
     return target->get_cfd() / (target->get_before() - now);
@@ -666,10 +666,10 @@ Sim::Sim(): _Object(), invalidated(0), is_requirement(false), opposite(false), s
 Sim::Sim(Sim *s): _Object(), invalidated(0), is_requirement(false), opposite(s->opposite), mode(s->mode), thz(s->thz), super_goal(s->super_goal), root(s->root), sol(s->sol), sol_cfd(s->sol_cfd), sol_before(s->sol_before) {
 }
 
-Sim::Sim(SimMode mode, uint64 thz, Fact *super_goal, bool opposite, Controller *root): _Object(), invalidated(0), is_requirement(false), opposite(opposite), mode(mode), thz(thz), super_goal(super_goal), root(root), sol(NULL), sol_cfd(0), sol_before(0) {
+Sim::Sim(SimMode mode, uint64_t thz, Fact *super_goal, bool opposite, Controller *root): _Object(), invalidated(0), is_requirement(false), opposite(opposite), mode(mode), thz(thz), super_goal(super_goal), root(root), sol(NULL), sol_cfd(0), sol_before(0) {
 }
 
-Sim::Sim(SimMode mode, uint64 thz, Fact *super_goal, bool opposite, Controller *root, Controller *sol, double sol_cfd, uint64 sol_deadline): _Object(), invalidated(0), is_requirement(false), opposite(opposite), mode(mode), thz(thz), super_goal(super_goal), root(root), sol(sol), sol_cfd(sol_cfd), sol_before(0) {
+Sim::Sim(SimMode mode, uint64_t thz, Fact *super_goal, bool opposite, Controller *root, Controller *sol, double sol_cfd, uint64_t sol_deadline): _Object(), invalidated(0), is_requirement(false), opposite(opposite), mode(mode), thz(thz), super_goal(super_goal), root(root), sol(sol), sol_cfd(sol_cfd), sol_before(0) {
 }
 
 void Sim::invalidate() {
@@ -699,7 +699,7 @@ MkRdx::MkRdx(SysObject *source): LObject(source), bindings(NULL) {
 
 MkRdx::MkRdx(Code *imdl_fact, Code *input, Code *output, double psln_thr, BindingMap *binding_map): LObject(), bindings(binding_map) {
 
-    uint16 extent_index = MK_RDX_ARITY + 1;
+    uint16_t extent_index = MK_RDX_ARITY + 1;
     code(0) = Atom::Marker(Opcodes::MkRdx, MK_RDX_ARITY);
     code(MK_RDX_CODE) = Atom::RPointer(0); // code.
     add_reference(imdl_fact);
@@ -738,7 +738,7 @@ Success::Success(_Fact *object, _Fact *evidence, double psln_thr): LObject() {
 Perf::Perf(): LObject() {
 }
 
-Perf::Perf(uint64 reduction_job_avg_latency, int64 d_reduction_job_avg_latency, uint64 time_job_avg_latency, int64 d_time_job_avg_latency): LObject() {
+Perf::Perf(uint64_t reduction_job_avg_latency, int64_t d_reduction_job_avg_latency, uint64_t time_job_avg_latency, int64_t d_time_job_avg_latency): LObject() {
 
     code(0) = Atom::Object(Opcodes::Perf, PERF_ARITY);
     code(PERF_RDX_LTCY) = Atom::Float(reduction_job_avg_latency);
@@ -762,7 +762,7 @@ bool ICST::is_invalidated() {
 //std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" icst was invalidated"<<std::endl;
         return true;
     }
-    for (uint64 i = 0; i < components.size(); ++i) {
+    for (uint64_t i = 0; i < components.size(); ++i) {
 
         if (components[i]->is_invalidated()) {
 
@@ -774,9 +774,9 @@ bool ICST::is_invalidated() {
     return false;
 }
 
-bool ICST::contains(_Fact *component, uint16 &component_index) const {
+bool ICST::contains(_Fact *component, uint16_t &component_index) const {
 
-    for (uint64 i = 0; i < components.size(); ++i) {
+    for (uint64_t i = 0; i < components.size(); ++i) {
 
         if (components[i] == component) {
 

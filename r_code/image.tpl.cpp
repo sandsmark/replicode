@@ -36,7 +36,7 @@
 
 namespace r_code{
 
-template<class I> Image<I> *Image<I>::Build(uint64 timestamp, size_t map_size, size_t code_size, size_t names_size)
+template<class I> Image<I> *Image<I>::Build(uint64_t timestamp, size_t map_size, size_t code_size, size_t names_size)
 {
         I *image=new(map_size+code_size) I(timestamp,map_size,code_size,names_size);
         return (Image<I> *)image;
@@ -44,11 +44,11 @@ template<class I> Image<I> *Image<I>::Build(uint64 timestamp, size_t map_size, s
 
 template<class I> Image<I> *Image<I>::Read(ifstream &stream)
 {
-    uint64 timestamp;
+    uint64_t timestamp;
     size_t map_size;
     size_t code_size;
     size_t names_size;
-    stream.read((char *)&timestamp,sizeof(uint64));
+    stream.read((char *)&timestamp,sizeof(uint64_t));
     stream.read((char *)&map_size,sizeof(size_t));
     stream.read((char *)&code_size,sizeof(size_t));
     stream.read((char *)&names_size,sizeof(size_t));
@@ -59,11 +59,11 @@ template<class I> Image<I> *Image<I>::Read(ifstream &stream)
 
 template<class I> void Image<I>::Write(Image<I> *image, ofstream &stream)
 {
-    uint64 timestamp=image->timestamp();
+    uint64_t timestamp=image->timestamp();
     size_t map_size=image->map_size();
     size_t code_size=image->code_size();
     size_t names_size=image->names_size();
-    stream.write((char *)&timestamp, sizeof(uint64));
+    stream.write((char *)&timestamp, sizeof(uint64_t));
     stream.write((char *)&map_size, sizeof(size_t));
     stream.write((char *)&code_size, sizeof(size_t));
     stream.write((char *)&names_size, sizeof(size_t));

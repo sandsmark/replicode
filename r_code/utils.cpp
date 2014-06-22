@@ -36,21 +36,21 @@
 
 namespace r_code {
 
-uint64 Utils::TimeReference = 0;
-uint64 Utils::BasePeriod = 0;
+uint64_t Utils::TimeReference = 0;
+uint64_t Utils::BasePeriod = 0;
 double Utils::FloatTolerance = 0;
-uint64 Utils::TimeTolerance = 0;
+uint64_t Utils::TimeTolerance = 0;
 
-uint64 Utils::GetTimeReference() {
+uint64_t Utils::GetTimeReference() {
     return TimeReference;
 }
-uint64 Utils::GetBasePeriod() {
+uint64_t Utils::GetBasePeriod() {
     return BasePeriod;
 }
-uint64 Utils::GetFloatTolerance() {
+uint64_t Utils::GetFloatTolerance() {
     return FloatTolerance;
 }
-uint64 Utils::GetTimeTolerance() {
+uint64_t Utils::GetTimeTolerance() {
     return TimeTolerance;
 }
 
@@ -61,7 +61,7 @@ void Utils::SetReferenceValues(uint64_t base_period, double float_tolerance, dou
     TimeTolerance = time_tolerance;
 }
 
-void Utils::SetTimeReference(uint64 time_reference) {
+void Utils::SetTimeReference(uint64_t time_reference) {
 
     TimeReference = time_reference;
 }
@@ -73,23 +73,23 @@ bool Utils::Equal(double l, double r) {
     return fabs(l - r) < FloatTolerance;
 }
 
-bool Utils::Synchronous(uint64 l, uint64 r) {
+bool Utils::Synchronous(uint64_t l, uint64_t r) {
 
-    return uint64_t(abs((int64)(l - r))) < TimeTolerance;
+    return uint64_t(abs((int64_t)(l - r))) < TimeTolerance;
 }
 
-uint64 Utils::GetTimestamp(const Atom *iptr)
+uint64_t Utils::GetTimestamp(const Atom *iptr)
 {
     return iptr[1].atom;
 }
 
-void Utils::SetTimestamp(Atom *iptr, uint64 t) {
+void Utils::SetTimestamp(Atom *iptr, uint64_t t) {
 
     iptr[0] = Atom::Timestamp();
     iptr[1].atom = t;
 }
 
-void Utils::SetTimestamp(Code *object, uint32_t index, uint64 t) {
+void Utils::SetTimestamp(Code *object, uint32_t index, uint64_t t) {
 
     object->code(index) = Atom::Timestamp();
     object->code(++index) = Atom(t);
@@ -99,7 +99,7 @@ std::string Utils::GetString(const Atom *iptr) {
 
     std::string s;
     char buffer[255];
-    uint8 char_count = (iptr[0].atom & 0x000000FF);
+    uint8_t char_count = (iptr[0].atom & 0x000000FF);
     memcpy(buffer, iptr + 1, char_count);
     buffer[char_count] = 0;
     s += buffer;
@@ -108,12 +108,12 @@ std::string Utils::GetString(const Atom *iptr) {
 
 void Utils::SetString(Atom *iptr, const std::string &s) {
 
-    uint8 l = (uint8)s.length();
-    uint8 index = 0;
+    uint8_t l = (uint8_t)s.length();
+    uint8_t index = 0;
     iptr[index] = Atom::String(l);
     uint64_t _st = 0;
-    int8 shift = 0;
-    for (uint8 i = 0; i < l; ++i) {
+    int8_t shift = 0;
+    for (uint8_t i = 0; i < l; ++i) {
 
         _st |= s[i] << shift;
         shift += 8;
@@ -128,13 +128,13 @@ void Utils::SetString(Atom *iptr, const std::string &s) {
         iptr[++index] = _st;
 }
 
-int64 Utils::GetResilience(uint64 now, uint64 time_to_live, uint64 upr) {
+int64_t Utils::GetResilience(uint64_t now, uint64_t time_to_live, uint64_t upr) {
 
     if (time_to_live == 0 || upr == 0)
         return 1;
-    uint64 deadline = now + time_to_live;
-    uint64 last_upr = (now - TimeReference) / upr;
-    uint64 next_upr = (deadline - TimeReference) / upr;
+    uint64_t deadline = now + time_to_live;
+    uint64_t last_upr = (now - TimeReference) / upr;
+    uint64_t next_upr = (deadline - TimeReference) / upr;
     if ((deadline - TimeReference) % upr > 0)
         ++next_upr;
     return next_upr - last_upr;
@@ -153,7 +153,7 @@ int64_t Utils::GetGroupResilience(double resilience, double origin_upr, double d
     return res;
 }
 
-std::string Utils::RelativeTime(uint64 t)
+std::string Utils::RelativeTime(uint64_t t)
 {
     return Time::ToString_seconds(t - TimeReference);
 }

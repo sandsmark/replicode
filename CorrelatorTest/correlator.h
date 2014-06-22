@@ -23,10 +23,10 @@ public:
 
         std::cout << "IPGMContext\n";
         std::cout << "Views\n";
-        for (uint64 i = 0; i < views.size(); ++i)
+        for (uint64_t i = 0; i < views.size(); ++i)
             views[i]->object->trace();
         std::cout << "States\n";
-        for (uint64 i = 0; i < states.size(); ++i)
+        for (uint64_t i = 0; i < states.size(); ++i)
             states[i]->trace();
     }
 };
@@ -43,10 +43,10 @@ public:
 
         std::cout << "Pattern\n";
         std::cout << "Left\n";
-        for (uint64 i = 0; i < left.size(); ++i)
+        for (uint64_t i = 0; i < left.size(); ++i)
             left[i]->object->trace();
         std::cout << "Right\n";
-        for (uint64 i = 0; i < right.size(); ++i)
+        for (uint64_t i = 0; i < right.size(); ++i)
             right[i]->object->trace();
     }
 };
@@ -58,7 +58,7 @@ public:
     void trace() {
 
         std::cout << "CorrelatorOutput\n";
-        for (uint64 i = 0; i < contexts.size(); ++i)
+        for (uint64_t i = 0; i < contexts.size(); ++i)
             contexts[i]->trace();
     }
 };

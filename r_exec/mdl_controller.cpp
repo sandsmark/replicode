@@ -152,7 +152,7 @@ Overlay *PrimaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLController
 
 bool PrimaryMDLOverlay::check_simulated_chaining(HLPBindingMap *bm, Fact *f_imdl, Pred *prediction) {
 
-    for (uint64 i = 0; i < prediction->simulations.size(); ++i) {
+    for (uint64_t i = 0; i < prediction->simulations.size(); ++i) {
 
         switch (((MDLController *)controller)->retrieve_simulated_imdl_fwd(bm, f_imdl, prediction->simulations[i]->root)) {
         case NO_R:
@@ -232,7 +232,7 @@ Overlay *SecondaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLControll
 MDLController *MDLController::New(View *view, bool &inject_in_secondary_group) {
 
     Code *unpacked_mdl = view->object->get_reference(view->object->references_size() - MDL_HIDDEN_REFS);
-    uint16 obj_set_index = unpacked_mdl->code(MDL_OBJS).asIndex();
+    uint16_t obj_set_index = unpacked_mdl->code(MDL_OBJS).asIndex();
     Code *rhs = unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index + 2).asIndex());
 
     if (rhs->get_reference(0)->code(0).asOpcode() == Opcodes::Ent) { // rhs is a drive.
@@ -248,7 +248,7 @@ MDLController *MDLController::New(View *view, bool &inject_in_secondary_group) {
 MDLController::MDLController(r_code::View *view): HLPController(view) {
 
     Code *object = get_unpacked_object();
-    uint16 obj_set_index = object->code(MDL_OBJS).asIndex();
+    uint16_t obj_set_index = object->code(MDL_OBJS).asIndex();
     lhs = object->get_reference(object->code(obj_set_index + 1).asIndex());
     rhs = object->get_reference(object->code(obj_set_index + 2).asIndex());
 
@@ -258,7 +258,7 @@ MDLController::MDLController(r_code::View *view): HLPController(view) {
     Code *rhs_ihlp = rhs->get_reference(0);
     _is_requirement = NaR;
     controllers[RHSController] = NULL;
-    uint16 opcode = rhs_ihlp->code(0).asOpcode();
+    uint16_t opcode = rhs_ihlp->code(0).asOpcode();
     if (opcode == Opcodes::ICst ||
             opcode == Opcodes::IMdl) {
 
@@ -363,7 +363,7 @@ void MDLController::remove_requirement_from_rhs()
 void MDLController::_store_requirement(r_code::list<REntry> *cache, REntry &e)
 {
     std::lock_guard<std::mutex> guard(requirements.mutex);
-    uint64 now = Now();
+    uint64_t now = Now();
     r_code::list<REntry>::const_iterator _e;
     for (_e = cache->begin(); _e != cache->end();) {
 
@@ -377,9 +377,9 @@ void MDLController::_store_requirement(r_code::list<REntry> *cache, REntry &e)
 
 ChainingStatus MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl, Controller *root) {
 
-    uint64 wr_count;
-    uint64 sr_count;
-    uint64 r_count = get_requirement_count(wr_count, sr_count);
+    uint64_t wr_count;
+    uint64_t sr_count;
+    uint64_t r_count = get_requirement_count(wr_count, sr_count);
     if (!r_count)
         return NO_R;
     ChainingStatus r;
@@ -387,7 +387,7 @@ ChainingStatus MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap *bm, Fac
 
         r = WR_DISABLED;
         std::lock_guard<std::mutex> guard(requirements.mutex);
-        uint64 now = Now();
+        uint64_t now = Now();
         r_code::list<REntry>::const_iterator e;
         for (e = simulated_requirements.positive_evidences.begin(); e != simulated_requirements.positive_evidences.end();) {
             if ((*e).is_too_old(now)) // garbage collection.
@@ -412,7 +412,7 @@ ChainingStatus MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap *bm, Fac
 
         if (!wr_count) { // some strong req., no weak req.: true if there is no |f->imdl complying with timings and bindings.
             std::lock_guard<std::mutex> guard(requirements.mutex);
-            uint64 now = Now();
+            uint64_t now = Now();
             r_code::list<REntry>::const_iterator e;
             for (e = simulated_requirements.negative_evidences.begin(); e != simulated_requirements.negative_evidences.end();) {
 
@@ -437,7 +437,7 @@ ChainingStatus MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap *bm, Fac
             r = WR_DISABLED;
             double negative_cfd = 0;
             std::lock_guard<std::mutex> guard(requirements.mutex);
-            uint64 now = Now();
+            uint64_t now = Now();
             r_code::list<REntry>::const_iterator e;
             for (e = simulated_requirements.negative_evidences.begin(); e != simulated_requirements.negative_evidences.end();) {
                 if ((*e).is_too_old(now)) // garbage collection.
@@ -486,16 +486,16 @@ ChainingStatus MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap *bm, Fac
 
 ChainingStatus MDLController::retrieve_simulated_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl, Controller *root) {
 
-    uint64 wr_count;
-    uint64 sr_count;
-    uint64 r_count = get_requirement_count(wr_count, sr_count);
+    uint64_t wr_count;
+    uint64_t sr_count;
+    uint64_t r_count = get_requirement_count(wr_count, sr_count);
     if (!r_count)
         return NO_R;
     ChainingStatus r;
     if (!sr_count) { // no strong req., some weak req.: true if there is one f->imdl complying with timings and bindings.
         r = WR_DISABLED;
         std::lock_guard<std::mutex> guard(requirements.mutex);
-        uint64 now = Now();
+        uint64_t now = Now();
         r_code::list<REntry>::const_iterator e;
         for (e = simulated_requirements.positive_evidences.begin(); e != simulated_requirements.positive_evidences.end();) {
             if ((*e).is_too_old(now)) // garbage collection.
@@ -521,7 +521,7 @@ ChainingStatus MDLController::retrieve_simulated_imdl_bwd(HLPBindingMap *bm, Fac
 
         if (!wr_count) { // some strong req., no weak req.: true if there is no |f->imdl complying with timings and bindings.
             std::lock_guard<std::mutex> guard(requirements.mutex);
-            uint64 now = Now();
+            uint64_t now = Now();
             r_code::list<REntry>::const_iterator e;
             for (e = simulated_requirements.negative_evidences.begin(); e != simulated_requirements.negative_evidences.end();) {
 
@@ -543,7 +543,7 @@ ChainingStatus MDLController::retrieve_simulated_imdl_bwd(HLPBindingMap *bm, Fac
             r = WR_DISABLED;
             double negative_cfd = 0;
             std::lock_guard<std::mutex> guard(requirements.mutex);
-            uint64 now = Now();
+            uint64_t now = Now();
             r_code::list<REntry>::const_iterator e;
             for (e = simulated_requirements.negative_evidences.begin(); e != simulated_requirements.negative_evidences.end();) {
 
@@ -592,9 +592,9 @@ ChainingStatus MDLController::retrieve_simulated_imdl_bwd(HLPBindingMap *bm, Fac
 
 ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl, RequirementsPair &r_p, Fact *&ground, MDLController *req_controller, bool &wr_enabled) { // wr_enabled: true if there is at least one wr stronger than at least one sr.
 
-    uint64 wr_count;
-    uint64 sr_count;
-    uint64 r_count = get_requirement_count(wr_count, sr_count);
+    uint64_t wr_count;
+    uint64_t sr_count;
+    uint64_t r_count = get_requirement_count(wr_count, sr_count);
     ground = NULL;
     if (!r_count)
         return NO_R;
@@ -614,12 +614,12 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
 
         r = WR_DISABLED;
         std::lock_guard<std::mutex> guard(requirements.mutex);
-        uint64 now = Now();
+        uint64_t now = Now();
         r_code::list<REntry>::const_iterator e;
         for (e = requirements.positive_evidences.begin(); e != requirements.positive_evidences.end();) {
 
 //Code *imdl=(*e).evidence->get_pred()->get_target()->get_reference(0);
-//uint16 tpl_index=imdl->code(I_HLP_TPL_ARGS).asIndex();
+//uint16_t tpl_index=imdl->code(I_HLP_TPL_ARGS).asIndex();
 //std::cout<<"IMDL: "<<imdl->code(tpl_index+1).asFloat()<<" ["<<Time::ToString_seconds((*e).after-Utils::GetTimeReference())<<" "<<Time::ToString_seconds((*e).before-Utils::GetTimeReference())<<"["<<std::endl;
 
             if ((*e).is_too_old(now)) // garbage collection.
@@ -656,7 +656,7 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
             wr_enabled = false;
             r = WR_ENABLED;
             std::lock_guard<std::mutex> guard(requirements.mutex);
-            uint64 now = Now();
+            uint64_t now = Now();
             r_code::list<REntry>::const_iterator e;
             for (e = requirements.negative_evidences.begin(); e != requirements.negative_evidences.end();) {
 
@@ -684,7 +684,7 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
             r = NO_R;
             std::lock_guard<std::mutex> guard(requirements.mutex);
             double negative_cfd = 0;
-            uint64 now = Now();
+            uint64_t now = Now();
 
             r_code::list<REntry>::const_iterator e;
             for (e = requirements.negative_evidences.begin(); e != requirements.negative_evidences.end();) {
@@ -764,9 +764,9 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
 
 ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl, Fact *&ground) {
 
-    uint64 wr_count;
-    uint64 sr_count;
-    uint64 r_count = get_requirement_count(wr_count, sr_count);
+    uint64_t wr_count;
+    uint64_t sr_count;
+    uint64_t r_count = get_requirement_count(wr_count, sr_count);
     ground = NULL;
     if (!r_count)
         return NO_R;
@@ -775,7 +775,7 @@ ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl,
 
         r = WR_DISABLED;
         std::lock_guard<std::mutex> guard(requirements.mutex);
-        uint64 now = Now();
+        uint64_t now = Now();
         r_code::list<REntry>::const_iterator e;
         for (e = requirements.positive_evidences.begin(); e != requirements.positive_evidences.end();) {
 
@@ -803,7 +803,7 @@ ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl,
             ground = NULL;
 
             std::lock_guard<std::mutex> guard(requirements.mutex);
-            uint64 now = Now();
+            uint64_t now = Now();
             r_code::list<REntry>::const_iterator e;
             for (e = requirements.negative_evidences.begin(); e != requirements.negative_evidences.end();) {
 
@@ -825,7 +825,7 @@ ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl,
             r = WR_DISABLED;
             double negative_cfd = 0;
             std::lock_guard<std::mutex> guard(requirements.mutex);
-            uint64 now = Now();
+            uint64_t now = Now();
             r_code::list<REntry>::const_iterator e;
             for (e = requirements.negative_evidences.begin(); e != requirements.negative_evidences.end();) {
 
@@ -914,17 +914,17 @@ void PMDLController::remove_r_monitor(_GMonitor *m)
 void PMDLController::inject_goal(HLPBindingMap *bm, Fact *goal, Fact *f_imdl) const
 {
     Group *primary_grp = get_host();
-    uint64 before = goal->get_before();
-    uint64 now = Now();
-    int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_grp, now, before - now);
+    uint64_t before = goal->get_before();
+    uint64_t now = Now();
+    int64_t resilience = _Mem::Get()->get_goal_pred_success_res(primary_grp, now, before - now);
 
     View *view = new View(View::SYNC_ONCE, now, 1, resilience, primary_grp, primary_grp, goal); // SYNC_ONCE,res=resilience.
     _Mem::Get()->inject(view);
 
     MkRdx *mk_rdx = new MkRdx(f_imdl, goal->get_goal()->get_super_goal(), goal, 1, bm);
 
-    uint16 out_group_count = get_rdx_out_group_count();
-    for (uint16 i = 0; i < out_group_count; ++i) {
+    uint16_t out_group_count = get_rdx_out_group_count();
+    for (uint16_t i = 0; i < out_group_count; ++i) {
 
         Group *out_group = (Group *)get_out_group(i);
         View *view = new NotificationView(primary_grp, out_group, mk_rdx);
@@ -935,9 +935,9 @@ void PMDLController::inject_goal(HLPBindingMap *bm, Fact *goal, Fact *f_imdl) co
 void PMDLController::inject_simulation(Fact *goal_pred) const { // f->pred->f->obj or f->goal->f->obj.
 
     Group *primary_grp = get_host();
-    uint64 before = ((_Fact *)goal_pred->get_reference(0)->get_reference(0))->get_before();
-    uint64 now = Now();
-    int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_grp, now, before - now);
+    uint64_t before = ((_Fact *)goal_pred->get_reference(0)->get_reference(0))->get_before();
+    uint64_t now = Now();
+    int64_t resilience = _Mem::Get()->get_goal_pred_success_res(primary_grp, now, before - now);
 
     View *view = new View(View::SYNC_ONCE, now, 1, resilience, primary_grp, primary_grp, goal_pred); // SYNC_ONCE,res=resilience.
     _Mem::Get()->inject(view);
@@ -975,8 +975,8 @@ void PMDLController::register_predicted_goal_outcome(Fact *goal, HLPBindingMap *
                 Fact *new_goal = new Fact(goal);
                 Goal *g = new_goal->get_goal();
 
-                uint64 deadline = g->get_target()->get_before();
-                uint64 sim_thz = get_sim_thz(Now(), deadline);
+                uint64_t deadline = g->get_target()->get_before();
+                uint64_t sim_thz = get_sim_thz(Now(), deadline);
 
                 Sim *new_sim = new Sim(SIM_ROOT, sim_thz, g->sim->super_goal, false, this);
 
@@ -990,14 +990,14 @@ void PMDLController::register_predicted_goal_outcome(Fact *goal, HLPBindingMap *
     }
 }
 
-inline uint64 PMDLController::get_sim_thz(uint64 now, uint64 deadline) const {
+inline uint64_t PMDLController::get_sim_thz(uint64_t now, uint64_t deadline) const {
 
-    uint64 min_sim_thz = _Mem::Get()->get_min_sim_time_horizon(); // time allowance for the simulated predictions to flow upward.
-    uint64 sim_thz = _Mem::Get()->get_sim_time_horizon(deadline - now);
+    uint64_t min_sim_thz = _Mem::Get()->get_min_sim_time_horizon(); // time allowance for the simulated predictions to flow upward.
+    uint64_t sim_thz = _Mem::Get()->get_sim_time_horizon(deadline - now);
     if (sim_thz > min_sim_thz) {
 
         sim_thz -= min_sim_thz;
-        uint64 max_sim_thz = _Mem::Get()->get_max_sim_time_horizon();
+        uint64_t max_sim_thz = _Mem::Get()->get_max_sim_time_horizon();
         if (sim_thz > max_sim_thz)
             sim_thz = max_sim_thz;
         return sim_thz;
@@ -1097,10 +1097,10 @@ void TopLevelMDLController::abduce_lhs(HLPBindingMap *bm,
                                        _Fact *evidence) {
 
     Goal *sub_goal = new Goal(sub_goal_target, super_goal->get_goal()->get_actor(), 1);
-    uint64 now = Now();
+    uint64_t now = Now();
     Fact *f_sub_goal = new Fact(sub_goal, now, now, 1, 1);
-    uint64 deadline = sub_goal_target->get_before();
-    uint64 sim_thz = get_sim_thz(now, deadline);
+    uint64_t deadline = sub_goal_target->get_before();
+    uint64_t sim_thz = get_sim_thz(now, deadline);
 
     Sim *sub_sim = new Sim(SIM_ROOT, sim_thz, super_goal, false, this);
 
@@ -1122,7 +1122,7 @@ void TopLevelMDLController::register_goal_outcome(Fact *goal, bool success, _Fac
 
     goal->invalidate();
 
-    uint64 now = Now();
+    uint64_t now = Now();
     Code *goal_success;
     Code *f_goal_success;
     _Fact *absentee;
@@ -1146,11 +1146,11 @@ void TopLevelMDLController::register_goal_outcome(Fact *goal, bool success, _Fac
     }
 
     Group *primary_host = get_host();
-    uint16 out_group_count = get_out_group_count() - 1;
-    for (uint16 i = 0; i < out_group_count; ++i) { // inject notification in out groups (drives host excepted).
+    uint16_t out_group_count = get_out_group_count() - 1;
+    for (uint16_t i = 0; i < out_group_count; ++i) { // inject notification in out groups (drives host excepted).
 
         Group *out_group = (Group *)get_out_group(i);
-        int64 resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
+        int64_t resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
         View *view = new View(View::SYNC_ONCE, now, 1, resilience, out_group, primary_host, f_goal_success);
         _Mem::Get()->inject(view);
 
@@ -1170,7 +1170,7 @@ void TopLevelMDLController::register_drive_outcome(Fact *drive, bool success) co
 
     drive->invalidate();
 
-    uint64 now = Now();
+    uint64_t now = Now();
     Code *drive_success = new Success(drive, NULL, 1);
     Code *f_drive_success;
     if (success)
@@ -1179,7 +1179,7 @@ void TopLevelMDLController::register_drive_outcome(Fact *drive, bool success) co
         f_drive_success = new AntiFact(drive_success, now, now, 1, 1);
 
     Group *primary_host = get_host();
-    uint16 out_group_count = get_out_group_count() - 1;
+    uint16_t out_group_count = get_out_group_count() - 1;
     Group *drives_host = (Group *)get_out_group(out_group_count); // the drives group is the last of the output groups.
     View *view = new View(View::SYNC_ONCE, now, 1, 1, drives_host, primary_host, f_drive_success); // sln=1,res=1.
     _Mem::Get()->inject(view); // inject in the drives group (will be caught by the drive injectors).
@@ -1192,7 +1192,7 @@ void TopLevelMDLController::register_simulated_goal_outcome(Fact *goal, bool suc
     Code *success_object = new Success(goal, evidence, 1);
     Pred *evidence_pred = evidence->get_pred();
     double confidence = evidence_pred->get_target()->get_cfd();
-    uint64 now = Now();
+    uint64_t now = Now();
     _Fact *f_success_object;
     if (success)
         f_success_object = new Fact(success_object, now, now, confidence, 1);
@@ -1200,13 +1200,13 @@ void TopLevelMDLController::register_simulated_goal_outcome(Fact *goal, bool suc
         f_success_object = new AntiFact(success_object, now, now, confidence, 1);
 
     Pred *pred = new Pred(f_success_object, 1);
-    for (uint16 i = 0; i < evidence_pred->simulations.size(); ++i)
+    for (uint16_t i = 0; i < evidence_pred->simulations.size(); ++i)
         pred->simulations.push_back(evidence_pred->simulations[i]);
 
     Fact *f_pred = new Fact(pred, now, now, 1, 1);
 
     Group *primary_host = get_host();
-    int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, 0);
+    int64_t resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, 0);
     View *view = new View(View::SYNC_ONCE, now, 1, resilience, primary_host, primary_host, f_pred);
     _Mem::Get()->inject(view); // inject in the primary group.
 }
@@ -1295,7 +1295,7 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
     bound_rhs->set_cfd(confidence);
 
     Pred *pred = new Pred(bound_rhs, 1);
-    uint64 now = Now();
+    uint64_t now = Now();
     Fact *production = new Fact(pred, now, now, 1, 1);
 
     if (prediction && !simulation) { // store the antecedents.
@@ -1323,7 +1323,7 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
             MDLController::add_monitor(m);
         } else { // try to inject the prediction: if cfd too low, the prediction is not injected.
 
-            uint64 before = bound_rhs->get_before();
+            uint64_t before = bound_rhs->get_before();
             if (before <= now) // can happen if the input comes from the past and the predicted time is still in the past.
                 return;
             if (prediction) { // no rdx nor monitoring if the input was a prediction; case of a reuse: f_imdl becomes f->p->f_imdl.
@@ -1345,20 +1345,20 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
         }
     } else { // no monitoring for simulated predictions.
 
-        for (uint16 i = 0; i < prediction->simulations.size(); ++i)
+        for (uint16_t i = 0; i < prediction->simulations.size(); ++i)
             pred->simulations.push_back(prediction->simulations[i]);
         HLPController::inject_prediction(production, confidence); // inject a simulated prediction in the primary group.
     }
 }
 
-bool PrimaryMDLController::inject_prediction(Fact *prediction, Fact *f_imdl, double confidence, uint64 time_to_live, Code *mk_rdx) const { // prediction: f->pred->f->target.
+bool PrimaryMDLController::inject_prediction(Fact *prediction, Fact *f_imdl, double confidence, uint64_t time_to_live, Code *mk_rdx) const { // prediction: f->pred->f->target.
 
-    uint64 now = Now();
+    uint64_t now = Now();
     Group *primary_host = get_host();
     double sln_thr = primary_host->code(GRP_SLN_THR).asDouble();
     if (confidence > sln_thr) { // do not inject if cfd is too low.
 
-        int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
+        int64_t resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
         View *view = new View(View::SYNC_ONCE, now, confidence, resilience, primary_host, primary_host, prediction); // SYNC_ONCE,res=resilience.
         _Mem::Get()->inject(view);
 
@@ -1367,8 +1367,8 @@ bool PrimaryMDLController::inject_prediction(Fact *prediction, Fact *f_imdl, dou
 
         if (mk_rdx) {
 
-            uint16 out_group_count = get_out_group_count();
-            for (uint16 i = 0; i < out_group_count; ++i) {
+            uint16_t out_group_count = get_out_group_count();
+            for (uint16_t i = 0; i < out_group_count; ++i) {
 
                 Group *out_group = (Group *)get_out_group(i);
                 View *view = new NotificationView(primary_host, out_group, mk_rdx);
@@ -1463,8 +1463,8 @@ void PrimaryMDLController::abduce(HLPBindingMap *bm, Fact *super_goal, bool oppo
 
     P<Fact> f_imdl = get_f_ihlp(bm, false);
     Sim *sim = super_goal->get_goal()->sim;
-    uint64 sim_thz = sim->thz >> 1; // 0 if super-goal had not time for simulation, else use half the thz (in case there are some requirments to simulate: they'll use the other half).
-    uint64 min_sim_thz = _Mem::Get()->get_min_sim_time_horizon() >> 1; // time allowance for the simulated predictions to flow upward.
+    uint64_t sim_thz = sim->thz >> 1; // 0 if super-goal had not time for simulation, else use half the thz (in case there are some requirments to simulate: they'll use the other half).
+    uint64_t min_sim_thz = _Mem::Get()->get_min_sim_time_horizon() >> 1; // time allowance for the simulated predictions to flow upward.
 
     Sim *sub_sim;
     if (sim_thz > min_sim_thz) {
@@ -1575,7 +1575,7 @@ void PrimaryMDLController::abduce_lhs(HLPBindingMap *bm, Fact *super_goal, Fact 
             if (set_before)
                 sim->sol_before = bound_lhs->get_before();
 
-            uint64 now = Now();
+            uint64_t now = Now();
             Fact *f_sub_goal = new Fact(sub_goal, now, now, 1, 1);
 
             add_g_monitor(new GMonitor(this, bm, bound_lhs->get_before(), 0, f_sub_goal, f_imdl, evidence));
@@ -1598,7 +1598,7 @@ void PrimaryMDLController::abduce_imdl(HLPBindingMap *bm, Fact *super_goal, Fact
     Goal *sub_goal = new Goal(f_imdl, super_goal->get_goal()->get_actor(), 1);
     sub_goal->sim = sim;
 
-    uint64 now = Now();
+    uint64_t now = Now();
     Fact *f_sub_goal = new Fact(sub_goal, now, now, 1, 1);
     add_r_monitor(new RMonitor(this, bm, super_goal->get_goal()->get_target()->get_before(), sim->thz, f_sub_goal, f_imdl)); // the monitor will wait until the deadline of the super-goal.
     inject_goal(bm, f_sub_goal, f_imdl);
@@ -1638,7 +1638,7 @@ void PrimaryMDLController::abduce_simulated_lhs(HLPBindingMap *bm, Fact *super_g
 
                 sub_goal->sim = sim;
 
-                uint64 now = Now();
+                uint64_t now = Now();
                 Fact *f_sub_goal = new Fact(sub_goal, now, now, 1, 1);
 
                 add_g_monitor(new SGMonitor(this, bm, sim->thz, f_sub_goal, f_imdl));
@@ -1658,7 +1658,7 @@ void PrimaryMDLController::abduce_simulated_imdl(HLPBindingMap *bm, Fact *super_
     Goal *sub_goal = new Goal(f_imdl, super_goal->get_goal()->get_actor(), 1);
     sub_goal->sim = sim;
 
-    uint64 now = Now();
+    uint64_t now = Now();
     Fact *f_sub_goal = new Fact(sub_goal, now, now, 1, 1);
     add_r_monitor(new SRMonitor(this, bm, sim->thz, f_sub_goal, f_imdl));
     inject_simulation(f_sub_goal);
@@ -1732,7 +1732,7 @@ inline void PrimaryMDLController::predict_simulated_evidence(_Fact *evidence, Si
     Pred *pred = new Pred(evidence, 1);
     pred->simulations.push_back(sim);
 
-    uint64 now = Now();
+    uint64_t now = Now();
     inject_simulation(new Fact(pred, now, now, 1, 1));
 }
 
@@ -1752,7 +1752,7 @@ void PrimaryMDLController::register_pred_outcome(Fact *f_pred, bool success, _Fa
 
     Success *success_object = new Success(f_pred, f_evidence, 1);
     Code *f_success_object;
-    uint64 now = Now();
+    uint64_t now = Now();
     if (success) {
 
         f_success_object = new Fact(success_object, now, now, confidence, 1);
@@ -1764,11 +1764,11 @@ void PrimaryMDLController::register_pred_outcome(Fact *f_pred, bool success, _Fa
     }
 
     Group *primary_host = get_host();
-    uint16 out_group_count = get_out_group_count();
-    for (uint16 i = 0; i < out_group_count; ++i) { // inject notification in out groups.
+    uint16_t out_group_count = get_out_group_count();
+    for (uint16_t i = 0; i < out_group_count; ++i) { // inject notification in out groups.
 
         Group *out_group = (Group *)get_out_group(i);
-        int64 resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
+        int64_t resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
         View *view = new View(View::SYNC_ONCE, now, 1, resilience, out_group, primary_host, f_success_object);
         _Mem::Get()->inject(view);
 
@@ -1788,14 +1788,14 @@ void PrimaryMDLController::register_req_outcome(Fact *f_pred, bool success, bool
         rate_model(false);
 
     std::lock_guard<std::mutex> guard(m_activeRequirementsMutex);
-    UNORDERED_MAP<P<_Fact>, RequirementsPair, PHash<_Fact> >::const_iterator r = active_requirements.find(f_pred);
+    std::unordered_map<P<_Fact>, RequirementsPair, PHash<_Fact> >::const_iterator r = active_requirements.find(f_pred);
     if (r != active_requirements.end()) { // some requirements were controlling the prediction: give feedback.
-        for (uint64 i = 0; i < r->second.first.controllers.size(); ++i) {
+        for (uint64_t i = 0; i < r->second.first.controllers.size(); ++i) {
             MDLController *c = r->second.first.controllers[i];
             if (!c->is_invalidated())
                 c->register_req_outcome(r->second.first.f_imdl, success, r->second.first.chaining_was_allowed);
         }
-        for (uint64 i = 0; i < r->second.second.controllers.size(); ++i) {
+        for (uint64_t i = 0; i < r->second.second.controllers.size(); ++i) {
             MDLController *c = r->second.second.controllers[i];
             if (!c->is_invalidated())
                 c->register_req_outcome(r->second.second.f_imdl, !success, r->second.second.chaining_was_allowed);
@@ -1808,7 +1808,7 @@ void PrimaryMDLController::register_goal_outcome(Fact *goal, bool success, _Fact
 
     goal->invalidate();
 
-    uint64 now = Now();
+    uint64_t now = Now();
     _Fact *f_success_object;
     _Fact *absentee;
     if (success) {
@@ -1834,14 +1834,14 @@ void PrimaryMDLController::register_goal_outcome(Fact *goal, bool success, _Fact
     }
 
     Group *primary_host = get_host();
-//int64 resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
+//int64_t resilience=_Mem::Get()->get_goal_pred_success_res(primary_host,0);
 //View *view=new View(true,now,1,resilience,primary_host,primary_host,f_success_object);
 
-    uint16 out_group_count = get_out_group_count();
-    for (uint16 i = 0; i < out_group_count; ++i) { // inject notification in out groups.
+    uint16_t out_group_count = get_out_group_count();
+    for (uint16_t i = 0; i < out_group_count; ++i) { // inject notification in out groups.
 
         Group *out_group = (Group *)get_out_group(i);
-        int64 resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
+        int64_t resilience = _Mem::Get()->get_goal_pred_success_res(out_group, now, 0);
         View *view = new View(View::SYNC_ONCE, now, 1, resilience, out_group, primary_host, f_success_object);
         _Mem::Get()->inject(view);
 
@@ -1858,7 +1858,7 @@ void PrimaryMDLController::register_simulated_goal_outcome(Fact *goal, bool succ
     Code *success_object = new Success(goal, evidence, 1);
     _Fact *f_success;
 
-    uint64 now = Now();
+    uint64_t now = Now();
     if (success)
         f_success = new Fact(success_object, now, now, 1, 1);
     else
@@ -1868,7 +1868,7 @@ void PrimaryMDLController::register_simulated_goal_outcome(Fact *goal, bool succ
     Fact *f_pred = new Fact(pred, now, now, 1, 1);
 
     Group *primary_host = get_host();
-    int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, 0);
+    int64_t resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, 0);
     View *view = new View(View::SYNC_ONCE, now, 1, resilience, primary_host, primary_host, f_pred);
 }
 
@@ -1892,9 +1892,9 @@ void PrimaryMDLController::rate_model(bool success) {
     if (success) { // leave the model active in the primary group.
         ++success_count;
         success_rate = success_count / instance_count;
-        uint64 instance_count_base = _Mem::Get()->get_mdl_inertia_cnt_thr();
+        uint64_t instance_count_base = _Mem::Get()->get_mdl_inertia_cnt_thr();
         if (success_rate >= _Mem::Get()->get_mdl_inertia_sr_thr() && instance_count >= instance_count_base) { // make the model strong if not already; trim the instance count to reduce the rating's inertia.
-            instance_count = (uint64)(1 / success_rate);
+            instance_count = (uint64_t)(1 / success_rate);
             success_rate = 1;
             model->code(MDL_STRENGTH) = Atom::Float(1);
         }
@@ -1976,15 +1976,15 @@ void PrimaryMDLController::assume_lhs(HLPBindingMap *bm, bool opposite, _Fact *i
     assumptions.push_back(bound_lhs);
     m_assumptionsMutex.unlock();
 
-    uint64 now = Now();
-    uint64 before = bound_lhs->get_before();
+    uint64_t now = Now();
+    uint64_t before = bound_lhs->get_before();
     Group *primary_host = get_host();
-    uint64 time_to_live;
+    uint64_t time_to_live;
     if (before > now)
         time_to_live = before - now;
     else
         time_to_live = 0;
-    int64 resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
+    int64_t resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
     View *view = new View(View::SYNC_ONCE, now, confidence, resilience, primary_host, primary_host, bound_lhs); // SYNC_ONCE,res=resilience.
     _Mem::Get()->inject(view);
     OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << " -> " << bound_lhs->get_oid() << " asmp" << std::endl;
@@ -2006,7 +2006,7 @@ void PrimaryMDLController::kill_views()
 
 void PrimaryMDLController::check_last_match_time(bool match) {
 
-    uint64 now;
+    uint64_t now;
     if (match) {
         std::lock_guard<std::mutex> guard(m_lastMatchTimeMutex);
         now = Now();
@@ -2079,7 +2079,7 @@ void SecondaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_im
 //rhs->trace();rhs->get_reference(0)->trace();bindings->trace();
     _Fact *bound_rhs = (_Fact *)bm->bind_pattern(rhs); // fact or |fact.
     Pred *_prediction = new Pred(bound_rhs, 1);
-    uint64 now = Now();
+    uint64_t now = Now();
     Fact *production = new Fact(_prediction, now, now, 1, 1);
 
     register_requirement(production, r_p);
@@ -2114,8 +2114,8 @@ void SecondaryMDLController::rate_model() { // acknowledge successes only; the p
         return;
     }
 
-    uint64 instance_count = model->code(MDL_CNT).asDouble();
-    uint64 success_count = model->code(MDL_SR).asDouble() * instance_count;
+    uint64_t instance_count = model->code(MDL_CNT).asDouble();
+    uint64_t success_count = model->code(MDL_SR).asDouble() * instance_count;
 
     ++instance_count;
     model->code(MDL_DSR) = model->code(MDL_SR);
@@ -2146,10 +2146,10 @@ void SecondaryMDLController::register_req_outcome(Fact *f_imdl, bool success, bo
         rate_model();
 
         std::lock_guard<std::mutex> guard(m_activeRequirementsMutex);
-        UNORDERED_MAP<P<_Fact>, RequirementsPair, PHash<_Fact> >::const_iterator r = active_requirements.find(f_imdl);
+        std::unordered_map<P<_Fact>, RequirementsPair, PHash<_Fact> >::const_iterator r = active_requirements.find(f_imdl);
         if (r != active_requirements.end()) { // some requirements were controlling the prediction: give feedback.
 
-            for (uint64 i = 0; i < r->second.first.controllers.size(); ++i) {
+            for (uint64_t i = 0; i < r->second.first.controllers.size(); ++i) {
 
                 if (!r->second.first.controllers[i]->is_invalidated())
                     r->second.first.controllers[i]->register_req_outcome(r->second.first.f_imdl, success, r->second.first.chaining_was_allowed);
@@ -2170,7 +2170,7 @@ void SecondaryMDLController::kill_views() {
 
 void SecondaryMDLController::check_last_match_time(bool match) {
 
-    uint64 now;
+    uint64_t now;
     if (match) {
         std::lock_guard<std::mutex> guard(m_lastMatchTimeMutex);
         now = Now();

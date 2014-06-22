@@ -67,31 +67,31 @@ public:
     } State;
 protected:
 // Parameters::Init.
-    uint64 base_period;
-    uint64 reduction_core_count;
-    uint64 time_core_count;
+    uint64_t base_period;
+    uint64_t reduction_core_count;
+    uint64_t time_core_count;
 
 // Parameters::System.
     double mdl_inertia_sr_thr;
-    uint64 mdl_inertia_cnt_thr;
+    uint64_t mdl_inertia_cnt_thr;
     double tpx_dsr_thr;
-    uint64 min_sim_time_horizon;
-    uint64 max_sim_time_horizon;
+    uint64_t min_sim_time_horizon;
+    uint64_t max_sim_time_horizon;
     double sim_time_horizon;
-    uint64 tpx_time_horizon;
-    uint64 perf_sampling_period;
+    uint64_t tpx_time_horizon;
+    uint64_t perf_sampling_period;
     double float_tolerance;
-    uint64 time_tolerance;
-    uint64 primary_thz;
-    uint64 secondary_thz;
+    uint64_t time_tolerance;
+    uint64_t primary_thz;
+    uint64_t secondary_thz;
 
 // Parameters::Debug.
     bool debug;
-    uint64 ntf_mk_res;
-    uint64 goal_pred_success_res;
+    uint64_t ntf_mk_res;
+    uint64_t goal_pred_success_res;
 
 // Parameters::Run.
-    uint64 probe_level;
+    uint64_t probe_level;
 
     template <class Type> struct JobQueue {
         void pushJob(P<Type> job) {
@@ -141,14 +141,14 @@ protected:
     std::vector<std::thread> m_coreThreads;
 
 // Performance stats.
-    uint64 reduction_job_count;
-    uint64 reduction_job_avg_latency; // latency: popping time.-pushing time; the lower the better.
-    uint64 _reduction_job_avg_latency; // previous value.
-    uint64 time_job_count;
-    uint64 time_job_avg_latency; // latency: deadline-the time the job is popped from the pipe; if <0, not registered (as it is too late for action); the higher the better.
-    uint64 _time_job_avg_latency; // previous value.
+    uint64_t reduction_job_count;
+    uint64_t reduction_job_avg_latency; // latency: popping time.-pushing time; the lower the better.
+    uint64_t _reduction_job_avg_latency; // previous value.
+    uint64_t time_job_count;
+    uint64_t time_job_avg_latency; // latency: deadline-the time the job is popped from the pipe; if <0, not registered (as it is too late for action); the higher the better.
+    uint64_t _time_job_avg_latency; // previous value.
 
-    uint64 core_count;
+    uint64_t core_count;
     std::mutex m_coreCountMutex;
 
     State state;
@@ -166,20 +166,20 @@ protected:
 
     std::vector<Group *> initial_groups; // convenience; cleared after start();
 
-    void init_timings(uint64 now) const;
+    void init_timings(uint64_t now) const;
 
     void store(Code *object);
-    virtual void set_last_oid(int64 oid) = 0;
+    virtual void set_last_oid(int64_t oid) = 0;
     virtual void bind(View *view) = 0;
 
     bool deleted;
 
-    static const uint64 DebugStreamCount = 8;
+    static const uint64_t DebugStreamCount = 8;
     ostream *debug_streams[8];
 
     _Mem();
 
-    void _unpack_code(Code *hlp, uint16 fact_object_index, Code *fact_object, uint16 read_index) const;
+    void _unpack_code(Code *hlp, uint16_t fact_object_index, Code *fact_object, uint16_t read_index) const;
 public:
     static _Mem *Get() {
         return (_Mem *)Mem::Get();
@@ -192,65 +192,65 @@ public:
 
     virtual ~_Mem();
 
-    void init(uint64 base_period,
-              uint64 reduction_core_count,
-              uint64 time_core_count,
+    void init(uint64_t base_period,
+              uint64_t reduction_core_count,
+              uint64_t time_core_count,
               double mdl_inertia_sr_thr,
-              uint64 mdl_inertia_cnt_thr,
+              uint64_t mdl_inertia_cnt_thr,
               double tpx_dsr_thr,
-              uint64 min_sim_time_horizon,
-              uint64 max_sim_time_horizon,
+              uint64_t min_sim_time_horizon,
+              uint64_t max_sim_time_horizon,
               double sim_time_horizon,
-              uint64 tpx_time_horizon,
-              uint64 perf_sampling_period,
+              uint64_t tpx_time_horizon,
+              uint64_t perf_sampling_period,
               double float_tolerance,
-              uint64 time_tolerance,
-              uint64 primary_thz,
-              uint64 secondary_thz,
+              uint64_t time_tolerance,
+              uint64_t primary_thz,
+              uint64_t secondary_thz,
               bool debug,
-              uint64 ntf_mk_res,
-              uint64 goal_pred_success_res,
-              uint64 probe_level,
-              uint64 traces);
+              uint64_t ntf_mk_res,
+              uint64_t goal_pred_success_res,
+              uint64_t probe_level,
+              uint64_t traces);
 
-    uint64 get_probe_level() const {
+    uint64_t get_probe_level() const {
         return probe_level;
     }
     double get_mdl_inertia_sr_thr() const {
         return mdl_inertia_sr_thr;
     }
-    uint64 get_mdl_inertia_cnt_thr() const {
+    uint64_t get_mdl_inertia_cnt_thr() const {
         return mdl_inertia_cnt_thr;
     }
     double get_tpx_dsr_thr() const {
         return tpx_dsr_thr;
     }
-    uint64 get_min_sim_time_horizon() const {
+    uint64_t get_min_sim_time_horizon() const {
         return min_sim_time_horizon;
     }
-    uint64 get_max_sim_time_horizon() const {
+    uint64_t get_max_sim_time_horizon() const {
         return max_sim_time_horizon;
     }
-    uint64 get_sim_time_horizon(uint64 horizon) const {
+    uint64_t get_sim_time_horizon(uint64_t horizon) const {
         return horizon * sim_time_horizon;
     }
-    uint64 get_tpx_time_horizon() const {
+    uint64_t get_tpx_time_horizon() const {
         return tpx_time_horizon;
     }
-    uint64 get_primary_thz() const {
+    uint64_t get_primary_thz() const {
         return primary_thz;
     }
-    uint64 get_secondary_thz() const {
+    uint64_t get_secondary_thz() const {
         return secondary_thz;
     }
 
     bool get_debug() const {
         return debug;
     }
-    uint64 get_ntf_mk_res() const {
+    uint64_t get_ntf_mk_res() const {
         return ntf_mk_res;
     }
-    uint64 get_goal_pred_success_res(Group *host, uint64 now, uint64 time_to_live) const {
+    uint64_t get_goal_pred_success_res(Group *host, uint64_t now, uint64_t time_to_live) const {
 
         if (debug)
             return goal_pred_success_res;
@@ -270,9 +270,9 @@ public:
 
     /// call before start; no mod/set/eje will be executed (only inj);
     /// no cov at init time.
-    bool load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 stdout_oid, uint64 self_oid);
+    bool load(std::vector<r_code::Code *> *objects, uint64_t stdin_oid, uint64_t stdout_oid, uint64_t self_oid);
 // return false on error.
-    uint64 start(); // return the starting time.
+    uint64_t start(); // return the starting time.
     void stop(); // after stop() the content is cleared and one has to call load() and start() again.
 
 // Internal core processing ////////////////////////////////////////////////////////////////
@@ -287,7 +287,7 @@ public:
     void inject_async(View *view);
     void inject_new_object(View *view);
     void inject_existing_object(View *view, Code *object, Group *host);
-    void inject_null_program(Controller *c, Group *group, uint64 time_to_live, bool take_past_inputs); // build a view v (ijt=now, act=1, sln=0, res according to time_to_live in the group), attach c to v, inject v in the group.
+    void inject_null_program(Controller *c, Group *group, uint64_t time_to_live, bool take_past_inputs); // build a view v (ijt=now, act=1, sln=0, res according to time_to_live in the group), attach c to v, inject v in the group.
     void inject_hlps(std::vector<View *> views, Group *destination);
     void inject_notification(View *view, bool lock);
     virtual Code *check_existence(Code *object) = 0; // returns the existing object if any, or object otherwise: in the latter case, packing may occur.
@@ -298,14 +298,14 @@ public:
     void inject_copy(View *view, Group *destination); // for cov; NB: no cov for groups, r-groups, models, pgm or notifications.
 
 // Called by cores.
-    void register_reduction_job_latency(uint64 latency);
-    void register_time_job_latency(uint64 latency);
+    void register_reduction_job_latency(uint64_t latency);
+    void register_time_job_latency(uint64_t latency);
     void inject_perf_stats();
 
 // rMem to rMem.
 // The view must contain the destination group (either stdin or stdout) as its grp member.
 // To be redefined by object transport aware subcalsses.
-    virtual void eject(View *view, uint16 nodeID);
+    virtual void eject(View *view, uint16_t nodeID);
 
 // From rMem to I/O device.
 // To be redefined by object transport aware subcalsses.
@@ -316,13 +316,13 @@ public:
 
 // unpacking of high-level patterns: upon loading or reception.
     void unpack_hlp(Code *hlp) const;
-    Code *unpack_fact(Code *hlp, uint16 fact_index) const;
-    Code *unpack_fact_object(Code *hlp, uint16 fact_object_index) const;
+    Code *unpack_fact(Code *hlp, uint16_t fact_index) const;
+    Code *unpack_fact_object(Code *hlp, uint16_t fact_object_index) const;
 
 // packing of high-level patterns: upon dynamic generation or transmission.
     void pack_hlp(Code *hlp) const;
-    void pack_fact(Code *fact, Code *hlp, uint16 &write_index, std::vector<P<Code> > *references) const;
-    void pack_fact_object(Code *fact_object, Code *hlp, uint16 &write_index, std::vector<P<Code> > *references) const;
+    void pack_fact(Code *fact, Code *hlp, uint16_t &write_index, std::vector<P<Code> > *references) const;
+    void pack_fact_object(Code *fact_object, Code *hlp, uint16_t &write_index, std::vector<P<Code> > *references) const;
 
     Code *clone(Code *original) const; // shallow copy.
 
@@ -352,9 +352,9 @@ class r_exec_dll MemStatic:
     public _Mem {
 private:
     std::mutex m_objectsMutex; // protects last_oid and objects.
-    uint64 last_oid;
+    uint64_t last_oid;
     void bind(View *view); // assigns an oid, stores view->object in objects if needed.
-    void set_last_oid(int64 oid);
+    void set_last_oid(int64_t oid);
 protected:
     MemStatic();
 public:
@@ -370,9 +370,9 @@ class r_exec_dll MemVolatile:
     public _Mem {
 private:
     std::atomic_int_fast64_t last_oid;
-    uint64 get_oid();
+    uint64_t get_oid();
     void bind(View *view); // assigns an oid (atomic operation).
-    void set_last_oid(int64 oid);
+    void set_last_oid(int64_t oid);
 protected:
     MemVolatile();
 public:
@@ -414,7 +414,7 @@ public:
 
 /* DEPRECATED
 r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const char *user_operator_library_path,
- uint64 (*time_base)(),
+ uint64_t (*time_base)(),
  const char *seed_path,
  const char *source_file_name);*/
 }

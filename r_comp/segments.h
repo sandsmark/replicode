@@ -36,6 +36,8 @@
 
 #include "class.h"
 
+#include <unordered_map>
+
 
 using namespace r_code;
 
@@ -52,7 +54,7 @@ public:
 
 // All classes below map components of r_code::Image into r_comp::Image.
 // Both images are equivalent, the latter being easier to work with (uses vectors instead of a contiguous structure, that is r_code::Image::data).
-// All read(word32*,uint64)/write(word32*) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
+// All read(word32*,uint64_t)/write(word32*) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
 
 class dll_export Metadata {
 private:
@@ -65,8 +67,8 @@ private:
 public:
     Metadata();
 
-    UNORDERED_MAP<std::string, Class> classes; // non-sys classes, operators and device functions.
-    UNORDERED_MAP<std::string, Class> sys_classes;
+    std::unordered_map<std::string, Class> classes; // non-sys classes, operators and device functions.
+    std::unordered_map<std::string, Class> sys_classes;
 
     r_code::vector<std::string> class_names; // classes and sys-classes; does not include set classes.
     r_code::vector<std::string> operator_names;
@@ -105,7 +107,7 @@ public:
 
 class dll_export ObjectNames {
 public:
-    UNORDERED_MAP<uintptr_t, std::string> symbols; // indexed by objects' OIDs.
+    std::unordered_map<uintptr_t, std::string> symbols; // indexed by objects' OIDs.
 
     ~ObjectNames();
 
@@ -117,7 +119,7 @@ public:
 class dll_export Image {
 private:
     size_t map_offset;
-    UNORDERED_MAP<r_code::Code *, size_t> ptrs_to_indices; // used for injection in memory.
+    std::unordered_map<r_code::Code *, size_t> ptrs_to_indices; // used for injection in memory.
 
     void add_object(r_code::Code *object);
     SysObject *add_object(Code *object, std::vector<SysObject *> &imported_objects);
@@ -130,7 +132,7 @@ public:
     CodeSegment code_segment;
     ObjectNames object_names;
 
-    uint64 timestamp;
+    uint64_t timestamp;
 
     Image();
     ~Image();

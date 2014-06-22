@@ -65,21 +65,21 @@ HLPOverlay::HLPOverlay(Controller *c, const HLPBindingMap *bindings, bool load_c
 HLPOverlay::~HLPOverlay() {
 }
 
-Atom *HLPOverlay::get_value_code(uint16 id) const {
+Atom *HLPOverlay::get_value_code(uint16_t id) const {
 
     return bindings->get_value_code(id);
 }
 
-uint16 HLPOverlay::get_value_code_size(uint16 id) const {
+uint16_t HLPOverlay::get_value_code_size(uint16_t id) const {
 
     return bindings->get_value_code_size(id);
 }
 
-inline bool HLPOverlay::evaluate_guards(uint16 guard_set_iptr_index) {
+inline bool HLPOverlay::evaluate_guards(uint16_t guard_set_iptr_index) {
 
-    uint16 guard_set_index = code[guard_set_iptr_index].asIndex();
-    uint16 guard_count = code[guard_set_index].getAtomCount();
-    for (uint16 i = 1; i <= guard_count; ++i) {
+    uint16_t guard_set_index = code[guard_set_iptr_index].asIndex();
+    uint16_t guard_count = code[guard_set_index].getAtomCount();
+    for (uint16_t i = 1; i <= guard_count; ++i) {
 
         if (!evaluate(guard_set_index + i))
             return false;
@@ -97,30 +97,30 @@ bool HLPOverlay::evaluate_bwd_guards() {
     return evaluate_guards(HLP_BWD_GUARDS);
 }
 
-bool HLPOverlay::evaluate(uint16 index) {
+bool HLPOverlay::evaluate(uint16_t index) {
 
     HLPContext c(code, index, this);
-    uint16 result_index;
+    uint16_t result_index;
     return c.evaluate(result_index);
 }
 
 bool HLPOverlay::check_fwd_timings() {
 
-    int16 fwd_after_guard_index = -1;
-    int16 fwd_before_guard_index = -1;
+    int16_t fwd_after_guard_index = -1;
+    int16_t fwd_before_guard_index = -1;
 
-    uint16 bm_fwd_after_index = bindings->get_fwd_after_index();
-    uint16 bm_fwd_before_index = bindings->get_fwd_before_index();
+    uint16_t bm_fwd_after_index = bindings->get_fwd_after_index();
+    uint16_t bm_fwd_before_index = bindings->get_fwd_before_index();
 
-    uint16 guard_set_index = code[HLP_BWD_GUARDS].asIndex();
-    uint16 guard_count = code[guard_set_index].getAtomCount();
-    for (uint16 i = 1; i <= guard_count; ++i) { // find the relevant guards.
+    uint16_t guard_set_index = code[HLP_BWD_GUARDS].asIndex();
+    uint16_t guard_count = code[guard_set_index].getAtomCount();
+    for (uint16_t i = 1; i <= guard_count; ++i) { // find the relevant guards.
 
-        uint16 index = guard_set_index + i;
+        uint16_t index = guard_set_index + i;
         Atom a = code[index];
         if (a.getDescriptor() == Atom::ASSIGN_PTR) {
 
-            uint16 _i = a.asAssignmentIndex();
+            uint16_t _i = a.asAssignmentIndex();
             if (_i == bm_fwd_after_index)
                 fwd_after_guard_index = i;
             if (_i == bm_fwd_before_index)
@@ -140,11 +140,11 @@ bool HLPOverlay::check_fwd_timings() {
 
 bool HLPOverlay::scan_bwd_guards() {
 
-    uint16 guard_set_index = code[HLP_BWD_GUARDS].asIndex();
-    uint16 guard_count = code[guard_set_index].getAtomCount();
-    for (uint16 i = 1; i <= guard_count; ++i) {
+    uint16_t guard_set_index = code[HLP_BWD_GUARDS].asIndex();
+    uint16_t guard_count = code[guard_set_index].getAtomCount();
+    for (uint16_t i = 1; i <= guard_count; ++i) {
 
-        uint16 index = guard_set_index + i;
+        uint16_t index = guard_set_index + i;
         Atom a = code[index];
         switch (a.getDescriptor()) {
         case Atom::I_PTR:
@@ -160,7 +160,7 @@ bool HLPOverlay::scan_bwd_guards() {
     return true;
 }
 
-bool HLPOverlay::scan_location(uint16 index) {
+bool HLPOverlay::scan_location(uint16_t index) {
 
     Atom a = code[index];
     switch (a.getDescriptor()) {
@@ -174,8 +174,8 @@ bool HLPOverlay::scan_location(uint16 index) {
         else
             return scan_variable(a.asIndex());
     case Atom::OPERATOR: {
-        uint16 atom_count = a.getAtomCount();
-        for (uint16 j = 1; j <= atom_count; ++j) {
+        uint16_t atom_count = a.getAtomCount();
+        for (uint16_t j = 1; j <= atom_count; ++j) {
 
             if (!scan_location(index + j))
                 return false;
@@ -187,13 +187,13 @@ bool HLPOverlay::scan_location(uint16 index) {
     }
 }
 
-bool HLPOverlay::scan_variable(uint16 index) { // check if the variable can be bound.
+bool HLPOverlay::scan_variable(uint16_t index) { // check if the variable can be bound.
 
-    uint16 guard_set_index = code[HLP_BWD_GUARDS].asIndex();
-    uint16 guard_count = code[guard_set_index].getAtomCount();
-    for (uint16 i = 1; i <= guard_count; ++i) {
+    uint16_t guard_set_index = code[HLP_BWD_GUARDS].asIndex();
+    uint16_t guard_count = code[guard_set_index].getAtomCount();
+    for (uint16_t i = 1; i <= guard_count; ++i) {
 
-        uint16 index = guard_set_index + i;
+        uint16_t index = guard_set_index + i;
         Atom a = code[index];
         switch (a.getDescriptor()) {
         case Atom::ASSIGN_PTR:

@@ -42,8 +42,8 @@ class r_exec_dll _ReductionJob:
 protected:
     _ReductionJob();
 public:
-    uint64 ijt; // time of injection of the job in the pipe.
-    virtual bool update(uint64 now) = 0; // return false to shutdown the reduction core.
+    uint64_t ijt; // time of injection of the job in the pipe.
+    virtual bool update(uint64_t now) = 0; // return false to shutdown the reduction core.
     virtual void debug() {}
 };
 
@@ -53,7 +53,7 @@ public:
     P<View> input;
     P<_P> processor;
     ReductionJob(View *input, _P *processor): _ReductionJob(), input(input), processor(processor) {}
-    bool update(uint64 now);
+    bool update(uint64_t now);
     void debug() {
 
         processor->debug(input);
@@ -67,13 +67,13 @@ public:
     P<T> trigger; // the event that triggered the job.
     P<C> controller; // the controller that produced the job.
     BatchReductionJob(_P *processor, T *trigger, C *controller): _ReductionJob(), processor(processor), trigger(trigger), controller(controller) {}
-    bool update(uint64 now);
+    bool update(uint64_t now);
 };
 
 class r_exec_dll ShutdownReductionCore:
     public _ReductionJob {
 public:
-    bool update(uint64 now);
+    bool update(uint64_t now);
 };
 
 class r_exec_dll AsyncInjectionJob:
@@ -81,7 +81,7 @@ class r_exec_dll AsyncInjectionJob:
 public:
     P<View> input;
     AsyncInjectionJob(View *input): _ReductionJob(), input(input) {}
-    bool update(uint64 now);
+    bool update(uint64_t now);
 };
 }
 

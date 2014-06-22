@@ -71,7 +71,7 @@ template<class U> void ASTController<U>::reduce(View *input)
     if (input_object->is_invalidated()) { //std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got inv data "<<input->object->get_oid()<<std::endl;
         return;
     }
-//uint64 t0=Now();
+//uint64_t t0=Now();
     std::lock_guard<std::mutex> guard(m_reductionMutex);
 
     if (input_object == target){
@@ -96,7 +96,7 @@ template<class U> void ASTController<U>::reduce(View *input)
 //std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" TPX"<<target->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<" got "<<input->object->get_reference(0)->code(MK_VAL_VALUE).asFloat()<<std::endl;
     ((U *)this)->reduce(input, input_object);
 
-//uint64 t1=Now();
+//uint64_t t1=Now();
 //std::cout<<"ASTC: "<<t1-t0<<std::endl;
 }
 

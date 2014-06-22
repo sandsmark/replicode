@@ -52,13 +52,13 @@ namespace r_exec {
 class CSTOverlay:
     public HLPOverlay {
 protected:
-    uint64 match_deadline; // before deadline after the last match.
+    uint64_t match_deadline; // before deadline after the last match.
     double lowest_cfd; // among the inputs (forward chaining).
 
     std::vector<P<_Fact> > inputs;
 
-    UNORDERED_SET<P<_Fact>, PHash<_Fact> > predictions; // f0->pred->f1->obj.
-    UNORDERED_SET<P<Sim>, PHash<Sim> > simulations;
+    std::unordered_set<P<_Fact>, PHash<_Fact> > predictions; // f0->pred->f1->obj.
+    std::unordered_set<P<Sim>, PHash<Sim> > simulations;
 
     void inject_production();
     void update(HLPBindingMap *map, _Fact *input, _Fact *bound_pattern);
@@ -73,7 +73,7 @@ public:
 
     void load_patterns();
 
-    bool can_match(uint64 now) const;
+    bool can_match(uint64_t now) const;
 };
 
 // Backward chaining:
@@ -91,7 +91,7 @@ private:
                      Fact *super_goal, // f0->g->f1->icst.
                      _Fact *sub_goal_target, // f1.
                      Sim *sim,
-                     uint64 now,
+                     uint64_t now,
                      double confidence,
                      Code *group) const;
 
@@ -107,8 +107,8 @@ public:
     Fact *get_f_ihlp(HLPBindingMap *bindings, bool wr_enabled) const;
     Fact *get_f_icst(HLPBindingMap *bindings, std::vector<P<_Fact> > *inputs) const;
 
-    void inject_icst(Fact *production, double confidence, uint64 time_to_live) const; // here, resilience=time to live, in us.
-    bool inject_prediction(Fact *prediction, double confidence, uint64 time_to_live) const; // here, resilience=time to live, in us; returns true if the prediction has actually been injected.
+    void inject_icst(Fact *production, double confidence, uint64_t time_to_live) const; // here, resilience=time to live, in us.
+    bool inject_prediction(Fact *prediction, double confidence, uint64_t time_to_live) const; // here, resilience=time to live, in us; returns true if the prediction has actually been injected.
 
     void set_secondary_host(Group *host);
     Group *get_secondary_host() const;

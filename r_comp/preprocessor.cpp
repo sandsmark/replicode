@@ -61,7 +61,7 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
 
     root->reset(); // trims root from previously preprocessed objects.
 
-    uint64 a = 0, b = 0;
+    uint64_t a = 0, b = 0;
     if (root->parse(&stream, a, b) < 0) {
         error = root->printError();
         stream.close();
@@ -73,7 +73,7 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
         return 0;
     }
 
-    int64 pass = 0, total = 0, count;
+    int64_t pass = 0, total = 0, count;
     while ((count = root->process()) > 0) {
 
         total += count;
@@ -137,7 +137,7 @@ bool Preprocessor::isSet(std::string class_name)
 
 void Preprocessor::instantiateClass(RepliStruct *tpl_class, std::vector<RepliStruct *> &tpl_args, std::string &instantiated_class_name) {
 
-    static uint64 LastClassID = 0;
+    static uint64_t LastClassID = 0;
 // remove the trailing [].
     std::string sset = "[]";
     instantiated_class_name = tpl_class->cmd;
@@ -276,8 +276,8 @@ void Preprocessor::initialize(Metadata *metadata)
     this->metadata = metadata;
 
     class_opcode = 0;
-    uint16 function_opcode = 0;
-    uint16 operator_opcode = 0;
+    uint16_t function_opcode = 0;
+    uint16_t operator_opcode = 0;
 
     std::vector<StructureMember> r_xpr;
     metadata->classes[std::string(Class::Expression)] = Class(Atom::Object(class_opcode, 0), Class::Expression, r_xpr); // to read unspecified expressions in classes and sets.

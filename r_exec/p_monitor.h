@@ -51,7 +51,7 @@ public:
     ~PMonitor();
 
     bool reduce(_Fact *input);
-    void update(uint64 &next_target);
+    void update(uint64_t &next_target);
 };
 }
 

@@ -31,8 +31,9 @@
 #ifndef cpp_programs_h
 #define cpp_programs_h
 
-#include "overlay.h"
+#include <unordered_map>
 
+#include "overlay.h"
 
 namespace r_exec {
 
@@ -40,7 +41,7 @@ class r_exec_dll CPPPrograms {
 public:
     typedef Controller *(*Program)(r_code::View *);
 private:
-    static UNORDERED_MAP<std::string, Program> Programs;
+    static std::unordered_map<std::string, Program> Programs;
 public:
     static void Register(std::string &pgm_name, Program pgm);
     static Program Get(std::string &pgm_name);

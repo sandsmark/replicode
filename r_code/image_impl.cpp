@@ -33,7 +33,7 @@
 
 namespace r_code {
 
-void *ImageImpl::operator new(size_t s, uint64 data_size) {
+void *ImageImpl::operator new(size_t s, uint64_t data_size) {
 
     return ::operator new(s);
 }
@@ -43,7 +43,7 @@ void ImageImpl::operator delete(void *o) {
     ::operator delete(o);
 }
 
-ImageImpl::ImageImpl(uint64 timestamp, uint64 map_size, uint64 code_size, uint64 names_size): _timestamp(timestamp), _map_size(map_size), _code_size(code_size), _names_size(names_size) {
+ImageImpl::ImageImpl(uint64_t timestamp, uint64_t map_size, uint64_t code_size, uint64_t names_size): _timestamp(timestamp), _map_size(map_size), _code_size(code_size), _names_size(names_size) {
 
     _data = new uintptr_t[_map_size + _code_size + _names_size];
 }
@@ -53,7 +53,7 @@ ImageImpl::~ImageImpl() {
     delete[] _data;
 }
 
-uint64 ImageImpl::timestamp() const {
+uint64_t ImageImpl::timestamp() const {
 
     return _timestamp;
 }

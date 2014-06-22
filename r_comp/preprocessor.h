@@ -49,8 +49,8 @@ private:
         T_SET = 2
     } ClassType;
     Metadata *metadata;
-    uint16 class_opcode; // shared with sys_classes
-    UNORDERED_MAP<std::string, RepliStruct *> template_classes;
+    uint16_t class_opcode; // shared with sys_classes
+    std::unordered_map<std::string, RepliStruct *> template_classes;
     void instantiateClass(RepliStruct *tpl_class, std::vector<RepliStruct *> &tpl_args, std::string &instantiated_class_name);
     bool isSet(std::string class_name);
     bool isTemplateClass(RepliStruct *s);

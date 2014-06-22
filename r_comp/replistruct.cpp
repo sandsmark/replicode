@@ -8,8 +8,8 @@
 
 namespace r_comp {
 
-UNORDERED_MAP<std::string, RepliMacro *> RepliStruct::RepliMacros;
-UNORDERED_MAP<std::string, int64_t> RepliStruct::Counters;
+std::unordered_map<std::string, RepliMacro *> RepliStruct::RepliMacros;
+std::unordered_map<std::string, int64_t> RepliStruct::Counters;
 std::list<RepliCondition *> RepliStruct::Conditions;
 uint64_t RepliStruct::GlobalLine = 1;
 std::string RepliStruct::GlobalFilename;
@@ -969,7 +969,7 @@ bool RepliCondition::reverse() {
     return true;
 }
 
-bool RepliCondition::isActive(UNORDERED_MAP<std::string, RepliMacro *> &RepliMacros, UNORDERED_MAP<std::string, int64_t> &Counters) {
+bool RepliCondition::isActive(std::unordered_map<std::string, RepliMacro *> &RepliMacros, std::unordered_map<std::string, int64_t> &Counters) {
 
     bool foundIt = (RepliMacros.find(name) != RepliMacros.end());
 

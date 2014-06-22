@@ -31,10 +31,8 @@
 #ifndef r_code_vector_h
 #define r_code_vector_h
 
-#include "CoreLibrary/types.h"
-
-
-using namespace core;
+#include <vector>
+#include <cstddef>
 
 namespace r_code {
 
@@ -45,12 +43,12 @@ public:
     size_t size() const {
         return m_vector->size();
     }
-    T &operator [](uint64 i) {
+    T &operator [](size_t i) {
         if (i >= size())
             m_vector->resize(i + 1);
         return m_vector->at(i);
     }
-    T &operator [](uint64 i) const {
+    T &operator [](size_t i) const {
         return m_vector->at(i);
     }
     void push_back(T t) {

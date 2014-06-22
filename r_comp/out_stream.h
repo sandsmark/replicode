@@ -44,12 +44,12 @@ namespace r_comp {
 // ex: labels and variables, i.e. when iptrs are discovered and these hold indexes are < read_index and do not point to variables
 class OutStream {
 public:
-    r_code::vector<uint16> code_indexes_to_stream_indexes;
-    uint16 code_index;
+    r_code::vector<uint16_t> code_indexes_to_stream_indexes;
+    uint16_t code_index;
     r_code::vector<std::streampos> positions;
     OutStream(std::ostringstream *s): stream(s) {}
     std::ostringstream *stream;
-    template<typename T> OutStream &push(const T &t, uint16 code_index) {
+    template<typename T> OutStream &push(const T &t, uint16_t code_index) {
         positions.push_back(stream->tellp());
         code_indexes_to_stream_indexes[code_index] = positions.size() - 1;
         return *this << t;
@@ -63,14 +63,14 @@ public:
         *stream << t;
         return *this;
     }
-    template<typename T> OutStream &insert(uint64 index, const T &t) { // inserts before code_indexes_to_stream_indexes[index]
-        uint16 stream_index = code_indexes_to_stream_indexes[index];
+    template<typename T> OutStream &insert(uint64_t index, const T &t) { // inserts before code_indexes_to_stream_indexes[index]
+        uint16_t stream_index = code_indexes_to_stream_indexes[index];
         stream->seekp(positions[stream_index]);
         std::string s = stream->str().substr(positions[stream_index]);
         *stream << t;
         std::streamoff offset = stream->tellp() - positions[stream_index];
         *stream << s;
-        for (uint16 i = stream_index + 1; i < positions.size(); ++i) // right-shift
+        for (uint16_t i = stream_index + 1; i < positions.size(); ++i) // right-shift
             positions[i] += offset;
         return *this;
     }

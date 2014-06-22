@@ -31,6 +31,8 @@
 #ifndef callbacks_h
 #define callbacks_h
 
+#include <unordered_map>
+
 #include "overlay.h"
 
 
@@ -38,9 +40,9 @@ namespace r_exec {
 
 class r_exec_dll Callbacks {
 public:
-    typedef bool (*Callback)(uint64, bool, const char *, uint8, Code **);
+    typedef bool (*Callback)(uint64_t, bool, const char *, uint8_t, Code **);
 private:
-    static UNORDERED_MAP<std::string, Callback> _Callbacks;
+    static std::unordered_map<std::string, Callback> _Callbacks;
 public:
     static void Register(std::string &callback_name, Callback callback);
     static Callback Get(std::string &callback_name);

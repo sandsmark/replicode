@@ -33,9 +33,8 @@
 
 #include "CoreLibrary/types.h"
 
-#undef THIS
-
-using namespace core;
+#include <cstdint>
+#include <cstddef>
 
 namespace r_code {
 
@@ -45,10 +44,10 @@ namespace r_code {
 // To define bigger constructs (e.g. large matrices), define hooks to RAM (and derive classes from Object).
 class dll_export Atom {
 private: // trace utilities.
-    static uint8 Members_to_go;
-    static uint8 Timestamp_data;
-    static uint8 String_data;
-    static uint8 Char_count;
+    static uint8_t Members_to_go;
+    static uint8_t Timestamp_data;
+    static uint8_t String_data;
+    static uint8_t Char_count;
     void write_indents() const;
 
 public:
@@ -107,39 +106,39 @@ public:
     static Atom RPointer(uint32_t index);
     static Atom VLPointer(uint32_t index, uint32_t cast_opcode = 0x0FFFFFFF);
     static Atom IPGMPointer(uint32_t index);
-    static Atom InObjPointer(uint8 inputIndex, uint32_t index); // inputIndex: index of the input view; index: index of data in the object's code.
-    static Atom DInObjPointer(uint8 relativeIndex, uint32_t index); // relativeIndex: index of an in-obj-ptr in the program's (patched) code; index: index of data in the referenced object code.
+    static Atom InObjPointer(uint8_t inputIndex, uint32_t index); // inputIndex: index of the input view; index: index of data in the object's code.
+    static Atom DInObjPointer(uint8_t relativeIndex, uint32_t index); // relativeIndex: index of an in-obj-ptr in the program's (patched) code; index: index of data in the referenced object code.
     static Atom OutObjPointer(uint32_t index);
     static Atom ValuePointer(uint32_t index);
     static Atom ProductionPointer(uint32_t index);
-    static Atom AssignmentPointer(uint8 variable_index, uint32_t index);
+    static Atom AssignmentPointer(uint8_t variable_index, uint32_t index);
     static Atom This();
     static Atom View();
     static Atom Mks();
     static Atom Vws();
-    static Atom Node(uint8 nodeID);
+    static Atom Node(uint8_t nodeID);
     static Atom UndefinedNode();
-    static Atom Device(uint8 nodeID, uint8 classID, uint8 devID);
+    static Atom Device(uint8_t nodeID, uint8_t classID, uint8_t devID);
     static Atom UndefinedDevice();
     static Atom DeviceFunction(uint32_t opcode);
     static Atom UndefinedDeviceFunction();
-    static Atom CPointer(uint8 elementCount);
-    static Atom SSet(uint32_t opcode, uint8 elementCount);
-    static Atom Set(uint8 elementCount);
-    static Atom Object(uint32_t opcode, uint8 arity);
-    static Atom Marker(uint32_t opcode, uint8 arity);
-    static Atom Operator(uint32_t opcode, uint8 arity);
-    static Atom String(uint8 characterCount);
+    static Atom CPointer(uint8_t elementCount);
+    static Atom SSet(uint32_t opcode, uint8_t elementCount);
+    static Atom Set(uint8_t elementCount);
+    static Atom Object(uint32_t opcode, uint8_t arity);
+    static Atom Marker(uint32_t opcode, uint8_t arity);
+    static Atom Operator(uint32_t opcode, uint8_t arity);
+    static Atom String(uint8_t characterCount);
     static Atom UndefinedString();
     static Atom Timestamp();
     static Atom UndefinedTimestamp();
-    static Atom InstantiatedProgram(uint32_t opcode, uint8 arity);
-    static Atom Group(uint32_t opcode, uint8 arity);
-    static Atom InstantiatedCPPProgram(uint32_t opcode, uint8 arity);
-    static Atom InstantiatedAntiProgram(uint32_t opcode, uint8 arity);
-    static Atom InstantiatedInputLessProgram(uint32_t opcode, uint8 arity);
-    static Atom CompositeState(uint32_t opcode, uint8 arity);
-    static Atom Model(uint32_t opcode, uint8 arity);
+    static Atom InstantiatedProgram(uint32_t opcode, uint8_t arity);
+    static Atom Group(uint32_t opcode, uint8_t arity);
+    static Atom InstantiatedCPPProgram(uint32_t opcode, uint8_t arity);
+    static Atom InstantiatedAntiProgram(uint32_t opcode, uint8_t arity);
+    static Atom InstantiatedInputLessProgram(uint32_t opcode, uint8_t arity);
+    static Atom CompositeState(uint32_t opcode, uint8_t arity);
+    static Atom Model(uint32_t opcode, uint8_t arity);
 
     static Atom NullProgram(bool take_past_inputs);
     static Atom RawPointer(void *pointer);
@@ -157,7 +156,7 @@ public:
 
 // decoders
     bool isUndefined() const;
-    uint8 getDescriptor() const;
+    uint8_t getDescriptor() const;
     bool isStructural() const;
     bool isFloat() const;
     bool readsAsNil() const; // returns true for all undefined values.
@@ -165,19 +164,19 @@ public:
     bool asBoolean() const;
     uint32_t asIndex() const; // applicable to internal, view, reference,
 // and value pointers.
-    uint8 asInputIndex() const; // applicable to IN_OBJ_PTR.
-    uint8 asRelativeIndex() const; // applicable to D_IN_OBJ_PTR.
+    uint8_t asInputIndex() const; // applicable to IN_OBJ_PTR.
+    uint8_t asRelativeIndex() const; // applicable to D_IN_OBJ_PTR.
     uint32_t asOpcode() const;
     uint32_t asCastOpcode() const; // applicable to VL_PTR.
-    uint8 getAtomCount() const; // arity of operators and
+    uint8_t getAtomCount() const; // arity of operators and
 // objects/markers/structured sets,
 // number of atoms in pointers chains,
 // number of blocks of characters in
 // strings.
-    uint8 getNodeID() const; // applicable to nodes and devices.
-    uint8 getClassID() const; // applicable to devices.
-    uint8 getDeviceID() const; // applicable to devices.
-    uint8 asAssignmentIndex() const;
+    uint8_t getNodeID() const; // applicable to nodes and devices.
+    uint8_t getClassID() const; // applicable to devices.
+    uint8_t getDeviceID() const; // applicable to devices.
+    uint8_t asAssignmentIndex() const;
 
     bool takesPastInputs() const; // applicable to NULL_PROGRAM.
     template<class C> C *asRawPointer() const {
@@ -185,7 +184,7 @@ public:
     }
 
     void trace() const;
-    static void Trace(Atom *base, uint16 count);
+    static void Trace(Atom *base, uint16_t count);
 };
 }
 

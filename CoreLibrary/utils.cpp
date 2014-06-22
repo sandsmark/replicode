@@ -30,7 +30,7 @@
 
 #include "utils.h"
 
-#if defined WINDOWS
+#if defined(WIN32) || defined(WIN64)
 #include <intrin.h>
 #pragma intrinsic (_InterlockedDecrement)
 #pragma intrinsic (_InterlockedIncrement)
@@ -38,12 +38,12 @@
 #pragma intrinsic (_InterlockedExchange64)
 #pragma intrinsic (_InterlockedCompareExchange)
 #pragma intrinsic (_InterlockedCompareExchange64)
-#elif defined LINUX
+#else
 #ifdef DEBUG
 #include <map>
 #include <execinfo.h>
 #endif // DEBUG
-#endif //LINUX
+#endif //platform
 
 #include <algorithm>
 #include <cctype>
@@ -52,26 +52,6 @@
 #include <string.h>
 
 namespace core {
-
-
-#if defined LINUX
-bool CalcTimeout(struct timespec &timeout, uint64 ms) {
-
-    struct timeval now;
-    if (gettimeofday(&now, NULL) != 0)
-        return false;
-
-    timeout.tv_sec = now.tv_sec + ms / 1000;
-    long us = now.tv_usec + ms % 1000;
-    if (us >= 1000000) {
-        timeout.tv_sec++;
-        us -= 1000000;
-    }
-    timeout.tv_nsec = us * 1000; // usec -> nsec
-    return true;
-}
-
-#endif
 
 SharedLibrary *SharedLibrary::New(const char *fileName) {
 
@@ -89,17 +69,17 @@ SharedLibrary::SharedLibrary(): library(NULL) {
 }
 
 SharedLibrary::~SharedLibrary() {
-#if defined WINDOWS
+#if defined(WIN32) || defined(WIN64)
     if (library)
         FreeLibrary(library);
-#elif defined LINUX
+#else
     if (library)
         dlclose(library);
 #endif
 }
 
 SharedLibrary *SharedLibrary::load(const char *fileName) {
-#if defined WINDOWS
+#if defined(WIN32) || defined(WIN64)
     library = LoadLibrary(TEXT(fileName));
     if (!library) {
 
@@ -107,7 +87,7 @@ SharedLibrary *SharedLibrary::load(const char *fileName) {
         std::cerr << "> Error: unable to load shared library " << fileName << " :" << error << std::endl;
         return NULL;
     }
-#elif defined LINUX
+#else
     /*
     * libraries on Linux are called 'lib<name>.so'
     * if the passed in fileName does not have those
@@ -134,21 +114,11 @@ SharedLibrary *SharedLibrary::load(const char *fileName) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-#if defined WINDOWS
-typedef LONG NTSTATUS;
-typedef NTSTATUS(__stdcall *NSTR)(ULONG, BOOLEAN, PULONG);
-#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)
-bool NtSetTimerResolution(IN ULONG RequestedResolution, IN BOOLEAN Set, OUT PULONG ActualResolution);
-#elif defined LINUX
-// TODO
-#endif
-
-std::string Time::ToString_seconds(uint64 t)
+std::string Time::ToString_seconds(uint64_t t)
 {
-    uint64 us = t % 1000;
-    uint64 ms = t / 1000;
-    uint64 s = ms / 1000;
+    uint64_t us = t % 1000;
+    uint64_t ms = t / 1000;
+    uint64_t s = ms / 1000;
     ms = ms % 1000;
 
     std::string _s = std::to_string(s);
@@ -161,11 +131,11 @@ std::string Time::ToString_seconds(uint64 t)
     return _s;
 }
 
-std::string Time::ToString_year(uint64 t)
+std::string Time::ToString_year(uint64_t t)
 {
-    uint64 us = t % 1000;
-    uint64 ms = t / 1000;
-//uint64 s=ms/1000;
+    uint64_t us = t % 1000;
+    uint64_t ms = t / 1000;
+//uint64_t s=ms/1000;
     ms = ms % 1000;
 
     time_t _gmt_time;

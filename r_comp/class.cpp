@@ -73,9 +73,9 @@ bool Class::is_fact(Metadata *metadata) const {
     return (metadata->classes.find("fact")->second.atom == atom) || (metadata->classes.find("|fact")->second.atom == atom);
 }
 
-bool Class::get_member_index(Metadata *metadata, std::string &name, uint16 &index, Class *&p) const {
+bool Class::get_member_index(Metadata *metadata, std::string &name, uint16_t &index, Class *&p) const {
 
-    for (uint16 i = 0; i < things_to_read.size(); ++i)
+    for (uint16_t i = 0; i < things_to_read.size(); ++i)
         if (things_to_read[i].name == name) {
 
             index = (has_offset() ? i + 1 : i); // in expressions the lead r-atom is at 0; in objects, members start at 1
@@ -88,19 +88,19 @@ bool Class::get_member_index(Metadata *metadata, std::string &name, uint16 &inde
     return false;
 }
 
-std::string Class::get_member_name(uint64 index) {
+std::string Class::get_member_name(uint64_t index) {
 
     return things_to_read[has_offset() ? index - 1 : index].name;
 }
 
-ReturnType Class::get_member_type(const uint16 index) {
+ReturnType Class::get_member_type(const uint16_t index) {
 
     return things_to_read[has_offset() ? index - 1 : index].get_return_type();
 }
 
 Class *Class::get_member_class(Metadata *metadata, const std::string &name) {
 
-    for (uint16 i = 0; i < things_to_read.size(); ++i)
+    for (uint16_t i = 0; i < things_to_read.size(); ++i)
         if (things_to_read[i].name == name)
             return things_to_read[i].get_class(metadata);
     return NULL;
@@ -110,11 +110,11 @@ void Class::write(uintptr_t *storage) {
 
     storage[0] = atom.atom;
     r_code::Write(storage + 1, str_opcode);
-    uint64 offset = 1 + r_code::GetSize(str_opcode);
+    uint64_t offset = 1 + r_code::GetSize(str_opcode);
     storage[offset++] = type;
     storage[offset++] = use_as;
     storage[offset++] = things_to_read.size();
-    for (uint64 i = 0; i < things_to_read.size(); ++i) {
+    for (uint64_t i = 0; i < things_to_read.size(); ++i) {
 
         things_to_read[i].write(storage + offset);
         offset += things_to_read[i].get_size();
@@ -125,11 +125,11 @@ void Class::read(uintptr_t* storage) {
 
     atom = storage[0];
     r_code::Read(storage + 1, str_opcode);
-    uint64 offset = 1 + r_code::GetSize(str_opcode);
+    uint64_t offset = 1 + r_code::GetSize(str_opcode);
     type = (ReturnType)storage[offset++];
     use_as = (StructureMember::Iteration)storage[offset++];
-    uint64 member_count = storage[offset++];
-    for (uint64 i = 0; i < member_count; ++i) {
+    uint64_t member_count = storage[offset++];
+    for (uint64_t i = 0; i < member_count; ++i) {
 
         StructureMember m;
         m.read(storage + offset);

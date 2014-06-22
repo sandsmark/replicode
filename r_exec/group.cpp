@@ -53,9 +53,9 @@ inline bool Group::is_eligible_input(View *view) {
            get_c_act() > get_c_act_thr(); // active ipgm/icpp_pgm/cst/mdl in a c-salient and c-active group.
 }
 
-View *Group::get_view(uint64 OID) {
+View *Group::get_view(uint64_t OID) {
 
-    UNORDERED_MAP<uint64, P<View> >::const_iterator it = other_views.find(OID);
+    std::unordered_map<uint64_t, P<View> >::const_iterator it = other_views.find(OID);
     if (it != other_views.end())
         return it->second;
     it = group_views.find(OID);
@@ -157,8 +157,8 @@ void Group::update_stats() {
         double change = v->second->update_sln_delta();
         if (fabs(change) > get_sln_chg_thr()) {
 
-            uint16 ntf_grp_count = get_ntf_grp_count();
-            for (uint16 i = 1; i <= ntf_grp_count; ++i)
+            uint16_t ntf_grp_count = get_ntf_grp_count();
+            for (uint16_t i = 1; i <= ntf_grp_count; ++i)
                 _Mem::Get()->inject_notification(new NotificationView(this, get_ntf_grp(i), new MkSlnChg(_Mem::Get(), v->second->object, change)), false);
         }
 
@@ -172,8 +172,8 @@ void Group::update_stats() {
         double change = v->second->update_act_delta();
         if (fabs(change) > get_act_chg_thr()) {
 
-            uint16 ntf_grp_count = get_ntf_grp_count();
-            for (uint16 i = 1; i <= ntf_grp_count; ++i)
+            uint16_t ntf_grp_count = get_ntf_grp_count();
+            for (uint16_t i = 1; i <= ntf_grp_count; ++i)
                 _Mem::Get()->inject_notification(new NotificationView(this, get_ntf_grp(i), new MkActChg(_Mem::Get(), v->second->object, change)), false);
         }
 
@@ -340,8 +340,8 @@ double Group::update_res(View *v) {
     float res = v->update_res();
     if (!v->isNotification() && res > 0 && res < get_low_res_thr()) {
 
-        uint16 ntf_grp_count = get_ntf_grp_count();
-        for (uint16 i = 1; i <= ntf_grp_count; ++i)
+        uint16_t ntf_grp_count = get_ntf_grp_count();
+        for (uint16_t i = 1; i <= ntf_grp_count; ++i)
             _Mem::Get()->inject_notification(new NotificationView(this, get_ntf_grp(i), new MkLowRes(_Mem::Get(), v->object)), false);
     }
     return res;
@@ -364,14 +364,14 @@ double Group::update_sln(View *v) {
         if (v->periods_at_high_sln == get_sln_ntf_prd()) {
 
             v->periods_at_high_sln = 0;
-            uint16 ntf_grp_count = get_ntf_grp_count();
-            for (uint16 i = 1; i <= ntf_grp_count; ++i)
+            uint16_t ntf_grp_count = get_ntf_grp_count();
+            for (uint16_t i = 1; i <= ntf_grp_count; ++i)
                 _Mem::Get()->inject_notification(new NotificationView(this, get_ntf_grp(i), new MkHighSln(_Mem::Get(), v->object)), false);
         } else if (v->periods_at_low_sln == get_sln_ntf_prd()) {
 
             v->periods_at_low_sln = 0;
-            uint16 ntf_grp_count = get_ntf_grp_count();
-            for (uint16 i = 1; i <= ntf_grp_count; ++i)
+            uint16_t ntf_grp_count = get_ntf_grp_count();
+            for (uint16_t i = 1; i <= ntf_grp_count; ++i)
                 _Mem::Get()->inject_notification(new NotificationView(this, get_ntf_grp(i), new MkLowSln(_Mem::Get(), v->object)), false);
         }
     }
@@ -392,14 +392,14 @@ double Group::update_act(View *v) {
         if (v->periods_at_high_act == get_act_ntf_prd()) {
 
             v->periods_at_high_act = 0;
-            uint16 ntf_grp_count = get_ntf_grp_count();
-            for (uint16 i = 1; i <= ntf_grp_count; ++i)
+            uint16_t ntf_grp_count = get_ntf_grp_count();
+            for (uint16_t i = 1; i <= ntf_grp_count; ++i)
                 _Mem::Get()->inject_notification(new NotificationView(this, get_ntf_grp(i), new MkHighAct(_Mem::Get(), v->object)), false);
         } else if (v->periods_at_low_act == get_act_ntf_prd()) {
 
             v->periods_at_low_act = 0;
-            uint16 ntf_grp_count = get_ntf_grp_count();
-            for (uint16 i = 1; i <= ntf_grp_count; ++i)
+            uint16_t ntf_grp_count = get_ntf_grp_count();
+            for (uint16_t i = 1; i <= ntf_grp_count; ++i)
                 _Mem::Get()->inject_notification(new NotificationView(this, get_ntf_grp(i), new MkLowAct(_Mem::Get(), v->object)), false);
         }
     }
@@ -471,7 +471,7 @@ bool Group::load(View *view, Code *object) {
             c->gain_activation();
         break;
     } case Atom::MARKER: // populate the marker set of the referenced objects.
-        for (uint64 i = 0; i < object->references_size(); ++i)
+        for (uint64_t i = 0; i < object->references_size(); ++i)
             object->get_reference(i)->markers.push_back(object);
         other_views[view->get_oid()] = view;
         break;
@@ -483,7 +483,7 @@ bool Group::load(View *view, Code *object) {
     return true;
 }
 
-void Group::update(uint64 planned_time)
+void Group::update(uint64_t planned_time)
 {
     std::lock_guard<std::mutex> guard(mutex);
     if (this != _Mem::Get()->get_root() && views.size() == 0) {
@@ -491,7 +491,7 @@ void Group::update(uint64 planned_time)
         return;
     }
 
-    uint64 now = Now();
+    uint64_t now = Now();
 //if(get_secondary_group()!=NULL)
 // std::cout<<Utils::RelativeTime(Now())<<" UPR\n";
 //if(this==_Mem::Get()->get_stdin())
@@ -499,7 +499,7 @@ void Group::update(uint64 planned_time)
     newly_salient_views.clear();
 
 // execute pending operations.
-    for (uint64 i = 0; i < pending_operations.size(); ++i) {
+    for (uint64_t i = 0; i < pending_operations.size(); ++i) {
 
         pending_operations[i]->execute(this);
         delete pending_operations[i];
@@ -521,7 +521,7 @@ void Group::update(uint64 planned_time)
         delete_view(v);
     else {
 
-        uint64 ijt = v->second->get_ijt();
+        uint64_t ijt = v->second->get_ijt();
         if (ijt >= planned_time) { // in case the update happens later than planned, don't touch views that were injected after the planned update time: update next time.
 
             ++v;
@@ -566,7 +566,7 @@ void Group::update(uint64 planned_time)
 
     if (state.is_c_active && state.is_c_salient) { // build signaling jobs for new ipgms.
 
-        for (uint64 i = 0; i < new_controllers.size(); ++i) {
+        for (uint64_t i = 0; i < new_controllers.size(); ++i) {
 
             switch (new_controllers[i]->getObject()->code(0).getDescriptor()) {
             case Atom::INSTANTIATED_ANTI_PROGRAM: { // inject signaling jobs for |ipgm (tsc).
@@ -713,7 +713,7 @@ void Group::_initiate_sln_propagation(Code *object, double change, double source
 
         if (object->code(0).getDescriptor() == Atom::MARKER) { // if marker, propagate to references.
 
-            for (uint16 i = 0; i < object->references_size(); ++i)
+            for (uint16_t i = 0; i < object->references_size(); ++i)
                 _propagate_sln(object->get_reference(i), change, source_sln_thr, path);
         }
 
@@ -731,13 +731,13 @@ void Group::_initiate_sln_propagation(Code *object, double change, double source
     if (fabs(change) > object->get_psln_thr()) {
 
 // prevent loops.
-        for (uint64 i = 0; i < path.size(); ++i)
+        for (uint64_t i = 0; i < path.size(); ++i)
             if (path[i] == object)
                 return;
         path.push_back(object);
 
         if (object->code(0).getDescriptor() == Atom::MARKER) // if marker, propagate to references.
-            for (uint16 i = 0; i < object->references_size(); ++i)
+            for (uint16_t i = 0; i < object->references_size(); ++i)
                 _propagate_sln(object->get_reference(i), change, source_sln_thr, path);
 
 // propagate to markers
@@ -755,7 +755,7 @@ void Group::_propagate_sln(Code *object, double change, double source_sln_thr, s
         return;
 
 // prevent loops.
-    for (uint64 i = 0; i < path.size(); ++i)
+    for (uint64_t i = 0; i < path.size(); ++i)
         if (path[i] == object)
             return;
     path.push_back(object);
@@ -815,7 +815,7 @@ void Group::inject(View *view)
     std::lock_guard<std::mutex> guard(mutex);
 
     Atom a = view->object->code(0);
-    uint64 now = Now();
+    uint64_t now = Now();
     view->set_ijt(now);
     switch (a.getDescriptor()) {
     case Atom::NULL_PROGRAM: // the view comes with a controller.
@@ -935,10 +935,10 @@ void Group::inject(View *view)
 }
 
 void Group::inject_new_object(View *view) { // the view can hold anything but groups and notifications.
-//uint64 t0=Now();
+//uint64_t t0=Now();
     switch (view->object->code(0).getDescriptor()) {
     case Atom::MARKER: // the marker does not exist yet: add it to the mks of its references.
-        for (uint64 i = 0; i < view->object->references_size(); ++i) {
+        for (uint64_t i = 0; i < view->object->references_size(); ++i) {
 
             Code *ref = view->object->get_reference(i);
             ref->acq_markers();
@@ -952,7 +952,7 @@ void Group::inject_new_object(View *view) { // the view can hold anything but gr
 
     inject(view);
     notifyNew(view);
-//uint64 t1=Now();
+//uint64_t t1=Now();
 //std::cout<<"injection: "<<t1-t0<<std::endl;
 }
 
@@ -1031,7 +1031,7 @@ void Group::inject_notification(View *view, bool lock) {
 
     notification_views[view->get_oid()] = view;
 
-    for (uint64 i = 0; i < view->object->references_size(); ++i) {
+    for (uint64_t i = 0; i < view->object->references_size(); ++i) {
 
         Code *ref = view->object->get_reference(i);
         ref->acq_markers();
@@ -1065,7 +1065,7 @@ void Group::inject_reduction_jobs(View *view)
 // build reduction jobs from host's own inputs and overlays from viewing groups, if no cov and view is not a notification.
 // NB: visibility is not transitive;
 // no shadowing: if a view alresady exists in the viewing group, there will be twice the reductions: all of the identicals will be trimmed down at injection time.
-    UNORDERED_MAP<Group *, bool>::const_iterator vg;
+    std::unordered_map<Group *, bool>::const_iterator vg;
     for (vg = viewing_groups.begin(); vg != viewing_groups.end(); ++vg) {
 
         if (vg->second || view->isNotification()) // no reduction jobs when cov==true or view is a notification.
@@ -1084,15 +1084,15 @@ void Group::notifyNew(View *view) {
 
     if (get_ntf_new() == 1) {
 
-        uint16 ntf_grp_count = get_ntf_grp_count();
-        for (uint16 i = 1; i <= ntf_grp_count; ++i)
+        uint16_t ntf_grp_count = get_ntf_grp_count();
+        for (uint16_t i = 1; i <= ntf_grp_count; ++i)
             _Mem::Get()->inject_notification(new NotificationView(this, get_ntf_grp(i), new MkNew(_Mem::Get(), view->object)), get_ntf_grp(i) != this); // the object appears for the first time in the group: notify.
     }
 }
 
 void Group::cov(View *view) {
 
-    UNORDERED_MAP<Group *, bool>::const_iterator vg;
+    std::unordered_map<Group *, bool>::const_iterator vg;
     for (vg = viewing_groups.begin(); vg != viewing_groups.end(); ++vg) {
 
         if (vg->second) // cov==true, viewing group c-salient and c-active (otherwise it wouldn't be a viewing group).
@@ -1104,7 +1104,7 @@ void Group::cov() {
 
 // cov, i.e. injecting now newly salient views in the viewing groups from which the group is visible and has cov.
 // reduction jobs will be added at each of the eligible viewing groups' own update time.
-    UNORDERED_MAP<Group *, bool>::const_iterator vg;
+    std::unordered_map<Group *, bool>::const_iterator vg;
     for (vg = viewing_groups.begin(); vg != viewing_groups.end(); ++vg) {
 
         if (vg->second) { // cov==true.
@@ -1161,7 +1161,7 @@ void Group::delete_view(View *v) {
         }
 }
 
-void Group::delete_view(UNORDERED_MAP<uint64, P<View> >::const_iterator &v) {
+void Group::delete_view(std::unordered_map<uint64_t, P<View> >::const_iterator &v) {
 
     if (v->second->isNotification())
         v = notification_views.erase(v);
@@ -1237,23 +1237,23 @@ void Group::inject_secondary_mdl_controller(View *view) {
     s->set_primary(p);
 }
 
-uint64 Group::get_next_upr_time(uint64 now) const {
+uint64_t Group::get_next_upr_time(uint64_t now) const {
 
-    uint64 __upr = get_upr();
+    uint64_t __upr = get_upr();
     if (__upr == 0)
         return Utils::MaxTime;
-    uint64 _upr = __upr * Utils::GetBasePeriod();
-    uint64 delta = (now - Utils::GetTimeReference()) % _upr;
+    uint64_t _upr = __upr * Utils::GetBasePeriod();
+    uint64_t delta = (now - Utils::GetTimeReference()) % _upr;
     return now - delta + _upr;
 }
 
-uint64 Group::get_prev_upr_time(uint64 now) const {
+uint64_t Group::get_prev_upr_time(uint64_t now) const {
 
-    uint64 __upr = get_upr();
+    uint64_t __upr = get_upr();
     if (__upr == 0)
         return Utils::MaxTime;
-    uint64 _upr = __upr * Utils::GetBasePeriod();
-    uint64 delta = (now - Utils::GetTimeReference()) % _upr;
+    uint64_t _upr = __upr * Utils::GetBasePeriod();
+    uint64_t delta = (now - Utils::GetTimeReference()) % _upr;
     return now - delta;
 }
 }

@@ -48,15 +48,15 @@ protected:
 
     r_code::list<P<_Fact> > patterns;
 
-    bool evaluate_guards(uint16 guard_set_iptr_index);
+    bool evaluate_guards(uint16_t guard_set_iptr_index);
     bool evaluate_fwd_guards();
-    bool evaluate(uint16 index);
+    bool evaluate(uint16_t index);
 
     bool check_fwd_timings();
 
     bool scan_bwd_guards();
-    bool scan_location(uint16 index);
-    bool scan_variable(uint16 index);
+    bool scan_location(uint16_t index);
+    bool scan_variable(uint16_t index);
 
     void store_evidence(_Fact *evidence, bool prediction, bool simulation); // stores both actual and non-simulated predicted evidences.
 
@@ -73,8 +73,8 @@ public:
         return bindings;
     }
 
-    Atom *get_value_code(uint16 id) const;
-    uint16 get_value_code_size(uint16 id) const;
+    Atom *get_value_code(uint16_t id) const;
+    uint16_t get_value_code_size(uint16_t id) const;
 
     Code *get_unpacked_object() const;
 

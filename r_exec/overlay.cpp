@@ -80,7 +80,7 @@ void Overlay::rollback() {
 
     Code *object = get_core_object();
     Atom *original_code = &object->code(0);
-    for (uint16 i = 0; i < patch_indices.size(); ++i) // upatch code.
+    for (uint16_t i = 0; i < patch_indices.size(); ++i) // upatch code.
         code[patch_indices[i]] = original_code[patch_indices[i]];
     patch_indices.clear();
 
@@ -100,22 +100,22 @@ void Overlay::commit() {
     value_commit_index = values.size();
 }
 
-void Overlay::patch_code(uint16 index, Atom value) {
+void Overlay::patch_code(uint16_t index, Atom value) {
 
     code[index] = value;
     patch_indices.push_back(index);
 }
 
-uint16 Overlay::get_last_patch_index() {
+uint16_t Overlay::get_last_patch_index() {
 
     return patch_indices.size();
 }
 
-void Overlay::unpatch_code(uint16 patch_index) {
+void Overlay::unpatch_code(uint16_t patch_index) {
 
     Code *object = get_core_object();
     Atom *original_code = &object->code(0);
-    for (uint16 i = patch_index; i < patch_indices.size(); ++i)
+    for (uint16_t i = patch_index; i < patch_indices.size(); ++i)
         code[patch_indices[i]] = original_code[patch_indices[i]];
     patch_indices.resize(patch_index);
 }

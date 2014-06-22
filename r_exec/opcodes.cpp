@@ -33,70 +33,70 @@
 
 namespace r_exec {
 
-uint16 Opcodes::View;
-uint16 Opcodes::PgmView;
-uint16 Opcodes::GrpView;
+uint16_t Opcodes::View;
+uint16_t Opcodes::PgmView;
+uint16_t Opcodes::GrpView;
 
-uint16 Opcodes::Ent;
-uint16 Opcodes::Ont;
-uint16 Opcodes::MkVal;
+uint16_t Opcodes::Ent;
+uint16_t Opcodes::Ont;
+uint16_t Opcodes::MkVal;
 
-uint16 Opcodes::Grp;
+uint16_t Opcodes::Grp;
 
-uint16 Opcodes::Ptn;
-uint16 Opcodes::AntiPtn;
+uint16_t Opcodes::Ptn;
+uint16_t Opcodes::AntiPtn;
 
-uint16 Opcodes::IPgm;
-uint16 Opcodes::ICppPgm;
+uint16_t Opcodes::IPgm;
+uint16_t Opcodes::ICppPgm;
 
-uint16 Opcodes::Pgm;
-uint16 Opcodes::AntiPgm;
+uint16_t Opcodes::Pgm;
+uint16_t Opcodes::AntiPgm;
 
-uint16 Opcodes::ICmd;
-uint16 Opcodes::Cmd;
+uint16_t Opcodes::ICmd;
+uint16_t Opcodes::Cmd;
 
-uint16 Opcodes::Fact;
-uint16 Opcodes::AntiFact;
+uint16_t Opcodes::Fact;
+uint16_t Opcodes::AntiFact;
 
-uint16 Opcodes::Cst;
-uint16 Opcodes::Mdl;
+uint16_t Opcodes::Cst;
+uint16_t Opcodes::Mdl;
 
-uint16 Opcodes::ICst;
-uint16 Opcodes::IMdl;
+uint16_t Opcodes::ICst;
+uint16_t Opcodes::IMdl;
 
-uint16 Opcodes::Pred;
-uint16 Opcodes::Goal;
+uint16_t Opcodes::Pred;
+uint16_t Opcodes::Goal;
 
-uint16 Opcodes::Success;
+uint16_t Opcodes::Success;
 
-uint16 Opcodes::MkGrpPair;
+uint16_t Opcodes::MkGrpPair;
 
-uint16 Opcodes::MkRdx;
-uint16 Opcodes::Perf;
+uint16_t Opcodes::MkRdx;
+uint16_t Opcodes::Perf;
 
-uint16 Opcodes::MkNew;
+uint16_t Opcodes::MkNew;
 
-uint16 Opcodes::MkLowRes;
-uint16 Opcodes::MkLowSln;
-uint16 Opcodes::MkHighSln;
-uint16 Opcodes::MkLowAct;
-uint16 Opcodes::MkHighAct;
-uint16 Opcodes::MkSlnChg;
-uint16 Opcodes::MkActChg;
+uint16_t Opcodes::MkLowRes;
+uint16_t Opcodes::MkLowSln;
+uint16_t Opcodes::MkHighSln;
+uint16_t Opcodes::MkLowAct;
+uint16_t Opcodes::MkHighAct;
+uint16_t Opcodes::MkSlnChg;
+uint16_t Opcodes::MkActChg;
 
-uint16 Opcodes::Inject;
-uint16 Opcodes::Eject;
-uint16 Opcodes::Mod;
-uint16 Opcodes::Set;
-uint16 Opcodes::NewClass;
-uint16 Opcodes::DelClass;
-uint16 Opcodes::LDC;
-uint16 Opcodes::Swap;
-uint16 Opcodes::Prb;
-uint16 Opcodes::Stop;
+uint16_t Opcodes::Inject;
+uint16_t Opcodes::Eject;
+uint16_t Opcodes::Mod;
+uint16_t Opcodes::Set;
+uint16_t Opcodes::NewClass;
+uint16_t Opcodes::DelClass;
+uint16_t Opcodes::LDC;
+uint16_t Opcodes::Swap;
+uint16_t Opcodes::Prb;
+uint16_t Opcodes::Stop;
 
-uint16 Opcodes::Add;
-uint16 Opcodes::Sub;
-uint16 Opcodes::Mul;
-uint16 Opcodes::Div;
+uint16_t Opcodes::Add;
+uint16_t Opcodes::Sub;
+uint16_t Opcodes::Mul;
+uint16_t Opcodes::Div;
 }

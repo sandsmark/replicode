@@ -40,18 +40,18 @@ using namespace core;
 namespace r_code {
 
 // Time limited buffer.
-// T is expected a function: bool is_invalidated(uint64 time_reference,uint64 thz) const where time_reference and thz are valuated with the buffer's own.
+// T is expected a function: bool is_invalidated(uint64_t time_reference,uint64_t thz) const where time_reference and thz are valuated with the buffer's own.
 template<typename T, class IsInvalidated> class time_buffer:
     public list<T> {
 protected:
     using list<T>::used_cells_head;
 //using list<T>::_cells;
-    uint64 thz; // time horizon.
-    uint64 time_reference;
+    uint64_t thz; // time horizon.
+    uint64_t time_reference;
 public:
     time_buffer() : list<T>(), thz(Utils::MaxTHZ) {}
 
-    void set_thz(uint64 thz) {
+    void set_thz(uint64_t thz) {
         this->thz = thz;
     }
 
@@ -60,7 +60,7 @@ public:
     private:
         time_buffer *buffer;
         uintptr_t _cell;
-        iterator(time_buffer *b, int64 c): buffer(b), _cell(c) {}
+        iterator(time_buffer *b, int64_t c): buffer(b), _cell(c) {}
     public:
         iterator(): buffer(nullptr), _cell(0) {}
         T &operator *() const {
@@ -94,7 +94,7 @@ public:
 private:
     static iterator end_iterator;
 public:
-    iterator begin(uint64 time_reference) {
+    iterator begin(uint64_t time_reference) {
 
         this->time_reference = time_reference;
         return iterator(this, used_cells_head);
@@ -102,7 +102,7 @@ public:
     iterator &end() {
         return end_iterator;
     }
-    iterator find(uint64 time_reference, const T &t) {
+    iterator find(uint64_t time_reference, const T &t) {
 
         iterator i;
         for (i = begin(time_reference); i != end(); ++i) {

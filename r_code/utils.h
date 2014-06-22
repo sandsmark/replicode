@@ -35,6 +35,7 @@
 #include "CoreLibrary/base.h"
 #include "CoreLibrary/utils.h"
 
+using namespace core;
 
 namespace r_code {
 
@@ -60,27 +61,27 @@ class Code;
 
 class dll_export Utils {
 private:
-    static uint64 TimeReference; // starting time.
-    static uint64 BasePeriod;
+    static uint64_t TimeReference; // starting time.
+    static uint64_t BasePeriod;
     static double FloatTolerance;
-    static uint64 TimeTolerance;
+    static uint64_t TimeTolerance;
 public:
-    static uint64 GetTimeReference();
-    static uint64 GetBasePeriod();
-    static uint64 GetFloatTolerance();
-    static uint64 GetTimeTolerance();
+    static uint64_t GetTimeReference();
+    static uint64_t GetBasePeriod();
+    static uint64_t GetFloatTolerance();
+    static uint64_t GetTimeTolerance();
     static void SetReferenceValues(uint64_t base_period, double float_tolerance, double time_tolerance);
-    static void SetTimeReference(uint64 time_reference);
+    static void SetTimeReference(uint64_t time_reference);
 
     static bool Equal(double l, double r);
-    static bool Synchronous(uint64 l, uint64 r);
+    static bool Synchronous(uint64_t l, uint64_t r);
 
-    static uint64 GetTimestamp(const Atom *iptr);
-    static void SetTimestamp(Atom *iptr, uint64 t);
-    static void SetTimestamp(Code *object, uint32_t index, uint64 t); // allocates atoms.
+    static uint64_t GetTimestamp(const Atom *iptr);
+    static void SetTimestamp(Atom *iptr, uint64_t t);
+    static void SetTimestamp(Code *object, uint32_t index, uint64_t t); // allocates atoms.
 
-    static const uint64 MaxTime = 0xFFFFFFFFFFFFFFFF;
-    static const uint64 MaxTHZ = 0xFFFFFFFF;
+    static const uint64_t MaxTime = 0xFFFFFFFFFFFFFFFF;
+    static const uint64_t MaxTHZ = 0xFFFFFFFF;
 
     template<class O> static uint64_t GetTimestamp(const O *object, uint32_t index)
     {
@@ -90,7 +91,7 @@ public:
 
     template<class O> static void SetTimestamp(O *object, uint32_t index, uint64_t t)
     {
-        uint16 t_index = object->code(index).asIndex();
+        uint16_t t_index = object->code(index).asIndex();
         object->code(t_index) = Atom::Timestamp();
         object->code(t_index + 1).atom = t;
     }
@@ -98,14 +99,14 @@ public:
     static std::string GetString(const Atom *iptr);
     static void SetString(Atom *iptr, const std::string &s);
 
-    template<class O> static std::string GetString(const O *object, uint16 index) {
+    template<class O> static std::string GetString(const O *object, uint16_t index) {
 
-        uint16 s_index = object->code(index).asIndex();
+        uint16_t s_index = object->code(index).asIndex();
         char buffer[255];
-        uint8 char_count = (object->code(s_index).atom & 0x000000FF);
+        uint8_t char_count = (object->code(s_index).atom & 0x000000FF);
         buffer[char_count] = 0;
         for (int i = 0; i < char_count; i += 4) {
-            uint64 val = object->code(s_index + 1 + i / 4);
+            uint64_t val = object->code(s_index + 1 + i / 4);
             buffer[i] = (val & 0x000000ff);
             buffer[i + 1] = (val & 0x0000ff00) >> 8;
             buffer[i + 2] = (val & 0x00ff0000) >> 16;
@@ -114,14 +115,14 @@ public:
         return std::string(buffer);
     }
 
-    template<class O> static void SetString(O *object, uint16 index, const std::string &s) {
+    template<class O> static void SetString(O *object, uint16_t index, const std::string &s) {
 
-        uint16 s_index = object->code(index).asIndex();
-        uint8 l = (uint8)s.length();
+        uint16_t s_index = object->code(index).asIndex();
+        uint8_t l = (uint8_t)s.length();
         object->code(s_index) = Atom::String(l);
-        uint64 _st = 0;
-        int8 shift = 0;
-        for (uint8 i = 0; i < l; ++i) {
+        uint64_t _st = 0;
+        int8_t shift = 0;
+        for (uint8_t i = 0; i < l; ++i) {
 
             _st |= s[i] << shift;
             shift += 8;
@@ -136,10 +137,10 @@ public:
             object->code(++s_index) = _st;
     }
 
-    static int64 GetResilience(uint64 now, uint64 time_to_live, uint64 upr); // ttl: us, upr: us.
+    static int64_t GetResilience(uint64_t now, uint64_t time_to_live, uint64_t upr); // ttl: us, upr: us.
     static int64_t GetGroupResilience(double resilience, double origin_upr, double destination_upr); // express the res in destination group, given the res in origin group.
 
-    static std::string RelativeTime(uint64 t);
+    static std::string RelativeTime(uint64_t t);
 };
 }
 

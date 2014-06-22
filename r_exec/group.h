@@ -36,7 +36,7 @@
 #include "CoreLibrary/utils.h"
 #include "object.h"
 #include "view.h"
-
+#include <unordered_map>
 
 namespace r_exec {
 
@@ -51,19 +51,19 @@ class r_exec_dll Group:
     public LObject {
 private:
 // Ctrl values.
-    uint64 sln_thr_changes;
+    uint64_t sln_thr_changes;
     double acc_sln_thr;
-    uint64 act_thr_changes;
+    uint64_t act_thr_changes;
     double acc_act_thr;
-    uint64 vis_thr_changes;
+    uint64_t vis_thr_changes;
     double acc_vis_thr;
-    uint64 c_sln_changes;
+    uint64_t c_sln_changes;
     double acc_c_sln;
-    uint64 c_act_changes;
+    uint64_t c_act_changes;
     double acc_c_act;
-    uint64 c_sln_thr_changes;
+    uint64_t c_sln_thr_changes;
     double acc_c_sln_thr;
-    uint64 c_act_thr_changes;
+    uint64_t c_act_thr_changes;
     double acc_c_act_thr;
     void reset_ctrl_values();
 
@@ -74,28 +74,28 @@ private:
     double avg_act;
     double high_act;
     double low_act;
-    uint64 sln_updates;
-    uint64 act_updates;
+    uint64_t sln_updates;
+    uint64_t act_updates;
 
 // Decay.
     double sln_decay;
     double sln_thr_decay;
-    int64 decay_periods_to_go;
+    int64_t decay_periods_to_go;
     double decay_percentage_per_period;
     double decay_target; // -1: none, 0: sln, 1:sln_thr
     void reset_decay_values();
 
 // Notifications.
-    int64 sln_change_monitoring_periods_to_go = 0;
-    int64 act_change_monitoring_periods_to_go = 0;
+    int64_t sln_change_monitoring_periods_to_go = 0;
+    int64_t act_change_monitoring_periods_to_go = 0;
 
-    void _mod_0_positive(uint16 member_index, double value);
-    void _mod_0_plus1(uint16 member_index, double value);
-    void _mod_minus1_plus1(uint16 member_index, double value);
-    void _set_0_positive(uint16 member_index, double value);
-    void _set_0_plus1(uint16 member_index, double value);
-    void _set_minus1_plus1(uint16 member_index, double value);
-    void _set_0_1(uint16 member_index, double value);
+    void _mod_0_positive(uint16_t member_index, double value);
+    void _mod_0_plus1(uint16_t member_index, double value);
+    void _mod_minus1_plus1(uint16_t member_index, double value);
+    void _set_0_positive(uint16_t member_index, double value);
+    void _set_0_plus1(uint16_t member_index, double value);
+    void _set_minus1_plus1(uint16_t member_index, double value);
+    void _set_0_1(uint16_t member_index, double value);
 
     bool is_active_pgm(View *view);
     bool is_eligible_input(View *view);
@@ -131,18 +131,18 @@ public:
     std::mutex mutex;
 // xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
 // Active overlays are to be found in xxx_ipgm_views.
-    UNORDERED_MAP<uint64, P<View> > ipgm_views;
-    UNORDERED_MAP<uint64, P<View> > anti_ipgm_views;
-    UNORDERED_MAP<uint64, P<View> > input_less_ipgm_views;
-    UNORDERED_MAP<uint64, P<View> > notification_views;
-    UNORDERED_MAP<uint64, P<View> > group_views;
-    UNORDERED_MAP<uint64, P<View> > other_views;
+    std::unordered_map<uint64_t, P<View> > ipgm_views;
+    std::unordered_map<uint64_t, P<View> > anti_ipgm_views;
+    std::unordered_map<uint64_t, P<View> > input_less_ipgm_views;
+    std::unordered_map<uint64_t, P<View> > notification_views;
+    std::unordered_map<uint64_t, P<View> > group_views;
+    std::unordered_map<uint64_t, P<View> > other_views;
 
 // Defined to create reduction jobs in the viewing groups from the viewed group.
 // Empty when the viewed group is invisible (this means that visible groups can be non c-active or non c-salient).
 // Maintained by the viewing groups (at update time).
 // Viewing groups are c-active and c-salient. the bool is the cov.
-    UNORDERED_MAP<Group *, bool> viewing_groups;
+    std::unordered_map<Group *, bool> viewing_groups;
 
 // Populated within update; ordered by increasing ijt; cleared at the beginning of update.
     std::multiset<P<View>, r_code::View::Less> newly_salient_views;
@@ -152,25 +152,25 @@ public:
 
     class Operation {
     protected:
-        Operation(uint64 oid): oid(oid) {}
+        Operation(uint64_t oid): oid(oid) {}
     public:
         virtual ~Operation() {};
-        const uint64 oid; // of the view.
+        const uint64_t oid; // of the view.
         virtual void execute(Group *g) const = 0;
     };
 
     class ModSet:
         public Operation {
     protected:
-        ModSet(uint64 oid, uint16 member_index, double value): Operation(oid), member_index(member_index), value(value) {}
-        const uint16 member_index;
+        ModSet(uint64_t oid, uint16_t member_index, double value): Operation(oid), member_index(member_index), value(value) {}
+        const uint16_t member_index;
         const double value;
     };
 
     class Mod:
         public ModSet {
     public:
-        Mod(uint64 oid, uint16 member_index, double value): ModSet(oid, member_index, value) {}
+        Mod(uint64_t oid, uint16_t member_index, double value): ModSet(oid, member_index, value) {}
         void execute(Group *g) const {
 
             View *v = g->get_view(oid);
@@ -182,7 +182,7 @@ public:
     class Set:
         public ModSet {
     public:
-        Set(uint64 oid, uint16 member_index, double value): ModSet(oid, member_index, value) {}
+        Set(uint64_t oid, uint16_t member_index, double value): ModSet(oid, member_index, value) {}
         void execute(Group *g) const {
 
             View *v = g->get_view(oid);
@@ -200,7 +200,7 @@ public:
 
     bool invalidate(); // removes all views of itself and of any other object.
 
-    bool all_views_cond(uint8 &selector, UNORDERED_MAP<uint64, P<View> >::const_iterator &it, UNORDERED_MAP<uint64, P<View> >::const_iterator &end) {
+    bool all_views_cond(uint8_t &selector, std::unordered_map<uint64_t, P<View> >::const_iterator &it, std::unordered_map<uint64_t, P<View> >::const_iterator &end) {
         while (it == end) {
             switch (selector++) {
             case 0:
@@ -232,21 +232,21 @@ public:
     }
 
 #define FOR_ALL_VIEWS_BEGIN(g,it) { \
-        uint8 selector; \
-        UNORDERED_MAP<uint64,P<View> >::const_iterator it=g->ipgm_views.begin(); \
-        UNORDERED_MAP<uint64,P<View> >::const_iterator end=g->ipgm_views.end(); \
+        uint8_t selector; \
+        std::unordered_map<uint64_t,P<View> >::const_iterator it=g->ipgm_views.begin(); \
+        std::unordered_map<uint64_t,P<View> >::const_iterator end=g->ipgm_views.end(); \
         for(selector=0;g->all_views_cond(selector,it,end);++it){
 
 #define FOR_ALL_VIEWS_BEGIN_NO_INC(g,it) { \
-        uint8 selector; \
-        UNORDERED_MAP<uint64,P<View> >::const_iterator it=g->ipgm_views.begin(); \
-        UNORDERED_MAP<uint64,P<View> >::const_iterator end=g->ipgm_views.end(); \
+        uint8_t selector; \
+        std::unordered_map<uint64_t,P<View> >::const_iterator it=g->ipgm_views.begin(); \
+        std::unordered_map<uint64_t,P<View> >::const_iterator end=g->ipgm_views.end(); \
         for(selector=0;g->all_views_cond(selector,it,end);){
 
 #define FOR_ALL_VIEWS_END } \
 }
 
-    bool views_with_inputs_cond(uint8 &selector, UNORDERED_MAP<uint64, P<View> >::const_iterator &it, UNORDERED_MAP<uint64, P<View> >::const_iterator &end) {
+    bool views_with_inputs_cond(uint8_t &selector, std::unordered_map<uint64_t, P<View> >::const_iterator &it, std::unordered_map<uint64_t, P<View> >::const_iterator &end) {
         while (it == end) {
             switch (selector++) {
             case 0:
@@ -262,15 +262,15 @@ public:
     }
 
 #define FOR_ALL_VIEWS_WITH_INPUTS_BEGIN(g,it) { \
-        uint8 selector; \
-        UNORDERED_MAP<uint64,P<View> >::const_iterator it=g->ipgm_views.begin(); \
-        UNORDERED_MAP<uint64,P<View> >::const_iterator end=g->ipgm_views.end(); \
+        uint8_t selector; \
+        std::unordered_map<uint64_t,P<View> >::const_iterator it=g->ipgm_views.begin(); \
+        std::unordered_map<uint64_t,P<View> >::const_iterator end=g->ipgm_views.end(); \
         for(selector=0;g->views_with_inputs_cond(selector,it,end);++it){
 
 #define FOR_ALL_VIEWS_WITH_INPUTS_END } \
 }
 
-    bool non_ntf_views_cond(uint8 &selector, UNORDERED_MAP<uint64, P<View> >::const_iterator &it, UNORDERED_MAP<uint64, P<View> >::const_iterator &end) {
+    bool non_ntf_views_cond(uint8_t &selector, std::unordered_map<uint64_t, P<View> >::const_iterator &it, std::unordered_map<uint64_t, P<View> >::const_iterator &end) {
         while (it == end) {
             switch (selector++) {
             case 0:
@@ -298,17 +298,17 @@ public:
     }
 
 #define FOR_ALL_NON_NTF_VIEWS_BEGIN(g,it) { \
-        uint8 selector; \
-        UNORDERED_MAP<uint64,P<View> >::const_iterator it=g->ipgm_views.begin(); \
-        UNORDERED_MAP<uint64,P<View> >::const_iterator end=g->ipgm_views.end(); \
+        uint8_t selector; \
+        std::unordered_map<uint64_t,P<View> >::const_iterator it=g->ipgm_views.begin(); \
+        std::unordered_map<uint64_t,P<View> >::const_iterator end=g->ipgm_views.end(); \
         for(selector=0;g->non_ntf_views_cond(selector,it,end);++it){
 
 #define FOR_ALL_NON_NTF_VIEWS_END } \
 }
 
-    View *get_view(uint64 OID);
+    View *get_view(uint64_t OID);
 
-    uint64 get_upr() const;
+    uint64_t get_upr() const;
 
     double get_sln_thr() const;
     double get_act_thr() const;
@@ -365,8 +365,8 @@ public:
 
     double get_ntf_new();
 
-    uint16 get_ntf_grp_count();
-    Group *get_ntf_grp(uint16 i); // i starts at 1.
+    uint16_t get_ntf_grp_count();
+    Group *get_ntf_grp(uint16_t i); // i starts at 1.
 
 // Delegate to views; update stats and notifies.
     double update_res(View *v);
@@ -376,8 +376,8 @@ public:
 // Target upr, spr, c_sln, c_act, sln_thr, act_thr, vis_thr, c_sln_thr, c_act_thr, sln_chg_thr,
 // sln_chg_prd, act_chg_thr, act_chg_prd, high_sln_thr, low_sln_thr, sln_ntf_prd, high_act_thr, low_act_thr, act_ntf_prd, low_res_thr, res_ntf_prd, ntf_new,
 // dcy_per, dcy-tgt, dcy_prd.
-    void mod(uint16 member_index, double value);
-    void set(uint16 member_index, double value);
+    void mod(uint16_t member_index, double value);
+    void set(uint16_t member_index, double value);
 
     void reset_stats(); // called at the begining of an update.
     void update_stats(); // at the end of an update; may produce notifcations.
@@ -393,7 +393,7 @@ public:
 // - inject next update job for the group.
 // - inject new signaling jobs if act pgm with no input or act |pgm.
 // - notify high and low values.
-    void update(uint64 planned_time);
+    void update(uint64_t planned_time);
 
     void inject_new_object(View *view);
     void inject_existing_object(View *view);
@@ -422,14 +422,14 @@ public:
     };
 
     void delete_view(View *v);
-    void delete_view(UNORDERED_MAP<uint64, P<View> >::const_iterator &v);
+    void delete_view(std::unordered_map<uint64_t, P<View> >::const_iterator &v);
 
     Group *get_secondary_group();
     void load_secondary_mdl_controller(View *view);
     void inject_secondary_mdl_controller(View *view);
 
-    uint64 get_next_upr_time(uint64 now) const;
-    uint64 get_prev_upr_time(uint64 now) const;
+    uint64_t get_next_upr_time(uint64_t now) const;
+    uint64_t get_prev_upr_time(uint64_t now) const;
 };
 }
 

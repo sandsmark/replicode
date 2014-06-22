@@ -40,12 +40,12 @@
 
 using namespace r_comp;
 
-r_exec::View *build_view(uint64 time, Code* rstdin) { // this is application dependent WRT view->sync.
+r_exec::View *build_view(uint64_t time, Code* rstdin) { // this is application dependent WRT view->sync.
 
     r_exec::View *view = new r_exec::View();
-    const uint64 arity = VIEW_ARITY; // reminder: opcode not included in the arity.
-    uint16 write_index = 0;
-    uint16 extent_index = arity + 1;
+    const uint64_t arity = VIEW_ARITY; // reminder: opcode not included in the arity.
+    uint16_t write_index = 0;
+    uint16_t extent_index = arity + 1;
 
     view->code(VIEW_OPCODE) = Atom::SSet(r_exec::View::ViewOpcode, arity);
     view->code(VIEW_SYNC) = Atom::Float(View::SYNC_ONCE); // sync on front.
@@ -84,10 +84,10 @@ void test_injection(r_exec::_Mem *mem, double n) {
 
 // mem->timings_report.clear();
 
-// uint64 tt1 = 0;
-// uint64 tt2 = 0;
-// uint64 tt3 = 0;
-// uint64 tt4 = 0;
+// uint64_t tt1 = 0;
+// uint64_t tt2 = 0;
+// uint64_t tt3 = 0;
+// uint64_t tt4 = 0;
 
 // std::vector<uint64> v1, v2, v3, v4;
 // v1.reserve(n);
@@ -95,19 +95,19 @@ void test_injection(r_exec::_Mem *mem, double n) {
 // v3.reserve(n);
 // v4.reserve(n);
 
-    uint64 t0 = r_exec::Now();
+    uint64_t t0 = r_exec::Now();
 
     for (double i = 0; i < n; ++i) {
 // tt1 = r_exec::Now();
         Code* object = make_object(mem, rstdin, i);
 
-        uint64 now = r_exec::Now();
+        uint64_t now = r_exec::Now();
 // v1.push_back(now - tt1);
 
 // Build a fact.
 // tt2 = now;
         Code *fact = new r_exec::Fact(object, now, now, 1, 1);
-// uint64 tt = r_exec::Now();
+// uint64_t tt = r_exec::Now();
 // v2.push_back(tt - tt2);
 
 // Build a default view for the fact.
@@ -123,30 +123,30 @@ void test_injection(r_exec::_Mem *mem, double n) {
 // v4.push_back(r_exec::Now() - tt4);
     }
 
-    uint64 t1 = r_exec::Now();
-    uint64 t2 = t1 - t0;
+    uint64_t t1 = r_exec::Now();
+    uint64_t t2 = t1 - t0;
     debug("main") << "for-loop total time: " << t2;
-    /* uint64 acc=0;
-    for(uint64 i=0;i<n;++i){
+    /* uint64_t acc=0;
+    for(uint64_t i=0;i<n;++i){
     acc+=v1[i];
     std::cout<<v1[i]<<'\t';
     }
     std::cout<<"\nfor-loop accumulated time make_object: "<<acc<< std::endl;
     acc=0;
-    for(uint64 i=0;i<n;++i){
+    for(uint64_t i=0;i<n;++i){
     acc+=v2[i];
     // std::cout<<v2[i]<<'/'<<mem->timings_report[i]<<'\t';
     std::cout<<v2[i]<<'\t';
     }
     std::cout<<"\nfor-loop accumulated time new Fact : "<<acc<< std::endl;
     acc=0;
-    for(uint64 i=0;i<n;++i){
+    for(uint64_t i=0;i<n;++i){
     acc+=v3[i];
     std::cout<<v3[i]<<'\t';
     }
     std::cout<<"\nfor-loop accumulated time build_view : "<<acc<< std::endl;
     acc=0;
-    for(uint64 i=0;i<n;++i){
+    for(uint64_t i=0;i<n;++i){
     acc+=v4[i];
     std::cout<<v4[i]<<'\t';
     }
@@ -154,12 +154,12 @@ void test_injection(r_exec::_Mem *mem, double n) {
     */
 }
 
-void test_many_injections(r_exec::_Mem *mem, uint64 sampling_period_ms, uint64_t nRuns, double nObjects) {
+void test_many_injections(r_exec::_Mem *mem, uint64_t sampling_period_ms, uint64_t nRuns, double nObjects) {
     for (; nRuns; --nRuns) {
-        uint64 start = r_exec::Now();
+        uint64_t start = r_exec::Now();
         debug("test many injections") << "number of runs:" << nRuns;
         test_injection(mem, nObjects);
-        uint64 taken_ms = (r_exec::Now() - start) / 1000;
+        uint64_t taken_ms = (r_exec::Now() - start) / 1000;
         if (taken_ms > sampling_period_ms) {
             debug("test many injections") << "Good grief! I exceeded the sampling period!";
         } else {
@@ -168,15 +168,15 @@ void test_many_injections(r_exec::_Mem *mem, uint64 sampling_period_ms, uint64_t
     }
 }
 
-void decompile(Decompiler &decompiler, r_comp::Image *image, uint64 time_offset, bool ignore_named_objects) {
+void decompile(Decompiler &decompiler, r_comp::Image *image, uint64_t time_offset, bool ignore_named_objects) {
 
 #ifdef DECOMPILE_ONE_BY_ONE
-    uint64 object_count = decompiler.decompile_references(image);
+    uint64_t object_count = decompiler.decompile_references(image);
     std::cout << object_count << " objects in the image\n";
     while (1) {
 
         std::cout << "> which object (-1 to exit)?\n";
-        int64 index; std::cin >> index;
+        int64_t index; std::cin >> index;
         if (index == -1)
             break;
         if (index >= object_count) {
@@ -190,15 +190,15 @@ void decompile(Decompiler &decompiler, r_comp::Image *image, uint64 time_offset,
     }
 #else
     std::ostringstream decompiled_code;
-    uint64 object_count = decompiler.decompile(image, &decompiled_code, time_offset, ignore_named_objects);
-//uint64 object_count=image->code_segment.objects.size();
+    uint64_t object_count = decompiler.decompile(image, &decompiled_code, time_offset, ignore_named_objects);
+//uint64_t object_count=image->code_segment.objects.size();
     debug("main") << "decompilation:\n" << decompiled_code.str();
     debug("main") << "image taken at:" << Time::ToString_year(image->timestamp);
     debug("main") << object_count << "objects";
 #endif
 }
 
-void write_to_file(r_comp::Image *image, std::string &image_path, Decompiler *decompiler, uint64 time_offset) {
+void write_to_file(r_comp::Image *image, std::string &image_path, Decompiler *decompiler, uint64_t time_offset) {
 
     ofstream output(image_path.c_str(), ios::binary | ios::out);
     r_code::Image<r_code::ImageImpl> *i = image->serialize<r_code::Image<r_code::ImageImpl> >();
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
     } else {
         debug("main") << "source compiled!";
 
-#ifdef WINDOWS
+#if defined(WIN32) || defined(WIN64)
         r_exec::PipeOStream::Open(settings.debug_windows);
 #endif
 
@@ -302,13 +302,13 @@ int main(int argc, char **argv)
                   settings.probe_level,
                   settings.trace_levels);
 
-        uint64 stdin_oid;
+        uint64_t stdin_oid;
         std::string stdin_symbol("stdin");
-        uint64 stdout_oid;
+        uint64_t stdout_oid;
         std::string stdout_symbol("stdout");
-        uint64 self_oid;
+        uint64_t self_oid;
         std::string self_symbol("self");
-        UNORDERED_MAP<uintptr_t, std::string>::const_iterator n;
+        std::unordered_map<uintptr_t, std::string>::const_iterator n;
         for (n = r_exec::getSeed()->object_names.symbols.begin(); n != r_exec::getSeed()->object_names.symbols.end(); ++n) {
 
             if (n->second == stdin_symbol)
@@ -321,7 +321,7 @@ int main(int argc, char **argv)
 
         if (!mem->load(ram_objects.as_std(), stdin_oid, stdout_oid, self_oid))
             return 4;
-        uint64 starting_time = mem->start();
+        uint64_t starting_time = mem->start();
 
         debug("main") << "running for" << settings.run_time << "ms";
         std::this_thread::sleep_for(std::chrono::milliseconds(settings.run_time));
@@ -394,7 +394,7 @@ int main(int argc, char **argv)
         }
         delete mem;
 
-#ifdef WINDOWS
+#if defined(WIN32) || defined(WIN64)
         r_exec::PipeOStream::Close();
 #endif
     }

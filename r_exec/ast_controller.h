@@ -50,7 +50,7 @@ template<class U> class ASTController:
 protected:
     P<CTPX> tpx;
     P<_Fact> target; // the repeated fact to be monitored.
-    uint64 thz; // time horizon: if an input is caught with ijt<thz (meaning it's too old), discard it.
+    uint64_t thz; // time horizon: if an input is caught with ijt<thz (meaning it's too old), discard it.
 
     void kill();
 

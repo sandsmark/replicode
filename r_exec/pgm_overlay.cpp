@@ -102,19 +102,19 @@ inline void InputLessPGMOverlay::reset() {
     productions.clear();
 }
 
-inline bool InputLessPGMOverlay::evaluate(uint16 index) {
+inline bool InputLessPGMOverlay::evaluate(uint16_t index) {
 
     IPGMContext c(getObject()->get_reference(0), getView(), code, index, this);
-    uint16 result_index;
+    uint16_t result_index;
     return c.evaluate(result_index);
 }
 
 void InputLessPGMOverlay::patch_tpl_args() { // no rollback on that part of the code.
 //getObject()->trace();
-    uint16 tpl_arg_set_index = code[PGM_TPL_ARGS].asIndex(); // index to the set of all tpl patterns.
-    uint16 arg_count = code[tpl_arg_set_index].getAtomCount();
-    uint16 ipgm_arg_set_index = getObject()->code(IPGM_ARGS).asIndex(); // index to the set of all ipgm tpl args.
-    for (uint16 i = 1; i <= arg_count; ++i) { // pgm_code[tpl_arg_set_index+i] is an iptr to a pattern.
+    uint16_t tpl_arg_set_index = code[PGM_TPL_ARGS].asIndex(); // index to the set of all tpl patterns.
+    uint16_t arg_count = code[tpl_arg_set_index].getAtomCount();
+    uint16_t ipgm_arg_set_index = getObject()->code(IPGM_ARGS).asIndex(); // index to the set of all ipgm tpl args.
+    for (uint16_t i = 1; i <= arg_count; ++i) { // pgm_code[tpl_arg_set_index+i] is an iptr to a pattern.
 
         Atom &skel_iptr = code[code[tpl_arg_set_index + i].asIndex() + 1];
         patch_tpl_code(skel_iptr.asIndex(), getObject()->code(ipgm_arg_set_index + i).asIndex());
@@ -123,10 +123,10 @@ void InputLessPGMOverlay::patch_tpl_args() { // no rollback on that part of the 
 //Atom::Trace(pgm_code,getObject()->get_reference(0)->code_size());
 }
 
-void InputLessPGMOverlay::patch_tpl_code(uint16 pgm_code_index, uint16 ipgm_code_index) { // patch recursively : in pgm_code[index] with IPGM_PTRs until ::.
+void InputLessPGMOverlay::patch_tpl_code(uint16_t pgm_code_index, uint16_t ipgm_code_index) { // patch recursively : in pgm_code[index] with IPGM_PTRs until ::.
 
-    uint16 atom_count = code[pgm_code_index].getAtomCount();
-    for (uint16 j = 1; j <= atom_count; ++j) {
+    uint16_t atom_count = code[pgm_code_index].getAtomCount();
+    for (uint16_t j = 1; j <= atom_count; ++j) {
 
         switch (code[pgm_code_index + j].getDescriptor()) {
         case Atom::WILDCARD:
@@ -143,14 +143,14 @@ void InputLessPGMOverlay::patch_tpl_code(uint16 pgm_code_index, uint16 ipgm_code
     }
 }
 
-void InputLessPGMOverlay::patch_input_code(uint16 pgm_code_index, uint16 input_index, uint16 input_code_index, int16 parent_index) {
+void InputLessPGMOverlay::patch_input_code(uint16_t pgm_code_index, uint16_t input_index, uint16_t input_code_index, int16_t parent_index) {
 }
 
 bool InputLessPGMOverlay::inject_productions() {
 
-    uint64 now = Now();
+    uint64_t now = Now();
 
-    uint16 unused_index;
+    uint16_t unused_index;
     bool in_red = false; // if prods are computed by red, we have to evaluate the expression; otherwise, we have to evaluate the prods in the set one by one to be able to reference new objects in this->productions.
     IPGMContext prods(getObject()->get_reference(0), getView(), code, code[PGM_PRODS].asIndex(), this);
     if (prods[0].getDescriptor() != Atom::SET) { // prods[0] is not a set: it is assumed to be an expression lead by red.
@@ -165,9 +165,9 @@ bool InputLessPGMOverlay::inject_productions() {
         prods = *prods;
     }
 //prods.trace();
-    uint16 production_count = prods.getChildrenCount();
-    uint16 cmd_count = 0; // cmds to the executive (excl. mod/set) and external devices.
-    for (uint16 i = 1; i <= production_count; ++i) {
+    uint16_t production_count = prods.getChildrenCount();
+    uint16_t cmd_count = 0; // cmds to the executive (excl. mod/set) and external devices.
+    for (uint16_t i = 1; i <= production_count; ++i) {
 
         IPGMContext cmd = *prods.getChild(i);
         if (!in_red && !cmd.evaluate(unused_index)) {
@@ -201,7 +201,7 @@ bool InputLessPGMOverlay::inject_productions() {
 
                 Code *object;
                 IPGMContext arg1 = args.getChild(1);
-                uint16 index = arg1.getIndex();
+                uint16_t index = arg1.getIndex();
                 arg1 = *arg1;
 // arg1.trace();
                 if (arg1.is_reference())
@@ -227,11 +227,11 @@ bool InputLessPGMOverlay::inject_productions() {
     }
 
     Code *mk_rdx = NULL;
-    uint16 ntf_grp_count = getView()->get_host()->get_ntf_grp_count();
+    uint16_t ntf_grp_count = getView()->get_host()->get_ntf_grp_count();
 
-    uint16 write_index;
-    uint16 mk_rdx_prod_index;
-    uint16 extent_index;
+    uint16_t write_index;
+    uint16_t mk_rdx_prod_index;
+    uint16_t extent_index;
     if (ntf_grp_count && cmd_count && (getObject()->code(IPGM_NFR).asBoolean())) { // the productions are command objects (cmd); only injections/ejections and cmds to external devices are notified.
 
         mk_rdx = get_mk_rdx(write_index);
@@ -241,7 +241,7 @@ bool InputLessPGMOverlay::inject_productions() {
     }
 
 // all productions have evaluated correctly; now we can execute the commands one by one.
-    for (uint16 i = 1; i <= production_count; ++i) {
+    for (uint16_t i = 1; i <= production_count; ++i) {
 
         IPGMContext cmd = *prods.getChild(i);
         IPGMContext function = *cmd.getChild(1);
@@ -298,8 +298,8 @@ bool InputLessPGMOverlay::inject_productions() {
 
                 void *object;
                 IPGMContext::ObjectType object_type;
-                int16 member_index;
-                uint64 view_oid;
+                int16_t member_index;
+                uint64_t view_oid;
                 args.getChild(1).getMember(object, view_oid, object_type, member_index); // args.getChild(1) is an iptr.
 
                 if (object) {
@@ -329,8 +329,8 @@ bool InputLessPGMOverlay::inject_productions() {
 
                 void *object;
                 IPGMContext::ObjectType object_type;
-                int16 member_index;
-                uint64 view_oid;
+                int16_t member_index;
+                uint64_t view_oid;
                 args.getChild(1).getMember(object, view_oid, object_type, member_index); // args.getChild(1) is an iptr.
 
                 if (object) {
@@ -373,12 +373,12 @@ bool InputLessPGMOverlay::inject_productions() {
                         std::string msg = Utils::GetString(&(*args.getChild(3))[0]);
                         IPGMContext _objects = *args.getChild(4);
 
-                        uint8 object_count = _objects[0].getAtomCount();
+                        uint8_t object_count = _objects[0].getAtomCount();
                         Code **objects = NULL;
                         if (object_count) {
 
                             objects = new Code *[object_count];
-                            for (uint8 i = 1; i <= object_count; ++i)
+                            for (uint8_t i = 1; i <= object_count; ++i)
                                 objects[i - 1] = (*_objects.getChild(i)).getObject();
                         }
 
@@ -418,7 +418,7 @@ bool InputLessPGMOverlay::inject_productions() {
     if (mk_rdx) {
 
         mk_rdx->code(mk_rdx_prod_index) = Atom::Set(cmd_count);
-        for (uint16 i = 1; i <= ntf_grp_count; ++i) {
+        for (uint16_t i = 1; i <= ntf_grp_count; ++i) {
 
             NotificationView *v = new NotificationView(getView()->get_host(), getView()->get_host()->get_ntf_grp(i), mk_rdx);
             _Mem::Get()->inject_notification(v, true);
@@ -428,9 +428,9 @@ bool InputLessPGMOverlay::inject_productions() {
     return true;
 }
 
-Code *InputLessPGMOverlay::get_mk_rdx(uint16 &extent_index) const {
+Code *InputLessPGMOverlay::get_mk_rdx(uint16_t &extent_index) const {
 
-    uint16 write_index = 0;
+    uint16_t write_index = 0;
     extent_index = MK_RDX_ARITY + 1;
 
     Code *mk_rdx = new r_exec::LObject(_Mem::Get());
@@ -454,13 +454,13 @@ PGMOverlay::PGMOverlay(Controller *c): InputLessPGMOverlay(c) {
     init();
 }
 
-PGMOverlay::PGMOverlay(PGMOverlay *original, uint16 last_input_index, uint16 value_commit_index): InputLessPGMOverlay() {
+PGMOverlay::PGMOverlay(PGMOverlay *original, uint16_t last_input_index, uint16_t value_commit_index): InputLessPGMOverlay() {
 
     controller = original->controller;
 
     input_pattern_indices = original->input_pattern_indices;
     input_pattern_indices.push_back(last_input_index); // put back the last original's input index.
-    for (uint16 i = 0; i < original->input_views.size() - 1; ++i) // ommit the last original's input view.
+    for (uint16_t i = 0; i < original->input_views.size() - 1; ++i) // ommit the last original's input view.
         input_views.push_back(original->input_views[i]);
 
     code_size = original->code_size;
@@ -468,11 +468,11 @@ PGMOverlay::PGMOverlay(PGMOverlay *original, uint16 last_input_index, uint16 val
     memcpy(code, original->code, code_size * sizeof(r_code::Atom)); // copy patched code.
 
     Atom *original_code = &getObject()->get_reference(0)->code(0);
-    for (uint16 i = 0; i < original->patch_indices.size(); ++i) // unpatch code.
+    for (uint16_t i = 0; i < original->patch_indices.size(); ++i) // unpatch code.
         code[original->patch_indices[i]] = original_code[original->patch_indices[i]];
 
     this->value_commit_index = value_commit_index;
-    for (uint16 i = 0; i < value_commit_index; ++i) // copy values up to the last commit index.
+    for (uint16_t i = 0; i < value_commit_index; ++i) // copy values up to the last commit index.
         values.push_back(original->values[i]);
 
     is_volatile = original->is_volatile;
@@ -485,9 +485,9 @@ inline PGMOverlay::~PGMOverlay() {
 inline void PGMOverlay::init() {
 
 // init the list of pattern indices.
-    uint16 pattern_set_index = code[PGM_INPUTS].asIndex();
-    uint16 pattern_count = code[pattern_set_index].getAtomCount();
-    for (uint16 i = 1; i <= pattern_count; ++i)
+    uint16_t pattern_set_index = code[PGM_INPUTS].asIndex();
+    uint16_t pattern_count = code[pattern_set_index].getAtomCount();
+    for (uint16_t i = 1; i <= pattern_count; ++i)
         input_pattern_indices.push_back(code[pattern_set_index + i].asIndex());
 
     birth_time = 0;
@@ -506,7 +506,7 @@ bool PGMOverlay::is_invalidated() {
 
     if (is_volatile) {
 
-        for (uint64 i = 0; i < input_views.size(); ++i) {
+        for (uint64_t i = 0; i < input_views.size(); ++i) {
 
             if (input_views[i]->object->is_invalidated())
                 return (invalidated = 1);
@@ -530,9 +530,9 @@ Code *PGMOverlay::dereference_in_ptr(Atom a) {
     }
 }
 
-void PGMOverlay::patch_input_code(uint16 pgm_code_index, uint16 input_index, uint16 input_code_index, int16 parent_index) { // patch recursively : in pgm_code[pgm_code_index] with (D_)IN_OBJ_PTRs until ::.
+void PGMOverlay::patch_input_code(uint16_t pgm_code_index, uint16_t input_index, uint16_t input_code_index, int16_t parent_index) { // patch recursively : in pgm_code[pgm_code_index] with (D_)IN_OBJ_PTRs until ::.
 
-    uint16 atom_count = code[pgm_code_index].getAtomCount();
+    uint16_t atom_count = code[pgm_code_index].getAtomCount();
 
 // Replace the head of a structure by a ptr to the input object.
     Atom head;
@@ -543,9 +543,9 @@ void PGMOverlay::patch_input_code(uint16 pgm_code_index, uint16 input_index, uin
     patch_indices.push_back(pgm_code_index);
 
 // Proceed with the structure's members.
-    for (uint16 j = 1; j <= atom_count; ++j) {
+    for (uint16_t j = 1; j <= atom_count; ++j) {
 
-        uint16 patch_index = pgm_code_index + j;
+        uint16_t patch_index = pgm_code_index + j;
         switch (code[patch_index].getDescriptor()) {
         case Atom::T_WILDCARD: // leave as is and stop patching.
             return;
@@ -557,7 +557,7 @@ void PGMOverlay::patch_input_code(uint16 pgm_code_index, uint16 input_index, uin
             patch_indices.push_back(patch_index);
             break;
         case Atom::I_PTR: { // sub-structure: go one level deeper in the pattern.
-            uint16 indirection = code[patch_index].asIndex(); // save the indirection before patching.
+            uint16_t indirection = code[patch_index].asIndex(); // save the indirection before patching.
 
             if (parent_index < 0)
                 code[patch_index] = Atom::InObjPointer(input_index, input_code_index + j);
@@ -583,7 +583,7 @@ void PGMOverlay::patch_input_code(uint16 pgm_code_index, uint16 input_index, uin
 
 Overlay *PGMOverlay::reduce(r_exec::View *input) {
 
-    uint16 input_index;
+    uint16_t input_index;
     switch (match(input, input_index)) {
     case SUCCESS:
         if (input_pattern_indices.size() == 0) { // all patterns matched.
@@ -592,7 +592,7 @@ Overlay *PGMOverlay::reduce(r_exec::View *input) {
 
                 ((PGMController *)controller)->notify_reduction();
                 /*std::cout<<std::hex<<this<<std::dec<<" full match:";
-                for(uint16 i=0;i<input_views.size();++i)
+                for(uint16_t i=0;i<input_views.size();++i)
                 std::cout<<" "<<input_views[i]->object->get_oid();
                 std::cout<<std::endl;*/
                 PGMOverlay *offspring = new PGMOverlay(this, input_index, value_commit_index);
@@ -607,7 +607,7 @@ Overlay *PGMOverlay::reduce(r_exec::View *input) {
         } else { // create an overlay in a state where the last input is not matched: this overlay will be able to catch other candidates for the input patterns that have already been matched.
 
             /*std::cout<<std::hex<<this<<std::dec<<" partial match:";
-            for(uint16 i=0;i<input_views.size();++i)
+            for(uint16_t i=0;i<input_views.size();++i)
             std::cout<<" "<<input_views[i]->object->get_oid();
             std::cout<<std::endl;*/
             PGMOverlay *offspring = new PGMOverlay(this, input_index, value_commit_index);
@@ -624,11 +624,11 @@ Overlay *PGMOverlay::reduce(r_exec::View *input) {
     }
 }
 
-PGMOverlay::MatchResult PGMOverlay::match(r_exec::View *input, uint16 &input_index) {
+PGMOverlay::MatchResult PGMOverlay::match(r_exec::View *input, uint16_t &input_index) {
 
     input_views.push_back(input);
     bool failed = false;
-    r_code::list<uint16>::const_iterator it;
+    r_code::list<uint16_t>::const_iterator it;
     for (it = input_pattern_indices.begin(); it != input_pattern_indices.end(); ++it) {
 
         MatchResult r = _match(input, *it);
@@ -648,7 +648,7 @@ PGMOverlay::MatchResult PGMOverlay::match(r_exec::View *input, uint16 &input_ind
     return failed ? FAILURE : IMPOSSIBLE;
 }
 
-inline PGMOverlay::MatchResult PGMOverlay::_match(r_exec::View *input, uint16 pattern_index) {
+inline PGMOverlay::MatchResult PGMOverlay::_match(r_exec::View *input, uint16_t pattern_index) {
 
     if (code[pattern_index].asOpcode() == Opcodes::AntiPtn) {
 
@@ -675,14 +675,14 @@ inline PGMOverlay::MatchResult PGMOverlay::_match(r_exec::View *input, uint16 pa
     return IMPOSSIBLE;
 }
 
-inline PGMOverlay::MatchResult PGMOverlay::__match(r_exec::View *input, uint16 pattern_index) {
+inline PGMOverlay::MatchResult PGMOverlay::__match(r_exec::View *input, uint16_t pattern_index) {
 //Atom::Trace(pgm_code,getObject()->get_reference(0)->code_size());
 //input->object->trace();
     patch_input_code(code[pattern_index + 1].asIndex(), input_views.size() - 1, 0); // the input has just been pushed on input_views (see match); pgm_code[pattern_index+1].asIndex() is the structure pointed by the pattern's skeleton.
 //Atom::Trace(pgm_code,getObject()->get_reference(0)->code_size());
 //input->object->trace();
 // match: evaluate the set of guards.
-    uint16 guard_set_index = code[pattern_index + 2].asIndex();
+    uint16_t guard_set_index = code[pattern_index + 2].asIndex();
     if (!evaluate(guard_set_index))
         return FAILURE;
     return SUCCESS;
@@ -690,9 +690,9 @@ inline PGMOverlay::MatchResult PGMOverlay::__match(r_exec::View *input, uint16 p
 
 bool PGMOverlay::check_guards() {
 
-    uint16 guard_set_index = code[PGM_GUARDS].asIndex();
-    uint16 guard_count = code[guard_set_index].getAtomCount();
-    for (uint16 i = 1; i <= guard_count; ++i) {
+    uint16_t guard_set_index = code[PGM_GUARDS].asIndex();
+    uint16_t guard_count = code[guard_set_index].getAtomCount();
+    for (uint16_t i = 1; i <= guard_count; ++i) {
 
         if (!evaluate(guard_set_index + i))
             return false;
@@ -700,9 +700,9 @@ bool PGMOverlay::check_guards() {
     return true;
 }
 
-Code *PGMOverlay::get_mk_rdx(uint16 &extent_index) const {
+Code *PGMOverlay::get_mk_rdx(uint16_t &extent_index) const {
 
-    uint16 write_index = 0;
+    uint16_t write_index = 0;
     extent_index = MK_RDX_ARITY + 1;
 
     Code *mk_rdx = new r_exec::LObject(_Mem::Get());
@@ -712,7 +712,7 @@ Code *PGMOverlay::get_mk_rdx(uint16 &extent_index) const {
     mk_rdx->add_reference(getObject());
     mk_rdx->code(write_index++) = Atom::IPointer(extent_index); // inputs.
     mk_rdx->code(extent_index++) = Atom::Set(input_views.size());
-    for (uint16 i = 0; i < input_views.size(); ++i) {
+    for (uint16_t i = 0; i < input_views.size(); ++i) {
 
         mk_rdx->code(extent_index++) = Atom::RPointer(i + 1);
         mk_rdx->add_reference(input_views[i]->object);
@@ -728,7 +728,7 @@ Code *PGMOverlay::get_mk_rdx(uint16 &extent_index) const {
 AntiPGMOverlay::AntiPGMOverlay(Controller *c): PGMOverlay(c) {
 }
 
-inline AntiPGMOverlay::AntiPGMOverlay(AntiPGMOverlay *original, uint16 last_input_index, uint16 value_limit): PGMOverlay(original, last_input_index, value_limit) {
+inline AntiPGMOverlay::AntiPGMOverlay(AntiPGMOverlay *original, uint16_t last_input_index, uint16_t value_limit): PGMOverlay(original, last_input_index, value_limit) {
 }
 
 inline AntiPGMOverlay::~AntiPGMOverlay() {
@@ -736,7 +736,7 @@ inline AntiPGMOverlay::~AntiPGMOverlay() {
 
 Overlay *AntiPGMOverlay::reduce(r_exec::View *input) {
 
-    uint16 input_index;
+    uint16_t input_index;
     switch (match(input, input_index)) {
     case SUCCESS:
         if (input_pattern_indices.size() == 0) { // all patterns matched.

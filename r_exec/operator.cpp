@@ -43,7 +43,7 @@ namespace r_exec {
 
 r_code::vector<Operator> Operator::Operators;
 
-void Operator::Register(uint16 opcode, bool (*o)(const Context &, uint16 &index)) {
+void Operator::Register(uint16_t opcode, bool (*o)(const Context &, uint16_t &index)) {
 
     if (Operators[opcode]._operator)
         Operators[opcode].setOverload(o);
@@ -53,7 +53,7 @@ void Operator::Register(uint16 opcode, bool (*o)(const Context &, uint16 &index)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool now(const Context &context, uint16 &index) {
+bool now(const Context &context, uint16_t &index) {
 
     index = context.setTimestampResult(Now());
     return true;
@@ -61,7 +61,7 @@ bool now(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool rnd(const Context &context, uint16 &index) {
+bool rnd(const Context &context, uint16_t &index) {
 
     Context range = *context.getChild(1);
 
@@ -81,7 +81,7 @@ bool rnd(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool equ(const Context &context, uint16 &index) {
+bool equ(const Context &context, uint16_t &index) {
 
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
@@ -93,7 +93,7 @@ bool equ(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool neq(const Context &context, uint16 &index) {
+bool neq(const Context &context, uint16_t &index) {
 
     bool r = *context.getChild(1) != *context.getChild(2);
     index = context.setAtomicResult(Atom::Boolean(r));
@@ -102,7 +102,7 @@ bool neq(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool gtr(const Context &context, uint16 &index) {
+bool gtr(const Context &context, uint16_t &index) {
 
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
@@ -131,7 +131,7 @@ bool gtr(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool lsr(const Context &context, uint16 &index) {
+bool lsr(const Context &context, uint16_t &index) {
 
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
@@ -160,7 +160,7 @@ bool lsr(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool gte(const Context &context, uint16 &index) {
+bool gte(const Context &context, uint16_t &index) {
 
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
@@ -189,7 +189,7 @@ bool gte(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool lse(const Context &context, uint16 &index) {
+bool lse(const Context &context, uint16_t &index) {
 
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
@@ -218,7 +218,7 @@ bool lse(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool add(const Context &context, uint16 &index) {
+bool add(const Context &context, uint16_t &index) {
 
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
@@ -271,7 +271,7 @@ bool add(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool sub(const Context &context, uint16 &index) {
+bool sub(const Context &context, uint16_t &index) {
 
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
@@ -317,7 +317,7 @@ bool sub(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool mul(const Context &context, uint16 &index) {
+bool mul(const Context &context, uint16_t &index) {
 
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
@@ -388,7 +388,7 @@ bool mul(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool div(const Context &context, uint16 &index) {
+bool div(const Context &context, uint16_t &index) {
 
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
@@ -440,7 +440,7 @@ bool div(const Context &context, uint16 &index) {
             }
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
 
-            float64 rhs_t = (float64)Utils::GetTimestamp(&rhs[0]);
+            double rhs_t = (double)Utils::GetTimestamp(&rhs[0]);
             if (rhs_t != 0) {
 
                 index = context.setAtomicResult(Atom::Float(lhs[0].asDouble() / rhs_t));
@@ -453,16 +453,16 @@ bool div(const Context &context, uint16 &index) {
 
             if (rhs[0].asDouble() != 0) {
 
-                float64 lhs_t = (float64)Utils::GetTimestamp(&lhs[0]);
+                double lhs_t = (double)Utils::GetTimestamp(&lhs[0]);
                 index = context.setTimestampResult(lhs_t / rhs[0].asDouble());
                 return true;
             }
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
 
-            float64 rhs_t = (float64)Utils::GetTimestamp(&rhs[0]);
+            double rhs_t = (double)Utils::GetTimestamp(&rhs[0]);
             if (rhs_t != 0) {
 
-                float64 lhs_t = (float64)Utils::GetTimestamp(&lhs[0]);
+                double lhs_t = (double)Utils::GetTimestamp(&lhs[0]);
                 index = context.setAtomicResult(Atom::Float(lhs_t / rhs_t));
                 return true;
             }
@@ -475,7 +475,7 @@ bool div(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool dis(const Context &context, uint16 &index) {
+bool dis(const Context &context, uint16_t &index) {
 
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
@@ -491,9 +491,9 @@ bool dis(const Context &context, uint16 &index) {
 
         if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
 
-            uint64 lhs_t = Utils::GetTimestamp(&lhs[0]);
-            uint64 rhs_t = Utils::GetTimestamp(&rhs[0]);
-            index = context.setTimestampResult(fabs((float64)(lhs_t - rhs_t)));
+            uint64_t lhs_t = Utils::GetTimestamp(&lhs[0]);
+            uint64_t rhs_t = Utils::GetTimestamp(&rhs[0]);
+            index = context.setTimestampResult(fabs((double)(lhs_t - rhs_t)));
             return true;
         }
     }
@@ -504,7 +504,7 @@ bool dis(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ln(const Context &context, uint16 &index) {
+bool ln(const Context &context, uint16_t &index) {
 
     Context arg = *context.getChild(1);
 
@@ -523,7 +523,7 @@ bool ln(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool exp(const Context &context, uint16 &index) {
+bool exp(const Context &context, uint16_t &index) {
 
     Context arg = *context.getChild(1);
 
@@ -539,7 +539,7 @@ bool exp(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool log(const Context &context, uint16 &index) {
+bool log(const Context &context, uint16_t &index) {
 
     Context arg = *context.getChild(1);
 
@@ -558,7 +558,7 @@ bool log(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool e10(const Context &context, uint16 &index) {
+bool e10(const Context &context, uint16_t &index) {
 
     Context arg = *context.getChild(1);
 
@@ -574,28 +574,28 @@ bool e10(const Context &context, uint16 &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool syn(const Context &context, uint16 &index) {
+bool syn(const Context &context, uint16_t &index) {
 
     return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ins(const Context &context, uint16 &index) {
+bool ins(const Context &context, uint16_t &index) {
 
     return IPGMContext::Ins(*(IPGMContext *)context.get_implementation(), index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool red(const Context &context, uint16 &index) {
+bool red(const Context &context, uint16_t &index) {
 
     return IPGMContext::Red(*(IPGMContext *)context.get_implementation(), index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool fvw(const Context &context, uint16 &index) {
+bool fvw(const Context &context, uint16_t &index) {
 
     return IPGMContext::Fvw(*(IPGMContext *)context.get_implementation(), index);
 }

@@ -30,12 +30,12 @@
 
 namespace r_exec {
 
-inline r_code::Code *PGMOverlay::getInputObject(uint16 i) const {
+inline r_code::Code *PGMOverlay::getInputObject(uint16_t i) const {
 
     return input_views[i]->object;
 }
 
-inline r_code::View *PGMOverlay::getInputView(uint16 i) const {
+inline r_code::View *PGMOverlay::getInputView(uint16_t i) const {
 
     return (r_code::View *)input_views[i];
 }

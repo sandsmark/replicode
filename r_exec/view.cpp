@@ -42,16 +42,16 @@ namespace r_exec {
 
 std::mutex oidMutex;
 
-uint64 View::LastOID = 0;
+uint64_t View::LastOID = 0;
 
-uint64 View::GetOID()
+uint64_t View::GetOID()
 {
     std::lock_guard<std::mutex> guard(oidMutex);
-    uint64 oid = LastOID++;
+    uint64_t oid = LastOID++;
     return oid;
 }
 
-uint16 View::ViewOpcode;
+uint16_t View::ViewOpcode;
 
 double View::MorphValue(double value, double source_thr, double destination_thr) {
 

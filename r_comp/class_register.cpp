@@ -34,7 +34,7 @@
 
 namespace r_comp {
 
-UNORDERED_MAP<std::string, Atom> ClassRegister::Opcodes;
+std::unordered_map<std::string, Atom> ClassRegister::Opcodes;
 
 void ClassRegister::LoadClasses(const char *path) {
 
@@ -58,7 +58,7 @@ void ClassRegister::LoadClasses(const char *path) {
     }
     source_code.close();
 
-    UNORDERED_MAP<std::string, r_comp::Class>::iterator it;
+    std::unordered_map<std::string, r_comp::Class>::iterator it;
     for (it = _image->class_image.classes.begin(); it != _image->class_image.classes.end(); ++it) {
         Opcodes.insert(make_pair(it->first, it->second.atom));
         printf("CLASS %s=0x%08x\n", it->first.c_str(), it->second.atom.atom);
@@ -71,10 +71,10 @@ void ClassRegister::LoadClasses(const char *path) {
     delete _image;
 }
 
-uint16 ClassRegister::GetOpcode(const char *class_name) {
+uint16_t ClassRegister::GetOpcode(const char *class_name) {
 
     std::string s(class_name);
-    UNORDERED_MAP<std::string, Atom>::const_iterator it = Opcodes.find(s);
+    std::unordered_map<std::string, Atom>::const_iterator it = Opcodes.find(s);
     if (it != Opcodes.end())
         return it->second.asOpcode();
     return 0xFFFF;

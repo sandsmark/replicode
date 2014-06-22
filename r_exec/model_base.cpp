@@ -34,16 +34,16 @@
 
 namespace r_exec {
 
-uint64 ModelBase::MEntry::_ComputeHashCode(_Fact *component) { // 14 bits: [fact or |fact (1)|type (3)|data (10)].
+uint64_t ModelBase::MEntry::_ComputeHashCode(_Fact *component) { // 14 bits: [fact or |fact (1)|type (3)|data (10)].
 
-    uint64 hash_code;
+    uint64_t hash_code;
     if (component->is_fact())
         hash_code = 0x00000000;
     else
         hash_code = 0x00002000;
     Code *payload = component->get_reference(0);
     Atom head = payload->code(0);
-    uint16 opcode = head.asOpcode();
+    uint16_t opcode = head.asOpcode();
     switch (head.getDescriptor()) {
     case Atom::OBJECT:
         if (opcode == Opcodes::Cmd) { // type: 2.
@@ -70,9 +70,9 @@ uint64 ModelBase::MEntry::_ComputeHashCode(_Fact *component) { // 14 bits: [fact
     return hash_code;
 }
 
-uint64 ModelBase::MEntry::ComputeHashCode(Code *mdl, bool packed) {
+uint64_t ModelBase::MEntry::ComputeHashCode(Code *mdl, bool packed) {
 
-    uint64 hash_code = (mdl->code(mdl->code(HLP_TPL_ARGS).asIndex()).getAtomCount() << 28);
+    uint64_t hash_code = (mdl->code(mdl->code(HLP_TPL_ARGS).asIndex()).getAtomCount() << 28);
     _Fact *lhs;
     _Fact *rhs;
     if (packed) {
@@ -100,12 +100,12 @@ bool ModelBase::MEntry::Match(Code *lhs, Code *rhs) {
         return false;
     if (lhs->references_size() != rhs->references_size())
         return false;
-    for (uint16 i = 0; i < lhs->code_size(); ++i) {
+    for (uint16_t i = 0; i < lhs->code_size(); ++i) {
 
         if (lhs->code(i) != rhs->code(i))
             return false;
     }
-    for (uint16 i = 0; i < lhs->references_size(); ++i) {
+    for (uint16_t i = 0; i < lhs->references_size(); ++i) {
 
         if (!Match(lhs->get_reference(i), rhs->get_reference(i)))
             return false;
@@ -124,7 +124,7 @@ bool ModelBase::MEntry::match(const MEntry &e) const { // at this point both mod
     if (mdl == e.mdl)
         return true;
 
-    for (uint16 i = 0; i < mdl->code_size(); ++i) { // first check the mdl code: this checks on tpl args and guards.
+    for (uint16_t i = 0; i < mdl->code_size(); ++i) { // first check the mdl code: this checks on tpl args and guards.
 
         if (i == MDL_STRENGTH || i == MDL_CNT || i == MDL_SR || i == MDL_DSR || i == MDL_ARITY) // ignore house keeping data.
             continue;
@@ -163,7 +163,7 @@ ModelBase::ModelBase() {
 void ModelBase::trim_objects()
 {
     std::lock_guard<std::mutex> guard(m_mdlMutex);
-    uint64 now = Now();
+    uint64_t now = Now();
     MdlSet::iterator m;
     for (m = black_list.begin(); m != black_list.end();) {
         if (now - (*m).touch_time >= thz)

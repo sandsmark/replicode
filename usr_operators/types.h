@@ -34,9 +34,9 @@
 #include "../r_exec/operator.h"
 
 
-typedef bool (*Operator)(const r_exec::Context &, uint16 &);
+typedef bool (*Operator)(const r_exec::Context &, uint16_t &);
 
-typedef uint16(*OpcodeRetriever)(const char *);
+typedef uint16_t(*OpcodeRetriever)(const char *);
 
 
 #endif

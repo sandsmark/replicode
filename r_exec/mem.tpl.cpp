@@ -60,7 +60,7 @@ template<class O, class S> r_code::Code *Mem<O, S>::build_object(r_code::SysObje
     case Atom::GROUP:
         return new Group(source);
     default: {
-        uint16 opcode = head.asOpcode();
+        uint16_t opcode = head.asOpcode();
         if (opcode == Opcodes::Fact)
             return new Fact(source);
         else if (opcode == Opcodes::AntiFact)
@@ -105,7 +105,7 @@ template<class O, class S> r_code::Code *Mem<O, S>::build_object(Atom head) cons
         object = new Group();
         break;
     default: {
-        uint16 opcode = head.asOpcode();
+        uint16_t opcode = head.asOpcode();
         if (opcode == Opcodes::Fact)
             object = new Fact();
         else if (opcode == Opcodes::AntiFact)

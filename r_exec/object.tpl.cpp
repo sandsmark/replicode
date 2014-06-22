@@ -64,7 +64,7 @@ template<class C, class U> bool Object<C, U>::invalidate() {
 
     if (this->code(0).getDescriptor() == Atom::MARKER) {
 
-        for (uint16 i = 0; i < this->references_size(); ++i)
+        for (uint16_t i = 0; i < this->references_size(); ++i)
             this->get_reference(i)->remove_marker(this);
     }
 
@@ -88,7 +88,7 @@ template<class C, class U> double Object<C, U>::get_psln_thr()
     return r;
 }
 
-template<class C, class U> void Object<C, U>::mod(uint16 member_index, double value) {
+template<class C, class U> void Object<C, U>::mod(uint16_t member_index, double value) {
 
     if (member_index != this->code_size() - 1)
         return;
@@ -102,7 +102,7 @@ template<class C, class U> void Object<C, U>::mod(uint16 member_index, double va
     this->code(member_index) = Atom::Float(v);
 }
 
-template<class C, class U> void Object<C, U>::set(uint16 member_index, double value) {
+template<class C, class U> void Object<C, U>::set(uint16_t member_index, double value) {
 
     if (member_index != this->code_size() - 1)
         return;
@@ -119,7 +119,7 @@ template<class C, class U> View *Object<C, U>::get_view(Code *group, bool lock) 
     r_code::View probe;
     probe.references[0] = group;
 
-    UNORDERED_SET<r_code::View *, r_code::View::Hash, r_code::View::Equal>::const_iterator v = this->views.find(&probe);
+    std::unordered_set<r_code::View *, r_code::View::Hash, r_code::View::Equal>::const_iterator v = this->views.find(&probe);
     if (v != this->views.end()) {
 
         if (lock)

@@ -13,8 +13,8 @@ public:
     CorrelatorController(r_code::View *icpp_pgm_view): r_exec::Controller(icpp_pgm_view) {
 
 // Load arguments here.
-        uint16 arg_set_index = getObject()->code(ICPP_PGM_ARGS).asIndex();
-        uint16 arg_count = getObject()->code(arg_set_index).getAtomCount();
+        uint16_t arg_set_index = getObject()->code(ICPP_PGM_ARGS).asIndex();
+        uint16_t arg_count = getObject()->code(arg_set_index).getAtomCount();
 
         correlator = new Correlator();
 
@@ -61,11 +61,11 @@ public:
 //correlator=new Correlator();
     }
 
-    void decompile(uint64 time_offset) {
+    void decompile(uint64_t time_offset) {
 
         r_comp::Image *image = r_exec::_Mem::Get()->get_objects();
 
-        uint64 object_count = decompiler.decompile_references(image);
+        uint64_t object_count = decompiler.decompile_references(image);
 
 // from here on is different, by Bas
         static void* inst;
@@ -80,12 +80,12 @@ public:
                 inst = this;
             }
 
-            static std::string wrapper(uint64 id) {
+            static std::string wrapper(uint64_t id) {
                 return ((OID2string*)inst)->impl(id);
             }
 
-            std::string impl(uint64 id) {
-                for (uint16 j = 0; j < object_count; ++j)
+            std::string impl(uint64_t id) {
+                for (uint16_t j = 0; j < object_count; ++j)
                     if (objects[j]->oid == id) {
                         std::ostringstream decompiled_code;
                         decompiler.decompile_object(j, &decompiled_code, time_offset);
@@ -106,17 +106,17 @@ public:
         delete image;
     }
     /*
-    void decompile(uint64 time_offset){
+    void decompile(uint64_t time_offset){
 
     mem->suspend();
     r_comp::Image *image=((r_exec::Mem<r_exec::LObject> *)mem)->getImage();
     mem->resume();
 
-    uint64 object_count=decompiler.decompile_references(image);
+    uint64_t object_count=decompiler.decompile_references(image);
     std::cout<<object_count<<" objects in the image\n";
-    for(uint16 i=0;i<correlator->episode.size();++i){ // episode is ordered by injection times.
+    for(uint16_t i=0;i<correlator->episode.size();++i){ // episode is ordered by injection times.
 
-    for(uint16 j=0;j<object_count;++j){
+    for(uint16_t j=0;j<object_count;++j){
 
     if(((SysObject *)image->code_segment.objects[j])->oid==correlator->episode[i]){
 
@@ -216,23 +216,23 @@ CorrelatorOutput* Correlator::get_output(bool useEntireHistory) {
 }
 
 // not yet implemented
-void Correlator::dump(std::ostream& out, std::string(*oid2str)(uint64)) const {
+void Correlator::dump(std::ostream& out, std::string(*oid2str)(uint64_t)) const {
 
 // ::dump(episode, enc2obj, out, oid2str);
 }
 
 #else // USE_WINEPI
 
-uint16 Correlator::NUM_BLOCKS = 8;
-uint16 Correlator::CELLS_PER_BLOCK = 1;
-uint64 Correlator::NUM_EPOCHS = 2000;
-float64 Correlator::TRAIN_TIME_SEC = 600;
-float64 Correlator::MSE_THR = 0.001;
-float64 Correlator::LEARNING_RATE = 0.001;
-float64 Correlator::MOMENTUM = 0.01;
-uint64 Correlator::SLICE_SIZE = 5;
-float64 Correlator::OBJECT_THR = 0.5;
-float64 Correlator::RULE_THR = 0.5;
+uint16_t Correlator::NUM_BLOCKS = 8;
+uint16_t Correlator::CELLS_PER_BLOCK = 1;
+uint64_t Correlator::NUM_EPOCHS = 2000;
+double Correlator::TRAIN_TIME_SEC = 600;
+double Correlator::MSE_THR = 0.001;
+double Correlator::LEARNING_RATE = 0.001;
+double Correlator::MOMENTUM = 0.01;
+uint64_t Correlator::SLICE_SIZE = 5;
+double Correlator::OBJECT_THR = 0.5;
+double Correlator::RULE_THR = 0.5;
 
 // assigns to "result" size-32 vectors representing
 // all elements in episode, in order, that occur at least twice
@@ -252,11 +252,11 @@ static void makeNoislessInputs(Episode::const_iterator first, Episode::const_ite
 
     result.assign(std::distance(first, last) - noise.size(), LSTMState(32));
 
-    uint64 i = 0;
+    uint64_t i = 0;
     for (Episode::const_iterator it = first; it != last; ++it) {
         enc_t code = *it;
         if (noise.find(code) == noise.end()) {
-            for (uint64 j = 0, b = 1 << 31; j < 32; ++j, b >>= 1)
+            for (uint64_t j = 0, b = 1 << 31; j < 32; ++j, b >>= 1)
                 result[i][j] = code & b ? 1 : 0;
             ++i;
         }
@@ -442,8 +442,8 @@ CorrelatorOutput* Correlator::get_output(bool useEntireHistory) {
     } else
         corcor.appendBuffers(inputs);
     time_t start, current;
-    uint16 epoch;
-    float64 mse;
+    uint16_t epoch;
+    double mse;
     for (time(&start), time(&current), epoch = 0, mse = 0xFFFFFFFF;
             epoch < NUM_EPOCHS && mse > MSE_THR && difftime(current, start) < TRAIN_TIME_SEC;
             ++epoch, time(&current)) {
@@ -481,16 +481,16 @@ void Correlator::dump(std::ostream& out, std::string(*oid2str)(OID_t)) const {
 // but in the future we may implement a better algorithm
 enc_t Correlator::encode(OID_t id, bool& is_new) {
 
-    const static uint8 INIT_NUM_ONES = 4; // can be changed
-    static uint8 NUM_ONES = INIT_NUM_ONES; // #ones we want in the encoding
-    static uint8 NUM_POS = NUM_ONES; // #positions to flip
+    const static uint8_t INIT_NUM_ONES = 4; // can be changed
+    static uint8_t NUM_ONES = INIT_NUM_ONES; // #ones we want in the encoding
+    static uint8_t NUM_POS = NUM_ONES; // #positions to flip
     static enc_t INIT_CODE = 0; // either 0 of 0xFFFFFFFF
-// const static uint64 BINOMIALS[] = {1, 32, 496, 4960, 35960, 201376,
+// const static uint64_t BINOMIALS[] = {1, 32, 496, 4960, 35960, 201376,
 // 906192, 3365856, 10518300, 28048800, 64512240, 129024480,
 // 225792840, 347373600, 471435600, 565722720, 601080390};
 // cumulative binomials of 32 above <index>
 // Mathematica: Accumulate[Binomial[32, Range[0, 31]]]
-    const static uint64 CUML_BINS[] = {1, 33, 529, 5489, 41449, 242825,
+    const static uint64_t CUML_BINS[] = {1, 33, 529, 5489, 41449, 242825,
                                        1149017, 4514873, 15033173, 43081973, 107594213, 236618693,
                                        462411533, 809785133, 1281220733, 1846943453, 2448023843,
                                        3013746563, 3485182163, 3832555763, 4058348603, 4187373083,
@@ -498,7 +498,7 @@ enc_t Correlator::encode(OID_t id, bool& is_new) {
                                        4294925847, 4294961807, 4294966767, 4294967263, 4294967295
                                       };
 // used to determine when to use more ones in encodings
-    static uint64 MAX_SIZE = CUML_BINS[NUM_ONES] -
+    static uint64_t MAX_SIZE = CUML_BINS[NUM_ONES] -
                              (INIT_NUM_ONES > 0 ? CUML_BINS[INIT_NUM_ONES - 1] : 0);
 
 // first, check if we already have an encoding
@@ -542,14 +542,14 @@ enc_t Correlator::encode(OID_t id, bool& is_new) {
 
 // extracts rules of the form Target <= {(Src_1,Dt_1),..,(Src_n,Dt_n)}
 // for deltaTimes Dt_1 < .. < Dt_n
-void Correlator::extract_rules(JacobianRules& rules, uint64 episode_size) {
+void Correlator::extract_rules(JacobianRules& rules, uint64_t episode_size) {
 
-    uint64 num_calls = episode_size - SLICE_SIZE;
+    uint64_t num_calls = episode_size - SLICE_SIZE;
     rules.reserve(num_calls);
     JacobianSlice slice(SLICE_SIZE, LSTMState(32));
 
 
-    for (int64 t = num_calls - 1; t >= 0; --t) {
+    for (int64_t t = num_calls - 1; t >= 0; --t) {
 
 // perform sensitivity analysis
         corcor.getJacobian(t, t + SLICE_SIZE, slice);
@@ -563,9 +563,9 @@ void Correlator::extract_rules(JacobianRules& rules, uint64 episode_size) {
 // the later objects occurred closer to the target, so iterate in reverse
         JacobianSlice::reverse_iterator it = ++slice.rbegin();
         JacobianSlice::reverse_iterator end = slice.rend();
-        for (uint16 deltaTime = 1; it != end; ++it, ++deltaTime) {
+        for (uint16_t deltaTime = 1; it != end; ++it, ++deltaTime) {
 
-            float64 match;
+            double match;
             r_code::Code* source = findBestMatch(it->begin(), match);
 
 // no confidence, no correlation
@@ -593,7 +593,7 @@ void Correlator::extract_rules(JacobianRules& rules, uint64 episode_size) {
 // NOTE: assumes there are (at least) 32 elements accessible from "first"
 // TODO: might return an object not occurring in the partial episode if not using entire history
 template<class InputIterator>
-r_code::Code* Correlator::findBestMatch(InputIterator first, float64& bestMatch) const {
+r_code::Code* Correlator::findBestMatch(InputIterator first, double& bestMatch) const {
 
     r_code::Code* object = NULL;
     bestMatch = -1;
@@ -608,7 +608,7 @@ r_code::Code* Correlator::findBestMatch(InputIterator first, float64& bestMatch)
             continue;
         }
 
-        float64 match = 0;
+        double match = 0;
         InputIterator vit = first;
         for (enc_t b = 1 << 31; b; b >>= 1, ++vit)
             if (code & b)

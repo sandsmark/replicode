@@ -47,17 +47,17 @@ class LObject;
 class r_exec_dll View:
     public r_code::View {
 private:
-    static uint64 LastOID;
-    static uint64 GetOID();
+    static uint64_t LastOID;
+    static uint64_t GetOID();
 
 // Ctrl values.
-    uint64 sln_changes;
+    uint64_t sln_changes;
     double acc_sln;
-    uint64 act_changes;
+    uint64_t act_changes;
     double acc_act;
-    uint64 vis_changes;
+    uint64_t vis_changes;
     double acc_vis;
-    uint64 res_changes;
+    uint64_t res_changes;
     double acc_res;
     void reset_ctrl_values();
 
@@ -66,9 +66,9 @@ private:
     double initial_act;
 
     void init(SyncMode sync,
-              uint64 ijt,
+              uint64_t ijt,
               double sln,
-              int64 res,
+              int64_t res,
               r_code::Code *host,
               r_code::Code *origin,
               r_code::Code *object);
@@ -76,33 +76,33 @@ protected:
     void reset_init_sln();
     void reset_init_act();
 public:
-    static uint16 ViewOpcode;
+    static uint16_t ViewOpcode;
 
     P<Controller> controller; // built upon injection of the view (if the object is an ipgm/icpp_pgm/cst/mdl).
 
     static double MorphValue(double value, double source_thr, double destination_thr);
     static double MorphChange(double change, double source_thr, double destination_thr);
 
-    uint64 periods_at_low_sln;
-    uint64 periods_at_high_sln;
-    uint64 periods_at_low_act;
-    uint64 periods_at_high_act;
+    uint64_t periods_at_low_sln;
+    uint64_t periods_at_high_sln;
+    uint64_t periods_at_low_act;
+    uint64_t periods_at_high_act;
 
     View();
     View(r_code::SysView *source, r_code::Code *object);
     View(View *view, Group *group); // copy the view and assigns it to the group (used for cov); morph ctrl values.
     View(const View *view, bool new_OID = false); // simple copy.
     View(SyncMode sync,
-         uint64 ijt,
+         uint64_t ijt,
          double sln,
-         int64 res,
+         int64_t res,
          Code *host,
          Code *origin,
          Code *object); // regular view; res set to -1 means forever.
     View(SyncMode sync,
-         uint64 ijt,
+         uint64_t ijt,
          double sln,
-         int64 res,
+         int64_t res,
          Code *host,
          Code *origin,
          Code *object,
@@ -112,7 +112,7 @@ public:
     void reset();
     void set_object(r_code::Code *object);
 
-    uint64 get_oid() const;
+    uint64_t get_oid() const;
 
     virtual bool isNotification() const;
 
@@ -151,8 +151,8 @@ public:
     void force_res(double value); // unmediated.
 
 // Target res, sln, act, vis.
-    void mod(uint16 member_index, double value);
-    void set(uint16 member_index, double value);
+    void mod(uint16_t member_index, double value);
+    void set(uint16_t member_index, double value);
 
     void delete_from_object();
     void delete_from_group();

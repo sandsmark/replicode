@@ -43,7 +43,7 @@ class dll_export HLPContext:
     public _Context {
 public:
     HLPContext();
-    HLPContext(Atom *code, uint16 index, HLPOverlay *const overlay, Data data = STEM);
+    HLPContext(Atom *code, uint16_t index, HLPOverlay *const overlay, Data data = STEM);
 
     HLPContext operator *() const;
 
@@ -54,20 +54,20 @@ public:
         return *this;
     }
 
-    Atom &operator [](uint16 i) const {
+    Atom &operator [](uint16_t i) const {
         return code[index + i];
     }
 
     bool operator ==(const HLPContext &c) const;
     bool operator !=(const HLPContext &c) const;
 
-    HLPContext getChild(uint16 index) const {
+    HLPContext getChild(uint16_t index) const {
 
         return HLPContext(code, this->index + index, (HLPOverlay *)overlay);
     }
 
-    bool evaluate(uint16 &result_index) const; // index is set to the index of the result, undefined in case of failure.
-    bool evaluate_no_dereference(uint16 &result_index) const;
+    bool evaluate(uint16_t &result_index) const; // index is set to the index of the result, undefined in case of failure.
+    bool evaluate_no_dereference(uint16_t &result_index) const;
 
 // __Context implementation.
     _Context *assign(const _Context *c) {
@@ -80,17 +80,17 @@ public:
         return *this == *(HLPContext *)c;
     }
 
-    Atom &get_atom(uint16 i) const {
+    Atom &get_atom(uint16_t i) const {
         return this->operator [](i);
     }
 
-    uint16 get_object_code_size() const;
+    uint16_t get_object_code_size() const;
 
-    uint16 getChildrenCount() const {
+    uint16_t getChildrenCount() const {
 
         return code[index].getAtomCount();
     }
-    _Context *_getChild(uint16 index) const {
+    _Context *_getChild(uint16_t index) const {
 
         HLPContext *_c = new HLPContext(getChild(index));
         return _c;

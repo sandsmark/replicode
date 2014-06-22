@@ -57,9 +57,9 @@ inline View::View(const View *view, bool new_OID): r_code::View(), controller(NU
 }
 
 inline View::View(SyncMode sync,
-                  uint64 ijt,
+                  uint64_t ijt,
                   double sln,
-                  int64 res,
+                  int64_t res,
                   Code *destination,
                   Code *origin,
                   Code *object): r_code::View(), controller(NULL) {
@@ -69,9 +69,9 @@ inline View::View(SyncMode sync,
 }
 
 inline View::View(SyncMode sync,
-                  uint64 ijt,
+                  uint64_t ijt,
                   double sln,
-                  int64 res,
+                  int64_t res,
                   Code *destination,
                   Code *origin,
                   Code *object,
@@ -83,9 +83,9 @@ inline View::View(SyncMode sync,
 }
 
 inline void View::init(SyncMode sync,
-                       uint64 ijt,
+                       uint64_t ijt,
                        double sln,
-                       int64 res,
+                       int64_t res,
                        Code *destination,
                        Code *origin,
                        Code *object) {
@@ -120,7 +120,7 @@ inline void View::reset() {
     reset_init_act();
 }
 
-inline uint64 View::get_oid() const {
+inline uint64_t View::get_oid() const {
 
     return _code[VIEW_OID].atom;
 }
@@ -131,13 +131,13 @@ inline bool View::isNotification() const {
 }
 
 inline Group *View::get_host() {
-    uint64 host_reference = code(VIEW_HOST).asIndex();
+    uint64_t host_reference = code(VIEW_HOST).asIndex();
     return (Group *)references[host_reference];
 }
 
 inline View::SyncMode View::get_sync() {
 
-    return (SyncMode)(uint64)code(VIEW_SYNC).asDouble();
+    return (SyncMode)(uint64_t)code(VIEW_SYNC).asDouble();
 }
 
 inline double View::get_res() {
@@ -239,7 +239,7 @@ inline void View::force_res(double value) {
     code(VIEW_RES) = Atom::Float(value);
 }
 
-inline void View::mod(uint16 member_index, double value) {
+inline void View::mod(uint16_t member_index, double value) {
 
     switch (member_index) {
     case VIEW_SLN:
@@ -257,7 +257,7 @@ inline void View::mod(uint16 member_index, double value) {
     }
 }
 
-inline void View::set(uint16 member_index, double value) {
+inline void View::set(uint16_t member_index, double value) {
 
     switch (member_index) {
     case VIEW_SLN:

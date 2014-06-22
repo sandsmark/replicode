@@ -33,20 +33,20 @@
 
 #include "CoreLibrary/types.h"
 
-
-using namespace core;
+#include <cstdint>
+#include <cstddef>
 
 namespace r_code {
 
 class dll_export ImageImpl {
 private:
     uintptr_t *_data; // [object map|code segment|object names]
-    uint64 _timestamp;
+    uint64_t _timestamp;
     size_t _map_size;
     size_t _code_size;
     size_t _names_size;
 protected:
-    uint64 timestamp() const;
+    uint64_t timestamp() const;
     size_t map_size() const;
     size_t code_size() const;
     size_t names_size() const;
@@ -54,9 +54,9 @@ protected:
     uintptr_t &data(size_t i);
     uintptr_t &data(size_t i) const;
 public:
-    void *operator new(size_t, uint64 data_size);
+    void *operator new(size_t, uint64_t data_size);
     void operator delete(void *o);
-    ImageImpl(uint64 timestamp, uint64 map_size, uint64 code_size, uint64 names_size);
+    ImageImpl(uint64_t timestamp, uint64_t map_size, uint64_t code_size, uint64_t names_size);
     ~ImageImpl();
 };
 }

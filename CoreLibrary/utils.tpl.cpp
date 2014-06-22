@@ -30,18 +30,15 @@
 
 #include <iostream>
 
-#if defined (WINDOWS)
-#elif defined (LINUX)
+#if !defined(WIN32) || !defined(WIN64)
 #include <dlfcn.h>
-#else
-#error "Not yet ported to your platform"
 #endif
 
 namespace core {
 
 template<typename T> T SharedLibrary::getFunction(const char *functionName) {
     T function = NULL;
-#if defined WINDOWS
+#if defined(WIN32) || defined(WIN64)
     if (library) {
 
         function = (T)GetProcAddress(library, functionName);
@@ -51,7 +48,7 @@ template<typename T> T SharedLibrary::getFunction(const char *functionName) {
             std::cerr << "GetProcAddress > Error: " << error << std::endl;
         }
     }
-#elif defined LINUX
+#else
     if (library) {
         function = T(dlsym(library, functionName));
         if (!function) {

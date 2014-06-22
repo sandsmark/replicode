@@ -40,21 +40,21 @@ AutoFocusController::AutoFocusController(r_code::View *view): Controller(view) {
 
 // Load arguments: pass_through, acquire_models, decompile_models, list of output groups: 1st must be the primary, 2nd the secondary, then other groups.
     Code *icpp_pgm = getObject();
-    uint16 arg_set_index = icpp_pgm->code(ICPP_PGM_ARGS).asIndex();
-    uint16 arg_count = icpp_pgm->code(arg_set_index).getAtomCount();
-    uint8 i = 1;
+    uint16_t arg_set_index = icpp_pgm->code(ICPP_PGM_ARGS).asIndex();
+    uint16_t arg_count = icpp_pgm->code(arg_set_index).getAtomCount();
+    uint8_t i = 1;
     _pass_through = icpp_pgm->code(arg_set_index + i++).asBoolean();
     _ctpx_on = icpp_pgm->code(arg_set_index + i++).asBoolean();
     _gtpx_on = icpp_pgm->code(arg_set_index + i++).asBoolean();
     _ptpx_on = icpp_pgm->code(arg_set_index + i++).asBoolean();
     _trace_injections = icpp_pgm->code(arg_set_index + i++).asBoolean();
     _decompile_models = icpp_pgm->code(arg_set_index + i).asBoolean();
-    for (uint16 j = i; j < arg_count; ++j)
+    for (uint16_t j = i; j < arg_count; ++j)
         output_groups.push_back((Group *)icpp_pgm->get_reference(j - i));
 
     cross_buffer.set_thz(_Mem::Get()->get_tpx_time_horizon());
     cross_buffer.reserve(CrossBufferInitialSize);
-    uint64 thz = 2 * ((r_exec::View*)view)->get_host()->get_upr() * Utils::GetBasePeriod(); // thz==2*sampling period.
+    uint64_t thz = 2 * ((r_exec::View*)view)->get_host()->get_upr() * Utils::GetBasePeriod(); // thz==2*sampling period.
     cache.set_thz(thz);
     cache.reserve(CacheInitialSize);
 }
@@ -70,7 +70,7 @@ Code *AutoFocusController::get_core_object() const {
 inline void AutoFocusController::inject_input(View *input, uint64_t start) {
 
     Group *origin = input->get_host();
-    for (uint16 i = start; i < output_groups.size(); ++i) {
+    for (uint16_t i = start; i < output_groups.size(); ++i) {
 
         Group *output_group = output_groups[i];
         View *view = new View(input, true);
@@ -93,13 +93,13 @@ inline View *AutoFocusController::inject_input(View *input) {
     Group *origin = input->get_host();
     Group *ref_group = output_groups[0];
 
-    uint64 now = Now();
+    uint64_t now = Now();
 
     View *primary_view;
     _Fact *copy;
     switch (input->get_sync()) {
     case View::SYNC_ONCE: // no copy, morph res; N.B.: cmds are sync_once.
-        for (uint16 i = 0; i < output_groups.size(); ++i) {
+        for (uint16_t i = 0; i < output_groups.size(); ++i) {
 
             Group *output_group = output_groups[i];
             View *view = new View(input, true);
@@ -116,7 +116,7 @@ inline View *AutoFocusController::inject_input(View *input) {
             copy = new AntiFact(input_fact->get_reference(0), ref_group->get_prev_upr_time(now), ref_group->get_next_upr_time(now), 1, 1);
         else
             copy = new Fact(input_fact->get_reference(0), ref_group->get_prev_upr_time(now), ref_group->get_next_upr_time(now), 1, 1);
-        for (uint16 i = 0; i < output_groups.size(); ++i) {
+        for (uint16_t i = 0; i < output_groups.size(); ++i) {
 
             Group *output_group = output_groups[i];
             View *view = new View(input, true);
@@ -134,12 +134,12 @@ inline View *AutoFocusController::inject_input(View *input) {
         }
         break;
     case View::SYNC_HOLD: { // inject a copy, add a controller, sync_once, morph res, after=now+time_tolerance (de-sync as it can have the same effect as a cmd), before=now+output_grp.upr+time_tolerance.
-        uint64 offset = 2 * Utils::GetTimeTolerance();
+        uint64_t offset = 2 * Utils::GetTimeTolerance();
         if (input_fact->is_anti_fact())
             copy = new AntiFact(input_fact->get_reference(0), now + offset, now + offset + ref_group->get_upr()*Utils::GetBasePeriod(), 1, 1);
         else
             copy = new Fact(input_fact->get_reference(0), now + offset, now + offset + ref_group->get_upr()*Utils::GetBasePeriod(), 1, 1);
-        for (uint16 i = 0; i < output_groups.size(); ++i) {
+        for (uint16_t i = 0; i < output_groups.size(); ++i) {
 
             Group *output_group = output_groups[i];
             View *view = new View(input, true);
@@ -162,7 +162,7 @@ inline View *AutoFocusController::inject_input(View *input) {
             copy = new AntiFact(input_fact->get_reference(0), ref_group->get_prev_upr_time(now), ref_group->get_next_upr_time(now), 1, 1);
         else
             copy = new Fact(input_fact->get_reference(0), ref_group->get_prev_upr_time(now), ref_group->get_next_upr_time(now), 1, 1);
-        for (uint16 i = 0; i < output_groups.size(); ++i) {
+        for (uint16_t i = 0; i < output_groups.size(); ++i) {
 
             Group *output_group = output_groups[i];
             View *view = new View(input, true);
@@ -262,7 +262,7 @@ void AutoFocusController::take_input(r_exec::View *input) {
 void AutoFocusController::reduce(r_exec::View *input)
 {
     Code *input_object = input->object;
-    uint16 opcode = input_object->code(0).asOpcode();
+    uint16_t opcode = input_object->code(0).asOpcode();
 
     std::lock_guard<std::mutex> guard(m_reductionMutex);
 
@@ -275,7 +275,7 @@ void AutoFocusController::reduce(r_exec::View *input)
 
             Code *mdl = f_ihlp->get_reference(0)->get_reference(0);
             Code *unpacked_mdl = mdl->get_reference(mdl->references_size() - MDL_HIDDEN_REFS);
-            uint16 obj_set_index = unpacked_mdl->code(MDL_OBJS).asIndex();
+            uint16_t obj_set_index = unpacked_mdl->code(MDL_OBJS).asIndex();
 
             _Fact *pattern;
             TPX *tpx;
@@ -304,7 +304,7 @@ void AutoFocusController::reduce(r_exec::View *input)
         if (success || opcode == Opcodes::AntiFact) { // discard everything but facts.
 
             Code *payload = input_object->get_reference(0);
-            uint16 opcode = payload->code(0).asOpcode();
+            uint16_t opcode = payload->code(0).asOpcode();
             if (opcode == Opcodes::Success) { // input_object is f->success->payload, where payload is f->g or f->p; trim down the target list, rate targets, signal tpx.
 
                 _Fact *target = (_Fact *)payload->get_reference(0);
@@ -355,7 +355,7 @@ void AutoFocusController::inject_hlps(const std::vector<P<Code> > &hlps) const
 {
     std::vector<View *> views;
 
-    uint64 now = Now();
+    uint64_t now = Now();
 
     std::vector<P<Code> >::const_iterator hlp;
     for (hlp = hlps.begin(); hlp != hlps.end(); ++hlp) {

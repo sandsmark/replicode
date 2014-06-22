@@ -107,20 +107,20 @@ void PGMController::take_input(r_exec::View *input)
 void PGMController::reduce(r_exec::View *input)
 {
     r_code::list<P<Overlay> >::const_iterator o;
-//uint64 oid=input->object->get_oid();
-//uint64 t=Now()-Utils::GetTimeReference();
+//uint64_t oid=input->object->get_oid();
+//uint64_t t=Now()-Utils::GetTimeReference();
 //std::cout<<Time::ToString_seconds(t)<<" got "<<oid<<" "<<input->get_sync()<<std::endl;
     if (tsc > 0) {
         std::lock_guard<std::mutex> guard(m_reductionMutex);
-        uint64 now = Now(); // call must be located after the CS.enter() since (*o)->reduce() may update (*o)->birth_time.
-//uint64 t=now-Utils::GetTimeReference();
+        uint64_t now = Now(); // call must be located after the CS.enter() since (*o)->reduce() may update (*o)->birth_time.
+//uint64_t t=now-Utils::GetTimeReference();
         for (o = overlays.begin(); o != overlays.end();) {
 
             if ((*o)->is_invalidated())
                 o = overlays.erase(o);
             else {
 
-                uint64 birth_time = ((PGMOverlay *)*o)->get_birth_time();
+                uint64_t birth_time = ((PGMOverlay *)*o)->get_birth_time();
                 if (birth_time > 0 && now - birth_time > tsc) {
 //std::cout<<Time::ToString_seconds(t)<<" kill "<<std::hex<<(void *)*o<<std::dec<<" born: "<<Time::ToString_seconds(birth_time-Utils::GetTimeReference())<<" after "<<Time::ToString_seconds(now-birth_time)<<std::endl;
 //std::cout<<std::hex<<(void *)*o<<std::dec<<" ------------kill "<<input->object->get_oid()<<" ignored "<<std::endl;

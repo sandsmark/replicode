@@ -42,31 +42,31 @@ _Mem::_Mem(): r_code::Mem(), state(NOT_STARTED), deleted(false) {
 
 _Mem::~_Mem() {
 
-    for (uint64 i = 0; i < DebugStreamCount; ++i)
+    for (uint64_t i = 0; i < DebugStreamCount; ++i)
         if (debug_streams[i] != NULL)
             delete debug_streams[i];
 }
 
-void _Mem::init(uint64 base_period,
-                uint64 reduction_core_count,
-                uint64 time_core_count,
+void _Mem::init(uint64_t base_period,
+                uint64_t reduction_core_count,
+                uint64_t time_core_count,
                 double mdl_inertia_sr_thr,
-                uint64 mdl_inertia_cnt_thr,
+                uint64_t mdl_inertia_cnt_thr,
                 double tpx_dsr_thr,
-                uint64 min_sim_time_horizon,
-                uint64 max_sim_time_horizon,
+                uint64_t min_sim_time_horizon,
+                uint64_t max_sim_time_horizon,
                 double sim_time_horizon,
-                uint64 tpx_time_horizon,
-                uint64 perf_sampling_period,
+                uint64_t tpx_time_horizon,
+                uint64_t perf_sampling_period,
                 double float_tolerance,
-                uint64 time_tolerance,
-                uint64 primary_thz,
-                uint64 secondary_thz,
+                uint64_t time_tolerance,
+                uint64_t primary_thz,
+                uint64_t secondary_thz,
                 bool debug,
-                uint64 ntf_mk_res,
-                uint64 goal_pred_success_res,
-                uint64 probe_level,
-                uint64 traces) {
+                uint64_t ntf_mk_res,
+                uint64_t goal_pred_success_res,
+                uint64_t probe_level,
+                uint64_t traces) {
 
     this->base_period = base_period;
 
@@ -99,8 +99,8 @@ void _Mem::init(uint64 base_period,
     reduction_job_avg_latency = _reduction_job_avg_latency = 0;
     time_job_avg_latency = _time_job_avg_latency = 0;
 
-    uint64 mask = 1;
-    for (uint64 i = 0; i < DebugStreamCount; ++i) {
+    uint64_t mask = 1;
+    for (uint64_t i = 0; i < DebugStreamCount; ++i) {
 
         if (traces & mask)
             debug_streams[i] = NULL;
@@ -164,12 +164,12 @@ void _Mem::shutdown_core()
 
 void _Mem::store(Code *object) {
 
-    int64 location;
+    int64_t location;
     objects.push_back(object, location);
     object->set_stroage_index(location);
 }
 
-bool _Mem::load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 stdout_oid, uint64 self_oid)
+bool _Mem::load(std::vector<r_code::Code *> *objects, uint64_t stdin_oid, uint64_t stdout_oid, uint64_t self_oid)
 {
 
     Utils::SetReferenceValues(base_period, float_tolerance, time_tolerance);
@@ -181,7 +181,7 @@ bool _Mem::load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 s
 
     set_last_oid(objects->size() - 1);
 
-    for (uint64 i = 1; i < objects->size(); ++i) { // skip root as it has no initial views.
+    for (uint64_t i = 1; i < objects->size(); ++i) { // skip root as it has no initial views.
 
         Code *object = (*objects)[i];
         store(object);
@@ -212,7 +212,7 @@ bool _Mem::load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 s
             break;
         }
 
-        UNORDERED_SET<r_code::View *, r_code::View::Hash, r_code::View::Equal>::const_iterator v;
+        std::unordered_set<r_code::View *, r_code::View::Hash, r_code::View::Equal>::const_iterator v;
         for (v = object->views.begin(); v != object->views.end(); ++v) {
 
 // init hosts' member_set.
@@ -231,18 +231,18 @@ bool _Mem::load(std::vector<r_code::Code *> *objects, uint64 stdin_oid, uint64 s
     return true;
 }
 
-void _Mem::init_timings(uint64 now) const { // called at the beginning of _Mem::start(); use initial user-supplied facts' times as offsets from now.
+void _Mem::init_timings(uint64_t now) const { // called at the beginning of _Mem::start(); use initial user-supplied facts' times as offsets from now.
 
-    uint64 time_tolerance = Utils::GetTimeTolerance() * 2;
+    uint64_t time_tolerance = Utils::GetTimeTolerance() * 2;
     r_code::list<P<Code> >::const_iterator o;
 
     for (o = objects.begin(); o != objects.end(); ++o) {
 
-        uint16 opcode = (*o)->code(0).asOpcode();
+        uint16_t opcode = (*o)->code(0).asOpcode();
         if (opcode == Opcodes::Fact || opcode == Opcodes::AntiFact) {
 
-            uint64 after = Utils::GetTimestamp<Code>(*o, FACT_AFTER);
-            uint64 before = Utils::GetTimestamp<Code>(*o, FACT_BEFORE);
+            uint64_t after = Utils::GetTimestamp<Code>(*o, FACT_AFTER);
+            uint64_t before = Utils::GetTimestamp<Code>(*o, FACT_BEFORE);
             if (after < Utils::MaxTime - now)
                 Utils::SetTimestamp<Code>(*o, FACT_AFTER, after + now);
             if (before < Utils::MaxTime - now - time_tolerance)
@@ -253,7 +253,7 @@ void _Mem::init_timings(uint64 now) const { // called at the beginning of _Mem::
     }
 }
 
-uint64 _Mem::start() {
+uint64_t _Mem::start() {
 
     if (state != STOPPED && state != NOT_STARTED)
         return 0;
@@ -262,8 +262,8 @@ uint64 _Mem::start() {
 
     std::vector<std::pair<View *, Group *> > initial_reduction_jobs;
 
-    uint64 i;
-    uint64 now = Now();
+    uint64_t i;
+    uint64_t now = Now();
     Utils::SetTimeReference(now);
     ModelBase::Get()->set_thz(secondary_thz);
     init_timings(now);
@@ -279,7 +279,7 @@ uint64 _Mem::start() {
         FOR_ALL_VIEWS_END
 
         if (c_active) {
-            UNORDERED_MAP<uint64, P<View> >::const_iterator v;
+            std::unordered_map<uint64_t, P<View> >::const_iterator v;
             // build signaling jobs for active input-less overlays.
             for (v = g->input_less_ipgm_views.begin(); v != g->input_less_ipgm_views.end(); ++v) {
                 if (v->second->controller != NULL && v->second->controller->is_activated()) {
@@ -324,7 +324,7 @@ uint64 _Mem::start() {
         m_coreThreads.push_back(std::thread(&r_exec::runTimeCore));
     }
 
-    for (uint64 i = 0; i < initial_reduction_jobs.size(); ++i) {
+    for (uint64_t i = 0; i < initial_reduction_jobs.size(); ++i) {
         initial_reduction_jobs[i].second->inject_reduction_jobs(initial_reduction_jobs[i].first);
     }
 
@@ -339,7 +339,7 @@ void _Mem::stop()
     }
 
     // We need to do this because things are wait()ing
-    uint64 i;
+    uint64_t i;
     for (i = 0; i < reduction_core_count; ++i) {
         pushReductionJob(new ShutdownReductionCore());
     }
@@ -396,7 +396,7 @@ void _Mem::pushTimeJob(P<r_exec::TimeJob> j)
 
 ////////////////////////////////////////////////////////////////
 
-void _Mem::eject(View *view, uint16 nodeID) {
+void _Mem::eject(View *view, uint16_t nodeID) {
 }
 
 void _Mem::eject(Code *command) {
@@ -416,14 +416,14 @@ void _Mem::inject_existing_object(View *view, Code *object, Group *host) {
     host->inject_existing_object(view);
 }
 
-void _Mem::inject_null_program(Controller *c, Group *group, uint64 time_to_live, bool take_past_inputs) {
+void _Mem::inject_null_program(Controller *c, Group *group, uint64_t time_to_live, bool take_past_inputs) {
 
-    uint64 now = Now();
+    uint64_t now = Now();
 
     Code *null_pgm = new LObject();
     null_pgm->code(0) = Atom::NullProgram(take_past_inputs);
 
-    uint64 res = Utils::GetResilience(now, time_to_live, group->get_upr() * Utils::GetBasePeriod());
+    uint64_t res = Utils::GetResilience(now, time_to_live, group->get_upr() * Utils::GetBasePeriod());
 
     View *view = new View(View::SYNC_ONCE, now, 0, res, group, NULL, null_pgm, 1);
     view->controller = c;
@@ -436,7 +436,7 @@ void _Mem::inject_null_program(Controller *c, Group *group, uint64 time_to_live,
 void _Mem::inject_new_object(View *view) {
 
     Group *host = view->get_host();
-//uint64 t0,t1,t2;
+//uint64_t t0,t1,t2;
     switch (view->object->code(0).getDescriptor()) {
     case Atom::GROUP:
         bind(view);
@@ -464,8 +464,8 @@ void _Mem::inject(View *view)
     if (host->is_invalidated())
         return;
 
-    uint64 now = Now();
-    uint64 ijt = view->get_ijt();
+    uint64_t now = Now();
+    uint64_t ijt = view->get_ijt();
 
     if (view->object->is_registered()) { // existing object.
 
@@ -493,8 +493,8 @@ void _Mem::inject_async(View *view) {
     if (host->is_invalidated())
         return;
 
-    uint64 now = Now();
-    uint64 ijt = view->get_ijt();
+    uint64_t now = Now();
+    uint64_t ijt = view->get_ijt();
 
     if (ijt <= now) {
         P<_ReductionJob> j = new AsyncInjectionJob(view);
@@ -529,14 +529,14 @@ void _Mem::inject_notification(View *view, bool lock) { // no notification for n
 
 ////////////////////////////////////////////////////////////////
 
-void _Mem::register_reduction_job_latency(uint64 latency)
+void _Mem::register_reduction_job_latency(uint64_t latency)
 {
     std::lock_guard<std::mutex> guard(m_reductionJobMutex);
     ++reduction_job_count;
     reduction_job_avg_latency += latency;
 }
 
-void _Mem::register_time_job_latency(uint64 latency)
+void _Mem::register_time_job_latency(uint64_t latency)
 {
     std::lock_guard<std::mutex> guard(m_timeJobMutex);
     ++time_job_count;
@@ -548,14 +548,14 @@ void _Mem::inject_perf_stats()
     m_reductionJobMutex.lock();
     m_timeJobMutex.lock();
 
-    int64 d_reduction_job_avg_latency;
+    int64_t d_reduction_job_avg_latency;
     if (reduction_job_count > 0) {
         reduction_job_avg_latency /= reduction_job_count;
         d_reduction_job_avg_latency = reduction_job_avg_latency - _reduction_job_avg_latency;
     } else
         reduction_job_avg_latency = d_reduction_job_avg_latency = 0;
 
-    int64 d_time_job_avg_latency;
+    int64_t d_time_job_avg_latency;
     if (time_job_count > 0) {
         time_job_avg_latency /= time_job_count;
         d_time_job_avg_latency = time_job_avg_latency - _time_job_avg_latency;
@@ -573,7 +573,7 @@ void _Mem::inject_perf_stats()
     m_reductionJobMutex.unlock();
 
 // inject f->perf in stdin.
-    uint64 now = Now();
+    uint64_t now = Now();
     Code *f_perf = new Fact(perf, now, now + perf_sampling_period, 1, 1);
     View *view = new View(View::SYNC_ONCE, now, 1, 1, _stdin, NULL, f_perf); // sync front, sln=1, res=1.
     inject(view);
@@ -596,7 +596,7 @@ void _Mem::propagate_sln(Code *object, double change, double source_sln_thr) {
         return;
     }
 
-    UNORDERED_SET<r_code::View *, r_code::View::Hash, r_code::View::Equal>::const_iterator it;
+    std::unordered_set<r_code::View *, r_code::View::Hash, r_code::View::Equal>::const_iterator it;
     for (it = object->views.begin(); it != object->views.end(); ++it) {
 
         double morphed_sln_change = View::MorphChange(change, source_sln_thr, ((r_exec::View*)*it)->get_host()->get_sln_thr());
@@ -612,30 +612,30 @@ void _Mem::unpack_hlp(Code *hlp) const { // produces a new object (featuring a s
 
     Code *unpacked_hlp = new LObject(); // will not be transmitted nor decompiled.
 
-    for (uint16 i = 0; i < hlp->code_size(); ++i)
+    for (uint16_t i = 0; i < hlp->code_size(); ++i)
         unpacked_hlp->code(i) = hlp->code(i);
 
-    uint16 pattern_set_index = hlp->code(HLP_OBJS).asIndex();
-    uint16 pattern_count = hlp->code(pattern_set_index).getAtomCount();
-    for (uint16 i = 1; i <= pattern_count; ++i) { // init the new references with the facts; turn the exisitng i-ptrs into r-ptrs.
+    uint16_t pattern_set_index = hlp->code(HLP_OBJS).asIndex();
+    uint16_t pattern_count = hlp->code(pattern_set_index).getAtomCount();
+    for (uint16_t i = 1; i <= pattern_count; ++i) { // init the new references with the facts; turn the exisitng i-ptrs into r-ptrs.
 
         Code *fact = unpack_fact(hlp, hlp->code(pattern_set_index + i).asIndex());
         unpacked_hlp->add_reference(fact);
         unpacked_hlp->code(pattern_set_index + i) = Atom::RPointer(unpacked_hlp->references_size() - 1);
     }
 
-    uint16 group_set_index = hlp->code(HLP_OUT_GRPS).asIndex();
-    uint16 group_count = hlp->code(group_set_index++).getAtomCount();
-    for (uint16 i = 0; i < group_count; ++i) { // append the out_groups to the new references; adjust the exisitng r-ptrs.
+    uint16_t group_set_index = hlp->code(HLP_OUT_GRPS).asIndex();
+    uint16_t group_count = hlp->code(group_set_index++).getAtomCount();
+    for (uint16_t i = 0; i < group_count; ++i) { // append the out_groups to the new references; adjust the exisitng r-ptrs.
 
         unpacked_hlp->add_reference(hlp->get_reference(hlp->code(group_set_index + i).asIndex()));
         unpacked_hlp->code(group_set_index + i) = Atom::RPointer(unpacked_hlp->references_size() - 1);
     }
 
-    uint16 invalid_point = pattern_set_index + pattern_count + 1; // index of what is after set of the patterns.
-    uint16 valid_point = hlp->code(HLP_FWD_GUARDS).asIndex(); // index of the first atom that does not belong to the patterns.
-    uint16 invalid_zone_length = valid_point - invalid_point;
-    for (uint16 i = valid_point; i < hlp->code_size(); ++i) { // shift the valid code upward; adjust i-ptrs.
+    uint16_t invalid_point = pattern_set_index + pattern_count + 1; // index of what is after set of the patterns.
+    uint16_t valid_point = hlp->code(HLP_FWD_GUARDS).asIndex(); // index of the first atom that does not belong to the patterns.
+    uint16_t invalid_zone_length = valid_point - invalid_point;
+    for (uint16_t i = valid_point; i < hlp->code_size(); ++i) { // shift the valid code upward; adjust i-ptrs.
 
         Atom h_atom = hlp->code(i);
         switch (h_atom.getDescriptor()) {
@@ -656,17 +656,17 @@ void _Mem::unpack_hlp(Code *hlp) const { // produces a new object (featuring a s
     unpacked_hlp->code(HLP_BWD_GUARDS) = Atom::IPointer(hlp->code(CST_BWD_GUARDS).asIndex() - invalid_zone_length);
     unpacked_hlp->code(HLP_OUT_GRPS) = Atom::IPointer(hlp->code(CST_OUT_GRPS).asIndex() - invalid_zone_length);
 
-    uint16 unpacked_code_length = hlp->code_size() - invalid_zone_length;
+    uint16_t unpacked_code_length = hlp->code_size() - invalid_zone_length;
     unpacked_hlp->resize_code(unpacked_code_length);
     hlp->add_reference(unpacked_hlp);
 }
 
-Code *_Mem::unpack_fact(Code *hlp, uint16 fact_index) const {
+Code *_Mem::unpack_fact(Code *hlp, uint16_t fact_index) const {
 
     Code *fact = new LObject();
     Code *fact_object;
-    uint16 fact_size = hlp->code(fact_index).getAtomCount() + 1;
-    for (uint16 i = 0; i < fact_size; ++i) {
+    uint16_t fact_size = hlp->code(fact_index).getAtomCount() + 1;
+    for (uint16_t i = 0; i < fact_size; ++i) {
 
         Atom h_atom = hlp->code(fact_index + i);
         switch (h_atom.getDescriptor()) {
@@ -688,19 +688,19 @@ Code *_Mem::unpack_fact(Code *hlp, uint16 fact_index) const {
     return fact;
 }
 
-Code *_Mem::unpack_fact_object(Code *hlp, uint16 fact_object_index) const {
+Code *_Mem::unpack_fact_object(Code *hlp, uint16_t fact_object_index) const {
 
     Code *fact_object = new LObject();
     _unpack_code(hlp, fact_object_index, fact_object, fact_object_index);
     return fact_object;
 }
 
-void _Mem::_unpack_code(Code *hlp, uint16 fact_object_index, Code *fact_object, uint16 read_index) const {
+void _Mem::_unpack_code(Code *hlp, uint16_t fact_object_index, Code *fact_object, uint16_t read_index) const {
 
     Atom h_atom = hlp->code(read_index);
-    uint16 code_size = h_atom.getAtomCount() + 1;
-    uint16 write_index = read_index - fact_object_index;
-    for (uint16 i = 0; i < code_size; ++i) {
+    uint16_t code_size = h_atom.getAtomCount() + 1;
+    uint16_t write_index = read_index - fact_object_index;
+    for (uint16_t i = 0; i < code_size; ++i) {
 
         switch (h_atom.getDescriptor()) {
         case Atom::R_PTR:
@@ -725,29 +725,29 @@ void _Mem::pack_hlp(Code *hlp) const { // produces a new object where a set of p
     Code *unpacked_hlp = clone(hlp);
 
     std::vector<Atom> trailing_code; // copy of the original code (the latter will be overwritten by packed facts).
-    uint16 trailing_code_index = hlp->code(HLP_FWD_GUARDS).asIndex();
-    for (uint16 i = trailing_code_index; i < hlp->code_size(); ++i)
+    uint16_t trailing_code_index = hlp->code(HLP_FWD_GUARDS).asIndex();
+    for (uint16_t i = trailing_code_index; i < hlp->code_size(); ++i)
         trailing_code.push_back(hlp->code(i));
 
-    uint16 group_set_index = hlp->code(HLP_OUT_GRPS).asIndex();
-    uint16 group_count = hlp->code(group_set_index).getAtomCount();
+    uint16_t group_set_index = hlp->code(HLP_OUT_GRPS).asIndex();
+    uint16_t group_count = hlp->code(group_set_index).getAtomCount();
 
     std::vector<P<Code> > references;
 
-    uint16 pattern_set_index = hlp->code(HLP_OBJS).asIndex();
-    uint16 pattern_count = hlp->code(pattern_set_index).getAtomCount();
-    uint16 insertion_point = pattern_set_index + pattern_count + 1; // point from where compacted code is to be inserted.
-    uint16 extent_index = insertion_point;
-    for (uint16 i = 0; i < pattern_count; ++i) {
+    uint16_t pattern_set_index = hlp->code(HLP_OBJS).asIndex();
+    uint16_t pattern_count = hlp->code(pattern_set_index).getAtomCount();
+    uint16_t insertion_point = pattern_set_index + pattern_count + 1; // point from where compacted code is to be inserted.
+    uint16_t extent_index = insertion_point;
+    for (uint16_t i = 0; i < pattern_count; ++i) {
 
         Code *pattern_object = hlp->get_reference(i);
         hlp->code(pattern_set_index + i + 1) = Atom::IPointer(extent_index);
         pack_fact(pattern_object, hlp, extent_index, &references);
     }
 
-    uint16 inserted_zone_length = extent_index - insertion_point;
+    uint16_t inserted_zone_length = extent_index - insertion_point;
 
-    for (uint16 i = 0; i < trailing_code.size(); ++i) { // shift the trailing code downward; adjust i-ptrs.
+    for (uint16_t i = 0; i < trailing_code.size(); ++i) { // shift the trailing code downward; adjust i-ptrs.
 
         Atom t_atom = trailing_code[i];
         switch (t_atom.getDescriptor()) {
@@ -769,7 +769,7 @@ void _Mem::pack_hlp(Code *hlp) const { // produces a new object where a set of p
     hlp->code(CST_OUT_GRPS) = Atom::IPointer(hlp->code(HLP_OUT_GRPS).asIndex() + inserted_zone_length);
 
     group_set_index += inserted_zone_length;
-    for (uint16 i = 1; i <= group_count; ++i) { // append the out_groups to the new references; adjust the exisitng r-ptrs.
+    for (uint16_t i = 1; i <= group_count; ++i) { // append the out_groups to the new references; adjust the exisitng r-ptrs.
 
         references.push_back(hlp->get_reference(hlp->code(group_set_index + i).asIndex()));
         hlp->code(group_set_index + i) = Atom::RPointer(references.size() - 1);
@@ -780,10 +780,10 @@ void _Mem::pack_hlp(Code *hlp) const { // produces a new object where a set of p
     hlp->add_reference(unpacked_hlp); // hidden reference.
 }
 
-void _Mem::pack_fact(Code *fact, Code *hlp, uint16 &write_index, std::vector<P<Code> > *references) const {
+void _Mem::pack_fact(Code *fact, Code *hlp, uint16_t &write_index, std::vector<P<Code> > *references) const {
 
-    uint16 extent_index = write_index + fact->code_size();
-    for (uint16 i = 0; i < fact->code_size(); ++i) {
+    uint16_t extent_index = write_index + fact->code_size();
+    for (uint16_t i = 0; i < fact->code_size(); ++i) {
 
         Atom p_atom = fact->code(i);
         switch (p_atom.getDescriptor()) {
@@ -801,17 +801,17 @@ void _Mem::pack_fact(Code *fact, Code *hlp, uint16 &write_index, std::vector<P<C
     write_index = extent_index;
 }
 
-void _Mem::pack_fact_object(Code *fact_object, Code *hlp, uint16 &write_index, std::vector<P<Code> > *references) const {
+void _Mem::pack_fact_object(Code *fact_object, Code *hlp, uint16_t &write_index, std::vector<P<Code> > *references) const {
 
-    uint16 offset = write_index;
-    for (uint16 i = 0; i < fact_object->code_size(); ++i) {
+    uint16_t offset = write_index;
+    for (uint16_t i = 0; i < fact_object->code_size(); ++i) {
 
         Atom p_atom = fact_object->code(i);
         switch (p_atom.getDescriptor()) {
         case Atom::R_PTR: { // append this reference to the hlp's if not already there.
             Code *reference = fact_object->get_reference(p_atom.asIndex());
             bool found = false;
-            for (uint16 i = 0; i < references->size(); ++i) {
+            for (uint16_t i = 0; i < references->size(); ++i) {
 
                 if ((*references)[i] == reference) {
 
@@ -842,13 +842,13 @@ void _Mem::pack_fact_object(Code *fact_object, Code *hlp, uint16 &write_index, s
 Code *_Mem::clone(Code *original) const { // shallow copy; oid not copied.
 
     Code *_clone = build_object(original->code(0));
-    uint16 opcode = original->code(0).asOpcode();
+    uint16_t opcode = original->code(0).asOpcode();
     if (opcode == Opcodes::Ont || opcode == Opcodes::Ent)
         return original;
 
-    for (uint16 i = 0; i < original->code_size(); ++i)
+    for (uint16_t i = 0; i < original->code_size(); ++i)
         _clone->code(i) = original->code(i);
-    for (uint16 i = 0; i < original->references_size(); ++i)
+    for (uint16_t i = 0; i < original->references_size(); ++i)
         _clone->add_reference(original->get_reference(i));
     return _clone;
 }
@@ -884,11 +884,11 @@ void MemStatic::bind(View *view) {
     if (object->code(0).getDescriptor() == Atom::NULL_PROGRAM) {
         return;
     }
-    int64 location;
+    int64_t location;
     objects.push_back(object, location);
     object->set_stroage_index(location);
 }
-void MemStatic::set_last_oid(int64 oid) {
+void MemStatic::set_last_oid(int64_t oid) {
 
     last_oid = oid;
 }
@@ -921,12 +921,12 @@ MemVolatile::MemVolatile(): _Mem(), last_oid(-1) {
 MemVolatile::~MemVolatile() {
 }
 
-uint64 MemVolatile::get_oid()
+uint64_t MemVolatile::get_oid()
 {
     return ++last_oid;
 }
 
-void MemVolatile::set_last_oid(int64 oid) {
+void MemVolatile::set_last_oid(int64_t oid) {
     last_oid = oid;
 }
 

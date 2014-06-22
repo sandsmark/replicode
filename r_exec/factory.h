@@ -99,14 +99,14 @@ class r_exec_dll _Fact:
     public LObject {
 private:
     static bool MatchAtom(Atom lhs, Atom rhs);
-    static bool MatchStructure(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, const Code *rhs, uint16 rhs_index);
-    static bool Match(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, const Code *rhs, uint16 rhs_index, uint16 lhs_arity);
+    static bool MatchStructure(const Code *lhs, uint16_t lhs_base_index, uint16_t lhs_index, const Code *rhs, uint16_t rhs_index);
+    static bool Match(const Code *lhs, uint16_t lhs_base_index, uint16_t lhs_index, const Code *rhs, uint16_t rhs_index, uint16_t lhs_arity);
     static bool CounterEvidence(const Code *lhs, const Code *rhs);
 protected:
     _Fact();
     _Fact(SysObject *source);
     _Fact(_Fact *f);
-    _Fact(uint16 opcode, Code *object, uint64 after, uint64 before, double confidence, double psln_thr);
+    _Fact(uint16_t opcode, Code *object, uint64_t after, uint64_t before, double confidence, double psln_thr);
 public:
     static bool MatchObject(const Code *lhs, const Code *rhs);
 
@@ -124,8 +124,8 @@ public:
     MatchResult is_evidence(const _Fact *target) const;
     MatchResult is_timeless_evidence(const _Fact *target) const;
 
-    uint64 get_after() const;
-    uint64 get_before() const;
+    uint64_t get_after() const;
+    uint64_t get_before() const;
     double get_cfd() const;
 
     void set_cfd(double cfd);
@@ -145,12 +145,12 @@ typedef enum {
 class r_exec_dll Sim:
     public _Object {
 private:
-    uint64 volatile invalidated; // 32 bits alignment.
+    uint64_t volatile invalidated; // 32 bits alignment.
 public:
     Sim();
     Sim(Sim *s); // is_requirement=false (not copied).
-    Sim(SimMode mode, uint64 thz, Fact *super_goal, bool opposite, Controller *root); // use for SIM_ROOT.
-    Sim(SimMode mode, uint64 thz, Fact *super_goal, bool opposite, Controller *root, Controller *sol, double sol_cfd, uint64 sol_deadline); // USE for SIM_MANDATORY or SIM_OPTIONAL.
+    Sim(SimMode mode, uint64_t thz, Fact *super_goal, bool opposite, Controller *root); // use for SIM_ROOT.
+    Sim(SimMode mode, uint64_t thz, Fact *super_goal, bool opposite, Controller *root, Controller *sol, double sol_cfd, uint64_t sol_deadline); // USE for SIM_MANDATORY or SIM_OPTIONAL.
 
     void invalidate();
     bool is_invalidated();
@@ -160,12 +160,12 @@ public:
     bool opposite; // of the goal the sim is attached to, i.e. the result of the match during controller->reduce(); the confidence is in the goal target.
 
     SimMode mode; // if SIM_MANDATORY or SIM_OPTIONAL: qualifies a sub-goal of the branch's root.
-    uint64 thz; // simulation time allowance (this is not the goal deadline); 0 indicates no time for simulation.
+    uint64_t thz; // simulation time allowance (this is not the goal deadline); 0 indicates no time for simulation.
     P<Fact> super_goal; // of the goal the sim is attached to.
     P<Controller> root; // controller that produced the simulation branch root (SIM_ROOT): identifies the branch.
     P<Controller> sol; // controller that produced a sub-goal of the branch's root: identifies the model that can be a solution for the super-goal.
     double sol_cfd; // confidence of the solution goal.
-    uint64 sol_before; // deadline of the solution goal.
+    uint64_t sol_before; // deadline of the solution goal.
 };
 
 // Caveat: instances of Fact can becone instances of AntiFact (set_opposite() upon MATCH_SUCCESS_NEGATIVE during backward chaining).
@@ -178,7 +178,7 @@ public:
     Fact();
     Fact(SysObject *source);
     Fact(Fact *f);
-    Fact(Code *object, uint64 after, uint64 before, double confidence, double psln_thr);
+    Fact(Code *object, uint64_t after, uint64_t before, double confidence, double psln_thr);
 };
 
 // Caveat: as for Fact.
@@ -189,7 +189,7 @@ public:
     AntiFact();
     AntiFact(SysObject *source);
     AntiFact(AntiFact *f);
-    AntiFact(Code *object, uint64 after, uint64 before, double confidence, double psln_thr);
+    AntiFact(Code *object, uint64_t after, uint64_t before, double confidence, double psln_thr);
 };
 
 // Goals and predictions:
@@ -247,7 +247,7 @@ public:
     P<Sim> sim;
     P<_Fact> ground; // f->p->f->imdl (weak requirement) that allowed backward chaining, if any.
 
-    double get_strength(uint64 now) const; // goal->target->cfd/(before-now).
+    double get_strength(uint64_t now) const; // goal->target->cfd/(before-now).
 };
 
 class r_exec_dll MkRdx:
@@ -271,7 +271,7 @@ class r_exec_dll Perf:
     public LObject {
 public:
     Perf();
-    Perf(uint64 reduction_job_avg_latency, int64 d_reduction_job_avg_latency, uint64 time_job_avg_latency, int64 d_time_job_avg_latency);
+    Perf(uint64_t reduction_job_avg_latency, int64_t d_reduction_job_avg_latency, uint64_t time_job_avg_latency, int64_t d_time_job_avg_latency);
 };
 
 class r_exec_dll ICST:
@@ -282,7 +282,7 @@ public:
 
     bool is_invalidated();
 
-    bool contains(_Fact *component, uint16 &component_index) const;
+    bool contains(_Fact *component, uint16_t &component_index) const;
 
     P<BindingMap> bindings;
     std::vector<P<_Fact> > components; // the inputs that triggered the building of the icst.

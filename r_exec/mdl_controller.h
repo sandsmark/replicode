@@ -107,7 +107,7 @@ protected:
         REntry();
         REntry(_Fact *f_p_f_imdl, MDLController *c, bool chaining_was_allowed); // f_imdl is f0 as in f0->pred->f1->imdl.
 
-        bool is_out_of_range(uint64 now) const {
+        bool is_out_of_range(uint64_t now) const {
             return (before < now || after > now);
         }
     };
@@ -130,8 +130,8 @@ protected:
     P<Code> lhs;
     P<Code> rhs;
 
-    static const uint64 LHSController = 0;
-    static const uint64 RHSController = 1;
+    static const uint64_t LHSController = 0;
+    static const uint64_t RHSController = 1;
 
     typedef enum {
         NaR = 0,
@@ -146,7 +146,7 @@ protected:
     double get_cfd() const;
 
     std::mutex m_activeRequirementsMutex;
-    UNORDERED_MAP<P<_Fact>, RequirementsPair, PHash<_Fact> > active_requirements; // P<_Fact>: f1 as in f0->pred->f1->imdl; requirements having allowed the production of prediction; first: wr, second: sr.
+    std::unordered_map<P<_Fact>, RequirementsPair, PHash<_Fact> > active_requirements; // P<_Fact>: f1 as in f0->pred->f1->imdl; requirements having allowed the production of prediction; first: wr, second: sr.
 
     template<class C> void reduce_cache(Fact *f_p_f_imdl, MDLController *controller) { // fwd; controller is the controller of the requirement which produced f_p_f_imdl.
 
@@ -156,7 +156,7 @@ protected:
 
     template<class E> void reduce_cache(Cache<E> *cache, Fact *f_p_f_imdl, MDLController *controller) {
         std::lock_guard<std::mutex> guard(cache->mutex);
-        uint64 now = Now();
+        uint64_t now = Now();
         typename r_code::list<E>::const_iterator _e;
         for (_e = cache->evidences.begin(); _e != cache->evidences.end();) {
 
@@ -218,7 +218,7 @@ protected:
     r_code::list<P<_GMonitor> > g_monitors;
     r_code::list<P<_GMonitor> > r_monitors;
 
-    virtual uint64 get_rdx_out_group_count() const {
+    virtual uint64_t get_rdx_out_group_count() const {
         return get_out_group_count();
     }
     void inject_goal(HLPBindingMap *bm, Fact *goal, Fact *f_imdl) const;
@@ -226,7 +226,7 @@ protected:
 
     bool monitor_goals(_Fact *input);
 
-    uint64 get_sim_thz(uint64 now, uint64 deadline) const;
+    uint64_t get_sim_thz(uint64_t now, uint64_t deadline) const;
 
     PMDLController(r_code::View *view);
 public:
@@ -260,7 +260,7 @@ public:
 class TopLevelMDLController:
     public PMDLController {
 private:
-    uint64 get_rdx_out_group_count() const {
+    uint64_t get_rdx_out_group_count() const {
         return get_out_group_count() - 1; // so that rdx are not injected in the drives host.
     }
 
@@ -340,7 +340,7 @@ public:
     void store_requirement(_Fact *f_imdl, MDLController *controller, bool chaining_was_allowed, bool simulation);
 
     void predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl, bool chaining_was_allowed, RequirementsPair &r_p, Fact *ground);
-    bool inject_prediction(Fact *prediction, Fact *f_imdl, double confidence, uint64 time_to_live, Code *mk_rdx) const; // here, resilience=time to live, in us; returns true if the prediction has actually been injected.
+    bool inject_prediction(Fact *prediction, Fact *f_imdl, double confidence, uint64_t time_to_live, Code *mk_rdx) const; // here, resilience=time to live, in us; returns true if the prediction has actually been injected.
 
     void register_pred_outcome(Fact *f_pred, bool success, _Fact *evidence, double confidence, bool rate_failures);
     void register_req_outcome(Fact *f_pred, bool success, bool rate_failures);

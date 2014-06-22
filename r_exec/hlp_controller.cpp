@@ -76,9 +76,9 @@ void HLPController::remove_requirement(bool strong)
     --requirement_count;
 }
 
-uint64 HLPController::get_requirement_count(uint64 &weak_requirement_count, uint64 &strong_requirement_count)
+uint64_t HLPController::get_requirement_count(uint64_t &weak_requirement_count, uint64_t &strong_requirement_count)
 {
-    uint64 r_c;
+    uint64_t r_c;
     std::lock_guard<std::mutex> guard(m_reductionMutex);
     r_c = requirement_count;
     weak_requirement_count = this->weak_requirement_count;
@@ -86,23 +86,23 @@ uint64 HLPController::get_requirement_count(uint64 &weak_requirement_count, uint
     return r_c;
 }
 
-uint64 HLPController::get_requirement_count()
+uint64_t HLPController::get_requirement_count()
 {
-    uint64 r_c;
+    uint64_t r_c;
     std::lock_guard<std::mutex> guard(m_reductionMutex);
     r_c = requirement_count;
     return r_c;
 }
 
-uint16 HLPController::get_out_group_count() const
+uint16_t HLPController::get_out_group_count() const
 {
     return getObject()->code(getObject()->code(HLP_OUT_GRPS).asIndex()).getAtomCount();
 }
 
-Code *HLPController::get_out_group(uint16 i) const {
+Code *HLPController::get_out_group(uint16_t i) const {
 
     Code *hlp = getObject();
-    uint16 out_groups_index = hlp->code(HLP_OUT_GRPS).asIndex() + 1; // first output group index.
+    uint16_t out_groups_index = hlp->code(HLP_OUT_GRPS).asIndex() + 1; // first output group index.
     return hlp->get_reference(hlp->code(out_groups_index + i).asIndex());
 }
 
@@ -131,7 +131,7 @@ MatchResult HLPController::check_evidences(_Fact *target, _Fact *&evidence) {
 
     MatchResult r = MATCH_FAILURE;
     std::lock_guard<std::mutex> guard(evidences.mutex);
-    uint64 now = Now();
+    uint64_t now = Now();
     r_code::list<EEntry>::const_iterator e;
     for (e = evidences.evidences.begin(); e != evidences.evidences.end();) {
         if ((*e).is_too_old(now)) // garbage collection. // garbage collection.
@@ -151,7 +151,7 @@ MatchResult HLPController::check_evidences(_Fact *target, _Fact *&evidence) {
 MatchResult HLPController::check_predicted_evidences(_Fact *target, _Fact *&evidence) {
     MatchResult r = MATCH_FAILURE;
     std::lock_guard<std::mutex> guard(predicted_evidences.mutex);
-    uint64 now = Now();
+    uint64_t now = Now();
     r_code::list<PEEntry>::const_iterator e;
     for (e = predicted_evidences.evidences.begin(); e != predicted_evidences.evidences.end();) {
         if ((*e).is_too_old(now)) // garbage collection. // garbage collection.
@@ -176,7 +176,7 @@ bool HLPController::become_invalidated() {
     if (is_invalidated())
         return true;
 
-    for (uint16 i = 0; i < controllers.size(); ++i) {
+    for (uint16_t i = 0; i < controllers.size(); ++i) {
 
         if (controllers[i] != NULL && controllers[i]->is_invalidated()) {
 

@@ -3,6 +3,8 @@
 
 #include "CoreLibrary/types.h"
 #include <list>
+#include <unordered_map>
+#include <vector>
 
 namespace r_comp {
 
@@ -10,8 +12,8 @@ class RepliMacro;
 class RepliCondition;
 class RepliStruct {
 public:
-    static UNORDERED_MAP<std::string, RepliMacro *> RepliMacros;
-    static UNORDERED_MAP<std::string, int64_t> Counters;
+    static std::unordered_map<std::string, RepliMacro *> RepliMacros;
+    static std::unordered_map<std::string, int64_t> Counters;
     static std::list<RepliCondition *> Conditions;
     static uint64_t GlobalLine;
     static std::string GlobalFilename;
@@ -73,7 +75,7 @@ public:
     RepliCondition(const std::string &name, bool reversed);
     ~RepliCondition();
     bool reverse();
-    bool isActive(UNORDERED_MAP<std::string, RepliMacro*> &RepliMacros, UNORDERED_MAP<std::string, int64_t> &Counters);
+    bool isActive(std::unordered_map<std::string, RepliMacro*> &RepliMacros, std::unordered_map<std::string, int64_t> &Counters);
 };
 
 

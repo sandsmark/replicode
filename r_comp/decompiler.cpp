@@ -43,10 +43,10 @@ Decompiler::~Decompiler() {
         delete out_stream;
 }
 
-std::string Decompiler::get_variable_name(uint16 index, bool postfix) {
+std::string Decompiler::get_variable_name(uint16_t index, bool postfix) {
 
     std::string s;
-    UNORDERED_MAP<uint16, std::string>::iterator it = variable_names.find(index);
+    std::unordered_map<uint16_t, std::string>::iterator it = variable_names.find(index);
     if (it == variable_names.end()) {
 
         char buffer[255];
@@ -64,7 +64,7 @@ std::string Decompiler::get_variable_name(uint16 index, bool postfix) {
     return it->second;
 }
 
-std::string Decompiler::get_hlp_variable_name(uint16 index) {
+std::string Decompiler::get_hlp_variable_name(uint16_t index) {
 
     std::string s("v");
     char buffer[255];
@@ -75,10 +75,10 @@ std::string Decompiler::get_hlp_variable_name(uint16 index) {
     return s;
 }
 
-std::string Decompiler::get_object_name(uint16 index) {
+std::string Decompiler::get_object_name(uint16_t index) {
 
     std::string s;
-    UNORDERED_MAP<uint16, std::string>::iterator it = object_names.find(index);
+    std::unordered_map<uint16_t, std::string>::iterator it = object_names.find(index);
     if (it == object_names.end()) {
 
         s = "unknown-object";
@@ -96,7 +96,7 @@ void Decompiler::init(r_comp::Metadata *metadata) {
     ignore_named_objects = false;
 
 // Load the renderers;
-    for (uint16 i = 0; i < metadata->classes_by_opcodes.size(); ++i) {
+    for (uint16_t i = 0; i < metadata->classes_by_opcodes.size(); ++i) {
 
         Class *c = metadata->get_class(i);
         std::string class_name = c->str_opcode;
@@ -124,36 +124,36 @@ void Decompiler::init(r_comp::Metadata *metadata) {
     }
 }
 
-uint64 Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream, uint64 time_offset, bool ignore_named_objects) {
+uint64_t Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream, uint64_t time_offset, bool ignore_named_objects) {
 
     this->ignore_named_objects = ignore_named_objects;
 
-    uint64 object_count = decompile_references(image);
+    uint64_t object_count = decompile_references(image);
 
-    for (uint16 i = 0; i < image->code_segment.objects.size(); ++i)
+    for (uint16_t i = 0; i < image->code_segment.objects.size(); ++i)
         decompile_object(i, stream, time_offset);
 
     return object_count;
 }
 
-uint64 Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream, uint64 time_offset, std::vector<SysObject *> &imported_objects) {
+uint64_t Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream, uint64_t time_offset, std::vector<SysObject *> &imported_objects) {
 
     partial_decompilation = true;
     ignore_named_objects = true;
     this->imported_objects = imported_objects;
 
-    uint64 object_count = decompile_references(image);
+    uint64_t object_count = decompile_references(image);
 
-    for (uint16 i = 0; i < image->code_segment.objects.size(); ++i)
+    for (uint16_t i = 0; i < image->code_segment.objects.size(); ++i)
         decompile_object(i, stream, time_offset);
 
     return object_count;
 }
 
-uint64 Decompiler::decompile_references(r_comp::Image *image) {
+uint64_t Decompiler::decompile_references(r_comp::Image *image) {
 
-    UNORDERED_MAP<const Class *, uint16> object_ID_per_class;
-    UNORDERED_MAP<std::string, Class>::const_iterator it;
+    std::unordered_map<const Class *, uint16_t> object_ID_per_class;
+    std::unordered_map<std::string, Class>::const_iterator it;
     for (it = metadata->sys_classes.begin(); it != metadata->sys_classes.end(); ++it)
         object_ID_per_class[&(it->second)] = 0;
 
@@ -164,11 +164,11 @@ uint64 Decompiler::decompile_references(r_comp::Image *image) {
 
 // populate object names first so they can be referenced in any order.
     Class *c;
-    uint16 last_object_ID;
-    for (uint16 i = 0; i < image->code_segment.objects.size(); ++i) {
+    uint16_t last_object_ID;
+    for (uint16_t i = 0; i < image->code_segment.objects.size(); ++i) {
 
         SysObject *sys_object = (SysObject *)image->code_segment.objects[i];
-        UNORDERED_MAP<uintptr_t, std::string>::const_iterator n = image->object_names.symbols.find(sys_object->oid);
+        std::unordered_map<uintptr_t, std::string>::const_iterator n = image->object_names.symbols.find(sys_object->oid);
         if (n != image->object_names.symbols.end()) {
 
             s = n->second;
@@ -192,7 +192,7 @@ uint64 Decompiler::decompile_references(r_comp::Image *image) {
     return image->code_segment.objects.size();
 }
 
-void Decompiler::decompile_object(uint16 object_index, std::ostringstream *stream, uint64 time_offset) {
+void Decompiler::decompile_object(uint16_t object_index, std::ostringstream *stream, uint64_t time_offset) {
 
     if (!out_stream)
         out_stream = new OutStream(stream);
@@ -209,7 +209,7 @@ void Decompiler::decompile_object(uint16 object_index, std::ostringstream *strea
 
     current_object = image->code_segment.objects[object_index];
     SysObject *sys_object = (SysObject *)current_object;
-    uint16 read_index = 0;
+    uint16_t read_index = 0;
     indents = 0;
 
     if (!partial_decompilation && ignore_named_objects) { // decompilation of the entire memory.
@@ -219,7 +219,7 @@ void Decompiler::decompile_object(uint16 object_index, std::ostringstream *strea
     } else { // decompiling on-the-fly: ignore named objects only if imported.
 
         bool imported = false;
-        for (uint64 i = 0; i < imported_objects.size(); ++i) {
+        for (uint64_t i = 0; i < imported_objects.size(); ++i) {
 
             if (sys_object == imported_objects[i]) {
 
@@ -246,11 +246,11 @@ void Decompiler::decompile_object(uint16 object_index, std::ostringstream *strea
 
     (this->*renderers[current_object->code[read_index].asOpcode()])(read_index);
 
-    uint16 view_count = sys_object->views.size();
+    uint16_t view_count = sys_object->views.size();
     if (view_count) { // write the set of views
 
         *out_stream << " []";
-        for (uint16 i = 0; i < view_count; ++i) {
+        for (uint16_t i = 0; i < view_count; ++i) {
 
             write_indent(3);
             current_object = sys_object->views[i];
@@ -262,20 +262,20 @@ void Decompiler::decompile_object(uint16 object_index, std::ostringstream *strea
     write_indent(0);
 }
 
-void Decompiler::decompile_object(const std::string object_name, std::ostringstream *stream, uint64 time_offset) {
+void Decompiler::decompile_object(const std::string object_name, std::ostringstream *stream, uint64_t time_offset) {
 
     decompile_object(object_indices[object_name], stream, time_offset);
 }
 
-void Decompiler::write_indent(uint16 i) {
-
-    *out_stream << NEWLINE;
+void Decompiler::write_indent(uint16_t i)
+{
+    *out_stream << "\n";
     indents = i;
-    for (uint16 j = 0; j < indents; j++)
+    for (uint16_t j = 0; j < indents; j++)
         *out_stream << ' ';
 }
 
-void Decompiler::write_expression_head(uint16 read_index) {
+void Decompiler::write_expression_head(uint16_t read_index) {
 
     switch (current_object->code[read_index].getDescriptor()) {
     case Atom::OPERATOR:
@@ -308,12 +308,12 @@ void Decompiler::write_expression_head(uint16 read_index) {
     }
 }
 
-void Decompiler::write_expression_tail(uint16 read_index, bool apply_time_offset, bool vertical) { // read_index points initially to the head.
+void Decompiler::write_expression_tail(uint16_t read_index, bool apply_time_offset, bool vertical) { // read_index points initially to the head.
 
-    uint16 arity = current_object->code[read_index].getAtomCount();
+    uint16_t arity = current_object->code[read_index].getAtomCount();
     bool after_tail_wildcard = false;
 
-    for (uint16 i = 0; i < arity; ++i) {
+    for (uint16_t i = 0; i < arity; ++i) {
 
         if (after_tail_wildcard)
             write_any(++read_index, after_tail_wildcard, apply_time_offset);
@@ -332,12 +332,12 @@ void Decompiler::write_expression_tail(uint16 read_index, bool apply_time_offset
             write_any(++read_index, after_tail_wildcard, apply_time_offset);
 
             if (!closing_set && vertical)
-                *out_stream << NEWLINE;
+                *out_stream << "\n";
         }
     }
 }
 
-void Decompiler::write_expression(uint16 read_index) {
+void Decompiler::write_expression(uint16_t read_index) {
 
     if (closing_set) {
 
@@ -355,7 +355,7 @@ void Decompiler::write_expression(uint16 read_index) {
     *out_stream << ')';
 }
 
-void Decompiler::write_group(uint16 read_index) {
+void Decompiler::write_group(uint16_t read_index) {
 
     if (closing_set) {
 
@@ -373,7 +373,7 @@ void Decompiler::write_group(uint16 read_index) {
     *out_stream << ')';
 }
 
-void Decompiler::write_marker(uint16 read_index) {
+void Decompiler::write_marker(uint16_t read_index) {
 
     if (closing_set) {
 
@@ -391,7 +391,7 @@ void Decompiler::write_marker(uint16 read_index) {
     *out_stream << ')';
 }
 
-void Decompiler::write_pgm(uint16 read_index) {
+void Decompiler::write_pgm(uint16_t read_index) {
 
     if (closing_set) {
 
@@ -410,7 +410,7 @@ void Decompiler::write_pgm(uint16 read_index) {
 }
 
 
-void Decompiler::write_ipgm(uint16 read_index) {
+void Decompiler::write_ipgm(uint16_t read_index) {
 
     if (closing_set) {
 
@@ -428,7 +428,7 @@ void Decompiler::write_ipgm(uint16 read_index) {
     *out_stream << ')';
 }
 
-void Decompiler::write_hlp(uint16 read_index) {
+void Decompiler::write_hlp(uint16_t read_index) {
 
     in_hlp = true;
     if (closing_set) {
@@ -440,10 +440,10 @@ void Decompiler::write_hlp(uint16 read_index) {
     write_expression_head(read_index);
     *out_stream << " ";
 
-    uint16 arity = current_object->code[read_index].getAtomCount();
+    uint16_t arity = current_object->code[read_index].getAtomCount();
     bool after_tail_wildcard = false;
 
-    for (uint16 i = 0; i < arity; ++i) {
+    for (uint16_t i = 0; i < arity; ++i) {
 
         if (after_tail_wildcard)
             write_any(++read_index, after_tail_wildcard, false);
@@ -461,7 +461,7 @@ void Decompiler::write_hlp(uint16 read_index) {
             hlp_postfix = false;
 
             if (!closing_set)
-                *out_stream << NEWLINE;
+                *out_stream << "\n";
         }
     }
 
@@ -474,7 +474,7 @@ void Decompiler::write_hlp(uint16 read_index) {
     in_hlp = false;
 }
 
-void Decompiler::write_ihlp(uint16 read_index) {
+void Decompiler::write_ihlp(uint16_t read_index) {
 
     if (!in_hlp)
         horizontal_set = true;
@@ -496,7 +496,7 @@ void Decompiler::write_ihlp(uint16 read_index) {
         horizontal_set = false;
 }
 
-void Decompiler::write_icmd(uint16 read_index) {
+void Decompiler::write_icmd(uint16_t read_index) {
 
     if (closing_set) {
 
@@ -507,17 +507,17 @@ void Decompiler::write_icmd(uint16 read_index) {
     write_expression_head(read_index);
 //write_expression_tail(read_index,true);
 
-    uint16 write_as_view_index = 0;
+    uint16_t write_as_view_index = 0;
     if (current_object->code[read_index + 1].asOpcode() == metadata->classes.find("_inj")->second.atom.asOpcode()) {
 
-        uint16 arg_set_index = current_object->code[read_index + 2].asIndex(); // 2 args for _inj; the view is the second.
+        uint16_t arg_set_index = current_object->code[read_index + 2].asIndex(); // 2 args for _inj; the view is the second.
         write_as_view_index = current_object->code[arg_set_index + 2].asIndex();
     }
 
-    uint16 arity = current_object->code[read_index].getAtomCount();
+    uint16_t arity = current_object->code[read_index].getAtomCount();
     bool after_tail_wildcard = false;
 
-    for (uint16 i = 0; i < arity; ++i) {
+    for (uint16_t i = 0; i < arity; ++i) {
 
         if (after_tail_wildcard)
             write_any(++read_index, after_tail_wildcard, true);
@@ -542,7 +542,7 @@ void Decompiler::write_icmd(uint16 read_index) {
     *out_stream << ')';
 }
 
-void Decompiler::write_cmd(uint16 read_index) {
+void Decompiler::write_cmd(uint16_t read_index) {
 
     if (!in_hlp)
         horizontal_set = true;
@@ -564,7 +564,7 @@ void Decompiler::write_cmd(uint16 read_index) {
         horizontal_set = false;
 }
 
-void Decompiler::write_fact(uint16 read_index) {
+void Decompiler::write_fact(uint16_t read_index) {
 
     if (in_hlp)
         horizontal_set = true;
@@ -585,7 +585,7 @@ void Decompiler::write_fact(uint16 read_index) {
     horizontal_set = false;
 }
 
-void Decompiler::write_view(uint16 read_index, uint16 arity) {
+void Decompiler::write_view(uint16_t read_index, uint16_t arity) {
 
     if (arity > VIEW_CODE_MAX_SIZE || arity <= 1) {
 
@@ -596,7 +596,7 @@ void Decompiler::write_view(uint16 read_index, uint16 arity) {
     bool after_tail_wildcard = false;
 
     *out_stream << "[";
-    for (uint16 j = 1; j <= arity; ++j) {
+    for (uint16_t j = 1; j <= arity; ++j) {
 
         write_any(read_index + j, after_tail_wildcard, true);
         if (j < arity)
@@ -605,9 +605,9 @@ void Decompiler::write_view(uint16 read_index, uint16 arity) {
     *out_stream << "]";
 }
 
-void Decompiler::write_set(uint16 read_index, bool aply_time_offset, uint16 write_as_view_index) { // read_index points to a set atom.
+void Decompiler::write_set(uint16_t read_index, bool aply_time_offset, uint16_t write_as_view_index) { // read_index points to a set atom.
 
-    uint16 arity = current_object->code[read_index].getAtomCount();
+    uint16_t arity = current_object->code[read_index].getAtomCount();
     bool after_tail_wildcard = false;
 
     if (arity == 1) { // write [element]
@@ -620,7 +620,7 @@ void Decompiler::write_set(uint16 read_index, bool aply_time_offset, uint16 writ
     else if (horizontal_set) { // write [elements].
 
         out_stream->push('[', read_index);
-        for (uint16 i = 0; i < arity; ++i) {
+        for (uint16_t i = 0; i < arity; ++i) {
 
             if (i > 0)
                 *out_stream << ' ';
@@ -635,7 +635,7 @@ void Decompiler::write_set(uint16 read_index, bool aply_time_offset, uint16 writ
 
         out_stream->push("[]", read_index);
         indents += 3;
-        for (uint16 i = 0; i < arity; ++i) {
+        for (uint16_t i = 0; i < arity; ++i) {
 
             if (after_tail_wildcard)
                 write_any(++read_index, after_tail_wildcard, aply_time_offset);
@@ -650,7 +650,7 @@ void Decompiler::write_set(uint16 read_index, bool aply_time_offset, uint16 writ
     }
 }
 
-void Decompiler::write_any(uint16 read_index, bool &after_tail_wildcard, bool apply_time_offset, uint16 write_as_view_index) { // after_tail_wildcard meant to avoid printing ':' after "::".
+void Decompiler::write_any(uint16_t read_index, bool &after_tail_wildcard, bool apply_time_offset, uint16_t write_as_view_index) { // after_tail_wildcard meant to avoid printing ':' after "::".
 
     Atom a = current_object->code[read_index];
 
@@ -667,7 +667,7 @@ void Decompiler::write_any(uint16 read_index, bool &after_tail_wildcard, bool ap
     }
 
     Atom atom;
-    uint16 index;
+    uint16_t index;
     switch (a.getDescriptor()) {
     case Atom::VL_PTR:
         if (in_hlp) {
@@ -737,7 +737,7 @@ void Decompiler::write_any(uint16 read_index, bool &after_tail_wildcard, bool ap
             else {
 
                 Atom first = current_object->code[index + 1];
-                uint64 ts = Utils::GetTimestamp(&current_object->code[index]);
+                uint64_t ts = Utils::GetTimestamp(&current_object->code[index]);
                 if (!in_hlp && ts > 0 && apply_time_offset)
                     ts -= time_offset;
                 out_stream->push(Time::ToString_seconds(ts), read_index);
@@ -745,8 +745,8 @@ void Decompiler::write_any(uint16 read_index, bool &after_tail_wildcard, bool ap
             break;
         case Atom::C_PTR: {
 
-            uint16 opcode;
-            uint16 member_count = atom.getAtomCount();
+            uint16_t opcode;
+            uint16_t member_count = atom.getAtomCount();
             atom = current_object->code[index + 1]; // current_object->code[index] is the cptr; lead atom is at index+1; iptrs start at index+2.
             switch (atom.getDescriptor()) {
             case Atom::THIS: // this always refers to an instantiated reactive object.
@@ -755,7 +755,7 @@ void Decompiler::write_any(uint16 read_index, bool &after_tail_wildcard, bool ap
                 break;
             case Atom::VL_PTR: {
 
-                uint8 cast_opcode = atom.asCastOpcode();
+                uint8_t cast_opcode = atom.asCastOpcode();
                 while (current_object->code[atom.asIndex()].getDescriptor() == Atom::I_PTR) // position to a structure or an atomic value.
                     atom = current_object->code[atom.asIndex()];
                 out_stream->push(get_variable_name(atom.asIndex(), current_object->code[atom.asIndex()].getDescriptor() != Atom::WILDCARD), read_index);
@@ -769,7 +769,7 @@ void Decompiler::write_any(uint16 read_index, bool &after_tail_wildcard, bool ap
                     opcode = cast_opcode;
                 break;
             } case Atom::R_PTR: {
-                uint64 object_index = current_object->references[atom.asIndex()];
+                uint64_t object_index = current_object->references[atom.asIndex()];
                 out_stream->push(get_object_name(object_index), read_index);
                 opcode = image->code_segment.objects[object_index]->code[0].asOpcode();
                 break;
@@ -779,7 +779,7 @@ void Decompiler::write_any(uint16 read_index, bool &after_tail_wildcard, bool ap
             }
 
             Class embedding_class = metadata->classes_by_opcodes[opcode]; // class defining the members.
-            for (uint16 i = 2; i <= member_count; ++i) { // get the class of the pointed structure and retrieve the member name from i.
+            for (uint16_t i = 2; i <= member_count; ++i) { // get the class of the pointed structure and retrieve the member name from i.
 
                 std::string member_name;
                 atom = current_object->code[index + i]; // atom is an iptr appearing after the leading atom in the cptr.
