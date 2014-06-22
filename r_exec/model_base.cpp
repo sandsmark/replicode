@@ -210,7 +210,7 @@ Code *ModelBase::check_existence(Code *mdl)
         white_list.erase(m);
         mEntry.touch_time = Now();
         white_list.emplace(mEntry);
-        return (*m).mdl;
+        return mEntry.mdl;
     }
     _Mem::Get()->pack_hlp(e.mdl);
     white_list.insert(e);
@@ -236,7 +236,7 @@ void ModelBase::check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1)
         white_list.erase(m);
         mEntry.touch_time = Now();
         white_list.emplace(mEntry);
-        _m0 = (*m).mdl;
+        _m0 = mEntry.mdl;
         Code *rhs = m1->get_reference(m1->code(m1->code(MDL_OBJS).asIndex() + 2).asIndex());
         Code *im0 = rhs->get_reference(0);
         im0->set_reference(0, _m0); // change imdl m0 into imdl _m0.
@@ -258,7 +258,7 @@ void ModelBase::check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1)
         white_list.erase(m);
         mEntry.touch_time = Now();
         white_list.emplace(mEntry);
-        _m1 = (*m).mdl;
+        _m1 = mEntry.mdl;
         return;
     }
     if (_m0 == m0) {
