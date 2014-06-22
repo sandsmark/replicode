@@ -29,7 +29,6 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "r_code.h"
-#include <CoreLibrary/utils.h>
 
 void Init()
 {

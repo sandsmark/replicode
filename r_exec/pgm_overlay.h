@@ -42,7 +42,7 @@ class IPGMContext;
 
 // Overlays for input-less programs.
 // Base class for other programs (with inputs, anti-programs).
-class r_exec_dll InputLessPGMOverlay:
+class dll_export InputLessPGMOverlay:
     public Overlay {
     friend class PGMController;
     friend class InputLessPGMController;
@@ -70,7 +70,7 @@ public:
 
 // Overlay with inputs.
 // Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
-class r_exec_dll PGMOverlay:
+class dll_export PGMOverlay:
     public InputLessPGMOverlay {
     friend class PGMController;
     friend class IPGMContext;
@@ -122,7 +122,7 @@ public:
 // Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
 // In addition, ReductionCores and signalling jobs can attempt to inject productions concurrently.
 // Usues the same mk.rdx as for InputLessPGMOverlays.
-class r_exec_dll AntiPGMOverlay:
+class dll_export AntiPGMOverlay:
     public PGMOverlay {
     friend class AntiPGMController;
 private:

@@ -1,13 +1,13 @@
 set(CoreLibrary_SRC
     base.cpp
-    utils.cpp
+    sharedlibrary.cpp
     xml_parser.cpp
     )
 
 set(CoreLibrary_HDR
     base.h
     types.h
-    utils.h
+    sharedlibrary.h
     xml_parser.h
     )
 

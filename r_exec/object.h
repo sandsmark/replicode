@@ -31,7 +31,6 @@
 #ifndef r_exec_object_h
 #define r_exec_object_h
 
-#include "CoreLibrary/utils.h"
 #include "r_code/object.h"
 #include "view.h"
 #include "opcodes.h"
@@ -41,7 +40,7 @@
 
 namespace r_exec {
 
-r_exec_dll bool IsNotification(Code *object);
+dll_export bool IsNotification(Code *object);
 
 // Shared resources:
 // views: accessed by Mem::injectNow (via various sub calls) and Mem::update.
@@ -131,7 +130,7 @@ public:
 // Used for r-code that does not travel across networks (groups and notifications) or when the rMem is not distributed.
 // Markers are killed when at least one of their references dies (held by their views).
 // Marker deletion is performed by registering pending delete operations in the groups they are projected onto.
-class r_exec_dll LObject:
+class dll_export LObject:
     public Object<r_code::LObject, LObject> {
 public:
     static bool RequiresPacking() {

@@ -31,7 +31,7 @@
 #ifndef r_comp_h
 #define r_comp_h
 
-#include "CoreLibrary/types.h"
+#include "CoreLibrary/dll.h"
 
 
 extern "C" {

@@ -41,7 +41,7 @@
 
 namespace r_exec {
 
-class r_exec_dll AutoFocusController:
+class dll_export AutoFocusController:
     public Controller {
 private:
 // icpp_pgm parameters.

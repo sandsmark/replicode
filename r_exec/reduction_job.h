@@ -37,7 +37,7 @@
 
 namespace r_exec {
 
-class r_exec_dll _ReductionJob:
+class dll_export _ReductionJob:
     public _Object {
 protected:
     _ReductionJob();
@@ -70,13 +70,13 @@ public:
     bool update(uint64_t now);
 };
 
-class r_exec_dll ShutdownReductionCore:
+class dll_export ShutdownReductionCore:
     public _ReductionJob {
 public:
     bool update(uint64_t now);
 };
 
-class r_exec_dll AsyncInjectionJob:
+class dll_export AsyncInjectionJob:
     public _ReductionJob {
 public:
     P<View> input;

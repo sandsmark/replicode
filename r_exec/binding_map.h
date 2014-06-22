@@ -32,7 +32,7 @@
 #define binding_map_h
 
 #include "object.h"
-#include "dll.h"
+#include "CoreLibrary/dll.h"
 
 
 namespace r_exec {
@@ -42,7 +42,7 @@ class AtomValue;
 class StructureValue;
 class ObjectValue;
 
-class r_exec_dll Value:
+class dll_export Value:
     public _Object {
 protected:
     BindingMap *map;
@@ -79,14 +79,14 @@ public:
     }
 };
 
-class r_exec_dll BoundValue:
+class dll_export BoundValue:
     public Value {
 protected:
     BoundValue(BindingMap *map);
 public:
 };
 
-class r_exec_dll UnboundValue:
+class dll_export UnboundValue:
     public Value {
 private:
     uint8_t index;
@@ -102,7 +102,7 @@ public:
     uint16_t get_code_size();
 };
 
-class r_exec_dll AtomValue:
+class dll_export AtomValue:
     public BoundValue {
 private:
     Atom atom;
@@ -122,7 +122,7 @@ public:
     bool contains(const Atom a) const;
 };
 
-class r_exec_dll StructureValue:
+class dll_export StructureValue:
     public BoundValue {
 private:
     P<Code> structure;
@@ -145,7 +145,7 @@ public:
     bool contains(const Atom *s) const;
 };
 
-class r_exec_dll ObjectValue:
+class dll_export ObjectValue:
     public BoundValue {
 private:
     const P<Code> object;
@@ -174,7 +174,7 @@ typedef enum {
 class _Fact;
 class Fact;
 
-class r_exec_dll BindingMap:
+class dll_export BindingMap:
     public _Object {
     friend class UnboundValue;
 protected:
@@ -249,7 +249,7 @@ public:
     bool scan_variable(uint16_t id) const; // return true if id<first_index or map[id] is not an UnboundValue.
 };
 
-class r_exec_dll HLPBindingMap:
+class dll_export HLPBindingMap:
     public BindingMap {
 private:
     int16_t bwd_after_index;

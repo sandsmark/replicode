@@ -1,4 +1,4 @@
-//	utils.tpl.cpp
+//	utils.h
 //
 //	Author: Eric Nivel, Thor List
 //
@@ -28,35 +28,60 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef SHAREDLIBRARY_H
+#define SHAREDLIBRARY_H
+
+#include "dll.h"
+
+#include <mutex>
 #include <iostream>
+
 
 #if !defined(WIN32) || !defined(WIN64)
 #include <dlfcn.h>
 #endif
 
+// Wrapping of OS-dependent functions
 namespace core {
 
-template<typename T> T SharedLibrary::getFunction(const char *functionName) {
-    T function = NULL;
 #if defined(WIN32) || defined(WIN64)
-    if (library) {
-
-        function = (T)GetProcAddress(library, functionName);
-        if (!function) {
-
-            DWORD error = GetLastError();
-            std::cerr << "GetProcAddress > Error: " << error << std::endl;
-        }
-    }
+typedef HINSTANCE shared_object;
 #else
-    if (library) {
-        function = T(dlsym(library, functionName));
-        if (!function) {
-            std::cout << "> Error: unable to find symbol " << functionName << " :" << dlerror() << std::endl;
-        }
-    }
+typedef void* shared_object;
 #endif
-    return function;
-}
 
-}// namespace core
+class core_dll SharedLibrary {
+private:
+    shared_object library;
+public:
+    static SharedLibrary *New(const char *fileName);
+    SharedLibrary();
+    ~SharedLibrary();
+    SharedLibrary *load(const char *fileName);
+    template<typename T> T getFunction(const char *functionName) {
+        T function = NULL;
+    #if defined(WIN32) || defined(WIN64)
+        if (library) {
+
+            function = (T)GetProcAddress(library, functionName);
+            if (!function) {
+
+                DWORD error = GetLastError();
+                std::cerr << "GetProcAddress > Error: " << error << std::endl;
+            }
+        }
+    #else
+        if (library) {
+            function = T(dlsym(library, functionName));
+            if (!function) {
+                std::cout << "> Error: unable to find symbol " << functionName << " :" << dlerror() << std::endl;
+            }
+        }
+    #endif
+        return function;
+    }
+};
+
+} // namespace core
+
+#endif//SHAREDLIBRARY_H

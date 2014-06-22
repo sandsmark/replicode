@@ -29,8 +29,6 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "decompiler.h"
-#include "CoreLibrary/utils.h"
-
 
 namespace r_comp {
 
@@ -740,7 +738,7 @@ void Decompiler::write_any(uint16_t read_index, bool &after_tail_wildcard, bool 
                 uint64_t ts = Utils::GetTimestamp(&current_object->code[index]);
                 if (!in_hlp && ts > 0 && apply_time_offset)
                     ts -= time_offset;
-                out_stream->push(Time::ToString_seconds(ts), read_index);
+                out_stream->push(DebugStream::timestamp(ts), read_index);
             }
             break;
         case Atom::C_PTR: {

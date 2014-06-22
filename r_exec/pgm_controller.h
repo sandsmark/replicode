@@ -36,7 +36,7 @@
 
 namespace r_exec {
 
-class r_exec_dll _PGMController:
+class dll_export _PGMController:
     public OController {
 protected:
     bool run_once;
@@ -51,7 +51,7 @@ public:
 
 // TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
 // No overlays.
-class r_exec_dll InputLessPGMController:
+class dll_export InputLessPGMController:
     public _PGMController {
 public:
     InputLessPGMController(r_code::View *ipgm_view);
@@ -65,7 +65,7 @@ private:
 };
 
 // Controller for programs with inputs.
-class r_exec_dll PGMController:
+class dll_export PGMController:
     public _PGMController {
 public:
     PGMController(r_code::View *ipgm_view);
@@ -79,7 +79,7 @@ public:
 
 // Signaled by TimeCores (holding AntiPGMSignalingJob).
 // Possible recursive locks: signal_anti_pgm()->overlay->inject_productions()->mem->inject()->injectNow()->inject_reduction_jobs()->overlay->take_input().
-class r_exec_dll AntiPGMController:
+class dll_export AntiPGMController:
     public _PGMController {
 private:
     bool successful_match;

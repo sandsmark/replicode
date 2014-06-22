@@ -37,7 +37,7 @@
 
 namespace r_exec {
 
-class r_exec_dll TimeJob:
+class dll_export TimeJob:
     public _Object {
 protected:
     TimeJob(uint64_t target_time);
@@ -49,7 +49,7 @@ public:
     virtual void report(int64_t lag) const;
 };
 
-class r_exec_dll UpdateJob:
+class dll_export UpdateJob:
     public TimeJob {
 public:
     P<Group> group;
@@ -58,7 +58,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class r_exec_dll SignalingJob:
+class dll_export SignalingJob:
     public TimeJob {
 protected:
     SignalingJob(View *v, uint64_t ijt);
@@ -67,7 +67,7 @@ public:
     bool is_alive() const;
 };
 
-class r_exec_dll AntiPGMSignalingJob:
+class dll_export AntiPGMSignalingJob:
     public SignalingJob {
 public:
     AntiPGMSignalingJob(View *v, uint64_t ijt);
@@ -75,7 +75,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class r_exec_dll InputLessPGMSignalingJob:
+class dll_export InputLessPGMSignalingJob:
     public SignalingJob {
 public:
     InputLessPGMSignalingJob(View *v, uint64_t ijt);
@@ -83,7 +83,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class r_exec_dll InjectionJob:
+class dll_export InjectionJob:
     public TimeJob {
 public:
     P<View> view;
@@ -92,7 +92,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class r_exec_dll EInjectionJob:
+class dll_export EInjectionJob:
     public TimeJob {
 public:
     P<View> view;
@@ -101,7 +101,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class r_exec_dll SaliencyPropagationJob:
+class dll_export SaliencyPropagationJob:
     public TimeJob {
 public:
     P<Code> object;
@@ -112,7 +112,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class r_exec_dll ShutdownTimeCore:
+class dll_export ShutdownTimeCore:
     public TimeJob {
 public:
     ShutdownTimeCore();
@@ -137,7 +137,7 @@ public:
     }
 };
 
-class r_exec_dll PerfSamplingJob:
+class dll_export PerfSamplingJob:
     public TimeJob {
 public:
     uint64_t period;

@@ -31,11 +31,12 @@
 #ifndef overlay_h
 #define overlay_h
 
-#include "CoreLibrary/base.h"
-#include "CoreLibrary/utils.h"
 #include "r_code/object.h"
-#include "dll.h"
 
+#include "CoreLibrary/dll.h"
+#include "CoreLibrary/base.h"
+
+#include <mutex>
 
 using namespace r_code;
 
@@ -46,7 +47,7 @@ class View;
 // Upon invocation of take_input() the overlays older than tsc are killed, assuming stc>0; otherwise, overlays live unitl the ipgm dies.
 // Controllers are built at loading time and at the view's injection time.
 // Derived classes must expose a function: void reduce(r_code::View*input); (called by reduction jobs).
-class r_exec_dll Controller:
+class dll_export Controller:
     public _Object {
 protected:
     volatile uint64_t invalidated; // 32 bit alignment.
@@ -112,7 +113,7 @@ class _Context;
 class IPGMContext;
 class HLPContext;
 
-class r_exec_dll Overlay:
+class dll_export Overlay:
     public _Object {
     friend class _Context;
     friend class IPGMContext;
@@ -168,7 +169,7 @@ public:
     r_code::Code *build_object(Atom head) const;
 };
 
-class r_exec_dll OController:
+class dll_export OController:
     public Controller {
 protected:
     r_code::list<P<Overlay> > overlays;

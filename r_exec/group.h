@@ -33,7 +33,6 @@
 
 #include <set>
 
-#include "CoreLibrary/utils.h"
 #include "object.h"
 #include "view.h"
 #include <unordered_map>
@@ -47,7 +46,7 @@ class HLPController;
 // all parameters: accessed by Mem::update and reduction cores (via overlay mod/set).
 // all views: accessed by Mem::update and reduction cores.
 // viewing_groups: accessed by Mem::injectNow and Mem::update.
-class r_exec_dll Group:
+class dll_export Group:
     public LObject {
 private:
 // Ctrl values.

@@ -34,11 +34,11 @@
 #include <unordered_map>
 
 #include "overlay.h"
-
+#include "CoreLibrary/dll.h"
 
 namespace r_exec {
 
-class r_exec_dll Callbacks {
+class dll_export Callbacks {
 public:
     typedef bool (*Callback)(uint64_t, bool, const char *, uint8_t, Code **);
 private:

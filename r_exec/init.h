@@ -31,30 +31,28 @@
 #ifndef init_h
 #define init_h
 
-#include "CoreLibrary/utils.h"
-
 #include "r_code/list.h"
 
 #include "r_comp/segments.h"
 #include "r_comp/compiler.h"
 #include "r_comp/preprocessor.h"
 
-#include "dll.h"
+#include "CoreLibrary/dll.h"
 
 #include <thread>
 
 namespace r_exec {
 
 // Time base; either Time::Get or network-aware synced time.
-extern r_exec_dll uint64_t(*Now)();
+extern dll_export uint64_t(*Now)();
 
 // Loaded once for all.
 // Results from the compilation of user.classes.replicode.
 // The latter contains all class definitions and all shared objects (e.g. ontology); does not contain any dynamic (res!=forever) objects.
-//extern r_exec_dll r_comp::Metadata Metadata;
-//extern r_exec_dll r_comp::Image Seed;
-r_exec_dll r_comp::Metadata *getMetadata();
-r_exec_dll r_comp::Image *getSeed();
+//extern dll_export r_comp::Metadata Metadata;
+//extern dll_export r_comp::Image Seed;
+dll_export r_comp::Metadata *getMetadata();
+dll_export r_comp::Image *getSeed();
 
 // A preprocessor and a compiler are maintained throughout the life of the dll to retain, respectively, macros and global references.
 // Both functions add the compiled object to Seed.code_image.
@@ -63,7 +61,7 @@ bool Compile(const char* filename, string& error, bool compile_metadata = false)
 
 // Threaded decompiler, for decompiling on the fly asynchronously.
 // Named objects are referenced but not decompiled.
-class r_exec_dll TDecompiler:
+class dll_export TDecompiler:
     public _Object {
 private:
     static const uint64_t ObjectsInitialSize = 16;
@@ -93,7 +91,7 @@ public:
 // (c) the stream pool management (PipeOStream::Open(), PipeOStream::Close() and PipeOStream::Get()) shall be decoupled from this implementation (it's an IDE feature),
 // (d) PipeOStream shall be based on std::ostringstream instead of std::ostream with a refined std::stringbuf (override sync() to write in the pipe).
 #if defined(WIN32) || defined(WIN64)
-class r_exec_dll PipeOStream:
+class dll_export PipeOStream:
     public std::ostream {
 private:
     static std::vector<PipeOStream *> Streams;
@@ -120,19 +118,19 @@ public:
 
 // Initialize Now, compile user.classes.replicode, builds the Seed and loads the user-defined operators.
 // Return false in case of a problem (e.g. file not found, operator not found, etc.).
-bool r_exec_dll Init(const char *user_operator_library_path,
+bool dll_export Init(const char *user_operator_library_path,
                      uint64_t(*time_base)(),
                      const char *seed_path);
 
 // Alternate taking a ready-made metadata and seed (will be copied into Metadata and Seed).
-bool r_exec_dll Init(const char *user_operator_library_path,
+bool dll_export Init(const char *user_operator_library_path,
                      uint64_t(*time_base)(),
                      const r_comp::Metadata &metadata,
                      const r_comp::Image &seed);
 
-uint16_t r_exec_dll GetOpcode(const char *name); // classes, operators and functions.
+uint16_t dll_export GetOpcode(const char *name); // classes, operators and functions.
 
-std::string r_exec_dll GetAxiomName(const uint16_t index); // for constant objects (ex: self, position, and other axioms).
+std::string dll_export GetAxiomName(const uint16_t index); // for constant objects (ex: self, position, and other axioms).
 }
 
 

@@ -33,6 +33,7 @@
 #include "reduction_job.tpl.cpp"
 #include "mem.h"
 #include "model_base.h"
+#include "CoreLibrary/debug.h"
 
 namespace r_exec {
 
@@ -397,7 +398,7 @@ void _TPX::inject_hlps(uint64_t analysis_starting_time) {
         uint64_t d = analysis_end - analysis_starting_time;
         char _timing[255];
         snprintf(_timing, 255, "%lu", d);
-        header = Time::ToString_seconds(Now() - Utils::GetTimeReference());
+        header = DebugStream::timestamp(Now() - Utils::GetTimeReference());
         std::string s0 = (" > ");
         s0 += get_header() + std::string(":production [");
         std::string timing(_timing);

@@ -1,7 +1,6 @@
 #ifndef REPLISTRUCT_H
 #define REPLISTRUCT_H
 
-#include "CoreLibrary/types.h"
 #include <list>
 #include <unordered_map>
 #include <vector>

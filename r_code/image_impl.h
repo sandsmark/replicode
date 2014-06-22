@@ -31,7 +31,7 @@
 #ifndef image_impl_h
 #define image_impl_h
 
-#include "CoreLibrary/types.h"
+#include "CoreLibrary/dll.h"
 
 #include <cstdint>
 #include <cstddef>

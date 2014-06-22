@@ -31,11 +31,12 @@
 #include "callbacks.h"
 
 #include "r_exec/mem.h"
+#include "CoreLibrary/debug.h"
 
 
 bool print(uint64_t t, bool suspended, const char *msg, uint8_t object_count, Code **objects) { // return true to resume the executive (applies when called from a suspend call, i.e. suspended==true).
 
-    std::cout << Time::ToString_seconds(t) << ": " << msg << std::endl;
+    std::cout << DebugStream::timestamp(t) << ": " << msg << std::endl;
     for (uint8_t i = 0; i < object_count; ++i)
         objects[i]->trace();
     return true;

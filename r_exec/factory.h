@@ -33,7 +33,7 @@
 
 #include "binding_map.h"
 #include "overlay.h"
-#include "dll.h"
+#include "CoreLibrary/dll.h"
 
 
 namespace r_exec {
@@ -44,49 +44,49 @@ namespace r_exec {
 // They are not used to propagate saliency changes.
 // They are encoded as Atom::Object instead of Atom::Marker.
 
-class r_exec_dll MkNew:
+class dll_export MkNew:
     public LObject {
 public:
     MkNew(r_code::Mem *m, Code *object);
 };
 
-class r_exec_dll MkLowRes:
+class dll_export MkLowRes:
     public LObject {
 public:
     MkLowRes(r_code::Mem *m, Code *object);
 };
 
-class r_exec_dll MkLowSln:
+class dll_export MkLowSln:
     public LObject {
 public:
     MkLowSln(r_code::Mem *m, Code *object);
 };
 
-class r_exec_dll MkHighSln:
+class dll_export MkHighSln:
     public LObject {
 public:
     MkHighSln(r_code::Mem *m, Code *object);
 };
 
-class r_exec_dll MkLowAct:
+class dll_export MkLowAct:
     public LObject {
 public:
     MkLowAct(r_code::Mem *m, Code *object);
 };
 
-class r_exec_dll MkHighAct:
+class dll_export MkHighAct:
     public LObject {
 public:
     MkHighAct(r_code::Mem *m, Code *object);
 };
 
-class r_exec_dll MkSlnChg:
+class dll_export MkSlnChg:
     public LObject {
 public:
     MkSlnChg(r_code::Mem *m, Code *object, double value);
 };
 
-class r_exec_dll MkActChg:
+class dll_export MkActChg:
     public LObject {
 public:
     MkActChg(r_code::Mem *m, Code *object, double value);
@@ -95,7 +95,7 @@ public:
 class Pred;
 class Goal;
 
-class r_exec_dll _Fact:
+class dll_export _Fact:
     public LObject {
 private:
     static bool MatchAtom(Atom lhs, Atom rhs);
@@ -142,7 +142,7 @@ typedef enum {
     SIM_MANDATORY = 2
 } SimMode;
 
-class r_exec_dll Sim:
+class dll_export Sim:
     public _Object {
 private:
     uint64_t volatile invalidated; // 32 bits alignment.
@@ -171,7 +171,7 @@ public:
 // Caveat: instances of Fact can becone instances of AntiFact (set_opposite() upon MATCH_SUCCESS_NEGATIVE during backward chaining).
 // In particular, is_fact() and is_anti_fact() are based on the opcode, not on the class.
 // Do not store any data in this class.
-class r_exec_dll Fact:
+class dll_export Fact:
     public _Fact {
 public:
     void *operator new(size_t s);
@@ -182,7 +182,7 @@ public:
 };
 
 // Caveat: as for Fact.
-class r_exec_dll AntiFact:
+class dll_export AntiFact:
     public _Fact {
 public:
     void *operator new(size_t s);
@@ -205,7 +205,7 @@ public:
 //
 // Invalidation checks are performed at both _take_input() time and reduce() time as the invalidation may occur during the transit in the pipe.
 
-class r_exec_dll Pred:
+class dll_export Pred:
     public LObject {
 public:
     Pred();
@@ -224,7 +224,7 @@ public:
     Sim *get_simulation(Controller *root) const; // return true if there is a simulation for the goal.
 };
 
-class r_exec_dll Goal:
+class dll_export Goal:
     public LObject {
 public:
     Goal();
@@ -250,7 +250,7 @@ public:
     double get_strength(uint64_t now) const; // goal->target->cfd/(before-now).
 };
 
-class r_exec_dll MkRdx:
+class dll_export MkRdx:
     public LObject {
 public:
     MkRdx();
@@ -260,21 +260,21 @@ public:
     P<BindingMap> bindings; // NULL when produced by programs.
 };
 
-class r_exec_dll Success:
+class dll_export Success:
     public LObject {
 public:
     Success();
     Success(_Fact *object, _Fact *evidence, double psln_thr);
 };
 
-class r_exec_dll Perf:
+class dll_export Perf:
     public LObject {
 public:
     Perf();
     Perf(uint64_t reduction_job_avg_latency, int64_t d_reduction_job_avg_latency, uint64_t time_job_avg_latency, int64_t d_time_job_avg_latency);
 };
 
-class r_exec_dll ICST:
+class dll_export ICST:
     public LObject {
 public:
     ICST();

@@ -40,7 +40,7 @@
 #include "r_comp/decompiler.h"
 #include "r_comp/preprocessor.h"
 
-//#include <process.h>
+#include "CoreLibrary/sharedlibrary.h"
 
 namespace r_exec {
 
@@ -62,7 +62,7 @@ r_comp::Image* getSeed()
 static std::unordered_map<std::string, uint16_t> _Opcodes;
 
 dll_export r_comp::Compiler Compiler;
-r_exec_dll r_comp::Preprocessor Preprocessor;
+dll_export r_comp::Preprocessor Preprocessor;
 
 SharedLibrary userOperatorLibrary;
 

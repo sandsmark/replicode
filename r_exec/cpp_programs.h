@@ -37,7 +37,7 @@
 
 namespace r_exec {
 
-class r_exec_dll CPPPrograms {
+class dll_export CPPPrograms {
 public:
     typedef Controller *(*Program)(r_code::View *);
 private:

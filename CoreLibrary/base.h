@@ -33,7 +33,7 @@
 
 #include <cstdlib>
 #include <atomic>
-#include "types.h"
+#include "dll.h"
 
 
 namespace core {

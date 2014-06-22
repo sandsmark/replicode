@@ -31,12 +31,6 @@
 #ifndef reduction_core_h
 #define reduction_core_h
 
-#include "CoreLibrary/utils.h"
-#include "reduction_job.h"
-
-
-using namespace core;
-
 namespace r_exec {
 // Pop a job and reduce - may create overlays from exisitng ones.
 // Injects new productions in the mem - may create 1st level overlays.

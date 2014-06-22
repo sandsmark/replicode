@@ -33,6 +33,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <CoreLibrary/debug.h>
 
 namespace r_code {
 
@@ -155,6 +156,6 @@ int64_t Utils::GetGroupResilience(double resilience, double origin_upr, double d
 
 std::string Utils::RelativeTime(uint64_t t)
 {
-    return Time::ToString_seconds(t - TimeReference);
+    return DebugStream::timestamp(t - TimeReference);
 }
 }

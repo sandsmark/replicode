@@ -31,11 +31,11 @@
 #ifndef mem_h
 #define mem_h
 
-#include "reduction_core.h"
-#include "time_core.h"
+#include "reduction_job.h"
+#include "time_job.h"
 #include "pgm_overlay.h"
 #include "binding_map.h"
-#include "dll.h"
+#include "CoreLibrary/dll.h"
 
 #include <list>
 #include <atomic>
@@ -57,7 +57,7 @@ namespace r_exec {
 // - when an object is scheduled for injection and the target group does not exist anymore (or is invalidated), the injection is cancelled.
 // - when an object is scheduled for propagation of sln changes and has no view anymore, the operation is cancelled.
 // Main processing in _Mem::update().
-class r_exec_dll _Mem:
+class dll_export _Mem:
     public r_code::Mem {
 public:
     typedef enum {
@@ -348,7 +348,7 @@ public:
 #define OUTPUT(c) _Mem::Output(_Mem::c)
 
 // _Mem that stores the objects as long as they are not invalidated.
-class r_exec_dll MemStatic:
+class dll_export MemStatic:
     public _Mem {
 private:
     std::mutex m_objectsMutex; // protects last_oid and objects.
@@ -366,7 +366,7 @@ public:
 };
 
 // _Mem that does not store objects.
-class r_exec_dll MemVolatile:
+class dll_export MemVolatile:
     public _Mem {
 private:
     std::atomic_int_fast64_t last_oid;
@@ -413,7 +413,7 @@ public:
 };
 
 /* DEPRECATED
-r_exec_dll r_exec::Mem<r_exec::LObject> *Run(const char *user_operator_library_path,
+dll_export r_exec::Mem<r_exec::LObject> *Run(const char *user_operator_library_path,
  uint64_t (*time_base)(),
  const char *seed_path,
  const char *source_file_name);*/

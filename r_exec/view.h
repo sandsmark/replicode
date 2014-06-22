@@ -33,7 +33,7 @@
 
 #include "r_code/object.h"
 #include "overlay.h"
-#include "dll.h"
+#include "CoreLibrary/dll.h"
 
 
 namespace r_exec {
@@ -44,7 +44,7 @@ class LObject;
 // OID is hidden at _code[VIEW_OID].
 // Shared resources:
 // none: all mod/set operations are pushed on the group and executed at update time.
-class r_exec_dll View:
+class dll_export View:
     public r_code::View {
 private:
     static uint64_t LastOID;
@@ -160,7 +160,7 @@ private:
     std::mutex m_groupMutex;
 };
 
-class r_exec_dll NotificationView:
+class dll_export NotificationView:
     public View {
 public:
     NotificationView(Code *origin, Code *destination, Code *marker); // res=1, sln=1.

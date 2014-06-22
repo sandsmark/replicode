@@ -91,7 +91,7 @@ public:
 // Targeted Pattern eXtractor.
 // Does nothing.
 // Used for wr_enabled productions, for well-rated productions or when model acqusiiton is disabled.
-class r_exec_dll TPX:
+class dll_export TPX:
     public _Object {
 protected:
     AutoFocusController *auto_focus;
@@ -124,7 +124,7 @@ public:
 
 class ICST;
 
-class r_exec_dll _TPX:
+class dll_export _TPX:
     public TPX {
 private:
     static const uint64_t InputsInitialSize = 16;
@@ -169,7 +169,7 @@ public:
 // Models produced are of the form: M1[cause -> goal_target], where cause can be an imdl and goal_target can be an imdl.
 // M1 does not have template arguments.
 // Commands are ignored (CTPX' job).
-class r_exec_dll GTPX: // target is the goal target.
+class dll_export GTPX: // target is the goal target.
     public _TPX {
 private:
     P<Fact> f_imdl; // that produced the goal.
@@ -195,7 +195,7 @@ public:
 // Models produced are of the form: M1[cause -> |imdl M0] where M0 is the model that produced the failed prediction and cause can be an imdl.
 // M1 does not have template arguments.
 // Commands are ignored (CTPX' job).
-class r_exec_dll PTPX: // target is the prediction.
+class dll_export PTPX: // target is the prediction.
     public _TPX {
 private:
     P<Fact> f_imdl; // that produced the prediction (and for which the PTPX will find strong requirements).

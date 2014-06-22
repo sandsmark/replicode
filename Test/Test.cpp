@@ -193,7 +193,7 @@ void decompile(Decompiler &decompiler, r_comp::Image *image, uint64_t time_offse
     uint64_t object_count = decompiler.decompile(image, &decompiled_code, time_offset, ignore_named_objects);
 //uint64_t object_count=image->code_segment.objects.size();
     debug("main") << "decompilation:\n" << decompiled_code.str();
-    debug("main") << "image taken at:" << Time::ToString_year(image->timestamp);
+    //debug("main") << "image taken at:" << Time::ToString_year(image->timestamp);
     debug("main") << object_count << "objects";
 #endif
 }

@@ -28,7 +28,7 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "utils.h"
+#include "sharedlibrary.h"
 
 #if defined(WIN32) || defined(WIN64)
 #include <intrin.h>
@@ -110,54 +110,6 @@ SharedLibrary *SharedLibrary::load(const char *fileName) {
     free(libraryName);
 #endif
     return this;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-std::string Time::ToString_seconds(uint64_t t)
-{
-    uint64_t us = t % 1000;
-    uint64_t ms = t / 1000;
-    uint64_t s = ms / 1000;
-    ms = ms % 1000;
-
-    std::string _s = std::to_string(s);
-    _s += "s:";
-    _s += std::to_string(ms);
-    _s += "ms:";
-    _s += std::to_string(us);
-    _s += "us";
-
-    return _s;
-}
-
-std::string Time::ToString_year(uint64_t t)
-{
-    uint64_t us = t % 1000;
-    uint64_t ms = t / 1000;
-//uint64_t s=ms/1000;
-    ms = ms % 1000;
-
-    time_t _gmt_time;
-    time(&_gmt_time);
-    struct tm *_t = gmtime(&_gmt_time);
-
-    std::string _s = asctime(_t); // _s is: Www Mmm dd hh:mm:ss yyyy but we want: Www Mmm dd yyyy hh:mm:ss:msmsms:ususus
-    std::string year = _s.substr(_s.length() - 5, 4);
-    _s.erase(_s.length() - 6, 5);
-    std::string hh_mm_ss = _s.substr(_s.length() - 9, 8);
-    hh_mm_ss += ":";
-    hh_mm_ss += std::to_string(ms);
-    hh_mm_ss += ":";
-    hh_mm_ss += std::to_string(us);
-
-    _s.erase(_s.length() - 9, 9);
-    _s += year;
-    _s += " ";
-    _s += hh_mm_ss;
-    _s += " GMT";
-
-    return _s;
 }
 
 }

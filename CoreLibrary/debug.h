@@ -18,6 +18,22 @@ public:
         s_debugSection.unlock();
     }
 
+    static std::string timestamp(const uint64_t t) {
+        uint64_t us = t % 1000;
+        uint64_t ms = t / 1000;
+        uint64_t s = ms / 1000;
+        ms = ms % 1000;
+
+        std::string _s = std::to_string(s);
+        _s += "s:";
+        _s += std::to_string(ms);
+        _s += "ms:";
+        _s += std::to_string(us);
+        _s += "us";
+
+        return _s;
+    }
+
     inline const DebugStream &operator<<(const std::string output) const { std::cout << " " << output ; return *this; }
     inline const DebugStream &operator<<(const uint64_t output) const { std::cout << " " << output; return *this; }
     inline const DebugStream &operator<<(const int64_t output) const { std::cout << " " << output; return *this; }

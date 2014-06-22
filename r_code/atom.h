@@ -31,7 +31,7 @@
 #ifndef r_code_atom_h
 #define r_code_atom_h
 
-#include "CoreLibrary/types.h"
+#include "CoreLibrary/dll.h"
 
 #include <cstdint>
 #include <cstddef>

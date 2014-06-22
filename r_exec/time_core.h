@@ -31,12 +31,6 @@
 #ifndef time_core_h
 #define time_core_h
 
-#include "CoreLibrary/utils.h"
-#include "time_job.h"
-
-
-using namespace core;
-
 namespace r_exec {
 void runTimeCore();
 }

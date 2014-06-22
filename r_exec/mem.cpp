@@ -32,6 +32,10 @@
 #include "mdl_controller.h"
 #include "model_base.h"
 
+#include "time_core.h"
+#include "reduction_core.h"
+
+
 namespace r_exec {
 
 _Mem::_Mem(): r_code::Mem(), state(NOT_STARTED), deleted(false) {
