@@ -32,7 +32,6 @@
 #include "mdl_controller.h"
 #include "model_base.h"
 
-
 namespace r_exec {
 
 _Mem::_Mem(): r_code::Mem(), state(NOT_STARTED), deleted(false) {
@@ -261,9 +260,6 @@ uint64 _Mem::start() {
 
     core_count = 0;
 
-    time_job_queue = new PipeNN<P<TimeJob>, 1024>();
-    reduction_job_queue = new PipeNN<P<_ReductionJob>, 1024>();
-
     std::vector<std::pair<View *, Group *> > initial_reduction_jobs;
 
     uint64 i;
@@ -283,37 +279,27 @@ uint64 _Mem::start() {
         FOR_ALL_VIEWS_END
 
         if (c_active) {
-
             UNORDERED_MAP<uint64, P<View> >::const_iterator v;
-
-// build signaling jobs for active input-less overlays.
+            // build signaling jobs for active input-less overlays.
             for (v = g->input_less_ipgm_views.begin(); v != g->input_less_ipgm_views.end(); ++v) {
-
                 if (v->second->controller != NULL && v->second->controller->is_activated()) {
-
-                    P<TimeJob> j = new InputLessPGMSignalingJob(v->second, now + Utils::GetTimestamp<Code>(v->second->object, IPGM_TSC));
-                    time_job_queue->push(j);
+                    pushTimeJob(new InputLessPGMSignalingJob(v->second, now + Utils::GetTimestamp<Code>(v->second->object, IPGM_TSC)));
                 }
             }
 
-// build signaling jobs for active anti-pgm overlays.
+            // build signaling jobs for active anti-pgm overlays.
             for (v = g->anti_ipgm_views.begin(); v != g->anti_ipgm_views.end(); ++v) {
-
                 if (v->second->controller != NULL && v->second->controller->is_activated()) {
-
-                    P<TimeJob> j = new AntiPGMSignalingJob(v->second, now + Utils::GetTimestamp<Code>(v->second->object, IPGM_TSC));
-                    time_job_queue->push(j);
+                    pushTimeJob(new AntiPGMSignalingJob(v->second, now + Utils::GetTimestamp<Code>(v->second->object, IPGM_TSC)));
                 }
             }
         }
 
         if (c_salient) {
-
-// build reduction jobs for each salient view and each active overlay - regardless of the view's sync mode.
+            // build reduction jobs for each salient view and each active overlay - regardless of the view's sync mode.
             FOR_ALL_VIEWS_BEGIN(g, v)
 
             if (v->second->get_sln() > g->get_sln_thr()) { // salient view.
-
                 g->newly_salient_views.insert(v->second);
                 initial_reduction_jobs.push_back(std::pair<View *, Group *>(v->second, g));
             }
@@ -321,9 +307,7 @@ uint64 _Mem::start() {
         }
 
         if (g->get_upr() > 0) { // inject the next update job for the group.
-
-            P<TimeJob> j = new UpdateJob(g, g->get_next_upr_time(now));
-            time_job_queue->push(j);
+            pushTimeJob(new UpdateJob(g, g->get_next_upr_time(now)));
         }
     }
 
@@ -331,8 +315,7 @@ uint64 _Mem::start() {
 
     state = RUNNING;
 
-    P<TimeJob> j = new PerfSamplingJob(now + perf_sampling_period, perf_sampling_period);
-    time_job_queue->push(j);
+    pushTimeJob(new PerfSamplingJob(now + perf_sampling_period, perf_sampling_period));
 
     for (i = 0; i < reduction_core_count; ++i) {
         m_coreThreads.push_back(std::thread(&r_exec::runReductionCore));
@@ -341,8 +324,9 @@ uint64 _Mem::start() {
         m_coreThreads.push_back(std::thread(&r_exec::runTimeCore));
     }
 
-    for (uint64 i = 0; i < initial_reduction_jobs.size(); ++i)
+    for (uint64 i = 0; i < initial_reduction_jobs.size(); ++i) {
         initial_reduction_jobs[i].second->inject_reduction_jobs(initial_reduction_jobs[i].first);
+    }
 
     return now;
 }
@@ -355,12 +339,12 @@ void _Mem::stop()
     }
 
     uint64 i;
-    P<_ReductionJob> r;
-    for (i = 0; i < reduction_core_count; ++i)
-        reduction_job_queue->push(r = new ShutdownReductionCore());
-    P<TimeJob> t;
-    for (i = 0; i < time_core_count; ++i)
-        time_job_queue->push(t = new ShutdownTimeCore());
+    for (i = 0; i < reduction_core_count; ++i) {
+        pushReductionJob(new ShutdownReductionCore());
+    }
+    for (i = 0; i < time_core_count; ++i) {
+        pushTimeJob(new ShutdownTimeCore());
+    }
 
     state = STOPPED;
     m_stateMutex.unlock();
@@ -376,37 +360,37 @@ void _Mem::stop()
 
 ////////////////////////////////////////////////////////////////
 
-_ReductionJob *_Mem::popReductionJob() {
-
+P<_ReductionJob> _Mem::popReductionJob()
+{
     if (state == STOPPED)
-        return NULL;
-    _ReductionJob *j;
-    j = reduction_job_queue->pop();
-    return j;
+        return nullptr;
+
+    return m_reductionJobQueue.popJob();
 }
 
-void _Mem::pushReductionJob(_ReductionJob *j) {
-
+void _Mem::pushReductionJob(P<_ReductionJob> j)
+{
     if (state == STOPPED)
         return;
+
     j->ijt = Now();
-    P<_ReductionJob> _j = j;
-    reduction_job_queue->push(_j);
+    m_reductionJobQueue.pushJob(j);
 }
 
-TimeJob *_Mem::popTimeJob() {
-
+P<TimeJob> _Mem::popTimeJob()
+{
     if (state == STOPPED)
-        return NULL;
-    return time_job_queue->pop();
+        return nullptr;
+
+    return m_timeJobQueue.popJob();
 }
 
-void _Mem::pushTimeJob(TimeJob *j) {
-
+void _Mem::pushTimeJob(P<r_exec::TimeJob> j)
+{
     if (state == STOPPED)
         return;
-    P<TimeJob> _j = j;
-    time_job_queue->push(_j);
+
+    m_timeJobQueue.pushJob(j);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -469,8 +453,8 @@ void _Mem::inject_new_object(View *view) {
     }
 }
 
-void _Mem::inject(View *view) {
-
+void _Mem::inject(View *view)
+{
     if (view->object->is_invalidated())
         return;
 
@@ -484,21 +468,16 @@ void _Mem::inject(View *view) {
 
     if (view->object->is_registered()) { // existing object.
 
-        if (ijt <= now)
+        if (ijt <= now) {
             inject_existing_object(view, view->object, host);
-        else {
-
-            P<TimeJob> j = new EInjectionJob(view, ijt);
-            time_job_queue->push(j);
+        } else {
+            pushTimeJob(new EInjectionJob(view, ijt));
         }
     } else { // new object.
-
-        if (ijt <= now)
+        if (ijt <= now) {
             inject_new_object(view);
-        else {
-
-            P<TimeJob> j = new InjectionJob(view, ijt);
-            time_job_queue->push(j);
+        } else {
+            pushTimeJob(new InjectionJob(view, ijt));
         }
     }
 }
@@ -517,19 +496,14 @@ void _Mem::inject_async(View *view) {
     uint64 ijt = view->get_ijt();
 
     if (ijt <= now) {
-
         P<_ReductionJob> j = new AsyncInjectionJob(view);
-        reduction_job_queue->push(j);
+        pushReductionJob(j);
     } else {
 
         if (view->object->is_registered()) { // existing object.
-
-            P<TimeJob> j = new EInjectionJob(view, ijt);
-            time_job_queue->push(j);
+            pushTimeJob(new EInjectionJob(view, ijt));
         } else {
-
-            P<TimeJob> j = new InjectionJob(view, ijt);
-            time_job_queue->push(j);
+            pushTimeJob(new InjectionJob(view, ijt));
         }
     }
 }

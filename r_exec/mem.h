@@ -40,7 +40,8 @@
 #include <list>
 #include <atomic>
 #include <thread>
-
+#include <queue>
+#include <condition_variable>
 #include "../r_code/list.h"
 #include "../r_comp/segments.h"
 
@@ -95,8 +96,50 @@ protected:
 // Parameters::Run.
     uint64 probe_level;
 
-    PipeNN<P<_ReductionJob>, 1024> *reduction_job_queue;
-    PipeNN<P<TimeJob>, 1024> *time_job_queue;
+    template <class Type> struct JobQueue {
+        void pushJob(P<Type> job) {
+            std::unique_lock<std::mutex> lock(m_pushMutex);
+            m_mutex.lock();
+            while (m_jobs.size() > 1024) { // while, because spurious wakeups
+                m_mutex.unlock();
+                m_canPushCondition.wait(lock);
+                m_mutex.lock();
+            }
+            m_jobs.push(job);
+            m_mutex.unlock();
+            m_canPopCondition.notify_one();
+        }
+
+        P<Type> popJob() {
+            std::unique_lock<std::mutex> lock(m_popMutex);
+            m_mutex.lock();
+            while (m_jobs.size() < 1) { // because of spurious wakeups
+                m_mutex.unlock();
+                m_canPopCondition.wait(lock);
+                m_mutex.lock();
+            }
+            P<Type> r = m_jobs.front();
+            m_jobs.pop();
+            m_mutex.unlock();
+            m_canPushCondition.notify_one();
+
+            return r;
+        }
+
+    private:
+        std::mutex m_mutex;
+        std::queue<P<Type>> m_jobs;
+
+        std::mutex m_pushMutex;
+        std::condition_variable m_canPushCondition;
+        std::mutex m_popMutex;
+        std::condition_variable m_canPopCondition;
+    };
+
+    JobQueue<_ReductionJob> m_reductionJobQueue;
+    JobQueue<TimeJob> m_timeJobQueue;
+    std::mutex m_timeJobMutex;
+    std::mutex m_reductionJobMutex;
 
     std::vector<std::thread> m_coreThreads;
 
@@ -107,9 +150,6 @@ protected:
     uint64 time_job_count;
     uint64 time_job_avg_latency; // latency: deadline-the time the job is popped from the pipe; if <0, not registered (as it is too late for action); the higher the better.
     uint64 _time_job_avg_latency; // previous value.
-
-    std::mutex m_reductionJobMutex;
-    std::mutex m_timeJobMutex;
 
     uint64 core_count;
     std::mutex m_coreCountMutex;
@@ -240,10 +280,10 @@ public:
 
 // Internal core processing ////////////////////////////////////////////////////////////////
 
-    _ReductionJob *popReductionJob();
-    void pushReductionJob(_ReductionJob *j);
-    TimeJob *popTimeJob();
-    void pushTimeJob(TimeJob *j);
+    P<_ReductionJob> popReductionJob();
+    void pushReductionJob(P<_ReductionJob> j);
+    P<TimeJob> popTimeJob();
+    void pushTimeJob(P<TimeJob> j);
 
 // Called upon successful reduction.
     void inject(View *view);

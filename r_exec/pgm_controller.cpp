@@ -73,8 +73,7 @@ void InputLessPGMController::signal_input_less_pgm()
                 if (host->get_c_act() > host->get_c_act_thr() && // c-active group.
                         host->get_c_sln() > host->get_c_sln_thr()) { // c-salient group.
 
-                    TimeJob *next_job = new InputLessPGMSignalingJob((r_exec::View*)view, Now() + tsc);
-                    _Mem::Get()->pushTimeJob(next_job);
+                    _Mem::Get()->pushTimeJob(new InputLessPGMSignalingJob((r_exec::View*)view, Now() + tsc));
                 }
             }
         }
@@ -235,8 +234,7 @@ void AntiPGMController::push_new_signaling_job()
             host->get_c_act() > host->get_c_act_thr() && // c-active group.
             host->get_c_sln() > host->get_c_sln_thr()) { // c-salient group.
 
-        TimeJob *next_job = new AntiPGMSignalingJob((r_exec::View*)view, Now() + Utils::GetTimestamp<Code>(getObject(), IPGM_TSC));
-        _Mem::Get()->pushTimeJob(next_job);
+        _Mem::Get()->pushTimeJob(new AntiPGMSignalingJob((r_exec::View*)view, Now() + Utils::GetTimestamp<Code>(getObject(), IPGM_TSC)));
     }
 }
 }
