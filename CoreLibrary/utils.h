@@ -55,19 +55,6 @@ public:
     static std::string ToString_year(uint64 t); // day_name day_number month year hour:minutes:seconds:milliseconds:microseconds GMT since 01/01/1970.
 };
 
-class core_dll Semaphore {
-private:
-    semaphore s;
-protected:
-    static const uint64 Infinite;
-public:
-    Semaphore(uint64 initialCount, uint64 maxCount);
-    ~Semaphore();
-    bool acquire(uint64 timeout = Infinite); // returns true if timedout
-    void release(uint64 count = 1);
-    void reset();
-};
-
 } // namespace core
 
 #include "utils.tpl.cpp"

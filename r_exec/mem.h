@@ -45,9 +45,6 @@
 #include "../r_code/list.h"
 #include "../r_comp/segments.h"
 
-#include "CoreLibrary/pipe.h"
-
-
 namespace r_exec {
 
 // The rMem.

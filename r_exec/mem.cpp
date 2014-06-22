@@ -338,6 +338,7 @@ void _Mem::stop()
         return;
     }
 
+    // We need to do this because things are wait()ing
     uint64 i;
     for (i = 0; i < reduction_core_count; ++i) {
         pushReductionJob(new ShutdownReductionCore());
