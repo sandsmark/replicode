@@ -1048,8 +1048,8 @@ void Group::inject_notification(View *view, bool lock) {
         mutex.unlock();
 }
 
-void Group::inject_reduction_jobs(View *view) { // group is assumed to be c-salient; already protected.
-
+void Group::inject_reduction_jobs(View *view)
+{
     if (get_c_act() > get_c_act_thr()) { // host is c-active.
 
 // build reduction jobs from host's own inputs and own overlays.

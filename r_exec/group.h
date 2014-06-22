@@ -402,6 +402,7 @@ public:
     void inject_group(View *view);
     void inject_notification(View *view, bool lock);
     void inject_hlps(std::vector<View *> &views);
+    /// group is assumed to be c-salient, already protected
     void inject_reduction_jobs(View *view);
 
     void cov();
