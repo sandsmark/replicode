@@ -187,7 +187,7 @@ inline View *AutoFocusController::inject_input(View *input) {
         case View::SYNC_AXIOM: type = "(axiom)"; break;
         case View::SYNC_ONCE_AXIOM: type = "(once axiom)"; break;
         }
-        ::debug("auto_focus") << Utils::RelativeTime(Now()) << "A/F ->" << input->object->get_oid() << "|" << primary_view->object->get_oid() << type;
+    //    ::debug("auto_focus") << Utils::RelativeTime(Now()) << "A/F ->" << input->object->get_oid() << "|" << primary_view->object->get_oid() << type;
     }
 
     return primary_view;

@@ -43,7 +43,6 @@ void delegatedCoreWait(P<TimeJob> job)
     _Mem::Get()->start_core();
     std::this_thread::sleep_until(steady_clock::time_point(microseconds(job->target_time)));
     bool run = true;
-    uint64_t next_target;
     do {
         if (!job->is_alive()) {
             break;
@@ -52,12 +51,11 @@ void delegatedCoreWait(P<TimeJob> job)
             break;
         }
         int64_t lag = Now() - job->target_time;
-        next_target = 0;
-        run = job->update(next_target);
+        run = job->update();
         if (lag > 0) {
             job->report(lag);
         }
-    } while(next_target != 0 && run);
+    } while(job->shouldRunAgain() && run);
     _Mem::Get()->shutdown_core();
 }
 
@@ -69,7 +67,6 @@ void runTimeCore()
         if (job == nullptr) {
             break;
         }
-        uint64_t next_target;
         do {
             if (!job->is_alive()) {
                 break;
@@ -77,9 +74,8 @@ void runTimeCore()
             if (_Mem::Get()->check_state() != _Mem::RUNNING) {
                 break;
             }
-            next_target = 0;
             if (job->target_time == 0) {// means ASAP. Control jobs (shutdown) are caught here.
-                run = job->update(next_target);
+                run = job->update();
                 continue;
             }
             int64_t waitTime = job->target_time - Now();
@@ -89,11 +85,11 @@ void runTimeCore()
                 _Mem::Get()->register_time_job_latency(waitTime);
                 break; // get a new job
             }
-            run = job->update(next_target);
+            run = job->update();
             if (waitTime < 0) {
                 job->report(-waitTime);
             }
-        } while(next_target != 0 && run);
+        } while(job->shouldRunAgain() && run);
         job = nullptr;
     }
 }

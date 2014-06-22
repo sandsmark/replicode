@@ -35,12 +35,8 @@
 
 namespace r_exec {
 
-TimeJob::TimeJob(uint64_t target_time): _Object(), target_time(target_time) {
-}
-
-bool TimeJob::is_alive() const {
-
-    return true;
+TimeJob::TimeJob(uint64_t target_time): _Object(), target_time(target_time)
+{
 }
 
 void TimeJob::report(int64 lag) const
@@ -50,12 +46,13 @@ void TimeJob::report(int64 lag) const
 
 ////////////////////////////////////////////////////////////
 
-UpdateJob::UpdateJob(Group *g, uint64 ijt): TimeJob(ijt) {
-
+UpdateJob::UpdateJob(Group *g, uint64 ijt): TimeJob(ijt)
+{
     group = g;
 }
 
-bool UpdateJob::update(uint64_t &next_target) {
+bool UpdateJob::update()
+{
     group->update(target_time);
     return true;
 }
@@ -67,25 +64,27 @@ void UpdateJob::report(int64 lag) const
 
 ////////////////////////////////////////////////////////////
 
-SignalingJob::SignalingJob(View *v, uint64 ijt): TimeJob(ijt) {
-
+SignalingJob::SignalingJob(View *v, uint64 ijt): TimeJob(ijt)
+{
     view = v;
 }
 
-bool SignalingJob::is_alive() const {
-
+bool SignalingJob::is_alive() const
+{
     return view->controller->is_alive();
 }
 
 ////////////////////////////////////////////////////////////
 
-AntiPGMSignalingJob::AntiPGMSignalingJob(View *v, uint64 ijt): SignalingJob(v, ijt) {
+AntiPGMSignalingJob::AntiPGMSignalingJob(View *v, uint64 ijt): SignalingJob(v, ijt)
+{
 }
 
-bool AntiPGMSignalingJob::update(uint64_t &next_target) {
-
-    if (is_alive())
+bool AntiPGMSignalingJob::update()
+{
+    if (is_alive()) {
         ((AntiPGMController *)view->controller)->signal_anti_pgm();
+    }
     return true;
 }
 
@@ -96,11 +95,12 @@ void AntiPGMSignalingJob::report(int64 lag) const
 
 ////////////////////////////////////////////////////////////
 
-InputLessPGMSignalingJob::InputLessPGMSignalingJob(View *v, uint64 ijt): SignalingJob(v, ijt) {
+InputLessPGMSignalingJob::InputLessPGMSignalingJob(View *v, uint64 ijt): SignalingJob(v, ijt)
+{
 }
 
-bool InputLessPGMSignalingJob::update(uint64_t &next_target) {
-
+bool InputLessPGMSignalingJob::update()
+{
     if (is_alive())
         ((InputLessPGMController *)view->controller)->signal_input_less_pgm();
     return true;
@@ -113,13 +113,13 @@ void InputLessPGMSignalingJob::report(int64 lag) const
 
 ////////////////////////////////////////////////////////////
 
-InjectionJob::InjectionJob(View *v, uint64 ijt): TimeJob(ijt) {
-
+InjectionJob::InjectionJob(View *v, uint64 ijt): TimeJob(ijt)
+{
     view = v;
 }
 
-bool InjectionJob::update(uint64_t &next_target) {
-
+bool InjectionJob::update()
+{
     _Mem::Get()->inject(view);
     return true;
 }
@@ -131,13 +131,13 @@ void InjectionJob::report(int64 lag) const
 
 ////////////////////////////////////////////////////////////
 
-EInjectionJob::EInjectionJob(View *v, uint64 ijt): TimeJob(ijt) {
-
+EInjectionJob::EInjectionJob(View *v, uint64 ijt): TimeJob(ijt)
+{
     view = v;
 }
 
-bool EInjectionJob::update(uint64_t &next_target) {
-
+bool EInjectionJob::update()
+{
     _Mem::Get()->inject_existing_object(view, view->object, view->get_host());
     return true;
 }
@@ -149,13 +149,14 @@ void EInjectionJob::report(int64 lag) const
 
 ////////////////////////////////////////////////////////////
 
-SaliencyPropagationJob::SaliencyPropagationJob(Code *o, double sln_change, double source_sln_thr, uint64 ijt): TimeJob(ijt), sln_change(sln_change), source_sln_thr(source_sln_thr) {
-
+SaliencyPropagationJob::SaliencyPropagationJob(Code *o, double sln_change, double source_sln_thr, uint64 ijt) :
+    TimeJob(ijt), sln_change(sln_change), source_sln_thr(source_sln_thr)
+{
     object = o;
 }
 
-bool SaliencyPropagationJob::update(uint64_t &next_target) {
-
+bool SaliencyPropagationJob::update()
+{
     if (!object->is_invalidated())
         _Mem::Get()->propagate_sln(object, sln_change, source_sln_thr);
     return true;
@@ -168,29 +169,25 @@ void SaliencyPropagationJob::report(int64 lag) const {
 
 ////////////////////////////////////////////////////////////
 
-ShutdownTimeCore::ShutdownTimeCore(): TimeJob(0) {
+ShutdownTimeCore::ShutdownTimeCore(): TimeJob(0)
+{
 }
 
-bool ShutdownTimeCore::update(uint64_t &next_target) {
-
+bool ShutdownTimeCore::update()
+{
     return false;
 }
 
 ////////////////////////////////////////////////////////////
 
-PerfSamplingJob::PerfSamplingJob(uint64 start, uint64 period): TimeJob(start), period(period) {
+PerfSamplingJob::PerfSamplingJob(uint64 start, uint64 period): TimeJob(start), period(period)
+{
 }
 
-bool PerfSamplingJob::update(uint64_t &next_target) {
-
+bool PerfSamplingJob::update()
+{
     _Mem::Get()->inject_perf_stats();
     target_time += period;
-    next_target = target_time;
-    return true;
-}
-
-bool PerfSamplingJob::is_alive() const {
-
     return true;
 }
 }
