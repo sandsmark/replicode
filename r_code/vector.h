@@ -40,6 +40,7 @@ namespace r_code {
 template<typename T> class vector {
 public:
     vector() : m_vector(new std::vector<T>) {}
+    ~vector() { delete m_vector; }
     size_t size() const {
         return m_vector->size();
     }
