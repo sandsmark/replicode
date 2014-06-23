@@ -248,7 +248,6 @@ int main(int argc, char **argv)
     using namespace std::chrono;
     if (!r_exec::Init(settings.usr_operator_path.c_str(),
                       []() -> uint64_t { return duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count(); },
-                      //Time::Get,
                       settings.usr_class_path.c_str()))
         return 2;
 

@@ -38,11 +38,11 @@ namespace r_exec {
 void runReductionCore() {
     bool run = true;
     while (run) {
-        P<_ReductionJob> j = _Mem::Get()->popReductionJob();
-        if (j == NULL)
+        _ReductionJob *job = _Mem::Get()->popReductionJob();
+        if (job == nullptr)
             break;
-        run = j->update(Now());
-        j = NULL;
+        run = job->update(Now());
+        delete job;
     }
 }
 

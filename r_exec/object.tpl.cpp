@@ -30,7 +30,7 @@
 
 #include <mutex>
 
-#define UNDEFINED_OID 0xFFFFFFFF
+#define UNDEFINED_OID 0xFFFFFFFFFFFFFFFF
 
 namespace r_exec {
 

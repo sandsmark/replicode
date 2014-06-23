@@ -94,7 +94,7 @@ protected:
     uint64_t probe_level;
 
     template <class Type> struct JobQueue {
-        void pushJob(P<Type> job) {
+        void pushJob(Type *job) {
             std::unique_lock<std::mutex> lock(m_pushMutex);
             m_mutex.lock();
             while (m_jobs.size() > 1024) { // while, because spurious wakeups
@@ -103,29 +103,33 @@ protected:
                 m_mutex.lock();
             }
             m_jobs.push(job);
+            if (m_jobs.size() == 1) {
+                m_canPopCondition.notify_all();
+            }
             m_mutex.unlock();
-            m_canPopCondition.notify_one();
         }
 
-        P<Type> popJob() {
+        Type *popJob() {
             std::unique_lock<std::mutex> lock(m_popMutex);
             m_mutex.lock();
-            while (m_jobs.size() < 1) { // because of spurious wakeups
+            while (m_jobs.size() < 1) { // while, because of spurious wakeups
                 m_mutex.unlock();
                 m_canPopCondition.wait(lock);
                 m_mutex.lock();
             }
-            P<Type> r = m_jobs.front();
+            Type *r = m_jobs.front();
             m_jobs.pop();
+            if (m_jobs.size() < 1024) {
+                m_canPushCondition.notify_all();
+            }
             m_mutex.unlock();
-            m_canPushCondition.notify_one();
 
             return r;
         }
 
     private:
         std::mutex m_mutex;
-        std::queue<P<Type>> m_jobs;
+        std::queue<Type*> m_jobs;
 
         std::mutex m_pushMutex;
         std::condition_variable m_canPushCondition;
@@ -148,13 +152,12 @@ protected:
     uint64_t time_job_avg_latency; // latency: deadline-the time the job is popped from the pipe; if <0, not registered (as it is too late for action); the higher the better.
     uint64_t _time_job_avg_latency; // previous value.
 
-    uint64_t core_count;
-    std::mutex m_coreCountMutex;
+    std::atomic<uint64_t> m_coreCount;
+    std::condition_variable m_coresRunning;
+    std::mutex m_coreCountMutex; // blocks the rMem until all cores terminate.
 
     State state;
     std::mutex m_stateMutex;
-
-    std::mutex m_stopMutex; // blocks the rMem until all cores terminate.
 
 
     r_code::list<P<Code> > objects; // store objects in order of injection: holds the initial objects (and dynamically created ones if MemStatic is used).
@@ -277,10 +280,10 @@ public:
 
 // Internal core processing ////////////////////////////////////////////////////////////////
 
-    P<_ReductionJob> popReductionJob();
-    void pushReductionJob(P<_ReductionJob> j);
-    P<TimeJob> popTimeJob();
-    void pushTimeJob(P<TimeJob> j);
+    _ReductionJob *popReductionJob();
+    void pushReductionJob(_ReductionJob *j);
+    TimeJob *popTimeJob();
+    void pushTimeJob(TimeJob *j);
 
 // Called upon successful reduction.
     void inject(View *view);
@@ -412,11 +415,6 @@ public:
     void inject(O *object, View *view);
 };
 
-/* DEPRECATED
-dll_export r_exec::Mem<r_exec::LObject> *Run(const char *user_operator_library_path,
- uint64_t (*time_base)(),
- const char *seed_path,
- const char *source_file_name);*/
 }
 
 

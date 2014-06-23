@@ -589,9 +589,7 @@ void Group::update(uint64_t planned_time)
     update_stats(); // triggers notifications.
 
     if (get_upr() > 0) { // inject the next update job for the group.
-
-        P<TimeJob> j = new UpdateJob(this, planned_time + get_upr()*Utils::GetBasePeriod());
-        _Mem::Get()->pushTimeJob(j);
+        _Mem::Get()->pushTimeJob(new UpdateJob(this, planned_time + get_upr()*Utils::GetBasePeriod()));
     }
 
 //if(get_secondary_group()!=NULL)

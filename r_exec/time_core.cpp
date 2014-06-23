@@ -38,7 +38,7 @@ namespace r_exec {
 
 using namespace std::chrono;
 
-void delegatedCoreWait(P<TimeJob> job)
+void delegatedCoreWait(TimeJob *job)
 {
     _Mem::Get()->start_core();
     std::this_thread::sleep_until(steady_clock::time_point(microseconds(job->target_time)));
@@ -56,6 +56,7 @@ void delegatedCoreWait(P<TimeJob> job)
             job->report(lag);
         }
     } while(job->shouldRunAgain() && run);
+    delete job;
     _Mem::Get()->shutdown_core();
 }
 
@@ -63,7 +64,7 @@ void runTimeCore()
 {
     bool run = true;
     while (run) {
-        P<TimeJob> job = _Mem::Get()->popTimeJob();
+        TimeJob *job = _Mem::Get()->popTimeJob();
         if (job == nullptr) {
             break;
         }
@@ -83,6 +84,7 @@ void runTimeCore()
                 std::thread *delegatedCoreThread = new std::thread(delegatedCoreWait, job);
                 delegatedCoreThread->detach();
                 _Mem::Get()->register_time_job_latency(waitTime);
+                job = nullptr;
                 break; // get a new job
             }
             run = job->update();
@@ -90,7 +92,7 @@ void runTimeCore()
                 job->report(-waitTime);
             }
         } while(job->shouldRunAgain() && run);
-        job = nullptr;
+        delete job;
     }
 }
 

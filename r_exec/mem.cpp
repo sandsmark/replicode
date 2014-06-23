@@ -151,17 +151,17 @@ _Mem::State _Mem::check_state() {
     return s;
 }
 
-void _Mem::start_core() {
-    std::lock_guard<std::mutex> guard(m_coreCountMutex);
-    if (++core_count == 1)
-        m_stopMutex.lock();
+void _Mem::start_core()
+{
+    std::unique_lock<std::mutex> guard(m_coreCountMutex);
+    m_coreCount++;
 }
 
 void _Mem::shutdown_core()
 {
-    std::lock_guard<std::mutex> guard(m_coreCountMutex);
-    if (--core_count == 0)
-        m_stopMutex.unlock();
+    std::unique_lock<std::mutex> guard(m_coreCountMutex);
+    m_coreCount--;
+    m_coresRunning.notify_all();
 }
 
 ////////////////////////////////////////////////////////////////
@@ -262,7 +262,7 @@ uint64_t _Mem::start() {
     if (state != STOPPED && state != NOT_STARTED)
         return 0;
 
-    core_count = 0;
+    m_coreCount = 0;
 
     std::vector<std::pair<View *, Group *> > initial_reduction_jobs;
 
@@ -358,14 +358,16 @@ void _Mem::stop()
         m_coreThreads[i].join();
     }
 
-    m_stopMutex.lock(); // wait for delegates.
+    std::unique_lock<std::mutex> lock(m_coreCountMutex);
+    if (m_coreCount > 0)
+        m_coresRunning.wait(lock);
 
     m_coreThreads.clear();
 }
 
 ////////////////////////////////////////////////////////////////
 
-P<_ReductionJob> _Mem::popReductionJob()
+_ReductionJob *_Mem::popReductionJob()
 {
     if (state == STOPPED)
         return nullptr;
@@ -373,7 +375,7 @@ P<_ReductionJob> _Mem::popReductionJob()
     return m_reductionJobQueue.popJob();
 }
 
-void _Mem::pushReductionJob(P<_ReductionJob> j)
+void _Mem::pushReductionJob(_ReductionJob *j)
 {
     if (state == STOPPED)
         return;
@@ -382,7 +384,7 @@ void _Mem::pushReductionJob(P<_ReductionJob> j)
     m_reductionJobQueue.pushJob(j);
 }
 
-P<TimeJob> _Mem::popTimeJob()
+TimeJob *_Mem::popTimeJob()
 {
     if (state == STOPPED)
         return nullptr;
@@ -390,7 +392,7 @@ P<TimeJob> _Mem::popTimeJob()
     return m_timeJobQueue.popJob();
 }
 
-void _Mem::pushTimeJob(P<r_exec::TimeJob> j)
+void _Mem::pushTimeJob(r_exec::TimeJob *j)
 {
     if (state == STOPPED)
         return;

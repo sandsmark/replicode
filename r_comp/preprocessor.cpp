@@ -42,8 +42,8 @@ Preprocessor::Preprocessor() {
     root = new RepliStruct(RepliStruct::Root);
 }
 
-Preprocessor::~Preprocessor() {
-
+Preprocessor::~Preprocessor()
+{
     delete root;
 }
 

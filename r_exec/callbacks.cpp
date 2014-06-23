@@ -34,13 +34,13 @@ namespace r_exec {
 
 std::unordered_map<std::string, Callbacks::Callback> Callbacks::_Callbacks;
 
-void Callbacks::Register(std::string &callback_name, Callback callback) {
-
+void Callbacks::Register(std::string &callback_name, Callback callback)
+{
     _Callbacks[callback_name] = callback;
 }
 
-Callbacks::Callback Callbacks::Get(std::string &callback_name) {
-
+Callbacks::Callback Callbacks::Get(std::string &callback_name)
+{
     std::unordered_map<std::string, Callback>::const_iterator it = _Callbacks.find(callback_name);
     if (it != _Callbacks.end())
         return it->second;

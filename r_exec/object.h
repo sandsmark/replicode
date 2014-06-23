@@ -51,7 +51,7 @@ template<class C, class U> class Object:
 private:
     size_t hash_value;
 
-    volatile uint64_t invalidated; // must be aligned on 32 bits.
+    volatile uint64_t invalidated; // must be aligned on 64 bits.
 
     std::mutex m_pslnThrMutex;
     std::mutex m_viewsMutex;
