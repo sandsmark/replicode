@@ -34,9 +34,6 @@
 
 #include <limits>
 
-const double PLUS_INFINITY = std::numeric_limits<float>::infinity();
-
-
 namespace r_exec {
 
 std::mutex oidMutex;
@@ -151,7 +148,7 @@ void View::reset_init_act() {
 double View::update_res() {
 
     double new_res = get_res();
-    if (new_res == PLUS_INFINITY)
+    if (new_res == std::numeric_limits<double>::infinity())
         return new_res;
     if (res_changes > 0 && acc_res != 0)
         new_res = get_res() + (double)acc_res / (double)res_changes;
