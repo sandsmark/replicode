@@ -26,6 +26,13 @@ bool IniFile::readFile(std::string filename)
     size_t linenum = 0;
     while (std::getline(file, line)) {
         linenum++;
+
+        size_t commentStart = line.find("//");
+        if (commentStart != std::string::npos) {
+            line = trim(line.substr(0, commentStart));
+        }
+
+
         if (line.length() == 0) continue;
 
         if (line[0] == '[') {
@@ -45,10 +52,36 @@ bool IniFile::readFile(std::string filename)
         }
         std::string name = trim(line.substr(0, nameEnd));
         std::string value = trim(line.substr(nameEnd + 1));
+        if (name == "" || value == "") continue;
         m_values[group][name] = value;
     }
 
     return true;
+}
+
+std::string IniFile::getString(const std::string group, const std::string name, std::string defaultVal)
+{
+    if (!hasString(group, name)) return defaultVal;
+    return m_values[group][name];
+}
+
+uint64_t IniFile::getInt(const std::string group, const std::string name, uint64_t defaultVal)
+{
+    if (!hasInt(group, name)) return defaultVal;
+    return std::stoi(getString(group, name, std::to_string(defaultVal)));
+}
+
+double IniFile::getDouble(const std::string group, const std::string name, double defaultVal)
+{
+    if (!hasDouble(group, name)) return defaultVal;
+    return std::stod(getString(group, name, std::to_string(defaultVal)));
+}
+
+int IniFile::getBool(const std::string group, const std::string name, bool defaultVal)
+{
+    if (!hasBool(group, name)) return defaultVal;
+    const std::string val = getString(group, name, std::to_string(defaultVal));
+    return val == "true" || val == "yes";
 }
 
 bool IniFile::hasString(const std::string group, const std::string name)
@@ -57,9 +90,23 @@ bool IniFile::hasString(const std::string group, const std::string name)
     return (m_values[group].find(name) != m_values[group].end());
 }
 
-std::string IniFile::getString(const std::string group, const std::string name)
+bool IniFile::hasDouble(const std::string group, const std::string name)
 {
-    return m_values[group][name];
+    if (!hasString(group, name)) return false;
+    size_t pos;
+    try {
+        std::stod(getString(group, name, "not a number"), &pos);
+    } catch (std::invalid_argument&) {
+        return false;
+    }
+    return (pos > 0);
+}
+
+bool IniFile::hasBool(const std::string group, const std::string name)
+{
+    if (!hasString(group, name)) return false;
+    const std::string val = getString(group, name, "not a bool");
+    return (val == "true") || (val == "yes") || (val == "false") || (val == "no");
 }
 
 bool IniFile::hasInt(const std::string group, const std::string name)
@@ -67,33 +114,9 @@ bool IniFile::hasInt(const std::string group, const std::string name)
     if (!hasString(group, name)) return false;
     size_t pos;
     try {
-        std::stoi(getString(group, name), &pos);
+        std::stoi(getString(group, name, "not a number"), &pos);
     } catch (std::invalid_argument&) {
         return false;
     }
     return (pos > 0);
-}
-
-int IniFile::getInt(const std::string group, const std::string name)
-{
-    if (!hasInt(group, name)) return 0;
-    return std::stoi(getString(group, name));
-}
-
-bool IniFile::hasDouble(const std::string group, const std::string name)
-{
-    if (!hasDouble(group, name)) return false;
-    size_t pos;
-    try {
-        std::stod(getString(group, name), &pos);
-    } catch (std::invalid_argument&) {
-        return false;
-    }
-    return (pos > 0);
-}
-
-int IniFile::getDouble(const std::string group, const std::string name)
-{
-    if (!hasDouble(group, name)) return 0;
-    return std::stod(getString(group, name));
 }

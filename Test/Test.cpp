@@ -35,6 +35,11 @@
 #include "settings.h"
 //#include "CoreLibrary/utils.h"
 
+static bool fileExists(const char *fileName)
+{
+    std::ifstream infile(fileName);
+    return infile.good();
+}
 
 //#define DECOMPILE_ONE_BY_ONE
 
@@ -229,19 +234,12 @@ void write_to_file(r_comp::Image *image, std::string &image_path, Decompiler *de
 int main(int argc, char **argv)
 {
     Settings settings;
-    if (argc == 2) {
-        if (!settings.load(argv[1])) {
-            std::cerr << "Unable to load config file " << argv[1] << std::endl;
-            return 1;
-        }
-    } else if (argc == 1) {
-        if (!settings.load("settings.xml")) {
-            std::cerr << "Unable to load default config file settings.xml" << std::endl;
-            return 1;
-        }
+
+    if (fileExists("settings.ini")) {
+        settings.load("settings.ini");
     } else {
-        std::cerr << "Usage: " << argv[0] << " [settings file]" << std::endl;
-        return 1;
+        // tries to load file, otherwise sets default values
+        settings.load("~/.config/replicode/replicode.ini");
     }
 
     debug("main") << "Initializing with user operator library and user class code...";

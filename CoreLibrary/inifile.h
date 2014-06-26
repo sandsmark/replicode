@@ -7,19 +7,19 @@ class IniFile
 {
 public:
     bool readFile(std::string filename);
-    bool hasString(const std::string group, const std::string name);
 
-    std::string getString(const std::string group, const std::string name);
 
-    bool hasInt(const std::string group, const std::string name);
-
-    int getInt(const std::string group, const std::string name);
-
-    bool hasDouble(const std::string group, const std::string name);
-
-    int getDouble(const std::string group, const std::string name);
+    std::string getString(const std::string group, const std::string name, std::string defaultVal);
+    uint64_t getInt(const std::string group, const std::string name, uint64_t defaultVal);
+    double getDouble(const std::string group, const std::string name, double defaultVal);
+    int getBool(const std::string group, const std::string name, bool defaultVal);
 
 private:
+    bool hasInt(const std::string group, const std::string name);
+    bool hasDouble(const std::string group, const std::string name);
+    bool hasBool(const std::string group, const std::string name);
+    bool hasString(const std::string group, const std::string name);
+
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> m_values;
 };
 

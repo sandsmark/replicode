@@ -31,7 +31,9 @@
 #ifndef settings_h
 #define settings_h
 
-#include <CoreLibrary/xml_parser.h>
+#include <CoreLibrary/inifile.h>
+#include <CoreLibrary/debug.h>
+#include <thread>
 
 class Settings {
 public:
@@ -85,169 +87,58 @@ public:
     bool test_models;
 
     bool load(const char *file_name) {
-
-        core::XMLNode mainNode = core::XMLNode::openFileHelper(file_name, "RunConfiguration");
-        if (!mainNode) {
-
-            std::cerr << "> Error: RunConfiguration is unreadable" << std::endl;
-            return false;
+        IniFile settingsFile;
+        if (!settingsFile.readFile(file_name)) {
+            std::cerr << "Unable to load settings, using defaults";
         }
 
-        core::XMLNode load = mainNode.getChildNode("Load");
-        if (!!load) {
+        usr_operator_path = settingsFile.getString("Load", "usr_operator_path", "../build/usr_operators/libusr_operators.so");
+        usr_class_path = settingsFile.getString("Load", "usr_class_path", "./V1.2/user.classes.replicode");
+        source_file_name = settingsFile.getString("Load", "source_file_name",  "./V1.2/test.2.replicode");
 
-            usr_operator_path = load.getAttribute("usr_operator_path");
-            usr_class_path = load.getAttribute("usr_class_path");
-            source_file_name = load.getAttribute("source_file_name");
-        } else {
+        unsigned int cores = std::thread::hardware_concurrency();
+        ::debug("settings") << "number of cores available:" << cores;
 
-            std::cerr << "> Error: Load section is unreadable" << std::endl;
-            return false;
-        }
+        base_period = settingsFile.getInt("Init", "base_period", 50000);
+        reduction_core_count = settingsFile.getInt("Init", "reduction_core_count", (cores * 3) / 4 + 1);
+        time_core_count = settingsFile.getInt("Init", "time_core_count", (cores - ((cores*3)/4)) + 1);
 
-        core::XMLNode init = mainNode.getChildNode("Init");
-        if (!!init) {
+        mdl_inertia_sr_thr = settingsFile.getDouble("System", "mdl_inertia_sr_thr", 0.9);
+        mdl_inertia_cnt_thr = settingsFile.getInt("System", "mdl_inertia_cnt_thr", 6);
+        tpx_dsr_thr = settingsFile.getDouble("System", "tpx_dsr_thr", 0.1);
+        min_sim_time_horizon = settingsFile.getInt("System", "min_sim_time_horizon", 0);
+        max_sim_time_horizon = settingsFile.getInt("System", "max_sim_time_horizon", 0);
+        sim_time_horizon = settingsFile.getDouble("System", "sim_time_horizon", 0.3);
+        tpx_time_horizon = settingsFile.getInt("System", "tpx_time_horizon", 500000);
+        perf_sampling_period = settingsFile.getInt("System", "perf_sampling_period", 250000);
+        float_tolerance = settingsFile.getDouble("System", "float_tolerance", 0.00001);
+        time_tolerance = settingsFile.getInt("System", "time_tolerance", 10000);
+        primary_thz = settingsFile.getInt("System", "primary_thz", 3600000);
+        secondary_thz = settingsFile.getInt("System", "secondary_thz", 7200000);
 
-            const char *_base_period = init.getAttribute("base_period");
-            const char *_reduction_core_count = init.getAttribute("reduction_core_count");
-            const char *_time_core_count = init.getAttribute("time_core_count");
+        this->debug = settingsFile.getBool("Debug", "debug", true);
+        debug_windows = settingsFile.getInt("Debug", "debug_windows", 1);
+        trace_levels = std::stoi(settingsFile.getString("Debug", "trace_levels", "CC"), nullptr, 16);
 
-            base_period = atoi(_base_period);
-            reduction_core_count = atoi(_reduction_core_count);
-            time_core_count = atoi(_time_core_count);
-        } else {
+        ntf_mk_resilience = settingsFile.getInt("Resilience",  "ntf_mk_resilience", 1);
+        goal_pred_success_resilience = settingsFile.getInt("Resilience", "goal_pred_success_resilience", 1000);
 
-            std::cerr << "> Error: Init section is unreadable" << std::endl;
-            return false;
-        }
+        get_objects = settingsFile.getBool("Objects", "get_objects", false);
+        decompile_objects = settingsFile.getBool("Objects", "decompile_objects", false);
+        decompile_to_file = settingsFile.getBool("Objects", "decompile_to_file", false);
+        decompilation_file_path = settingsFile.getString("Objects", "decompilation_file_path", "../Test/decompiled.replicode");
+        ignore_named_objects = settingsFile.getBool("Objects", "ignore_named_objects", false);
+        write_objects = settingsFile.getBool("Objects", "write_objects", false);
+        test_objects = settingsFile.getBool("Objects", "test_objects", false);
 
-        core::XMLNode system = mainNode.getChildNode("System");
-        if (!!system) {
+        run_time = settingsFile.getInt("Run", "run_time", 10080);
+        probe_level = settingsFile.getInt("Run", "probe_level", 2);
 
-            const char *_mdl_inertia_sr_thr = system.getAttribute("mdl_inertia_sr_thr");
-            const char *_mdl_inertia_cnt_thr = system.getAttribute("mdl_inertia_cnt_thr");
-            const char *_tpx_dsr_thr = system.getAttribute("tpx_dsr_thr");
-            const char *_min_sim_time_horizon = system.getAttribute("min_sim_time_horizon");
-            const char *_max_sim_time_horizon = system.getAttribute("max_sim_time_horizon");
-            const char *_sim_time_horizon = system.getAttribute("sim_time_horizon");
-            const char *_tpx_time_horizon = system.getAttribute("tpx_time_horizon");
-            const char *_perf_sampling_period = system.getAttribute("perf_sampling_period");
-            const char *_float_tolerance = system.getAttribute("float_tolerance");
-            const char *_time_tolerance = system.getAttribute("time_tolerance");
-            const char *_primary_thz = system.getAttribute("primary_thz");
-            const char *_secondary_thz = system.getAttribute("secondary_thz");
-
-            mdl_inertia_sr_thr = atof(_mdl_inertia_sr_thr);
-            mdl_inertia_cnt_thr = atoi(_mdl_inertia_cnt_thr);
-            tpx_dsr_thr = atof(_tpx_dsr_thr);
-            min_sim_time_horizon = atoi(_min_sim_time_horizon);
-            max_sim_time_horizon = atoi(_max_sim_time_horizon);
-            sim_time_horizon = atof(_sim_time_horizon);
-            tpx_time_horizon = atoi(_tpx_time_horizon);
-            perf_sampling_period = atoi(_perf_sampling_period);
-            float_tolerance = atof(_float_tolerance);
-            time_tolerance = atoi(_time_tolerance);
-            primary_thz = atoi(_primary_thz);
-            secondary_thz = atoi(_secondary_thz);
-        } else {
-
-            std::cerr << "> Error: System section is unreadable" << std::endl;
-            return false;
-        }
-
-        core::XMLNode debug = mainNode.getChildNode("Debug");
-        if (!!debug) {
-
-            const char *_debug = debug.getAttribute("debug");
-            const char *_debug_windows = debug.getAttribute("debug_windows");
-            const char *_trace_levels = debug.getAttribute("trace_levels");
-
-            this->debug = (strcmp(_debug, "yes") == 0);
-            debug_windows = atoi(_debug_windows);
-            sscanf(_trace_levels, "%lx", &trace_levels);
-
-            core::XMLNode resilience = debug.getChildNode("Resilience");
-            if (!!resilience) {
-
-                const char *_ntf_mk_resilience = resilience.getAttribute("ntf_mk_resilience");
-                const char *_goal_pred_success_resilience = resilience.getAttribute("goal_pred_success_resilience");
-
-                ntf_mk_resilience = atoi(_ntf_mk_resilience);
-                goal_pred_success_resilience = atoi(_goal_pred_success_resilience);
-            } else {
-
-                std::cerr << "> Error: Debug/Resilience section is unreadable" << std::endl;
-                return false;
-            }
-            core::XMLNode objects = debug.getChildNode("Objects");
-            if (!!objects) {
-
-                const char *_get_objects = objects.getAttribute("get_objects");
-                const char *_decompile_objects = objects.getAttribute("decompile_objects");
-                const char *_decompile_to_file = objects.getAttribute("decompile_to_file");
-                decompilation_file_path = objects.getAttribute("decompilation_file_path");
-                const char *_ignore_named_objects = objects.getAttribute("ignore_named_objects");
-                const char *_write_objects = objects.getAttribute("write_objects");
-                const char *_test_objects = objects.getAttribute("test_objects");
-
-                get_objects = (strcmp(_get_objects, "yes") == 0);
-                decompile_objects = (strcmp(_decompile_objects, "yes") == 0);
-                decompile_to_file = (strcmp(_decompile_to_file, "yes") == 0);
-                ignore_named_objects = (strcmp(_ignore_named_objects, "yes") == 0);
-                write_objects = (strcmp(_write_objects, "yes") == 0);
-                if (write_objects) {
-
-                    objects_path = objects.getAttribute("objects_path");
-                    test_objects = (strcmp(_test_objects, "yes") == 0);
-                }
-            } else {
-
-                std::cerr << "> Error: Debug/Objects section is unreadable" << std::endl;
-                return false;
-            }
-        } else {
-
-            std::cerr << "> Error: Debug section is unreadable" << std::endl;
-            return false;
-        }
-
-        core::XMLNode run = mainNode.getChildNode("Run");
-        if (!!run) {
-
-            const char *_run_time = run.getAttribute("run_time");
-            const char *_probe_level = run.getAttribute("probe_level");
-
-            run_time = atoi(_run_time);
-            probe_level = atoi(_probe_level);
-
-            core::XMLNode models = run.getChildNode("Models");
-            if (!!models) {
-
-                const char *_get_models = models.getAttribute("get_models");
-                const char *_decompile_models = models.getAttribute("decompile_models");
-                const char *_ignore_named_models = models.getAttribute("ignore_named_models");
-                const char *_write_models = models.getAttribute("write_models");
-                const char *_test_models = models.getAttribute("test_models");
-
-                get_models = (strcmp(_get_models, "yes") == 0);
-                decompile_models = (strcmp(_decompile_models, "yes") == 0);
-                ignore_named_models = (strcmp(_ignore_named_models, "yes") == 0);
-                write_models = (strcmp(_write_models, "yes") == 0);
-                if (write_models) {
-
-                    models_path = models.getAttribute("models_path");
-                    test_models = (strcmp(_test_models, "yes") == 0);
-                }
-            } else {
-
-                std::cerr << "> Error: Run/Models section is unreadable" << std::endl;
-                return false;
-            }
-        } else {
-
-            std::cerr << "> Error: Run section is unreadable" << std::endl;
-            return false;
-        }
+        get_models = settingsFile.getBool("Models", "get_models", false);
+        decompile_models = settingsFile.getBool("Models", "decompile_models", false);
+        ignore_named_models = settingsFile.getBool("Models", "ignore_named_models", false);
+        write_models = settingsFile.getBool("Models", "write_models", false);
+        test_models = settingsFile.getBool("Models", "test_models", false);
 
         return true;
     }
