@@ -12,6 +12,5 @@ add_subdirectory(CoreLibrary)
 add_subdirectory(r_code)
 add_subdirectory(r_comp)
 add_subdirectory(r_exec)
-add_subdirectory(Test)
-# TODO: include this, crashes GCC so far
+add_subdirectory(executor)
 add_subdirectory(usr_operators)
