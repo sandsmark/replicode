@@ -1,0 +1,15 @@
+language: cpp
+before_script:
+    - mkdir build
+    - cd build
+    - cmake ..
+script: make
+compiler:
+    - clang
+    - gcc
+notifications:
+    irc:
+        channels:
+            - "chat.freenode.net#replicode"
+        template:
+            - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
