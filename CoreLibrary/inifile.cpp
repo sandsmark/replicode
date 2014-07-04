@@ -3,6 +3,7 @@
 #include <fstream>
 #include <algorithm>
 #include <iostream>
+#include <string>
 
 static inline std::string trim(std::string string)
 {
