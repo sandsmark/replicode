@@ -657,15 +657,10 @@ bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16_t write
         }
     }
 
-    if (node->args.size() != p.atom.getAtomCount()) {
-        size_t wildcards = 0;
-        for(RepliStruct *n : node->args) {
-            if (n->cmd == "::") wildcards++;
-        }
-        if (p.atom.getAtomCount() - node->args.size() != wildcards) {
+    if (node->args.size() != p.atom.getAtomCount() &&
+        node->args[node->args.size() - 1]->cmd != "::") {
             set_arity_error(node, p.atom.getAtomCount(), node->args.size());
             return false;
-        }
     }
 
     for (size_t i=0; i < node->args.size(); i++) {
