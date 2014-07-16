@@ -724,6 +724,16 @@ Code *PGMOverlay::get_mk_rdx(uint16_t &extent_index) const {
     return mk_rdx;
 }
 
+r_code::Code *PGMOverlay::getInputObject(uint16_t i) const {
+
+    return input_views[i]->object;
+}
+
+r_code::View *PGMOverlay::getInputView(uint16_t i) const {
+
+    return (r_code::View *)input_views[i];
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 AntiPGMOverlay::AntiPGMOverlay(Controller *c): PGMOverlay(c) {
