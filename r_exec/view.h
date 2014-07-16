@@ -169,8 +169,4 @@ public:
 };
 }
 
-
-#include "view.inline.cpp"
-
-
 #endif

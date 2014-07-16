@@ -36,6 +36,7 @@
 #include "context.h"
 #include "callbacks.h"
 
+#include <string.h>
 
 // pgm layout:
 //

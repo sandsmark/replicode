@@ -42,6 +42,8 @@
 
 #include "CoreLibrary/sharedlibrary.h"
 
+#include <string.h>
+
 namespace r_exec {
 
 dll_export uint64_t(*Now)();

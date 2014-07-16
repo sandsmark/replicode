@@ -31,6 +31,7 @@
 #include "overlay.h"
 #include "mem.h"
 
+#include <string.h>
 
 #define MAX_VALUE_SIZE 128
 

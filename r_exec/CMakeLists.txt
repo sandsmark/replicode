@@ -35,7 +35,6 @@ set(r_exec_SRC
     time_core.cpp
     time_job.cpp
     view.cpp
-    #view.inline.cpp
     )
 
 add_library(r_exec SHARED ${r_exec_SRC})

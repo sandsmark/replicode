@@ -33,9 +33,257 @@
 #include "mem.h"
 
 #include <limits>
+#include <string.h>
 
-namespace r_exec {
+namespace r_exec
+{
+View::View(): r_code::View(), controller(NULL)
+{
+    _code[VIEW_OID].atom = GetOID();
+    reset_ctrl_values();
+}
 
+View::View(r_code::SysView *source, r_code::Code *object): r_code::View(source, object), controller(NULL)
+{
+    _code[VIEW_OID].atom = GetOID();
+    reset();
+}
+
+View::View(const View *view, bool new_OID): r_code::View(), controller(NULL)
+{
+    object = view->object;
+    memcpy(_code, view->_code, VIEW_CODE_MAX_SIZE * sizeof(Atom) + 2 * sizeof(Code *)); // reference_set is contiguous to code; memcpy in one go.
+    if (new_OID)
+        _code[VIEW_OID].atom = GetOID();
+    controller = NULL; // deprecated: controller=view->controller;
+    reset();
+}
+
+View::View(SyncMode sync,
+                  uint64_t ijt,
+                  double sln,
+                  int64_t res,
+                  Code *destination,
+                  Code *origin,
+                  Code *object): r_code::View(), controller(NULL)
+{
+    code(VIEW_OPCODE) = Atom::SSet(Opcodes::View, VIEW_ARITY);
+    init(sync, ijt, sln, res, destination, origin, object);
+}
+
+View::View(SyncMode sync,
+                  uint64_t ijt,
+                  double sln,
+                  int64_t res,
+                  Code *destination,
+                  Code *origin,
+                  Code *object,
+                  double act): r_code::View(), controller(NULL)
+{
+    code(VIEW_OPCODE) = Atom::SSet(Opcodes::PgmView, PGM_VIEW_ARITY);
+    init(sync, ijt, sln, res, destination, origin, object);
+    code(VIEW_ACT) = Atom::Float(act);
+}
+
+void View::init(SyncMode sync,
+                       uint64_t ijt,
+                       double sln,
+                       int64_t res,
+                       Code *destination,
+                       Code *origin,
+                       Code *object)
+{
+    _code[VIEW_OID].atom = GetOID();
+    reset_ctrl_values();
+
+    code(VIEW_SYNC) = Atom::Float(sync);
+    code(VIEW_IJT) = Atom::IPointer(code(VIEW_OPCODE).getAtomCount() + 1);
+    Utils::SetTimestamp<View>(this, VIEW_IJT, ijt);
+    code(VIEW_SLN) = Atom::Float(sln);
+    code(VIEW_RES) = res < 0 ? Atom::PlusInfinity() : Atom::Float(res);
+    code(VIEW_HOST) = Atom::RPointer(0);
+    code(VIEW_ORG) = origin ? Atom::RPointer(1) : Atom::Nil();
+
+    references[0] = destination;
+    references[1] = origin;
+
+    set_object(object);
+}
+
+View::~View()
+{
+    if (!!controller)
+        controller->invalidate();
+}
+
+void View::reset()
+{
+    reset_ctrl_values();
+    reset_init_sln();
+    reset_init_act();
+}
+
+uint64_t View::get_oid() const
+{
+    return _code[VIEW_OID].atom;
+}
+
+bool View::isNotification() const
+{
+    return false;
+}
+
+Group *View::get_host()
+{    uint64_t host_reference = code(VIEW_HOST).asIndex();
+    return (Group *)references[host_reference];
+}
+
+View::SyncMode View::get_sync()
+{
+    return (SyncMode)(uint64_t)code(VIEW_SYNC).asDouble();
+}
+
+double View::get_res()
+{
+    return code(VIEW_RES).asDouble();
+}
+
+double View::get_sln()
+{
+    return code(VIEW_SLN).asDouble();
+}
+
+double View::get_act()
+{
+    return code(VIEW_ACT).asDouble();
+}
+
+double View::get_vis()
+{
+    return code(GRP_VIEW_VIS).asDouble();
+}
+
+bool View::get_cov()
+{
+    if (object->code(0).getDescriptor() == Atom::GROUP)
+        return code(GRP_VIEW_COV).asBoolean();
+    return false;
+}
+
+void View::mod_res(double value)
+{
+    if (code(VIEW_RES) == Atom::PlusInfinity())
+        return;
+    acc_res += value;
+    ++res_changes;
+}
+
+void View::set_res(double value)
+{
+    if (code(VIEW_RES) == Atom::PlusInfinity())
+        return;
+    acc_res += value - get_res();
+    ++res_changes;
+}
+
+void View::mod_sln(double value)
+{
+    acc_sln += value;
+    ++sln_changes;
+}
+
+void View::set_sln(double value)
+{
+    acc_sln += value - get_sln();
+    ++sln_changes;
+}
+
+void View::mod_act(double value)
+{
+    acc_act += value;
+    ++act_changes;
+}
+
+void View::set_act(double value)
+{
+    acc_act += value - get_act();
+    ++act_changes;
+}
+
+void View::mod_vis(double value)
+{
+    acc_vis += value;
+    ++vis_changes;
+}
+
+void View::set_vis(double value)
+{
+    acc_vis += value - get_vis();
+    ++vis_changes;
+}
+
+double View::update_sln_delta()
+{
+    double delta = get_sln() - initial_sln;
+    initial_sln = get_sln();
+    return delta;
+}
+
+double View::update_act_delta()
+{
+    double act = get_act();
+    double delta = act - initial_act;
+    initial_act = act;
+    return delta;
+}
+
+void View::force_res(double value)
+{
+    code(VIEW_RES) = Atom::Float(value);
+}
+
+void View::mod(uint16_t member_index, double value)
+{
+    switch (member_index) {
+    case VIEW_SLN:
+        mod_sln(value);
+        break;
+    case VIEW_RES:
+        mod_res(value);
+        break;
+    case VIEW_ACT:
+        mod_act(value);
+        break;
+    case GRP_VIEW_VIS:
+        mod_vis(value);
+        break;
+    }
+}
+
+void View::set(uint16_t member_index, double value)
+{
+    switch (member_index) {
+    case VIEW_SLN:
+        set_sln(value);
+        break;
+    case VIEW_RES:
+        set_res(value);
+        break;
+    case VIEW_ACT:
+        set_act(value);
+        break;
+    case GRP_VIEW_VIS:
+        set_vis(value);
+        break;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool NotificationView::isNotification() const
+{
+    return true;
+}
 std::mutex oidMutex;
 
 uint64_t View::LastOID = 0;
@@ -49,15 +297,13 @@ uint64_t View::GetOID()
 
 uint16_t View::ViewOpcode;
 
-double View::MorphValue(double value, double source_thr, double destination_thr) {
-
+double View::MorphValue(double value, double source_thr, double destination_thr)
+{
     if (value == 0)
         return destination_thr;
 
     if (source_thr > 0) {
-
         if (destination_thr > 0) {
-
             double r = value * destination_thr / source_thr;
             if (r > 1) // handles precision errors.
                 r = 1;
@@ -71,7 +317,6 @@ double View::MorphValue(double value, double source_thr, double destination_thr)
 double View::MorphChange(double change, double source_thr, double destination_thr) { // change is always >0.
 
     if (source_thr > 0) {
-
         if (destination_thr > 0)
             return change * destination_thr / source_thr;
         else
@@ -80,8 +325,8 @@ double View::MorphChange(double change, double source_thr, double destination_th
     return destination_thr + change;
 }
 
-View::View(View *view, Group *group): r_code::View(), controller(NULL) {
-
+View::View(View *view, Group *group): r_code::View(), controller(NULL)
+{
     Group *source = view->get_host();
     object = view->object;
     memcpy(_code, view->_code, VIEW_CODE_MAX_SIZE * sizeof(Atom));
@@ -91,7 +336,7 @@ View::View(View *view, Group *group): r_code::View(), controller(NULL) {
 
 // morph ctrl values; NB: res is not morphed as it is expressed as a multiple of the upr.
     code(VIEW_SLN) = Atom::Float(MorphValue(view->code(VIEW_SLN).asDouble(), source->get_sln_thr(), group->get_sln_thr()));
-    switch (object->code(0).getDescriptor()) {
+    switch (object->code(0).getDescriptor()){
     case Atom::GROUP:
         code(GRP_VIEW_VIS) = Atom::Float(MorphValue(view->code(GRP_VIEW_VIS).asDouble(), source->get_vis_thr(), group->get_vis_thr()));
         break;
@@ -109,14 +354,14 @@ View::View(View *view, Group *group): r_code::View(), controller(NULL) {
     reset();
 }
 
-void View::set_object(r_code::Code *object) {
-
+void View::set_object(r_code::Code *object)
+{
     this->object = object;
     reset();
 }
 
-void View::reset_ctrl_values() {
-
+void View::reset_ctrl_values()
+{
     sln_changes = 0;
     acc_sln = 0;
     act_changes = 0;
@@ -132,21 +377,21 @@ void View::reset_ctrl_values() {
     periods_at_high_act = 0;
 }
 
-void View::reset_init_sln() {
-
+void View::reset_init_sln()
+{
     initial_sln = get_sln();
 }
 
-void View::reset_init_act() {
-
+void View::reset_init_act()
+{
     if (object != NULL)
         initial_act = get_act();
     else
         initial_act = 0;
 }
 
-double View::update_res() {
-
+double View::update_res()
+{
     double new_res = get_res();
     if (new_res == std::numeric_limits<double>::infinity())
         return new_res;
@@ -160,10 +405,9 @@ double View::update_res() {
     return get_res();
 }
 
-double View::update_sln(double low, double high) {
-
+double View::update_sln(double low, double high)
+{
     if (sln_changes > 0 && acc_sln != 0) {
-
         double new_sln = get_sln() + acc_sln / sln_changes;
         if (new_sln < 0)
             new_sln = 0;
@@ -178,7 +422,6 @@ double View::update_sln(double low, double high) {
     if (sln < low)
         ++periods_at_low_sln;
     else {
-
         periods_at_low_sln = 0;
         if (sln > high)
             ++periods_at_high_sln;
@@ -188,10 +431,9 @@ double View::update_sln(double low, double high) {
     return sln;
 }
 
-double View::update_act(double low, double high) {
-
+double View::update_act(double low, double high)
+{
     if (act_changes > 0 && acc_act != 0) {
-
         double new_act = get_act() + acc_act / act_changes;
         if (new_act < 0)
             new_act = 0;
@@ -206,7 +448,6 @@ double View::update_act(double low, double high) {
     if (act < low)
         ++periods_at_low_act;
     else {
-
         periods_at_low_act = 0;
         if (act > high)
             ++periods_at_high_act;
@@ -216,10 +457,9 @@ double View::update_act(double low, double high) {
     return act;
 }
 
-double View::update_vis() {
-
+double View::update_vis()
+{
     if (vis_changes > 0 && acc_vis != 0) {
-
         double new_vis = get_vis() + acc_vis / vis_changes;
         if (new_vis < 0)
             new_vis = 0;
@@ -232,8 +472,8 @@ double View::update_vis() {
     return get_vis();
 }
 
-void View::delete_from_object() {
-
+void View::delete_from_object()
+{
     object->acq_views();
     object->views.erase(this);
     if (object->views.size() == 0) {
@@ -253,8 +493,8 @@ void View::delete_from_group()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-NotificationView::NotificationView(Code *origin, Code *destination, Code *marker): View() {
-
+NotificationView::NotificationView(Code *origin, Code *destination, Code *marker): View()
+{
     code(VIEW_OPCODE) = r_code::Atom::SSet(ViewOpcode, VIEW_ARITY); // Structured Set.
     code(VIEW_SYNC) = r_code::Atom::Float(View::SYNC_ONCE); // sync once.
     code(VIEW_IJT) = r_code::Atom::IPointer(VIEW_ARITY + 1); // iptr to ijt.
