@@ -1,6 +1,5 @@
 set(r_code_SRC
     atom.cpp
-    #    atom.inline.cpp
     image.cpp
     #image.tpl.cpp
     image_impl.cpp

@@ -99,8 +99,4 @@ public:
 };
 }
 
-
-#include "pgm_controller.inline.cpp"
-
-
 #endif

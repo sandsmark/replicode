@@ -189,7 +189,4 @@ public:
 }
 
 
-#include "atom.inline.cpp"
-
-
 #endif
