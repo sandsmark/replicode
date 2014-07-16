@@ -434,7 +434,5 @@ public:
 
 
 #include "object.tpl.cpp"
-#include "group.inline.cpp"
-
 
 #endif

@@ -11,7 +11,6 @@ set(r_exec_SRC
     factory.cpp
     g_monitor.cpp
     group.cpp
-    #group.inline.cpp
     guard_builder.cpp
     hlp_context.cpp
     hlp_controller.cpp
