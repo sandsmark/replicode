@@ -826,10 +826,10 @@ GuardBuilder *CTPX::find_guard_builder(_Fact *cause, _Fact *consequent, uint64_t
     uint16_t opcode = cause_payload->code(0).asOpcode();
     if (opcode == Opcodes::Cmd) { // form 0.
 
-        double q0 = target->get_reference(0)->code(MK_VAL_VALUE).asDouble();
-        double q1 = consequent->get_reference(0)->code(MK_VAL_VALUE).asDouble();
+        float q0 = target->get_reference(0)->code(MK_VAL_VALUE).asFloat();
+        float q1 = consequent->get_reference(0)->code(MK_VAL_VALUE).asFloat();
 
-        double searched_for = q1 - q0;
+        float searched_for = q1 - q0;
         uint16_t cmd_arg_set_index = cause_payload->code(CMD_ARGS).asIndex();
         uint16_t cmd_arg_count = cause_payload->code(cmd_arg_set_index).getAtomCount();
         for (uint16_t i = 1; i <= cmd_arg_count; ++i) {
@@ -837,7 +837,7 @@ GuardBuilder *CTPX::find_guard_builder(_Fact *cause, _Fact *consequent, uint64_t
             Atom s = cause_payload->code(cmd_arg_set_index + i);
             if (!s.isFloat())
                 continue;
-            double _s = s.asDouble();
+            float _s = s.asFloat();
             if (Utils::Equal(_s, searched_for))
                 return new ACGuardBuilder(period, cmd_arg_set_index + i);
         }
@@ -850,7 +850,7 @@ GuardBuilder *CTPX::find_guard_builder(_Fact *cause, _Fact *consequent, uint64_t
                 Atom s = cause_payload->code(i);
                 if (!s.isFloat())
                     continue;
-                double _s = s.asDouble();
+                float _s = s.asFloat();
                 if (Utils::Equal(_s, searched_for))
                     return new MCGuardBuilder(period, i);
             }
@@ -860,11 +860,11 @@ GuardBuilder *CTPX::find_guard_builder(_Fact *cause, _Fact *consequent, uint64_t
         Atom s = cause_payload->code(MK_VAL_VALUE);
         if (s.isFloat()) {
 
-            double _s = s.asDouble();
-            double q0 = target->get_reference(0)->code(MK_VAL_VALUE).asDouble();
-            double q1 = consequent->get_reference(0)->code(MK_VAL_VALUE).asDouble();
+            float _s = s.asFloat();
+            float q0 = target->get_reference(0)->code(MK_VAL_VALUE).asFloat();
+            float q1 = consequent->get_reference(0)->code(MK_VAL_VALUE).asFloat();
 
-            double searched_for = (q1 - q0) / period;
+            float searched_for = (q1 - q0) / period;
             if (Utils::Equal(_s, searched_for)) { // form 1.
 
                 uint64_t offset = Utils::GetTimestamp<Code>(cause, FACT_AFTER) - Utils::GetTimestamp<Code>(target, FACT_AFTER);

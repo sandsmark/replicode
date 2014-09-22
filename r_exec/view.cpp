@@ -140,27 +140,27 @@ Group *View::get_host()
 
 View::SyncMode View::get_sync()
 {
-    return (SyncMode)(uint64_t)code(VIEW_SYNC).asDouble();
+    return (SyncMode)(uint64_t)code(VIEW_SYNC).asFloat();
 }
 
-double View::get_res()
+float View::get_res()
 {
-    return code(VIEW_RES).asDouble();
+    return code(VIEW_RES).asFloat();
 }
 
-double View::get_sln()
+float View::get_sln()
 {
-    return code(VIEW_SLN).asDouble();
+    return code(VIEW_SLN).asFloat();
 }
 
-double View::get_act()
+float View::get_act()
 {
-    return code(VIEW_ACT).asDouble();
+    return code(VIEW_ACT).asFloat();
 }
 
-double View::get_vis()
+float View::get_vis()
 {
-    return code(GRP_VIEW_VIS).asDouble();
+    return code(GRP_VIEW_VIS).asFloat();
 }
 
 bool View::get_cov()
@@ -222,17 +222,17 @@ void View::set_vis(double value)
     ++vis_changes;
 }
 
-double View::update_sln_delta()
+float View::update_sln_delta()
 {
-    double delta = get_sln() - initial_sln;
+    float delta = get_sln() - initial_sln;
     initial_sln = get_sln();
     return delta;
 }
 
-double View::update_act_delta()
+float View::update_act_delta()
 {
-    double act = get_act();
-    double delta = act - initial_act;
+    float act = get_act();
+    float delta = act - initial_act;
     initial_act = act;
     return delta;
 }
@@ -335,10 +335,10 @@ View::View(View *view, Group *group): r_code::View(), controller(NULL)
     references[1] = source; // origin.
 
 // morph ctrl values; NB: res is not morphed as it is expressed as a multiple of the upr.
-    code(VIEW_SLN) = Atom::Float(MorphValue(view->code(VIEW_SLN).asDouble(), source->get_sln_thr(), group->get_sln_thr()));
+    code(VIEW_SLN) = Atom::Float(MorphValue(view->code(VIEW_SLN).asFloat(), source->get_sln_thr(), group->get_sln_thr()));
     switch (object->code(0).getDescriptor()){
     case Atom::GROUP:
-        code(GRP_VIEW_VIS) = Atom::Float(MorphValue(view->code(GRP_VIEW_VIS).asDouble(), source->get_vis_thr(), group->get_vis_thr()));
+        code(GRP_VIEW_VIS) = Atom::Float(MorphValue(view->code(GRP_VIEW_VIS).asFloat(), source->get_vis_thr(), group->get_vis_thr()));
         break;
     case Atom::NULL_PROGRAM:
     case Atom::INSTANTIATED_PROGRAM:
@@ -347,7 +347,7 @@ View::View(View *view, Group *group): r_code::View(), controller(NULL)
     case Atom::INSTANTIATED_ANTI_PROGRAM:
     case Atom::COMPOSITE_STATE:
     case Atom::MODEL:
-        code(VIEW_ACT) = Atom::Float(MorphValue(view->code(VIEW_ACT).asDouble(), source->get_act_thr(), group->get_act_thr()));
+        code(VIEW_ACT) = Atom::Float(MorphValue(view->code(VIEW_ACT).asFloat(), source->get_act_thr(), group->get_act_thr()));
         break;
     }
 

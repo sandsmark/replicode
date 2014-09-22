@@ -52,13 +52,13 @@ private:
 
 // Ctrl values.
     uint64_t sln_changes;
-    double acc_sln;
+    float acc_sln;
     uint64_t act_changes;
-    double acc_act;
+    float acc_act;
     uint64_t vis_changes;
-    double acc_vis;
+    float acc_vis;
     uint64_t res_changes;
-    double acc_res;
+    float acc_res;
     void reset_ctrl_values();
 
 // Monitoring
@@ -119,15 +119,15 @@ public:
     Group *get_host();
 
     SyncMode get_sync();
-    double get_res();
-    double get_sln();
-    double get_act();
+    float get_res();
+    float get_sln();
+    float get_act();
     bool get_cov();
-    double get_vis();
-    uintptr_t &ctrl0() {
+    float get_vis();
+    uint32_t &ctrl0() {
         return _code[VIEW_CTRL_0].atom; // use only for non-group views.
     }
-    uintptr_t &ctrl1() {
+    uint32_t &ctrl1() {
         return _code[VIEW_CTRL_1].atom; // idem.
     }
 
@@ -145,8 +145,8 @@ public:
     double update_act(double low, double high);
     double update_vis();
 
-    double update_sln_delta();
-    double update_act_delta();
+    float update_sln_delta();
+    float update_act_delta();
 
     void force_res(double value); // unmediated.
 

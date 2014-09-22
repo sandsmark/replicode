@@ -432,7 +432,7 @@ bool CSTController::inject_prediction(Fact *prediction, double confidence, uint6
 
     uint64_t now = Now();
     Group *primary_host = get_host();
-    double sln_thr = primary_host->code(GRP_SLN_THR).asDouble();
+    float sln_thr = primary_host->code(GRP_SLN_THR).asFloat();
     if (confidence > sln_thr) { // do not inject if cfd is too low.
 
         int64_t resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
@@ -447,7 +447,7 @@ void CSTController::inject_icst(Fact *production, double confidence, uint64_t ti
 
     uint64_t now = Now();
     Group *primary_host = get_host();
-    double sln_thr = primary_host->code(GRP_SLN_THR).asDouble();
+    float sln_thr = primary_host->code(GRP_SLN_THR).asFloat();
     if (confidence > sln_thr) {
 
         View *view = new View(View::SYNC_ONCE, now, 1, Utils::GetResilience(now, time_to_live, primary_host->get_upr()*Utils::GetBasePeriod()), primary_host, primary_host, production);
@@ -461,7 +461,7 @@ void CSTController::inject_icst(Fact *production, double confidence, uint64_t ti
         }
     }
 
-    sln_thr = secondary_host->code(GRP_SLN_THR).asDouble();
+    sln_thr = secondary_host->code(GRP_SLN_THR).asFloat();
     if (confidence > sln_thr) {
 
         View *view = new View(View::SYNC_ONCE, now, 1, Utils::GetResilience(now, time_to_live, secondary_host->get_upr()*Utils::GetBasePeriod()), secondary_host, primary_host, production);

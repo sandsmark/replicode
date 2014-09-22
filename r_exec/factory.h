@@ -126,7 +126,7 @@ public:
 
     uint64_t get_after() const;
     uint64_t get_before() const;
-    double get_cfd() const;
+    float get_cfd() const;
 
     void set_cfd(double cfd);
 

@@ -49,7 +49,6 @@ private: // trace utilities.
     static uint8_t String_data;
     static uint8_t Char_count;
     void write_indents() const;
-
 public:
     typedef enum {
         NIL = 0x80,
@@ -88,30 +87,29 @@ public:
         INSTANTIATED_ANTI_PROGRAM = 0xCC,
         COMPOSITE_STATE = 0xCD,
         MODEL = 0xCE,
-        NULL_PROGRAM = 0xCF,
-        UNDEFINED = UINT64_MAX
+        NULL_PROGRAM = 0xCF
     } Type;
 
 // encoders
-    static Atom Float(double f); // IEEE 754 64 bits encoding; shifted by 1 to the right (loss of precison).
+    static Atom Float(float f); // IEEE 754 32 bits encoding; shifted by 1 to the right (loss of precison).
     static Atom PlusInfinity();
     static Atom MinusInfinity();
     static Atom UndefinedFloat();
     static Atom Nil();
     static Atom Boolean(bool value);
     static Atom UndefinedBoolean();
-    static Atom Wildcard(uint32_t opcode = 0x00);
+    static Atom Wildcard(uint16_t opcode = 0x00);
     static Atom TailWildcard();
-    static Atom IPointer(uint32_t index);
-    static Atom RPointer(uint32_t index);
-    static Atom VLPointer(uint32_t index, uint32_t cast_opcode = 0x0FFFFFFF);
-    static Atom IPGMPointer(uint32_t index);
-    static Atom InObjPointer(uint8_t inputIndex, uint32_t index); // inputIndex: index of the input view; index: index of data in the object's code.
-    static Atom DInObjPointer(uint8_t relativeIndex, uint32_t index); // relativeIndex: index of an in-obj-ptr in the program's (patched) code; index: index of data in the referenced object code.
-    static Atom OutObjPointer(uint32_t index);
-    static Atom ValuePointer(uint32_t index);
-    static Atom ProductionPointer(uint32_t index);
-    static Atom AssignmentPointer(uint8_t variable_index, uint32_t index);
+    static Atom IPointer(uint16_t index);
+    static Atom RPointer(uint16_t index);
+    static Atom VLPointer(uint16_t index, uint16_t cast_opcode = 0x0FFF);
+    static Atom IPGMPointer(uint16_t index);
+    static Atom InObjPointer(uint8_t inputIndex, uint16_t index); // inputIndex: index of the input view; index: index of data in the object's code.
+    static Atom DInObjPointer(uint8_t relativeIndex, uint16_t index); // relativeIndex: index of an in-obj-ptr in the program's (patched) code; index: index of data in the referenced object code.
+    static Atom OutObjPointer(uint16_t index);
+    static Atom ValuePointer(uint16_t index);
+    static Atom ProductionPointer(uint16_t index);
+    static Atom AssignmentPointer(uint8_t variable_index, uint16_t index);
     static Atom This();
     static Atom View();
     static Atom Mks();
@@ -120,30 +118,30 @@ public:
     static Atom UndefinedNode();
     static Atom Device(uint8_t nodeID, uint8_t classID, uint8_t devID);
     static Atom UndefinedDevice();
-    static Atom DeviceFunction(uint32_t opcode);
+    static Atom DeviceFunction(uint16_t opcode);
     static Atom UndefinedDeviceFunction();
     static Atom CPointer(uint8_t elementCount);
-    static Atom SSet(uint32_t opcode, uint8_t elementCount);
+    static Atom SSet(uint16_t opcode, uint8_t elementCount);
     static Atom Set(uint8_t elementCount);
-    static Atom Object(uint32_t opcode, uint8_t arity);
-    static Atom Marker(uint32_t opcode, uint8_t arity);
-    static Atom Operator(uint32_t opcode, uint8_t arity);
+    static Atom Object(uint16_t opcode, uint8_t arity);
+    static Atom Marker(uint16_t opcode, uint8_t arity);
+    static Atom Operator(uint16_t opcode, uint8_t arity);
     static Atom String(uint8_t characterCount);
     static Atom UndefinedString();
     static Atom Timestamp();
     static Atom UndefinedTimestamp();
-    static Atom InstantiatedProgram(uint32_t opcode, uint8_t arity);
-    static Atom Group(uint32_t opcode, uint8_t arity);
-    static Atom InstantiatedCPPProgram(uint32_t opcode, uint8_t arity);
-    static Atom InstantiatedAntiProgram(uint32_t opcode, uint8_t arity);
-    static Atom InstantiatedInputLessProgram(uint32_t opcode, uint8_t arity);
-    static Atom CompositeState(uint32_t opcode, uint8_t arity);
-    static Atom Model(uint32_t opcode, uint8_t arity);
+    static Atom InstantiatedProgram(uint16_t opcode, uint8_t arity);
+    static Atom Group(uint16_t opcode, uint8_t arity);
+    static Atom InstantiatedCPPProgram(uint16_t opcode, uint8_t arity);
+    static Atom InstantiatedAntiProgram(uint16_t opcode, uint8_t arity);
+    static Atom InstantiatedInputLessProgram(uint16_t opcode, uint8_t arity);
+    static Atom CompositeState(uint16_t opcode, uint8_t arity);
+    static Atom Model(uint16_t opcode, uint8_t arity);
 
     static Atom NullProgram(bool take_past_inputs);
     static Atom RawPointer(void *pointer);
 
-    Atom(uint64_t a = UINT64_MAX);
+    Atom(uintptr_t a = UINTPTR_MAX);
     ~Atom();
 
     Atom &operator =(const Atom& a);
@@ -152,7 +150,7 @@ public:
     bool operator !() const;
     operator size_t () const;
 
-    uint64_t atom;
+    uint32_t atom;
 
 // decoders
     bool isUndefined() const;
@@ -160,14 +158,14 @@ public:
     bool isStructural() const;
     bool isFloat() const;
     bool readsAsNil() const; // returns true for all undefined values.
-    double asDouble() const;
+    float asFloat() const;
     bool asBoolean() const;
-    uint32_t asIndex() const; // applicable to internal, view, reference,
+    uint16_t asIndex() const; // applicable to internal, view, reference,
 // and value pointers.
     uint8_t asInputIndex() const; // applicable to IN_OBJ_PTR.
     uint8_t asRelativeIndex() const; // applicable to D_IN_OBJ_PTR.
-    uint32_t asOpcode() const;
-    uint32_t asCastOpcode() const; // applicable to VL_PTR.
+    uint16_t asOpcode() const;
+    uint16_t asCastOpcode() const; // applicable to VL_PTR.
     uint8_t getAtomCount() const; // arity of operators and
 // objects/markers/structured sets,
 // number of atoms in pointers chains,
@@ -187,6 +185,5 @@ public:
     static void Trace(Atom *base, uint16_t count);
 };
 }
-
 
 #endif

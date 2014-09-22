@@ -31,40 +31,39 @@
 #include "atom.h"
 
 #include <iostream>
-#include <limits>
 
 
 namespace r_code {
 
-Atom Atom::Float(double f)
+Atom Atom::Float(float f)
 {
-    uint64_t a = *reinterpret_cast<uint64_t *>(&f);
+    uintptr_t a = *reinterpret_cast<uintptr_t *>(&f);
     return Atom(a >> 1);
 }
 
 Atom Atom::PlusInfinity()
 {
-    return Atom::Float(std::numeric_limits<double>::infinity());
+    return Atom(0x3FC00000);
 }
 
 Atom Atom::MinusInfinity()
 {
-    return Atom::Float(-std::numeric_limits<double>::infinity());
+    return Atom(0x7FC00000);
 }
 
 Atom Atom::UndefinedFloat()
 {
-    return Atom(0x0FFFFFFFFFFFFFFF);
+    return Atom(0xFFFFFFF);
 }
 
 Atom Atom::Nil()
 {
-    return Atom(NIL << 56);
+    return Atom(NIL << 24);
 }
 
 Atom Atom::Boolean(bool value)
 {
-    return Atom((BOOLEAN_ << 56) + value);
+    return Atom((BOOLEAN_ << 24) + value);
 }
 
 Atom Atom::UndefinedBoolean()
@@ -72,145 +71,144 @@ Atom Atom::UndefinedBoolean()
     return Atom(0x81FFFFFF);
 }
 
-Atom Atom::Wildcard(uint32_t opcode)
+Atom Atom::Wildcard(uint16_t opcode)
 {
-    return Atom((WILDCARD << 56) + ((uint64_t)(opcode & 0x0FFFFFF) << 8));
+    return Atom((WILDCARD << 24) + ((opcode & 0x0FFF) << 8));
 }
 
 Atom Atom::TailWildcard()
 {
-    return Atom(T_WILDCARD << 56);
+    return Atom(T_WILDCARD << 24);
 }
 
-Atom Atom::IPointer(uint32_t index)
+Atom Atom::IPointer(uint16_t index)
 {
-    return Atom((I_PTR << 56) + (index & 0x0FFFFFFF));
+    return Atom((I_PTR << 24) + (index & 0x0FFF));
 }
 
-Atom Atom::VLPointer(uint32_t index, uint32_t cast_opcode)
+Atom Atom::VLPointer(uint16_t index, uint16_t cast_opcode)
 {
-    return Atom((VL_PTR << 56) + ((uint64_t)(cast_opcode & 0x0FFFFFFF) << 28) + (index & 0x0FFFFFFF));
+    return Atom((VL_PTR << 24) + ((cast_opcode & 0x0FFF) << 12) + (index & 0x0FFF));
 }
 
-Atom Atom::RPointer(uint32_t index)
+Atom Atom::RPointer(uint16_t index)
 {
-    return Atom((R_PTR << 56) + (index & 0x0FFFFFFF));
+    return Atom((R_PTR << 24) + (index & 0x0FFF));
 }
 
-Atom Atom::IPGMPointer(uint32_t index)
+Atom Atom::IPGMPointer(uint16_t index)
 {
-    return Atom((IPGM_PTR << 56) + (index & 0x0FFFFFFF));
+    return Atom((IPGM_PTR << 24) + (index & 0x0FFF));
 }
 
-Atom Atom::InObjPointer(uint8_t inputIndex, uint32_t index)
+Atom Atom::InObjPointer(uint8_t inputIndex, uint16_t index)
 {
-    return Atom((IN_OBJ_PTR << 56) + ((uint64_t)inputIndex << 28) + (index & 0x0FFFFFFF));
+    return Atom((IN_OBJ_PTR << 24) + (inputIndex << 12) + (index & 0x0FFF));
 }
 
-Atom Atom::DInObjPointer(uint8_t relativeIndex, uint32_t index)
+Atom Atom::DInObjPointer(uint8_t relativeIndex, uint16_t index)
 {
-    return Atom((D_IN_OBJ_PTR << 56) + ((uint64_t)relativeIndex << 28) + (index & 0x0FFFFFFF));
+    return Atom((D_IN_OBJ_PTR << 24) + (relativeIndex << 12) + (index & 0x0FFF));
 }
 
-Atom Atom::OutObjPointer(uint32_t index)
+Atom Atom::OutObjPointer(uint16_t index)
 {
-    return Atom((OUT_OBJ_PTR << 56) + (index & 0x0FFFFFFF));
+    return Atom((OUT_OBJ_PTR << 24) + (index & 0x0FFF));
 }
 
-Atom Atom::ValuePointer(uint32_t index)
+Atom Atom::ValuePointer(uint16_t index)
 {
-    return Atom((VALUE_PTR << 56) + (index & 0x0FFFFFFF));
+    return Atom((VALUE_PTR << 24) + (index & 0x0FFF));
 }
 
-Atom Atom::ProductionPointer(uint32_t index)
+Atom Atom::ProductionPointer(uint16_t index)
 {
-    return Atom((PROD_PTR << 56) + (index & 0x0FFFFFFF));
+    return Atom((PROD_PTR << 24) + (index & 0x0FFF));
 }
 
-Atom Atom::AssignmentPointer(uint8_t variable_index, uint32_t index)
+Atom Atom::AssignmentPointer(uint8_t variable_index, uint16_t index)
 {
-    return Atom((ASSIGN_PTR << 56) + ((uint64_t)variable_index << 28) + (index & 0x0FFFFFFF));
+    return Atom((ASSIGN_PTR << 24) + (variable_index << 16) + (index & 0x0FFF));
 }
 
 Atom Atom::This()
 {
-    return Atom(THIS << 56);
+    return Atom(THIS << 24);
 }
 
 Atom Atom::View()
 {
-    return Atom(VIEW << 56);
+    return Atom(VIEW << 24);
 }
 
 Atom Atom::Mks()
 {
-    return Atom(MKS << 56);
+    return Atom(MKS << 24);
 }
 
 Atom Atom::Vws()
 {
-    return Atom(VWS << 56);
+    return Atom(VWS << 24);
 }
 
-Atom Atom::SSet(uint32_t opcode, uint8_t elementCount)
+Atom Atom::SSet(uint16_t opcode, uint8_t elementCount)
 {
-    return Atom((S_SET << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + elementCount);
+    return Atom((S_SET << 24) + ((opcode & 0x0FFF) << 8) + elementCount);
 }
 
 Atom Atom::Set(uint8_t elementCount)
 {
-    return Atom((SET << 56) + elementCount);
+    return Atom((SET << 24) + elementCount);
 }
 
 Atom Atom::CPointer(uint8_t elementCount)
 {
-    return Atom((C_PTR << 56) + elementCount);
+    return Atom((C_PTR << 24) + elementCount);
 }
 
-
-Atom Atom::Object(uint32_t opcode, uint8_t arity)
+Atom Atom::Object(uint16_t opcode, uint8_t arity)
 {
-    return Atom((OBJECT << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + arity);
+    return Atom((OBJECT << 24) + ((opcode & 0x0FFF) << 8) + arity);
 }
 
-Atom Atom::Marker(uint32_t opcode, uint8_t arity)
+Atom Atom::Marker(uint16_t opcode, uint8_t arity)
 {
-    return Atom((MARKER << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + arity);
+    return Atom((MARKER << 24) + ((opcode & 0x0FFF) << 8) + arity);
 }
 
-Atom Atom::Operator(uint32_t opcode, uint8_t arity)
+Atom Atom::Operator(uint16_t opcode, uint8_t arity)
 {
-    return Atom((OPERATOR << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + arity);
+    return Atom((OPERATOR << 24) + ((opcode & 0x0FFF) << 8) + arity);
 }
 
 Atom Atom::Node(uint8_t nodeID)
 {
-    return Atom((NODE << 56) + ((uint64_t)nodeID << 8));
+    return Atom((NODE << 24) + (nodeID << 8));
 }
 
 Atom Atom::UndefinedNode()
 {
-    return Atom(0xA0FFFFFFFFFFFFFF);
+    return Atom(0xA0FFFFFF);
 }
 
 Atom Atom::Device(uint8_t nodeID, uint8_t classID, uint8_t devID)
 {
-    return Atom((DEVICE << 56) + ((uint64_t)nodeID << 16) + ((uint64_t)classID << 8) + devID);
+    return Atom((DEVICE << 24) + (nodeID << 16) + (classID << 8) + devID);
 }
 
 Atom Atom::UndefinedDevice()
 {
-    return Atom(0xA1FFFFFFFFFFFFFF);
+    return Atom(0xA1FFFFFF);
 }
 
-Atom Atom::DeviceFunction(uint32_t opcode)
+Atom Atom::DeviceFunction(uint16_t opcode)
 {
-    return Atom((DEVICE_FUNCTION << 56) + (opcode << 8));
+    return Atom((DEVICE_FUNCTION << 24) + (opcode << 8));
 }
 
 Atom Atom::UndefinedDeviceFunction()
 {
-    return Atom(0xA2FFFFFFFFFFFFFF);
+    return Atom(0xA2FFFFFF);
 }
 
 Atom Atom::String(uint8_t characterCount)
@@ -218,70 +216,70 @@ Atom Atom::String(uint8_t characterCount)
     uint8_t blocks = characterCount / 4;
     if (characterCount % 4)
         ++blocks;
-    return Atom((STRING << 56) + ((uint64_t)blocks << 8) + characterCount);
+    return Atom((STRING << 24) + (blocks << 8) + characterCount);
 }
 
 Atom Atom::UndefinedString()
 {
-    return Atom(0xC6FFFFFFFFFFFFFF);
+    return Atom(0xC6FFFFFF);
 }
 
 Atom Atom::Timestamp()
 {
-    return Atom(TIMESTAMP << 56);
+    return Atom(TIMESTAMP << 24);
 }
 
 Atom Atom::UndefinedTimestamp()
 {
-    return Atom(0xC7FFFFFFFFFFFFFF);
+    return Atom(0xC7FFFFFF);
 }
 
-Atom Atom::InstantiatedProgram(uint32_t opcode, uint8_t arity)
+Atom Atom::InstantiatedProgram(uint16_t opcode, uint8_t arity)
 {
-    return Atom((INSTANTIATED_PROGRAM << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + arity);
+    return Atom((INSTANTIATED_PROGRAM << 24) + ((opcode & 0x0FFF) << 8) + arity);
 }
 
-Atom Atom::Group(uint32_t opcode, uint8_t arity)
+Atom Atom::Group(uint16_t opcode, uint8_t arity)
 {
-    return Atom((GROUP << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + arity);
+    return Atom((GROUP << 24) + ((opcode & 0x0FFF) << 8) + arity);
 }
 
-Atom Atom::InstantiatedCPPProgram(uint32_t opcode, uint8_t arity)
+Atom Atom::InstantiatedCPPProgram(uint16_t opcode, uint8_t arity)
 {
-    return Atom((INSTANTIATED_CPP_PROGRAM << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + arity);
+    return Atom((INSTANTIATED_CPP_PROGRAM << 24) + ((opcode & 0x0FFF) << 8) + arity);
 }
 
-Atom Atom::InstantiatedAntiProgram(uint32_t opcode, uint8_t arity)
+Atom Atom::InstantiatedAntiProgram(uint16_t opcode, uint8_t arity)
 {
-    return Atom((INSTANTIATED_ANTI_PROGRAM << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + arity);
+    return Atom((INSTANTIATED_ANTI_PROGRAM << 24) + ((opcode & 0x0FFF) << 8) + arity);
 }
 
-Atom Atom::InstantiatedInputLessProgram(uint32_t opcode, uint8_t arity)
+Atom Atom::InstantiatedInputLessProgram(uint16_t opcode, uint8_t arity)
 {
-    return Atom((INSTANTIATED_INPUT_LESS_PROGRAM << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + arity);
+    return Atom((INSTANTIATED_INPUT_LESS_PROGRAM << 24) + ((opcode & 0x0FFF) << 8) + arity);
 }
 
-Atom Atom::CompositeState(uint32_t opcode, uint8_t arity)
+Atom Atom::CompositeState(uint16_t opcode, uint8_t arity)
 {
-    return Atom((COMPOSITE_STATE << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + arity);
+    return Atom((COMPOSITE_STATE << 24) + ((opcode & 0x0FFF) << 8) + arity);
 }
 
-Atom Atom::Model(uint32_t opcode, uint8_t arity)
+Atom Atom::Model(uint16_t opcode, uint8_t arity)
 {
-    return Atom((MODEL << 56) + ((uint64_t)(opcode & 0x0FFFFFFF) << 8) + arity);
+    return Atom((MODEL << 24) + ((opcode & 0x0FFF) << 8) + arity);
 }
 
 Atom Atom::NullProgram(bool take_past_inputs)
 {
-    return Atom((NULL_PROGRAM << 56) + (take_past_inputs ? 1 : 0));
+    return Atom((NULL_PROGRAM << 24) + (take_past_inputs ? 1 : 0));
 }
 
 Atom Atom::RawPointer(void *pointer)
 {
-    return Atom((uint64_t)pointer);
+    return Atom((uintptr_t)pointer);
 }
 
-Atom::Atom(uint64_t a): atom(a)
+Atom::Atom(uintptr_t a): atom(a)
 {
 }
 
@@ -317,75 +315,75 @@ Atom::operator size_t () const
 
 bool Atom::isUndefined() const
 {
-    return atom == UINT64_MAX;
+    return atom == 0xFFFFFFFF;
 }
 
 uint8_t Atom::getDescriptor() const
 {
-    return atom >> 56;
+    return atom >> 24;
 }
 
 bool Atom::isStructural() const
 {
-    return ((atom & 0xC000000000000000) == 0xC000000000000000 || (atom & 0xD000000000000000) == 0xD000000000000000);
+    return ((atom & 0xC0000000) == 0xC0000000 || (atom & 0xD0000000) == 0xD0000000);
 }
 
 bool Atom::isFloat() const
 {
-    return atom >> 63 == 0;
+    return atom >> 31 == 0;
 }
 
 bool Atom::readsAsNil() const
 {
-    return atom == 0x8000000000000000 ||
-           atom == 0x3FFFFFFFFFFFFFFF ||
-           atom == 0x81FFFFFFFFFFFFFF ||
-           atom == 0xC100000000000000 ||
-           atom == 0xA0FFFFFFFFFFFFFF ||
-           atom == 0xA1FFFFFFFFFFFFFF ||
-           atom == 0xA2FFFFFFFFFFFFFF ||
-           atom == 0xC6FFFFFFFFFFFFFF;
+    return atom == 0x80000000 ||
+           atom == 0x3FFFFFFF ||
+           atom == 0x81FFFFFF ||
+           atom == 0xC1000000 ||
+           atom == 0xA0FFFFFF ||
+           atom == 0xA1FFFFFF ||
+           atom == 0xA2FFFFFF ||
+           atom == 0xC6FFFFFF;
 }
 
-double Atom::asDouble() const
+float Atom::asFloat() const
 {
-    uint64_t _f = atom << 1;
-    return *reinterpret_cast<const double *>(&_f);
+    uint32_t _f = atom << 1;
+    return *reinterpret_cast<const float *>(&_f);
 }
 
 bool Atom::asBoolean() const
 {
-    return atom & 0x00000000000000FF;
+    return atom & 0x000000FF;
 }
 
-uint32_t Atom::asIndex() const
+uint16_t Atom::asIndex() const
 {
-    return atom & 0x000000000FFFFFFF;
+    return atom & 0x00000FFF;
 }
 
 uint8_t Atom::asInputIndex() const
 {
-    return (uint8_t)((atom & 0x000FF0000000) >> 28);
+    return (uint8_t)((atom & 0x000FF000) >> 12);
 }
 
 uint8_t Atom::asRelativeIndex() const
 {
-    return (uint8_t)((atom & 0x000FF0000000) >> 28);
+    return (uint8_t)((atom & 0x000FF000) >> 12);
 }
 
-uint32_t Atom::asOpcode() const
+uint16_t Atom::asOpcode() const
 {
-    return (atom >> 8) & 0x000000000FFFFFFF;
+    return (atom >> 8) & 0x00000FFF;
 }
 
-uint32_t Atom::asCastOpcode() const
+uint16_t Atom::asCastOpcode() const
 {
-    return (uint32_t)((atom & 0x00FFFFFFF000) >> 28);
+    return (uint16_t)((atom & 0x00FFF000) >> 12);
 }
 
 uint8_t Atom::getNodeID() const
 {
-    return (uint8_t)((atom & 0x0000000000FF0000) >> 16);
+    return (uint8_t)((atom & 0x00FF0000) >> 16);
 }
 
 uint8_t Atom::getClassID() const
@@ -395,12 +393,12 @@ uint8_t Atom::getClassID() const
 
 uint8_t Atom::getDeviceID() const
 {
-    return atom & 0x00000000000000FF;
+    return atom & 0x000000FF;
 }
 
 uint8_t Atom::asAssignmentIndex() const
 {
-    return (atom & 0x00FFF0000000) >> 28;
+    return (atom & 0x00FF0000) >> 16;
 }
 
 uint8_t Atom::getAtomCount() const
@@ -418,8 +416,9 @@ uint8_t Atom::getAtomCount() const
     case COMPOSITE_STATE:
     case MODEL:
     case GROUP:
-    case S_SET: return atom & 0x0000000000FF;
-    case STRING: return (atom & 0x00000000FF00) >> 8;
+    case S_SET: return atom & 0x000000FF;
+    case STRING: return (atom & 0x0000FF00) >> 8;
+    case TIMESTAMP: return 2;
     default:
         return 0;
     }
@@ -427,19 +426,15 @@ uint8_t Atom::getAtomCount() const
 
 bool Atom::takesPastInputs() const
 {
-    return atom & 0x0000000000000001;
+    return atom & 0x00000001;
 }
-
-/*
- * The rest is for debugging
- */
 
 uint8_t Atom::Members_to_go = 0;
 uint8_t Atom::Timestamp_data = 0;
 uint8_t Atom::String_data = 0;
 uint8_t Atom::Char_count = 0;
-void Atom::trace() const {
-
+void Atom::trace() const
+{
     write_indents();
     switch (getDescriptor()) {
     case NIL: std::cout << "nil"; return;
@@ -450,8 +445,8 @@ void Atom::trace() const {
     case VL_PTR: std::cout << "vlptr: " << std::dec << asIndex(); return;
     case R_PTR: std::cout << "rptr: " << std::dec << asIndex(); return;
     case IPGM_PTR: std::cout << "ipgm_ptr: " << std::dec << asIndex(); return;
-    case IN_OBJ_PTR: std::cout << "in_obj_ptr: " << std::dec << (uint64_t)asInputIndex() << " " << asIndex(); return;
-    case D_IN_OBJ_PTR: std::cout << "d_in_obj_ptr: " << std::dec << (uint64_t)asRelativeIndex() << " " << asIndex(); return;
+    case IN_OBJ_PTR: std::cout << "in_obj_ptr: " << std::dec << (uint32_t)asInputIndex() << " " << asIndex(); return;
+    case D_IN_OBJ_PTR: std::cout << "d_in_obj_ptr: " << std::dec << (uint32_t)asRelativeIndex() << " " << asIndex(); return;
     case OUT_OBJ_PTR: std::cout << "out_obj_ptr: " << std::dec << asIndex(); return;
     case VALUE_PTR: std::cout << "value_ptr: " << std::dec << asIndex(); return;
     case PROD_PTR: std::cout << "prod_ptr: " << std::dec << asIndex(); return;
@@ -460,8 +455,8 @@ void Atom::trace() const {
     case VIEW: std::cout << "view"; return;
     case MKS: std::cout << "mks"; return;
     case VWS: std::cout << "vws"; return;
-    case NODE: std::cout << "nid: " << std::dec << (uint16_t)getNodeID(); return;
-    case DEVICE: std::cout << "did: " << std::dec << (uint16_t)getNodeID() << " " << (uint16_t)getClassID() << " " << (uint16_t)getDeviceID(); return;
+    case NODE: std::cout << "nid: " << std::dec << (uint32_t)getNodeID(); return;
+    case DEVICE: std::cout << "did: " << std::dec << (uint32_t)getNodeID() << " " << (uint32_t)getClassID() << " " << (uint32_t)getDeviceID(); return;
     case DEVICE_FUNCTION: std::cout << "fid: " << std::dec << asOpcode(); return;
     case C_PTR: std::cout << "cptr: " << std::dec << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
     case SET: std::cout << "set: " << std::dec << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
@@ -470,7 +465,7 @@ void Atom::trace() const {
     case MARKER: std::cout << "mk: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
     case OPERATOR: std::cout << "op: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
     case STRING: std::cout << "st: " << std::dec << (uint16_t)getAtomCount(); Members_to_go = String_data = getAtomCount(); Char_count = (atom & 0x000000FF); return;
-    case TIMESTAMP: std::cout << "us"; Members_to_go = Timestamp_data = 1; return;
+    case TIMESTAMP: std::cout << "us"; Members_to_go = Timestamp_data = 2; return;
     case GROUP: std::cout << "grp: " << std::dec << asOpcode() << " " << (uint16_t)getAtomCount(); Members_to_go = getAtomCount(); return;
     case INSTANTIATED_PROGRAM:
     case INSTANTIATED_ANTI_PROGRAM:
@@ -481,11 +476,9 @@ void Atom::trace() const {
     case NULL_PROGRAM: std::cout << "null pgm " << (takesPastInputs() ? "all inputs" : "new inputs"); return;
     default:
         if (Timestamp_data) {
-
             --Timestamp_data;
             std::cout << atom;
         } else if (String_data) {
-
             --String_data;
             std::string s;
             char *content = (char *)&atom;
@@ -498,7 +491,7 @@ void Atom::trace() const {
             }
             std::cout << s.c_str();
         } else if (isFloat()) {
-            std::cout << "nb: " << std::scientific << asDouble();
+            std::cout << "nb: " << std::scientific << asFloat();
             return;
         } else
             std::cout << "undef";
@@ -506,20 +499,18 @@ void Atom::trace() const {
     }
 }
 
-void Atom::write_indents() const {
-
+void Atom::write_indents() const
+{
     if (Members_to_go) {
-
         std::cout << " ";
         --Members_to_go;
     }
 }
 
-void Atom::Trace(Atom *base, uint16_t count) {
-
+void Atom::Trace(Atom *base, uint16_t count)
+{
     std::cout << "--------\n";
     for (uint16_t i = 0; i < count; ++i) {
-
         std::cout << i << "\t";
         base[i].trace();
         std::cout << std::endl;

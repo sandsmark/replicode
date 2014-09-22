@@ -143,7 +143,7 @@ protected:
     bool _is_reuse;
     bool _is_cmd;
 
-    double get_cfd() const;
+    float get_cfd() const;
 
     std::mutex m_activeRequirementsMutex;
     std::unordered_map<P<_Fact>, RequirementsPair, PHash<_Fact> > active_requirements; // P<_Fact>: f1 as in f0->pred->f1->imdl; requirements having allowed the production of prediction; first: wr, second: sr.

@@ -84,7 +84,7 @@ template<class C, class U> void Object<C, U>::compute_hash_value() {
 template<class C, class U> double Object<C, U>::get_psln_thr()
 {
     std::lock_guard<std::mutex> guard(m_pslnThrMutex);
-    double r = this->code(this->code(0).getAtomCount()).asDouble(); // psln is always the last member of an object.
+    float r = this->code(this->code(0).getAtomCount()).asFloat(); // psln is always the last member of an object.
     return r;
 }
 
@@ -92,7 +92,7 @@ template<class C, class U> void Object<C, U>::mod(uint16_t member_index, double 
 
     if (member_index != this->code_size() - 1)
         return;
-    double v = this->code(member_index).asDouble() + value;
+    float v = this->code(member_index).asFloat() + value;
     if (v < 0)
         v = 0;
     else if (v > 1)

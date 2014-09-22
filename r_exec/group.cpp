@@ -90,44 +90,44 @@ bool Group::invalidate() {
     return false;
 }
 
-uint64_t Group::get_upr() const
+uint32_t Group::get_upr() const
 {
-    return code(GRP_UPR).asDouble();
+    return code(GRP_UPR).asFloat();
 }
 
-double Group::get_sln_thr() const {
+float Group::get_sln_thr() const {
 
-    return code(GRP_SLN_THR).asDouble();
+    return code(GRP_SLN_THR).asFloat();
 }
 
-double Group::get_act_thr() const {
+float Group::get_act_thr() const {
 
-    return code(GRP_ACT_THR).asDouble();
+    return code(GRP_ACT_THR).asFloat();
 }
 
-double Group::get_vis_thr() const {
+float Group::get_vis_thr() const {
 
-    return code(GRP_VIS_THR).asDouble();
+    return code(GRP_VIS_THR).asFloat();
 }
 
-double Group::get_c_sln_thr() const {
+float Group::get_c_sln_thr() const {
 
-    return code(GRP_C_SLN_THR).asDouble();
+    return code(GRP_C_SLN_THR).asFloat();
 }
 
-double Group::get_c_act_thr() const {
+float Group::get_c_act_thr() const {
 
-    return code(GRP_C_ACT_THR).asDouble();
+    return code(GRP_C_ACT_THR).asFloat();
 }
 
-double Group::get_c_sln() const {
+float Group::get_c_sln() const {
 
-    return code(GRP_C_SLN).asDouble();
+    return code(GRP_C_SLN).asFloat();
 }
 
-double Group::get_c_act() const {
+float Group::get_c_act() const {
 
-    return code(GRP_C_ACT).asDouble();
+    return code(GRP_C_ACT).asFloat();
 }
 
 void Group::mod_sln_thr(double value) {
@@ -214,94 +214,94 @@ void Group::set_c_act_thr(double value) {
     acc_c_act_thr += value - get_c_act_thr();
 }
 
-double Group::get_sln_chg_thr() {
+float Group::get_sln_chg_thr() {
 
-    return code(GRP_SLN_CHG_THR).asDouble();
+    return code(GRP_SLN_CHG_THR).asFloat();
 }
 
-double Group::get_sln_chg_prd() {
+float Group::get_sln_chg_prd() {
 
-    return code(GRP_SLN_CHG_PRD).asDouble();
+    return code(GRP_SLN_CHG_PRD).asFloat();
 }
 
-double Group::get_act_chg_thr() {
+float Group::get_act_chg_thr() {
 
-    return code(GRP_ACT_CHG_THR).asDouble();
+    return code(GRP_ACT_CHG_THR).asFloat();
 }
 
-double Group::get_act_chg_prd() {
+float Group::get_act_chg_prd() {
 
-    return code(GRP_ACT_CHG_PRD).asDouble();
+    return code(GRP_ACT_CHG_PRD).asFloat();
 }
 
-double Group::get_avg_sln() {
+float Group::get_avg_sln() {
 
-    return code(GRP_AVG_SLN).asDouble();
+    return code(GRP_AVG_SLN).asFloat();
 }
 
-double Group::get_high_sln() {
+float Group::get_high_sln() {
 
-    return code(GRP_HIGH_SLN).asDouble();
+    return code(GRP_HIGH_SLN).asFloat();
 }
 
-double Group::get_low_sln() {
+float Group::get_low_sln() {
 
-    return code(GRP_LOW_SLN).asDouble();
+    return code(GRP_LOW_SLN).asFloat();
 }
 
-double Group::get_avg_act() {
+float Group::get_avg_act() {
 
-    return code(GRP_AVG_ACT).asDouble();
+    return code(GRP_AVG_ACT).asFloat();
 }
 
-double Group::get_high_act() {
+float Group::get_high_act() {
 
-    return code(GRP_HIGH_ACT).asDouble();
+    return code(GRP_HIGH_ACT).asFloat();
 }
 
-double Group::get_low_act() {
+float Group::get_low_act() {
 
-    return code(GRP_LOW_ACT).asDouble();
+    return code(GRP_LOW_ACT).asFloat();
 }
 
-double Group::get_high_sln_thr() {
+float Group::get_high_sln_thr() {
 
-    return code(GRP_HIGH_SLN_THR).asDouble();
+    return code(GRP_HIGH_SLN_THR).asFloat();
 }
 
-double Group::get_low_sln_thr() {
+float Group::get_low_sln_thr() {
 
-    return code(GRP_LOW_SLN_THR).asDouble();
+    return code(GRP_LOW_SLN_THR).asFloat();
 }
 
-double Group::get_sln_ntf_prd() {
+float Group::get_sln_ntf_prd() {
 
-    return code(GRP_SLN_NTF_PRD).asDouble();
+    return code(GRP_SLN_NTF_PRD).asFloat();
 }
 
-double Group::get_high_act_thr() {
+float Group::get_high_act_thr() {
 
-    return code(GRP_HIGH_ACT_THR).asDouble();
+    return code(GRP_HIGH_ACT_THR).asFloat();
 }
 
-double Group::get_low_act_thr() {
+float Group::get_low_act_thr() {
 
-    return code(GRP_LOW_ACT_THR).asDouble();
+    return code(GRP_LOW_ACT_THR).asFloat();
 }
 
-double Group::get_act_ntf_prd() {
+float Group::get_act_ntf_prd() {
 
-    return code(GRP_ACT_NTF_PRD).asDouble();
+    return code(GRP_ACT_NTF_PRD).asFloat();
 }
 
-double Group::get_low_res_thr() {
+float Group::get_low_res_thr() {
 
-    return code(GRP_LOW_RES_THR).asDouble();
+    return code(GRP_LOW_RES_THR).asFloat();
 }
 
-double Group::get_ntf_new() {
+float Group::get_ntf_new() {
 
-    return code(GRP_NTF_NEW).asDouble();
+    return code(GRP_NTF_NEW).asFloat();
 }
 
 uint16_t Group::get_ntf_grp_count() {
@@ -318,17 +318,17 @@ Group *Group::get_ntf_grp(uint16_t i) {
     return (Group *)get_reference(index);
 }
 
-void Group::_mod_0_positive(uint16_t member_index, double value) {
+void Group::_mod_0_positive(uint16_t member_index, float value) {
 
-    double v = code(member_index).asDouble() + value;
+    float v = code(member_index).asFloat() + value;
     if (v < 0)
         v = 0;
     code(member_index) = Atom::Float(v);
 }
 
-void Group::_mod_0_plus1(uint16_t member_index, double value) {
+void Group::_mod_0_plus1(uint16_t member_index, float value) {
 
-    double v = code(member_index).asDouble() + value;
+    float v = code(member_index).asFloat() + value;
     if (v < 0)
         v = 0;
     else if (v > 1)
@@ -336,9 +336,9 @@ void Group::_mod_0_plus1(uint16_t member_index, double value) {
     code(member_index) = Atom::Float(v);
 }
 
-void Group::_mod_minus1_plus1(uint16_t member_index, double value) {
+void Group::_mod_minus1_plus1(uint16_t member_index, float value) {
 
-    double v = code(member_index).asDouble() + value;
+    float v = code(member_index).asFloat() + value;
     if (v < -1)
         v = -1;
     else if (v > 1)
@@ -346,7 +346,7 @@ void Group::_mod_minus1_plus1(uint16_t member_index, double value) {
     code(member_index) = Atom::Float(v);
 }
 
-void Group::_set_0_positive(uint16_t member_index, double value) {
+void Group::_set_0_positive(uint16_t member_index, float value) {
 
     if (value < 0)
         code(member_index) = Atom::Float(0);
@@ -354,7 +354,7 @@ void Group::_set_0_positive(uint16_t member_index, double value) {
         code(member_index) = Atom::Float(value);
 }
 
-void Group::_set_0_plus1(uint16_t member_index, double value) {
+void Group::_set_0_plus1(uint16_t member_index, float value) {
 
     if (value < 0)
         code(member_index) = Atom::Float(0);
@@ -364,7 +364,7 @@ void Group::_set_0_plus1(uint16_t member_index, double value) {
         code(member_index) = Atom::Float(value);
 }
 
-void Group::_set_minus1_plus1(uint16_t member_index, double value) {
+void Group::_set_minus1_plus1(uint16_t member_index, float value) {
 
     if (value < -1)
         code(member_index) = Atom::Float(-1);
@@ -374,13 +374,13 @@ void Group::_set_minus1_plus1(uint16_t member_index, double value) {
         code(member_index) = Atom::Float(value);
 }
 
-void Group::_set_0_1(uint16_t member_index, double value) {
+void Group::_set_0_1(uint16_t member_index, float value) {
 
     if (value == 0 || value == 1)
         code(member_index) = Atom::Float(value);
 }
 
-void Group::mod(uint16_t member_index, double value) {
+void Group::mod(uint16_t member_index, float value) {
 
     switch (member_index) {
     case GRP_UPR:
@@ -427,7 +427,7 @@ void Group::mod(uint16_t member_index, double value) {
     }
 }
 
-void Group::set(uint16_t member_index, double value) {
+void Group::set(uint16_t member_index, float value) {
 
     switch (member_index) {
     case GRP_UPR:
@@ -572,8 +572,8 @@ void Group::update_stats() {
         --decay_periods_to_go;
 
 // auto restart: iff dcy_auto==1.
-    if (Utils::Equal(code(GRP_DCY_AUTO).asDouble(), 1)) {
-        double period = code(GRP_DCY_PRD).asDouble();
+    if (Utils::Equal(code(GRP_DCY_AUTO).asFloat(), 1)) {
+        double period = code(GRP_DCY_PRD).asFloat();
         if (decay_periods_to_go <= 0 && period > 0) {
             decay_periods_to_go = period;
         }
@@ -633,20 +633,20 @@ void Group::reset_decay_values() {
 
 double Group::update_sln_thr() {
 
-    double percentage = code(GRP_DCY_PER).asDouble();
-    double period = code(GRP_DCY_PRD).asDouble();
+    float percentage = code(GRP_DCY_PER).asFloat();
+    float period = code(GRP_DCY_PRD).asFloat();
     if (percentage == 0 || period == 0)
         reset_decay_values();
     else {
 
         double percentage_per_period = percentage / period;
-        if (percentage_per_period != decay_percentage_per_period || code(GRP_DCY_TGT).asDouble() != decay_target) { // recompute decay.
+        if (percentage_per_period != decay_percentage_per_period || code(GRP_DCY_TGT).asFloat() != decay_target) { // recompute decay.
 
             decay_periods_to_go = period;
             decay_percentage_per_period = percentage_per_period;
-            decay_target = code(GRP_DCY_TGT).asDouble();
+            decay_target = code(GRP_DCY_TGT).asFloat();
 
-            if (code(GRP_DCY_TGT).asDouble() == 0) {
+            if (code(GRP_DCY_TGT).asFloat() == 0) {
 
                 sln_thr_decay = 0;
                 sln_decay = percentage_per_period;

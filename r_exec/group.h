@@ -88,13 +88,13 @@ private:
     int64_t sln_change_monitoring_periods_to_go = 0;
     int64_t act_change_monitoring_periods_to_go = 0;
 
-    void _mod_0_positive(uint16_t member_index, double value);
-    void _mod_0_plus1(uint16_t member_index, double value);
-    void _mod_minus1_plus1(uint16_t member_index, double value);
-    void _set_0_positive(uint16_t member_index, double value);
-    void _set_0_plus1(uint16_t member_index, double value);
-    void _set_minus1_plus1(uint16_t member_index, double value);
-    void _set_0_1(uint16_t member_index, double value);
+    void _mod_0_positive(uint16_t member_index, float value);
+    void _mod_0_plus1(uint16_t member_index, float value);
+    void _mod_minus1_plus1(uint16_t member_index, float value);
+    void _set_0_positive(uint16_t member_index, float value);
+    void _set_0_plus1(uint16_t member_index, float value);
+    void _set_minus1_plus1(uint16_t member_index, float value);
+    void _set_0_1(uint16_t member_index, float value);
 
     bool is_active_pgm(View *view);
     bool is_eligible_input(View *view);
@@ -307,17 +307,17 @@ public:
 
     View *get_view(uint64_t OID);
 
-    uint64_t get_upr() const;
+    uint32_t get_upr() const;
 
-    double get_sln_thr() const;
-    double get_act_thr() const;
-    double get_vis_thr() const;
+    float get_sln_thr() const;
+    float get_act_thr() const;
+    float get_vis_thr() const;
 
-    double get_c_sln() const;
-    double get_c_act() const;
+    float get_c_sln() const;
+    float get_c_act() const;
 
-    double get_c_sln_thr() const;
-    double get_c_act_thr() const;
+    float get_c_sln_thr() const;
+    float get_c_act_thr() const;
 
     void mod_sln_thr(double value);
     void set_sln_thr(double value);
@@ -342,27 +342,27 @@ public:
     double update_c_sln_thr();
     double update_c_act_thr();
 
-    double get_sln_chg_thr();
-    double get_sln_chg_prd();
-    double get_act_chg_thr();
-    double get_act_chg_prd();
+    float get_sln_chg_thr();
+    float get_sln_chg_prd();
+    float get_act_chg_thr();
+    float get_act_chg_prd();
 
-    double get_avg_sln();
-    double get_high_sln();
-    double get_low_sln();
-    double get_avg_act();
-    double get_high_act();
-    double get_low_act();
+    float get_avg_sln();
+    float get_high_sln();
+    float get_low_sln();
+    float get_avg_act();
+    float get_high_act();
+    float get_low_act();
 
-    double get_high_sln_thr();
-    double get_low_sln_thr();
-    double get_sln_ntf_prd();
-    double get_high_act_thr();
-    double get_low_act_thr();
-    double get_act_ntf_prd();
-    double get_low_res_thr();
+    float get_high_sln_thr();
+    float get_low_sln_thr();
+    float get_sln_ntf_prd();
+    float get_high_act_thr();
+    float get_low_act_thr();
+    float get_act_ntf_prd();
+    float get_low_res_thr();
 
-    double get_ntf_new();
+    float get_ntf_new();
 
     uint16_t get_ntf_grp_count();
     Group *get_ntf_grp(uint16_t i); // i starts at 1.
@@ -375,8 +375,8 @@ public:
 // Target upr, spr, c_sln, c_act, sln_thr, act_thr, vis_thr, c_sln_thr, c_act_thr, sln_chg_thr,
 // sln_chg_prd, act_chg_thr, act_chg_prd, high_sln_thr, low_sln_thr, sln_ntf_prd, high_act_thr, low_act_thr, act_ntf_prd, low_res_thr, res_ntf_prd, ntf_new,
 // dcy_per, dcy-tgt, dcy_prd.
-    void mod(uint16_t member_index, double value);
-    void set(uint16_t member_index, double value);
+    void mod(uint16_t member_index, float value);
+    void set(uint16_t member_index, float value);
 
     void reset_stats(); // called at the begining of an update.
     void update_stats(); // at the end of an update; may produce notifcations.

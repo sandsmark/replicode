@@ -119,7 +119,7 @@ inline Group *HLPController::get_host() const {
 void HLPController::inject_prediction(Fact *prediction, double confidence) const { // prediction is simulated: f->pred->f->target.
 
     Code *primary_host = get_host();
-    double sln_thr = primary_host->code(GRP_SLN_THR).asDouble();
+    float sln_thr = primary_host->code(GRP_SLN_THR).asFloat();
     if (confidence > sln_thr) { // do not inject if cfd is too low.
 
         View *view = new View(View::SYNC_ONCE, Now(), confidence, 1, primary_host, primary_host, prediction); // SYNC_ONCE,res=1.

@@ -75,7 +75,7 @@ inline void AutoFocusController::inject_input(View *input, uint64_t start) {
         Group *output_group = output_groups[i];
         View *view = new View(input, true);
         view->references[0] = output_group;
-        view->code(VIEW_RES) = Atom::Float(Utils::GetGroupResilience(view->code(VIEW_RES).asDouble(), origin->get_upr(), output_group->get_upr()));
+        view->code(VIEW_RES) = Atom::Float(Utils::GetGroupResilience(view->code(VIEW_RES).asFloat(), origin->get_upr(), output_group->get_upr()));
         _Mem::Get()->inject(view);
     }
 }
@@ -105,7 +105,7 @@ inline View *AutoFocusController::inject_input(View *input) {
             View *view = new View(input, true);
             view->references[0] = output_group;
             view->references[1] = input->references[0];
-            view->code(VIEW_RES) = Atom::Float(Utils::GetGroupResilience(view->code(VIEW_RES).asDouble(), origin->get_upr(), output_group->get_upr()));
+            view->code(VIEW_RES) = Atom::Float(Utils::GetGroupResilience(view->code(VIEW_RES).asFloat(), origin->get_upr(), output_group->get_upr()));
             _Mem::Get()->inject(view);
             if (i == 0)
                 primary_view = view;
@@ -122,7 +122,7 @@ inline View *AutoFocusController::inject_input(View *input) {
             View *view = new View(input, true);
             view->references[0] = output_group;
             view->references[1] = input->references[0];
-            view->code(VIEW_RES) = Atom::Float(Utils::GetGroupResilience(view->code(VIEW_RES).asDouble(), origin->get_upr(), output_group->get_upr()));
+            view->code(VIEW_RES) = Atom::Float(Utils::GetGroupResilience(view->code(VIEW_RES).asFloat(), origin->get_upr(), output_group->get_upr()));
             view->object = copy;
             _Mem::Get()->inject(view);
             if (i == 0) {
@@ -146,7 +146,7 @@ inline View *AutoFocusController::inject_input(View *input) {
             view->references[0] = output_group;
             view->references[1] = input->references[0];
             view->code(VIEW_SYNC) = Atom::Float(View::SYNC_ONCE);
-            view->code(VIEW_RES) = Atom::Float(Utils::GetGroupResilience(view->code(VIEW_RES).asDouble(), origin->get_upr(), output_group->get_upr()));
+            view->code(VIEW_RES) = Atom::Float(Utils::GetGroupResilience(view->code(VIEW_RES).asFloat(), origin->get_upr(), output_group->get_upr()));
             view->object = copy;
             _Mem::Get()->inject(view);
             if (i == 0) {

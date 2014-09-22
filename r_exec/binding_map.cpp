@@ -151,7 +151,7 @@ bool AtomValue::contains(const Atom a) const {
         return true;
 
     if (atom.isFloat() && a.isFloat())
-        return Utils::Equal(atom.asDouble(), a.asDouble());
+        return Utils::Equal(atom.asFloat(), a.asFloat());
 
     return false;
 }
@@ -244,7 +244,7 @@ bool StructureValue::contains(const Atom *s) const {
             continue;
 
         if (a.isFloat() && _a.isFloat())
-            return Utils::Equal(a.asDouble(), _a.asDouble());
+            return Utils::Equal(a.asFloat(), _a.asFloat());
 
         return false;
     }
@@ -627,7 +627,7 @@ bool BindingMap::match_atom(Atom o_atom, Atom p_atom) {
         return true;
 
     if (p_atom.isFloat() && o_atom.isFloat())
-        return Utils::Equal(o_atom.asDouble(), p_atom.asDouble());
+        return Utils::Equal(o_atom.asFloat(), p_atom.asFloat());
 
     return false;
 }

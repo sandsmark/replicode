@@ -653,13 +653,13 @@ void Decompiler::write_any(uint16_t read_index, bool &after_tail_wildcard, bool 
     Atom a = current_object->code[read_index];
 
     if (a.isFloat()) {
-        if (a.atom == 0x3FFFFFFFFFFFFFFF)
+        if (a.atom == 0x3FFFFFFF)
             out_stream->push("|nb", read_index);
         else if (a == Atom::PlusInfinity())
             out_stream->push("forever", read_index);
         else {
             *out_stream << std::dec;
-            out_stream->push(a.asDouble(), read_index);
+            out_stream->push(a.asFloat(), read_index);
         }
         return;
     }

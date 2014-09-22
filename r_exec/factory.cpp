@@ -284,7 +284,7 @@ bool _Fact::MatchAtom(Atom lhs, Atom rhs) {
         return true;
 
     if (lhs.isFloat() && rhs.isFloat())
-        return Utils::Equal(lhs.asDouble(), rhs.asDouble());
+        return Utils::Equal(lhs.asFloat(), rhs.asFloat());
 
     return false;
 }
@@ -415,9 +415,9 @@ MatchResult _Fact::is_timeless_evidence(const _Fact *target) const {
     return MATCH_FAILURE;
 }
 
-double _Fact::get_cfd() const {
+float _Fact::get_cfd() const {
 
-    return code(FACT_CFD).asDouble();
+    return code(FACT_CFD).asFloat();
 }
 
 void _Fact::set_cfd(double cfd) {

@@ -305,7 +305,7 @@ bool InputLessPGMOverlay::inject_productions() {
 
                 if (object) {
 
-                    double value = (*args.getChild(2))[0].asDouble();
+                    float value = (*args.getChild(2))[0].asFloat();
                     switch (object_type) {
                     case IPGMContext::TYPE_VIEW: { // add the target and value to the group's pending operations.
 
@@ -336,7 +336,7 @@ bool InputLessPGMOverlay::inject_productions() {
 
                 if (object) {
 
-                    double value = (*args.getChild(2))[0].asDouble();
+                    float value = (*args.getChild(2))[0].asFloat();
                     switch (object_type) {
                     case IPGMContext::TYPE_VIEW: { // add the target and value to the group's pending operations.
                         Group *g = (Group *)object;
@@ -363,7 +363,7 @@ bool InputLessPGMOverlay::inject_productions() {
 
             } else if (function[0].asOpcode() == Opcodes::Prb) { // args:[probe_level,callback_name,msg,set of objects].
 
-                double probe_lvl = (*args.getChild(1))[0].asDouble();
+                float probe_lvl = (*args.getChild(1))[0].asFloat();
                 if (probe_lvl < _Mem::Get()->get_probe_level()) {
 
                     std::string callback_name = Utils::GetString(&(*args.getChild(2))[0]);

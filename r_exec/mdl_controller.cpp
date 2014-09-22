@@ -292,9 +292,9 @@ MDLController::MDLController(r_code::View *view): HLPController(view) {
     _is_cmd = (lhs_ihlp->code(0).asOpcode() == Opcodes::Cmd);
 }
 
-double MDLController::get_cfd() const {
+float MDLController::get_cfd() const {
 
-    return get_core_object()->code(MDL_SR).asDouble();
+    return get_core_object()->code(MDL_SR).asFloat();
 }
 
 bool MDLController::monitor_predictions(_Fact *input)
@@ -1030,7 +1030,7 @@ void TopLevelMDLController::reduce(r_exec::View *input) { // no lock.
 
         _Fact *goal_target = goal->get_target(); // goal_target is f->object.
         double confidence = get_cfd() * goal_target->get_cfd(); // reading SR is atomic.
-        if (confidence <= get_host()->code(GRP_SLN_THR).asDouble()) // cfd is too low for any sub-goal to be injected.
+        if (confidence <= get_host()->code(GRP_SLN_THR).asFloat()) // cfd is too low for any sub-goal to be injected.
             return;
 
         P<HLPBindingMap> bm = new HLPBindingMap(bindings);
@@ -1330,7 +1330,7 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
 
                 Fact *pred_f_imdl = new Fact(new Pred(f_imdl, 1), now, now, 1, 1);
                 inject_prediction(production, pred_f_imdl, confidence, before - now, NULL);
-                OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << ": " << input->get_oid() << " -> " << production->get_oid() << " pred " << bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asDouble() << std::endl;
+                OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << ": " << input->get_oid() << " -> " << production->get_oid() << " pred " << bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asFloat() << std::endl;
             } else {
 
                 Code *mk_rdx = new MkRdx(f_imdl, (Code *)input, production, 1, bindings);
@@ -1340,7 +1340,7 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
                 Group *secondary_host = secondary->getView()->get_host(); // inject f_imdl in secondary group.
                 View *view = new View(View::SYNC_ONCE, now, confidence, 1, getView()->get_host(), secondary_host, f_imdl); // SYNC_ONCE,res=resilience.
                 _Mem::Get()->inject(view);
-                OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << ": " << input->get_oid() << " -> " << production->get_oid() << " pred " << bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asDouble() << std::endl;
+                OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << ": " << input->get_oid() << " -> " << production->get_oid() << " pred " << bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asFloat() << std::endl;
             }
         }
     } else { // no monitoring for simulated predictions.
@@ -1355,7 +1355,7 @@ bool PrimaryMDLController::inject_prediction(Fact *prediction, Fact *f_imdl, dou
 
     uint64_t now = Now();
     Group *primary_host = get_host();
-    double sln_thr = primary_host->code(GRP_SLN_THR).asDouble();
+    float sln_thr = primary_host->code(GRP_SLN_THR).asFloat();
     if (confidence > sln_thr) { // do not inject if cfd is too low.
 
         int64_t resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, time_to_live);
@@ -1405,9 +1405,9 @@ void PrimaryMDLController::reduce(r_exec::View *input) { // no lock.
     if (goal && goal->is_self_goal() && !goal->is_drive()) {
 
         _Fact *goal_target = goal->get_target(); // goal_target is f->object.
-        double confidence = get_cfd() * goal_target->get_cfd(); // reading SR is atomic.
+        float confidence = get_cfd() * goal_target->get_cfd(); // reading SR is atomic.
         Code *host = get_host();
-        if (confidence <= host->code(GRP_SLN_THR).asDouble()) // cfd is too low for any sub-goal to be injected.
+        if (confidence <= host->code(GRP_SLN_THR).asFloat()) // cfd is too low for any sub-goal to be injected.
             return;
 
         P<HLPBindingMap> bm = new HLPBindingMap(bindings);
@@ -1881,9 +1881,9 @@ void PrimaryMDLController::rate_model(bool success) {
         return;
     }
 
-    double strength = model->code(MDL_STRENGTH).asDouble();
-    double instance_count = model->code(MDL_CNT).asDouble();
-    double success_count = model->code(MDL_SR).asDouble() * instance_count;
+    float strength = model->code(MDL_STRENGTH).asFloat();
+    float instance_count = model->code(MDL_CNT).asFloat();
+    float success_count = model->code(MDL_SR).asFloat() * instance_count;
 
     ++instance_count;
     model->code(MDL_DSR) = model->code(MDL_SR);
@@ -1927,15 +1927,15 @@ void PrimaryMDLController::assume(_Fact *input) {
         return;
 
     Code *model = get_core_object();
-    if (model->code(MDL_STRENGTH).asDouble() == 0) // only strong models compute assumptions.
+    if (model->code(MDL_STRENGTH).asFloat() == 0) // only strong models compute assumptions.
         return;
 
     if (input->get_pred()) // discard predictions.
         return;
 
-    double confidence = get_cfd() * input->get_cfd(); // reading SR is atomic.
+    float confidence = get_cfd() * input->get_cfd(); // reading SR is atomic.
     Code *host = get_host();
-    if (confidence <= host->code(GRP_SLN_THR).asDouble()) // cfd is too low for any assumption to be injected.
+    if (confidence <= host->code(GRP_SLN_THR).asFloat()) // cfd is too low for any assumption to be injected.
         return;
 
     P<HLPBindingMap> bm = new HLPBindingMap(bindings);
@@ -2114,8 +2114,8 @@ void SecondaryMDLController::rate_model() { // acknowledge successes only; the p
         return;
     }
 
-    uint64_t instance_count = model->code(MDL_CNT).asDouble();
-    uint64_t success_count = model->code(MDL_SR).asDouble() * instance_count;
+    uint32_t instance_count = model->code(MDL_CNT).asFloat();
+    uint32_t success_count = model->code(MDL_SR).asFloat() * instance_count;
 
     ++instance_count;
     model->code(MDL_DSR) = model->code(MDL_SR);

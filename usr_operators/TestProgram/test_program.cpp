@@ -37,7 +37,7 @@
 class TestController:
     public r_exec::Controller {
 private:
-    double arg1;
+    float arg1;
     bool arg2;
 public:
     TestController(r_code::View *icpp_pgm_view): r_exec::Controller(icpp_pgm_view) {
@@ -50,7 +50,7 @@ public:
             std::cerr << "test_program error: expected 2 arguments, got " << arg_count << std::endl;
             return;
         }
-        arg1 = getObject()->code(arg_set_index + 1).asDouble();
+        arg1 = getObject()->code(arg_set_index + 1).asFloat();
         arg2 = getObject()->code(arg_set_index + 2).asBoolean();
     }
 
