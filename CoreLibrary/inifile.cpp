@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 static inline std::string trim(std::string string)
 {
