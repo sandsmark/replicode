@@ -491,7 +491,7 @@ void Atom::trace() const
             }
             std::cout << s.c_str();
         } else if (isFloat()) {
-            std::cout << "nb: " << std::scientific << asFloat();
+            std::cout << "nb: " << std::dec << asFloat();
             return;
         } else
             std::cout << "undef";
