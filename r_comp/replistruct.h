@@ -1,6 +1,8 @@
 #ifndef REPLISTRUCT_H
 #define REPLISTRUCT_H
 
+#include <cstdint>
+#include <string>
 #include <list>
 #include <unordered_map>
 #include <vector>
