@@ -1007,7 +1007,7 @@ bool Compiler::read_boolean(RepliStruct *node, bool enforce, const Class *p, uin
     }
     restore_state(s);
     if (enforce) {
-        set_error(" error: expected a Boolean or an expr evaluating to a Boolean", node);
+        set_error(" error: expected a Boolean or an expr evaluating to a Boolean, got: " + node->cmd, node);
         return false;
     }
     return false;
