@@ -1030,12 +1030,13 @@ bool Compiler::read_timestamp(RepliStruct *node, bool enforce, const Class *p, u
         std::string number = node->cmd.substr(0, node->cmd.find("us"));
         try {
             char *p;
-            unsigned long long ts = std::strtoull(number.c_str(), &p, 10);
+            uint64_t ts = std::strtoull(number.c_str(), &p, 10);
             if (*p == 0) {
                 if (write) {
                     current_object->code[write_index] = Atom::IPointer(extent_index);
                     current_object->code[extent_index++] = Atom::Timestamp();
-                    current_object->code[extent_index++] = ts;
+                    current_object->code[extent_index++] = ts>>32;
+                    current_object->code[extent_index++] = (ts & 0x00000000FFFFFFFF);
                 }
                 return true;
             }
@@ -1337,8 +1338,8 @@ bool Compiler::read_nil_us(RepliStruct *node, uint16_t write_index, uint16_t &ex
         if (write) {
             current_object->code[write_index] = Atom::IPointer(extent_index);
             current_object->code[extent_index++] = Atom::UndefinedTimestamp();
-            current_object->code[extent_index++] = 0xFFFFFFFFFFFFFFFF;
-            current_object->code[extent_index++] = 0xFFFFFFFFFFFFFFFF;
+            current_object->code[extent_index++] = 0xFFFFFFFF;
+            current_object->code[extent_index++] = 0xFFFFFFFF;
         }
         return true;
     }
