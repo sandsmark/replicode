@@ -196,7 +196,7 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
 
     if (view->args.size() > 0) {
         if (view->type != RepliStruct::Set) {
-            set_error("expected a view set", view);
+            set_error("expected a view set, got " + view->cmd, view);
             return false;
         }
 
@@ -928,7 +928,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
         return true;
     }
     if (write)
-        set_error("error: expecting more elements", node);
+        set_error("error: expecting more elements in " + node->cmd + ", has " + std::to_string(node->args.size()) + " arguments", node);
     return false;
 }
 
