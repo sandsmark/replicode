@@ -1,6 +1,7 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 #include <mutex>
+#include <iostream>
 
 static std::mutex s_debugSection;
 

@@ -1,5 +1,7 @@
 #include "inifile.h"
 
+#include "debug.h"
+
 #include <fstream>
 #include <algorithm>
 #include <iostream>
@@ -19,7 +21,7 @@ bool IniFile::readFile(std::string filename)
     file.open(filename);
 
     if (!file.is_open()) {
-        std::cout << "unable to open file\n";
+        debug("inifile") << "unable to open file" << filename;
         return 1;
     }
 
@@ -40,7 +42,7 @@ bool IniFile::readFile(std::string filename)
         if (line[0] == '[') {
             size_t end = line.find(']');
             if (end == std::string::npos) {
-                std::cout << "invalid file, unclosed group at line " << linenum << std::endl;
+                debug("inifile") << "invalid file, unclosed group at line " << linenum;
                 return false;
             }
             group = trim(line.substr(1, end - 1));
@@ -49,7 +51,7 @@ bool IniFile::readFile(std::string filename)
 
         size_t nameEnd = line.find('=');
         if (nameEnd == std::string::npos) {
-            std::cerr << "invalid file, missing = at line " << linenum << std::endl;
+            debug("inifile") << "invalid file, missing = at line " << linenum;
             return false;
         }
         std::string name = trim(line.substr(0, nameEnd));
