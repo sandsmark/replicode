@@ -103,9 +103,4 @@ template<class C> inline P<C> &P<C>::operator =(const P<C> &p) {
 
     return this->operator =((C *)p.object);
 }
-
-////////////////////////////////////////////////////////////////////////////////////
-
-template<class C> inline _ObjectAdapter<C>::_ObjectAdapter(): _Object(), C() {
-}
 }

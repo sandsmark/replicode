@@ -81,6 +81,10 @@ bool Compile(const char* filename, std::string &error, bool compile_metadata) {
         std::cerr << "! Compilation failed: " << r_exec::Compiler.getError() << std::endl;
         return false;
     }
+    r_code::vector<SysObject*> &objects = getSeed()->code_segment.objects;
+    for (size_t i=0;i<objects.size(); i++) {
+//        objects[i]->trace();
+    }
     return true;
 }
 

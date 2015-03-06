@@ -1,4 +1,4 @@
-!load ../Test/std.replicode
+!load ./V1.2/std.replicode
 
 !def (std_grp _upr _sln_thr _act_thr _vis_thr _ntf_grps) (grp _upr _sln_thr _act_thr _vis_thr 1 0 1 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 _ntf_grps 1); c-salient and c-active.
 !def (std_rgrp _upr _sln_thr _act_thr _vis_thr) (rgrp _upr _sln_thr _act_thr _vis_thr 1 0 0 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 |[] 1); c-salient, non c-active.

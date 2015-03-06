@@ -84,13 +84,6 @@ public:
     virtual void decRef();
 };
 
-// Template version of the well-known DP. Adapts C to _Object.
-template<class C> class _ObjectAdapter:
-    public C,
-    public _Object {
-protected:
-    _ObjectAdapter();
-};
 }
 
 

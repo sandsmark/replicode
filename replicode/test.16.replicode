@@ -6,15 +6,18 @@
 _start:(pgm
 |[]
 |[]
+|[]
 []
    (inj []
       p:(pgm
       |[]
       |[]
+      |[]
       []
          (inj []
             (mk.val self position (vec3 1 2 3) 1)
-            [SYNC_FRONT (\ (+ now 10000)) 1 forever root nil]
+            [SYNC_FRONT now 1 forever root nil 1 1 1 1]
+            |[]
          )
          (mod [this.vw.act -1])
       1

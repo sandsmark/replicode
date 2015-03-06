@@ -244,9 +244,9 @@ void _Mem::init_timings(uint64_t now) const { // called at the beginning of _Mem
 
         uint16_t opcode = (*o)->code(0).asOpcode();
         if (opcode == Opcodes::Fact || opcode == Opcodes::AntiFact) {
-
             uint64_t after = Utils::GetTimestamp<Code>(*o, FACT_AFTER);
             uint64_t before = Utils::GetTimestamp<Code>(*o, FACT_BEFORE);
+            (*o)->trace();
             if (after < Utils::MaxTime - now)
                 Utils::SetTimestamp<Code>(*o, FACT_AFTER, after + now);
             if (before < Utils::MaxTime - now - time_tolerance)

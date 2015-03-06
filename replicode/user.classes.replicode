@@ -1,4 +1,4 @@
-!load std.replicode
+!load ./V1.2/std.replicode
 
 !class (vec3 x:nb y:nb z:nb)
 !class (mk.tag (_obj {object: tag:st}))
@@ -47,9 +47,7 @@ root:(grp
 0; low_res_thr
 [nil]; ntf_grps
 1; psln_thr
-)
-[]
-   [SYNC_ONCE now 0 forever nil nil COV_OFF 0]
+)[[SYNC_ONCE now 0 forever nil nil COV_OFF 0]]
 
 g1:(grp
 1; upr

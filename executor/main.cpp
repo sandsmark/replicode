@@ -203,198 +203,201 @@ void decompile(Decompiler &decompiler, r_comp::Image *image, uint64_t time_offse
 #endif
 }
 
-void write_to_file(r_comp::Image *image, std::string &image_path, Decompiler *decompiler, uint64_t time_offset) {
-
+void write_to_file(r_comp::Image *image, std::string &image_path, Decompiler *decompiler, uint64_t time_offset)
+{
     ofstream output(image_path.c_str(), ios::binary | ios::out);
     r_code::Image<r_code::ImageImpl> *i = image->serialize<r_code::Image<r_code::ImageImpl> >();
     r_code::Image<r_code::ImageImpl>::Write(i, output);
     output.close();
     delete i;
 
-    if (decompiler) {
-
-        ifstream input(image_path.c_str(), ios::binary | ios::in);
-        if (!input.good())
-            return;
-
-        r_code::Image<r_code::ImageImpl> *img = (r_code::Image<r_code::ImageImpl> *)r_code::Image<r_code::ImageImpl>::Read(input);
-        input.close();
-
-        r_code::vector<Code *> objects;
-        r_comp::Image *_i = new r_comp::Image();
-        _i->load(img);
-
-        decompile(*decompiler, _i, time_offset, false);
-        delete _i;
-
-        delete img;
+    if (!decompiler) {
+        return;
     }
+
+    ifstream input(image_path.c_str(), ios::binary | ios::in);
+    if (!input.good())
+        return;
+
+    r_code::Image<r_code::ImageImpl> *img = (r_code::Image<r_code::ImageImpl> *)r_code::Image<r_code::ImageImpl>::Read(input);
+    input.close();
+
+    r_code::vector<Code *> objects;
+    r_comp::Image *_i = new r_comp::Image();
+    _i->load(img);
+
+    decompile(*decompiler, _i, time_offset, false);
+    delete _i;
+
+    delete img;
 }
 
 int main(int argc, char **argv)
 {
     Settings settings;
 
+    // First try to load local config, otherwise user config, otherwise just
+    // use default values
     if (fileExists("settings.ini")) {
         settings.load("settings.ini");
     } else {
-        // tries to load file, otherwise sets default values
         settings.load("~/.config/replicode/replicode.ini");
     }
 
     debug("main") << "Initializing with user operator library and user class code...";
     using namespace std::chrono;
     if (!r_exec::Init(settings.usr_operator_path.c_str(),
-                      []() -> uint64_t { return duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count(); },
-                      settings.usr_class_path.c_str()))
+                      []() -> uint64_t {
+                          return duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count();
+                      },
+                      settings.usr_class_path.c_str())) {
         return 2;
+    }
 
     srand(r_exec::Now());
-    //Random::Init();
 
     debug("main") << "compiling source...";
     std::string error;
     if (!r_exec::Compile(settings.source_file_name.c_str(), error)) {
         std::cerr << " <- " << error << std::endl;
         return 3;
-    } else {
-        debug("main") << "source compiled!";
-
-#if defined(WIN32) || defined(WIN64)
-        r_exec::PipeOStream::Open(settings.debug_windows);
-#endif
-
-        Decompiler decompiler;
-        decompiler.init(r_exec::getMetadata());
-
-        r_comp::Image *image;
-
-        r_exec::_Mem *mem;
-        if (settings.get_objects)
-            mem = new r_exec::Mem<r_exec::LObject, r_exec::MemStatic>();
-        else
-            mem = new r_exec::Mem<r_exec::LObject, r_exec::MemVolatile>();
-
-        r_code::vector<r_code::Code *> ram_objects;
-        r_exec::getSeed()->get_objects(mem, ram_objects);
-
-        mem->init(settings.base_period,
-                  settings.reduction_core_count,
-                  settings.time_core_count,
-                  settings.mdl_inertia_sr_thr,
-                  settings.mdl_inertia_cnt_thr,
-                  settings.tpx_dsr_thr,
-                  settings.min_sim_time_horizon,
-                  settings.max_sim_time_horizon,
-                  settings.sim_time_horizon,
-                  settings.tpx_time_horizon,
-                  settings.perf_sampling_period,
-                  settings.float_tolerance,
-                  settings.time_tolerance,
-                  settings.primary_thz,
-                  settings.secondary_thz,
-                  settings.debug,
-                  settings.ntf_mk_resilience,
-                  settings.goal_pred_success_resilience,
-                  settings.probe_level,
-                  settings.trace_levels);
-
-        uint64_t stdin_oid;
-        std::string stdin_symbol("stdin");
-        uint64_t stdout_oid;
-        std::string stdout_symbol("stdout");
-        uint64_t self_oid;
-        std::string self_symbol("self");
-        std::unordered_map<uintptr_t, std::string>::const_iterator n;
-        for (n = r_exec::getSeed()->object_names.symbols.begin(); n != r_exec::getSeed()->object_names.symbols.end(); ++n) {
-
-            if (n->second == stdin_symbol)
-                stdin_oid = n->first;
-            else if (n->second == stdout_symbol)
-                stdout_oid = n->first;
-            else if (n->second == self_symbol)
-                self_oid = n->first;
-        }
-
-        if (!mem->load(ram_objects.as_std(), stdin_oid, stdout_oid, self_oid))
-            return 4;
-        uint64_t starting_time = mem->start();
-
-        debug("main") << "running for" << settings.run_time << "ms";
-        std::this_thread::sleep_for(std::chrono::milliseconds(settings.run_time));
-
-        /*Thread::Sleep(settings.run_time/2);
-        test_many_injections(mem,
-        argc > 2 ? atoi(argv[2]) : 100, // sampling period in ms
-        argc > 3 ? atoi(argv[3]) : 600, // number of batches
-        argc > 4 ? atoi(argv[4]) : 66); // number of objects per batch
-        Thread::Sleep(settings.run_time/2);*/
-
-        debug("main") << "shutting rMem down...";
-        mem->stop();
-
-        if (settings.get_objects) {
-//TimeProbe probe;
-//probe.set();
-            image = mem->get_objects();
-//probe.check();
-            image->object_names.symbols = r_exec::getSeed()->object_names.symbols;
-
-            if (settings.write_objects)
-                write_to_file(image, settings.objects_path, settings.test_objects ? &decompiler : NULL, starting_time);
-
-            if (settings.decompile_objects && (!settings.write_objects || !settings.test_objects)) {
-                if (settings.decompile_to_file) { // argv[2] is a file to redirect the decompiled code to.
-
-                    std::ofstream outfile;
-                    outfile.open(settings.decompilation_file_path.c_str(), std::ios_base::trunc);
-                    std::streambuf *coutbuf = std::cout.rdbuf(outfile.rdbuf());
-
-                    decompile(decompiler, image, starting_time, settings.ignore_named_objects);
-
-                    std::cout.rdbuf(coutbuf);
-                    outfile.close();
-                } else
-                    decompile(decompiler, image, starting_time, settings.ignore_named_objects);
-            }
-            delete image;
-//std::cout<<"get_image(): "<<probe.us()<<"us"<<std::endl;
-        }
-
-        if (settings.get_models) {
-//TimeProbe probe;
-//probe.set();
-            image = mem->get_models();
-//probe.check();
-            image->object_names.symbols = r_exec::getSeed()->object_names.symbols;
-
-            if (settings.write_models)
-                write_to_file(image, settings.models_path, settings.test_models ? &decompiler : NULL, starting_time);
-
-            if (settings.decompile_models && (!settings.write_models || !settings.test_models)) {
-
-                if (argc > 2) { // argv[2] is a file to redirect the decompiled code to.
-
-                    std::ofstream outfile;
-                    outfile.open(argv[2], std::ios_base::trunc);
-                    std::streambuf *coutbuf = std::cout.rdbuf(outfile.rdbuf());
-
-                    decompile(decompiler, image, starting_time, settings.ignore_named_models);
-
-                    std::cout.rdbuf(coutbuf);
-                    outfile.close();
-                } else
-                    decompile(decompiler, image, starting_time, settings.ignore_named_models);
-            }
-            delete image;
-//std::cout<<"get_models(): "<<probe.us()<<"us"<<std::endl;
-        }
-        delete mem;
-
-#if defined(WIN32) || defined(WIN64)
-        r_exec::PipeOStream::Close();
-#endif
     }
+
+    debug("main") << "source compiled!";
+
+#if defined(WIN32) || defined(WIN64)
+    r_exec::PipeOStream::Open(settings.debug_windows);
+#endif
+
+    Decompiler decompiler;
+    decompiler.init(r_exec::getMetadata());
+
+
+    r_exec::_Mem *mem;
+    if (settings.get_objects)
+        mem = new r_exec::Mem<r_exec::LObject, r_exec::MemStatic>();
+    else
+        mem = new r_exec::Mem<r_exec::LObject, r_exec::MemVolatile>();
+
+    r_code::vector<r_code::Code *> ram_objects;
+    r_exec::getSeed()->get_objects(mem, ram_objects);
+
+    mem->init(settings.base_period,
+            settings.reduction_core_count,
+            settings.time_core_count,
+            settings.mdl_inertia_sr_thr,
+            settings.mdl_inertia_cnt_thr,
+            settings.tpx_dsr_thr,
+            settings.min_sim_time_horizon,
+            settings.max_sim_time_horizon,
+            settings.sim_time_horizon,
+            settings.tpx_time_horizon,
+            settings.perf_sampling_period,
+            settings.float_tolerance,
+            settings.time_tolerance,
+            settings.primary_thz,
+            settings.secondary_thz,
+            settings.debug,
+            settings.ntf_mk_resilience,
+            settings.goal_pred_success_resilience,
+            settings.probe_level,
+            settings.trace_levels);
+
+    uint64_t stdin_oid;
+    std::string stdin_symbol("stdin");
+    uint64_t stdout_oid;
+    std::string stdout_symbol("stdout");
+    uint64_t self_oid;
+    std::string self_symbol("self");
+    std::unordered_map<uintptr_t, std::string>::const_iterator n;
+    for (n = r_exec::getSeed()->object_names.symbols.begin(); n != r_exec::getSeed()->object_names.symbols.end(); ++n) {
+
+        if (n->second == stdin_symbol)
+            stdin_oid = n->first;
+        else if (n->second == stdout_symbol)
+            stdout_oid = n->first;
+        else if (n->second == self_symbol)
+            self_oid = n->first;
+    }
+
+    if (!mem->load(ram_objects.as_std(), stdin_oid, stdout_oid, self_oid))
+        return 4;
+    uint64_t starting_time = mem->start();
+
+    debug("main") << "running for" << settings.run_time << "ms";
+    std::this_thread::sleep_for(std::chrono::milliseconds(settings.run_time));
+
+    /*Thread::Sleep(settings.run_time/2);
+      test_many_injections(mem,
+      argc > 2 ? atoi(argv[2]) : 100, // sampling period in ms
+      argc > 3 ? atoi(argv[3]) : 600, // number of batches
+      argc > 4 ? atoi(argv[4]) : 66); // number of objects per batch
+      Thread::Sleep(settings.run_time/2);*/
+
+    debug("main") << "shutting rMem down...";
+    mem->stop();
+
+    if (settings.get_objects) {
+        //TimeProbe probe;
+        //probe.set();
+        r_comp::Image *image = mem->get_objects();
+        //probe.check();
+        image->object_names.symbols = r_exec::getSeed()->object_names.symbols;
+
+        if (settings.write_objects)
+            write_to_file(image, settings.objects_path, settings.test_objects ? &decompiler : NULL, starting_time);
+
+        if (settings.decompile_objects && (!settings.write_objects || !settings.test_objects)) {
+            if (settings.decompile_to_file) { // argv[2] is a file to redirect the decompiled code to.
+
+                std::ofstream outfile;
+                outfile.open(settings.decompilation_file_path.c_str(), std::ios_base::trunc);
+                std::streambuf *coutbuf = std::cout.rdbuf(outfile.rdbuf());
+
+                decompile(decompiler, image, starting_time, settings.ignore_named_objects);
+
+                std::cout.rdbuf(coutbuf);
+                outfile.close();
+            } else
+                decompile(decompiler, image, starting_time, settings.ignore_named_objects);
+        }
+        delete image;
+        //std::cout<<"get_image(): "<<probe.us()<<"us"<<std::endl;
+    }
+
+    if (settings.get_models) {
+        //TimeProbe probe;
+        //probe.set();
+        r_comp::Image *image = mem->get_models();
+        //probe.check();
+        image->object_names.symbols = r_exec::getSeed()->object_names.symbols;
+
+        if (settings.write_models)
+            write_to_file(image, settings.models_path, settings.test_models ? &decompiler : NULL, starting_time);
+
+        if (settings.decompile_models && (!settings.write_models || !settings.test_models)) {
+
+            if (argc > 2) { // argv[2] is a file to redirect the decompiled code to.
+
+                std::ofstream outfile;
+                outfile.open(argv[2], std::ios_base::trunc);
+                std::streambuf *coutbuf = std::cout.rdbuf(outfile.rdbuf());
+
+                decompile(decompiler, image, starting_time, settings.ignore_named_models);
+
+                std::cout.rdbuf(coutbuf);
+                outfile.close();
+            } else
+                decompile(decompiler, image, starting_time, settings.ignore_named_models);
+        }
+        delete image;
+        //std::cout<<"get_models(): "<<probe.us()<<"us"<<std::endl;
+    }
+    delete mem;
+
+#if defined(WIN32) || defined(WIN64)
+    r_exec::PipeOStream::Close();
+#endif
 
     return 0;
 }
