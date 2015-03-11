@@ -241,7 +241,8 @@ int main(int argc, char **argv)
     if (fileExists("settings.ini")) {
         settings.load("settings.ini");
     } else {
-        settings.load("~/.config/replicode/replicode.ini");
+        std::cout << "loading from home" << std::endl;
+        settings.load("~/.config/replicode/replicode.conf");
     }
 
     debug("main") << "Initializing with user operator library and user class code...";

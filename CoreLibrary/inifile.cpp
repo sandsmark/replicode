@@ -1,4 +1,5 @@
 #include "inifile.h"
+#include "debug.h"
 
 #include "debug.h"
 
@@ -7,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <wordexp.h>
 
 static inline std::string trim(std::string string)
 {
@@ -15,10 +17,26 @@ static inline std::string trim(std::string string)
     return string;
 }
 
+static inline std::string string_replace(std::string haystack, std::string needle, std::string new_value)
+{
+    for (size_t index = 0;; index += new_value.length()) {
+        index = haystack.find(needle, index);
+        if (index == std::string::npos) {
+            break;
+        }
+        haystack.erase(index, needle.length());
+        haystack.insert(index, new_value);
+    }
+    return haystack;
+}
+
 bool IniFile::readFile(std::string filename)
 {
     std::ifstream file;
-    file.open(filename);
+    wordexp_t exp_res;
+    wordexp(filename.c_str(), &exp_res, 0);
+    
+    file.open(exp_res.we_wordv[0]);
 
     if (!file.is_open()) {
         debug("inifile") << "unable to open file" << filename;
@@ -54,7 +72,7 @@ bool IniFile::readFile(std::string filename)
             debug("inifile") << "invalid file, missing = at line " << linenum;
             return false;
         }
-        std::string name = trim(line.substr(0, nameEnd));
+        std::string name = trim(string_replace(line.substr(0, nameEnd), "%20", " "));
         std::string value = trim(line.substr(nameEnd + 1));
         if (name == "" || value == "") continue;
         m_values[group][name] = value;

@@ -92,53 +92,55 @@ public:
             std::cerr << "Unable to load settings, using defaults";
         }
 
-        usr_operator_path = settingsFile.getString("Load", "usr_operator_path", "../build/usr_operators/libusr_operators.so");
-        usr_class_path = settingsFile.getString("Load", "usr_class_path", "./V1.2/user.classes.replicode");
-        source_file_name = settingsFile.getString("Load", "source_file_name",  "./V1.2/test.2.replicode");
+        usr_operator_path = settingsFile.getString("Load", "User Operator Module Path", "../build/usr_operators/libusr_operators.so");
+        usr_class_path = settingsFile.getString("Load", "User Class File Path", "./V1.2/user.classes.replicode");
+        source_file_name = settingsFile.getString("Load", "Source File Path",  "./V1.2/test.2.replicode");
 
         unsigned int cores = std::thread::hardware_concurrency();
         ::debug("settings") << "number of cores available:" << cores;
 
-        base_period = settingsFile.getInt("Init", "base_period", 50000);
-        reduction_core_count = settingsFile.getInt("Init", "reduction_core_count", (cores * 3) / 4 + 1);
-        time_core_count = settingsFile.getInt("Init", "time_core_count", (cores - ((cores*3)/4)) + 1);
+        base_period = settingsFile.getInt("Init", "Base Period", 50000);
+        reduction_core_count = settingsFile.getInt("Init", "Reduction Core Count", (cores * 3) / 4 + 1);
+        time_core_count = settingsFile.getInt("Init", "Time Core Count", (cores - ((cores*3)/4)) + 1);
 
-        mdl_inertia_sr_thr = settingsFile.getDouble("System", "mdl_inertia_sr_thr", 0.9);
-        mdl_inertia_cnt_thr = settingsFile.getInt("System", "mdl_inertia_cnt_thr", 6);
-        tpx_dsr_thr = settingsFile.getDouble("System", "tpx_dsr_thr", 0.1);
-        min_sim_time_horizon = settingsFile.getInt("System", "min_sim_time_horizon", 0);
-        max_sim_time_horizon = settingsFile.getInt("System", "max_sim_time_horizon", 0);
-        sim_time_horizon = settingsFile.getDouble("System", "sim_time_horizon", 0.3);
-        tpx_time_horizon = settingsFile.getInt("System", "tpx_time_horizon", 500000);
-        perf_sampling_period = settingsFile.getInt("System", "perf_sampling_period", 250000);
-        float_tolerance = settingsFile.getDouble("System", "float_tolerance", 0.00001);
-        time_tolerance = settingsFile.getInt("System", "time_tolerance", 10000);
-        primary_thz = settingsFile.getInt("System", "primary_thz", 3600000);
-        secondary_thz = settingsFile.getInt("System", "secondary_thz", 7200000);
+        mdl_inertia_sr_thr = settingsFile.getDouble("System", "Model Inertia Success Rate Threshold", 0.9);
+        mdl_inertia_cnt_thr = settingsFile.getInt("System", "Model Inertia Count Threshold", 6);
+        tpx_dsr_thr = settingsFile.getDouble("System", "Targeted Pattern Extractor Delta Success Rate Threshold", 0.1);
+        min_sim_time_horizon = settingsFile.getInt("System", "Minimum Simulation Time Horizon", 0);
+        max_sim_time_horizon = settingsFile.getInt("System", "Maximum Simulation Time Horizon", 0);
+        sim_time_horizon = settingsFile.getDouble("System", "Simulation Time Horizon", 0.3);
+        tpx_time_horizon = settingsFile.getInt("System", "Targeted Pattern Extractor Time Horizon", 500000);
+        perf_sampling_period = settingsFile.getInt("System", "Perf Sampling Period", 250000);
+        float_tolerance = settingsFile.getDouble("System", "Float Tolerance", 0.00001);
+        time_tolerance = settingsFile.getInt("System", "Timer Tolerance", 10000);
+        primary_thz = settingsFile.getInt("System", "Primary Time Horizon", 3600000);
+        secondary_thz = settingsFile.getInt("System", "Secondary Time Horizon", 7200000);
 
-        this->debug = settingsFile.getBool("Debug", "debug", true);
-        debug_windows = settingsFile.getInt("Debug", "debug_windows", 1);
-        trace_levels = std::stoi(settingsFile.getString("Debug", "trace_levels", "CC"), nullptr, 16);
+        this->debug = settingsFile.getBool("Debug", "Debug", true);
+        debug_windows = settingsFile.getInt("Debug", "Debug Windows", 1);
+        trace_levels = std::stoi(settingsFile.getString("Debug", "Trace Levels", "CC"), nullptr, 16);
 
-        ntf_mk_resilience = settingsFile.getInt("Resilience",  "ntf_mk_resilience", 1);
-        goal_pred_success_resilience = settingsFile.getInt("Resilience", "goal_pred_success_resilience", 1000);
+        ntf_mk_resilience = settingsFile.getInt("Resilience",  "Notification Marker Resilience", 1);
+        goal_pred_success_resilience = settingsFile.getInt("Resilience", "Goal Prediction Success Resilience", 1000);
 
-        get_objects = settingsFile.getBool("Objects", "get_objects", false);
-        decompile_objects = settingsFile.getBool("Objects", "decompile_objects", false);
-        decompile_to_file = settingsFile.getBool("Objects", "decompile_to_file", false);
-        decompilation_file_path = settingsFile.getString("Objects", "decompilation_file_path", "../Test/decompiled.replicode");
-        ignore_named_objects = settingsFile.getBool("Objects", "ignore_named_objects", false);
+        get_objects = settingsFile.getBool("Objects", "Get Objects", false);
+        decompile_objects = settingsFile.getBool("Objects", "Decompile Objects", false);
+        decompile_to_file = settingsFile.getBool("Objects", "Decompile To File", false);
+        decompilation_file_path = settingsFile.getString("Objects", "Decompilation Files Paths", "../Test/decompiled.replicode");
+        ignore_named_objects = settingsFile.getBool("Objects", "Ignore Named Objects", false);
         write_objects = settingsFile.getBool("Objects", "write_objects", false);
-        test_objects = settingsFile.getBool("Objects", "test_objects", false);
+        objects_path = settingsFile.getString("Objects", "Objects Path", "../decompiled-objects.replicode");
+        test_objects = settingsFile.getBool("Objects", "Test Objects", false);
 
-        run_time = settingsFile.getInt("Run", "run_time", 10080);
-        probe_level = settingsFile.getInt("Run", "probe_level", 2);
+        run_time = settingsFile.getInt("Run", "Run Time", 10080);
+        probe_level = settingsFile.getInt("Run", "Probe Level", 2);
 
-        get_models = settingsFile.getBool("Models", "get_models", false);
-        decompile_models = settingsFile.getBool("Models", "decompile_models", false);
-        ignore_named_models = settingsFile.getBool("Models", "ignore_named_models", false);
-        write_models = settingsFile.getBool("Models", "write_models", false);
-        test_models = settingsFile.getBool("Models", "test_models", false);
+        get_models = settingsFile.getBool("Models", "Get Models", false);
+        decompile_models = settingsFile.getBool("Models", "Decompile Models", false);
+        ignore_named_models = settingsFile.getBool("Models", "Ignore Named Models", false);
+        write_models = settingsFile.getBool("Models", "Write Models", false);
+        models_path = settingsFile.getString("Models", "Models Path", "../decompiled-models.replicode");
+        test_models = settingsFile.getBool("Models", "Test Models", false);
 
         return true;
     }
