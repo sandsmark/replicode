@@ -97,20 +97,20 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
     return root;
 }
 
-bool Preprocessor::isTemplateClass(RepliStruct *s) {
-
-    for (std::vector<RepliStruct *>::iterator j(s->args.begin()); j != s->args.end(); ++j) {
+bool Preprocessor::isTemplateClass(RepliStruct *replistruct)
+{
+    for (RepliStruct *childstruct : replistruct->args) {
         std::string name;
         std::string type;
-        switch ((*j)->type) {
+        switch (childstruct->type) {
         case RepliStruct::Atom:
-            if ((*j)->cmd == ":~")
+            if (childstruct->cmd == ":~")
                 return true;
             break;
         case RepliStruct::Structure: // template instantiation; args are the actual parameters.
         case RepliStruct::Development: // actual template arg as a list of args.
         case RepliStruct::Set: // sets can contain tpl args.
-            if (isTemplateClass(*j))
+            if (isTemplateClass(childstruct))
                 return true;
             break;
         default:
@@ -122,13 +122,14 @@ bool Preprocessor::isTemplateClass(RepliStruct *s) {
 
 bool Preprocessor::isSet(std::string class_name)
 {
-    for (std::vector<RepliStruct *>::iterator i(root->args.begin()); i != root->args.end(); ++i) {
-        if ((*i)->type != RepliStruct::Directive || (*i)->cmd != "!class")
+    for(RepliStruct *replistruct : root->args) {
+        if (replistruct->type != RepliStruct::Directive || replistruct->cmd != "!class") {
             continue;
-        RepliStruct *s = *(*i)->args.begin();
-        if (s->cmd == class_name) // set classes are written class_name[].
+        }
+        
+        if (replistruct->cmd == class_name) // set classes are written class_name[].
             return false;
-        if (s->cmd == class_name + "[]")
+        if (replistruct->cmd == class_name + "[]")
             return true;
     }
     return false;
@@ -148,8 +149,9 @@ void Preprocessor::instantiateClass(RepliStruct *tpl_class, std::vector<RepliStr
 
     std::vector<StructureMember> members;
     std::list<RepliStruct *> _tpl_args;
-    for (std::vector<RepliStruct *>::reverse_iterator i = tpl_args.rbegin(); i != tpl_args.rend(); ++i)
-        _tpl_args.push_back(*i);
+    for (RepliStruct *replistruct : tpl_args) {
+        _tpl_args.push_back(replistruct);
+    }
     getMembers(tpl_class, members, _tpl_args, true);
 
     metadata->class_names[class_opcode] = instantiated_class_name;
@@ -230,8 +232,9 @@ void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct 
             members.push_back(StructureMember(&Compiler::read_set, m->label.substr(0, m->label.length() - 1), instantiated_class_name, StructureMember::I_CLASS));
         } else {
 
-            for (std::vector<RepliStruct *>::reverse_iterator i = m->args.rbegin(); i != m->args.rend(); ++i) // append the passed args to the ones held by m.
-                tpl_args.push_back(*i);
+            for (RepliStruct *replistruct : m->args) {// append the passed args to the ones held by m.
+                tpl_args.push_back(replistruct);
+            }
             getMembers(template_class, members, tpl_args, false);
         }
         break;
@@ -243,10 +246,11 @@ void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct 
     }
 }
 
-void Preprocessor::getMembers(RepliStruct *s, std::vector<StructureMember> &members, std::list<RepliStruct *> &tpl_args, bool instantiate) {
-
-    for (std::vector<RepliStruct *>::iterator j(s->args.begin()); j != s->args.end(); ++j)
-        getMember(members, *j, tpl_args, instantiate);
+void Preprocessor::getMembers(RepliStruct *s, std::vector<StructureMember> &members, std::list<RepliStruct *> &tpl_args, bool instantiate)
+{
+    for (RepliStruct *childstruct : s->args) {
+        getMember(members, childstruct, tpl_args, instantiate);
+    }
 }
 
 ReturnType Preprocessor::getReturnType(RepliStruct *s) {
@@ -285,20 +289,20 @@ void Preprocessor::initialize(Metadata *metadata)
     metadata->classes[std::string(Class::Type)] = Class(Atom::Object(class_opcode, 0), Class::Type, r_type); // to read object types in expressions and sets.
     ++class_opcode;
 
-    for (std::vector<RepliStruct *>::iterator i(root->args.begin()); i != root->args.end(); ++i) {
-        if ((*i)->type != RepliStruct::Directive)
+    for (RepliStruct *replistruct : root->args) {
+        if (replistruct->type != RepliStruct::Directive)
             continue;
 
-        RepliStruct *s = *(*i)->args.begin();
+        RepliStruct *s = replistruct->args.front();
         std::vector<StructureMember> members;
-        if ((*i)->cmd == "!class") {
-
+        if (replistruct->cmd == "!class") {
             std::string sset = "[]";
             std::string class_name = s->cmd;
             size_t p = class_name.find(sset);
             ClassType class_type = (p == std::string::npos ? T_CLASS : T_SET);
-            if (class_type == T_SET) // remove the trailing [] since the RepliStructs for instantiated classes do so.
+            if (class_type == T_SET) { // remove the trailing [] since the RepliStructs for instantiated classes do so.
                 class_name = class_name.substr(0, class_name.length() - sset.length());
+            }
 
             if (isTemplateClass(s)) {
 
@@ -310,26 +314,27 @@ void Preprocessor::initialize(Metadata *metadata)
             getMembers(s, members, tpl_args, false);
 
             Atom atom;
-            if (class_name == "grp")
+            if (class_name == "grp") {
                 atom = Atom::Group(class_opcode, members.size());
-            else if (class_name == "ipgm")
+            } else if (class_name == "ipgm") {
                 atom = Atom::InstantiatedProgram(class_opcode, members.size());
-            else if (class_name == "icpp_pgm")
+            } else if (class_name == "icpp_pgm") {
                 atom = Atom::InstantiatedCPPProgram(class_opcode, members.size());
-            else if (class_name == "cst")
+            } else if (class_name == "cst") {
                 atom = Atom::CompositeState(class_opcode, members.size());
-            else if (class_name == "mdl")
+            } else if (class_name == "mdl") {
                 atom = Atom::Model(class_opcode, members.size());
-            else if (class_name.find("mk.") != string::npos)
+            } else if (class_name.find("mk.") != string::npos) {
                 atom = Atom::Marker(class_opcode, members.size());
-            else
+            } else {
                 atom = Atom::Object(class_opcode, members.size());
+            }
 
             if (class_type == T_CLASS) { // find out if the class is a sys class, i.e. is an instantiation of _obj, _grp or _fact.
-
                 std::string base_class = s->args.front()->cmd;
-                if (base_class == "_obj" || base_class == "_grp" || base_class == "_fact")
+                if (base_class == "_obj" || base_class == "_grp" || base_class == "_fact") {
                     class_type = T_SYS_CLASS;
+                }
             }
 
             metadata->class_names[class_opcode] = class_name;
@@ -347,8 +352,7 @@ void Preprocessor::initialize(Metadata *metadata)
                 break;
             }
             ++class_opcode;
-        } else if ((*i)->cmd == "!op") {
-
+        } else if (replistruct->cmd == "!op") {
             std::list<RepliStruct *> tpl_args;
             getMembers(s, members, tpl_args, false);
             ReturnType return_type = getReturnType(s);
@@ -357,7 +361,7 @@ void Preprocessor::initialize(Metadata *metadata)
             metadata->operator_names.push_back(operator_name);
             metadata->classes[operator_name] = Class(Atom::Operator(operator_opcode, s->args.size()), operator_name, members, return_type);
             ++operator_opcode;
-        } else if ((*i)->cmd == "!dfn") { // don't bother to read the members, it's always a set.
+        } else if (replistruct->cmd == "!dfn") { // don't bother to read the members, it's always a set.
             std::vector<StructureMember> r_set;
             r_set.push_back(StructureMember(&Compiler::read_set, ""));
 
