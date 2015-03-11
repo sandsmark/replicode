@@ -53,7 +53,7 @@ private:
     std::unordered_map<std::string, RepliStruct *> template_classes;
     void instantiateClass(RepliStruct *tpl_class, std::vector<RepliStruct *> &tpl_args, std::string &instantiated_class_name);
     bool isSet(std::string class_name);
-    bool isTemplateClass(RepliStruct *s);
+    bool isTemplateClass(RepliStruct* replistruct);
     void getMember(std::vector<StructureMember> &members, RepliStruct *m, std::list<RepliStruct *> &tpl_args, bool instantiate);
     void getMembers(RepliStruct *s, std::vector<StructureMember> &members, std::list<RepliStruct *> &tpl_args, bool instantiate);
     ReturnType getReturnType(RepliStruct *s);
