@@ -6,7 +6,7 @@ before_script:
 script: make VERBOSE=1
 compiler:
     - clang
-    - gcc
+      #    - gcc
 
 before_install:
   # g++4.8.1
@@ -24,7 +24,7 @@ install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
 
   # clang 3.4
-  - if [ "$CXX" == "clang++" ]; then sudo apt-get install --allow-unauthenticated -qq clang-3.6; fi
+  - if [ "$CXX" == "clang++" ]; then sudo apt-get install --allow-unauthenticated clang-3.6; fi
   - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.6"; fi
 
 notifications:
