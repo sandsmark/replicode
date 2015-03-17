@@ -37,8 +37,8 @@
 namespace r_comp {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Preprocessor::Preprocessor() {
-
+Preprocessor::Preprocessor()
+{
     root = new RepliStruct(RepliStruct::Root);
 }
 
@@ -67,14 +67,13 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
         return 0;
     }
     if (!stream.eof()) {
-        error = "Code structure error: Unmatched ) or ].\n";
+        error = "Code structure error: Unexpected EOF, unmatched ) or ].\n";
         stream.close();
         return 0;
     }
 
     int64_t pass = 0, total = 0, count;
     while ((count = root->process()) > 0) {
-
         total += count;
         pass++;
     }
@@ -120,16 +119,16 @@ bool Preprocessor::isTemplateClass(RepliStruct *replistruct)
     return false;
 }
 
-bool Preprocessor::isSet(std::string class_name)
+bool Preprocessor::isSet(std::string className)
 {
     for(RepliStruct *replistruct : root->args) {
         if (replistruct->type != RepliStruct::Directive || replistruct->cmd != "!class") {
             continue;
         }
         
-        if (replistruct->cmd == class_name) // set classes are written class_name[].
+        if (replistruct->cmd == className) // set classes are written class_name[].
             return false;
-        if (replistruct->cmd == class_name + "[]")
+        if (replistruct->cmd == className + "[]")
             return true;
     }
     return false;
@@ -154,9 +153,9 @@ void Preprocessor::instantiateClass(RepliStruct *tpl_class, std::vector<RepliStr
     }
     getMembers(tpl_class, members, _tpl_args, true);
 
-    metadata->class_names[class_opcode] = instantiated_class_name;
-    metadata->classes_by_opcodes[class_opcode] = metadata->classes[instantiated_class_name] = Class(Atom::SSet(class_opcode, members.size()), instantiated_class_name, members);
-    ++class_opcode;
+    m_metadata->class_names[m_classOpcode] = instantiated_class_name;
+    m_metadata->classes_by_opcodes[m_classOpcode] = m_metadata->classes[instantiated_class_name] = Class(Atom::SSet(m_classOpcode, members.size()), instantiated_class_name, members);
+    ++m_classOpcode;
 }
 
 void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct *m, std::list<RepliStruct *> &tpl_args, bool instantiate) {
@@ -211,7 +210,7 @@ void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct 
             switch (_m->type) {
             case RepliStruct::Structure: { // the tpl arg is an instantiated tpl set class.
                 std::string instantiated_class_name;
-                instantiateClass(template_classes.find(_m->cmd)->second, _m->args, instantiated_class_name);
+                instantiateClass(m_templateClasses.find(_m->cmd)->second, _m->args, instantiated_class_name);
                 members.push_back(StructureMember(&Compiler::read_set, _m->label.substr(0, _m->label.length() - 1), instantiated_class_name, StructureMember::I_CLASS));
                 break;
             } default:
@@ -224,7 +223,7 @@ void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct 
             members.push_back(StructureMember(&Compiler::read_expression, name, type));
         break;
     case RepliStruct::Structure: { // template instantiation; (*m)->cmd is the template class, (*m)->args are the actual parameters.
-        RepliStruct *template_class = template_classes.find(m->cmd)->second;
+        RepliStruct *template_class = m_templateClasses.find(m->cmd)->second;
         if (instantiate) {
 
             std::string instantiated_class_name;
@@ -276,18 +275,18 @@ ReturnType Preprocessor::getReturnType(RepliStruct *s) {
 
 void Preprocessor::initialize(Metadata *metadata)
 {
-    this->metadata = metadata;
+    this->m_metadata = metadata;
 
-    class_opcode = 0;
+    m_classOpcode = 0;
     uint16_t function_opcode = 0;
     uint16_t operator_opcode = 0;
 
     std::vector<StructureMember> r_xpr;
-    metadata->classes[std::string(Class::Expression)] = Class(Atom::Object(class_opcode, 0), Class::Expression, r_xpr); // to read unspecified expressions in classes and sets.
-    ++class_opcode;
+    metadata->classes[std::string(Class::Expression)] = Class(Atom::Object(m_classOpcode, 0), Class::Expression, r_xpr); // to read unspecified expressions in classes and sets.
+    ++m_classOpcode;
     std::vector<StructureMember> r_type;
-    metadata->classes[std::string(Class::Type)] = Class(Atom::Object(class_opcode, 0), Class::Type, r_type); // to read object types in expressions and sets.
-    ++class_opcode;
+    metadata->classes[std::string(Class::Type)] = Class(Atom::Object(m_classOpcode, 0), Class::Type, r_type); // to read object types in expressions and sets.
+    ++m_classOpcode;
 
     for (RepliStruct *replistruct : root->args) {
         if (replistruct->type != RepliStruct::Directive)
@@ -306,7 +305,7 @@ void Preprocessor::initialize(Metadata *metadata)
 
             if (isTemplateClass(s)) {
 
-                template_classes[class_name] = s;
+                m_templateClasses[class_name] = s;
                 continue;
             }
 
@@ -315,19 +314,19 @@ void Preprocessor::initialize(Metadata *metadata)
 
             Atom atom;
             if (class_name == "grp") {
-                atom = Atom::Group(class_opcode, members.size());
+                atom = Atom::Group(m_classOpcode, members.size());
             } else if (class_name == "ipgm") {
-                atom = Atom::InstantiatedProgram(class_opcode, members.size());
+                atom = Atom::InstantiatedProgram(m_classOpcode, members.size());
             } else if (class_name == "icpp_pgm") {
-                atom = Atom::InstantiatedCPPProgram(class_opcode, members.size());
+                atom = Atom::InstantiatedCPPProgram(m_classOpcode, members.size());
             } else if (class_name == "cst") {
-                atom = Atom::CompositeState(class_opcode, members.size());
+                atom = Atom::CompositeState(m_classOpcode, members.size());
             } else if (class_name == "mdl") {
-                atom = Atom::Model(class_opcode, members.size());
+                atom = Atom::Model(m_classOpcode, members.size());
             } else if (class_name.find("mk.") != string::npos) {
-                atom = Atom::Marker(class_opcode, members.size());
+                atom = Atom::Marker(m_classOpcode, members.size());
             } else {
-                atom = Atom::Object(class_opcode, members.size());
+                atom = Atom::Object(m_classOpcode, members.size());
             }
 
             if (class_type == T_CLASS) { // find out if the class is a sys class, i.e. is an instantiation of _obj, _grp or _fact.
@@ -337,21 +336,21 @@ void Preprocessor::initialize(Metadata *metadata)
                 }
             }
 
-            metadata->class_names[class_opcode] = class_name;
+            metadata->class_names[m_classOpcode] = class_name;
             switch (class_type) {
             case T_SYS_CLASS:
-                metadata->classes_by_opcodes[class_opcode] = metadata->classes[class_name] = metadata->sys_classes[class_name] = Class(atom, class_name, members);
+                metadata->classes_by_opcodes[m_classOpcode] = metadata->classes[class_name] = metadata->sys_classes[class_name] = Class(atom, class_name, members);
                 break;
             case T_CLASS:
-                metadata->classes_by_opcodes[class_opcode] = metadata->classes[class_name] = Class(atom, class_name, members);
+                metadata->classes_by_opcodes[m_classOpcode] = metadata->classes[class_name] = Class(atom, class_name, members);
                 break;
             case T_SET:
-                metadata->classes_by_opcodes[class_opcode] = metadata->classes[class_name] = Class(Atom::SSet(class_opcode, members.size()), class_name, members);
+                metadata->classes_by_opcodes[m_classOpcode] = metadata->classes[class_name] = Class(Atom::SSet(m_classOpcode, members.size()), class_name, members);
                 break;
             default:
                 break;
             }
-            ++class_opcode;
+            ++m_classOpcode;
         } else if (replistruct->cmd == "!op") {
             std::list<RepliStruct *> tpl_args;
             getMembers(s, members, tpl_args, false);

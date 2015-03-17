@@ -41,31 +41,36 @@
 using namespace r_code;
 
 namespace r_comp {
-class dll_export Preprocessor {
+class dll_export Preprocessor
+{
+public:
+    RepliStruct *root;
+    
+    Preprocessor();
+    ~Preprocessor();
+    RepliStruct *process(const char *file, // if an ifstream, stream must be open.
+                         std::string &error, // set when function fails, e.g. returns false.
+                         Metadata *metadata = NULL); // process will fill class_image, or use the exiting one if NULL.
+
 private:
-    typedef enum {
+    enum ClassType
+    {
         T_CLASS = 0,
         T_SYS_CLASS = 1,
         T_SET = 2
-    } ClassType;
-    Metadata *metadata;
-    uint16_t class_opcode; // shared with sys_classes
-    std::unordered_map<std::string, RepliStruct *> template_classes;
+    };
+    
     void instantiateClass(RepliStruct *tpl_class, std::vector<RepliStruct *> &tpl_args, std::string &instantiated_class_name);
-    bool isSet(std::string class_name);
+    bool isSet(std::string className);
     bool isTemplateClass(RepliStruct* replistruct);
     void getMember(std::vector<StructureMember> &members, RepliStruct *m, std::list<RepliStruct *> &tpl_args, bool instantiate);
     void getMembers(RepliStruct *s, std::vector<StructureMember> &members, std::list<RepliStruct *> &tpl_args, bool instantiate);
     ReturnType getReturnType(RepliStruct *s);
     void initialize(Metadata *metadata); // init definition_segment
-public:
-    RepliStruct *root;
 
-    Preprocessor();
-    ~Preprocessor();
-    RepliStruct *process(const char *file, // if an ifstream, stream must be open.
-                 std::string &error, // set when function fails, e.g. returns false.
-                 Metadata *metadata = NULL); // process will fill class_image, or use the exiting one if NULL.
+    Metadata *m_metadata;
+    uint16_t m_classOpcode; // shared with sys_classes
+    std::unordered_map<std::string, RepliStruct *> m_templateClasses;
 };
 }
 
