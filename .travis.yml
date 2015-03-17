@@ -1,0 +1,35 @@
+language: cpp
+before_script:
+    - mkdir build
+    - cd build
+    - cmake ..
+script: make VERBOSE=1
+compiler:
+    - clang
+    - gcc
+
+before_install:
+  # needed for both new gcc and libstdc++ for clang
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+
+  # clang 3.4
+  - if [ "$CXX" == "clang++" ]; then wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key|sudo apt-key add -; fi
+  - if [ "$CXX" == "clang++" ]; then sudo add-apt-repository -y 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main'; fi
+
+  - sudo apt-get update -qq
+
+install:
+  # g++4.8.1
+  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
+
+  # clang 3.4
+  - if [ "$CXX" == "clang++" ]; then sudo apt-get install --allow-unauthenticated clang-3.6; fi
+  - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.6"; fi
+
+notifications:
+    irc:
+        channels:
+            - "chat.freenode.net#replicode"
+        template:
+            - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
