@@ -13,7 +13,7 @@ before_install:
   - if [ "$CXX" == "g++" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
 
   # clang 3.4
-  - if [ "$CXX" == "clang++" ]; then sudo add-apt-repository -y deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main; fi
+  - if [ "$CXX" == "clang++" ]; then sudo add-apt-repository -y 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main'; fi
 
   - sudo apt-get update -qq
 
