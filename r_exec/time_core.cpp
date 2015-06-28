@@ -41,9 +41,9 @@ using namespace std::chrono;
 void delegatedCoreWait(TimeJob *job)
 {
     _Mem::Get()->start_core();
-    std::this_thread::sleep_until(steady_clock::time_point(microseconds(job->target_time)));
     bool run = true;
     do {
+        std::this_thread::sleep_until(steady_clock::time_point(microseconds(job->target_time)));
         if (!job->is_alive()) {
             break;
         }
