@@ -339,6 +339,7 @@ void _Mem::stop()
 {
     m_stateMutex.lock();
     if (state != RUNNING) {
+        ::debug("mem") << "memory asked to stop while not running";
         return;
     }
 
