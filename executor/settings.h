@@ -89,8 +89,9 @@ public:
     bool load(const char *file_name) {
         IniFile settingsFile;
         if (!settingsFile.readFile(file_name)) {
-            std::cerr << "Unable to load settings, using defaults";
+            ::debug("settings") << "Unable to parse settings, using defaults";
         }
+        ::debug("settings") << "Loading settings file" << file_name;
 
         usr_operator_path = settingsFile.getString("Load", "User Operator Module Path", "../build/usr_operators/libusr_operators.so");
         usr_class_path = settingsFile.getString("Load", "User Class File Path", "./V1.2/user.classes.replicode");
