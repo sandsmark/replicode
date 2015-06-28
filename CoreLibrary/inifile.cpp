@@ -90,19 +90,19 @@ std::string IniFile::getString(const std::string group, const std::string name, 
 uint64_t IniFile::getInt(const std::string group, const std::string name, uint64_t defaultVal)
 {
     if (!hasInt(group, name)) return defaultVal;
-    return std::stoi(getString(group, name, std::to_string(defaultVal)));
+    return std::stoi(m_values[group][name]);
 }
 
 double IniFile::getDouble(const std::string group, const std::string name, double defaultVal)
 {
     if (!hasDouble(group, name)) return defaultVal;
-    return std::stod(getString(group, name, std::to_string(defaultVal)));
+    return std::stod(m_values[group][name]);
 }
 
 int IniFile::getBool(const std::string group, const std::string name, bool defaultVal)
 {
     if (!hasBool(group, name)) return defaultVal;
-    const std::string val = getString(group, name, std::to_string(defaultVal));
+    const std::string val = m_values[group][name];
     return val == "true" || val == "yes";
 }
 
@@ -117,7 +117,7 @@ bool IniFile::hasDouble(const std::string group, const std::string name)
     if (!hasString(group, name)) return false;
     size_t pos;
     try {
-        std::stod(getString(group, name, "not a number"), &pos);
+        std::stod(m_values[group][name], &pos);
     } catch (std::invalid_argument&) {
         return false;
     }
@@ -127,7 +127,7 @@ bool IniFile::hasDouble(const std::string group, const std::string name)
 bool IniFile::hasBool(const std::string group, const std::string name)
 {
     if (!hasString(group, name)) return false;
-    const std::string val = getString(group, name, "not a bool");
+    const std::string val = m_values[group][name];
     return (val == "true") || (val == "yes") || (val == "false") || (val == "no");
 }
 
@@ -136,7 +136,7 @@ bool IniFile::hasInt(const std::string group, const std::string name)
     if (!hasString(group, name)) return false;
     size_t pos;
     try {
-        std::stoi(getString(group, name, "not a number"), &pos);
+        std::stoi(m_values[group][name], &pos);
     } catch (std::invalid_argument&) {
         return false;
     }
