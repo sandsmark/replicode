@@ -81,13 +81,15 @@ bool Utils::Synchronous(uint64_t l, uint64_t r) {
 
 uint64_t Utils::GetTimestamp(const Atom *iptr)
 {
-    return iptr[1].atom;
+    uint64_t high=iptr[1].atom;
+    return high<<32 | iptr[2].atom;
 }
 
 void Utils::SetTimestamp(Atom *iptr, uint64_t t) {
 
     iptr[0] = Atom::Timestamp();
-    iptr[1].atom = t;
+    iptr[1].atom = t >> 32;
+    iptr[2].atom = t & 0x00000000FFFFFFFF;
 }
 
 void Utils::SetTimestamp(Code *object, uint32_t index, uint64_t t) {
