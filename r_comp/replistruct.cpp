@@ -74,7 +74,6 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
     int64_t paramCount = 0;
     int64_t returnIndent = 0;
 
-    bool inComment = false;
     bool expectSet = false;
 
     while (!stream->eof()) {
@@ -84,12 +83,10 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
 // printf("%c", c);
         switch (c) {
         case '\t':
-            if (inComment) continue; // allow tabs in comments, does not matter anyway
             line = GlobalLine;
             error += "Tabs chars are not permitted. ";
             return -1;
         case '!':
-            if (inComment) continue;
             if (this->type == Root) {
                 subStruct = new RepliStruct(Directive);
                 subStruct->parent = this;
@@ -105,13 +102,6 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
         case '\n':
             GlobalLine++;
         case '\r':
-// remain inComment?
-            if (inComment) {
-                if ((lastc == ' ') || ((lastc == '.') && (lastcc == '.')))
-                    continue; // continue comment on next line
-                else
-                    inComment = false; // end comment
-            }
 // skip all CR and LF
             while ((!stream->eof()) && (stream->peek() < 32))
                 if (stream->get() == '\n')
@@ -191,11 +181,12 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                 }
             }
             break;
-        case ';':
-            inComment = true;
+        case ';': // Comments
+            while (!stream->eof() && stream->peek() != '\n') {
+                stream->get(); // discard
+            }
             break;
         case ' ':
-            if (inComment) continue;
 // next string is ready
             if (str.size() > 0) {
                 if ((cmd.size() > 0) || (type == Set) || (type == Development)) { // Modification from Eric to have the Development treat tpl vars as atoms instead of a Development.cmd
@@ -225,7 +216,6 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
             }
             break;
         case '(':
-            if (inComment) continue;
 // Check for scenario 'xxx('
             if (str.size() > 0) {
                 if (lastc == ':') { // label:(xxx)
@@ -260,7 +250,6 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                 return (returnIndent - 1);
             break;
         case ')':
-            if (inComment) continue;
 // Check for directive use of xxx):xxx or xxx):
             if (stream->peek() == ':') {
 // expect ':' or ':xxx'
@@ -285,7 +274,6 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
             }
             return 0;
         case '{':
-            if (inComment) continue;
 // Check for scenario 'xxx{'
             if (str.size() > 0) {
                 if (lastc == ':') { // label:{xxx}
@@ -320,7 +308,6 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                 return (returnIndent - 1);
             break;
         case '}':
-            if (inComment) continue;
 // Check for directive use of xxx):xxx or xxx):
             if (stream->peek() == ':') {
 // expect ':' or ':xxx'
@@ -345,7 +332,6 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
             }
             return 0;
         case '|':
-            if (inComment) continue;
             if (stream->peek() == '[') {
                 stream->get(); // read the [
                 stream->get(); // read the ]
@@ -355,7 +341,6 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                 str += c;
             break;
         case '[': // set start
-            if (inComment) continue;
             if (lastc == ':') { // label:[xxx]
                 label = str;
                 str = "";
@@ -411,7 +396,6 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
             }
             break;
         case ']':
-            if (inComment) continue;
 // We met a boundary, act as ' '
             if (str.size() > 0) {
                 if ((cmd.size() > 0) || (type == Set)) {
@@ -430,7 +414,6 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
             }
             return 0;
         default:
-            if (inComment) continue;
             str += c;
             break;
         }
