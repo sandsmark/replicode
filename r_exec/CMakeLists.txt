@@ -37,3 +37,5 @@ set(r_exec_SRC
     )
 
 add_library(r_exec SHARED ${r_exec_SRC})
+set_property(TARGET r_exec PROPERTY CXX_STANDARD 11)
+set_property(TARGET r_exec PROPERTY CXX_STANDARD_REQUIRED ON)
