@@ -37,7 +37,7 @@ namespace r_code {
 
 Atom Atom::Float(float f)
 {
-    uintptr_t a = *reinterpret_cast<uintptr_t *>(&f);
+    uint32_t a = *reinterpret_cast<uint32_t *>(&f);
     return Atom(a >> 1);
 }
 
@@ -274,12 +274,7 @@ Atom Atom::NullProgram(bool take_past_inputs)
     return Atom((NULL_PROGRAM << 24) + (take_past_inputs ? 1 : 0));
 }
 
-Atom Atom::RawPointer(void *pointer)
-{
-    return Atom((uintptr_t)pointer);
-}
-
-Atom::Atom(uintptr_t a): atom(a)
+Atom::Atom(uint32_t  a): atom(a)
 {
 }
 

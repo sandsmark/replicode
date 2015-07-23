@@ -139,9 +139,8 @@ public:
     static Atom Model(uint16_t opcode, uint8_t arity);
 
     static Atom NullProgram(bool take_past_inputs);
-    static Atom RawPointer(void *pointer);
 
-    Atom(uintptr_t a = UINTPTR_MAX);
+    Atom(uint32_t a = UINT32_MAX);
     ~Atom();
 
     Atom &operator =(const Atom& a);
@@ -177,9 +176,6 @@ public:
     uint8_t asAssignmentIndex() const;
 
     bool takesPastInputs() const; // applicable to NULL_PROGRAM.
-    template<class C> C *asRawPointer() const {
-        return (C *)atom;
-    }
 
     void trace() const;
     static void Trace(Atom *base, uint16_t count);
