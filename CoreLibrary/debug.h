@@ -2,6 +2,7 @@
 #define DEBUG_H
 #include <mutex>
 #include <iostream>
+#include <stdint.h>
 
 static std::mutex s_debugSection;
 
