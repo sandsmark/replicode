@@ -1,0 +1,52 @@
+<TestConfiguration>
+
+  <Parameters
+    base_period="100000"
+	  
+    reduction_core_count="3"
+	  time_core_count="1"
+  	
+    notification_resilience="1000"
+    goal_resilience="1000"
+    assumption_resilience="1000"
+    simulation_resilience="1000"
+    
+	  run_time="1000"
+    
+    probe_level="2"
+    
+    usr_operator_path="Replicode/usr_operators.dll"
+    usr_class_path="Replicode/rgrp.user.classes.replicode"
+    source_file_name="Replicode/test.rgrp.1.replicode"
+
+    decompile_image="yes"
+    write_image="no"
+    image_path="Replicode/Correlator.Data.Generation/motor.babbling.episodes.replicode.image"
+    test_image="no"
+    />
+
+  </TestConfiguration>
+
+<!--Usage
+
+base_period: in us.
+
+reduction_core_count: number of threads processing reduction jobs.
+
+time_core_count: number of thread processing update jobs.
+
+notification_resilience: in upr (i.e. relative to the ntf group). For debugging only - otherwise shall be 1.
+
+run_time: in ms.
+
+decompile_timestamps: either "relative" or "absolute". When "relative", timestamps are displayed as offsets from mem->start().
+
+probe_level: any probe set to a level >= this level will not be executed. 0 means no probe will be executed.
+
+decompile_image: yes or no.
+
+write_image: yes or no.
+
+test_image: yes or no (yes: reads back and decompiles).
+
+-->
