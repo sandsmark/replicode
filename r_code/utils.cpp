@@ -31,7 +31,7 @@
 #include "utils.h"
 #include "object.h"
 
-#include <math.h>
+#include <cmath>
 #include <string.h>
 #include <CoreLibrary/debug.h>
 
@@ -76,7 +76,7 @@ bool Utils::Equal(double l, double r) {
 
 bool Utils::Synchronous(uint64_t l, uint64_t r) {
 
-    return uint64_t(abs((int64_t)(l - r))) < TimeTolerance;
+    return uint64_t(std::abs((int64_t)(l - r))) < TimeTolerance;
 }
 
 uint64_t Utils::GetTimestamp(const Atom *iptr)
