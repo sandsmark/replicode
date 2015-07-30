@@ -122,8 +122,10 @@ TDecompiler::TDecompiler(uint64_t ostream_id, std::string header): _Object(), os
 
 TDecompiler::~TDecompiler() {
 
-    if (_thread)
+    if (_thread) {
+        _thread->join();
         delete _thread;
+    }
 }
 
 void TDecompiler::add_object(Code *object) {
