@@ -8,4 +8,5 @@ set(usr_operators_SRC
 
 add_library(usr_operators SHARED ${usr_operators_SRC})
 target_link_libraries(usr_operators r_exec)
-# set_target_properties(usr_operators PROPERTIES PREFIX "")
+set_property(TARGET usr_operators PROPERTY CXX_STANDARD 11)
+set_property(TARGET usr_operators PROPERTY CXX_STANDARD_REQUIRED ON)
