@@ -414,9 +414,13 @@ void IPGMContext::getMember(void *&object, uint64_t &view_oid, ObjectType &objec
     case Atom::GROUP:
     case Atom::SET: // dynamically generated views can be sets.
     case Atom::S_SET: // views are always copied; set the object to the view's group on which to perform an operation for the view's oid.
-        if (c.data == VALUE_ARRAY)
+        if (c.data == VALUE_ARRAY) {
+            // FIXME: I'm not sure how this could ever have worked
+            debug("IPGMContext") << "This will never work, aborting";
+            c[VIEW_CODE_MAX_SIZE].trace();
+            exit(0);
             object = (Group *)c[VIEW_CODE_MAX_SIZE].atom; // first reference of grp in a view stored in athe value array.
-        else
+        } else
             object = c.view->get_host();
         view_oid = c[VIEW_OID].atom; // oid is hidden at the end of the view code; stored directly as a uint64.
         object_type = TYPE_VIEW;
