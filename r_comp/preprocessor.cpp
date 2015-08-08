@@ -60,6 +60,8 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
 
     root->reset(); // trims root from previously preprocessed objects.
 
+    root->fileName = file;
+
     uint64_t a = 0, b = 0;
     if (root->parse(&stream, a, b) < 0) {
         error = root->printError();
