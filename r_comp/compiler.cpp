@@ -173,7 +173,7 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
     current_object = new SysObject();
     if (hasLabel) {
         std::string label = node->label.substr(0, node->label.size() - 1);
-        global_references[label] = Reference(_image->code_segment.objects.size(), current_class, Class());
+        _metadata->global_references[label] = Reference(_image->code_segment.objects.size(), current_class, Class());
     }
 
     current_object->code[0] = current_class.atom;
@@ -254,9 +254,9 @@ bool Compiler::read(RepliStruct *node, const StructureMember &m, bool enforce, u
 
 bool Compiler::getGlobalReferenceIndex(const std::string reference_name, const ReturnType t, ImageObject *object, uint16_t &index, Class *&_class)
 {
-    std::unordered_map<std::string, Reference>::iterator it = global_references.find(reference_name);
+    std::unordered_map<std::string, Reference>::iterator it = _metadata->global_references.find(reference_name);
 
-    if (it != global_references.end() && (t == ANY || (t != ANY && it->second._class.type == t))) {
+    if (it != _metadata->global_references.end() && (t == ANY || (t != ANY && it->second._class.type == t))) {
         _class = &it->second._class;
         for (uint16_t j = 0; j < object->references.size(); ++j)
             if (object->references[j] == it->second.index) { // the object has already been referenced.
@@ -1573,7 +1573,7 @@ bool Compiler::read_tail_wildcard(RepliStruct *node, uint16_t write_index, uint1
 std::string Compiler::getObjectName(const uint16_t index) const
 {
     std::unordered_map<std::string, Reference>::const_iterator r;
-    for (r = global_references.begin(); r != global_references.end(); ++r) {
+    for (r = _metadata->global_references.begin(); r != _metadata->global_references.end(); ++r) {
         if (r->second.index == index)
             return r->first;
     }

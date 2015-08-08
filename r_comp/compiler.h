@@ -81,7 +81,6 @@ private:
     std::unordered_map<std::string, Reference> local_references;
    
     // labels declared outside sys-objects. translate to reference pointers.
-    std::unordered_map<std::string, Reference> global_references;
     bool addLocalReference(const std::string reference_name, const uint16_t index, const Class &p); // detect cast.
     bool getGlobalReferenceIndex(const std::string reference_name, const ReturnType t, ImageObject *object, uint16_t &index, Class *&_class); // index points to the reference set.
 // return false when not found.

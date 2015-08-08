@@ -70,6 +70,8 @@ public:
     std::unordered_map<std::string, Class> classes; // non-sys classes, operators and device functions.
     std::unordered_map<std::string, Class> sys_classes;
 
+    std::unordered_map<std::string, Reference> global_references;
+
     r_code::vector<std::string> class_names; // classes and sys-classes; does not include set classes.
     r_code::vector<std::string> operator_names;
     r_code::vector<std::string> function_names;
