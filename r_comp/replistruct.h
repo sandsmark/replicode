@@ -50,8 +50,8 @@ public:
     friend std::ostream& operator<<(std::ostream &os, const RepliStruct &structure);
     friend std::ostream& operator<<(std::ostream &os, RepliStruct *structure);
 private:
-    RepliStruct(const RepliStruct &);
-    RepliStruct();
+    RepliStruct(const RepliStruct &) = delete;
+    RepliStruct() = delete;
 };
 
 class RepliMacro {
