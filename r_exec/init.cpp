@@ -48,42 +48,34 @@ namespace r_exec {
 
 dll_export uint64_t(*Now)();
 
-r_comp::Metadata* getMetadata()
-{
-    static r_comp::Metadata metadata;
-    return &metadata;
-}
-
-r_comp::Image* getSeed()
-{
-    static r_comp::Image image;
-    return &image;
-}
-
-
-static std::unordered_map<std::string, uint16_t> _Opcodes;
-
-dll_export r_comp::Compiler Compiler;
-dll_export r_comp::Preprocessor Preprocessor;
-
-SharedLibrary userOperatorLibrary;
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool Compile(const char* filename, std::string &error, bool compile_metadata) {
+bool Compile(const char* filename,
+             std::string &error,
+             r_comp::Image *image,
+             r_comp::Metadata *metadata,
+             bool compile_metadata)
+{
+    if (!image) {
+        debug("init") << "null image supplied";
+        return false;
+    }
+    if (!metadata) {
+        debug("init") << "null metadata supplied";
+        return false;
+    }
+
     debug("init") << "compiling file: " << filename;
-    r_comp::RepliStruct *root = r_exec::Preprocessor.process(filename, error, compile_metadata ? getMetadata() : NULL);
+    r_comp::Preprocessor preprocessor;
+    r_comp::RepliStruct *root = preprocessor.process(filename, error, compile_metadata ? metadata : nullptr);
     if (!root) {
-        error.insert(0, std::to_string(r_exec::Preprocessor.root->line) + ": Preprocessor ");
+        error.insert(0, "Preprocessor: " + preprocessor.root->fileName + ":" + std::to_string(preprocessor.root->line) + " ");
         return false;
     }
-    if (!r_exec::Compiler.compile(root, getSeed(), getMetadata(), error, false)) {
-        std::cerr << "! Compilation failed: " << r_exec::Compiler.getError() << std::endl;
+    r_comp::Compiler compiler;
+    if (!compiler.compile(root, image, metadata, error, false)) {
+        std::cerr << "! Compilation failed: " << compiler.getError() << std::endl;
         return false;
-    }
-    r_code::vector<SysObject*> &objects = getSeed()->code_segment.objects;
-    for (size_t i=0;i<objects.size(); i++) {
-//        objects[i]->trace();
     }
     return true;
 }
@@ -95,16 +87,16 @@ void TDecompiler::decompile()
     this->spawned = 1;
 
     r_comp::Decompiler decompiler;
-    decompiler.init(getMetadata());
+    decompiler.init(this->metadata);
 
     std::vector<SysObject *> imported_objects;
 
     r_comp::Image *image = new r_comp::Image();
     image->add_objects(this->objects, imported_objects);
-    image->object_names.symbols = getSeed()->object_names.symbols;
+    //image->object_names.symbols = getSeed()->object_names.symbols;
 
     std::ostringstream decompiled_code;
-    decompiler.decompile(image, &decompiled_code, Utils::GetTimeReference(), imported_objects);
+    //decompiler.decompile(image, &decompiled_code, Utils::GetTimeReference(), imported_objects);
 
 #if defined(WIN32) || defined(WIN64)
     PipeOStream::Get(this->ostream_id - 1) << this->header.c_str();
@@ -115,8 +107,14 @@ void TDecompiler::decompile()
 #endif//win
 }
 
-TDecompiler::TDecompiler(uint64_t ostream_id, std::string header): _Object(), ostream_id(ostream_id), header(header), _thread(NULL), spawned(0) {
-
+TDecompiler::TDecompiler(uint64_t ostream_id, std::string header, r_comp::Metadata *m)
+    : _Object(),
+      ostream_id(ostream_id),
+      header(header),
+      _thread(nullptr),
+      spawned(0),
+      metadata(m)
+{
     objects.reserve(ObjectsInitialSize);
 }
 
@@ -149,6 +147,11 @@ void TDecompiler::add_objects(const std::vector<P<Code> > &objects) {
 
 void TDecompiler::runDecompiler()
 {
+    if (!metadata) {
+        debug("tdecompiler") << "unable to run without metadata";
+        return;
+    }
+
     _thread = new std::thread(&r_exec::TDecompiler::decompile, this);
 }
 
@@ -253,98 +256,95 @@ PipeOStream& PipeOStream::operator <<(const char *s) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-uint16_t RetrieveOpcode(const char *name) {
-
-    return _Opcodes.find(name)->second;
-}
-
 bool Init(const char *user_operator_library_path,
-          uint64_t(*time_base)()) {
-
+          uint64_t(*time_base)(),
+          r_comp::Metadata *metadata)
+{
     Now = time_base;
 
     std::unordered_map<std::string, r_comp::Class>::iterator it;
-    for (it = getMetadata()->classes.begin(); it != getMetadata()->classes.end(); ++it) {
 
-        _Opcodes[it->first] = it->second.atom.asOpcode();
-//std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
+    std::unordered_map<std::string, uint16_t> &opcodes = metadata->opcodes;
+
+    for (it = metadata->classes.begin(); it != metadata->classes.end(); ++it) {
+        opcodes[it->first] = it->second.atom.asOpcode();
+        //std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
     }
-    for (it = getMetadata()->sys_classes.begin(); it != getMetadata()->sys_classes.end(); ++it) {
-
-        _Opcodes[it->first] = it->second.atom.asOpcode();
-//std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
+    for (it = metadata->sys_classes.begin(); it != metadata->sys_classes.end(); ++it) {
+        opcodes[it->first] = it->second.atom.asOpcode();
+        //std::cout<<it->first<<":"<<it->second.atom.asOpcode()<<std::endl;
     }
 
 // load class Opcodes.
-    View::ViewOpcode = _Opcodes.find("view")->second;
+    View::ViewOpcode = opcodes["view"];
 
-    Opcodes::View = _Opcodes.find("view")->second;
-    Opcodes::PgmView = _Opcodes.find("pgm_view")->second;
-    Opcodes::GrpView = _Opcodes.find("grp_view")->second;
+    Opcodes::View    = opcodes["view"];//.find("view")->second;
+    Opcodes::PgmView = opcodes["pgm_view"];
+    Opcodes::GrpView = opcodes["grp_view"];
 
-    Opcodes::Ent = _Opcodes.find("ent")->second;
-    Opcodes::Ont = _Opcodes.find("ont")->second;
-    Opcodes::MkVal = _Opcodes.find("mk.val")->second;
+    Opcodes::Ent     = opcodes["ent"];
+    Opcodes::Ont     = opcodes["ont"];
+    Opcodes::MkVal   = opcodes["mk.val"];
 
-    Opcodes::Grp = _Opcodes.find("grp")->second;
+    Opcodes::Grp = opcodes["grp"];
 
-    Opcodes::Ptn = _Opcodes.find("ptn")->second;
-    Opcodes::AntiPtn = _Opcodes.find("|ptn")->second;
+    Opcodes::Ptn = opcodes["ptn"];
+    Opcodes::AntiPtn = opcodes["|ptn"];
 
-    Opcodes::IPgm = _Opcodes.find("ipgm")->second;
-    Opcodes::ICppPgm = _Opcodes.find("icpp_pgm")->second;
+    Opcodes::IPgm = opcodes["ipgm"];
+    Opcodes::ICppPgm = opcodes["icpp_pgm"];
 
-    Opcodes::Pgm = _Opcodes.find("pgm")->second;
-    Opcodes::AntiPgm = _Opcodes.find("|pgm")->second;
+    Opcodes::Pgm = opcodes["pgm"];
+    Opcodes::AntiPgm = opcodes["|pgm"];
 
-    Opcodes::ICmd = _Opcodes.find("icmd")->second;
-    Opcodes::Cmd = _Opcodes.find("cmd")->second;
+    Opcodes::ICmd = opcodes["icmd"];
+    Opcodes::Cmd = opcodes["cmd"];
 
-    Opcodes::Fact = _Opcodes.find("fact")->second;
-    Opcodes::AntiFact = _Opcodes.find("|fact")->second;
+    Opcodes::Fact = opcodes["fact"];
+    Opcodes::AntiFact = opcodes["|fact"];
 
-    Opcodes::Cst = _Opcodes.find("cst")->second;
-    Opcodes::Mdl = _Opcodes.find("mdl")->second;
+    Opcodes::Cst = opcodes["cst"];
+    Opcodes::Mdl = opcodes["mdl"];
 
-    Opcodes::ICst = _Opcodes.find("icst")->second;
-    Opcodes::IMdl = _Opcodes.find("imdl")->second;
+    Opcodes::ICst = opcodes["icst"];
+    Opcodes::IMdl = opcodes["imdl"];
 
-    Opcodes::Pred = _Opcodes.find("pred")->second;
-    Opcodes::Goal = _Opcodes.find("goal")->second;
+    Opcodes::Pred = opcodes["pred"];
+    Opcodes::Goal = opcodes["goal"];
 
-    Opcodes::Success = _Opcodes.find("success")->second;
+    Opcodes::Success = opcodes["success"];
 
-    Opcodes::MkGrpPair = _Opcodes.find("mk.grp_pair")->second;
+    Opcodes::MkGrpPair = opcodes["mk.grp_pair"];
 
-    Opcodes::MkRdx = _Opcodes.find("mk.rdx")->second;
-    Opcodes::Perf = _Opcodes.find("perf")->second;
+    Opcodes::MkRdx = opcodes["mk.rdx"];
+    Opcodes::Perf = opcodes["perf"];
 
-    Opcodes::MkNew = _Opcodes.find("mk.new")->second;
+    Opcodes::MkNew = opcodes["mk.new"];
 
-    Opcodes::MkLowRes = _Opcodes.find("mk.low_res")->second;
-    Opcodes::MkLowSln = _Opcodes.find("mk.low_sln")->second;
-    Opcodes::MkHighSln = _Opcodes.find("mk.high_sln")->second;
-    Opcodes::MkLowAct = _Opcodes.find("mk.low_act")->second;
-    Opcodes::MkHighAct = _Opcodes.find("mk.high_act")->second;
-    Opcodes::MkSlnChg = _Opcodes.find("mk.sln_chg")->second;
-    Opcodes::MkActChg = _Opcodes.find("mk.act_chg")->second;
+    Opcodes::MkLowRes = opcodes["mk.low_res"];
+    Opcodes::MkLowSln = opcodes["mk.low_sln"];
+    Opcodes::MkHighSln = opcodes["mk.high_sln"];
+    Opcodes::MkLowAct = opcodes["mk.low_act"];
+    Opcodes::MkHighAct = opcodes["mk.high_act"];
+    Opcodes::MkSlnChg = opcodes["mk.sln_chg"];
+    Opcodes::MkActChg = opcodes["mk.act_chg"];
 
 // load executive function Opcodes.
-    Opcodes::Inject = _Opcodes.find("_inj")->second;
-    Opcodes::Eject = _Opcodes.find("_eje")->second;
-    Opcodes::Mod = _Opcodes.find("_mod")->second;
-    Opcodes::Set = _Opcodes.find("_set")->second;
-    Opcodes::NewClass = _Opcodes.find("_new_class")->second;
-    Opcodes::DelClass = _Opcodes.find("_del_class")->second;
-    Opcodes::LDC = _Opcodes.find("_ldc")->second;
-    Opcodes::Swap = _Opcodes.find("_swp")->second;
-    Opcodes::Prb = _Opcodes.find("_prb")->second;
-    Opcodes::Stop = _Opcodes.find("_stop")->second;
+    Opcodes::Inject = opcodes["_inj"];
+    Opcodes::Eject = opcodes["_eje"];
+    Opcodes::Mod = opcodes["_mod"];
+    Opcodes::Set = opcodes["_set"];
+    Opcodes::NewClass = opcodes["_new_class"];
+    Opcodes::DelClass = opcodes["_del_class"];
+    Opcodes::LDC = opcodes["_ldc"];
+    Opcodes::Swap = opcodes["_swp"];
+    Opcodes::Prb = opcodes["_prb"];
+    Opcodes::Stop = opcodes["_stop"];
 
-    Opcodes::Add = _Opcodes.find("add")->second;
-    Opcodes::Sub = _Opcodes.find("sub")->second;
-    Opcodes::Mul = _Opcodes.find("mul")->second;
-    Opcodes::Div = _Opcodes.find("div")->second;
+    Opcodes::Add = opcodes["add"];
+    Opcodes::Sub = opcodes["sub"];
+    Opcodes::Mul = opcodes["mul"];
+    Opcodes::Div = opcodes["div"];
 
 // load std operators.
     uint16_t operator_opcode = 0;
@@ -373,28 +373,28 @@ bool Init(const char *user_operator_library_path,
     if (!user_operator_library_path) // when no rMem is used.
         return true;
 
-// load usr operators and c++ programs.
-    if (!(userOperatorLibrary.load(user_operator_library_path)))
+    // load usr operators and c++ programs.
+    if (!(metadata->user_operator_library.load(user_operator_library_path)))
         exit(-1);
 
-// Operators.
+    // Operators.
     typedef uint16_t(*OpcodeRetriever)(const char *);
-    typedef void (*UserInit)(OpcodeRetriever);
-    UserInit _Init = userOperatorLibrary.getFunction<UserInit>("Init");
+    typedef void (*UserInit)(r_comp::Metadata *metadata);
+    UserInit _Init = metadata->user_operator_library.getFunction<UserInit>("Init");
     if (!_Init)
         return false;
 
     typedef uint16_t(*UserGetOperatorCount)();
-    UserGetOperatorCount GetOperatorCount = userOperatorLibrary.getFunction<UserGetOperatorCount>("GetOperatorCount");
+    UserGetOperatorCount GetOperatorCount = metadata->user_operator_library.getFunction<UserGetOperatorCount>("GetOperatorCount");
     if (!GetOperatorCount)
         return false;
 
-    typedef void (*UserGetOperatorName)(char *);
-    UserGetOperatorName GetOperatorName = userOperatorLibrary.getFunction<UserGetOperatorName>("GetOperatorName");
+    typedef void (*UserGetOperatorName)(char *op_name, int op_index);
+    UserGetOperatorName GetOperatorName = metadata->user_operator_library.getFunction<UserGetOperatorName>("GetOperatorName");
     if (!GetOperatorName)
         return false;
 
-    _Init(RetrieveOpcode);
+    _Init(metadata);
 
     typedef bool (*UserOperator)(const Context &, uint16_t &);
 
@@ -403,15 +403,14 @@ bool Init(const char *user_operator_library_path,
 
         char op_name[256];
         memset(op_name, 0, 256);
-        GetOperatorName(op_name);
+        GetOperatorName(op_name, i);
 
-        std::unordered_map<std::string, uint16_t>::iterator it = _Opcodes.find(op_name);
-        if (it == _Opcodes.end()) {
-
+        std::unordered_map<std::string, uint16_t>::iterator it = opcodes.find(op_name);
+        if (it == opcodes.end()) {
             std::cerr << "Operator " << op_name << " is undefined" << std::endl;
             exit(-1);
         }
-        UserOperator op = userOperatorLibrary.getFunction<UserOperator>(op_name);
+        UserOperator op = metadata->user_operator_library.getFunction<UserOperator>(op_name);
         if (!op)
             return false;
 
@@ -420,12 +419,12 @@ bool Init(const char *user_operator_library_path,
 
 // C++ programs.
     typedef uint16_t(*UserGetProgramCount)();
-    UserGetProgramCount GetProgramCount = userOperatorLibrary.getFunction<UserGetProgramCount>("GetProgramCount");
+    UserGetProgramCount GetProgramCount = metadata->user_operator_library.getFunction<UserGetProgramCount>("GetProgramCount");
     if (!GetProgramCount)
         return false;
 
     typedef void (*UserGetProgramName)(char *);
-    UserGetProgramName GetProgramName = userOperatorLibrary.getFunction<UserGetProgramName>("GetProgramName");
+    UserGetProgramName GetProgramName = metadata->user_operator_library.getFunction<UserGetProgramName>("GetProgramName");
     if (!GetProgramName)
         return false;
 
@@ -440,21 +439,21 @@ bool Init(const char *user_operator_library_path,
 
         std::string _pgm_name = pgm_name;
 
-        UserProgram pgm = userOperatorLibrary.getFunction<UserProgram>(pgm_name);
+        UserProgram pgm = metadata->user_operator_library.getFunction<UserProgram>(pgm_name);
         if (!pgm)
             return false;
 
         CPPPrograms::Register(_pgm_name, pgm);
     }
 
-// Callbacks.
+    // Callbacks.
     typedef uint16_t(*UserGetCallbackCount)();
-    UserGetCallbackCount GetCallbackCount = userOperatorLibrary.getFunction<UserGetCallbackCount>("GetCallbackCount");
+    UserGetCallbackCount GetCallbackCount = metadata->user_operator_library.getFunction<UserGetCallbackCount>("GetCallbackCount");
     if (!GetCallbackCount)
         return false;
 
     typedef void (*UserGetCallbackName)(char *);
-    UserGetCallbackName GetCallbackName = userOperatorLibrary.getFunction<UserGetCallbackName>("GetCallbackName");
+    UserGetCallbackName GetCallbackName = metadata->user_operator_library.getFunction<UserGetCallbackName>("GetCallbackName");
     if (!GetCallbackName)
         return false;
 
@@ -468,8 +467,7 @@ bool Init(const char *user_operator_library_path,
         GetCallbackName(callback_name);
 
         std::string _callback_name = callback_name;
-
-        UserCallback callback = userOperatorLibrary.getFunction<UserCallback>(callback_name);
+        UserCallback callback = metadata->user_operator_library.getFunction<UserCallback>(callback_name);
         if (!callback)
             return false;
 
@@ -483,39 +481,18 @@ bool Init(const char *user_operator_library_path,
 
 bool Init(const char *user_operator_library_path,
           uint64_t(*time_base)(),
-          const char *seed_path) {
-
+          const char *seed_path,
+          r_comp::Image *image,
+          r_comp::Metadata *metadata)
+{
     std::string error;
-    if (!Compile(seed_path, error, true)) {
-
+    if (!Compile(seed_path, error, image, metadata, true))
+    {
         std::cerr << error << std::endl;
         return false;
     }
 
-    return Init(user_operator_library_path, time_base);
+    return Init(user_operator_library_path, time_base, metadata);
 }
 
-bool Init(const char *user_operator_library_path,
-          uint64_t(*time_base)(),
-          const r_comp::Metadata &metadata,
-          const r_comp::Image &seed) {
-
-    *getMetadata() = metadata;
-    *getSeed() = seed;
-
-    return Init(user_operator_library_path, time_base);
-}
-
-uint16_t GetOpcode(const char *name) {
-
-    std::unordered_map<std::string, uint16_t>::iterator it = _Opcodes.find(name);
-    if (it == _Opcodes.end())
-        return 0xFFFF;
-    return it->second;
-}
-
-std::string GetAxiomName(const uint16_t index) {
-
-    return Compiler.getObjectName(index);
-}
 }

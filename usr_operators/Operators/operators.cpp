@@ -133,9 +133,7 @@ bool dis(const r_exec::Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Operators::Init(OpcodeRetriever r) {
-
-    const char *vec3 = "vec3";
-
-    Vec3Opcode = r(vec3);
+void Operators::Init(r_comp::Metadata *metadata)
+{
+    Vec3Opcode = metadata->opcodes["vec3"];
 }

@@ -31,16 +31,17 @@
 #ifndef usr_operators_h
 #define usr_operators_h
 
+#include <r_comp/segments.h>
 #include "types.h"
 
 
 extern "C" {
-    void dll_export Init(OpcodeRetriever r); // OpcodeRetriever allows the dll to retrieve opcodes from the r_rxec dll without referencing the corresponding STL structures.
+    void dll_export Init(r_comp::Metadata *metadata); // The metadata contains the opcodes
 
 // Operators //////////////////////////////////////////////////////////////////////////////
 
     uint16_t dll_export GetOperatorCount();
-    void dll_export GetOperatorName(char *op_name);
+    void dll_export GetOperatorName(char *op_name, int op_index);
 
 // CPP Programs //////////////////////////////////////////////////////////////////////////////
 

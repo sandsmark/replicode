@@ -334,6 +334,7 @@ public:
     r_comp::Image *get_models(); // create an image; fill with all models; call only when stopped.
 
 //std::vector<uint64> timings_report; // debug facility.
+    r_comp::Metadata *metadata = nullptr;
     typedef enum {
         CST_IN = 0,
         CST_OUT = 1,

@@ -30,15 +30,15 @@
 
 #include "usr_operators.h"
 
-#include "../r_exec/init.h"
+#include <r_exec/init.h>
 
 #include <iostream>
 #include <cmath>
 #include <string.h>
 
-void Init(OpcodeRetriever r) {
+void Init(r_comp::Metadata *metadata) {
 
-    Operators::Init(r);
+    Operators::Init(metadata);
 
     debug("user operators") << "usr operators initialized";
 }
@@ -48,12 +48,9 @@ uint16_t GetOperatorCount() {
     return 4;
 }
 
-void GetOperatorName(char *op_name) {
-
-    static uint16_t op_index = 0;
-
+void GetOperatorName(char *op_name, int op_index)
+{
     if (op_index == 0) {
-
         std::string s = "add";
         memcpy(op_name, s.c_str(), s.length());
         ++op_index;

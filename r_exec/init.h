@@ -51,13 +51,12 @@ extern dll_export uint64_t(*Now)();
 // The latter contains all class definitions and all shared objects (e.g. ontology); does not contain any dynamic (res!=forever) objects.
 //extern dll_export r_comp::Metadata Metadata;
 //extern dll_export r_comp::Image Seed;
-dll_export r_comp::Metadata *getMetadata();
-dll_export r_comp::Image *getSeed();
+//dll_export r_comp::Metadata *getMetadata();
+//dll_export r_comp::Image *getSeed();
 
-// A preprocessor and a compiler are maintained throughout the life of the dll to retain, respectively, macros and global references.
 // Both functions add the compiled object to Seed.code_image.
 // Source files: use ANSI encoding (not Unicode).
-bool Compile(const char* filename, string& error, bool compile_metadata = false);
+bool Compile(const char* filename, string& error, r_comp::Image *image, r_comp::Metadata *metadata, bool compile_metadata = false);
 
 // Threaded decompiler, for decompiling on the fly asynchronously.
 // Named objects are referenced but not decompiled.
@@ -73,9 +72,10 @@ private:
     r_code::list<P<Code> > objects;
     std::thread *_thread;
     volatile uint64_t spawned;
+    r_comp::Metadata *metadata;
 
 public:
-    TDecompiler(uint64_t ostream_id, std::string header);
+    TDecompiler(uint64_t ostream_id, std::string header, r_comp::Metadata *metadata);
     ~TDecompiler();
 
     void add_object(Code *object);
@@ -120,17 +120,9 @@ public:
 // Return false in case of a problem (e.g. file not found, operator not found, etc.).
 bool dll_export Init(const char *user_operator_library_path,
                      uint64_t(*time_base)(),
-                     const char *seed_path);
-
-// Alternate taking a ready-made metadata and seed (will be copied into Metadata and Seed).
-bool dll_export Init(const char *user_operator_library_path,
-                     uint64_t(*time_base)(),
-                     const r_comp::Metadata &metadata,
-                     const r_comp::Image &seed);
-
-uint16_t dll_export GetOpcode(const char *name); // classes, operators and functions.
-
-std::string dll_export GetAxiomName(const uint16_t index); // for constant objects (ex: self, position, and other axioms).
+                     const char *seed_path,
+                     r_comp::Image *seed,
+                     r_comp::Metadata *metadata);
 }
 
 

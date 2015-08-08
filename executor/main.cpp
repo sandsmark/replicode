@@ -245,13 +245,19 @@ int main(int argc, char **argv)
         settings.load("~/.config/replicode/replicode.conf");
     }
 
+
+    r_comp::Image seed;
+    r_comp::Metadata metadata;
+
     debug("main") << "Initializing with user operator library and user class code...";
     using namespace std::chrono;
     if (!r_exec::Init(settings.usr_operator_path.c_str(),
                       []() -> uint64_t {
                           return duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count();
                       },
-                      settings.usr_class_path.c_str())) {
+                      settings.usr_class_path.c_str(),
+                      &seed,
+                      &metadata)) {
         return 2;
     }
 
@@ -259,7 +265,7 @@ int main(int argc, char **argv)
 
     debug("main") << "compiling source...";
     std::string error;
-    if (!r_exec::Compile(settings.source_file_name.c_str(), error)) {
+    if (!r_exec::Compile(settings.source_file_name.c_str(), error, &seed, &metadata)) {
         std::cerr << " <- " << error << std::endl;
         return 3;
     }
@@ -271,7 +277,7 @@ int main(int argc, char **argv)
 #endif
 
     Decompiler decompiler;
-    decompiler.init(r_exec::getMetadata());
+    decompiler.init(&metadata);
 
 
     r_exec::_Mem *mem;
@@ -281,8 +287,9 @@ int main(int argc, char **argv)
         mem = new r_exec::Mem<r_exec::LObject, r_exec::MemVolatile>();
 
     r_code::vector<r_code::Code *> ram_objects;
-    r_exec::getSeed()->get_objects(mem, ram_objects);
+    seed.get_objects(mem, ram_objects);
 
+    mem->metadata = &metadata;
     mem->init(settings.base_period,
             settings.reduction_core_count,
             settings.time_core_count,
@@ -311,7 +318,7 @@ int main(int argc, char **argv)
     uint64_t self_oid;
     std::string self_symbol("self");
     std::unordered_map<uintptr_t, std::string>::const_iterator n;
-    for (n = r_exec::getSeed()->object_names.symbols.begin(); n != r_exec::getSeed()->object_names.symbols.end(); ++n) {
+    for (n = seed.object_names.symbols.begin(); n != seed.object_names.symbols.end(); ++n) {
 
         if (n->second == stdin_symbol)
             stdin_oid = n->first;
@@ -343,7 +350,7 @@ int main(int argc, char **argv)
         //probe.set();
         r_comp::Image *image = mem->get_objects();
         //probe.check();
-        image->object_names.symbols = r_exec::getSeed()->object_names.symbols;
+        image->object_names.symbols = image->object_names.symbols;
 
         if (settings.write_objects)
             write_to_file(image, settings.objects_path, settings.test_objects ? &decompiler : NULL, starting_time);
@@ -371,7 +378,7 @@ int main(int argc, char **argv)
         //probe.set();
         r_comp::Image *image = mem->get_models();
         //probe.check();
-        image->object_names.symbols = r_exec::getSeed()->object_names.symbols;
+        image->object_names.symbols = image->object_names.symbols;
 
         if (settings.write_models)
             write_to_file(image, settings.models_path, settings.test_models ? &decompiler : NULL, starting_time);

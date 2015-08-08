@@ -390,7 +390,7 @@ void _TPX::inject_hlps(uint64_t analysis_starting_time) {
 
         std::string header("> from buffer -------------------\n\n");
 
-        P<TDecompiler> td = new TDecompiler(1, header);
+        P<TDecompiler> td = new TDecompiler(1, header, _Mem::Get()->metadata);
         td->add_objects(tmp);
         td->runDecompiler();
 
@@ -405,7 +405,7 @@ void _TPX::inject_hlps(uint64_t analysis_starting_time) {
         std::string s1("us] -------------------\n\n");
         header += s0 + timing + s1;
 
-        td = new TDecompiler(1, header);
+        td = new TDecompiler(1, header, _Mem::Get()->metadata);
         td->add_objects(mdls);
         inject_hlps();
         td->runDecompiler();

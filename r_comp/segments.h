@@ -33,6 +33,7 @@
 
 #include "r_code/object.h"
 #include "r_code/list.h"
+#include <CoreLibrary/sharedlibrary.h>
 
 #include "class.h"
 
@@ -76,6 +77,8 @@ public:
     r_code::vector<std::string> operator_names;
     r_code::vector<std::string> function_names;
     r_code::vector<Class> classes_by_opcodes; // classes indexed by opcodes; used to retrieve member names; registers all classes (incl. set classes).
+    std::unordered_map<std::string, uint16_t> opcodes;
+    core::SharedLibrary user_operator_library;
 
     Class *get_class(std::string &class_name);
     Class *get_class(size_t opcode);

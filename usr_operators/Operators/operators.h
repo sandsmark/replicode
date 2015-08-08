@@ -32,7 +32,7 @@
 #define operators_h
 
 #include "../types.h"
-
+#include <r_comp/segments.h>
 
 extern "C" {
     bool dll_export add(const r_exec::Context &context, uint16_t &index);
@@ -43,7 +43,7 @@ extern "C" {
 
 class Operators {
 public:
-    static void Init(OpcodeRetriever r);
+    static void Init(r_comp::Metadata *metadata);
 };
 
 
