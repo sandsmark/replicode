@@ -37,9 +37,10 @@ public:
     }
 
     inline const DebugStream &operator<<(const std::string output) const { std::cout << " " << output ; return *this; }
-    inline const DebugStream &operator<<(const uint64_t output) const { std::cout << " " << output; return *this; }
     inline const DebugStream &operator<<(const double output) const { std::cout << " " << output; return *this; }
+    inline const DebugStream &operator<<(const int output) const { std::cout << " " << output; return *this; }
     inline const DebugStream &operator<<(const int64_t output) const { std::cout << " " << output; return *this; }
+    inline const DebugStream &operator<<(const uint64_t output) const { std::cout << " " << output; return *this; }
     inline const DebugStream &operator<<(const uint32_t output) const { std::cout << " " << output; return *this; }
     inline const DebugStream &operator<<(const uint16_t output) const { std::cout << " " << output; return *this; }
     inline const DebugStream &operator<<(const uint8_t output) const { std::cout << " " << (uint64_t)output; return *this; }
