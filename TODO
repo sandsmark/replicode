@@ -1,0 +1,11 @@
+ - CI builds for OS X (travis)
+ - CI builds for Windows
+ - Child class in Mem for parameters
+ - Refactor Compiler
+     - Call Preprocessor from compiler
+     - Separate is_ (const) from get_ (ref)
+ - New language
+ - Implement diff for compiler test (longest common subsequence)
+ - UI/graph view
+ - Integrate with various games (TG AI competition)
+ - More unit tests, test more individual functions (e. g. in compiler)
