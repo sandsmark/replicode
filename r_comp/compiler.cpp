@@ -183,14 +183,14 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
 
     SysObject *sys_object = (SysObject *)current_object; // current_object will point to views, if any.
 
-// compile view set
-// input format:
-// []
-// [view-data]
-// ...
-// [view-data]
-// or:
-// |[]
+    // compile view set
+    // input format:
+    // []
+    // [view-data]
+    // ...
+    // [view-data]
+    // or:
+    // |[]
 
     if (view->args.size() > 0) {
         if (view->type != RepliStruct::Set) {
@@ -234,14 +234,15 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
         sys_object->trace();
 
 
+    // TODO: what happens if hasLabel == false
     std::string label = node->label.substr(0, node->label.size() - 1);
     _image->add_sys_object(sys_object, label);
 
     return true;
 }
 
-bool Compiler::read(RepliStruct *node, const StructureMember &m, bool enforce, uint16_t write_index, uint16_t &extent_index, bool write) {
-
+bool Compiler::read(RepliStruct *node, const StructureMember &m, bool enforce, uint16_t write_index, uint16_t &extent_index, bool write)
+{
     if (Class *p = m.get_class(_metadata)) {
         p->use_as = m.getIteration();
         return (this->*m.read())(node, enforce, p, write_index, extent_index, write);
@@ -548,14 +549,16 @@ bool Compiler::global_indirection(RepliStruct *node, std::vector<int16_t> &v, co
 
 bool Compiler::object(RepliStruct *node, Class &p)
 {
-    if (sys_object(node, p))
+    if (sys_object(node, p)) {
         return true;
+    }
 
     std::unordered_map<std::string, Class>::const_iterator it = _metadata->classes.find(node->cmd);
     if (it == _metadata->classes.end()) {
         return false;
     }
     p = it->second;
+
     return true;
 }
 
@@ -649,7 +652,8 @@ bool Compiler::expression_head(RepliStruct *node, const Class &p)
     return true;
 }
 
-bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write) { // arity>0.
+bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write)  // arity>0.
+{
     bool entered_pattern;
     uint16_t pattern_end_index;
     if (in_hlp) {
@@ -701,6 +705,8 @@ bool Compiler::expression(RepliStruct *node, const ReturnType t, uint16_t write_
     if (!expression_head(node, p, t)) {
         return false;
     }
+
+
     if (lbl && !in_hlp) {
         if (!addLocalReference(label, write_index, p)) {
             set_error("cast to " + label.substr(label.find("#") + 1) + ": unknown class", node);
@@ -1221,8 +1227,8 @@ bool Compiler::read_function(RepliStruct *node, bool enforce, const Class *p, ui
     return false;
 }
 
-bool Compiler::read_expression(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write) {
-
+bool Compiler::read_expression(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)
+{
     if (read_nil(node, write_index, extent_index, write))
         return true;
     if (p && p->str_opcode != Class::Expression) {
