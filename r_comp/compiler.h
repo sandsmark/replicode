@@ -123,15 +123,14 @@ private:
     bool global_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType t); // ex: p.res where p is a label/variable declared outside the object.
 
     bool object(RepliStruct *node, Class &p); // looks first in sys_objects, then in objects.
-    bool object(RepliStruct *node, const Class &p); // must conform to p.
+    bool is_object(RepliStruct *node, const Class &p); // must conform to p.
     bool sys_object(RepliStruct *node, Class &p); // looks only in sys_objects.
-    bool sys_object(RepliStruct *node, const Class &p); // must conform to p.
     bool marker(RepliStruct *node, Class &p);
     bool op(RepliStruct *node, Class &p, const ReturnType t); // operator; must conform to t. return true if type matches t or ANY.
-    bool op(RepliStruct *node, const Class &p); // must conform to p.
+    bool is_op(RepliStruct *node, const Class &p); // must conform to p.
     bool function(RepliStruct *node, Class &p); // device function.
     bool expression_head(RepliStruct *node, Class &p, const ReturnType t); // starts from the first element; arity does not count the head; must conform to t.
-    bool expression_head(RepliStruct *node, const Class &p); // starts from the first element; arity does not count the head; must conform to p.
+    bool is_expression_head(RepliStruct *node, const Class &p); // starts from the first element; arity does not count the head; must conform to p.
     bool expression_tail(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write); // starts from the second element; must conform to p.
 
 // Structural units; check for heading labels.

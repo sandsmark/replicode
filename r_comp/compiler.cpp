@@ -522,11 +522,8 @@ bool Compiler::object(RepliStruct *node, Class &p)
     return true;
 }
 
-bool Compiler::object(RepliStruct *node, const Class &p)
+bool Compiler::is_object(RepliStruct *node, const Class &p)
 {
-    if (sys_object(node, p))
-        return true;
-
     return (node->cmd == p.str_opcode);
 }
 
@@ -542,11 +539,6 @@ bool Compiler::sys_object(RepliStruct *node, Class &p)
     }
     p = it->second;
     return true;
-}
-
-bool Compiler::sys_object(RepliStruct *node, const Class &p)
-{
-    return (node->cmd == p.str_opcode);
 }
 
 bool Compiler::marker(RepliStruct *node, Class &p)
@@ -573,7 +565,7 @@ bool Compiler::op(RepliStruct *node, Class &p, const ReturnType t)
     return true;
 }
 
-bool Compiler::op(RepliStruct *node, const Class &p)
+bool Compiler::is_op(RepliStruct *node, const Class &p)
 {
     return (node->cmd == p.str_opcode);
 }
@@ -604,12 +596,13 @@ bool Compiler::expression_head(RepliStruct *node, Class &p, const ReturnType t)
     return true;
 }
 
-bool Compiler::expression_head(RepliStruct *node, const Class &p)
+bool Compiler::is_expression_head(RepliStruct *node, const Class &p)
 {
-    if (!object(node, p))
-        if (!op(node, p))
-            return false;
-    return true;
+    if (is_object(node, p) || is_op(node, p)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write)  // arity>0.
@@ -702,7 +695,7 @@ bool Compiler::expression(RepliStruct *node, const Class &p, uint16_t write_inde
         label = node->label.substr(0, node->label.size() - 1);
         lbl = true;
     }
-    if (!expression_head(node, p)) {
+    if (!is_expression_head(node, p)) {
         return false;
     }
     if (lbl) {
