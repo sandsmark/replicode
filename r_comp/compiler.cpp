@@ -343,63 +343,23 @@ bool Compiler::hlp_reference(RepliStruct *node, uint16_t &index)
     return false;
 }
 
-bool Compiler::this_indirection(RepliStruct *node, std::vector<int16_t> &v, const ReturnType returnType)
+bool Compiler::this_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType returnType)
 {
     if (!startsWith(node->cmd, "this.")) {
         return false;
     }
-    Class *p; // in general, p starts as the current_class; exception: in pgm, this refers to the instantiated program.
+    Class *reference_class; // in general, p starts as the current_class; exception: in pgm, this refers to the instantiated program.
     if (current_class.str_opcode == "pgm")
-        p = &_metadata->sys_classes["ipgm"];
-    Class *_p;
-    std::string m;
-    uint16_t index;
-    ReturnType type;
+        reference_class = &_metadata->sys_classes["ipgm"];
 
-    std::string name = node->cmd;
-    name.erase(0, name.find(".") + 1); // remove "this."
-    size_t pos = 0;
+    std::string path = node->cmd;
+    path.erase(0, path.find(".") + 1); // remove "this."
 
-    while ((pos = name.find(".")) != std::string::npos) {
-        m = name.substr(0, pos);
-        if (m == "vw") {
-            _p = &_metadata->classes.find("pgm_view")->second;
-            type = ANY;
-            v.push_back(-1);
-        } else if (m == "mks") {
-            _p = NULL;
-            type = SET;
-            v.push_back(-2);
-        } else if (m == "vws") {
-            _p = NULL;
-            type = SET;
-            v.push_back(-3);
-        } else if (!p->get_member_index(_metadata, m, index, _p)) {
-            set_error(" error: " + m + " is not a member of " + p->str_opcode, node);
-            break;
-        } else {
-            type = p->get_member_type(index);
-            v.push_back(index);
-        }
 
-        name.erase(0, pos + 1);
-
-        if (name[0] == '.') {
-            if (!_p) {
-                set_error(" error: " + m + " is not a structure", node);
-                break;
-            }
-            p = _p;
-        } else {
-            if (returnType == ANY || (returnType != ANY && type == returnType)) {
-                return true;
-            }
-        }
-    }
-    return false;
+    return indirection(node, reference_class, path, &indices, returnType);
 }
 
-bool Compiler::local_indirection(RepliStruct *node, std::vector<int16_t> &v, const ReturnType t, uint32_t &cast_opcode)
+bool Compiler::local_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType expected_type, uint32_t &cast_opcode)
 {
     std::string path = node->cmd;
     size_t pos = path.find(".");
@@ -409,56 +369,54 @@ bool Compiler::local_indirection(RepliStruct *node, std::vector<int16_t> &v, con
 
     std::string name = path.substr(0, pos); // first name is a reference to a label or a variable
 
-    uint16_t index;
-    ReturnType type;
     if (local_references.count(name) == 0) {
         return false;
     }
 
     Reference &reference = local_references[name];
-
-    index = reference.index;
-    v.push_back(index);
-    Class *current_class;
+    indices.push_back(reference.index);
+    Class *reference_class;
     if (reference.cast_class.str_opcode == "undefined") { // find out if there was a cast for this reference.
-        current_class = &reference._class;
+        reference_class = &reference._class;
         cast_opcode = 0x0FFFFFFF;
     } else {
-        current_class = &reference.cast_class;
-        cast_opcode = current_class->atom.asOpcode();
+        reference_class = &reference.cast_class;
+        cast_opcode = reference_class->atom.asOpcode();
     }
 
     path.erase(0, pos + 1); // remove the first member
+
+    return indirection(node, reference_class, path, &indices, expected_type);
+}
+
+bool Compiler::indirection(RepliStruct *node, Class *reference_class, std::string path, std::vector<int16_t> *indices, const ReturnType expected_type)
+{
+    uint16_t index;
     Class *fetched_class;
-
-    std::string current_path = name;
-
+    ReturnType type;
     while (path.length() > 0) {
-        pos = path.find(".");
-        name = path.substr(0, pos);
+        size_t pos = path.find(".");
+        std::string name = path.substr(0, pos);
 
         if (name == "vw") {
             fetched_class = &_metadata->classes.find("pgm_view")->second;
             type = ANY;
-            v.push_back(-1);
+            indices->push_back(-1);
         } else if (name == "mks") {
             fetched_class = NULL;
             type = SET;
-            v.push_back(-2);
+            indices->push_back(-2);
         } else if (name == "vws") {
             fetched_class = NULL;
             type = SET;
-            v.push_back(-3);
-        } else if (!current_class->get_member_index(_metadata, name, index, fetched_class)) {
-            set_error(" error: " + name + " is not a member of " + current_class->str_opcode, node);
-            break;
+            indices->push_back(-3);
+        } else if (!reference_class->get_member_index(_metadata, name, index, fetched_class)) {
+            set_error(" error: " + name + " is not a member of " + reference_class->str_opcode, node);
+            return false;
         } else {
-            type = current_class->get_member_type(index);
-            v.push_back(index);
+            type = reference_class->get_member_type(index);
+            indices->push_back(index);
         }
-
-        current_path += '.';
-        current_path += name;
 
         // No more dots
         if (pos == std::string::npos) {
@@ -466,85 +424,87 @@ bool Compiler::local_indirection(RepliStruct *node, std::vector<int16_t> &v, con
         }
 
         if (!fetched_class) {
-            set_error(" error: " + current_path + " is not an addressable structure", node);
+            set_error(" error: " + name + " is not an addressable structure", node);
             return false;
         }
-        current_class = fetched_class;
 
-        // Remove fetched member + '.'
-        path.erase(0, pos + 1);
+        reference_class = fetched_class;
+        path.erase(0, pos + 1); // Remove fetched name + .
     }
 
-    if (type == t || t == ANY) {
+    if (type == expected_type || expected_type == ANY) {
         return true;
     } else {
         return false;
     }
 }
 
-bool Compiler::global_indirection(RepliStruct *node, std::vector<int16_t> &v, const ReturnType t) {
-    std::string name = node->cmd;
-    size_t pos = name.find(".");
+bool Compiler::global_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType expected_type)
+{
+    std::string path = node->cmd;
+    size_t pos = path.find(".");
     if (pos == std::string::npos) { // first m is a reference
         return false;
     }
-    std::string m = name.substr(0, pos);
-    Class *p;
+
+    std::string name = path.substr(0, pos);
+    Class *reference_class;
 
     uint16_t index;
-    ReturnType type;
-    if (!getGlobalReferenceIndex(m, ANY, current_object, index, p)) {
+    if (!getGlobalReferenceIndex(name, ANY, current_object, index, reference_class)) {
         return false;
     }
+    indices.push_back(index);
 
-    v.push_back(index);
-    Class *_p;
+    // TODO: Merge with the other indirections
+    ReturnType type;
+    Class *fetched_class;
     bool first_member = true;
-    while ((pos = name.find(".")) != std::string::npos) {
-        m = name.substr(0, pos);
-        if (m == "vw") {
+    while (path.length() > 0) {
+        pos = path.find(".");
+        name = path.substr(0, pos);
+
+        if (name == "vw") {
             set_error(" error: vw is not accessible on global references", node);
             break;
-        } else if (m == "mks") {
-
-            _p = NULL;
+        } else if (name == "mks") {
+            fetched_class = NULL;
             type = SET;
-            v.push_back(-2);
-        } else if (m == "vws") {
-
-            _p = NULL;
+            indices.push_back(-2);
+        } else if (name == "vws") {
+            fetched_class = NULL;
             type = SET;
-            v.push_back(-3);
-        } else if (!p->get_member_index(_metadata, m, index, _p)) {
-
-            set_error(" error: " + m + " is not a member of " + p->str_opcode, node);
-            break;
+            indices.push_back(-3);
+        } else if (!reference_class->get_member_index(_metadata, name, index, fetched_class)) {
+            set_error(" error: " + name + " is not a member of " + reference_class->str_opcode, node);
+            return false;
         } else {
-
-            type = p->get_member_type(index);
+            type = reference_class->get_member_type(index);
             if (first_member && index == 0) // indicates the first member; store in the RObject, after the leading atom, hence index=1.
                 index = 1;
-            v.push_back(index);
+            indices.push_back(index);
+        }
+
+        // No more dots
+        if (pos == std::string::npos) {
+            break;
+        }
+
+        if (!fetched_class) {
+            set_error(" error: " + name + " is not a structure", node);
+            break;
         }
 
         first_member = false;
-
-        name.erase(0, pos + 1);
-
-        if (name[0] == '.') {
-            if (!_p) {
-                set_error(" error: " + m + " is not a structure", node);
-                break;
-            }
-            p = _p;
-        } else {
-            if (t == ANY || (t != ANY && type == t)) {
-                return true;
-            }
-            break;
-        }
+        path.erase(0, pos + 1); // remove fetched name + .
+        reference_class = fetched_class;
     }
-    return false;
+
+    if (type == expected_type || expected_type == ANY) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool Compiler::object(RepliStruct *node, Class &p)

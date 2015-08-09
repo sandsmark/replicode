@@ -114,9 +114,14 @@ private:
     bool local_reference(RepliStruct *node, uint16_t &index, const ReturnType t); // must conform to t; indicates if the ref is to ba valuated in the value array (in_pattern set to true).
     bool global_reference(RepliStruct *node, uint16_t &index, const ReturnType t); // no conformance: return type==ANY.
     bool hlp_reference(RepliStruct *node, uint16_t &index);
-    bool this_indirection(RepliStruct *node, std::vector<int16_t> &v, const ReturnType t); // ex: this.res.
-    bool local_indirection(RepliStruct *node, std::vector<int16_t> &v, const ReturnType t, uint32_t &cast_opcode); // ex: p.res where p is a label/variable declared within the object; cast_opcode=0x0FFF if no cast.
-    bool global_indirection(RepliStruct *node, std::vector<int16_t> &v, const ReturnType t); // ex: p.res where p is a label/variable declared outside the object.
+
+    /// Helper function for this_indirection, local_indirection, global_indirection
+    /// Parses \a path, e. g. "f.vw.ijt", and puts the result into \a indices.
+    bool indirection(RepliStruct *node, Class *reference_class, std::string path, std::vector<int16_t> *indices, const ReturnType t);
+    bool this_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType t); // ex: this.res.
+    bool local_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType expected_type, uint32_t &cast_opcode); // ex: p.res where p is a label/variable declared within the object; cast_opcode=0x0FFF if no cast.
+    bool global_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType t); // ex: p.res where p is a label/variable declared outside the object.
+
     bool object(RepliStruct *node, Class &p); // looks first in sys_objects, then in objects.
     bool object(RepliStruct *node, const Class &p); // must conform to p.
     bool sys_object(RepliStruct *node, Class &p); // looks only in sys_objects.
