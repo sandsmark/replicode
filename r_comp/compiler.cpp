@@ -144,8 +144,6 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
     local_references.clear();
     hlp_references.clear();
 
-    current_view_index = -1;
-
     bool hasLabel = node->label != "";
 
     in_hlp = false;
@@ -217,7 +215,6 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
 
         for (RepliStruct *argNode : view->args) {
             current_object = new SysView();
-            current_view_index = count;
             uint16_t extent_index = 0;
 
             if (!read_set(argNode, true, &current_class, 0, extent_index, true)) {

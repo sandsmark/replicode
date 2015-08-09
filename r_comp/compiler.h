@@ -55,7 +55,6 @@ private:
     Class current_class; // the sys-class currently parsed.
     ImageObject *current_object; // the sys-object currently parsed.
     uint64_t current_object_index; // ordinal of the current sys-object in the code segment.
-    int64_t current_view_index; // ordinal of a view in the sys-object's view set.
 
     r_comp::Image *_image;
     r_comp::Metadata *_metadata;
