@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
         return 5;
     }
 
-    if (!compiler.compile(root, &image, &metadata, error, false)) {
+    if (!compiler.compile(root, &image, &metadata, false)) {
         debug("compiler test") << "Compile failed:" << compiler.getError();
         return 6;
     }

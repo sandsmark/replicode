@@ -104,7 +104,7 @@ void Compiler::set_arity_error(RepliStruct *node, uint16_t expected, uint16_t go
   ...
   */
 
-bool Compiler::compile(RepliStruct *root, r_comp::Image *_image, r_comp::Metadata *_metadata, std::string &error, bool trace)
+bool Compiler::compile(RepliStruct *root, r_comp::Image *_image, r_comp::Metadata *_metadata, bool trace)
 {
     this->err = false;
     this->trace = trace;

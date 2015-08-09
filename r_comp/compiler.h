@@ -149,7 +149,6 @@ public:
     bool compile(RepliStruct *rootNode, // stream must be open.
                  r_comp::Image *_image,
                  r_comp::Metadata *_metadata,
-                 std::string &error,
                  bool trace); // set when compile() fails, e.g. returns false.
 
     std::string getError();

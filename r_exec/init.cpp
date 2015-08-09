@@ -73,8 +73,9 @@ bool Compile(const char* filename,
         return false;
     }
     r_comp::Compiler compiler;
-    if (!compiler.compile(root, image, metadata, error, false)) {
+    if (!compiler.compile(root, image, metadata, false)) {
         std::cerr << "! Compilation failed: " << compiler.getError() << std::endl;
+        error = compiler.getError();
         return false;
     }
     return true;
