@@ -497,7 +497,7 @@ void Atom::trace() const
 void Atom::write_indents() const
 {
     if (Members_to_go) {
-        std::cout << " ";
+        std::cout << "   ";
         --Members_to_go;
     }
 }
