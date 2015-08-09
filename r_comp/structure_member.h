@@ -58,6 +58,33 @@ typedef enum {
     CLASS = 9
 } ReturnType;
 
+inline std::string returntype_string(const ReturnType type) {
+    switch(type) {
+    case ANY:
+        return "any";
+    case NUMBER:
+        return "number";
+    case TIMESTAMP:
+        return "timestamp";
+    case SET:
+        return "set";
+    case BOOLEAN:
+        return "boolean";
+    case STRING:
+        return "string";
+    case NODE_ID:
+        return "node id";
+    case DEVICE_ID:
+        return "device id";
+    case FUNCTION_ID:
+        return "function id";
+    case CLASS:
+        return "class";
+    default:
+        return "unknown (" + std::to_string(type) + ")";
+    }
+}
+
 typedef bool (Compiler::*_Read)(RepliStruct *, bool, const Class *, uint16_t, uint16_t &, bool); // reads from the stream and writes in an object.
 
 class Metadata;
