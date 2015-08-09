@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     }
 
     r_comp::Preprocessor preprocessor;
-    r_comp::Compiler compiler;
+    r_comp::Compiler compiler(&image, &metadata);
     std::string error;
 
     r_comp::RepliStruct *root = preprocessor.process(testfile.c_str(), error, &metadata);
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
         return 5;
     }
 
-    if (!compiler.compile(root, &image, &metadata, false)) {
+    if (!compiler.compile(root, false)) {
         debug("compiler test") << "Compile failed:" << compiler.getError();
         return 6;
     }

@@ -49,16 +49,21 @@ bool endsWith(const std::string &haystack, const std::string &needle)
     return (haystack.rfind(needle) == (haystack.length() - needle.length()));
 }
 
-Compiler::Compiler(): error(std::string("")), current_object(NULL)  {
+Compiler::Compiler(Image *_image, Metadata *_metadata)
+{
+    this->_image = _image;
+    this->_metadata = _metadata;
 }
 
-Compiler::State Compiler::save_state() {
 
+Compiler::State Compiler::save_state()
+{
     State s(this);
     return s;
 }
 
-void Compiler::restore_state(State s) {
+void Compiler::restore_state(State s)
+{
     state = s;
 }
 
@@ -77,17 +82,11 @@ void Compiler::set_error(const std::string &s, RepliStruct *node)
     }
 }
 
-void Compiler::set_arity_error(RepliStruct *node, uint16_t expected, uint16_t got) {
-
-    char buffer[255];
-    std::string s = "error: got ";
-    sprintf(buffer, "%d", got);
-    s += buffer;
-    s += " elements, expected ";
-    sprintf(buffer, "%d", expected);
-    s += buffer;
-    s += " for '" + node->cmd + "'";
-    set_error(s, node);
+void Compiler::set_arity_error(RepliStruct *node, uint16_t expected, uint16_t got)
+{
+    set_error("got " + std::to_string(got) +
+              " elements, expected " + std::to_string(expected) +
+              " for " + node->cmd, node);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,13 +103,11 @@ void Compiler::set_arity_error(RepliStruct *node, uint16_t expected, uint16_t go
   ...
   */
 
-bool Compiler::compile(RepliStruct *root, r_comp::Image *_image, r_comp::Metadata *_metadata, bool trace)
+bool Compiler::compile(RepliStruct *root, bool trace)
 {
     this->err = false;
     this->trace = trace;
 
-    this->_image = _image;
-    this->_metadata = _metadata;
     current_object_index = _image->object_map.objects.size();
 
     for (std::vector<RepliStruct*>::iterator iter = root->args.begin(); iter != root->args.end(); iter++) {

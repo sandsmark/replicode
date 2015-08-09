@@ -45,7 +45,7 @@ namespace r_comp {
 class RepliStruct;
 
 class dll_export Compiler {
-private:
+
     std::string error;
     std::string m_errorFile;
     int m_errorLine;
@@ -53,14 +53,13 @@ private:
     bool trace;
 
     Class current_class; // the sys-class currently parsed.
-    ImageObject *current_object; // the sys-object currently parsed.
+    ImageObject *current_object = nullptr; // the sys-object currently parsed.
     uint64_t current_object_index; // ordinal of the current sys-object in the code segment.
 
     r_comp::Image *_image;
     r_comp::Metadata *_metadata;
 
-    class State {
-    public:
+    struct State {
         State(): pattern_lvl(0),
             no_arity_check(false) {}
         State(Compiler *c): pattern_lvl(c->state.pattern_lvl),
@@ -143,11 +142,9 @@ private:
 
     bool read_sys_object(RepliStruct *node, RepliStruct *view); // compiles one object; return false when there is an error.
 public:
-    Compiler();
+    Compiler(r_comp::Image *_image, r_comp::Metadata *_metadata);
 
-    bool compile(RepliStruct *rootNode, // stream must be open.
-                 r_comp::Image *_image,
-                 r_comp::Metadata *_metadata,
+    bool compile(RepliStruct *rootNode,
                  bool trace); // set when compile() fails, e.g. returns false.
 
     std::string getError();

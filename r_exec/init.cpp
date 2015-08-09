@@ -72,8 +72,8 @@ bool Compile(const char* filename,
         error.insert(0, "Preprocessor: " + preprocessor.root->fileName + ":" + std::to_string(preprocessor.root->line) + " ");
         return false;
     }
-    r_comp::Compiler compiler;
-    if (!compiler.compile(root, image, metadata, false)) {
+    r_comp::Compiler compiler(image, metadata);
+    if (!compiler.compile(root, false)) {
         std::cerr << "! Compilation failed: " << compiler.getError() << std::endl;
         error = compiler.getError();
         return false;
