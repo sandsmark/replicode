@@ -30,6 +30,8 @@
 
 #include "decompiler.h"
 
+#include <assert.h>
+
 namespace r_comp {
 
 Decompiler::Decompiler(): out_stream(NULL), in_hlp(false), current_object(NULL), metadata(NULL), image(NULL) {
@@ -691,6 +693,7 @@ void Decompiler::write_any(uint16_t read_index, bool &after_tail_wildcard, bool 
         while (atom.getDescriptor() == Atom::I_PTR) {
 
             index = atom.asIndex();
+            assert(atom != current_object->code[index]);
             atom = current_object->code[index];
         }
         if (index < read_index) { // reference to a label or variable.
