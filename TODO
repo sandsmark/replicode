@@ -9,3 +9,5 @@
  - UI/graph view
  - Integrate with various games (TG AI competition)
  - More unit tests, test more individual functions (e. g. in compiler)
+ - Clean up classes;
+    - Remove argments from constructor, set individually
