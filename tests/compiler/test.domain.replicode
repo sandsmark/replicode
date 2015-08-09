@@ -1,0 +1,28 @@
+; objects.
+
+self_right_hand:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+self_right_hand_is_a_hand:(mk.val self_right_hand essence hand 1) |[]
+f_self_right_hand_is_a_hand:(fact self_right_hand_is_a_hand 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+; self_head:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; self_head_is_a_head(mk.val self_head essence head 1) [[SYNC_STATE now 1 forever stdin nil]]
+; f_self_head_is_a_head:(fact self_head_is_a_head 0us MAX_TIME 1 1) [[SYNC_STATE now 1 forever stdin nil]]
+
+; programmer:(ont 1) [[SYNC_FRONT now 1 forever root nil]]
+
+; human1:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human1 essence actor 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human1_right_hand:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human1_right_hand essence hand 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human1_head:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human1_head essence head 1) [[SYNC_STATE now 1 forever stdin nil]]
+
+; human2:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human2 essence actor 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human2_right_hand:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human2_right_hand essence hand 1) [[SYNC_STATE now 1 forever stdin nil]]
+; human2_head:(ent 1) [[SYNC_FRONT now 1 forever root nil]]
+; (mk.val human2_head essence head 1) [[SYNC_STATE now 1 forever stdin nil]]
+
+cube0:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+cube0_is_a_cube:(mk.val cube0 essence cube 1) |[]
+f_cube0_is_a_cube:(fact cube0_is_a_cube 0us MAX_TIME 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]

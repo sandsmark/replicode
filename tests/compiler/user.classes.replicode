@@ -1,0 +1,89 @@
+!load std.replicode
+
+
+; utilities.
+
+!def (std_grp _upr _sln_thr _act_thr _vis_thr _ntf_grps) (grp _upr _sln_thr _act_thr _vis_thr 1 0 1 0 0 1 0 0 1 1 1 1 0 0 0 0 0 0 1 0 1 1 0 1 0 0 _ntf_grps 1); c-salient and c-active.
+
+
+; domain-dependent classes.
+
+!class (vec3 x:nb y:nb z:nb)
+!class (speech_context (_obj {speaker:ent listener:ent}))
+
+
+; device functions.
+
+!dfn (grab_hand :); arg0: a hand, arg1: deadline.
+!dfn (release_hand :); arg0: a hand, arg1: deadline.
+!dfn (move_hand :); arg0: a hand, arg1: target position, arg2: deadline.
+!dfn (speak :); arg0: a word, arg1: deadline.
+!dfn (look_at :); arg0: a vec3, arg1: deadline.
+!dfn (point_at :); arg0: a hand, arg1: target position, arg2: deadline.
+
+!dfn (lift_hand :); arg0: a hand, arg1: a distance.
+!dfn (grab_hand :); arg0: a hand.
+!dfn (release_hand :); arg0: a hand.
+
+!def sampling_period 100000us
+
+
+; initial groups.
+
+root:(std_grp 0 0 0 0 [nil]) [[SYNC_ONCE now 0 forever nil nil COV_OFF 0]]
+stdout:(std_grp 0 0 0 0 |[]) [[SYNC_ONCE now 0 forever root nil COV_OFF 0]]
+stdin:(std_grp 2 0 0 0 [stdout]) [[SYNC_ONCE now 0 forever root nil COV_OFF 0]]; ensure stdin.upr=sampling_period.
+
+primary:(std_grp 2 0 0.4 0 |[]) [[SYNC_ONCE now 0 forever root nil COV_OFF 0]]; ensure primary.upr=stdin.upr.
+secondary:(std_grp 2 0 0.3 0 |[]) [[SYNC_ONCE now 0 forever root nil COV_OFF 0]]; ensure secondary.upr=primary.upr.
+grp_pair:(mk.grp_pair primary secondary 1) [[SYNC_ONCE now 0 forever root nil]]
+drives:(std_grp 40 0 0 0 [stdout]) [[SYNC_ONCE now 0 forever root nil COV_OFF 0]]; holds pgm that inject drives periodically; drive priority=pgm.act; ensure ipgm.tsc>primary.upr.
+
+
+; extensions.
+
+; args: pass_through, ctpx_on, gtpx_on, ptpx_on, trace injections, decompile_models, primary group, other output groups.
+auto_focus:(icpp_pgm "auto_focus" [true true false false true true primary] RUN_ALWAYS 0us VOLATILE SILENT 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+
+
+; application ontology.
+
+; attributes.
+
+essence:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val x essence "sphere" 1) or (mk.val x essence sphere 1) if sphere is defined as an entity.
+color:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val x color "green" 1) or (mk.val x color green 1) if green is defined as an entity.
+role:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage (mk.val self role interviewer 1)
+
+position_x:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+position_y:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+position_z:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+speed_x:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+speed_y:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+speed_z:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+
+attachment:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val self_right_hand attachment a_thing 1)
+spoken:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val an_actor spoken a_sentence 1)
+pointed_at:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val an_actor pointed_at a_location 1)
+looked_at:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val an_actor looked_at a_location 1)
+
+knowing:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val an_actor knowing something 1)
+most_salient:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+
+
+; values.
+
+actor:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+interviewer:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+interviewee:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+hand:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+head:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+cube:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
+
+
+; initial application objects.
+
+self:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+; (mk.val self essence actor 1) [[SYNC_STATE now 1 forever stdin nil]]
+
+; drive targets; drives are goals whose target fact points to an entity.
+run:(ent 1) [[SYNC_ONCE now 0 forever root nil]]

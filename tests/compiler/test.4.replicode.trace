@@ -1,0 +1,2224 @@
+
+---object---
+0
+code size: 35
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 grp: 15 32
+1    nb: 0
+2    nb: 0
+3    nb: 0
+4    nb: 0
+5    nb: 1
+6    nb: 0
+7    nb: 1
+8    nb: 0
+9    nb: 0
+10    nb: 1
+11    nb: 0
+12    nb: 0
+13    nb: 1
+14    nb: 1
+15    nb: 1
+16    nb: 1
+17    nb: 0
+18    nb: 0
+19    nb: 0
+20    nb: 0
+21    nb: 0
+22    nb: 0
+23    nb: 1
+24    nb: 0
+25    nb: 1
+26    nb: 1
+27    nb: 0
+28    nb: 1
+29    nb: 0
+30    nb: 0
+31    iptr: 33
+32    nb: 1
+33 set: 1
+34    nil
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 0
+-code-
+0 s_set: 9 8
+1    nb: 0
+2    iptr: 9
+3    nb: 0
+4    nb: inf
+5    nil
+6    nil
+7    bl: false
+8    nb: 0
+9 op: 0 0
+-reference set-
+
+---object---
+1
+code size: 34
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 grp: 15 32
+1    nb: 0
+2    nb: 0
+3    nb: 0
+4    nb: 0
+5    nb: 1
+6    nb: 0
+7    nb: 1
+8    nb: 0
+9    nb: 0
+10    nb: 1
+11    nb: 0
+12    nb: 0
+13    nb: 1
+14    nb: 1
+15    nb: 1
+16    nb: 1
+17    nb: 0
+18    nb: 0
+19    nb: 0
+20    nb: 0
+21    nb: 0
+22    nb: 0
+23    nb: 1
+24    nb: 0
+25    nb: 1
+26    nb: 1
+27    nb: 0
+28    nb: 1
+29    nb: 0
+30    nb: 0
+31    iptr: 33
+32    nb: 1
+33 set: 0
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 9 8
+1    nb: 0
+2    iptr: 9
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7    bl: false
+8    nb: 0
+9 op: 0 0
+-reference set-
+0 0
+
+---object---
+2
+code size: 35
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 grp: 15 32
+1    nb: 2
+2    nb: 0
+3    nb: 0
+4    nb: 0
+5    nb: 1
+6    nb: 0
+7    nb: 1
+8    nb: 0
+9    nb: 0
+10    nb: 1
+11    nb: 0
+12    nb: 0
+13    nb: 1
+14    nb: 1
+15    nb: 1
+16    nb: 1
+17    nb: 0
+18    nb: 0
+19    nb: 0
+20    nb: 0
+21    nb: 0
+22    nb: 0
+23    nb: 1
+24    nb: 0
+25    nb: 1
+26    nb: 1
+27    nb: 0
+28    nb: 1
+29    nb: 0
+30    nb: 0
+31    iptr: 33
+32    nb: 1
+33 set: 1
+34    rptr: 0
+
+---reference set---
+0 1
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 9 8
+1    nb: 0
+2    iptr: 9
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7    bl: false
+8    nb: 0
+9 op: 0 0
+-reference set-
+0 0
+
+---object---
+3
+code size: 34
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 grp: 15 32
+1    nb: 2
+2    nb: 0
+3    nb: 0.4
+4    nb: 0
+5    nb: 1
+6    nb: 0
+7    nb: 1
+8    nb: 0
+9    nb: 0
+10    nb: 1
+11    nb: 0
+12    nb: 0
+13    nb: 1
+14    nb: 1
+15    nb: 1
+16    nb: 1
+17    nb: 0
+18    nb: 0
+19    nb: 0
+20    nb: 0
+21    nb: 0
+22    nb: 0
+23    nb: 1
+24    nb: 0
+25    nb: 1
+26    nb: 1
+27    nb: 0
+28    nb: 1
+29    nb: 0
+30    nb: 0
+31    iptr: 33
+32    nb: 1
+33 set: 0
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 9 8
+1    nb: 0
+2    iptr: 9
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7    bl: false
+8    nb: 0
+9 op: 0 0
+-reference set-
+0 0
+
+---object---
+4
+code size: 34
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 grp: 15 32
+1    nb: 2
+2    nb: 0
+3    nb: 0.3
+4    nb: 0
+5    nb: 1
+6    nb: 0
+7    nb: 1
+8    nb: 0
+9    nb: 0
+10    nb: 1
+11    nb: 0
+12    nb: 0
+13    nb: 1
+14    nb: 1
+15    nb: 1
+16    nb: 1
+17    nb: 0
+18    nb: 0
+19    nb: 0
+20    nb: 0
+21    nb: 0
+22    nb: 0
+23    nb: 1
+24    nb: 0
+25    nb: 1
+26    nb: 1
+27    nb: 0
+28    nb: 1
+29    nb: 0
+30    nb: 0
+31    iptr: 33
+32    nb: 1
+33 set: 0
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 9 8
+1    nb: 0
+2    iptr: 9
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7    bl: false
+8    nb: 0
+9 op: 0 0
+-reference set-
+0 0
+
+---object---
+5
+code size: 4
+reference set size: 2
+marker set size: 0
+view set size: 1
+
+---code---
+0 mk: 41 3
+1    rptr: 0
+2    rptr: 1
+3    nb: 1
+
+---reference set---
+0 3
+1 4
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+6
+code size: 35
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 grp: 15 32
+1    nb: 40
+2    nb: 0
+3    nb: 0
+4    nb: 0
+5    nb: 1
+6    nb: 0
+7    nb: 1
+8    nb: 0
+9    nb: 0
+10    nb: 1
+11    nb: 0
+12    nb: 0
+13    nb: 1
+14    nb: 1
+15    nb: 1
+16    nb: 1
+17    nb: 0
+18    nb: 0
+19    nb: 0
+20    nb: 0
+21    nb: 0
+22    nb: 0
+23    nb: 1
+24    nb: 0
+25    nb: 1
+26    nb: 1
+27    nb: 0
+28    nb: 1
+29    nb: 0
+30    nb: 0
+31    iptr: 33
+32    nb: 1
+33 set: 1
+34    rptr: 0
+
+---reference set---
+0 1
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 9 8
+1    nb: 0
+2    iptr: 9
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7    bl: false
+8    nb: 0
+9 op: 0 0
+-reference set-
+0 0
+
+---object---
+7
+code size: 23
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 undef
+1 iptr: 8
+2 iptr: 12
+3 bl: true
+4 iptr: 20
+5 bl: true
+6 bl: false
+7 nb: 1
+8 st: 3
+9    auto
+10    _foc
+11    us
+12 set: 7
+13    bl: true
+14    bl: true
+15    bl: false
+16    bl: false
+17    bl: true
+18    bl: true
+19    rptr: 0
+20 us
+21    0
+22    0
+
+---reference set---
+0 3
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 10 7
+1    nb: 0
+2    iptr: 8
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7    nb: 1
+8 op: 0 0
+-reference set-
+0 2
+
+---object---
+8
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+9
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+10
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+11
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+12
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+13
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+14
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+15
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+16
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+17
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+18
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+19
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+20
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+21
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+22
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+23
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+24
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+25
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+26
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+27
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+28
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 1
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+29
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 5 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+30
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 4 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 0
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+31
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 4 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 1
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+32
+code size: 5
+reference set size: 3
+marker set size: 0
+view set size: 0
+
+---code---
+0 mk: 30 4
+1    rptr: 0
+2    rptr: 1
+3    rptr: 2
+4    nb: 1
+
+---reference set---
+0 31
+1 8
+2 26
+
+---marker set---
+
+---view set---
+
+---object---
+33
+code size: 12
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 32 5
+1    rptr: 0
+2    iptr: 6
+3    iptr: 9
+4    nb: 1
+5    nb: 1
+6 us
+7    0
+8    0
+9 us
+10    4294967295
+11    4294967295
+
+---reference set---
+0 32
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 3
+2    iptr: 7
+3    nb: 1
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 2
+
+---object---
+34
+code size: 2
+reference set size: 0
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 4 1
+1    nb: 1
+
+---reference set---
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 0
+2    iptr: 7
+3    nb: 1
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 0
+
+---object---
+35
+code size: 5
+reference set size: 3
+marker set size: 0
+view set size: 0
+
+---code---
+0 mk: 30 4
+1    rptr: 0
+2    rptr: 1
+3    rptr: 2
+4    nb: 1
+
+---reference set---
+0 34
+1 8
+2 28
+
+---marker set---
+
+---view set---
+
+---object---
+36
+code size: 12
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 obj: 32 5
+1    rptr: 0
+2    iptr: 6
+3    iptr: 9
+4    nb: 1
+5    nb: 1
+6 us
+7    0
+8    0
+9 us
+10    4294967295
+11    4294967295
+
+---reference set---
+0 35
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 8 6
+1    nb: 3
+2    iptr: 7
+3    nb: 1
+4    nb: inf
+5    rptr: 0
+6    nil
+7 op: 0 0
+-reference set-
+0 2
+
+---object---
+37
+code size: 52
+reference set size: 3
+marker set size: 0
+view set size: 0
+
+---code---
+0 obj: 13 5
+1    iptr: 6
+2    iptr: 7
+3    iptr: 8
+4    iptr: 9
+5    nb: 1
+6 set: 0
+7 set: 0
+8 set: 0
+9 set: 2
+10    iptr: 12
+11    iptr: 24
+12 obj: 16 2
+13    fid: 0
+14    iptr: 15
+15 set: 2
+16    iptr: 18
+17    iptr: 23
+18 mk: 30 4
+19    rptr: 0
+20    rptr: 1
+21    nb: 10
+22    nb: 1
+23 set: 0
+24 obj: 16 2
+25    fid: 0
+26    iptr: 27
+27 set: 2
+28    iptr: 30
+29    iptr: 44
+30 obj: 32 5
+31    vlptr: 16
+32    iptr: 36
+33    iptr: 37
+34    nb: 1
+35    nb: 1
+36 op: 0 0
+37 op: 8 2
+38    iptr: 40
+39    iptr: 41
+40 op: 0 0
+41 us
+42    0
+43    100000
+44 set: 6
+45    nb: 1
+46    iptr: 51
+47    nb: 1
+48    nb: 1
+49    rptr: 2
+50    nil
+51 op: 0 0
+
+---reference set---
+0 31
+1 13
+2 2
+
+---marker set---
+
+---view set---
+
+---object---
+38
+code size: 12
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 ipgm: 19 7
+1    rptr: 0
+2    iptr: 8
+3    bl: false
+4    iptr: 9
+5    bl: true
+6    bl: false
+7    nb: 1
+8 set: 0
+9 us
+10    0
+11    100000
+
+---reference set---
+0 37
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 10 7
+1    nb: 0
+2    iptr: 8
+3    nb: 0
+4    nb: 1
+5    rptr: 0
+6    nil
+7    nb: 1
+8 op: 0 0
+-reference set-
+0 2
+
+---object---
+39
+code size: 50
+reference set size: 2
+marker set size: 0
+view set size: 0
+
+---code---
+0 obj: 13 5
+1    iptr: 6
+2    iptr: 7
+3    iptr: 8
+4    iptr: 9
+5    nb: 1
+6 set: 0
+7 set: 0
+8 set: 0
+9 set: 2
+10    iptr: 12
+11    iptr: 26
+12 obj: 16 2
+13    fid: 0
+14    iptr: 15
+15 set: 2
+16    iptr: 18
+17    iptr: 25
+18 obj: 17 3
+19    fid: 16
+20    iptr: 22
+21    nb: 1
+22 set: 2
+23    rptr: 0
+24    nb: 2
+25 set: 0
+26 obj: 16 2
+27    fid: 0
+28    iptr: 29
+29 set: 2
+30    iptr: 32
+31    iptr: 42
+32 obj: 32 5
+33    vlptr: 16
+34    iptr: 38
+35    iptr: 39
+36    nb: 1
+37    nb: 1
+38 op: 0 0
+39 us
+40    0
+41    200000
+42 set: 6
+43    nb: 0
+44    iptr: 49
+45    nb: 1
+46    nb: 1
+47    rptr: 1
+48    nil
+49 op: 0 0
+
+---reference set---
+0 31
+1 2
+
+---marker set---
+
+---view set---
+
+---object---
+40
+code size: 12
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 ipgm: 19 7
+1    rptr: 0
+2    iptr: 8
+3    bl: false
+4    iptr: 9
+5    bl: true
+6    bl: false
+7    nb: 1
+8 set: 0
+9 us
+10    0
+11    150000
+
+---reference set---
+0 39
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 10 7
+1    nb: 0
+2    iptr: 8
+3    nb: 0
+4    nb: 2
+5    rptr: 0
+6    nil
+7    nb: 1
+8 op: 0 0
+-reference set-
+0 2
+
+---object---
+41
+code size: 92
+reference set size: 3
+marker set size: 0
+view set size: 0
+
+---code---
+0 obj: 13 5
+1    iptr: 6
+2    iptr: 7
+3    iptr: 42
+4    iptr: 43
+5    nb: 1
+6 set: 0
+7 set: 2
+8    iptr: 10
+9    iptr: 27
+10 obj: 11 2
+11    iptr: 13
+12    iptr: 26
+13 obj: 32 5
+14    iptr: 19
+15    :
+16    :
+17    ::
+18    :
+19 obj: 17 3
+20    fid: 16
+21    iptr: 23
+22    :
+23 set: 2
+24    :
+25    :
+26 set: 0
+27 obj: 11 2
+28    iptr: 30
+29    iptr: 41
+30 obj: 32 5
+31    iptr: 36
+32    :
+33    :
+34    ::
+35    :
+36 mk: 30 4
+37    :
+38    rptr: 0
+39    :
+40    :
+41 set: 0
+42 set: 0
+43 set: 2
+44    iptr: 46
+45    iptr: 61
+46 obj: 16 2
+47    fid: 0
+48    iptr: 49
+49 set: 2
+50    iptr: 52
+51    iptr: 60
+52 mk: 30 4
+53    rptr: 1
+54    rptr: 0
+55    iptr: 57
+56    nb: 1
+57 op: 8 2
+58    vlptr: 25
+59    vlptr: 39
+60 set: 0
+61 obj: 16 2
+62    fid: 0
+63    iptr: 64
+64 set: 2
+65    iptr: 67
+66    iptr: 85
+67 obj: 32 5
+68    vlptr: 50
+69    iptr: 73
+70    iptr: 79
+71    nb: 1
+72    nb: 1
+73 op: 8 2
+74    vlptr: 32
+75    iptr: 76
+76 us
+77    0
+78    100000
+79 op: 8 2
+80    vlptr: 33
+81    iptr: 82
+82 us
+83    0
+84    100000
+85 set: 6
+86    nb: 1
+87    vlptr: 33
+88    nb: 1
+89    nb: 1
+90    rptr: 2
+91    nil
+
+---reference set---
+0 13
+1 31
+2 2
+
+---marker set---
+
+---view set---
+
+---object---
+42
+code size: 12
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 ipgm: 19 7
+1    rptr: 0
+2    iptr: 8
+3    bl: false
+4    iptr: 9
+5    bl: true
+6    bl: true
+7    nb: 1
+8 set: 0
+9 us
+10    0
+11    0
+
+---reference set---
+0 41
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 10 7
+1    nb: 0
+2    iptr: 8
+3    nb: 0
+4    nb: 2
+5    rptr: 0
+6    nil
+7    nb: 1
+8 op: 0 0
+-reference set-
+0 2
+
+---object---
+43
+code size: 132
+reference set size: 5
+marker set size: 0
+view set size: 0
+
+---code---
+0 obj: 13 5
+1    iptr: 6
+2    iptr: 7
+3    iptr: 8
+4    iptr: 9
+5    nb: 1
+6 set: 0
+7 set: 0
+8 set: 0
+9 set: 6
+10    iptr: 16
+11    iptr: 28
+12    iptr: 52
+13    iptr: 64
+14    iptr: 92
+15    iptr: 104
+16 obj: 16 2
+17    fid: 0
+18    iptr: 19
+19 set: 2
+20    iptr: 22
+21    iptr: 27
+22 mk: 30 4
+23    rptr: 0
+24    rptr: 1
+25    rptr: 2
+26    nb: 1
+27 set: 0
+28 obj: 16 2
+29    fid: 0
+30    iptr: 31
+31 set: 2
+32    iptr: 34
+33    iptr: 44
+34 obj: 33 5
+35    vlptr: 20
+36    iptr: 40
+37    iptr: 41
+38    nb: 1
+39    nb: 1
+40 op: 0 0
+41 us
+42    4294967295
+43    4294967295
+44 set: 6
+45    nb: 2
+46    iptr: 51
+47    nb: 1
+48    nb: inf
+49    rptr: 3
+50    nil
+51 op: 0 0
+52 obj: 16 2
+53    fid: 0
+54    iptr: 55
+55 set: 2
+56    iptr: 58
+57    iptr: 63
+58 mk: 30 4
+59    rptr: 0
+60    rptr: 4
+61    nb: 0
+62    nb: 1
+63 set: 0
+64 obj: 16 2
+65    fid: 0
+66    iptr: 67
+67 set: 2
+68    iptr: 70
+69    iptr: 84
+70 obj: 32 5
+71    vlptr: 56
+72    iptr: 76
+73    iptr: 77
+74    nb: 1
+75    nb: 1
+76 op: 0 0
+77 op: 8 2
+78    iptr: 80
+79    iptr: 81
+80 op: 0 0
+81 us
+82    0
+83    100000
+84 set: 6
+85    nb: 1
+86    iptr: 91
+87    nb: 1
+88    nb: 1
+89    rptr: 3
+90    nil
+91 op: 0 0
+92 obj: 16 2
+93    fid: 0
+94    iptr: 95
+95 set: 2
+96    iptr: 98
+97    iptr: 103
+98 mk: 30 4
+99    rptr: 2
+100    rptr: 4
+101    nb: 0
+102    nb: 1
+103 set: 0
+104 obj: 16 2
+105    fid: 0
+106    iptr: 107
+107 set: 2
+108    iptr: 110
+109    iptr: 124
+110 obj: 32 5
+111    vlptr: 96
+112    iptr: 116
+113    iptr: 117
+114    nb: 1
+115    nb: 1
+116 op: 0 0
+117 op: 8 2
+118    iptr: 120
+119    iptr: 121
+120 op: 0 0
+121 us
+122    0
+123    100000
+124 set: 6
+125    nb: 1
+126    iptr: 131
+127    nb: 1
+128    nb: 1
+129    rptr: 3
+130    nil
+131 op: 0 0
+
+---reference set---
+0 31
+1 17
+2 34
+3 2
+4 11
+
+---marker set---
+
+---view set---
+
+---object---
+44
+code size: 12
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 ipgm: 19 7
+1    rptr: 0
+2    iptr: 8
+3    bl: false
+4    iptr: 9
+5    bl: true
+6    bl: true
+7    nb: 1
+8 set: 0
+9 us
+10    0
+11    200000
+
+---reference set---
+0 43
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 10 7
+1    nb: 0
+2    iptr: 8
+3    nb: 0
+4    nb: 1
+5    rptr: 0
+6    nil
+7    nb: 1
+8 op: 0 0
+-reference set-
+0 2
+
+---object---
+45
+code size: 91
+reference set size: 4
+marker set size: 0
+view set size: 0
+
+---code---
+0 obj: 13 5
+1    iptr: 6
+2    iptr: 7
+3    iptr: 8
+4    iptr: 9
+5    nb: 1
+6 set: 0
+7 set: 0
+8 set: 0
+9 set: 4
+10    iptr: 14
+11    iptr: 27
+12    iptr: 55
+13    iptr: 67
+14 obj: 16 2
+15    fid: 0
+16    iptr: 17
+17 set: 2
+18    iptr: 20
+19    iptr: 26
+20 obj: 17 3
+21    fid: 17
+22    iptr: 24
+23    nb: 1
+24 set: 1
+25    rptr: 0
+26 set: 0
+27 obj: 16 2
+28    fid: 0
+29    iptr: 30
+30 set: 2
+31    iptr: 33
+32    iptr: 47
+33 obj: 32 5
+34    vlptr: 18
+35    iptr: 39
+36    iptr: 40
+37    nb: 1
+38    nb: 1
+39 op: 0 0
+40 op: 8 2
+41    iptr: 43
+42    iptr: 44
+43 op: 0 0
+44 us
+45    0
+46    10000
+47 set: 6
+48    nb: 0
+49    iptr: 54
+50    nb: 1
+51    nb: 1
+52    rptr: 1
+53    nil
+54 op: 0 0
+55 obj: 16 2
+56    fid: 0
+57    iptr: 58
+58 set: 2
+59    iptr: 61
+60    iptr: 66
+61 mk: 30 4
+62    rptr: 0
+63    rptr: 2
+64    rptr: 3
+65    nb: 1
+66 set: 0
+67 obj: 16 2
+68    fid: 0
+69    iptr: 70
+70 set: 2
+71    iptr: 73
+72    iptr: 83
+73 obj: 32 5
+74    vlptr: 59
+75    iptr: 79
+76    iptr: 80
+77    nb: 1
+78    nb: 1
+79 op: 0 0
+80 us
+81    4294967295
+82    4294967295
+83 set: 6
+84    nb: 2
+85    iptr: 90
+86    nb: 1
+87    nb: inf
+88    rptr: 1
+89    nil
+90 op: 0 0
+
+---reference set---
+0 31
+1 2
+2 17
+3 34
+
+---marker set---
+
+---view set---
+
+---object---
+46
+code size: 12
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 ipgm: 19 7
+1    rptr: 0
+2    iptr: 8
+3    bl: false
+4    iptr: 9
+5    bl: true
+6    bl: true
+7    nb: 1
+8 set: 0
+9 us
+10    0
+11    260000
+
+---reference set---
+0 45
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 10 7
+1    nb: 0
+2    iptr: 8
+3    nb: 0
+4    nb: 2
+5    rptr: 0
+6    nil
+7    nb: 1
+8 op: 0 0
+-reference set-
+0 2
+
+---object---
+47
+code size: 91
+reference set size: 4
+marker set size: 0
+view set size: 0
+
+---code---
+0 obj: 13 5
+1    iptr: 6
+2    iptr: 7
+3    iptr: 8
+4    iptr: 9
+5    nb: 1
+6 set: 0
+7 set: 0
+8 set: 0
+9 set: 4
+10    iptr: 14
+11    iptr: 27
+12    iptr: 55
+13    iptr: 67
+14 obj: 16 2
+15    fid: 0
+16    iptr: 17
+17 set: 2
+18    iptr: 20
+19    iptr: 26
+20 obj: 17 3
+21    fid: 18
+22    iptr: 24
+23    nb: 1
+24 set: 1
+25    rptr: 0
+26 set: 0
+27 obj: 16 2
+28    fid: 0
+29    iptr: 30
+30 set: 2
+31    iptr: 33
+32    iptr: 47
+33 obj: 32 5
+34    vlptr: 18
+35    iptr: 39
+36    iptr: 40
+37    nb: 1
+38    nb: 1
+39 op: 0 0
+40 op: 8 2
+41    iptr: 43
+42    iptr: 44
+43 op: 0 0
+44 us
+45    0
+46    10000
+47 set: 6
+48    nb: 0
+49    iptr: 54
+50    nb: 1
+51    nb: 1
+52    rptr: 1
+53    nil
+54 op: 0 0
+55 obj: 16 2
+56    fid: 0
+57    iptr: 58
+58 set: 2
+59    iptr: 61
+60    iptr: 66
+61 mk: 30 4
+62    rptr: 0
+63    rptr: 2
+64    rptr: 3
+65    nb: 1
+66 set: 0
+67 obj: 16 2
+68    fid: 0
+69    iptr: 70
+70 set: 2
+71    iptr: 73
+72    iptr: 83
+73 obj: 33 5
+74    vlptr: 59
+75    iptr: 79
+76    iptr: 80
+77    nb: 1
+78    nb: 1
+79 op: 0 0
+80 us
+81    4294967295
+82    4294967295
+83 set: 6
+84    nb: 2
+85    iptr: 90
+86    nb: 1
+87    nb: 1
+88    rptr: 1
+89    nil
+90 op: 0 0
+
+---reference set---
+0 31
+1 2
+2 17
+3 34
+
+---marker set---
+
+---view set---
+
+---object---
+48
+code size: 12
+reference set size: 1
+marker set size: 0
+view set size: 1
+
+---code---
+0 ipgm: 19 7
+1    rptr: 0
+2    iptr: 8
+3    bl: false
+4    iptr: 9
+5    bl: true
+6    bl: true
+7    nb: 1
+8 set: 0
+9 us
+10    0
+11    360000
+
+---reference set---
+0 47
+
+---marker set---
+
+---view set---
+view[0]
+reference set size: 1
+-code-
+0 s_set: 10 7
+1    nb: 0
+2    iptr: 8
+3    nb: 0
+4    nb: 2
+5    rptr: 0
+6    nil
+7    nb: 1
+8 op: 0 0
+-reference set-
+0 2
