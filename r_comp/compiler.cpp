@@ -403,74 +403,85 @@ bool Compiler::this_indirection(RepliStruct *node, std::vector<int16_t> &v, cons
 
 bool Compiler::local_indirection(RepliStruct *node, std::vector<int16_t> &v, const ReturnType t, uint32_t &cast_opcode)
 {
-    std::string name = node->cmd;
-    size_t pos = name.find(".");
+    std::string path = node->cmd;
+    size_t pos = path.find(".");
     if (pos == std::string::npos) {
         return false;
     }
-    std::string m = name.substr(0, pos); // first m is a reference to a label or a variable
+
+    std::string name = path.substr(0, pos); // first name is a reference to a label or a variable
 
     uint16_t index;
     ReturnType type;
-    std::unordered_map<std::string, Reference>::iterator it = local_references.find(m);
-    if (it == local_references.end()) {
+    if (local_references.count(name) == 0) {
         return false;
     }
 
-    index = it->second.index;
+    Reference &reference = local_references[name];
+
+    index = reference.index;
     v.push_back(index);
-    Class *p;
-    if (it->second.cast_class.str_opcode == "undefined") { // find out if there was a cast for this reference.
-        p = &it->second._class;
+    Class *current_class;
+    if (reference.cast_class.str_opcode == "undefined") { // find out if there was a cast for this reference.
+        current_class = &reference._class;
         cast_opcode = 0x0FFFFFFF;
     } else {
-        p = &it->second.cast_class;
-        cast_opcode = p->atom.asOpcode();
+        current_class = &reference.cast_class;
+        cast_opcode = current_class->atom.asOpcode();
     }
 
-    name.erase(0, pos + 1); // remove the first member
-    Class *_p;
-    std::string path = "";
-    while ((pos = name.find(".")) != std::string::npos) {
-        m = name.substr(0, pos);
-        if (m == "vw") {
-            _p = &_metadata->classes.find("pgm_view")->second;
+    path.erase(0, pos + 1); // remove the first member
+    Class *fetched_class;
+
+    std::string current_path = name;
+
+    while (path.length() > 0) {
+        pos = path.find(".");
+        name = path.substr(0, pos);
+
+        if (name == "vw") {
+            fetched_class = &_metadata->classes.find("pgm_view")->second;
             type = ANY;
             v.push_back(-1);
-        } else if (m == "mks") {
-            _p = NULL;
+        } else if (name == "mks") {
+            fetched_class = NULL;
             type = SET;
             v.push_back(-2);
-        } else if (m == "vws") {
-            _p = NULL;
+        } else if (name == "vws") {
+            fetched_class = NULL;
             type = SET;
             v.push_back(-3);
-        } else if (!p->get_member_index(_metadata, m, index, _p)) {
-            set_error(" error: " + m + " is not a member of " + p->str_opcode, node);
+        } else if (!current_class->get_member_index(_metadata, name, index, fetched_class)) {
+            set_error(" error: " + name + " is not a member of " + current_class->str_opcode, node);
             break;
         } else {
-            type = p->get_member_type(index);
+            type = current_class->get_member_type(index);
             v.push_back(index);
         }
 
-        path += '.';
-        path += m;
+        current_path += '.';
+        current_path += name;
 
-        name.erase(0, pos + 1); // remove the first member
-        if (name[0] == '.') {
-            if (!_p) {
-                set_error(" error: " + path + " is not an addressable structure", node);
-                break;
-            }
-            p = _p;
-        } else {
-            if (t == ANY || (t != ANY && type == t)) {
-                return true;
-            }
+        // No more dots
+        if (pos == std::string::npos) {
             break;
         }
+
+        if (!fetched_class) {
+            set_error(" error: " + current_path + " is not an addressable structure", node);
+            return false;
+        }
+        current_class = fetched_class;
+
+        // Remove fetched member + '.'
+        path.erase(0, pos + 1);
     }
-    return false;
+
+    if (type == t || t == ANY) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool Compiler::global_indirection(RepliStruct *node, std::vector<int16_t> &v, const ReturnType t) {
