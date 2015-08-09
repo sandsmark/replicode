@@ -1,12 +1,16 @@
 #include <r_exec/init.h>
 #include <r_comp/preprocessor.h>
 #include <r_comp/compiler.h>
+#include <r_comp/decompiler.h>
 #include <CoreLibrary/debug.h>
 #include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <chrono>
+
+#define USR_OPERATOR_PATH "../../build/usr_operators/libusr_operators.so"
+#define USR_CLASSES_PATH  "user.classes.replicode"
 
 int main(int argc, char *argv[])
 {
@@ -15,55 +19,55 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    const std::string usr_operator_path("../../build/usr_operators/libusr_operators.so");
-    const std::string usr_classes_path("user.classes.replicode");
+    std::string testfile = argv[1];
+    debug("compiler test") << "Testing compiler with file" << testfile;
 
-    std::string testsource = argv[1];
-    std::ifstream tracefile((testsource + ".trace").c_str(), std::ios::binary);
+
+    std::string tracefilename = testfile + ".trace";
+    std::ifstream tracefile(tracefilename.c_str(), std::ios::binary);
     if (!tracefile.good()) {
-        debug(testsource) << "Unable to open .trace file";
+        debug("compiler test") << "Unable to open .trace file" << tracefilename;
         return 1;
     }
 
     std::string correct_trace( (std::istreambuf_iterator<char>(tracefile)),
                                (std::istreambuf_iterator<char>()));
     if (correct_trace.length() == 0) {
-        debug(testsource) << ".trace file is empty";
+        debug("compiler test") << ".trace file is empty";
         return 2;
     }
 
     r_comp::Image image;
     r_comp::Metadata metadata;
 
-    if (!r_exec::Init(usr_operator_path.c_str(),
+    if (!r_exec::Init(USR_OPERATOR_PATH,
                       []() -> uint64_t {
                           return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
                       },
-                      usr_classes_path.c_str(),
+                      USR_CLASSES_PATH,
                       &image,
                       &metadata)) {
         debug("compiler test") << "Unable to initialize metadata and image";
         return 3;
     }
-    debug(testsource) << "initialized";
 
     r_comp::Preprocessor preprocessor;
     r_comp::Compiler compiler;
     std::string error;
 
-    r_comp::RepliStruct *root = preprocessor.process(testsource.c_str(), error, &metadata);
+    r_comp::RepliStruct *root = preprocessor.process(testfile.c_str(), error, &metadata);
     if (error.length() != 0) {
-        debug(testsource) << "Error from preprocessor:" << error;
+        debug("compiler test") << "Error from preprocessor:" << error;
         return 4;
     }
 
     if (!root) {
-        debug(testsource) << "Preprocessor returned null-root, without error!";
+        debug("compiler test") << "Preprocessor returned null-root, without error!";
         return 5;
     }
 
     if (!compiler.compile(root, &image, &metadata, error, false)) {
-        debug(testsource) << "Compile failed:" << compiler.getError();
+        debug("compiler test") << "Compile failed:" << compiler.getError();
         return 6;
     }
 
@@ -80,11 +84,23 @@ int main(int argc, char *argv[])
     std::cout.rdbuf(old_cout);
 
     if (result_stream.str() != correct_trace) {
-        debug(testsource) << "Trace does not match expected trace" << result_stream.str().length() << correct_trace.length();
-        std::ofstream outfile((testsource + ".wrong").c_str(), std::ios::trunc);
+        debug("compiler test") << "Trace does not match expected trace" << result_stream.str().length() << correct_trace.length();
+        std::ofstream outfile((testfile + ".trace.wrong").c_str(), std::ios::trunc);
         outfile << result_stream.str();
+
+        r_comp::Decompiler decompiler;
+        decompiler.init(&metadata);
+        std::ostringstream decompiled_code;
+        uint64_t decompiled_object_count = decompiler.decompile(&image, &decompiled_code, 0, false);
+        debug("compiler test") << "decompiled objects count:" << decompiled_object_count << "image object count:" << image.code_segment.objects.size();
+
+        std::ofstream decompilefile((testfile + ".decompiled.replicode").c_str(), std::ios::trunc);
+        decompilefile << decompiled_code.rdbuf();
+
         return 7;
     }
+
+    debug("compiler test") << "Test succeeded!";
 
     return 0;
 }
