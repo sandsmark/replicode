@@ -691,9 +691,7 @@ void Decompiler::write_any(uint16_t read_index, bool &after_tail_wildcard, bool 
         index = a.asIndex();
         atom = current_object->code[index];
         while (atom.getDescriptor() == Atom::I_PTR) {
-
             index = atom.asIndex();
-            assert(atom != current_object->code[index]);
             atom = current_object->code[index];
         }
         if (index < read_index) { // reference to a label or variable.
