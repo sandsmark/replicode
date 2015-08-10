@@ -30,17 +30,19 @@
 
 #include "guard_builder.h"
 
-
 namespace r_exec {
 
-GuardBuilder::GuardBuilder(): _Object() {
+GuardBuilder::GuardBuilder() :
+    _Object()
+{
 }
 
-GuardBuilder::~GuardBuilder() {
+GuardBuilder::~GuardBuilder()
+{
 }
 
-void GuardBuilder::build(Code *mdl, _Fact *premise, _Fact *cause, uint16_t &write_index) const {
-
+void GuardBuilder::build(Code *mdl, _Fact *premise, _Fact *cause, uint16_t &write_index) const
+{
     mdl->code(MDL_FWD_GUARDS) = Atom::IPointer(++write_index);
     mdl->code(write_index) = Atom::Set(0);
 
@@ -50,14 +52,18 @@ void GuardBuilder::build(Code *mdl, _Fact *premise, _Fact *cause, uint16_t &writ
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TimingGuardBuilder::TimingGuardBuilder(uint64_t period): GuardBuilder(), period(period) {
+TimingGuardBuilder::TimingGuardBuilder(uint64_t period) :
+    GuardBuilder(),
+    period(period)
+{
 }
 
-TimingGuardBuilder::~TimingGuardBuilder() {
+TimingGuardBuilder::~TimingGuardBuilder()
+{
 }
 
-void TimingGuardBuilder::write_guard(Code *mdl, uint16_t l, uint16_t r, uint16_t opcode, uint64_t offset, uint16_t &write_index, uint16_t &extent_index) const {
-
+void TimingGuardBuilder::write_guard(Code *mdl, uint16_t l, uint16_t r, uint16_t opcode, uint64_t offset, uint16_t &write_index, uint16_t &extent_index) const
+{
     mdl->code(++write_index) = Atom::AssignmentPointer(l, ++extent_index);
     mdl->code(extent_index) = Atom::Operator(opcode, 2); // l:(opcode r offset)
     mdl->code(++extent_index) = Atom::VLPointer(r);
@@ -67,8 +73,8 @@ void TimingGuardBuilder::write_guard(Code *mdl, uint16_t l, uint16_t r, uint16_t
     extent_index += 2;
 }
 
-void TimingGuardBuilder::_build(Code *mdl, uint16_t t0, uint16_t t1, uint16_t &write_index) const {
-
+void TimingGuardBuilder::_build(Code *mdl, uint16_t t0, uint16_t t1, uint16_t &write_index) const
+{
     Code *rhs_val = mdl->get_reference(1);
     uint16_t t2 = rhs_val->code(FACT_AFTER).asIndex();
     uint16_t t3 = rhs_val->code(FACT_BEFORE).asIndex();
@@ -93,8 +99,8 @@ void TimingGuardBuilder::_build(Code *mdl, uint16_t t0, uint16_t t1, uint16_t &w
     write_index = extent_index;
 }
 
-void TimingGuardBuilder::build(Code *mdl, _Fact *premise, _Fact *cause, uint16_t &write_index) const {
-
+void TimingGuardBuilder::build(Code *mdl, _Fact *premise, _Fact *cause, uint16_t &write_index) const
+{
     uint16_t t0;
     uint16_t t1;
     uint16_t tpl_arg_set_index = mdl->code(MDL_TPL_ARGS).asIndex();
@@ -114,14 +120,18 @@ void TimingGuardBuilder::build(Code *mdl, _Fact *premise, _Fact *cause, uint16_t
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-SGuardBuilder::SGuardBuilder(uint64_t period, uint64_t offset): TimingGuardBuilder(period), offset(offset) {
+SGuardBuilder::SGuardBuilder(uint64_t period, uint64_t offset) :
+    TimingGuardBuilder(period),
+    offset(offset)
+{
 }
 
-SGuardBuilder::~SGuardBuilder() {
+SGuardBuilder::~SGuardBuilder()
+{
 }
 
-void SGuardBuilder::_build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const {
-
+void SGuardBuilder::_build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const
+{
     Code *rhs = mdl->get_reference(1);
     uint16_t t2 = rhs->code(FACT_AFTER).asIndex();
     uint16_t t3 = rhs->code(FACT_BEFORE).asIndex();
@@ -179,19 +189,17 @@ void SGuardBuilder::_build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uin
     write_index = extent_index;
 }
 
-void SGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const {
-
+void SGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const
+{
     uint16_t q0;
     uint16_t t0;
     uint16_t t1;
     uint16_t tpl_arg_set_index = mdl->code(MDL_TPL_ARGS).asIndex();
     if (mdl->code(tpl_arg_set_index).getAtomCount() == 0) {
-
         q0 = premise_pattern->get_reference(0)->code(MK_VAL_VALUE).asIndex();
         t0 = premise_pattern->code(FACT_AFTER).asIndex();
         t1 = premise_pattern->code(FACT_BEFORE).asIndex();
     } else { // use the tpl args.
-
         q0 = 0;
         t0 = 1;
         t1 = 2;
@@ -202,14 +210,19 @@ void SGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_patter
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-NoArgCmdGuardBuilder::NoArgCmdGuardBuilder(uint64_t period, uint64_t offset, uint64_t cmd_duration): TimingGuardBuilder(period), offset(offset), cmd_duration(cmd_duration) {
+NoArgCmdGuardBuilder::NoArgCmdGuardBuilder(uint64_t period, uint64_t offset, uint64_t cmd_duration) :
+    TimingGuardBuilder(period),
+    offset(offset),
+    cmd_duration(cmd_duration)
+{
 }
 
-NoArgCmdGuardBuilder::~NoArgCmdGuardBuilder() {
+NoArgCmdGuardBuilder::~NoArgCmdGuardBuilder()
+{
 }
 
-void NoArgCmdGuardBuilder::_build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const {
-
+void NoArgCmdGuardBuilder::_build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const
+{
     Code *rhs = mdl->get_reference(1);
     uint16_t t2 = rhs->code(FACT_AFTER).asIndex();
     uint16_t t3 = rhs->code(FACT_BEFORE).asIndex();
@@ -225,7 +238,6 @@ void NoArgCmdGuardBuilder::_build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t 
 
     write_guard(mdl, t2, t0, Opcodes::Add, period, write_index, extent_index);
     write_guard(mdl, t3, t1, Opcodes::Add, period, write_index, extent_index);
-
     write_index = extent_index;
     mdl->code(MDL_BWD_GUARDS) = Atom::IPointer(++write_index);
     mdl->code(write_index) = Atom::Set(4);
@@ -241,37 +253,38 @@ void NoArgCmdGuardBuilder::_build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t 
     write_index = extent_index;
 }
 
-void NoArgCmdGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const {
-
+void NoArgCmdGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const
+{
     uint16_t q0;
     uint16_t t0;
     uint16_t t1;
     uint16_t tpl_arg_set_index = mdl->code(MDL_TPL_ARGS).asIndex();
     if (mdl->code(tpl_arg_set_index).getAtomCount() == 0) {
-
         q0 = premise_pattern->get_reference(0)->code(MK_VAL_VALUE).asIndex();
         t0 = premise_pattern->code(FACT_AFTER).asIndex();
         t1 = premise_pattern->code(FACT_BEFORE).asIndex();
     } else { // use the tpl args.
-
         q0 = 0;
         t0 = 1;
         t1 = 2;
     }
-
     _build(mdl, q0, t0, t1, write_index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CmdGuardBuilder::CmdGuardBuilder(uint64_t period, uint16_t cmd_arg_index): TimingGuardBuilder(period), cmd_arg_index(cmd_arg_index) {
+CmdGuardBuilder::CmdGuardBuilder(uint64_t period, uint16_t cmd_arg_index) :
+    TimingGuardBuilder(period),
+    cmd_arg_index(cmd_arg_index)
+{
 }
 
-CmdGuardBuilder::~CmdGuardBuilder() {
+CmdGuardBuilder::~CmdGuardBuilder()
+{
 }
 
-void CmdGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const {
-
+void CmdGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const
+{
     Code *rhs = mdl->get_reference(1);
     uint16_t t2 = rhs->code(FACT_AFTER).asIndex();
     uint16_t t3 = rhs->code(FACT_BEFORE).asIndex();
@@ -317,19 +330,17 @@ void CmdGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode
     write_index = extent_index;
 }
 
-void CmdGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const {
-
+void CmdGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const
+{
     uint16_t q0;
     uint16_t t0;
     uint16_t t1;
     uint16_t tpl_arg_set_index = mdl->code(MDL_TPL_ARGS).asIndex();
     if (mdl->code(tpl_arg_set_index).getAtomCount() == 0) {
-
         q0 = premise_pattern->get_reference(0)->code(MK_VAL_VALUE).asIndex();
         t0 = premise_pattern->code(FACT_AFTER).asIndex();
         t1 = premise_pattern->code(FACT_BEFORE).asIndex();
     } else { // use the tpl args.
-
         q0 = 0;
         t0 = 1;
         t1 = 2;
@@ -340,40 +351,50 @@ void CmdGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-MCGuardBuilder::MCGuardBuilder(uint64_t period, double cmd_arg_index): CmdGuardBuilder(period, cmd_arg_index) {
+MCGuardBuilder::MCGuardBuilder(uint64_t period, double cmd_arg_index): CmdGuardBuilder(period, cmd_arg_index)
+{
 }
 
-MCGuardBuilder::~MCGuardBuilder() {
+MCGuardBuilder::~MCGuardBuilder()
+{
 }
 
-void MCGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const {
-
+void MCGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const
+{
     _build(mdl, Opcodes::Mul, Opcodes::Div, premise_pattern, cause_pattern, write_index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ACGuardBuilder::ACGuardBuilder(uint64_t period, uint16_t cmd_arg_index): CmdGuardBuilder(period, cmd_arg_index) {
+ACGuardBuilder::ACGuardBuilder(uint64_t period, uint16_t cmd_arg_index) :
+    CmdGuardBuilder(period, cmd_arg_index)
+{
 }
 
-ACGuardBuilder::~ACGuardBuilder() {
+ACGuardBuilder::~ACGuardBuilder()
+{
 }
 
-void ACGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const {
-
+void ACGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const
+{
     _build(mdl, Opcodes::Add, Opcodes::Sub, premise_pattern, cause_pattern, write_index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ConstGuardBuilder::ConstGuardBuilder(uint64_t period, double constant, uint64_t offset): TimingGuardBuilder(period), constant(constant), offset(offset) {
+ConstGuardBuilder::ConstGuardBuilder(uint64_t period, double constant, uint64_t offset) :
+    TimingGuardBuilder(period),
+    constant(constant),
+    offset(offset)
+{
 }
 
-ConstGuardBuilder::~ConstGuardBuilder() {
+ConstGuardBuilder::~ConstGuardBuilder()
+{
 }
 
-void ConstGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const {
-
+void ConstGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const
+{
     Code *rhs = mdl->get_reference(1);
     uint16_t t2 = rhs->code(FACT_AFTER).asIndex();
     uint16_t t3 = rhs->code(FACT_BEFORE).asIndex();
@@ -418,19 +439,17 @@ void ConstGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opco
     write_index = extent_index;
 }
 
-void ConstGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const {
-
+void ConstGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const
+{
     uint16_t q0;
     uint16_t t0;
     uint16_t t1;
     uint16_t tpl_arg_set_index = mdl->code(MDL_TPL_ARGS).asIndex();
     if (mdl->code(tpl_arg_set_index).getAtomCount() == 0) {
-
         q0 = premise_pattern->get_reference(0)->code(MK_VAL_VALUE).asIndex();
         t0 = premise_pattern->code(FACT_AFTER).asIndex();
         t1 = premise_pattern->code(FACT_BEFORE).asIndex();
     } else { // use the tpl args.
-
         q0 = 0;
         t0 = 1;
         t1 = 2;
@@ -441,27 +460,34 @@ void ConstGuardBuilder::_build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opco
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-MGuardBuilder::MGuardBuilder(uint64_t period, double constant, uint64_t offset): ConstGuardBuilder(period, constant, offset) {
+MGuardBuilder::MGuardBuilder(uint64_t period, double constant, uint64_t offset) :
+    ConstGuardBuilder(period, constant, offset)
+{
 }
 
-MGuardBuilder::~MGuardBuilder() {
+MGuardBuilder::~MGuardBuilder()
+{
 }
 
-void MGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const {
-
+void MGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const
+{
     _build(mdl, Opcodes::Mul, Opcodes::Div, premise_pattern, cause_pattern, write_index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-AGuardBuilder::AGuardBuilder(uint64_t period, double constant, uint64_t offset): ConstGuardBuilder(period, constant, offset) {
+AGuardBuilder::AGuardBuilder(uint64_t period, double constant, uint64_t offset) :
+    ConstGuardBuilder(period, constant, offset)
+{
 }
 
-AGuardBuilder::~AGuardBuilder() {
+AGuardBuilder::~AGuardBuilder()
+{
 }
 
-void AGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const {
-
+void AGuardBuilder::build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const
+{
     _build(mdl, Opcodes::Add, Opcodes::Sub, premise_pattern, cause_pattern, write_index);
 }
+
 }
