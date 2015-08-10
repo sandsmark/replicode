@@ -62,7 +62,7 @@ void TimingGuardBuilder::write_guard(Code *mdl, uint16_t l, uint16_t r, uint16_t
     mdl->code(extent_index) = Atom::Operator(opcode, 2); // l:(opcode r offset)
     mdl->code(++extent_index) = Atom::VLPointer(r);
     extent_index++;
-    mdl->code(extent_index) = Atom::IPointer(extent_index);
+    mdl->code(extent_index) = Atom::IPointer(extent_index + 1);
     Utils::SetTimestamp(mdl, ++extent_index, offset);
     extent_index += 2;
 }
@@ -144,11 +144,11 @@ void SGuardBuilder::_build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uin
     mdl->code(extent_index) = Atom::Operator(Opcodes::Add, 2); // q1:(+ q0 (* s period))
     mdl->code(++extent_index) = Atom::VLPointer(q0);
     extent_index++;
-    mdl->code(extent_index) = Atom::IPointer(extent_index);
+    mdl->code(extent_index) = Atom::IPointer(extent_index + 1);
     mdl->code(++extent_index) = Atom::Operator(Opcodes::Mul, 2);
     mdl->code(++extent_index) = Atom::VLPointer(speed_value);
     extent_index++;
-    mdl->code(extent_index) = Atom::IPointer(extent_index);
+    mdl->code(extent_index) = Atom::IPointer(extent_index + 1);
     Utils::SetTimestamp(mdl, ++extent_index, period);
     extent_index += 2;
 
@@ -167,9 +167,9 @@ void SGuardBuilder::_build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uin
     mdl->code(++write_index) = Atom::AssignmentPointer(speed_value, ++extent_index);
     mdl->code(extent_index) = Atom::Operator(Opcodes::Div, 2); // s:(/ (- q1 q0) period)
     extent_index++;
-    mdl->code(extent_index) = Atom::IPointer(extent_index + 1);
+    mdl->code(extent_index) = Atom::IPointer(extent_index + 2);
     extent_index++;
-    mdl->code(extent_index) = Atom::IPointer(extent_index + 3);
+    mdl->code(extent_index) = Atom::IPointer(extent_index + 4);
     mdl->code(++extent_index) = Atom::Operator(Opcodes::Sub, 2);
     mdl->code(++extent_index) = Atom::VLPointer(q1);
     mdl->code(++extent_index) = Atom::VLPointer(q0);
