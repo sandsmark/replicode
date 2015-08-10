@@ -54,8 +54,9 @@ bool IniFile::readFile(std::string filename)
             line = trim(line.substr(0, commentStart));
         }
 
-
-        if (line.length() == 0) continue;
+        if (line.length() == 0 || line.front() == '#'){
+            continue;
+        }
 
         if (line[0] == '[') {
             size_t end = line.find(']');
