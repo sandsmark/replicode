@@ -12,6 +12,12 @@ cmake ..
 make
 ```
 
+An optional step after building is to run the automated tests:
+
+```bash
+make test
+```
+
 [![Build Status](https://travis-ci.org/sandsmark/replicode.svg?branch=travis)](https://travis-ci.org/sandsmark/replicode)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/3254/badge.svg)](https://scan.coverity.com/projects/3254)
 
