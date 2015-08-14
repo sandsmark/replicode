@@ -346,8 +346,11 @@ bool Compiler::this_indirection(RepliStruct *node, std::vector<int16_t> &indices
         return false;
     }
     Class *reference_class; // in general, p starts as the current_class; exception: in pgm, this refers to the instantiated program.
-    if (current_class.str_opcode == "pgm")
+    if (current_class.str_opcode == "pgm") {
         reference_class = &_metadata->sys_classes["ipgm"];
+    } else {
+        reference_class = &current_class;
+    }
 
     std::string path = node->cmd;
     path.erase(0, path.find(".") + 1); // remove "this."
