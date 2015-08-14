@@ -36,30 +36,54 @@
 
 namespace r_code {
 
-// auto-resized vector
+/// Auto-resizing vector
 template<typename T> class vector {
 public:
-    vector() : m_vector(new std::vector<T>) {}
-    ~vector() { delete m_vector; }
+    vector() {}
+    ~vector() { }
     size_t size() const {
-        return m_vector->size();
+        return m_vector.size();
     }
     T &operator [](size_t i) {
-        if (i >= size())
-            m_vector->resize(i + 1);
-        return m_vector->at(i);
+        if (i >= size()) {
+            m_vector.resize(i + 1);
+        }
+        return m_vector.at(i);
     }
-    T &operator [](size_t i) const {
-        return m_vector->at(i);
+    const T &operator [](size_t i) const
+    {
+        return m_vector[i];
     }
     void push_back(T t) {
-        m_vector->push_back(t);
+        m_vector.push_back(t);
     }
-    std::vector<T> *as_std() const {
-        return m_vector;
+    std::vector<T> *as_std() {
+        return &m_vector;
     }
+
+    typedef typename std::vector<T>::iterator iterator;
+    typedef typename std::vector<T>::const_iterator const_iterator;
+    iterator begin() {
+        return m_vector->begin();
+    }
+    const_iterator begin() const {
+        return m_vector.begin();
+    }
+    const_iterator cbegin() const {
+        return m_vector.cbegin();
+    }
+    iterator end() {
+        return m_vector.end();
+    }
+    const_iterator end() const {
+        return m_vector.end();
+    }
+    const_iterator cend() const {
+        return m_vector.cend();
+    }
+
 private:
-    std::vector<T> *m_vector;
+    std::vector<T> m_vector;
 };
 
 }

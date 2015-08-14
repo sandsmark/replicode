@@ -42,7 +42,7 @@ namespace r_comp {
 
 class dll_export Decompiler {
 private:
-    OutStream *out_stream;
+    r_comp::OutStream *out_stream;
     uint16_t indents; // in chars.
     bool closing_set; // set after writing the last element of a set: any element in an expression finding closing_set will indent and set closing_set to false.
     bool in_hlp;

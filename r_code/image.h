@@ -104,8 +104,8 @@ public:
 
     size_t get_size() const; // size of data in word32
     size_t getObjectCount() const;
-    uintptr_t *getObject(size_t i); // points to the code size of the object; the first atom is at getObject()+2
-    uintptr_t *getCodeSegment(); // equals getObject(0)
+    uint32_t *getObject(size_t i); // points to the code size of the object; the first atom is at getObject()+2
+    uint32_t *getCodeSegment(); // equals getObject(0)
     size_t getCodeSegmentSize() const;
 
     void trace() const;

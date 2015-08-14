@@ -60,13 +60,12 @@ Class *Metadata::get_class(size_t opcode) {
     return &classes_by_opcodes[opcode];
 }
 
-void Metadata::write(uintptr_t *data) {
+void Metadata::write(uint32_t *data) {
 
     data[0] = classes_by_opcodes.size();
     size_t i;
     size_t offset = 1;
     for (i = 0; i < classes_by_opcodes.size(); ++i) {
-
         classes_by_opcodes[i].write(data + offset);
         offset += classes_by_opcodes[i].get_size();
     }
@@ -113,7 +112,7 @@ void Metadata::write(uintptr_t *data) {
     }
 }
 
-void Metadata::read(uintptr_t *data, size_t size) {
+void Metadata::read(uint32_t *data, size_t size) {
 
     size_t class_count = data[0];
     size_t i;
@@ -263,26 +262,29 @@ size_t Metadata::get_function_names_size() {
 
 ////////////////////////////////////////////////////////////////
 
-void ObjectMap::shift(uintptr_t offset) {
+void ObjectMap::shift(uint32_t offset) {
 
-    for (size_t i = 0; i < objects.size(); ++i)
+    for (size_t i = 0; i < objects.size(); ++i) {
         objects[i] += offset;
+    }
 }
 
-void ObjectMap::write(uintptr_t *data) {
-
-    for (size_t i = 0; i < objects.size(); ++i)
+void ObjectMap::write(uint32_t *data)
+{
+    for (size_t i = 0; i < objects.size(); ++i) {
         data[i] = objects[i];
+    }
 }
 
-void ObjectMap::read(uintptr_t *data, uintptr_t size) {
-
-    for (size_t i = 0; i < size; ++i)
+void ObjectMap::read(uint32_t *data, size_t size)
+{
+    for (size_t i = 0; i < size; ++i) {
         objects.push_back(data[i]);
+    }
 }
 
-size_t ObjectMap::get_size() const {
-
+size_t ObjectMap::get_size() const
+{
     return objects.size();
 }
 
@@ -294,21 +296,19 @@ CodeSegment::~CodeSegment() {
         delete objects[i];
 }
 
-void CodeSegment::write(uintptr_t *data) {
+void CodeSegment::write(uint32_t *data) {
 
-    size_t offset = 0;
+    uint32_t offset = 0;
     for (size_t i = 0; i < objects.size(); ++i) {
-
         objects[i]->write(data + offset);
         offset += objects[i]->get_size();
     }
 }
 
-void CodeSegment::read(uintptr_t *data, size_t object_count) {
-
+void CodeSegment::read(uint32_t *data, size_t object_count)
+{
     size_t offset = 0;
     for (size_t i = 0; i < object_count; ++i) {
-
         SysObject *o = new SysObject();
         o->read(data + offset);
         objects.push_back(o);
@@ -326,43 +326,35 @@ size_t CodeSegment::get_size() {
 
 ////////////////////////////////////////////////////////////////
 
-// Format:
-// number of entries
-// list of entries (one per user-defined symbol)
-// oid
-// symbol length
-// symbol characters
 
-ObjectNames::~ObjectNames() {
+ObjectNames::~ObjectNames()
+{
 }
 
-void ObjectNames::write(uintptr_t* data) {
-
+void ObjectNames::write(uint32_t *data)
+{
     data[0] = symbols.size();
 
     size_t index = 1;
 
-    std::unordered_map<size_t, std::string>::const_iterator n;
-    for (n = symbols.begin(); n != symbols.end(); ++n) {
-
-        data[index] = n->first;
-        size_t symbol_length = n->second.length() + 1; // add a trailing null character (for reading).
+    for(auto symbol : symbols) {
+        data[index] = symbol.first;
+        size_t symbol_length = symbol.second.length() + 1; // add a trailing null character (for reading).
         size_t _symbol_length = symbol_length / 4;
         size_t __symbol_length = symbol_length % 4;
         if (__symbol_length)
             ++_symbol_length;
         data[index + 1] = _symbol_length;
-        memcpy(data + index + 2, n->second.c_str(), symbol_length);
+        memcpy(data + index + 2, symbol.second.c_str(), symbol_length);
         index += _symbol_length + 2;
     }
 }
 
-void ObjectNames::read(uintptr_t *data) {
-
+void ObjectNames::read(uint32_t *data)
+{
     size_t symbol_count = data[0];
     size_t index = 1;
     for (size_t i = 0; i < symbol_count; ++i) {
-
         uintptr_t oid = data[index];
         size_t symbol_length = data[index + 1]; // number of words needed to store all the characters.
         std::string symbol((char *)(data + index + 2));
@@ -372,15 +364,13 @@ void ObjectNames::read(uintptr_t *data) {
     }
 }
 
-size_t ObjectNames::get_size() {
-
+size_t ObjectNames::get_size()
+{
     size_t size = 1; // size of symbols.
 
-    std::unordered_map<uintptr_t, std::string>::const_iterator n;
-    for (n = symbols.begin(); n != symbols.end(); ++n) {
-
+    for (auto n : symbols) {
         size += 2; // oid and symbol's length.
-        size_t symbol_length = n->second.length() + 1;
+        size_t symbol_length = n.second.length() + 1;
         size_t _symbol_length = symbol_length / 4;
         size_t __symbol_length = symbol_length % 4;
         if (__symbol_length)

@@ -106,8 +106,8 @@ Class *Class::get_member_class(Metadata *metadata, const std::string &name) {
     return NULL;
 }
 
-void Class::write(uintptr_t *storage) {
-
+void Class::write(uint32_t *storage)
+{
     storage[0] = atom.atom;
     r_code::WriteString(storage + 1, str_opcode);
     uint64_t offset = 1 + r_code::GetStringSize(str_opcode);
@@ -120,8 +120,8 @@ void Class::write(uintptr_t *storage) {
     }
 }
 
-void Class::read(uintptr_t* storage) {
-
+void Class::read(uint32_t *storage)
+{
     atom = storage[0];
     str_opcode = r_code::ReadString(storage + 1);
     uint64_t offset = 1 + r_code::GetStringSize(str_opcode);

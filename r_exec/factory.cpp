@@ -162,12 +162,13 @@ bool _Fact::is_anti_fact() const {
     return (code(0).asOpcode() == Opcodes::AntiFact);
 }
 
-void _Fact::set_opposite() const {
-
-    if (is_fact())
+void _Fact::set_opposite()
+{
+    if (is_fact()) {
         code(0) = Atom::Object(Opcodes::AntiFact, FACT_ARITY);
-    else
+    } else {
         code(0) = Atom::Object(Opcodes::Fact, FACT_ARITY);
+    }
 }
 
 _Fact *_Fact::get_absentee() const {

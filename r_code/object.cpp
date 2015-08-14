@@ -49,7 +49,7 @@ SysView::SysView(View *source) {
             references.push_back(0);
 }
 
-void SysView::write(uintptr_t *data) {
+void SysView::write(uint32_t *data) {
 
     data[0] = code.size();
     data[1] = references.size();
@@ -60,7 +60,7 @@ void SysView::write(uintptr_t *data) {
         data[2 + i + j] = references[j];
 }
 
-void SysView::read(uintptr_t* data) {
+void SysView::read(uint32_t *data) {
 
     size_t code_size = data[0];
     size_t reference_set_size = data[1];
@@ -94,7 +94,7 @@ void SysView::trace() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-uintptr_t SysObject::LastOID = 0;
+uint32_t SysObject::LastOID = 0;
 
 SysObject::SysObject(): oid(LastOID++) {
 }
@@ -123,8 +123,8 @@ SysObject::~SysObject() {
         delete views[i];
 }
 
-void SysObject::write(uintptr_t *data) {
-
+void SysObject::write(uint32_t *data)
+{
     data[0] = oid;
     data[1] = code.size();
     data[2] = references.size();
@@ -148,7 +148,7 @@ void SysObject::write(uintptr_t *data) {
     }
 }
 
-void SysObject::read(uintptr_t* data) {
+void SysObject::read(uint32_t *data) {
 
     oid = data[0];
     size_t code_size = data[1];

@@ -127,8 +127,9 @@ public:
     Iteration getIteration() const;
     _Read read() const;
 
-    void write(uintptr_t *storage) const;
-    void read(uintptr_t *storage);
+    void write(uint32_t *storage) const;
+    void read(uint32_t *storage);
+    /// see segments.cpp for the RAM layout
     size_t get_size();
 };
 }

@@ -46,66 +46,67 @@ namespace r_code {
 
 // I/O from/to r_code::Image ////////////////////////////////////////////////////////////////////////
 
-class dll_export ImageObject {
+class dll_export ImageObject
+{
 public:
     r_code::vector<Atom> code;
-    r_code::vector<uintptr_t> references;
+    r_code::vector<uint32_t> references;
     virtual ~ImageObject() {}
 
-    virtual void write(uintptr_t *data) = 0;
-    virtual void read(uintptr_t *data) = 0;
+    virtual void write(uint32_t *data) = 0;
+    virtual void read(uint32_t *data) = 0;
     virtual void trace() = 0;
 };
 
 class View;
 
-class dll_export SysView:
-    public ImageObject {
+class dll_export SysView : public ImageObject
+{
 public:
     SysView();
     SysView(View *source);
 
-    void write(uintptr_t *data);
-    void read(uintptr_t *data);
+    void write(uint32_t *data);
+    void read(uint32_t *data);
     size_t get_size() const;
     void trace();
 };
 
 class Code;
 
-class dll_export SysObject:
-    public ImageObject {
-private:
-    static uintptr_t LastOID;
+class dll_export SysObject : public ImageObject
+{
 public:
-    r_code::vector<uintptr_t> markers; // indexes in the relocation segment
+    r_code::vector<uint32_t> markers; // indexes in the relocation segment
     r_code::vector<SysView *> views;
 
-    uintptr_t oid;
+    uint32_t oid;
 
     SysObject();
     SysObject(Code *source);
     ~SysObject();
 
-    void write(uintptr_t *data);
-    void read(uintptr_t *data);
+    void write(uint32_t *data);
+    void read(uint32_t *data);
     size_t get_size();
+
     void trace();
+
+private:
+    static uint32_t LastOID;
 };
 
 // Interfaces for r_exec classes ////////////////////////////////////////////////////////////////////////
 
 class Object;
 
-class dll_export View:
-    public _Object {
-private:
-    uint16_t index; // for unpacking: index is the index of the view in the SysObject.
-protected:
-    Atom _code[VIEW_CODE_MAX_SIZE]; // dimensioned to hold the largest view (group view): head atom, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp; oid is the last word32 (not an atom).
+class dll_export View : public _Object
+{
 public:
-    Code *references[2]; // does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group in references[0]).
-    P<Code> object; // viewed object.
+    /// does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group in references[0]).
+    Code *references[2];
+    /// viewed object.
+    P<Code> object;
 
     View(): object(NULL) {
 
@@ -147,26 +148,31 @@ public:
         Utils::SetTimestamp(_code + _code[VIEW_IJT].asIndex(), ijt);
     }
 
-    class Hash {
-    public:
+    struct Hash {
         size_t operator()(View *v) const {
             return (size_t)(Code *)v->references[0]; // i.e. the group the view belongs to.
         }
     };
 
-    class Equal {
-    public:
+    struct Equal {
         bool operator()(const View *lhs, const View *rhs) const {
             return lhs->references[0] == rhs->references[0];
         }
     };
 
-    class Less {
-    public:
+    struct Less {
         bool operator()(const View *lhs, const View *rhs) const {
             return lhs->get_ijt() < rhs->get_ijt();
         }
     };
+
+private:
+    /// For unpacking: index is the index of the view in the SysObject.
+    uint16_t index;
+protected:
+    /// Dimensioned to hold the largest view (group view):
+    /// head atom, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp; oid is the last word32 (not an atom).
+    Atom _code[VIEW_CODE_MAX_SIZE];
 };
 
 class dll_export Code:
@@ -202,7 +208,7 @@ public:
     virtual void set_oid(uint64_t oid) = 0;
 
     virtual Atom &code(uint16_t i) = 0;
-    virtual Atom &code(uint16_t i) const = 0;
+    virtual const Atom &code(uint16_t i) const = 0;
     virtual uint16_t code_size() const = 0;
     virtual void resize_code(uint16_t new_size) = 0;
     virtual void set_reference(uint16_t i, Code *object) = 0;
@@ -245,7 +251,7 @@ public:
     virtual View *get_view(Code *group, bool lock) {
         return NULL;
     }
-    virtual void add_reference(Code *object) const {} // called only on local objects.
+    virtual void add_reference(Code *object) {} // called only on local objects.
     void remove_marker(Code *m) {
 
         acq_markers();
@@ -293,11 +299,11 @@ public:
         _oid = oid;
     }
 
-    Atom &code(uint16_t i) {
+    const Atom &code(uint16_t i) const {
         return _code[i];
     }
-    Atom &code(uint16_t i) const {
-        return (*_code.as_std())[i];
+    Atom &code(uint16_t i) {
+        return _code[i];
     }
     uint16_t code_size() const {
         return _code.size();
@@ -309,7 +315,7 @@ public:
         _references[i] = object;
     }
     Code *get_reference(uint16_t i) const {
-        return (*_references.as_std())[i];
+        return _references[i];
     }
     uint16_t references_size() const {
         return _references.size();
@@ -320,8 +326,8 @@ public:
     void set_references(std::vector<P<Code> > &new_references) {
         (*_references.as_std()) = new_references;
     }
-    void add_reference(Code *object) const {
-        _references.as_std()->push_back(object);
+    void add_reference(Code *object) {
+        _references.push_back(object);
     }
 };
 

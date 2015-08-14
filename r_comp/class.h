@@ -62,8 +62,8 @@ public:
     ReturnType type; // ANY for non-operators.
     StructureMember::Iteration use_as;
 
-    void write(uintptr_t *storage);
-    void read(uintptr_t *storage);
+    void write(uint32_t *storage);
+    void read(uint32_t *storage);
     size_t get_size();
 };
 }

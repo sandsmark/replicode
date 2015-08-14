@@ -43,9 +43,13 @@ void ImageImpl::operator delete(void *o) {
     ::operator delete(o);
 }
 
-ImageImpl::ImageImpl(uint64_t timestamp, uint64_t map_size, uint64_t code_size, uint64_t names_size): _timestamp(timestamp), _map_size(map_size), _code_size(code_size), _names_size(names_size) {
-
-    _data = new uintptr_t[_map_size + _code_size + _names_size];
+ImageImpl::ImageImpl(uint64_t timestamp, size_t map_size, size_t code_size, size_t names_size) :
+    _data(new uint32_t[map_size + code_size + names_size]),
+    _timestamp(timestamp),
+    _map_size(map_size),
+    _code_size(code_size),
+    _names_size(names_size)
+{
 }
 
 ImageImpl::~ImageImpl() {
@@ -73,17 +77,17 @@ size_t ImageImpl::names_size() const {
     return _names_size;
 }
 
-uintptr_t *ImageImpl::data() const {
+uint32_t *ImageImpl::data() const {
 
     return _data;
 }
 
-uintptr_t &ImageImpl::data(size_t i) {
+uint32_t &ImageImpl::data(size_t i) {
 
     return _data[i];
 }
 
-uintptr_t &ImageImpl::data(size_t i) const {
+uint32_t &ImageImpl::data(size_t i) const {
 
     return _data[i];
 }

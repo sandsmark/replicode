@@ -114,7 +114,7 @@ public:
 
     bool is_fact() const;
     bool is_anti_fact() const;
-    void set_opposite() const;
+    void set_opposite();
     _Fact *get_absentee() const;
 
     bool match_timings_sync(const _Fact *evidence) const;

@@ -87,12 +87,12 @@ template<class I> size_t Image<I>::getObjectCount() const
     return this->map_size();
 }
 
-template<class I> uintptr_t *Image<I>::getObject(size_t i)
+template<class I> uint32_t *Image<I>::getObject(size_t i)
 {
     return this->data() + this->data(i);
 }
 
-template<class I> uintptr_t *Image<I>::getCodeSegment()
+template<class I> uint32_t *Image<I>::getCodeSegment()
 {
     return this->data() + this->map_size();
 }
@@ -116,20 +116,30 @@ template<class I> void Image<I>::trace() const
 
     // at this point, i is at the first word32 of the first object in the code segment
     size_t code_start=this->map_size();
-    for(size_t j = 0;j < code_start; ++j){ // read object map: data[data[j]] is the first word32 of an object, data[data[j]+5] is the first atom
-        uintptr_t object_axiom = this->data(this->data(j));
+    for(size_t j = 0; j < code_start; ++j){ // read object map: data[data[j]] is the first word32 of an object, data[data[j]+5] is the first atom
+        //uint32_t object_axiom = this->data(this->data(j));
         size_t object_code_size = this->data(this->data(j) + 1);
         size_t object_reference_set_size = this->data(this->data(j) + 2);
         size_t object_marker_set_size = this->data(this->data(j) + 3);
         size_t object_view_set_size = this->data(this->data(j) + 4);
         debug("image trace object") << "object" << i++;
         /*switch(object_axiom){
-case SysObject::ROOT_GRP: std::cout<<" root\n"; break;
-case SysObject::STDIN_GRP: std::cout<<" stdin\n"; break;
-case SysObject::STDOUT_GRP: std::cout<<" stdout\n"; break;
-case SysObject::SELF_ENT: std::cout<<" self\n"; break;
-default: std::cout<<" non standard\n"; break;
-}*/
+        case SysObject::ROOT_GRP:
+            debug("image trace object") << "root";
+            break;
+        case SysObject::STDIN_GRP:
+            debug("image trace object") << "stdin";
+            break;
+        case SysObject::STDOUT_GRP:
+            debug("image trace object") << "stdout";
+            break;
+        case SysObject::SELF_ENT:
+            debug("image trace object") << "self";
+            break;
+        default:
+            debug("image trace object") << "non-standard";
+            break;
+        }*/
         debug("image trace object") << i++ <<" code size: "<<object_code_size;
         debug("image trace object") << i++ <<" reference set size: "<< object_reference_set_size;
         debug("image trace object") << i++ <<" marker set size: "<< object_marker_set_size;

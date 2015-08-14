@@ -153,38 +153,32 @@ uint64_t Decompiler::decompile(r_comp::Image *image, std::ostringstream *stream,
 uint64_t Decompiler::decompile_references(r_comp::Image *image) {
 
     std::unordered_map<const Class *, uint16_t> object_ID_per_class;
-    std::unordered_map<std::string, Class>::const_iterator it;
-    for (it = metadata->sys_classes.begin(); it != metadata->sys_classes.end(); ++it)
-        object_ID_per_class[&(it->second)] = 0;
+    for (const auto c : metadata->sys_classes) {
+        object_ID_per_class[&c.second] = 0;
+    }
 
-    char buffer[255];
-    std::string s;
-
+    std::string name;
     this->image = image;
-
-// populate object names first so they can be referenced in any order.
+    // populate object names first so they can be referenced in any order.
     Class *c;
     uint16_t last_object_ID;
     for (uint16_t i = 0; i < image->code_segment.objects.size(); ++i) {
-
         SysObject *sys_object = (SysObject *)image->code_segment.objects[i];
-        std::unordered_map<uintptr_t, std::string>::const_iterator n = image->object_names.symbols.find(sys_object->oid);
-        if (n != image->object_names.symbols.end()) {
 
-            s = n->second;
+        const auto iterator = image->object_names.symbols.find(sys_object->oid);
+        if (iterator != image->object_names.symbols.end()) {
+            name = iterator->second;
             named_objects.insert(sys_object->oid);
         } else {
-
             c = metadata->get_class(sys_object->code[0].asOpcode());
             last_object_ID = object_ID_per_class[c];
             object_ID_per_class[c] = last_object_ID + 1;
-            sprintf(buffer, "%d", last_object_ID);
-            s = c->str_opcode;
-            s += buffer;
+            name = c->str_opcode;
+            name += std::to_string(last_object_ID);
         }
 
-        object_names[i] = s;
-        object_indices[s] = i;
+        object_names[i] = name;
+        object_indices[name] = i;
     }
 
     closing_set = false;
