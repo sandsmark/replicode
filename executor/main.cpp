@@ -318,14 +318,13 @@ int main(int argc, char **argv)
     uint64_t self_oid;
     std::string self_symbol("self");
     std::unordered_map<uintptr_t, std::string>::const_iterator n;
-    for (n = seed.object_names.symbols.begin(); n != seed.object_names.symbols.end(); ++n) {
-
-        if (n->second == stdin_symbol)
-            stdin_oid = n->first;
-        else if (n->second == stdout_symbol)
-            stdout_oid = n->first;
-        else if (n->second == self_symbol)
-            self_oid = n->first;
+    for (const auto symbol : seed.object_names.symbols) {
+        if (symbol.second == stdin_symbol)
+            stdin_oid = symbol.first;
+        else if (symbol.second == stdout_symbol)
+            stdout_oid = symbol.first;
+        else if (symbol.second == self_symbol)
+            self_oid = symbol.first;
     }
 
     if (!mem->load(ram_objects.as_std(), stdin_oid, stdout_oid, self_oid))
