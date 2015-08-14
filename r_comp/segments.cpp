@@ -75,8 +75,8 @@ void Metadata::write(uintptr_t *data) {
     std::unordered_map<std::string, Class>::iterator it = classes.begin();
     for (; it != classes.end(); ++it) {
 
-        r_code::Write(data + offset, it->first);
-        offset += r_code::GetSize(it->first);
+        r_code::WriteString(data + offset, it->first);
+        offset += r_code::GetStringSize(it->first);
         data[offset] = it->second.atom.asOpcode();
         offset++;
     }
@@ -85,8 +85,8 @@ void Metadata::write(uintptr_t *data) {
     it = sys_classes.begin();
     for (; it != sys_classes.end(); ++it) {
 
-        r_code::Write(data + offset, it->first);
-        offset += r_code::GetSize(it->first);
+        r_code::WriteString(data + offset, it->first);
+        offset += r_code::GetStringSize(it->first);
         data[offset] = it->second.atom.asOpcode();
         offset++;
     }
@@ -94,22 +94,22 @@ void Metadata::write(uintptr_t *data) {
     data[offset++] = class_names.size();
     for (i = 0; i < class_names.size(); ++i) {
 
-        r_code::Write(data + offset, class_names[i]);
-        offset += r_code::GetSize(class_names[i]);
+        r_code::WriteString(data + offset, class_names[i]);
+        offset += r_code::GetStringSize(class_names[i]);
     }
 
     data[offset++] = operator_names.size();
     for (i = 0; i < operator_names.size(); ++i) {
 
-        r_code::Write(data + offset, operator_names[i]);
-        offset += r_code::GetSize(operator_names[i]);
+        r_code::WriteString(data + offset, operator_names[i]);
+        offset += r_code::GetStringSize(operator_names[i]);
     }
 
     data[offset++] = function_names.size();
     for (i = 0; i < function_names.size(); ++i) {
 
-        r_code::Write(data + offset, function_names[i]);
-        offset += r_code::GetSize(function_names[i]);
+        r_code::WriteString(data + offset, function_names[i]);
+        offset += r_code::GetStringSize(function_names[i]);
     }
 }
 
@@ -128,47 +128,37 @@ void Metadata::read(uintptr_t *data, size_t size) {
 
     size_t classes_count = data[offset++];
     for (i = 0; i < classes_count; ++i) {
-
-        std::string s;
-        r_code::Read(data + offset, s);
-        offset += r_code::GetSize(s);
-        classes[s] = classes_by_opcodes[data[offset++]];
+        std::string name = r_code::ReadString(data + offset);
+        offset += r_code::GetStringSize(name);
+        classes[name] = classes_by_opcodes[data[offset++]];
     }
 
     size_t sys_classes_count = data[offset++];
     for (i = 0; i < sys_classes_count; ++i) {
-
-        std::string s;
-        r_code::Read(data + offset, s);
-        offset += r_code::GetSize(s);
-        sys_classes[s] = classes_by_opcodes[data[offset++]];
+        std::string name = r_code::ReadString(data + offset);
+        offset += r_code::GetStringSize(name);
+        sys_classes[name] = classes_by_opcodes[data[offset++]];
     }
 
     size_t class_names_count = data[offset++];
     for (i = 0; i < class_names_count; ++i) {
-
-        std::string s;
-        r_code::Read(data + offset, s);
-        class_names.push_back(s);
-        offset += r_code::GetSize(s);
+        std::string name = r_code::ReadString(data + offset);
+        class_names.push_back(name);
+        offset += r_code::GetStringSize(name);
     }
 
     size_t operator_names_count = data[offset++];
     for (i = 0; i < operator_names_count; ++i) {
-
-        std::string s;
-        r_code::Read(data + offset, s);
-        operator_names.push_back(s);
-        offset += r_code::GetSize(s);
+        std::string name = r_code::ReadString(data + offset);
+        operator_names.push_back(name);
+        offset += r_code::GetStringSize(name);
     }
 
     size_t function_names_count = data[offset++];
     for (i = 0; i < function_names_count; ++i) {
-
-        std::string s;
-        r_code::Read(data + offset, s);
-        function_names.push_back(s);
-        offset += r_code::GetSize(s);
+        std::string name = r_code::ReadString(data + offset);
+        function_names.push_back(name);
+        offset += r_code::GetStringSize(name);
     }
 }
 
@@ -234,7 +224,7 @@ uintptr_t Metadata::get_classes_size() {
     size_t size = 1; // size of the hash table
     std::unordered_map<std::string, Class>::iterator it = classes.begin();
     for (; it != classes.end(); ++it)
-        size += r_code::GetSize(it->first) + 1; // +1: index to the class in the class array
+        size += r_code::GetStringSize(it->first) + 1; // +1: index to the class in the class array
     return size;
 }
 
@@ -243,7 +233,7 @@ uintptr_t Metadata::get_sys_classes_size() {
     size_t size = 1; // size of the hash table
     std::unordered_map<std::string, Class>::iterator it = sys_classes.begin();
     for (; it != sys_classes.end(); ++it)
-        size += r_code::GetSize(it->first) + 1; // +1: index to the class in the class array
+        size += r_code::GetStringSize(it->first) + 1; // +1: index to the class in the class array
     return size;
 }
 
@@ -251,7 +241,7 @@ size_t Metadata::get_class_names_size() {
 
     size_t size = 1; // size of the vector
     for (size_t i = 0; i < class_names.size(); ++i)
-        size += r_code::GetSize(class_names[i]);
+        size += r_code::GetStringSize(class_names[i]);
     return size;
 }
 
@@ -259,7 +249,7 @@ size_t Metadata::get_operator_names_size() {
 
     size_t size = 1; // size of the vector
     for (size_t i = 0; i < operator_names.size(); ++i)
-        size += r_code::GetSize(operator_names[i]);
+        size += r_code::GetStringSize(operator_names[i]);
     return size;
 }
 
@@ -267,7 +257,7 @@ size_t Metadata::get_function_names_size() {
 
     size_t size = 1; // size of the vector
     for (size_t i = 0; i < function_names.size(); ++i)
-        size += r_code::GetSize(function_names[i]);
+        size += r_code::GetStringSize(function_names[i]);
     return size;
 }
 

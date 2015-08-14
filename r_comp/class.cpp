@@ -109,13 +109,12 @@ Class *Class::get_member_class(Metadata *metadata, const std::string &name) {
 void Class::write(uintptr_t *storage) {
 
     storage[0] = atom.atom;
-    r_code::Write(storage + 1, str_opcode);
-    uint64_t offset = 1 + r_code::GetSize(str_opcode);
+    r_code::WriteString(storage + 1, str_opcode);
+    uint64_t offset = 1 + r_code::GetStringSize(str_opcode);
     storage[offset++] = type;
     storage[offset++] = use_as;
     storage[offset++] = things_to_read.size();
     for (uint64_t i = 0; i < things_to_read.size(); ++i) {
-
         things_to_read[i].write(storage + offset);
         offset += things_to_read[i].get_size();
     }
@@ -124,8 +123,8 @@ void Class::write(uintptr_t *storage) {
 void Class::read(uintptr_t* storage) {
 
     atom = storage[0];
-    r_code::Read(storage + 1, str_opcode);
-    uint64_t offset = 1 + r_code::GetSize(str_opcode);
+    str_opcode = r_code::ReadString(storage + 1);
+    uint64_t offset = 1 + r_code::GetStringSize(str_opcode);
     type = (ReturnType)storage[offset++];
     use_as = (StructureMember::Iteration)storage[offset++];
     uint64_t member_count = storage[offset++];
@@ -141,7 +140,7 @@ void Class::read(uintptr_t* storage) {
 size_t Class::get_size() { // see segments.cpp for the RAM layout
 
     size_t size = 4; // atom, return type, usage, number of members
-    size += r_code::GetSize(str_opcode);
+    size += r_code::GetStringSize(str_opcode);
     for (size_t i = 0; i < things_to_read.size(); ++i)
         size += things_to_read[i].get_size();
     return size;

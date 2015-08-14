@@ -112,9 +112,15 @@ public:
 };
 
 // utilities
-size_t dll_export GetSize(const std::string &s); // returns the number of word32 needed to encode the string
-void dll_export Write(uintptr_t *data, const std::string &s);
-void dll_export Read(uintptr_t *data, std::string &s);
+
+/// Returns the number of word32 needed to encode the string
+/// String content is aligned on 4 bytes boundaries; string length heads the structure
+size_t dll_export GetStringSize(const std::string &s);
+
+/// Writes the string to \a data, null-terminated
+void dll_export WriteString(uint32_t *data, const std::string &string);
+/// Reads a null-terminated string from \a data
+std::string dll_export ReadString(uint32_t *data);
 }
 
 

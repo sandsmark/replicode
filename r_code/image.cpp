@@ -33,32 +33,32 @@
 
 namespace r_code {
 
-size_t GetSize(const std::string &s) { // string content is aligned on 4 bytes boundaries; string length heads the structure
-
-    uint64_t length = s.length() + 1; // +1 for null termination
-    if (length % 4)
+size_t GetStringSize(const std::string &s)
+{
+    size_t length = s.length() + 1; // +1 for null termination
+    if (length % 4) {
         return length / 4 + 2; // +1 for the length, +1 for alignment
+    }
     return length / 4 + 1; // +1 for the length
 }
 
-void Write(uintptr_t *data, const std::string &s) {
-
-    data[0] = GetSize(s) - 1;
+void WriteString(uint32_t *data, const std::string &string)
+{
+    data[0] = GetStringSize(string) - 1;
     char *content = (char *)(data + 1);
-    for (uint64_t i = 0; i < s.length(); ++i)
-        content[i] = s[i];
-    content[s.length()] = '\0';
+    for (uint64_t i = 0; i < string.length(); ++i)
+        content[i] = string[i];
+    content[string.length()] = '\0';
 }
 
-void Read(uintptr_t *data, std::string &s) {
-
+std::string ReadString(uint32_t *data)
+{
+    std::string ret;
     char *content = (char *)(data + 1);
-    for (uint64_t i = 0;; ++i) {
 
-        if (content[i] != '\0')
-            s += content[i];
-        else
-            break;
+    for (size_t i = 0; content[i] != 0; ++i) {
+        ret += content[i];
     }
+    return ret;
 }
 }
