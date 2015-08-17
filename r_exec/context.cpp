@@ -263,15 +263,6 @@ bool IPGMContext::evaluate_no_dereference(uint16_t &result_index) const {
     }
 }
 
-inline bool IPGMContext::evaluate(uint16_t &result_index) const {
-
-    if (data == REFERENCE || data == VALUE_ARRAY)
-        return true;
-
-    IPGMContext c = **this;
-    return c.evaluate_no_dereference(result_index);
-}
-
 void IPGMContext::copy_to_value_array(uint16_t &position) {
 
     position = overlay->values.size();

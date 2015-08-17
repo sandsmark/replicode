@@ -324,8 +324,16 @@ public:
         return _c;
     }
 
-// IPGM specifics.
-    bool evaluate(uint16_t &result_index) const; // index is set to the index of the result, undefined in case of failure.
+    // IPGM specifics.
+
+    /// index is set to the index of the result, undefined in case of failure.
+    inline bool evaluate(uint16_t &result_index) const {
+        if (data == REFERENCE || data == VALUE_ARRAY)
+            return true;
+
+        IPGMContext c = **this;
+        return c.evaluate_no_dereference(result_index);
+    }
     bool evaluate_no_dereference(uint16_t &result_index) const;
 
     IPGMContext &operator =(const IPGMContext &c) {

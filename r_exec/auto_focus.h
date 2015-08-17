@@ -129,7 +129,11 @@ public:
 
     View *inject_input(View *input); // inject a filtered input into the output groups starting from 0; return the view injected in the primary group.
     void inject_input(View *input, uint64_t start); // inject an unfiltered input into the output groups starting from start.
-    void inject_input(View *input, _Fact *abstract_input, BindingMap *bm); // inject a filtered input into the output groups.
+    /// inject a filtered input into the output groups.
+    inline void inject_input(View *input, _Fact *abstract_input, BindingMap *bm) {
+        View *primary_view = inject_input(input);
+        cross_buffer.push_back(Input(primary_view, abstract_input, bm));
+    }
 
     /// inject in the primary group; models will be injected in the secondary group automatically.
     void inject_hlps(const std::vector<P<Code> > &hlps) const; // called by TPX; hlp is a mdl or a cst.

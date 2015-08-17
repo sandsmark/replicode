@@ -80,12 +80,6 @@ inline void AutoFocusController::inject_input(View *input, uint64_t start) {
     }
 }
 
-inline void AutoFocusController::inject_input(View *input, _Fact *abstract_input, BindingMap *bm) {
-
-    View *primary_view = inject_input(input);
-    cross_buffer.push_back(Input(primary_view, abstract_input, bm));
-}
-
 inline View *AutoFocusController::inject_input(View *input) {
 
     _Fact *input_fact = (_Fact *)input->object;

@@ -154,7 +154,9 @@ public:
 
     uint16_t get_out_group_count() const;
     Code *get_out_group(uint16_t i) const; // i starts at 1.
-    Group *get_host() const;
+    inline Group *get_host() const {
+        return (Group *)getView()->get_host();
+    }
     bool has_tpl_args() const {
         return _has_tpl_args;
     }

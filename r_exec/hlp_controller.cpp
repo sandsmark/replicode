@@ -111,11 +111,6 @@ bool HLPController::evaluate_bwd_guards(HLPBindingMap *bm) {
     return HLPOverlay::EvaluateBWDGuards(this, bm);
 }
 
-inline Group *HLPController::get_host() const {
-
-    return (Group *)getView()->get_host();
-}
-
 void HLPController::inject_prediction(Fact *prediction, double confidence) const { // prediction is simulated: f->pred->f->target.
 
     Code *primary_host = get_host();
