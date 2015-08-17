@@ -90,10 +90,8 @@ void TDecompiler::decompile()
     r_comp::Decompiler decompiler;
     decompiler.init(this->metadata);
 
-    std::vector<SysObject *> imported_objects;
-
     r_comp::Image *image = new r_comp::Image();
-    image->add_objects(this->objects, imported_objects);
+    image->add_objects_full(this->objects);
     //image->object_names.symbols = getSeed()->object_names.symbols;
 
     std::ostringstream decompiled_code;
@@ -375,8 +373,9 @@ bool Init(const char *user_operator_library_path,
         return true;
 
     // load usr operators and c++ programs.
-    if (!(metadata->user_operator_library.load(user_operator_library_path)))
-        exit(-1);
+    if (!(metadata->user_operator_library.load(user_operator_library_path))) {
+        return false;
+    }
 
     // Operators.
     typedef uint16_t(*OpcodeRetriever)(const char *);

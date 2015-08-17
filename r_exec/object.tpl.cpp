@@ -30,8 +30,6 @@
 
 #include <mutex>
 
-#define UNDEFINED_OID 0xFFFFFFFF
-
 namespace r_exec {
 
 template<class C, class U> Object<C, U>::Object(): C(), hash_value(0), invalidated(0) {

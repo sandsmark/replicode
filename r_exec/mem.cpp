@@ -869,7 +869,7 @@ r_comp::Image *_Mem::get_models() {
 
     r_code::list<P<Code> > models;
     ModelBase::Get()->get_models(models); // protected by ModelBase.
-    image->add_objects(models);
+    image->add_objects_full(models);
 
     return image;
 }

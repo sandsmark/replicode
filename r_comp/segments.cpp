@@ -415,11 +415,11 @@ void Image::add_objects(r_code::list<P<r_code::Code> > &objects) {
     build_references();
 }
 
-void Image::add_objects(r_code::list<P<r_code::Code> > &objects, std::vector<SysObject *> &imported_objects) {
+void Image::add_objects_full(r_code::list<P<r_code::Code> > &objects) {
 
     r_code::list<P<r_code::Code> >::const_iterator o;
     for (o = objects.begin(); o != objects.end(); ++o)
-        add_object(*o, imported_objects);
+        add_object_full(*o);
 
     build_references();
 }
@@ -451,7 +451,7 @@ void Image::add_object(Code *object)
     for (size_t i = 0; i < reference_count; ++i) { // follow reference pointers and recurse.
 
         Code *reference = object->get_reference(i);
-        if (reference->get_oid() == 0xFFFFFFFF ||
+        if (reference->get_oid() == UNDEFINED_OID ||
                 reference->is_invalidated()) // the referenced object is not in the image and will not be added otherwise.
             add_object(reference);
     }
@@ -461,11 +461,12 @@ void Image::add_object(Code *object)
     sys_object->references[1] = (_object >> 32);
 }
 
-SysObject *Image::add_object(Code *object, std::vector<SysObject *> &imported_objects) {
+void Image::add_object_full(Code *object)
+{
 
     std::unordered_map<Code *, size_t>::iterator it = ptrs_to_indices.find(object);
     if (it != ptrs_to_indices.end()) // object already there.
-        return code_segment.objects[it->second];
+        return;
 
     size_t object_index;
     ptrs_to_indices[object] = object_index = code_segment.objects.as_std()->size();
@@ -476,15 +477,13 @@ SysObject *Image::add_object(Code *object, std::vector<SysObject *> &imported_ob
     for (size_t i = 0; i < reference_count; ++i) { // follow the object's reference pointers and recurse.
 
         Code *reference = object->get_reference(i);
-        if (reference->get_oid() == 0xFFFFFFFF) // the referenced object is not in the image and will not be added otherwise.
-            add_object(reference, imported_objects);
+        if (reference->get_oid() == UNDEFINED_OID) // the referenced object is not in the image and will not be added otherwise.
+            add_object_full(reference);
         else { // add the referenced object if not present in the list.
 
             std::unordered_map<Code *, size_t>::iterator it = ptrs_to_indices.find(reference);
             if (it == ptrs_to_indices.end()) {
-
-                SysObject *sys_ref = add_object(reference, imported_objects);
-                imported_objects.push_back(sys_ref);
+                add_object_full(reference);
             }
         }
     }
@@ -500,9 +499,7 @@ SysObject *Image::add_object(Code *object, std::vector<SysObject *> &imported_ob
 
                 std::unordered_map<r_code::Code *, size_t>::const_iterator index = ptrs_to_indices.find(reference);
                 if (index == ptrs_to_indices.end()) {
-
-                    SysObject *sys_ref = add_object(reference, imported_objects);
-                    imported_objects.push_back(sys_ref);
+                    add_object_full(reference);
                 }
             }
         }
@@ -512,7 +509,6 @@ SysObject *Image::add_object(Code *object, std::vector<SysObject *> &imported_ob
     uint64_t _object = uint64_t(object);
     sys_object->references[0] = (_object & 0x00000000FFFFFFF);
     sys_object->references[1] = (_object >> 32);
-    return sys_object;
 }
 
 void Image::build_references() {

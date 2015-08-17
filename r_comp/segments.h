@@ -147,8 +147,12 @@ private:
     /// Used for injection in memory.
     std::unordered_map<r_code::Code *, size_t> ptrs_to_indices;
 
+
+    /// called by add_object().
+    void add_sys_object(SysObject *object);
     void add_object(r_code::Code *object);
-    SysObject *add_object(Code *object, std::vector<SysObject *> &imported_objects);
+    void add_object_full(Code *object);
+
     size_t get_reference_count(const Code *object) const;
     void build_references();
     void build_references(SysObject *sys_object, r_code::Code *object);
@@ -166,9 +170,6 @@ public:
     /// called by the compiler.
     void add_sys_object(SysObject *object, std::string name);
 
-    /// called by add_object().
-    void add_sys_object(SysObject *object);
-
     void get_objects(Mem *mem, r_code::vector<r_code::Code *> &ram_objects);
 
     template<class O> void get_objects(r_code::vector<Code *> &ram_objects) {
@@ -183,7 +184,7 @@ public:
     void add_objects(r_code::list<P<r_code::Code> > &objects);
 
     /// called by any r_exec code for decompiling on the fly.
-    void add_objects(r_code::list<P<r_code::Code> > &objects, std::vector<SysObject *> &imported_objects);
+    void add_objects_full(r_code::list<P<r_code::Code> > &objects);
 
     template<class I> I *serialize()
     {
