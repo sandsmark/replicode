@@ -124,7 +124,7 @@ std::string dll_export ReadString(uint32_t *data);
 }
 
 
-#include "image.tpl.cpp"
+#include "image.tpl.h"
 
 
 #endif

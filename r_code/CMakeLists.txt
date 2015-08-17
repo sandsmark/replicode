@@ -10,8 +10,8 @@ set(r_code_SRC
 set(r_code_HDR
     atom.h
     image.h
+    image.tpl.h
     image_impl.h
-    image.tpl.cpp
     list.h
     object.h
     r_code.h
