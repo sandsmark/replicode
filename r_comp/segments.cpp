@@ -436,8 +436,8 @@ size_t Image::get_reference_count(const Code* object) const {
     }
 }
 
-void Image::add_object(Code *object) {
-
+void Image::add_object(Code *object)
+{
     std::unordered_map<Code *, size_t>::iterator it = ptrs_to_indices.find(object);
     if (it != ptrs_to_indices.end()) // object already there.
         return;
@@ -457,8 +457,8 @@ void Image::add_object(Code *object) {
     }
 
     uintptr_t _object = (uintptr_t)object;
-    sys_object->references[0] = (_object & 0x0000FFFF);
-    sys_object->references[1] = (_object >> 16);
+    sys_object->references[0] = (_object & 0x00000000FFFFFFF);
+    sys_object->references[1] = (_object >> 32);
 }
 
 SysObject *Image::add_object(Code *object, std::vector<SysObject *> &imported_objects) {
@@ -509,9 +509,9 @@ SysObject *Image::add_object(Code *object, std::vector<SysObject *> &imported_ob
     }
     object->rel_views();
 
-    uintptr_t _object = (uintptr_t)object;
-    sys_object->references[0] = (_object & 0x0000FFFF);
-    sys_object->references[1] = (_object >> 16);
+    uint64_t _object = uint64_t(object);
+    sys_object->references[0] = (_object & 0x00000000FFFFFFF);
+    sys_object->references[1] = (_object >> 32);
     return sys_object;
 }
 
@@ -523,7 +523,7 @@ void Image::build_references() {
 
         sys_object = code_segment.objects[i];
         uintptr_t _object = sys_object->references[0];
-        _object |= (sys_object->references[1] << 16);
+        _object |= (uint64_t(sys_object->references[1]) << 32);
         object = (Code *)_object;
         sys_object->references.as_std()->clear();
         build_references(sys_object, object);
