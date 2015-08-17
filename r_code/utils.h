@@ -78,7 +78,7 @@ public:
 
     static uint64_t GetTimestamp(const Atom *iptr);
     static void SetTimestamp(Atom *iptr, uint64_t t);
-    static void SetTimestamp(Code *object, uint32_t index, uint64_t t); // allocates atoms.
+    static void SetTimestamp(Code *object, uint16_t index, uint64_t t); // allocates atoms.
 
     static const uint64_t MaxTime = 0xFFFFFFFFFFFFFFFF;
     static const uint64_t MaxTHZ = 0xFFFFFFFF;
