@@ -86,7 +86,7 @@ template<class C, class U> double Object<C, U>::get_psln_thr()
     return r;
 }
 
-template<class C, class U> void Object<C, U>::mod(uint16_t member_index, double value) {
+template<class C, class U> void Object<C, U>::mod(uint16_t member_index, float value) {
 
     if (member_index != this->code_size() - 1)
         return;
@@ -100,7 +100,7 @@ template<class C, class U> void Object<C, U>::mod(uint16_t member_index, double 
     this->code(member_index) = Atom::Float(v);
 }
 
-template<class C, class U> void Object<C, U>::set(uint16_t member_index, double value) {
+template<class C, class U> void Object<C, U>::set(uint16_t member_index, float value) {
 
     if (member_index != this->code_size() - 1)
         return;
@@ -109,8 +109,8 @@ template<class C, class U> void Object<C, U>::set(uint16_t member_index, double 
     this->code(member_index) = Atom::Float(value);
 }
 
-template<class C, class U> View *Object<C, U>::get_view(Code *group, bool lock) {
-
+template<class C, class U> View *Object<C, U>::get_view(Code *group, bool lock)
+{
     if (lock)
         acq_views();
 
