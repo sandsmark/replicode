@@ -746,8 +746,9 @@ void Decompiler::write_any(uint16_t read_index, bool &after_tail_wildcard, bool 
             case Atom::VL_PTR: {
 
                 uint8_t cast_opcode = atom.asCastOpcode();
-                while (current_object->code[atom.asIndex()].getDescriptor() == Atom::I_PTR) // position to a structure or an atomic value.
+                while (current_object->code[atom.asIndex()].getDescriptor() == Atom::I_PTR) { // position to a structure or an atomic value.
                     atom = current_object->code[atom.asIndex()];
+                }
                 out_stream->push(get_variable_name(atom.asIndex(), current_object->code[atom.asIndex()].getDescriptor() != Atom::WILDCARD), read_index);
                 if (cast_opcode == 0xFF) {
 
@@ -765,12 +766,11 @@ void Decompiler::write_any(uint16_t read_index, bool &after_tail_wildcard, bool 
                 break;
             } default:
                 out_stream->push("unknown-cptr-lead-type", read_index);
-                break;
+                return;
             }
 
             Class embedding_class = metadata->classes_by_opcodes[opcode]; // class defining the members.
             for (uint16_t i = 2; i <= member_count; ++i) { // get the class of the pointed structure and retrieve the member name from i.
-
                 std::string member_name;
                 atom = current_object->code[index + i]; // atom is an iptr appearing after the leading atom in the cptr.
                 switch (atom.getDescriptor()) {
