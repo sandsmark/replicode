@@ -41,8 +41,7 @@
 #include <dlfcn.h>
 #endif
 
-// Wrapping of OS-dependent functions
-namespace core {
+namespace utils {
 
 #if defined(WIN32) || defined(WIN64)
 typedef HINSTANCE shared_object;

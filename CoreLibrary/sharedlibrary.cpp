@@ -51,7 +51,7 @@
 #include <sys/time.h>
 #include <string.h>
 
-namespace core {
+namespace utils {
 
 SharedLibrary *SharedLibrary::New(const char *fileName) {
 

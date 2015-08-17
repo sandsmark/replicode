@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <string>
 
+namespace utils {
+
 class IniFile
 {
 public:
@@ -24,5 +26,6 @@ private:
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> m_values;
 };
 
+} //namespace utils
 
 #endif // INIFILE_H

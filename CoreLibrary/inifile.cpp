@@ -30,6 +30,8 @@ static inline std::string string_replace(std::string haystack, std::string needl
     return haystack;
 }
 
+namespace utils {
+
 bool IniFile::readFile(std::string filename)
 {
     std::ifstream file;
@@ -143,3 +145,5 @@ bool IniFile::hasInt(const std::string group, const std::string name)
     }
     return (pos > 0);
 }
+
+} // namespace utils

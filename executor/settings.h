@@ -87,7 +87,7 @@ public:
     bool test_models;
 
     bool load(const char *file_name) {
-        IniFile settingsFile;
+        utils::IniFile settingsFile;
         if (!settingsFile.readFile(file_name)) {
             std::cerr << "Unable to load settings, using defaults";
         }

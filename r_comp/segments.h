@@ -87,7 +87,7 @@ public:
     /// Classes indexed by opcodes; used to retrieve member names; registers all classes (incl. set classes).
     r_code::vector<Class> classes_by_opcodes;
     std::unordered_map<std::string, uint16_t> opcodes;
-    core::SharedLibrary user_operator_library;
+    utils::SharedLibrary user_operator_library;
 
     Class *get_class(std::string &class_name);
     Class *get_class(size_t opcode);
