@@ -245,8 +245,8 @@ public:
     }
     virtual ~Code() {}
 
-    virtual void mod(uint16_t member_index, double value) {};
-    virtual void set(uint16_t member_index, double value) {};
+    virtual void mod(uint16_t member_index, float value) {};
+    virtual void set(uint16_t member_index, float value) {};
     virtual View *get_view(Code *group, bool lock) {
         return NULL;
     }

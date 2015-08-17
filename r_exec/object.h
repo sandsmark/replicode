@@ -88,8 +88,8 @@ public:
     }
 
 // Target psln_thr only.
-    void set(uint16_t member_index, double value);
-    void mod(uint16_t member_index, double value);
+    void set(uint16_t member_index, float value);
+    void mod(uint16_t member_index, float value);
 
     View *get_view(Code *group, bool lock); // returns the found view if any, NULL otherwise.
 
