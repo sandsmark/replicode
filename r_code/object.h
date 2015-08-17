@@ -166,9 +166,6 @@ public:
         }
     };
 
-private:
-    /// For unpacking: index is the index of the view in the SysObject.
-    uint16_t index;
 protected:
     /// Dimensioned to hold the largest view (group view):
     /// head atom, iptr to ijt, sln, res, rptr to grp, rptr to org, vis, cov, 3 atoms for ijt's timestamp; oid is the last word32 (not an atom).

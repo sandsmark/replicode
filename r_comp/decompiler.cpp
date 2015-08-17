@@ -728,8 +728,6 @@ void Decompiler::write_any(uint16_t read_index, bool &after_tail_wildcard, bool 
             if (atom.readsAsNil())
                 out_stream->push("|us", read_index);
             else {
-
-                Atom first = current_object->code[index + 1];
                 uint64_t ts = Utils::GetTimestamp(&current_object->code[index]);
                 if (!in_hlp && ts > 0 && apply_time_offset)
                     ts -= time_offset;
@@ -737,7 +735,6 @@ void Decompiler::write_any(uint16_t read_index, bool &after_tail_wildcard, bool 
             }
             break;
         case Atom::C_PTR: {
-
             uint16_t opcode;
             uint16_t member_count = atom.getAtomCount();
             atom = current_object->code[index + 1]; // current_object->code[index] is the cptr; lead atom is at index+1; iptrs start at index+2.
