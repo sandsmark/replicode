@@ -174,7 +174,6 @@ public:
 
     template<class O> void get_objects(r_code::vector<Code *> &ram_objects) {
         for (size_t i = 0; i < code_segment.objects.size(); ++i) {
-            uint32_t opcode = code_segment.objects[i]->code[0].asOpcode();
             ram_objects[i] = new O(code_segment.objects[i]);
         }
         unpack_objects(ram_objects);
