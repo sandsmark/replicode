@@ -74,6 +74,8 @@ public:
 
 class Code;
 
+#define UNDEFINED_OID 0xFFFFFFFF
+
 class dll_export SysObject : public ImageObject
 {
 public:
