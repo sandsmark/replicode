@@ -98,7 +98,7 @@ void View::init(SyncMode sync,
 
     code(VIEW_SYNC) = Atom::Float(sync);
     code(VIEW_IJT) = Atom::IPointer(code(VIEW_OPCODE).getAtomCount() + 1);
-    Utils::SetTimestamp<View>(this, VIEW_IJT, ijt);
+    Utils::SetIndirectTimestamp<View>(this, VIEW_IJT, ijt);
     code(VIEW_SLN) = Atom::Float(sln);
     code(VIEW_RES) = res < 0 ? Atom::PlusInfinity() : Atom::Float(res);
     code(VIEW_HOST) = Atom::RPointer(0);

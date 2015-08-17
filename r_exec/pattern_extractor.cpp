@@ -929,8 +929,8 @@ bool CTPX::build_requirement(HLPBindingMap *bm, Code *m0, uint64_t period) { // 
     }
 
     P<Fact> f_im0 = bm->build_f_ihlp(m0, Opcodes::IMdl, false);
-    Utils::SetTimestamp<Code>(f_im0, FACT_AFTER, f_icst->get_after());
-    Utils::SetTimestamp<Code>(f_im0, FACT_BEFORE, f_icst->get_before());
+    Utils::SetIndirectTimestamp<Code>(f_im0, FACT_AFTER, f_icst->get_after());
+    Utils::SetIndirectTimestamp<Code>(f_im0, FACT_BEFORE, f_icst->get_before());
 
     Code *unpacked_cst;
     if (new_cst == NULL) {

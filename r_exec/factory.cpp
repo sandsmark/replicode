@@ -147,8 +147,8 @@ _Fact::_Fact(uint16_t opcode, Code *object, uint64_t after, uint64_t before, dou
     code(FACT_BEFORE) = Atom::IPointer(FACT_ARITY + 4);
     code(FACT_CFD) = Atom::Float(confidence);
     code(FACT_ARITY) = Atom::Float(psln_thr);
-    Utils::SetTimestamp<Code>(this, FACT_AFTER, after);
-    Utils::SetTimestamp<Code>(this, FACT_BEFORE, before);
+    Utils::SetIndirectTimestamp<Code>(this, FACT_AFTER, after);
+    Utils::SetIndirectTimestamp<Code>(this, FACT_BEFORE, before);
     add_reference(object);
 }
 

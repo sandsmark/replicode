@@ -90,7 +90,7 @@ public:
         return high << 32 | object->code(t_index + 2).atom;
     }
 
-    template<class O> static void SetTimestamp(O *object, uint16_t index, uint64_t t)
+    template<class O> static void SetIndirectTimestamp(O *object, uint16_t index, uint64_t t)
     {
         uint16_t t_index = object->code(index).asIndex();
         object->code(t_index) = Atom::Timestamp();

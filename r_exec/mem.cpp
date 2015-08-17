@@ -248,11 +248,11 @@ void _Mem::init_timings(uint64_t now) const { // called at the beginning of _Mem
             uint64_t before = Utils::GetTimestamp<Code>(*o, FACT_BEFORE);
             (*o)->trace();
             if (after < Utils::MaxTime - now)
-                Utils::SetTimestamp<Code>(*o, FACT_AFTER, after + now);
+                Utils::SetIndirectTimestamp<Code>(*o, FACT_AFTER, after + now);
             if (before < Utils::MaxTime - now - time_tolerance)
-                Utils::SetTimestamp<Code>(*o, FACT_BEFORE, before + now + time_tolerance);
+                Utils::SetIndirectTimestamp<Code>(*o, FACT_BEFORE, before + now + time_tolerance);
             else
-                Utils::SetTimestamp<Code>(*o, FACT_BEFORE, Utils::MaxTime);
+                Utils::SetIndirectTimestamp<Code>(*o, FACT_BEFORE, Utils::MaxTime);
         }
     }
 }
@@ -279,7 +279,7 @@ uint64_t _Mem::start() {
         bool c_salient = g->get_c_sln() > g->get_c_sln_thr();
 
         FOR_ALL_VIEWS_BEGIN(g, v)
-        Utils::SetTimestamp<View>(v->second, VIEW_IJT, now); // init injection time for the view.
+        Utils::SetIndirectTimestamp<View>(v->second, VIEW_IJT, now); // init injection time for the view.
         FOR_ALL_VIEWS_END
 
         if (c_active) {
