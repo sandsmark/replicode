@@ -172,7 +172,7 @@ public:
         Mod(uint64_t oid, uint16_t member_index, double value): ModSet(oid, member_index, value) {}
         void execute(Group *g) const {
 
-            View *v = g->get_view(oid);
+            View *v = g->get_view_for_object(oid);
             if (v)
                 v->mod(member_index, value);
         }
@@ -184,7 +184,7 @@ public:
         Set(uint64_t oid, uint16_t member_index, double value): ModSet(oid, member_index, value) {}
         void execute(Group *g) const {
 
-            View *v = g->get_view(oid);
+            View *v = g->get_view_for_object(oid);
             if (v)
                 v->set(member_index, value);
         }
@@ -305,7 +305,7 @@ public:
 #define FOR_ALL_NON_NTF_VIEWS_END } \
 }
 
-    View *get_view(uint64_t OID);
+    View *get_view_for_object(uint64_t OID);
 
     uint32_t get_upr() const;
 

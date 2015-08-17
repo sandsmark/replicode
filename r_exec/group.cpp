@@ -494,8 +494,8 @@ inline bool Group::is_eligible_input(View *view) {
            get_c_act() > get_c_act_thr(); // active ipgm/icpp_pgm/cst/mdl in a c-salient and c-active group.
 }
 
-View *Group::get_view(uint64_t OID) {
-
+View *Group::get_view_for_object(uint64_t OID)
+{
     std::unordered_map<uint64_t, P<View> >::const_iterator it = other_views.find(OID);
     if (it != other_views.end())
         return it->second;
