@@ -433,6 +433,6 @@ public:
 }
 
 
-#include "object.tpl.cpp"
+#include "object.tpl.h"
 
 #endif

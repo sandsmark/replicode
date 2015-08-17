@@ -31,8 +31,8 @@
 #include "cst_controller.h"
 #include "mem.h"
 #include "hlp_context.h"
-#include "overlay.inline.cpp"
-#include "reduction_job.tpl.cpp"
+#include "overlay.tpl.h"
+#include "reduction_job.tpl.h"
 
 
 namespace r_exec {

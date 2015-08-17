@@ -99,7 +99,7 @@ public:
 }
 
 
-#include "ast_controller.tpl.cpp"
+#include "ast_controller.tpl.h"
 
 
 #endif

@@ -419,7 +419,7 @@ public:
 }
 
 
-#include "mem.tpl.cpp"
+#include "mem.tpl.h"
 
 
 #endif

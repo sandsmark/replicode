@@ -1,4 +1,4 @@
-//	overlay.inline.h
+//	overlay.tpl.h
 //
 //	Author: Eric Nivel
 //
