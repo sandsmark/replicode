@@ -21,7 +21,6 @@ set(r_exec_SRC
     model_base.cpp
     monitor.cpp
     object.cpp
-    #object.tpl.cpp
     opcodes.cpp
     operator.cpp
     overlay.cpp
@@ -35,8 +34,51 @@ set(r_exec_SRC
     time_job.cpp
     view.cpp
     )
+set(r_exec_HDR
+    _context.h
+    ast_controller.h
+    ast_controller.tpl.h
+    auto_focus.h
+    binding_map.h
+    callbacks.h
+    context.h
+    cpp_programs.h
+    cst_controller.h
+    domain.h
+    factory.h
+    g_monitor.h
+    group.h
+    guard_builder.h
+    hlp_context.h
+    hlp_controller.h
+    hlp_overlay.h
+    init.h
+    mdl_controller.h
+    mem.h
+    mem.tpl.h
+    model_base.h
+    monitor.h
+    object.h
+    object.tpl.h
+    opcodes.h
+    operator.h
+    overlay.h
+    overlay.tpl.h
+    p_monitor.h
+    pattern_extractor.h
+    pgm_controller.h
+    pgm_overlay.h
+    reduction_core.h
+    reduction_job.h
+    reduction_job.tpl.h
+    time_core.h
+    time_job.h
+    view.h
+    )
 
 add_library(r_exec SHARED ${r_exec_SRC})
 target_link_libraries(r_exec CoreLibrary)
 set_property(TARGET r_exec PROPERTY CXX_STANDARD 11)
 set_property(TARGET r_exec PROPERTY CXX_STANDARD_REQUIRED ON)
+install(TARGETS r_exec DESTINATION lib)
+install(FILES ${r_exec_HDR} DESTINATION include/r_exec)
