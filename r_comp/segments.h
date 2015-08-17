@@ -70,6 +70,9 @@ private:
 public:
     Metadata();
 
+    // Convenience to retrieve axiom names by index.
+    std::string getObjectName(const uint16_t index) const;
+
     /// Non-sys classes, operators and device functions.
     std::unordered_map<std::string, Class> classes;
     std::unordered_map<std::string, Class> sys_classes;

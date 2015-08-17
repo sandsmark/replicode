@@ -47,6 +47,17 @@ Reference::Reference(const uintptr_t i, const Class &c, const Class &cc): index(
 Metadata::Metadata() {
 }
 
+std::string Metadata::getObjectName(const uint16_t index) const
+{
+    std::unordered_map<std::string, Reference>::const_iterator r;
+    for (r = global_references.begin(); r != global_references.end(); ++r) {
+        if (r->second.index == index)
+            return r->first;
+    }
+    std::string s;
+    return s;
+}
+
 Class *Metadata::get_class(std::string &class_name) {
 
     std::unordered_map<std::string, Class>::iterator it = classes.find(class_name);

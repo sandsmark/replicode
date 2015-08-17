@@ -168,9 +168,6 @@ public:
     bool read_expression(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
     bool read_set(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
     bool read_class(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
-
-// Convenience to retrieve axiom names by index.
-    std::string getObjectName(const uint16_t index) const;
 };
 }
 

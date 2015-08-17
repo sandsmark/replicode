@@ -1537,14 +1537,4 @@ bool Compiler::read_tail_wildcard(RepliStruct *node, uint16_t write_index, uint1
     return false;
 }
 
-std::string Compiler::getObjectName(const uint16_t index) const
-{
-    std::unordered_map<std::string, Reference>::const_iterator r;
-    for (r = _metadata->global_references.begin(); r != _metadata->global_references.end(); ++r) {
-        if (r->second.index == index)
-            return r->first;
-    }
-    std::string s;
-    return s;
-}
 }
