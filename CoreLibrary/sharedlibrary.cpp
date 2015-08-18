@@ -30,21 +30,6 @@
 
 #include "sharedlibrary.h"
 
-#if defined(WIN32) || defined(WIN64)
-#include <intrin.h>
-#pragma intrinsic (_InterlockedDecrement)
-#pragma intrinsic (_InterlockedIncrement)
-#pragma intrinsic (_InterlockedExchange)
-#pragma intrinsic (_InterlockedExchange64)
-#pragma intrinsic (_InterlockedCompareExchange)
-#pragma intrinsic (_InterlockedCompareExchange64)
-#else
-#ifdef DEBUG
-#include <map>
-#include <execinfo.h>
-#endif // DEBUG
-#endif //platform
-
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -88,26 +73,11 @@ SharedLibrary *SharedLibrary::load(const char *fileName) {
         return NULL;
     }
 #else
-    /*
-    * libraries on Linux are called 'lib<name>.so'
-    * if the passed in fileName does not have those
-    * components add them in.
-    */
-    char *libraryName = (char *)calloc(1, strlen(fileName) + 6 + 1);
-    /*if (strstr(fileName, "lib") == NULL) {
-    strcat(libraryName, "lib");
-    }*/
-    strcat(libraryName, fileName);
-    if (strstr(fileName + (strlen(fileName) - 3), ".so") == NULL) {
-        strcat(libraryName, ".so");
-    }
-    library = dlopen(libraryName, RTLD_NOW | RTLD_GLOBAL);
+    library = dlopen(fileName, RTLD_NOW | RTLD_GLOBAL);
     if (!library) {
         std::cout << "> Error: unable to load shared library " << fileName << " :" << dlerror() << std::endl;
-        free(libraryName);
         return NULL;
     }
-    free(libraryName);
 #endif
     return this;
 }
