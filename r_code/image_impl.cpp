@@ -31,15 +31,16 @@
 #include "image_impl.h"
 
 
-namespace r_code {
+namespace r_code
+{
 
-void *ImageImpl::operator new(size_t s, uint64_t data_size) {
-
+void *ImageImpl::operator new(size_t s, uint64_t data_size)
+{
     return ::operator new(s);
 }
 
-void ImageImpl::operator delete(void *o) {
-
+void ImageImpl::operator delete(void *o)
+{
     ::operator delete(o);
 }
 
@@ -52,43 +53,43 @@ ImageImpl::ImageImpl(uint64_t timestamp, size_t map_size, size_t code_size, size
 {
 }
 
-ImageImpl::~ImageImpl() {
-
+ImageImpl::~ImageImpl()
+{
     delete[] _data;
 }
 
-uint64_t ImageImpl::timestamp() const {
-
+uint64_t ImageImpl::timestamp() const
+{
     return _timestamp;
 }
 
-size_t ImageImpl::map_size() const {
-
+size_t ImageImpl::map_size() const
+{
     return _map_size;
 }
 
-size_t ImageImpl::code_size() const {
-
+size_t ImageImpl::code_size() const
+{
     return _code_size;
 }
 
-size_t ImageImpl::names_size() const {
-
+size_t ImageImpl::names_size() const
+{
     return _names_size;
 }
 
-uint32_t *ImageImpl::data() const {
-
+uint32_t *ImageImpl::data() const
+{
     return _data;
 }
 
-uint32_t &ImageImpl::data(size_t i) {
-
+uint32_t &ImageImpl::data(size_t i)
+{
     return _data[i];
 }
 
-uint32_t &ImageImpl::data(size_t i) const {
-
+uint32_t &ImageImpl::data(size_t i) const
+{
     return _data[i];
 }
 }

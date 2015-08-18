@@ -40,7 +40,8 @@
 
 using namespace r_code;
 
-namespace r_exec {
+namespace r_exec
+{
 
 class View;
 
@@ -48,7 +49,8 @@ class View;
 // Controllers are built at loading time and at the view's injection time.
 // Derived classes must expose a function: void reduce(r_code::View*input); (called by reduction jobs).
 class dll_export Controller:
-    public _Object {
+    public _Object
+{
 protected:
     volatile uint64_t invalidated; // 32 bit alignment.
     volatile uint64_t activated; // 32 bit alignment.
@@ -66,41 +68,51 @@ protected:
 public:
     virtual ~Controller();
 
-    uint64_t get_tsc() {
+    uint64_t get_tsc()
+    {
         return tsc;
     }
 
-    virtual void invalidate() {
+    virtual void invalidate()
+    {
         invalidated = 1;
     }
-    bool is_invalidated() {
+    bool is_invalidated()
+    {
         return invalidated == 1;
     };
-    void activate(bool a) {
+    void activate(bool a)
+    {
         activated = (a ? 1 : 0);
     }
-    bool is_activated() const {
+    bool is_activated() const
+    {
         return activated == 1;
     }
-    bool is_alive() const {
+    bool is_alive() const
+    {
         return invalidated == 0 && activated == 1;
     }
 
     virtual Code *get_core_object() const = 0;
 
-    r_code::Code *getObject() const {
+    r_code::Code *getObject() const
+    {
         return view->object; // return the reduction object (e.g. ipgm, icpp_pgm, cst, mdl).
     }
-    r_exec::View *getView() const {
+    r_exec::View *getView() const
+    {
         return (r_exec::View *)view; // return the reduction object's view.
     }
 
     void _take_input(r_exec::View *input); // called by the rMem at update time and at injection time.
 
-    virtual void gain_activation() {
+    virtual void gain_activation()
+    {
         activate(true);
     }
-    virtual void lose_activation() {
+    virtual void lose_activation()
+    {
         activate(false);
     }
 
@@ -114,7 +126,8 @@ class IPGMContext;
 class HLPContext;
 
 class dll_export Overlay:
-    public _Object {
+    public _Object
+{
     friend class _Context;
     friend class IPGMContext;
     friend class HLPContext;
@@ -124,11 +137,11 @@ protected:
     Controller *controller;
 
     r_code::vector<Atom> values; // value array: stores the results of computations.
-// Copy of the pgm/hlp code. Will be patched during matching and evaluation:
-// any area indexed by a vl_ptr will be overwritten with:
-// the evaluation result if it fits in a single atom,
-// a ptr to the value array if the result is larger than a single atom,
-// a ptr to an input if the result is a pattern input.
+    // Copy of the pgm/hlp code. Will be patched during matching and evaluation:
+    // any area indexed by a vl_ptr will be overwritten with:
+    // the evaluation result if it fits in a single atom,
+    // a ptr to the value array if the result is larger than a single atom,
+    // a ptr to an input if the result is a pattern input.
     Atom *code;
     uint16_t code_size;
     std::vector<uint16_t> patch_indices; // indices where patches are applied; used for rollbacks.
@@ -152,17 +165,21 @@ public:
     virtual void reset(); // reset to original state.
     virtual Overlay *reduce(r_exec::View *input); // returns an offspring in case of a match.
 
-    void invalidate() {
+    void invalidate()
+    {
         invalidated = 1;
     }
-    virtual bool is_invalidated() {
+    virtual bool is_invalidated()
+    {
         return invalidated == 1;
     }
 
-    r_code::Code *getObject() const {
+    r_code::Code *getObject() const
+    {
         return ((Controller *)controller)->getObject();
     }
-    r_exec::View *getView() const {
+    r_exec::View *getView() const
+    {
         return ((Controller *)controller)->getView();
     }
 
@@ -170,7 +187,8 @@ public:
 };
 
 class dll_export OController:
-    public Controller {
+    public Controller
+{
 protected:
     r_code::list<P<Overlay> > overlays;
 

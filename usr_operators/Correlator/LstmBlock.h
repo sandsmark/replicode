@@ -11,8 +11,9 @@
 #define LSTMBLOCK_H_
 
 struct LstmBlockState {
-// default constructor creates one cell inside
-    LstmBlockState() {
+    // default constructor creates one cell inside
+    LstmBlockState()
+    {
         sc.assign(1, 0.);
         ac.assign(1, 0.);
         bc.assign(1, 0.);
@@ -21,7 +22,8 @@ struct LstmBlockState {
         dc.assign(1, 0.);
         ai = af = ao = bi = bf = bo = di = df = d_o = 0.0; // this is necessary, C++ does not initialize them in vector of states
     }
-    LstmBlockState(int nCells) {
+    LstmBlockState(int nCells)
+    {
         sc.assign(nCells, 0.);
         ac.assign(nCells, 0.);
         bc.assign(nCells, 0.);
@@ -30,7 +32,8 @@ struct LstmBlockState {
         dc.assign(nCells, 0.);
         ai = af = ao = bi = bf = bo = di = df = d_o = 0.0;
     }
-    void addCell() {
+    void addCell()
+    {
         sc.push_back(0.);
         ac.push_back(0.);
         bc.push_back(0.);
@@ -39,7 +42,7 @@ struct LstmBlockState {
         dc.push_back(0.);
     }
 
-// current cell states
+    // current cell states
     std::vector <double> sc; // cell states
     std::vector <double> ac; // block input activations
     std::vector <double> bc; // memory block output
@@ -50,24 +53,25 @@ struct LstmBlockState {
     double bf; // forget gate activation
     double bo; // output gate activation
 
-//deltas
+    //deltas
     double di; // input gate delta
     double df; // forget gate delta
     double d_o; // output gate delta
     std::vector<double> dc; // cell delta
 
-//errors
+    //errors
     std::vector<double> ec; // cell outputs errors
     std::vector<double> es; // cell states errors
 
 };
 
-class LstmBlock {
+class LstmBlock
+{
 public:
     LstmBlock(int nCells, int nInputs, int nOutputs, int nBlocks);
     void forwardPassStep(int t, std::vector<LstmBlockState>& state, std::vector<double>& x, std::vector<double>& b);
-// the wK vector is a corresponding column from wK matrix stored in ForwardLayer
-// the wH matrix is a part of transposed matrix (columns as rows) for the source cells
+    // the wK vector is a corresponding column from wK matrix stored in ForwardLayer
+    // the wH matrix is a part of transposed matrix (columns as rows) for the source cells
     void backwardPassStep(int t, std::vector<LstmBlockState>& state, std::vector< std::vector<double> >& wK,
                           std::vector<double>& dk, std::vector< std::vector<double> >& wH, std::vector<double>& db,
                           std::vector< std::vector<double> >& gw, std::vector<double>& gd, std::vector<double>& x, std::vector<double>& b);
@@ -86,10 +90,10 @@ public:
     ~LstmBlock();
 
 
-//private:
-//LstmBlockState state;
+    //private:
+    //LstmBlockState state;
 
-// input gate weights, derivatives, momentum weights
+    // input gate weights, derivatives, momentum weights
     std::vector <double> wIi;
     std::vector <double> wHi;
     std::vector <double> wCi;
@@ -100,7 +104,7 @@ public:
     std::vector <double> wHim;
     std::vector <double> wCim;
 
-// forget gate weights
+    // forget gate weights
     std::vector <double> wIf;
     std::vector <double> wHf;
     std::vector <double> wCf;
@@ -110,7 +114,7 @@ public:
     std::vector <double> wIfm;
     std::vector <double> wHfm;
     std::vector <double> wCfm;
-// output gate weights
+    // output gate weights
     std::vector <double> wIo;
     std::vector <double> wHo;
     std::vector <double> wCo;
@@ -120,7 +124,7 @@ public:
     std::vector <double> wIom;
     std::vector <double> wHom;
     std::vector <double> wCom;
-// cell weights
+    // cell weights
     std::vector <std::vector<double> > wIc;
     std::vector<std::vector<double> > wHc;
 
@@ -129,7 +133,7 @@ public:
     std::vector <std::vector<double> > wIcm;
     std::vector<std::vector<double> > wHcm;
 
-// bias
+    // bias
     double biasI, biasF, biasO, biasId, biasFd, biasOd, biasIm, biasFm, biasOm;
     std::vector <double> biasC;
     std::vector <double> biasCd;
@@ -139,32 +143,38 @@ public:
 
 
 
-inline double fnF(double x) {
+inline double fnF(double x)
+{
     return 1 / (1 + exp(-x));
 }
-inline double fnFd(double x) {
+inline double fnFd(double x)
+{
     double ex = exp(x);
     return ex / ((1 + ex) * (1 + ex));
 }
 
-inline double fnG(double x) {
-//return 1/(1+exp(-x));
+inline double fnG(double x)
+{
+    //return 1/(1+exp(-x));
     return tanh(x);
 }
-inline double fnGd(double x) {
-//double ex=exp(x);
-//return ex/((1+ex)*(1+ex));
+inline double fnGd(double x)
+{
+    //double ex=exp(x);
+    //return ex/((1+ex)*(1+ex));
     double th = tanh(x);
     return 1 - th * th;
 }
 
-inline double fnH(double x) {
-//return 1/(1+exp(-x));
+inline double fnH(double x)
+{
+    //return 1/(1+exp(-x));
     return tanh(x);
 }
-inline double fnHd(double x) {
-//double ex=exp(x);
-//return ex/((1+ex)*(1+ex));
+inline double fnHd(double x)
+{
+    //double ex=exp(x);
+    //return ex/((1+ex)*(1+ex));
     double th = tanh(x);
     return 1 - th * th;
 }

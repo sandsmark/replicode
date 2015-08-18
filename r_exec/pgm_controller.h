@@ -34,17 +34,20 @@
 #include "pgm_overlay.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class dll_export _PGMController:
-    public OController {
+    public OController
+{
 protected:
     bool run_once;
 
     _PGMController(r_code::View *ipgm_view);
     virtual ~_PGMController();
 public:
-    Code *get_core_object() const {
+    Code *get_core_object() const
+    {
         return getObject()->get_reference(0);
     }
 };
@@ -52,12 +55,13 @@ public:
 // TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
 // No overlays.
 class dll_export InputLessPGMController:
-    public _PGMController {
+    public _PGMController
+{
 public:
     InputLessPGMController(r_code::View *ipgm_view);
     ~InputLessPGMController();
 
-     /// next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
+    /// next job will be pushed by the rMem upon processing the current signaling job, i.e. right after exiting this function.
     void signal_input_less_pgm();
 
 private:
@@ -66,7 +70,8 @@ private:
 
 // Controller for programs with inputs.
 class dll_export PGMController:
-    public _PGMController {
+    public _PGMController
+{
 public:
     PGMController(r_code::View *ipgm_view);
     virtual ~PGMController();
@@ -80,7 +85,8 @@ public:
 // Signaled by TimeCores (holding AntiPGMSignalingJob).
 // Possible recursive locks: signal_anti_pgm()->overlay->inject_productions()->mem->inject()->injectNow()->inject_reduction_jobs()->overlay->take_input().
 class dll_export AntiPGMController:
-    public _PGMController {
+    public _PGMController
+{
 private:
     bool successful_match;
     std::mutex m_hostMutex;

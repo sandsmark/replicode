@@ -31,7 +31,8 @@
 #ifndef time_core_h
 #define time_core_h
 
-namespace r_exec {
+namespace r_exec
+{
 void runTimeCore();
 }
 

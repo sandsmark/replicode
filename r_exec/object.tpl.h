@@ -30,50 +30,54 @@
 
 #include <mutex>
 
-namespace r_exec {
+namespace r_exec
+{
 
-template<class C, class U> Object<C, U>::Object(): C(), hash_value(0), invalidated(0) {
+template<class C, class U> Object<C, U>::Object(): C(), hash_value(0), invalidated(0)
+{
 }
 
-template<class C, class U> Object<C, U>::Object(r_code::Mem *mem): C(), hash_value(0), invalidated(0) {
-
+template<class C, class U> Object<C, U>::Object(r_code::Mem *mem): C(), hash_value(0), invalidated(0)
+{
     this->set_oid(UNDEFINED_OID);
 }
 
-template<class C, class U> Object<C, U>::~Object() {
-
+template<class C, class U> Object<C, U>::~Object()
+{
     this->invalidate();
 }
 
-template<class C, class U> bool Object<C, U>::is_invalidated() {
-
+template<class C, class U> bool Object<C, U>::is_invalidated()
+{
     return invalidated == 1;
 }
 
-template<class C, class U> bool Object<C, U>::invalidate() {
-
-    if (invalidated)
+template<class C, class U> bool Object<C, U>::invalidate()
+{
+    if (invalidated) {
         return true;
-    invalidated = 1; //std::cout<<std::dec<<get_oid()<<" invalidated\n";
+    }
 
+    invalidated = 1; //std::cout<<std::dec<<get_oid()<<" invalidated\n";
     acq_views();
     this->views.clear();
     rel_views();
 
     if (this->code(0).getDescriptor() == Atom::MARKER) {
-
-        for (uint16_t i = 0; i < this->references_size(); ++i)
+        for (uint16_t i = 0; i < this->references_size(); ++i) {
             this->get_reference(i)->remove_marker(this);
+        }
     }
 
-    if (this->is_registered())
+    if (this->is_registered()) {
         r_code::Mem::Get()->delete_object(this);
+    }
 
     return false;
 }
 
-template<class C, class U> void Object<C, U>::compute_hash_value() {
-
+template<class C, class U> void Object<C, U>::compute_hash_value()
+{
     hash_value = this->code(0).asOpcode() << 20; // 12 bits for the opcode.
     hash_value |= (this->code_size() & 0x00000FFF) << 8; // 12 bits for the code size.
     hash_value |= this->references_size() & 0x000000FF; // 8 bits for the reference set size.
@@ -86,24 +90,29 @@ template<class C, class U> double Object<C, U>::get_psln_thr()
     return r;
 }
 
-template<class C, class U> void Object<C, U>::mod(uint16_t member_index, float value) {
-
-    if (member_index != this->code_size() - 1)
+template<class C, class U> void Object<C, U>::mod(uint16_t member_index, float value)
+{
+    if (member_index != this->code_size() - 1) {
         return;
+    }
+
     float v = this->code(member_index).asFloat() + value;
-    if (v < 0)
+
+    if (v < 0) {
         v = 0;
-    else if (v > 1)
+    } else if (v > 1) {
         v = 1;
+    }
 
     std::lock_guard<std::mutex> guard(m_pslnThrMutex);
     this->code(member_index) = Atom::Float(v);
 }
 
-template<class C, class U> void Object<C, U>::set(uint16_t member_index, float value) {
-
-    if (member_index != this->code_size() - 1)
+template<class C, class U> void Object<C, U>::set(uint16_t member_index, float value)
+{
+    if (member_index != this->code_size() - 1) {
         return;
+    }
 
     std::lock_guard<std::mutex> guard(m_pslnThrMutex);
     this->code(member_index) = Atom::Float(value);
@@ -111,22 +120,26 @@ template<class C, class U> void Object<C, U>::set(uint16_t member_index, float v
 
 template<class C, class U> View *Object<C, U>::get_view(Code *group, bool lock)
 {
-    if (lock)
+    if (lock) {
         acq_views();
+    }
 
     r_code::View probe;
     probe.references[0] = group;
-
     std::unordered_set<r_code::View *, r_code::View::Hash, r_code::View::Equal>::const_iterator v = this->views.find(&probe);
-    if (v != this->views.end()) {
 
-        if (lock)
+    if (v != this->views.end()) {
+        if (lock) {
             rel_views();
+        }
+
         return (r_exec::View *)*v;
     }
 
-    if (lock)
+    if (lock) {
         rel_views();
+    }
+
     return NULL;
 }
 }

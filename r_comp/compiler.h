@@ -40,11 +40,13 @@
 
 using namespace r_code;
 
-namespace r_comp {
+namespace r_comp
+{
 
 class RepliStruct;
 
-class dll_export Compiler {
+class dll_export Compiler
+{
 
     std::string error;
     std::string m_errorFile;
@@ -77,11 +79,11 @@ class dll_export Compiler {
 
     /// labels and variables declared inside objects (cleared before parsing each sys-object): translate to value pointers.
     std::unordered_map<std::string, Reference> local_references;
-   
+
     // labels declared outside sys-objects. translate to reference pointers.
     bool addLocalReference(const std::string reference_name, const uint16_t index, const Class &p); // detect cast.
     bool getGlobalReferenceIndex(const std::string reference_name, const ReturnType t, ImageObject *object, uint16_t &index, Class *&_class); // index points to the reference set.
-// return false when not found.
+    // return false when not found.
 
     /// In high-level pattern
     bool in_hlp;
@@ -89,7 +91,7 @@ class dll_export Compiler {
     uint32_t add_hlp_reference(std::string reference_name);
     uint8_t get_hlp_reference(std::string reference_name);
 
-// Utility.
+    // Utility.
     bool read_nil(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
     bool read_nil_set(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
     bool read_nil_nb(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
@@ -107,9 +109,9 @@ class dll_export Compiler {
 
     bool err; // set to true when parsing fails in the functions below.
 
-// All functions below return false (a) upon eof or, (b) when the class structure is not matched; in both cases, characters are pushed back.
+    // All functions below return false (a) upon eof or, (b) when the class structure is not matched; in both cases, characters are pushed back.
 
-// Lexical units.
+    // Lexical units.
     bool local_reference(RepliStruct *node, uint16_t &index, const ReturnType t); // must conform to t; indicates if the ref is to ba valuated in the value array (in_pattern set to true).
     bool global_reference(RepliStruct *node, uint16_t &index, const ReturnType t); // no conformance: return type==ANY.
     bool hlp_reference(RepliStruct *node, uint16_t &index);
@@ -132,7 +134,7 @@ class dll_export Compiler {
     bool is_expression_head(RepliStruct *node, const Class &p); // starts from the first element; arity does not count the head; must conform to p.
     bool expression_tail(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write); // starts from the second element; must conform to p.
 
-// Structural units; check for heading labels.
+    // Structural units; check for heading labels.
     bool expression(RepliStruct *node, const ReturnType t, uint16_t write_index, uint16_t &extent_index, bool write); // must conform to t.
     bool expression(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write); // must conform to p.
     bool set(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write); // no conformance, i.e. set of anything. [ ] is illegal; use |[] instead, or [nil].
@@ -149,14 +151,14 @@ public:
 
     std::string getError();
 
-// Read functions for defining structure members.
-// Always try to read nil (typed), a variable, a wildcrad or a tail wildcard first; then try to read the lexical unit; then try to read an expression returning the appropriate type.
-// indented: flag indicating if an indent has been found, meaning that a matching indent will have to be enforced.
-// enforce: set to true when the stream content has to conform with the type xxx in read_xxx.
-// _class: specifies the elements that shall compose a structure (expression or set).
-// write_index: the index where the r-atom shall be written (atomic data), or where an internal pointer to a structure shall be written (structural data).
-// extent_index: the index where to write data belonging to a structure (the internal pointer is written at write_index).
-// write: when false, no writing in code->data is performed (needed by set_element_count()).
+    // Read functions for defining structure members.
+    // Always try to read nil (typed), a variable, a wildcrad or a tail wildcard first; then try to read the lexical unit; then try to read an expression returning the appropriate type.
+    // indented: flag indicating if an indent has been found, meaning that a matching indent will have to be enforced.
+    // enforce: set to true when the stream content has to conform with the type xxx in read_xxx.
+    // _class: specifies the elements that shall compose a structure (expression or set).
+    // write_index: the index where the r-atom shall be written (atomic data), or where an internal pointer to a structure shall be written (structural data).
+    // extent_index: the index where to write data belonging to a structure (the internal pointer is written at write_index).
+    // write: when false, no writing in code->data is performed (needed by set_element_count()).
     bool read_any(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write); // calls all of the functions below.
     bool read_number(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
     bool read_timestamp(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write); // p always NULL

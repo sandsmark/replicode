@@ -36,15 +36,14 @@
 #include <cmath>
 #include <string.h>
 
-void Init(r_comp::Metadata *metadata) {
-
+void Init(r_comp::Metadata *metadata)
+{
     Operators::Init(metadata);
-
     debug("user operators") << "usr operators initialized";
 }
 
-uint16_t GetOperatorCount() {
-
+uint16_t GetOperatorCount()
+{
     return 4;
 }
 
@@ -58,7 +57,6 @@ void GetOperatorName(char *op_name, int op_index)
     }
 
     if (op_index == 1) {
-
         std::string s = "sub";
         memcpy(op_name, s.c_str(), s.length());
         ++op_index;
@@ -66,7 +64,6 @@ void GetOperatorName(char *op_name, int op_index)
     }
 
     if (op_index == 2) {
-
         std::string s = "mul";
         memcpy(op_name, s.c_str(), s.length());
         ++op_index;
@@ -74,7 +71,6 @@ void GetOperatorName(char *op_name, int op_index)
     }
 
     if (op_index == 3) {
-
         std::string s = "dis";
         memcpy(op_name, s.c_str(), s.length());
         ++op_index;
@@ -84,22 +80,22 @@ void GetOperatorName(char *op_name, int op_index)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint16_t GetProgramCount() {
-
+uint16_t GetProgramCount()
+{
     return 2;
 }
 
-void GetProgramName(char *pgm_name) {
-
+void GetProgramName(char *pgm_name)
+{
     static uint16_t pgm_index = 0;
 
     if (pgm_index == 0) {
-
         std::string s = "test_program";
         memcpy(pgm_name, s.c_str(), s.length());
         ++pgm_index;
         return;
     }
+
     /*
     if(pgm_index==1){
 
@@ -110,7 +106,6 @@ void GetProgramName(char *pgm_name) {
     }
     */
     if (pgm_index == 1) {
-
         std::string s = "auto_focus";
         memcpy(pgm_name, s.c_str(), s.length());
         ++pgm_index;
@@ -120,17 +115,16 @@ void GetProgramName(char *pgm_name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint16_t GetCallbackCount() {
-
+uint16_t GetCallbackCount()
+{
     return 1;
 }
 
-void GetCallbackName(char *callback_name) {
-
+void GetCallbackName(char *callback_name)
+{
     static uint16_t callback_index = 0;
 
     if (callback_index == 0) {
-
         std::string s = "print";
         memcpy(callback_name, s.c_str(), s.length());
         ++callback_index;

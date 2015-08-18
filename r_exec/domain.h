@@ -34,7 +34,8 @@
 #include "binding_map.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 /*
  class Range:
  public _Object{

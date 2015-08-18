@@ -36,48 +36,61 @@
 #include <sys/time.h>
 #include <string.h>
 
-namespace utils {
+namespace utils
+{
 
-SharedLibrary *SharedLibrary::New(const char *fileName) {
-
+SharedLibrary *SharedLibrary::New(const char *fileName)
+{
     SharedLibrary *sl = new SharedLibrary();
-    if (sl->load(fileName))
-        return sl;
-    else {
 
+    if (sl->load(fileName)) {
+        return sl;
+    } else {
         delete sl;
         return NULL;
     }
 }
 
-SharedLibrary::SharedLibrary(): library(NULL) {
+SharedLibrary::SharedLibrary(): library(NULL)
+{
 }
 
-SharedLibrary::~SharedLibrary() {
+SharedLibrary::~SharedLibrary()
+{
 #if defined(WIN32) || defined(WIN64)
-    if (library)
+
+    if (library) {
         FreeLibrary(library);
+    }
+
 #else
-    if (library)
+
+    if (library) {
         dlclose(library);
+    }
+
 #endif
 }
 
-SharedLibrary *SharedLibrary::load(const char *fileName) {
+SharedLibrary *SharedLibrary::load(const char *fileName)
+{
 #if defined(WIN32) || defined(WIN64)
     library = LoadLibrary(TEXT(fileName));
-    if (!library) {
 
+    if (!library) {
         DWORD error = GetLastError();
         std::cerr << "> Error: unable to load shared library " << fileName << " :" << error << std::endl;
         return NULL;
     }
+
 #else
     library = dlopen(fileName, RTLD_NOW | RTLD_GLOBAL);
+
     if (!library) {
         std::cout << "> Error: unable to load shared library " << fileName << " :" << dlerror() << std::endl;
         return NULL;
     }
+
 #endif
     return this;
 }

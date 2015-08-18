@@ -35,58 +35,65 @@
 #include <string.h>
 #include <CoreLibrary/debug.h>
 
-namespace r_code {
+namespace r_code
+{
 
 uint64_t Utils::TimeReference = 0;
 uint64_t Utils::BasePeriod = 0;
 double Utils::FloatTolerance = 0;
 uint64_t Utils::TimeTolerance = 0;
 
-uint64_t Utils::GetTimeReference() {
+uint64_t Utils::GetTimeReference()
+{
     return TimeReference;
 }
-uint64_t Utils::GetBasePeriod() {
+uint64_t Utils::GetBasePeriod()
+{
     return BasePeriod;
 }
-uint64_t Utils::GetFloatTolerance() {
+uint64_t Utils::GetFloatTolerance()
+{
     return FloatTolerance;
 }
-uint64_t Utils::GetTimeTolerance() {
+uint64_t Utils::GetTimeTolerance()
+{
     return TimeTolerance;
 }
 
-void Utils::SetReferenceValues(uint64_t base_period, double float_tolerance, double time_tolerance) {
-
+void Utils::SetReferenceValues(uint64_t base_period, double float_tolerance, double time_tolerance)
+{
     BasePeriod = base_period;
     FloatTolerance = float_tolerance;
     TimeTolerance = time_tolerance;
 }
 
-void Utils::SetTimeReference(uint64_t time_reference) {
-
+void Utils::SetTimeReference(uint64_t time_reference)
+{
     TimeReference = time_reference;
 }
 
-bool Utils::Equal(double l, double r) {
-
-    if (l == r)
+bool Utils::Equal(double l, double r)
+{
+    if (l == r) {
         return true;
+    }
+
     return fabs(l - r) < FloatTolerance;
 }
 
-bool Utils::Synchronous(uint64_t l, uint64_t r) {
-
+bool Utils::Synchronous(uint64_t l, uint64_t r)
+{
     return uint64_t(std::abs((int64_t)(l - r))) < TimeTolerance;
 }
 
 uint64_t Utils::GetTimestamp(const Atom *iptr)
 {
-    uint64_t high=iptr[1].atom;
-    return high<<32 | iptr[2].atom;
+    uint64_t high = iptr[1].atom;
+    return high << 32 | iptr[2].atom;
 }
 
-void Utils::SetTimestamp(Atom *iptr, uint64_t t) {
-
+void Utils::SetTimestamp(Atom *iptr, uint64_t t)
+{
     iptr[0] = Atom::Timestamp();
     iptr[1].atom = t >> 32;
     iptr[2].atom = t & 0x00000000FFFFFFFF;
@@ -95,12 +102,12 @@ void Utils::SetTimestamp(Atom *iptr, uint64_t t) {
 void Utils::SetTimestamp(Code *object, uint16_t index, uint64_t t)
 {
     object->code(index) = Atom::Timestamp();
-    object->code(++index)=Atom(t>>32);
-    object->code(++index)=Atom(t & 0x00000000FFFFFFFF);
+    object->code(++index) = Atom(t >> 32);
+    object->code(++index) = Atom(t & 0x00000000FFFFFFFF);
 }
 
-std::string Utils::GetString(const Atom *iptr) {
-
+std::string Utils::GetString(const Atom *iptr)
+{
     std::string s;
     char buffer[255];
     uint8_t char_count = (iptr[0].atom & 0x000000FF);
@@ -110,50 +117,64 @@ std::string Utils::GetString(const Atom *iptr) {
     return s;
 }
 
-void Utils::SetString(Atom *iptr, const std::string &s) {
-
+void Utils::SetString(Atom *iptr, const std::string &s)
+{
     uint8_t l = (uint8_t)s.length();
     uint8_t index = 0;
     iptr[index] = Atom::String(l);
     uint64_t _st = 0;
     int8_t shift = 0;
-    for (uint8_t i = 0; i < l; ++i) {
 
+    for (uint8_t i = 0; i < l; ++i) {
         _st |= s[i] << shift;
         shift += 8;
-        if (shift == 64) {
 
+        if (shift == 64) {
             iptr[++index] = _st;
             _st = 0;
             shift = 0;
         }
     }
-    if (l % 4)
+
+    if (l % 4) {
         iptr[++index] = _st;
+    }
 }
 
-int64_t Utils::GetResilience(uint64_t now, uint64_t time_to_live, uint64_t upr) {
-
-    if (time_to_live == 0 || upr == 0)
+int64_t Utils::GetResilience(uint64_t now, uint64_t time_to_live, uint64_t upr)
+{
+    if (time_to_live == 0 || upr == 0) {
         return 1;
+    }
+
     uint64_t deadline = now + time_to_live;
     uint64_t last_upr = (now - TimeReference) / upr;
     uint64_t next_upr = (deadline - TimeReference) / upr;
-    if ((deadline - TimeReference) % upr > 0)
+
+    if ((deadline - TimeReference) % upr > 0) {
         ++next_upr;
+    }
+
     return next_upr - last_upr;
 }
 
-int64_t Utils::GetGroupResilience(double resilience, double origin_upr, double destination_upr) {
+int64_t Utils::GetGroupResilience(double resilience, double origin_upr, double destination_upr)
+{
+    if (origin_upr == 0) {
+        return 1;
+    }
 
-    if (origin_upr == 0)
+    if (destination_upr <= origin_upr) {
         return 1;
-    if (destination_upr <= origin_upr)
-        return 1;
+    }
+
     double r = origin_upr / destination_upr;
     double res = resilience * r;
-    if (res < 1)
+
+    if (res < 1) {
         return 1;
+    }
+
     return res;
 }
 

@@ -34,11 +34,13 @@
 #include "structure_member.h"
 #include <vector>
 
-namespace r_comp {
+namespace r_comp
+{
 
 class Compiler;
 
-class Class {
+class Class
+{
 private:
     bool has_offset() const;
 public:

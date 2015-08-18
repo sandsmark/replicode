@@ -41,7 +41,8 @@
 #include <dlfcn.h>
 #endif
 
-namespace utils {
+namespace utils
+{
 
 #if defined(WIN32) || defined(WIN64)
 typedef HINSTANCE shared_object;
@@ -49,7 +50,8 @@ typedef HINSTANCE shared_object;
 typedef void* shared_object;
 #endif
 
-class core_dll SharedLibrary {
+class core_dll SharedLibrary
+{
 private:
     shared_object library;
 public:
@@ -57,26 +59,31 @@ public:
     SharedLibrary();
     ~SharedLibrary();
     SharedLibrary *load(const char *fileName);
-    template<typename T> T getFunction(const char *functionName) {
+    template<typename T> T getFunction(const char *functionName)
+    {
         T function = NULL;
-    #if defined(WIN32) || defined(WIN64)
+#if defined(WIN32) || defined(WIN64)
+
         if (library) {
-
             function = (T)GetProcAddress(library, functionName);
-            if (!function) {
 
+            if (!function) {
                 DWORD error = GetLastError();
                 std::cerr << "GetProcAddress > Error: " << error << std::endl;
             }
         }
-    #else
+
+#else
+
         if (library) {
             function = T(dlsym(library, functionName));
+
             if (!function) {
                 std::cout << "> Error: unable to find symbol " << functionName << " :" << dlerror() << std::endl;
             }
         }
-    #endif
+
+#endif
         return function;
     }
 };

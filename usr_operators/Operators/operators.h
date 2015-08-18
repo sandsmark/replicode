@@ -41,7 +41,8 @@ extern "C" {
     bool dll_export dis(const r_exec::Context &context, uint16_t &index);
 }
 
-class Operators {
+class Operators
+{
 public:
     static void Init(r_comp::Metadata *metadata);
 };

@@ -28,8 +28,10 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-namespace r_exec {
-template<class C> void Controller::__take_input(r_exec::View *input) { // utility: to be called by sub-classes.
+namespace r_exec
+{
+template<class C> void Controller::__take_input(r_exec::View *input)   // utility: to be called by sub-classes.
+{
     ReductionJob<C> *j = new ReductionJob<C>(input/*_view*/, (C *)this);
     _Mem::Get()->pushReductionJob(j);
 }

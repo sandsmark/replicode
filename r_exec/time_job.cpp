@@ -33,7 +33,8 @@
 #include "mem.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 TimeJob::TimeJob(uint64_t target_time): _Object(), target_time(target_time)
 {
@@ -85,6 +86,7 @@ bool AntiPGMSignalingJob::update()
     if (is_alive()) {
         ((AntiPGMController *)view->controller)->signal_anti_pgm();
     }
+
     return true;
 }
 
@@ -101,8 +103,10 @@ InputLessPGMSignalingJob::InputLessPGMSignalingJob(View *v, uint64_t ijt): Signa
 
 bool InputLessPGMSignalingJob::update()
 {
-    if (is_alive())
+    if (is_alive()) {
         ((InputLessPGMController *)view->controller)->signal_input_less_pgm();
+    }
+
     return true;
 }
 
@@ -157,13 +161,15 @@ SaliencyPropagationJob::SaliencyPropagationJob(Code *o, double sln_change, doubl
 
 bool SaliencyPropagationJob::update()
 {
-    if (!object->is_invalidated())
+    if (!object->is_invalidated()) {
         _Mem::Get()->propagate_sln(object, sln_change, source_sln_thr);
+    }
+
     return true;
 }
 
-void SaliencyPropagationJob::report(int64_t lag) const {
-
+void SaliencyPropagationJob::report(int64_t lag) const
+{
     debug("saliency propagation job") << "late:" << lag << "us behind.";
 }
 

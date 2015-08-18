@@ -33,14 +33,20 @@
 #include "init.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
-void runReductionCore() {
+void runReductionCore()
+{
     bool run = true;
+
     while (run) {
         _ReductionJob *job = _Mem::Get()->popReductionJob();
-        if (job == nullptr)
+
+        if (job == nullptr) {
             break;
+        }
+
         run = job->update(Now());
         delete job;
     }

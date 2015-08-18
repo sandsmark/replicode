@@ -4,7 +4,8 @@
 #include <unordered_map>
 #include <string>
 
-namespace utils {
+namespace utils
+{
 
 class IniFile
 {

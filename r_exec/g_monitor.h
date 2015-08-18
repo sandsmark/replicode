@@ -34,13 +34,15 @@
 #include "monitor.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class PMDLController;
 class PrimaryMDLController;
 
 class _GMonitor:
-    public Monitor {
+    public Monitor
+{
 protected:
     uint64_t deadline; // of the goal.
     uint64_t sim_thz;
@@ -52,13 +54,14 @@ protected:
 
     typedef std::list<std::pair<P<Goal>, P<Sim> > > SolutionList;
 
-    class SimOutcomes {
+    class SimOutcomes
+    {
     public:
         SolutionList mandatory_solutions;
         SolutionList optional_solutions;
     };
 
-// Simulated predictions of any goal success resulting from the simulation of the monitored goal.
+    // Simulated predictions of any goal success resulting from the simulation of the monitored goal.
     SimOutcomes sim_successes;
     SimOutcomes sim_failures;
 
@@ -72,7 +75,8 @@ protected:
               Fact *goal,
               Fact *f_imdl); // goal is f0->g->f1->object.
 public:
-    virtual bool signal(bool simulation) {
+    virtual bool signal(bool simulation)
+    {
         return false;
     }
 };
@@ -103,7 +107,8 @@ public:
 // actual mode
 // if the goal is not invalidated, report a failure.
 class GMonitor:
-    public _GMonitor {
+    public _GMonitor
+{
 protected:
     _Fact *volatile predicted_evidence; // f0->pred->f1->object; 32 bits alignment.
     bool injected_goal;
@@ -131,7 +136,8 @@ public:
 // if yes: assert success and abort: the model will bind its rhs with the bm retrieved from the pred->f_imdl; this will kill the monitor and a new one will be built for the bound rhs sub-goal.
 // At the deadline, assert failure.
 class RMonitor:
-    public GMonitor {
+    public GMonitor
+{
 public:
     RMonitor(PrimaryMDLController *controller,
              BindingMap *bindings,
@@ -147,7 +153,8 @@ public:
 
 // Monitors simulated goals.
 class SGMonitor:
-    public _GMonitor {
+    public _GMonitor
+{
 protected:
     void commit();
 public:
@@ -164,7 +171,8 @@ public:
 // Monitors simulated requirements.
 // Use for SIM_OPTIONAL and SIM_MANDATORY.
 class SRMonitor:
-    public SGMonitor {
+    public SGMonitor
+{
 public:
     SRMonitor(PrimaryMDLController *controller,
               BindingMap *bindings,

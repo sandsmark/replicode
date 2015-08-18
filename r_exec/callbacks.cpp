@@ -30,7 +30,8 @@
 
 #include	"callbacks.h"
 
-namespace r_exec {
+namespace r_exec
+{
 
 std::unordered_map<std::string, Callbacks::Callback> Callbacks::_Callbacks;
 
@@ -42,8 +43,11 @@ void Callbacks::Register(std::string &callback_name, Callback callback)
 Callbacks::Callback Callbacks::Get(std::string &callback_name)
 {
     std::unordered_map<std::string, Callback>::const_iterator it = _Callbacks.find(callback_name);
-    if (it != _Callbacks.end())
+
+    if (it != _Callbacks.end()) {
         return it->second;
+    }
+
     return NULL;
 }
 }

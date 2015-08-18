@@ -36,7 +36,8 @@
 #include "dll.h"
 
 
-namespace core {
+namespace core
+{
 
 class _Object;
 
@@ -44,7 +45,8 @@ class _Object;
 // No circular refs (use std c++ ptrs).
 // No passing in functions (cast P<C> into C*).
 // Cannot be a value returned by a function (return C* instead).
-template<class C> class P {
+template<class C> class P
+{
 private:
     _Object *object;
 public:
@@ -53,8 +55,8 @@ public:
     P(const P<C> &p);
     ~P();
     C *operator ->() const;
-    template<class D> operator D *() const {
-
+    template<class D> operator D *() const
+    {
         return (D *)object;
     }
     bool operator ==(C *c) const;
@@ -72,7 +74,8 @@ public:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Root smart-pointable object class.
-class core_dll _Object {
+class core_dll _Object
+{
     template<class C> friend class P;
     friend class _P;
 protected:

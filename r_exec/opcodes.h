@@ -35,10 +35,12 @@
 
 #include <cstdint>
 
-namespace r_exec {
+namespace r_exec
+{
 
 // Opcodes are initialized by Init().
-class dll_export Opcodes {
+class dll_export Opcodes
+{
 public:
     static uint16_t View;
     static uint16_t PgmView;

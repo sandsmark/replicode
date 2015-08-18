@@ -37,67 +37,72 @@
 #include "hlp_overlay.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class dll_export HLPContext:
-    public _Context {
+    public _Context
+{
 public:
     HLPContext();
     HLPContext(Atom *code, uint16_t index, HLPOverlay *const overlay, Data data = STEM);
 
     HLPContext operator *() const;
 
-    HLPContext &operator =(const HLPContext &c) {
-
+    HLPContext &operator =(const HLPContext &c)
+    {
         code = c.code;
         index = c.index;
         return *this;
     }
 
-    Atom &operator [](uint16_t i) const {
+    Atom &operator [](uint16_t i) const
+    {
         return code[index + i];
     }
 
     bool operator ==(const HLPContext &c) const;
     bool operator !=(const HLPContext &c) const;
 
-    HLPContext getChild(uint16_t index) const {
-
+    HLPContext getChild(uint16_t index) const
+    {
         return HLPContext(code, this->index + index, (HLPOverlay *)overlay);
     }
 
     bool evaluate(uint16_t &result_index) const; // index is set to the index of the result, undefined in case of failure.
     bool evaluate_no_dereference(uint16_t &result_index) const;
 
-// __Context implementation.
-    _Context *assign(const _Context *c) {
-
+    // __Context implementation.
+    _Context *assign(const _Context *c)
+    {
         HLPContext *_c = new HLPContext(*(HLPContext *)c);
         return _c;
     }
 
-    bool equal(const _Context *c) const {
+    bool equal(const _Context *c) const
+    {
         return *this == *(HLPContext *)c;
     }
 
-    Atom &get_atom(uint16_t i) const {
+    Atom &get_atom(uint16_t i) const
+    {
         return this->operator [](i);
     }
 
     uint16_t get_object_code_size() const;
 
-    uint16_t getChildrenCount() const {
-
+    uint16_t getChildrenCount() const
+    {
         return code[index].getAtomCount();
     }
-    _Context *_getChild(uint16_t index) const {
-
+    _Context *_getChild(uint16_t index) const
+    {
         HLPContext *_c = new HLPContext(getChild(index));
         return _c;
     }
 
-    _Context *dereference() const {
-
+    _Context *dereference() const
+    {
         HLPContext *_c = new HLPContext(**this);
         return _c;
     }

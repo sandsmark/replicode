@@ -35,13 +35,15 @@
 #include "binding_map.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class HLPContext;
 
 // HLP: high-level patterns.
 class HLPOverlay:
-    public Overlay {
+    public Overlay
+{
     friend class HLPContext;
 protected:
     P<HLPBindingMap> bindings;
@@ -69,7 +71,8 @@ public:
     HLPOverlay(Controller *c, const HLPBindingMap *bindings, bool load_code);
     virtual ~HLPOverlay();
 
-    HLPBindingMap *get_bindings() const {
+    HLPBindingMap *get_bindings() const
+    {
         return bindings;
     }
 

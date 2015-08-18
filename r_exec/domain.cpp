@@ -31,7 +31,8 @@
 #include "domain.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 /*
  void Domain::add(BindingMap *bm){
 

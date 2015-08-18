@@ -36,7 +36,8 @@
 #include "CoreLibrary/dll.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class Group;
 class LObject;
@@ -45,12 +46,13 @@ class LObject;
 // Shared resources:
 // none: all mod/set operations are pushed on the group and executed at update time.
 class dll_export View:
-    public r_code::View {
+    public r_code::View
+{
 private:
     static uint64_t LastOID;
     static uint64_t GetOID();
 
-// Ctrl values.
+    // Ctrl values.
     uint64_t sln_changes;
     float acc_sln;
     uint64_t act_changes;
@@ -61,7 +63,7 @@ private:
     float acc_res;
     void reset_ctrl_values();
 
-// Monitoring
+    // Monitoring
     double initial_sln;
     double initial_act;
 
@@ -124,10 +126,12 @@ public:
     float get_act();
     bool get_cov();
     float get_vis();
-    uint32_t &ctrl0() {
+    uint32_t &ctrl0()
+    {
         return _code[VIEW_CTRL_0].atom; // use only for non-group views.
     }
-    uint32_t &ctrl1() {
+    uint32_t &ctrl1()
+    {
         return _code[VIEW_CTRL_1].atom; // idem.
     }
 
@@ -150,7 +154,7 @@ public:
 
     void force_res(double value); // unmediated.
 
-// Target res, sln, act, vis.
+    // Target res, sln, act, vis.
     void mod(uint16_t member_index, double value);
     void set(uint16_t member_index, double value);
 
@@ -161,7 +165,8 @@ private:
 };
 
 class dll_export NotificationView:
-    public View {
+    public View
+{
 public:
     NotificationView(Code *origin, Code *destination, Code *marker); // res=1, sln=1.
 

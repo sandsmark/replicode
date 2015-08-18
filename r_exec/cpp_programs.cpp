@@ -31,28 +31,34 @@
 #include "cpp_programs.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 std::unordered_map<std::string, CPPPrograms::Program> CPPPrograms::Programs;
 
-void CPPPrograms::Register(std::string &pgm_name, Program pgm) {
+void CPPPrograms::Register(std::string &pgm_name, Program pgm)
+{
     Programs[pgm_name] = pgm;
 }
 
-CPPPrograms::Program CPPPrograms::Get(std::string &pgm_name) {
+CPPPrograms::Program CPPPrograms::Get(std::string &pgm_name)
+{
     std::unordered_map<std::string, Program>::const_iterator it = Programs.find(pgm_name);
-    if (it != Programs.end())
+
+    if (it != Programs.end()) {
         return it->second;
+    }
+
     return NULL;
 }
 
-Controller *CPPPrograms::New(std::string &pgm_name, r_code::View *view) {
-
+Controller *CPPPrograms::New(std::string &pgm_name, r_code::View *view)
+{
     CPPPrograms::Program pgm = Get(pgm_name);
-    if (pgm != NULL)
-        return pgm(view);
-    else {
 
+    if (pgm != NULL) {
+        return pgm(view);
+    } else {
         std::cerr << "c++ program '" << pgm_name << "' could not be found\n";
         return NULL;
     }

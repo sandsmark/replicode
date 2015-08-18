@@ -14,7 +14,8 @@
 #ifndef LSTMNETWORK_H_
 #define LSTMNETWORK_H_
 
-class LstmNetwork {
+class LstmNetwork
+{
 public:
     LstmNetwork(int nCells, int nInputs, int nOutputs, int nBlocks);
     void forwardPassStep(int t, std::vector <std::vector<LstmBlockState> >& lstmLayerState,

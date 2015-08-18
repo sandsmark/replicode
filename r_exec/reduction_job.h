@@ -35,10 +35,12 @@
 #include "object.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class dll_export _ReductionJob:
-    public _Object {
+    public _Object
+{
 protected:
     _ReductionJob();
 public:
@@ -48,20 +50,22 @@ public:
 };
 
 template<class _P> class ReductionJob:
-    public _ReductionJob {
+    public _ReductionJob
+{
 public:
     P<View> input;
     P<_P> processor;
     ReductionJob(View *input, _P *processor): _ReductionJob(), input(input), processor(processor) {}
     bool update(uint64_t now);
-    void debug() {
-
+    void debug()
+    {
         processor->debug(input);
     }
 };
 
 template<class _P, class T, class C> class BatchReductionJob:
-    public _ReductionJob {
+    public _ReductionJob
+{
 public:
     P<_P> processor; // the controller that will process the job.
     P<T> trigger; // the event that triggered the job.
@@ -71,13 +75,15 @@ public:
 };
 
 class dll_export ShutdownReductionCore:
-    public _ReductionJob {
+    public _ReductionJob
+{
 public:
     bool update(uint64_t now);
 };
 
 class dll_export AsyncInjectionJob:
-    public _ReductionJob {
+    public _ReductionJob
+{
 public:
     P<View> input;
     AsyncInjectionJob(View *input): _ReductionJob(), input(input) {}

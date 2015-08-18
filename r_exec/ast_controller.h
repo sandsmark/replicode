@@ -36,7 +36,8 @@
 #include "pattern_extractor.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 // Atomic state controller. Attached to a null-pgm and monitoring to a (repeated) input fact (SYNC_PERIODIC or SYNC_HOLD).
 // Has a resilience of 2 times the upr of the group its target comes from.
@@ -46,7 +47,8 @@ namespace r_exec {
 // There is no control over AST: instead, computation is minimal (just pattern-matching) and CTPX are killed asap whenever a model predicts a value change.
 // There cannot be any control based on the semantics of the inputs as these are atomic and henceforth no icst is available at injection time.
 template<class U> class ASTController:
-    public OController {
+    public OController
+{
 protected:
     P<CTPX> tpx;
     P<_Fact> target; // the repeated fact to be monitored.
@@ -58,7 +60,8 @@ protected:
 public:
     virtual ~ASTController();
 
-    Code *get_core_object() const {
+    Code *get_core_object() const
+    {
         return getObject();
     }
 
@@ -71,12 +74,14 @@ private:
 
 // For SYNC_PERIODIC targets.
 class PASTController:
-    public ASTController<PASTController> {
+    public ASTController<PASTController>
+{
 public:
     PASTController(AutoFocusController *auto_focus, View *target);
     ~PASTController();
 
-    void reduce(View *input) {
+    void reduce(View *input)
+    {
         this->ASTController<PASTController>::reduce(input);
     }
     void reduce(View *v, _Fact *input);
@@ -84,14 +89,16 @@ public:
 
 // For SYNC_HOLD targets.
 class HASTController:
-    public ASTController<HASTController> {
+    public ASTController<HASTController>
+{
 private:
     P<_Fact> source; // to be invalidated if a counter-evidence is found.
 public:
     HASTController(AutoFocusController *auto_focus, View *target, _Fact *source);
     ~HASTController();
 
-    void reduce(View *input) {
+    void reduce(View *input)
+    {
         this->ASTController<HASTController>::reduce(input);
     }
     void reduce(View *v, _Fact *input);

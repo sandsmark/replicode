@@ -36,7 +36,8 @@
 #include "CoreLibrary/dll.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 // No instances of the following classes can transmited; for now: facts and icst will be.
 
@@ -45,49 +46,57 @@ namespace r_exec {
 // They are encoded as Atom::Object instead of Atom::Marker.
 
 class dll_export MkNew:
-    public LObject {
+    public LObject
+{
 public:
     MkNew(r_code::Mem *m, Code *object);
 };
 
 class dll_export MkLowRes:
-    public LObject {
+    public LObject
+{
 public:
     MkLowRes(r_code::Mem *m, Code *object);
 };
 
 class dll_export MkLowSln:
-    public LObject {
+    public LObject
+{
 public:
     MkLowSln(r_code::Mem *m, Code *object);
 };
 
 class dll_export MkHighSln:
-    public LObject {
+    public LObject
+{
 public:
     MkHighSln(r_code::Mem *m, Code *object);
 };
 
 class dll_export MkLowAct:
-    public LObject {
+    public LObject
+{
 public:
     MkLowAct(r_code::Mem *m, Code *object);
 };
 
 class dll_export MkHighAct:
-    public LObject {
+    public LObject
+{
 public:
     MkHighAct(r_code::Mem *m, Code *object);
 };
 
 class dll_export MkSlnChg:
-    public LObject {
+    public LObject
+{
 public:
     MkSlnChg(r_code::Mem *m, Code *object, double value);
 };
 
 class dll_export MkActChg:
-    public LObject {
+    public LObject
+{
 public:
     MkActChg(r_code::Mem *m, Code *object, double value);
 };
@@ -96,7 +105,8 @@ class Pred;
 class Goal;
 
 class dll_export _Fact:
-    public LObject {
+    public LObject
+{
 private:
     static bool MatchAtom(Atom lhs, Atom rhs);
     static bool MatchStructure(const Code *lhs, uint16_t lhs_base_index, uint16_t lhs_index, const Code *rhs, uint16_t rhs_index);
@@ -143,7 +153,8 @@ typedef enum {
 } SimMode;
 
 class dll_export Sim:
-    public _Object {
+    public _Object
+{
 private:
     uint64_t volatile invalidated; // 32 bits alignment.
 public:
@@ -172,7 +183,8 @@ public:
 // In particular, is_fact() and is_anti_fact() are based on the opcode, not on the class.
 // Do not store any data in this class.
 class dll_export Fact:
-    public _Fact {
+    public _Fact
+{
 public:
     void *operator new(size_t s);
     Fact();
@@ -183,7 +195,8 @@ public:
 
 // Caveat: as for Fact.
 class dll_export AntiFact:
-    public _Fact {
+    public _Fact
+{
 public:
     void *operator new(size_t s);
     AntiFact();
@@ -206,7 +219,8 @@ public:
 // Invalidation checks are performed at both _take_input() time and reduce() time as the invalidation may occur during the transit in the pipe.
 
 class dll_export Pred:
-    public LObject {
+    public LObject
+{
 public:
     Pred();
     Pred(SysObject *source);
@@ -225,7 +239,8 @@ public:
 };
 
 class dll_export Goal:
-    public LObject {
+    public LObject
+{
 public:
     Goal();
     Goal(SysObject *source);
@@ -251,7 +266,8 @@ public:
 };
 
 class dll_export MkRdx:
-    public LObject {
+    public LObject
+{
 public:
     MkRdx();
     MkRdx(SysObject *source);
@@ -261,21 +277,24 @@ public:
 };
 
 class dll_export Success:
-    public LObject {
+    public LObject
+{
 public:
     Success();
     Success(_Fact *object, _Fact *evidence, double psln_thr);
 };
 
 class dll_export Perf:
-    public LObject {
+    public LObject
+{
 public:
     Perf();
     Perf(uint64_t reduction_job_avg_latency, int64_t d_reduction_job_avg_latency, uint64_t time_job_avg_latency, int64_t d_time_job_avg_latency);
 };
 
 class dll_export ICST:
-    public LObject {
+    public LObject
+{
 public:
     ICST();
     ICST(SysObject *source);

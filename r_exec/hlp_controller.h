@@ -38,7 +38,8 @@
 #include "init.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 typedef enum {
     WR_DISABLED = 0,
@@ -49,13 +50,15 @@ typedef enum {
 } ChainingStatus;
 
 class HLPController:
-    public OController {
+    public OController
+{
 private:
     uint64_t strong_requirement_count; // number of active strong requirements in the same group; updated dynamically.
     uint64_t weak_requirement_count; // number of active weak requirements in the same group; updated dynamically.
     uint64_t requirement_count; // sum of the two above.
 protected:
-    class EEntry { // evidences.
+    class EEntry   // evidences.
+    {
     private:
         void load_data(_Fact *evidence);
     public:
@@ -68,19 +71,22 @@ protected:
         EEntry(_Fact *evidence);
         EEntry(_Fact *evidence, _Fact *payload);
 
-        bool is_too_old(uint64_t now) const {
+        bool is_too_old(uint64_t now) const
+        {
             return (evidence->is_invalidated() || before < now);
         }
     };
 
     class PEEntry: // predicted evidences.
-        public EEntry {
+        public EEntry
+    {
     public:
         PEEntry();
         PEEntry(_Fact *evidence);
     };
 
-    template<class E> class Cache {
+    template<class E> class Cache
+    {
     public:
         std::mutex mutex;
         r_code::list<E> evidences;
@@ -89,19 +95,21 @@ protected:
     Cache<EEntry> evidences;
     Cache<PEEntry> predicted_evidences;
 
-    template<class E> void _store_evidence(Cache<E> *cache, _Fact *evidence) {
-
+    template<class E> void _store_evidence(Cache<E> *cache, _Fact *evidence)
+    {
         E e(evidence);
         std::lock_guard<std::mutex> guard(cache->mutex);
         uint64_t now = r_exec::Now();
         typename r_code::list<E>::const_iterator _e;
-        for (_e = cache->evidences.begin(); _e != cache->evidences.end();) {
 
-            if ((*_e).is_too_old(now)) // garbage collection.
+        for (_e = cache->evidences.begin(); _e != cache->evidences.end();) {
+            if ((*_e).is_too_old(now)) { // garbage collection.
                 _e = cache->evidences.erase(_e);
-            else
+            } else {
                 ++_e;
+            }
         }
+
         cache->evidences.push_front(e);
     }
 
@@ -128,11 +136,12 @@ public:
 
     void invalidate();
 
-    Code *get_core_object() const {
+    Code *get_core_object() const
+    {
         return getObject(); // cst or mdl.
     }
-    Code *get_unpacked_object() const { // the unpacked version of the core object.
-
+    Code *get_unpacked_object() const   // the unpacked version of the core object.
+    {
         Code *core_object = get_core_object();
         return core_object->get_reference(core_object->references_size() - MDL_HIDDEN_REFS);
     }
@@ -143,10 +152,12 @@ public:
     uint64_t get_requirement_count(uint64_t &weak_requirement_count, uint64_t &strong_requirement_count);
     uint64_t get_requirement_count();
 
-    void store_evidence(_Fact *evidence) {
+    void store_evidence(_Fact *evidence)
+    {
         _store_evidence<EEntry>(&evidences, evidence);
     }
-    void store_predicted_evidence(_Fact *evidence) {
+    void store_predicted_evidence(_Fact *evidence)
+    {
         _store_evidence <PEEntry>(&predicted_evidences, evidence);
     }
 
@@ -154,10 +165,12 @@ public:
 
     uint16_t get_out_group_count() const;
     Code *get_out_group(uint16_t i) const; // i starts at 1.
-    inline Group *get_host() const {
+    inline Group *get_host() const
+    {
         return (Group *)getView()->get_host();
     }
-    bool has_tpl_args() const {
+    bool has_tpl_args() const
+    {
         return _has_tpl_args;
     }
 

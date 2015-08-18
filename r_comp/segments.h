@@ -42,9 +42,11 @@
 
 using namespace r_code;
 
-namespace r_comp {
+namespace r_comp
+{
 
-class Reference {
+class Reference
+{
 public:
     Reference();
     Reference(const uintptr_t i, const Class &c, const Class &cc);
@@ -175,10 +177,12 @@ public:
 
     void get_objects(Mem *mem, r_code::vector<r_code::Code *> &ram_objects);
 
-    template<class O> void get_objects(r_code::vector<Code *> &ram_objects) {
+    template<class O> void get_objects(r_code::vector<Code *> &ram_objects)
+    {
         for (size_t i = 0; i < code_segment.objects.size(); ++i) {
             ram_objects[i] = new O(code_segment.objects[i]);
         }
+
         unpack_objects(ram_objects);
     }
 
@@ -191,12 +195,10 @@ public:
     template<class I> I *serialize()
     {
         I *image = (I *)I::Build(timestamp, object_map.get_size(), code_segment.get_size(), object_names.get_size());
-
         object_map.shift(image->map_size());
         object_map.write(image->data());
         code_segment.write(image->data() + image->map_size());
         object_names.write(image->data() + image->map_size() + image->code_size());
-
         return image;
     }
 

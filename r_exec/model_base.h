@@ -34,7 +34,8 @@
 #include "factory.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class _Mem;
 
@@ -44,7 +45,8 @@ class _Mem;
 /// Each bad model is tagged with the last time it was successfully compared to. GC is performed by comparing this time to the thz.
 /// The white list contains models that are still alive and is trimmed down when models time out.
 /// Models are packed before insertion in the white list.
-class ModelBase {
+class ModelBase
+{
     friend class _Mem;
 private:
     static ModelBase *Singleton;
@@ -53,7 +55,8 @@ private:
 
     uint64_t thz;
 
-    class MEntry {
+    class MEntry
+    {
     private:
         static bool Match(Code *lhs, Code *rhs);
         /// use for lhs/rhs.
@@ -71,16 +74,20 @@ private:
 
         bool match(const MEntry &e) const;
 
-        class Hash {
+        class Hash
+        {
         public:
-            size_t operator()(MEntry e) const {
+            size_t operator()(MEntry e) const
+            {
                 return e.hash_code;
             }
         };
 
-        class Equal {
+        class Equal
+        {
         public:
-            bool operator()(const MEntry lhs, const MEntry rhs) const {
+            bool operator()(const MEntry lhs, const MEntry rhs) const
+            {
                 return lhs.match(rhs);
             }
         };
@@ -95,7 +102,8 @@ private:
     MdlSet white_list;
 
     /// called by _Mem::start(); set to secondary_thz.
-    void set_thz(uint64_t thz) {
+    void set_thz(uint64_t thz)
+    {
         this->thz = thz;
     }
 

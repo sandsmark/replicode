@@ -36,13 +36,15 @@
 #include <cstdint>
 #include <cstddef>
 
-namespace r_code {
+namespace r_code
+{
 
 // Opcodes on 12 bits.
 // Indices on 12 bits.
 // Element count on 8 bits.
 // To define bigger constructs (e.g. large matrices), define hooks to RAM (and derive classes from Object).
-class dll_export Atom {
+class dll_export Atom
+{
 private: // trace utilities.
     static uint8_t Members_to_go;
     static uint8_t Timestamp_data;
@@ -90,7 +92,7 @@ public:
         NULL_PROGRAM = 0xCF
     } Type;
 
-// encoders
+    // encoders
     static Atom Float(float f); // IEEE 754 32 bits encoding; shifted by 1 to the right (loss of precison).
     static Atom PlusInfinity();
     static Atom MinusInfinity();
@@ -151,7 +153,7 @@ public:
 
     uint32_t atom;
 
-// decoders
+    // decoders
     bool isUndefined() const;
     uint8_t getDescriptor() const;
     bool isStructural() const;
@@ -160,16 +162,16 @@ public:
     float asFloat() const;
     bool asBoolean() const;
     uint16_t asIndex() const; // applicable to internal, view, reference,
-// and value pointers.
+    // and value pointers.
     uint8_t asInputIndex() const; // applicable to IN_OBJ_PTR.
     uint8_t asRelativeIndex() const; // applicable to D_IN_OBJ_PTR.
     uint16_t asOpcode() const;
     uint16_t asCastOpcode() const; // applicable to VL_PTR.
     uint8_t getAtomCount() const; // arity of operators and
-// objects/markers/structured sets,
-// number of atoms in pointers chains,
-// number of blocks of characters in
-// strings.
+    // objects/markers/structured sets,
+    // number of atoms in pointers chains,
+    // number of blocks of characters in
+    // strings.
     uint8_t getNodeID() const; // applicable to nodes and devices.
     uint8_t getClassID() const; // applicable to devices.
     uint8_t getDeviceID() const; // applicable to devices.

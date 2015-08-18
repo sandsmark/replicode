@@ -39,10 +39,12 @@
 #include "mem.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class MDLOverlay:
-    public HLPOverlay {
+    public HLPOverlay
+{
 protected:
     MDLOverlay(Controller *c, const HLPBindingMap *bindngs);
 public:
@@ -54,7 +56,8 @@ public:
 };
 
 class PrimaryMDLOverlay:
-    public MDLOverlay {
+    public MDLOverlay
+{
 protected:
     bool check_simulated_chaining(HLPBindingMap *bm, Fact *f_imdl, Pred *prediction);
 public:
@@ -65,7 +68,8 @@ public:
 };
 
 class SecondaryMDLOverlay:
-    public MDLOverlay {
+    public MDLOverlay
+{
 public:
     SecondaryMDLOverlay(Controller *c, const HLPBindingMap *bindngs);
     ~SecondaryMDLOverlay();
@@ -74,7 +78,8 @@ public:
 };
 
 class MDLController;
-class Requirements {
+class Requirements
+{
 public:
     std::vector<P<MDLController> > controllers;
     P<_Fact> f_imdl; // f1 as in f0->pred->f1->imdl.
@@ -96,10 +101,12 @@ typedef std::pair<Requirements, Requirements> RequirementsPair; // first: wr, se
 //
 // If forward chaining is inhibited (by strong reqs with better cfd than weak reqs), predictions are still produced, but not injected (no mk.rdx): this is to allow the rating of the requirements.
 class MDLController:
-    public HLPController {
+    public HLPController
+{
 protected:
     class REntry: // use for requirements.
-        public PEEntry {
+        public PEEntry
+    {
     public:
         P<MDLController> controller; // of the requirement.
         bool chaining_was_allowed;
@@ -107,12 +114,14 @@ protected:
         REntry();
         REntry(_Fact *f_p_f_imdl, MDLController *c, bool chaining_was_allowed); // f_imdl is f0 as in f0->pred->f1->imdl.
 
-        bool is_out_of_range(uint64_t now) const {
+        bool is_out_of_range(uint64_t now) const
+        {
             return (before < now || after > now);
         }
     };
 
-    class RCache {
+    class RCache
+    {
     public:
         std::mutex mutex;
         r_code::list<REntry> positive_evidences;
@@ -148,22 +157,22 @@ protected:
     std::mutex m_activeRequirementsMutex;
     std::unordered_map<P<_Fact>, RequirementsPair, PHash<_Fact> > active_requirements; // P<_Fact>: f1 as in f0->pred->f1->imdl; requirements having allowed the production of prediction; first: wr, second: sr.
 
-    template<class C> void reduce_cache(Fact *f_p_f_imdl, MDLController *controller) { // fwd; controller is the controller of the requirement which produced f_p_f_imdl.
-
+    template<class C> void reduce_cache(Fact *f_p_f_imdl, MDLController *controller)   // fwd; controller is the controller of the requirement which produced f_p_f_imdl.
+    {
         BatchReductionJob<C, Fact, MDLController> *j = new BatchReductionJob<C, Fact, MDLController>((C *)this, f_p_f_imdl, controller);
         _Mem::Get()->pushReductionJob(j);
     }
 
-    template<class E> void reduce_cache(Cache<E> *cache, Fact *f_p_f_imdl, MDLController *controller) {
+    template<class E> void reduce_cache(Cache<E> *cache, Fact *f_p_f_imdl, MDLController *controller)
+    {
         std::lock_guard<std::mutex> guard(cache->mutex);
         uint64_t now = Now();
         typename r_code::list<E>::const_iterator _e;
+
         for (_e = cache->evidences.begin(); _e != cache->evidences.end();) {
-
-            if ((*_e).is_too_old(now)) // garbage collection.
+            if ((*_e).is_too_old(now)) { // garbage collection.
                 _e = cache->evidences.erase(_e);
-            else {
-
+            } else {
                 PrimaryMDLOverlay o(this, bindings);
                 o.reduce((*_e).evidence, f_p_f_imdl, controller);
                 ++_e;
@@ -171,7 +180,7 @@ protected:
         }
     }
 
-     /// predictions are admissible inputs (for checking predicted counter-evidences).
+    /// predictions are admissible inputs (for checking predicted counter-evidences).
     bool monitor_predictions(_Fact *input);
 
     MDLController(r_code::View *view);
@@ -198,13 +207,16 @@ public:
     void add_requirement_to_rhs();
     void remove_requirement_from_rhs();
 
-    bool is_requirement() const {
+    bool is_requirement() const
+    {
         return (_is_requirement != NaR);
     }
-    bool is_reuse() const {
+    bool is_reuse() const
+    {
         return _is_reuse;
     }
-    bool is_cmd() const {
+    bool is_cmd() const
+    {
         return _is_cmd;
     }
 
@@ -212,13 +224,15 @@ public:
 };
 
 class PMDLController:
-    public MDLController {
+    public MDLController
+{
 protected:
     std::mutex m_gMonitorsMutex;
     r_code::list<P<_GMonitor> > g_monitors;
     r_code::list<P<_GMonitor> > r_monitors;
 
-    virtual uint64_t get_rdx_out_group_count() const {
+    virtual uint64_t get_rdx_out_group_count() const
+    {
         return get_out_group_count();
     }
     void inject_goal(HLPBindingMap *bm, Fact *goal, Fact *f_imdl) const;
@@ -258,9 +272,11 @@ public:
 // if lhs is in the prediction cache, spawn a g-monitor (will be ready to catch a counter-prediction, invalidate the goal and trigger the re-issuing of a new goal).
 // else commit to the sub-goal; this will trigger the simulation of sub-sub-goals; N.B.: commands are not simulated, commands with unbound values are not injected.
 class TopLevelMDLController:
-    public PMDLController {
+    public PMDLController
+{
 private:
-    uint64_t get_rdx_out_group_count() const {
+    uint64_t get_rdx_out_group_count() const
+    {
         return get_out_group_count() - 1; // so that rdx are not injected in the drives host.
     }
 
@@ -304,7 +320,8 @@ class SecondaryMDLController;
 // else predict rhs (cfd=1) and stop.
 // Commands with unbound values are not injected.
 class PrimaryMDLController:
-    public PMDLController {
+    public PMDLController
+{
 private:
     SecondaryMDLController *secondary;
 
@@ -360,7 +377,8 @@ public:
 // Requirements are stroed whetwehr they come from a primary or a secondary controller.
 // Positive requirements are stored into the rhs controller, both kinds (secondary or primary: the latter case is necessary for rating the model).
 class SecondaryMDLController:
-    public MDLController {
+    public MDLController
+{
 private:
     PrimaryMDLController *primary;
 

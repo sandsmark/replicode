@@ -20,7 +20,8 @@
 #include "LstmNetwork.h"
 #include "VectorMath.h"
 
-class CorrelatorCore {
+class CorrelatorCore
+{
 public:
     std::vector< std::vector<double> > inputSequenceBuffer;
     std::vector< std::vector<LstmBlockState> > lstmStateBuffer;
@@ -43,7 +44,7 @@ public:
 
     CorrelatorCore();
 
-//int nCells=1,nBlocks=2,nInputs=3,nOutputs=3,nX=10,dimX=3;
+    //int nCells=1,nBlocks=2,nInputs=3,nOutputs=3,nX=10,dimX=3;
     void initializeOneStepPrediction(int nC, int nB, std::vector<std::vector <double> >& dataSequence);
     void appendBuffers(std::vector<std::vector <double> >& dataSequence);
     void forwardPass();

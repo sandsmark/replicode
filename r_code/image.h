@@ -38,11 +38,13 @@
 
 using namespace std;
 
-namespace r_comp {
+namespace r_comp
+{
 class Image;
 }
 
-namespace r_code {
+namespace r_code
+{
 
 // An image contains the following:
 // - sizes of what follows
@@ -91,11 +93,12 @@ namespace r_code {
 // };
 
 template<class I> class Image:
-    public I {
+    public I
+{
     friend class r_comp::Image;
 public:
     static Image<I> *Build(uint64_t timestamp, size_t map_size, size_t code_size, size_t names_size);
-// file IO
+    // file IO
     static Image<I> *Read(ifstream &stream);
     static void Write(Image<I> *image, ofstream &stream);
 

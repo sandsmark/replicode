@@ -35,9 +35,11 @@
 
 #include "overlay.h"
 
-namespace r_exec {
+namespace r_exec
+{
 
-class dll_export CPPPrograms {
+class dll_export CPPPrograms
+{
 public:
     typedef Controller *(*Program)(r_code::View *);
 private:

@@ -7,11 +7,13 @@
 #include <unordered_map>
 #include <vector>
 
-namespace r_comp {
+namespace r_comp
+{
 
 class RepliMacro;
 class RepliCondition;
-class RepliStruct {
+class RepliStruct
+{
 public:
     static std::unordered_map<std::string, RepliMacro *> RepliMacros;
     static std::unordered_map<std::string, int64_t> Counters;
@@ -54,7 +56,8 @@ private:
     RepliStruct() = delete;
 };
 
-class RepliMacro {
+class RepliMacro
+{
 public:
     std::string name;
     RepliStruct *src;
@@ -68,7 +71,8 @@ public:
     RepliStruct *expandMacro(RepliStruct *oldStruct);
 };
 
-class RepliCondition {
+class RepliCondition
+{
 public:
     std::string name;
     bool reversed;

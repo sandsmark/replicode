@@ -31,7 +31,8 @@
 #include "opcodes.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 uint16_t Opcodes::View;
 uint16_t Opcodes::PgmView;

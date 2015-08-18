@@ -32,20 +32,26 @@
 #include "base.h"
 
 
-namespace core {
+namespace core
+{
 
-_Object::_Object(): refCount(0) {
+_Object::_Object(): refCount(0)
+{
 }
 
-_Object::~_Object() {
+_Object::~_Object()
+{
 }
 
-void _Object::incRef() {
+void _Object::incRef()
+{
     refCount++;
 }
 
-void _Object::decRef() {
-    if (--refCount == 0)
+void _Object::decRef()
+{
+    if (--refCount == 0) {
         delete this;
+    }
 }
 }

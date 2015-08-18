@@ -35,12 +35,14 @@
 #include "factory.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class MDLController;
 
 class Monitor:
-    public _Object {
+    public _Object
+{
 protected:
     P<BindingMap> bindings;
     P<Fact> target; // f->g or f->p.

@@ -31,6 +31,7 @@
 #include "vector.h"
 
 
-namespace r_code {
+namespace r_code
+{
 
 }

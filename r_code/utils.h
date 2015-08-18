@@ -37,29 +37,35 @@
 
 using namespace core;
 
-namespace r_code {
+namespace r_code
+{
 
 // For use in STL containers.
-template<class C> class PHash {
+template<class C> class PHash
+{
 public:
-    size_t operator()(P<C> c) const {
+    size_t operator()(P<C> c) const
+    {
         return (size_t)(C *)c;
     }
 };
 
 // Debugging facility.
 class NullOStream:
-    public std::ostream {
+    public std::ostream
+{
 public:
     NullOStream(): std::ostream(NULL) {}
-    template<typename T> NullOStream& operator <<(T &t) {
+    template<typename T> NullOStream& operator <<(T &t)
+    {
         return *this;
     }
 };
 
 class Code;
 
-class dll_export Utils {
+class dll_export Utils
+{
 private:
     static uint64_t TimeReference; // starting time.
     static uint64_t BasePeriod;
@@ -101,12 +107,13 @@ public:
     static std::string GetString(const Atom *iptr);
     static void SetString(Atom *iptr, const std::string &s);
 
-    template<class O> static std::string GetString(const O *object, uint16_t index) {
-
+    template<class O> static std::string GetString(const O *object, uint16_t index)
+    {
         uint16_t s_index = object->code(index).asIndex();
         char buffer[255];
         uint8_t char_count = (object->code(s_index).atom & 0x000000FF);
         buffer[char_count] = 0;
+
         for (int i = 0; i < char_count; i += 4) {
             uint64_t val = object->code(s_index + 1 + i / 4);
             buffer[i] = (val & 0x000000ff);
@@ -114,29 +121,32 @@ public:
             buffer[i + 2] = (val & 0x00ff0000) >> 16;
             buffer[i + 3] = (val & 0xff000000) >> 24;
         }
+
         return std::string(buffer);
     }
 
-    template<class O> static void SetString(O *object, uint16_t index, const std::string &s) {
-
+    template<class O> static void SetString(O *object, uint16_t index, const std::string &s)
+    {
         uint16_t s_index = object->code(index).asIndex();
         uint8_t l = (uint8_t)s.length();
         object->code(s_index) = Atom::String(l);
         uint64_t _st = 0;
         int8_t shift = 0;
-        for (uint8_t i = 0; i < l; ++i) {
 
+        for (uint8_t i = 0; i < l; ++i) {
             _st |= s[i] << shift;
             shift += 8;
-            if (shift == 32) {
 
+            if (shift == 32) {
                 object->code(++s_index) = _st;
                 _st = 0;
                 shift = 0;
             }
         }
-        if (l % 4)
+
+        if (l % 4) {
             object->code(++s_index) = _st;
+        }
     }
 
     static int64_t GetResilience(uint64_t now, uint64_t time_to_live, uint64_t upr); // ttl: us, upr: us.

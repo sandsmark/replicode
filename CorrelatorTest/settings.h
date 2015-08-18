@@ -34,7 +34,8 @@
 #include <../../CoreLibrary/trunk/CoreLibrary/xml_parser.h>
 
 
-class CorrelatorTestSettings {
+class CorrelatorTestSettings
+{
 public:
     typedef enum {
         TS_RELATIVE = 0,
@@ -46,32 +47,30 @@ public:
     std::string use_case_path;
     std::string image_name;
 
-    bool load(const char *file_name) {
-
+    bool load(const char *file_name)
+    {
         XMLNode mainNode = XMLNode::openFileHelper(file_name, "TestConfiguration");
-        if (!mainNode) {
 
+        if (!mainNode) {
             std::cerr << "> Error: TestConfiguration is unreadable" << std::endl;
             return false;
         }
 
         XMLNode parameters = mainNode.getChildNode("Parameters");
+
         if (!!parameters) {
-
             const char *_decompile_timestamps = parameters.getAttribute("decompile_timestamps");
-
             usr_operator_path = parameters.getAttribute("usr_operator_path");
             usr_class_path = parameters.getAttribute("usr_class_path");
-
             use_case_path = parameters.getAttribute("use_case_path");
             image_name = parameters.getAttribute("image_name");
 
-            if (strcmp(_decompile_timestamps, "relative") == 0)
+            if (strcmp(_decompile_timestamps, "relative") == 0) {
                 decompile_timestamps = TS_RELATIVE;
-            else
+            } else {
                 decompile_timestamps = TS_ABSOLUTE;
+            }
         } else {
-
             std::cerr << "> Error: Parameter section is unreadable" << std::endl;
             return false;
         }

@@ -40,12 +40,13 @@
 
 using namespace r_code;
 
-namespace r_comp {
+namespace r_comp
+{
 class dll_export Preprocessor
 {
 public:
     RepliStruct *root;
-    
+
     Preprocessor();
     ~Preprocessor();
     RepliStruct *process(const char *file, // if an ifstream, stream must be open.
@@ -53,13 +54,12 @@ public:
                          Metadata *metadata = NULL); // process will fill class_image, or use the exiting one if NULL.
 
 private:
-    enum ClassType
-    {
+    enum ClassType {
         T_CLASS = 0,
         T_SYS_CLASS = 1,
         T_SET = 2
     };
-    
+
     void instantiateClass(RepliStruct *tpl_class, std::vector<RepliStruct *> &tpl_args, std::string &instantiated_class_name);
     bool isSet(std::string className);
     bool isTemplateClass(RepliStruct* replistruct);

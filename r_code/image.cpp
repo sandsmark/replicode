@@ -31,14 +31,17 @@
 #include "image.h"
 
 
-namespace r_code {
+namespace r_code
+{
 
 size_t GetStringSize(const std::string &s)
 {
     size_t length = s.length() + 1; // +1 for null termination
+
     if (length % 4) {
         return length / 4 + 2; // +1 for the length, +1 for alignment
     }
+
     return length / 4 + 1; // +1 for the length
 }
 
@@ -46,8 +49,11 @@ void WriteString(uint32_t *data, const std::string &string)
 {
     data[0] = GetStringSize(string) - 1;
     char *content = (char *)(data + 1);
-    for (uint64_t i = 0; i < string.length(); ++i)
+
+    for (uint64_t i = 0; i < string.length(); ++i) {
         content[i] = string[i];
+    }
+
     content[string.length()] = '\0';
 }
 
@@ -59,6 +65,7 @@ std::string ReadString(uint32_t *data)
     for (size_t i = 0; content[i] != 0; ++i) {
         ret += content[i];
     }
+
     return ret;
 }
 }

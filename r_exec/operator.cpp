@@ -38,34 +38,35 @@
 #include <math.h>
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 r_code::vector<Operator> Operator::Operators;
 
-void Operator::Register(uint16_t opcode, bool (*o)(const Context &, uint16_t &index)) {
-
-    if (Operators[opcode]._operator)
+void Operator::Register(uint16_t opcode, bool (*o)(const Context &, uint16_t &index))
+{
+    if (Operators[opcode]._operator) {
         Operators[opcode].setOverload(o);
-    else
+    } else {
         Operators[opcode] = Operator(o);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool now(const Context &context, uint16_t &index) {
-
+bool now(const Context &context, uint16_t &index)
+{
     index = context.setTimestampResult(Now());
     return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool rnd(const Context &context, uint16_t &index) {
-
+bool rnd(const Context &context, uint16_t &index)
+{
     Context range = *context.getChild(1);
 
     if (!range[0].isFloat()) {
-
         index = context.setAtomicResult(Atom::Nil());
         return false;
     }
@@ -80,11 +81,10 @@ bool rnd(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool equ(const Context &context, uint16_t &index) {
-
+bool equ(const Context &context, uint16_t &index)
+{
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
-
     bool r = (lhs == rhs);
     index = context.setAtomicResult(Atom::Boolean(r));
     return r;
@@ -92,8 +92,8 @@ bool equ(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool neq(const Context &context, uint16_t &index) {
-
+bool neq(const Context &context, uint16_t &index)
+{
     bool r = *context.getChild(1) != *context.getChild(2);
     index = context.setAtomicResult(Atom::Boolean(r));
     return r;
@@ -101,23 +101,19 @@ bool neq(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool gtr(const Context &context, uint16_t &index) {
-
+bool gtr(const Context &context, uint16_t &index)
+{
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
 
     if (lhs[0].isFloat()) {
-
         if (rhs[0].isFloat()) {
-
             bool r = lhs[0].asFloat() > rhs[0].asFloat();
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
         if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             bool r = Utils::GetTimestamp(&lhs[0]) > Utils::GetTimestamp(&rhs[0]);
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
@@ -130,23 +126,19 @@ bool gtr(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool lsr(const Context &context, uint16_t &index) {
-
+bool lsr(const Context &context, uint16_t &index)
+{
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
 
     if (lhs[0].isFloat()) {
-
         if (rhs[0].isFloat()) {
-
             bool r = lhs[0].asFloat() < rhs[0].asFloat();
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
         if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             bool r = Utils::GetTimestamp(&lhs[0]) < Utils::GetTimestamp(&rhs[0]);
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
@@ -159,23 +151,19 @@ bool lsr(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool gte(const Context &context, uint16_t &index) {
-
+bool gte(const Context &context, uint16_t &index)
+{
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
 
     if (lhs[0].isFloat()) {
-
         if (rhs[0].isFloat()) {
-
             bool r = lhs[0].asFloat() >= rhs[0].asFloat();
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
         if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             bool r = Utils::GetTimestamp(&lhs[0]) >= Utils::GetTimestamp(&rhs[0]);
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
@@ -188,23 +176,19 @@ bool gte(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool lse(const Context &context, uint16_t &index) {
-
+bool lse(const Context &context, uint16_t &index)
+{
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
 
     if (lhs[0].isFloat()) {
-
         if (rhs[0].isFloat()) {
-
             bool r = lhs[0].asFloat() <= rhs[0].asFloat();
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
         if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             bool r = Utils::GetTimestamp(&lhs[0]) <= Utils::GetTimestamp(&rhs[0]);
             index = context.setAtomicResult(Atom::Boolean(r));
             return r;
@@ -217,23 +201,19 @@ bool lse(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool add(const Context &context, uint16_t &index) {
-
+bool add(const Context &context, uint16_t &index)
+{
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
 
     if (lhs[0].isFloat()) {
-
         if (rhs[0].isFloat()) {
-
             if (lhs[0] == Atom::PlusInfinity()) {
-
                 index = context.setAtomicResult(Atom::PlusInfinity());
                 return true;
             }
 
             if (rhs[0] == Atom::PlusInfinity()) {
-
                 index = context.setAtomicResult(Atom::PlusInfinity());
                 return true;
             }
@@ -241,23 +221,17 @@ bool add(const Context &context, uint16_t &index) {
             index = context.setAtomicResult(Atom::Float(lhs[0].asFloat() + rhs[0].asFloat()));
             return true;
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             if (lhs[0] != Atom::PlusInfinity()) {
-
                 index = context.setTimestampResult(Utils::GetTimestamp(&rhs[0]) + lhs[0].asFloat());
                 return true;
             }
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
         if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) + Utils::GetTimestamp(&rhs[0]));
             return true;
         } else if (rhs[0].isFloat()) {
-
             if (rhs[0] != Atom::PlusInfinity()) {
-
                 index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) + rhs[0].asFloat());
                 return true;
             }
@@ -270,23 +244,19 @@ bool add(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool sub(const Context &context, uint16_t &index) {
-
+bool sub(const Context &context, uint16_t &index)
+{
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
 
     if (lhs[0].isFloat()) {
-
         if (rhs[0].isFloat()) {
-
             if (lhs[0] == Atom::PlusInfinity()) {
-
                 index = context.setAtomicResult(Atom::PlusInfinity());
                 return true;
             }
 
             if (rhs[0] == Atom::PlusInfinity()) {
-
                 index = context.setAtomicResult(Atom::Float(0));
                 return true;
             }
@@ -295,15 +265,11 @@ bool sub(const Context &context, uint16_t &index) {
             return true;
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
         if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) - Utils::GetTimestamp(&rhs[0]));
             return true;
         } else if (rhs[0].isFloat()) {
-
             if (rhs[0] != Atom::PlusInfinity()) {
-
                 index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) - rhs[0].asFloat());
                 return true;
             }
@@ -316,46 +282,37 @@ bool sub(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool mul(const Context &context, uint16_t &index) {
-
+bool mul(const Context &context, uint16_t &index)
+{
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
 
     if (lhs[0].isFloat()) {
-
         if (rhs[0].isFloat()) {
-
             if (lhs[0] == Atom::PlusInfinity()) {
-
                 if (rhs[0] == Atom::PlusInfinity()) {
-
                     index = context.setAtomicResult(Atom::PlusInfinity());
                     return true;
                 }
 
                 if (rhs[0].asFloat() > 0) {
-
                     index = context.setAtomicResult(Atom::PlusInfinity());
                     return true;
                 }
 
                 if (rhs[0].asFloat() <= 0) {
-
                     index = context.setAtomicResult(Atom::Float(0));
                     return true;
                 }
             }
 
             if (rhs[0] == Atom::PlusInfinity()) {
-
                 if (lhs[0].asFloat() > 0) {
-
                     index = context.setAtomicResult(Atom::PlusInfinity());
                     return true;
                 }
 
                 if (lhs[0].asFloat() <= 0) {
-
                     index = context.setAtomicResult(Atom::Float(0));
                     return true;
                 }
@@ -364,18 +321,14 @@ bool mul(const Context &context, uint16_t &index) {
             index = context.setAtomicResult(Atom::Float(lhs[0].asFloat() * rhs[0].asFloat()));
             return true;
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             index = context.setAtomicResult(Atom::Float(Utils::GetTimestamp(&rhs[0]) * lhs[0].asFloat()));
             return true;
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
         if (rhs[0].isFloat()) {
-
             index = context.setTimestampResult(Utils::GetTimestamp(&lhs[0]) * rhs[0].asFloat());
             return true;
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             index = context.setAtomicResult(Atom::Float(Utils::GetTimestamp(&lhs[0]) * Utils::GetTimestamp(&lhs[0])));
             return true;
         }
@@ -387,48 +340,38 @@ bool mul(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool div(const Context &context, uint16_t &index) {
-
+bool div(const Context &context, uint16_t &index)
+{
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
 
     if (lhs[0].isFloat()) {
-
         if (rhs[0].isFloat()) {
-
             if (rhs[0].asFloat() != 0) {
-
                 if (lhs[0] == Atom::PlusInfinity()) {
-
                     if (rhs[0] == Atom::PlusInfinity()) {
-
                         index = context.setAtomicResult(Atom::PlusInfinity());
                         return true;
                     }
 
                     if (rhs[0].asFloat() > 0) {
-
                         index = context.setAtomicResult(Atom::PlusInfinity());
                         return true;
                     }
 
                     if (rhs[0].asFloat() <= 0) {
-
                         index = context.setAtomicResult(Atom::Float(0));
                         return true;
                     }
                 }
 
                 if (rhs[0] == Atom::PlusInfinity()) {
-
                     if (lhs[0].asFloat() > 0) {
-
                         index = context.setAtomicResult(Atom::PlusInfinity());
                         return true;
                     }
 
                     if (lhs[0].asFloat() <= 0) {
-
                         index = context.setAtomicResult(Atom::Float(0));
                         return true;
                     }
@@ -438,29 +381,24 @@ bool div(const Context &context, uint16_t &index) {
                 return true;
             }
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             double rhs_t = (double)Utils::GetTimestamp(&rhs[0]);
-            if (rhs_t != 0) {
 
+            if (rhs_t != 0) {
                 index = context.setAtomicResult(Atom::Float(lhs[0].asFloat() / rhs_t));
                 return true;
             }
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
         if (rhs[0].isFloat()) {
-
             if (rhs[0].asFloat() != 0) {
-
                 double lhs_t = (double)Utils::GetTimestamp(&lhs[0]);
                 index = context.setTimestampResult(lhs_t / rhs[0].asFloat());
                 return true;
             }
         } else if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             double rhs_t = (double)Utils::GetTimestamp(&rhs[0]);
-            if (rhs_t != 0) {
 
+            if (rhs_t != 0) {
                 double lhs_t = (double)Utils::GetTimestamp(&lhs[0]);
                 index = context.setAtomicResult(Atom::Float(lhs_t / rhs_t));
                 return true;
@@ -474,22 +412,18 @@ bool div(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool dis(const Context &context, uint16_t &index) {
-
+bool dis(const Context &context, uint16_t &index)
+{
     Context lhs = *context.getChild(1);
     Context rhs = *context.getChild(2);
 
     if (lhs[0].isFloat()) {
-
         if (rhs[0].isFloat()) {
-
             index = context.setAtomicResult(Atom::Float(fabs(lhs[0].asFloat() - rhs[0].asFloat())));
             return true;
         }
     } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
         if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
-
             uint64_t lhs_t = Utils::GetTimestamp(&lhs[0]);
             uint64_t rhs_t = Utils::GetTimestamp(&rhs[0]);
             index = context.setTimestampResult(fabs((double)(lhs_t - rhs_t)));
@@ -503,14 +437,12 @@ bool dis(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ln(const Context &context, uint16_t &index) {
-
+bool ln(const Context &context, uint16_t &index)
+{
     Context arg = *context.getChild(1);
 
     if (arg[0].isFloat()) {
-
         if (arg[0].asFloat() != 0) {
-
             index = context.setAtomicResult(Atom::Float(::log(arg[0].asFloat())));
             return true;
         }
@@ -522,12 +454,11 @@ bool ln(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool exp(const Context &context, uint16_t &index) {
-
+bool exp(const Context &context, uint16_t &index)
+{
     Context arg = *context.getChild(1);
 
     if (arg[0].isFloat()) {
-
         index = context.setAtomicResult(Atom::Float(::exp(arg[0].asFloat())));
         return true;
     }
@@ -538,14 +469,12 @@ bool exp(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool log(const Context &context, uint16_t &index) {
-
+bool log(const Context &context, uint16_t &index)
+{
     Context arg = *context.getChild(1);
 
     if (arg[0].isFloat()) {
-
         if (arg[0].asFloat() != 0) {
-
             index = context.setAtomicResult(Atom::Float(log10(arg[0].asFloat())));
             return true;
         }
@@ -557,12 +486,11 @@ bool log(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool e10(const Context &context, uint16_t &index) {
-
+bool e10(const Context &context, uint16_t &index)
+{
     Context arg = *context.getChild(1);
 
     if (arg[0].isFloat()) {
-
         index = context.setAtomicResult(Atom::Float(pow(10, arg[0].asFloat())));
         return true;
     }
@@ -573,29 +501,29 @@ bool e10(const Context &context, uint16_t &index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool syn(const Context &context, uint16_t &index) {
-
+bool syn(const Context &context, uint16_t &index)
+{
     return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ins(const Context &context, uint16_t &index) {
-
+bool ins(const Context &context, uint16_t &index)
+{
     return IPGMContext::Ins(*(IPGMContext *)context.get_implementation(), index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool red(const Context &context, uint16_t &index) {
-
+bool red(const Context &context, uint16_t &index)
+{
     return IPGMContext::Red(*(IPGMContext *)context.get_implementation(), index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool fvw(const Context &context, uint16_t &index) {
-
+bool fvw(const Context &context, uint16_t &index)
+{
     return IPGMContext::Fvw(*(IPGMContext *)context.get_implementation(), index);
 }
 }

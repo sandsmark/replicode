@@ -31,16 +31,17 @@
 #include "_context.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
-uint16_t _Context::setAtomicResult(Atom a) const { // patch code with 32 bits data.
-
+uint16_t _Context::setAtomicResult(Atom a) const   // patch code with 32 bits data.
+{
     overlay->patch_code(index, a);
     return index;
 }
 
-uint16_t _Context::setTimestampResult(uint64_t t) const { // patch code with a VALUE_PTR
-
+uint16_t _Context::setTimestampResult(uint64_t t) const   // patch code with a VALUE_PTR
+{
     overlay->patch_code(index, Atom::ValuePointer(overlay->values.size()));
     overlay->values.as_std()->resize(overlay->values.size() + 3);
     uint16_t value_index = overlay->values.size() - 3;
@@ -48,41 +49,46 @@ uint16_t _Context::setTimestampResult(uint64_t t) const { // patch code with a V
     return value_index;
 }
 
-uint16_t _Context::setCompoundResultHead(Atom a) const { // patch code with a VALUE_PTR.
-
+uint16_t _Context::setCompoundResultHead(Atom a) const   // patch code with a VALUE_PTR.
+{
     uint16_t value_index = overlay->values.size();
     overlay->patch_code(index, Atom::ValuePointer(value_index));
     addCompoundResultPart(a);
     return value_index;
 }
 
-uint16_t _Context::addCompoundResultPart(Atom a) const { // store result in the value array.
-
+uint16_t _Context::addCompoundResultPart(Atom a) const   // store result in the value array.
+{
     overlay->values.push_back(a);
     return overlay->values.size() - 1;
 }
 
-void _Context::trace() const {
-
+void _Context::trace() const
+{
     std::cout << "======== CONTEXT ========\n";
+
     switch (data) {
     case UNDEFINED:
         std::cout << "undefined\n";
         return;
+
     case MKS:
         std::cout << "--> mks\n";
         return;
+
     case VWS:
         std::cout << "--> vws\n";
         return;
+
     default:
         break;
     }
 
     for (uint16_t i = 0; i < get_object_code_size(); ++i) {
-
-        if (index == i)
+        if (index == i) {
             std::cout << ">>";
+        }
+
         std::cout << i << "\t";
         code[i].trace();
         std::cout << std::endl;

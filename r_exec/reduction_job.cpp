@@ -32,17 +32,21 @@
 #include "mem.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
-_ReductionJob::_ReductionJob(): _Object() {
+_ReductionJob::_ReductionJob(): _Object()
+{
 }
 
-template <class _P> bool ReductionJob<_P>::update(uint64_t now) {
+template <class _P> bool ReductionJob<_P>::update(uint64_t now)
+{
     _Mem::Get()->register_reduction_job_latency(now - ijt);
     processor->reduce(input);
     return true;
 }
-template<class _P, class T, class C> bool BatchReductionJob<_P, T, C>::update(uint64_t now) {
+template<class _P, class T, class C> bool BatchReductionJob<_P, T, C>::update(uint64_t now)
+{
     _Mem::Get()->register_reduction_job_latency(now - ijt);
     processor->reduce_batch(trigger, controller);
     return true;
@@ -50,15 +54,15 @@ template<class _P, class T, class C> bool BatchReductionJob<_P, T, C>::update(ui
 
 ////////////////////////////////////////////////////////////
 
-bool ShutdownReductionCore::update(uint64_t now) {
-
+bool ShutdownReductionCore::update(uint64_t now)
+{
     return false;
 }
 
 ////////////////////////////////////////////////////////////
 
-bool AsyncInjectionJob::update(uint64_t now) {
-
+bool AsyncInjectionJob::update(uint64_t now)
+{
     _Mem::Get()->inject(input);
     return true;
 }

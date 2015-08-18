@@ -38,7 +38,8 @@
 #include <list>
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 dll_export bool IsNotification(Code *object);
 
@@ -47,7 +48,8 @@ dll_export bool IsNotification(Code *object);
 // psln_thr: accessed by reduction cores (via overlay mod/set).
 // marker_set: accessed by Mem::injectNow ans Mem::_initiate_sln_propagation.
 template<class C, class U> class Object:
-    public C {
+    public C
+{
 private:
     size_t hash_value;
 
@@ -62,8 +64,8 @@ protected:
 public:
     virtual ~Object(); // un-registers from the rMem's object_register.
 
-    r_code::View *build_view(SysView *source) {
-
+    r_code::View *build_view(SysView *source)
+    {
         return Code::build_view<r_exec::View>(source);
     }
 
@@ -74,20 +76,24 @@ public:
 
     double get_psln_thr();
 
-    void acq_views() {
+    void acq_views()
+    {
         m_viewsMutex.lock();
     }
-    void rel_views() {
+    void rel_views()
+    {
         m_viewsMutex.unlock();
     }
-    void acq_markers() {
+    void acq_markers()
+    {
         m_markersMutex.lock();
     }
-    void rel_markers() {
+    void rel_markers()
+    {
         m_markersMutex.unlock();
     }
 
-// Target psln_thr only.
+    // Target psln_thr only.
     void set(uint16_t member_index, float value);
     void mod(uint16_t member_index, float value);
 
@@ -95,32 +101,41 @@ public:
 
     void kill();
 
-    class Hash {
+    class Hash
+    {
     public:
-        size_t operator()(U *o) const {
-
-            if (o->hash_value == 0)
+        size_t operator()(U *o) const
+        {
+            if (o->hash_value == 0) {
                 o->compute_hash_value();
+            }
+
             return o->hash_value;
         }
     };
 
-    class Equal {
+    class Equal
+    {
     public:
-        bool operator()(const U *lhs, const U *rhs) const { // lhs and rhs have the same hash value, i.e. same opcode, same code size and same reference size.
-
-            if (lhs->code(0).asOpcode() == Opcodes::Ent || rhs->code(0).asOpcode() == Opcodes::Ent)
+        bool operator()(const U *lhs, const U *rhs) const   // lhs and rhs have the same hash value, i.e. same opcode, same code size and same reference size.
+        {
+            if (lhs->code(0).asOpcode() == Opcodes::Ent || rhs->code(0).asOpcode() == Opcodes::Ent) {
                 return lhs == rhs;
+            }
 
             uint16_t i;
-            for (i = 0; i < lhs->references_size(); ++i)
-                if (lhs->get_reference(i) != rhs->get_reference(i))
-                    return false;
-            for (i = 0; i < lhs->code_size(); ++i) {
 
-                if (lhs->code(i) != rhs->code(i))
+            for (i = 0; i < lhs->references_size(); ++i)
+                if (lhs->get_reference(i) != rhs->get_reference(i)) {
                     return false;
+                }
+
+            for (i = 0; i < lhs->code_size(); ++i) {
+                if (lhs->code(i) != rhs->code(i)) {
+                    return false;
+                }
             }
+
             return true;
         }
     };
@@ -131,17 +146,20 @@ public:
 // Markers are killed when at least one of their references dies (held by their views).
 // Marker deletion is performed by registering pending delete operations in the groups they are projected onto.
 class dll_export LObject:
-    public Object<r_code::LObject, LObject> {
+    public Object<r_code::LObject, LObject>
+{
 public:
-    static bool RequiresPacking() {
+    static bool RequiresPacking()
+    {
         return false;
     }
-    static LObject *Pack(Code *object, r_code::Mem *mem) {
+    static LObject *Pack(Code *object, r_code::Mem *mem)
+    {
         return (LObject *)object; //   object is always a LObject (local operation).
     }
     LObject(r_code::Mem *mem = NULL): Object<r_code::LObject, LObject>(mem) {}
-    LObject(r_code::SysObject *source): Object<r_code::LObject, LObject>() {
-
+    LObject(r_code::SysObject *source): Object<r_code::LObject, LObject>()
+    {
         load(source);
     }
     virtual ~LObject() {}

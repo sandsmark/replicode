@@ -31,7 +31,8 @@
 #ifndef reduction_core_h
 #define reduction_core_h
 
-namespace r_exec {
+namespace r_exec
+{
 // Pop a job and reduce - may create overlays from exisitng ones.
 // Injects new productions in the mem - may create 1st level overlays.
 // For each job:
@@ -40,7 +41,7 @@ namespace r_exec {
 // - inject new rdx jobs if salient prods.
 // - inject new update jobs if prod=grp.
 // - inject new signaling jobs if prod=|pgm or prod=pgm with no inputs.
-    void  runReductionCore();
+void  runReductionCore();
 }
 
 

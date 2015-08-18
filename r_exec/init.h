@@ -41,7 +41,8 @@
 
 #include <thread>
 
-namespace r_exec {
+namespace r_exec
+{
 
 // Time base; either Time::Get or network-aware synced time.
 extern dll_export uint64_t(*Now)();
@@ -61,7 +62,8 @@ bool Compile(const char* filename, string& error, r_comp::Image *image, r_comp::
 // Threaded decompiler, for decompiling on the fly asynchronously.
 // Named objects are referenced but not decompiled.
 class dll_export TDecompiler:
-    public _Object {
+    public _Object
+{
 private:
     static const uint64_t ObjectsInitialSize = 16;
     void decompile();
@@ -92,15 +94,16 @@ public:
 // (d) PipeOStream shall be based on std::ostringstream instead of std::ostream with a refined std::stringbuf (override sync() to write in the pipe).
 #if defined(WIN32) || defined(WIN64)
 class dll_export PipeOStream:
-    public std::ostream {
+    public std::ostream
+{
 private:
     static std::vector<PipeOStream *> Streams;
     static PipeOStream NullStream;
 
     int m_pipeRead[2];
     int m_pipeWrite[2];
-//HANDLE pipe_read;
-//HANDLE pipe_write;
+    //HANDLE pipe_read;
+    //HANDLE pipe_write;
 
     void init(); // create one child process and a pipe.
     PipeOStream();

@@ -34,7 +34,8 @@
 
 #include <chrono>
 
-namespace r_exec {
+namespace r_exec
+{
 
 using namespace std::chrono;
 
@@ -42,20 +43,26 @@ void delegatedCoreWait(TimeJob *job)
 {
     _Mem::Get()->start_core();
     bool run = true;
+
     do {
         std::this_thread::sleep_until(steady_clock::time_point(microseconds(job->target_time)));
+
         if (!job->is_alive()) {
             break;
         }
+
         if (_Mem::Get()->check_state() != _Mem::RUNNING) {
             break;
         }
+
         int64_t lag = Now() - job->target_time;
         run = job->update();
+
         if (lag > 0) {
             job->report(lag);
         }
     } while(job->shouldRunAgain() && run);
+
     delete job;
     _Mem::Get()->shutdown_core();
 }
@@ -63,23 +70,30 @@ void delegatedCoreWait(TimeJob *job)
 void runTimeCore()
 {
     bool run = true;
+
     while (run) {
         TimeJob *job = _Mem::Get()->popTimeJob();
+
         if (job == nullptr) {
             break;
         }
+
         do {
             if (!job->is_alive()) {
                 break;
             }
+
             if (_Mem::Get()->check_state() != _Mem::RUNNING) {
                 break;
             }
+
             if (job->target_time == 0) {// means ASAP. Control jobs (shutdown) are caught here.
                 run = job->update();
                 continue;
             }
+
             int64_t waitTime = job->target_time - Now();
+
             if (waitTime > 0) { // early: spawn a delegate to wait for the due time; delegate will die when done.
                 std::thread *delegatedCoreThread = new std::thread(delegatedCoreWait, job);
                 delegatedCoreThread->detach();
@@ -87,11 +101,14 @@ void runTimeCore()
                 job = nullptr;
                 break; // get a new job
             }
+
             run = job->update();
+
             if (waitTime < 0) {
                 job->report(-waitTime);
             }
         } while(job->shouldRunAgain() && run);
+
         delete job;
     }
 }

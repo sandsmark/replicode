@@ -32,25 +32,30 @@
 #include "segments.h"
 
 
-namespace r_comp {
+namespace r_comp
+{
 
 const char *Class::Expression = "xpr";
 const char *Class::Type = "type";
 
-bool Class::has_offset() const {
-
+bool Class::has_offset() const
+{
     switch (atom.getDescriptor()) {
     case Atom::OBJECT:
     case Atom::GROUP:
     case Atom::INSTANTIATED_PROGRAM:
     case Atom::INSTANTIATED_CPP_PROGRAM:
     case Atom::S_SET:
-    case Atom::MARKER: return true;
-    default: return false;
+    case Atom::MARKER:
+        return true;
+
+    default:
+        return false;
     }
 }
 
-Class::Class(ReturnType t): str_opcode("undefined"), type(t) {
+Class::Class(ReturnType t): str_opcode("undefined"), type(t)
+{
 }
 
 Class::Class(Atom atom,
@@ -60,49 +65,55 @@ Class::Class(Atom atom,
     str_opcode(str_opcode),
     things_to_read(r),
     type(t),
-    use_as(StructureMember::I_CLASS) {
+    use_as(StructureMember::I_CLASS)
+{
 }
 
-bool Class::is_pattern(Metadata *metadata) const {
-
+bool Class::is_pattern(Metadata *metadata) const
+{
     return (metadata->classes.find("ptn")->second.atom == atom) || (metadata->classes.find("|ptn")->second.atom == atom);
 }
 
-bool Class::is_fact(Metadata *metadata) const {
-
+bool Class::is_fact(Metadata *metadata) const
+{
     return (metadata->classes.find("fact")->second.atom == atom) || (metadata->classes.find("|fact")->second.atom == atom);
 }
 
-bool Class::get_member_index(Metadata *metadata, std::string &name, uint16_t &index, Class *&p) const {
-
+bool Class::get_member_index(Metadata *metadata, std::string &name, uint16_t &index, Class *&p) const
+{
     for (uint16_t i = 0; i < things_to_read.size(); ++i)
         if (things_to_read[i].name == name) {
-
             index = (has_offset() ? i + 1 : i); // in expressions the lead r-atom is at 0; in objects, members start at 1
-            if (things_to_read[i].used_as_expression()) // the class is: [::a-class]
+
+            if (things_to_read[i].used_as_expression()) { // the class is: [::a-class]
                 p = NULL;
-            else
+            } else {
                 p = things_to_read[i].get_class(metadata);
+            }
+
             return true;
         }
+
     return false;
 }
 
-std::string Class::get_member_name(uint64_t index) {
-
+std::string Class::get_member_name(uint64_t index)
+{
     return things_to_read[has_offset() ? index - 1 : index].name;
 }
 
-ReturnType Class::get_member_type(const uint16_t index) {
-
+ReturnType Class::get_member_type(const uint16_t index)
+{
     return things_to_read[has_offset() ? index - 1 : index].get_return_type();
 }
 
-Class *Class::get_member_class(Metadata *metadata, const std::string &name) {
-
+Class *Class::get_member_class(Metadata *metadata, const std::string &name)
+{
     for (uint16_t i = 0; i < things_to_read.size(); ++i)
-        if (things_to_read[i].name == name)
+        if (things_to_read[i].name == name) {
             return things_to_read[i].get_class(metadata);
+        }
+
     return NULL;
 }
 
@@ -114,6 +125,7 @@ void Class::write(uint32_t *storage)
     storage[offset++] = type;
     storage[offset++] = use_as;
     storage[offset++] = things_to_read.size();
+
     for (uint64_t i = 0; i < things_to_read.size(); ++i) {
         things_to_read[i].write(storage + offset);
         offset += things_to_read[i].get_size();
@@ -128,8 +140,8 @@ void Class::read(uint32_t *storage)
     type = (ReturnType)storage[offset++];
     use_as = (StructureMember::Iteration)storage[offset++];
     uint64_t member_count = storage[offset++];
-    for (uint64_t i = 0; i < member_count; ++i) {
 
+    for (uint64_t i = 0; i < member_count; ++i) {
         StructureMember m;
         m.read(storage + offset);
         things_to_read.push_back(m);
@@ -137,12 +149,15 @@ void Class::read(uint32_t *storage)
     }
 }
 
-size_t Class::get_size() { // see segments.cpp for the RAM layout
-
+size_t Class::get_size()   // see segments.cpp for the RAM layout
+{
     size_t size = 4; // atom, return type, usage, number of members
     size += r_code::GetStringSize(str_opcode);
-    for (size_t i = 0; i < things_to_read.size(); ++i)
+
+    for (size_t i = 0; i < things_to_read.size(); ++i) {
         size += things_to_read[i].get_size();
+    }
+
     return size;
 }
 }

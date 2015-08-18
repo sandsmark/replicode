@@ -34,12 +34,14 @@
 #include "monitor.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class MDLController;
 
 class PMonitor:
-    public Monitor {
+    public Monitor
+{
 private:
     bool rate_failures;
     _Fact *prediction_target; // f1 as in f0->pred->f1->object.

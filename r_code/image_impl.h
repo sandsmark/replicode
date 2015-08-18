@@ -36,9 +36,11 @@
 #include <cstdint>
 #include <cstddef>
 
-namespace r_code {
+namespace r_code
+{
 
-class dll_export ImageImpl {
+class dll_export ImageImpl
+{
 private:
     /// [object map|code segment|object names]
     uint32_t *_data;

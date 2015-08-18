@@ -35,22 +35,31 @@
 #include "pgm_overlay.h"
 #include "CoreLibrary/debug.h"
 
-namespace r_exec {
+namespace r_exec
+{
 
 class dll_export TimeJob:
-    public _Object {
+    public _Object
+{
 protected:
     TimeJob(uint64_t target_time);
 public:
     uint64_t target_time; // absolute deadline; 0 means ASAP.
     virtual bool update() = 0; // next_target: absolute deadline; 0 means no more waiting; return false to shutdown the time core.
-    virtual bool is_alive() const { return true; }
-    virtual bool shouldRunAgain() const { return false; }
+    virtual bool is_alive() const
+    {
+        return true;
+    }
+    virtual bool shouldRunAgain() const
+    {
+        return false;
+    }
     virtual void report(int64_t lag) const;
 };
 
 class dll_export UpdateJob:
-    public TimeJob {
+    public TimeJob
+{
 public:
     P<Group> group;
     UpdateJob(Group *g, uint64_t ijt);
@@ -59,7 +68,8 @@ public:
 };
 
 class dll_export SignalingJob:
-    public TimeJob {
+    public TimeJob
+{
 protected:
     SignalingJob(View *v, uint64_t ijt);
 public:
@@ -68,7 +78,8 @@ public:
 };
 
 class dll_export AntiPGMSignalingJob:
-    public SignalingJob {
+    public SignalingJob
+{
 public:
     AntiPGMSignalingJob(View *v, uint64_t ijt);
     bool update();
@@ -76,7 +87,8 @@ public:
 };
 
 class dll_export InputLessPGMSignalingJob:
-    public SignalingJob {
+    public SignalingJob
+{
 public:
     InputLessPGMSignalingJob(View *v, uint64_t ijt);
     bool update();
@@ -84,7 +96,8 @@ public:
 };
 
 class dll_export InjectionJob:
-    public TimeJob {
+    public TimeJob
+{
 public:
     P<View> view;
     InjectionJob(View *v, uint64_t ijt);
@@ -93,7 +106,8 @@ public:
 };
 
 class dll_export EInjectionJob:
-    public TimeJob {
+    public TimeJob
+{
 public:
     P<View> view;
     EInjectionJob(View *v, uint64_t ijt);
@@ -102,7 +116,8 @@ public:
 };
 
 class dll_export SaliencyPropagationJob:
-    public TimeJob {
+    public TimeJob
+{
 public:
     P<Code> object;
     double sln_change;
@@ -113,37 +128,49 @@ public:
 };
 
 class dll_export ShutdownTimeCore:
-    public TimeJob {
+    public TimeJob
+{
 public:
     ShutdownTimeCore();
     bool update();
 };
 
 template<class M> class MonitoringJob:
-    public TimeJob {
+    public TimeJob
+{
 public:
     P<M> monitor;
     MonitoringJob(M *monitor, uint64_t deadline): TimeJob(deadline), monitor(monitor) {}
-    bool update() {
+    bool update()
+    {
         monitor->update(target_time);
         return true;
     }
-    virtual bool shouldRunAgain() const { return (target_time != 0); }
-    bool is_alive() const {
+    virtual bool shouldRunAgain() const
+    {
+        return (target_time != 0);
+    }
+    bool is_alive() const
+    {
         return monitor->is_alive();
     }
-    void report(int64_t lag) const {
+    void report(int64_t lag) const
+    {
         debug("monitoring job") << "late:" << lag << "us behind.";
     }
 };
 
 class dll_export PerfSamplingJob:
-    public TimeJob {
+    public TimeJob
+{
 public:
     uint64_t period;
     PerfSamplingJob(uint64_t start, uint64_t period);
     bool update();
-    bool shouldRunAgain() const { return true; }
+    bool shouldRunAgain() const
+    {
+        return true;
+    }
 };
 }
 

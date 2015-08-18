@@ -37,7 +37,8 @@
 #include "view.h"
 #include <unordered_map>
 
-namespace r_exec {
+namespace r_exec
+{
 
 class _Mem;
 class HLPController;
@@ -47,9 +48,10 @@ class HLPController;
 // all views: accessed by Mem::update and reduction cores.
 // viewing_groups: accessed by Mem::injectNow and Mem::update.
 class dll_export Group:
-    public LObject {
+    public LObject
+{
 private:
-// Ctrl values.
+    // Ctrl values.
     uint64_t sln_thr_changes;
     double acc_sln_thr;
     uint64_t act_thr_changes;
@@ -66,7 +68,7 @@ private:
     double acc_c_act_thr;
     void reset_ctrl_values();
 
-// Stats.
+    // Stats.
     double avg_sln;
     double high_sln;
     double low_sln;
@@ -76,7 +78,7 @@ private:
     uint64_t sln_updates;
     uint64_t act_updates;
 
-// Decay.
+    // Decay.
     double sln_decay;
     double sln_thr_decay;
     int64_t decay_periods_to_go;
@@ -84,7 +86,7 @@ private:
     double decay_target; // -1: none, 0: sln, 1:sln_thr
     void reset_decay_values();
 
-// Notifications.
+    // Notifications.
     int64_t sln_change_monitoring_periods_to_go = 0;
     int64_t act_change_monitoring_periods_to_go = 0;
 
@@ -105,7 +107,8 @@ private:
     void notifyNew(View *view);
     void cov(View *view);
 
-    class GroupState {
+    class GroupState
+    {
     public:
         double former_sln_thr;
         bool was_c_active;
@@ -128,8 +131,8 @@ private:
     void _propagate_sln(Code *object, double change, double source_sln_thr, std::vector<Code *> &path) const;
 public:
     std::mutex mutex;
-// xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
-// Active overlays are to be found in xxx_ipgm_views.
+    // xxx_views are meant for erasing views with res==0. They are specialized by type to ease update operations.
+    // Active overlays are to be found in xxx_ipgm_views.
     std::unordered_map<uint64_t, P<View> > ipgm_views;
     std::unordered_map<uint64_t, P<View> > anti_ipgm_views;
     std::unordered_map<uint64_t, P<View> > input_less_ipgm_views;
@@ -137,19 +140,20 @@ public:
     std::unordered_map<uint64_t, P<View> > group_views;
     std::unordered_map<uint64_t, P<View> > other_views;
 
-// Defined to create reduction jobs in the viewing groups from the viewed group.
-// Empty when the viewed group is invisible (this means that visible groups can be non c-active or non c-salient).
-// Maintained by the viewing groups (at update time).
-// Viewing groups are c-active and c-salient. the bool is the cov.
+    // Defined to create reduction jobs in the viewing groups from the viewed group.
+    // Empty when the viewed group is invisible (this means that visible groups can be non c-active or non c-salient).
+    // Maintained by the viewing groups (at update time).
+    // Viewing groups are c-active and c-salient. the bool is the cov.
     std::unordered_map<Group *, bool> viewing_groups;
 
-// Populated within update; ordered by increasing ijt; cleared at the beginning of update.
+    // Populated within update; ordered by increasing ijt; cleared at the beginning of update.
     std::multiset<P<View>, r_code::View::Less> newly_salient_views;
 
-// Populated upon ipgm injection; used at update time; cleared afterward.
+    // Populated upon ipgm injection; used at update time; cleared afterward.
     std::vector<Controller *> new_controllers;
 
-    class Operation {
+    class Operation
+    {
     protected:
         Operation(uint64_t oid): oid(oid) {}
     public:
@@ -159,7 +163,8 @@ public:
     };
 
     class ModSet:
-        public Operation {
+        public Operation
+    {
     protected:
         ModSet(uint64_t oid, uint16_t member_index, double value): Operation(oid), member_index(member_index), value(value) {}
         const uint16_t member_index;
@@ -167,30 +172,36 @@ public:
     };
 
     class Mod:
-        public ModSet {
+        public ModSet
+    {
     public:
         Mod(uint64_t oid, uint16_t member_index, double value): ModSet(oid, member_index, value) {}
-        void execute(Group *g) const {
-
+        void execute(Group *g) const
+        {
             View *v = g->get_view_for_object(oid);
-            if (v)
+
+            if (v) {
                 v->mod(member_index, value);
+            }
         }
     };
 
     class Set:
-        public ModSet {
+        public ModSet
+    {
     public:
         Set(uint64_t oid, uint16_t member_index, double value): ModSet(oid, member_index, value) {}
-        void execute(Group *g) const {
-
+        void execute(Group *g) const
+        {
             View *v = g->get_view_for_object(oid);
-            if (v)
+
+            if (v) {
                 v->set(member_index, value);
+            }
         }
     };
 
-// Pending mod/set operations on the group's view, exploited and cleared at update time.
+    // Pending mod/set operations on the group's view, exploited and cleared at update time.
     std::vector<Operation *> pending_operations;
 
     Group(r_code::Mem *m = NULL);
@@ -199,34 +210,41 @@ public:
 
     bool invalidate(); // removes all views of itself and of any other object.
 
-    bool all_views_cond(uint8_t &selector, std::unordered_map<uint64_t, P<View> >::const_iterator &it, std::unordered_map<uint64_t, P<View> >::const_iterator &end) {
+    bool all_views_cond(uint8_t &selector, std::unordered_map<uint64_t, P<View> >::const_iterator &it, std::unordered_map<uint64_t, P<View> >::const_iterator &end)
+    {
         while (it == end) {
             switch (selector++) {
             case 0:
                 it = anti_ipgm_views.begin();
                 end = anti_ipgm_views.end();
                 break;
+
             case 1:
                 it = input_less_ipgm_views.begin();
                 end = input_less_ipgm_views.end();
                 break;
+
             case 2:
                 it = notification_views.begin();
                 end = notification_views.end();
                 break;
+
             case 3:
                 it = group_views.begin();
                 end = group_views.end();
                 break;
+
             case 4:
                 it = other_views.begin();
                 end = other_views.end();
                 break;
+
             case 5:
                 selector = 0;
                 return false;
             }
         }
+
         return true;
     }
 
@@ -245,18 +263,21 @@ public:
 #define FOR_ALL_VIEWS_END } \
 }
 
-    bool views_with_inputs_cond(uint8_t &selector, std::unordered_map<uint64_t, P<View> >::const_iterator &it, std::unordered_map<uint64_t, P<View> >::const_iterator &end) {
+    bool views_with_inputs_cond(uint8_t &selector, std::unordered_map<uint64_t, P<View> >::const_iterator &it, std::unordered_map<uint64_t, P<View> >::const_iterator &end)
+    {
         while (it == end) {
             switch (selector++) {
             case 0:
                 it = anti_ipgm_views.begin();
                 end = anti_ipgm_views.end();
                 break;
+
             case 1:
                 selector = 0;
                 return false;
             }
         }
+
         return true;
     }
 
@@ -269,30 +290,36 @@ public:
 #define FOR_ALL_VIEWS_WITH_INPUTS_END } \
 }
 
-    bool non_ntf_views_cond(uint8_t &selector, std::unordered_map<uint64_t, P<View> >::const_iterator &it, std::unordered_map<uint64_t, P<View> >::const_iterator &end) {
+    bool non_ntf_views_cond(uint8_t &selector, std::unordered_map<uint64_t, P<View> >::const_iterator &it, std::unordered_map<uint64_t, P<View> >::const_iterator &end)
+    {
         while (it == end) {
             switch (selector++) {
             case 0:
                 it = anti_ipgm_views.begin();
                 end = anti_ipgm_views.end();
                 break;
+
             case 1:
                 it = input_less_ipgm_views.begin();
                 end = input_less_ipgm_views.end();
                 break;
+
             case 2:
                 it = group_views.begin();
                 end = group_views.end();
                 break;
+
             case 3:
                 it = other_views.begin();
                 end = other_views.end();
                 break;
+
             case 4:
                 selector = 0;
                 return false;
             }
         }
+
         return true;
     }
 
@@ -367,14 +394,14 @@ public:
     uint16_t get_ntf_grp_count();
     Group *get_ntf_grp(uint16_t i); // i starts at 1.
 
-// Delegate to views; update stats and notifies.
+    // Delegate to views; update stats and notifies.
     double update_res(View *v);
     double update_sln(View *v); // applies decay if any.
     double update_act(View *v);
 
-// Target upr, spr, c_sln, c_act, sln_thr, act_thr, vis_thr, c_sln_thr, c_act_thr, sln_chg_thr,
-// sln_chg_prd, act_chg_thr, act_chg_prd, high_sln_thr, low_sln_thr, sln_ntf_prd, high_act_thr, low_act_thr, act_ntf_prd, low_res_thr, res_ntf_prd, ntf_new,
-// dcy_per, dcy-tgt, dcy_prd.
+    // Target upr, spr, c_sln, c_act, sln_thr, act_thr, vis_thr, c_sln_thr, c_act_thr, sln_chg_thr,
+    // sln_chg_prd, act_chg_thr, act_chg_prd, high_sln_thr, low_sln_thr, sln_ntf_prd, high_act_thr, low_act_thr, act_ntf_prd, low_res_thr, res_ntf_prd, ntf_new,
+    // dcy_per, dcy-tgt, dcy_prd.
     void mod(uint16_t member_index, float value);
     void set(uint16_t member_index, float value);
 
@@ -383,15 +410,15 @@ public:
 
     bool load(View *view, Code *object);
 
-// Called at each update period.
-// - set the final resilience value, if 0, delete.
-// - set the final saliency.
-// - set the final activation.
-// - set the final visibility, cov.
-// - propagate saliency changes.
-// - inject next update job for the group.
-// - inject new signaling jobs if act pgm with no input or act |pgm.
-// - notify high and low values.
+    // Called at each update period.
+    // - set the final resilience value, if 0, delete.
+    // - set the final saliency.
+    // - set the final activation.
+    // - set the final visibility, cov.
+    // - propagate saliency changes.
+    // - inject next update job for the group.
+    // - inject new signaling jobs if act pgm with no input or act |pgm.
+    // - notify high and low values.
     void update(uint64_t planned_time);
 
     void inject_new_object(View *view);
@@ -406,16 +433,20 @@ public:
 
     void cov();
 
-    class Hash {
+    class Hash
+    {
     public:
-        size_t operator()(Group *g) const {
+        size_t operator()(Group *g) const
+        {
             return (size_t)g;
         }
     };
 
-    class Equal {
+    class Equal
+    {
     public:
-        bool operator()(const Group *lhs, const Group *rhs) const {
+        bool operator()(const Group *lhs, const Group *rhs) const
+        {
             return lhs == rhs;
         }
     };

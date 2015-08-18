@@ -33,31 +33,33 @@
 
 using namespace core;
 
-int64_t main(int argc, char **argv) {
-
+int64_t main(int argc, char **argv)
+{
     HANDLE pipe_read = (HANDLE)atoi(argv[1]);
-
     uint64_t read;
     char buffer[1024];
     bool r;
-    while (1) {
 
+    while (1) {
         r = ReadFile(pipe_read, buffer, 1024, &read, NULL);
-        if (!r || read == 0)
+
+        if (!r || read == 0) {
             break;
+        }
 
         std::string s(buffer);
         s = s.substr(0, read);
         std::string stop("close_output_window");
         size_t found = s.rfind(stop);
-        if (found != std::string::npos)
+
+        if (found != std::string::npos) {
             break;
+        }
 
         std::cout << s;
     }
 
     std::cout << "> press a key to exit\n";
     getchar();
-
     return 0;
 }

@@ -39,12 +39,14 @@
 #include "mem.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class dll_export AutoFocusController:
-    public Controller {
+    public Controller
+{
 private:
-// icpp_pgm parameters.
+    // icpp_pgm parameters.
     bool _pass_through;
     bool _ctpx_on;
     bool _gtpx_on;
@@ -53,25 +55,29 @@ private:
     bool _decompile_models;
     std::vector<Group *> output_groups; // 1st is the primary, 2nd the secondary, followed by other groups if any.
 
-    class Rating {
+    class Rating
+    {
     public:
         uint64_t evidences;
         uint64_t positive_evidences;
         double SR;
         double dSR;
 
-        static bool DSR(double dSR) {
-
+        static bool DSR(double dSR)
+        {
             return dSR > 0 && dSR < _Mem::Get()->get_tpx_dsr_thr();
         }
 
         Rating(): evidences(0), positive_evidences(0), SR(0), dSR(1) {}
 
-        void add_evidence(bool success) {
-
+        void add_evidence(bool success)
+        {
             ++evidences;
-            if (success)
+
+            if (success) {
                 ++positive_evidences;
+            }
+
             dSR = SR;
             SR = positive_evidences / evidences;
             dSR = SR - dSR;
@@ -85,7 +91,7 @@ private:
 
     typedef std::unordered_map<P<_Fact>, Rating, PHash<_Fact> > RatingMap;
 
-// entries are patterns, i.e. abstract targets.
+    // entries are patterns, i.e. abstract targets.
     RatingMap goal_ratings;
     RatingMap prediction_ratings;
 
@@ -99,23 +105,27 @@ private:
     void dispatch_pred_success(_Fact *predicted_f, TPXMap &map);
     void dispatch(View *input, _Fact *abstract_input, BindingMap *bm, bool &injected, TPXMap &map);
     void dispatch_no_inject(View *input, _Fact *abstract_input, BindingMap *bm, TPXMap &map);
-    template<class T> TPX *build_tpx(_Fact *target, _Fact *pattern, BindingMap *bm, RatingMap &map, Fact *f_imdl, bool wr_enabled) {
-
-        if (!_gtpx_on && !_ptpx_on)
+    template<class T> TPX *build_tpx(_Fact *target, _Fact *pattern, BindingMap *bm, RatingMap &map, Fact *f_imdl, bool wr_enabled)
+    {
+        if (!_gtpx_on && !_ptpx_on) {
             return new TPX(this, target, pattern, bm);
+        }
 
-        if (wr_enabled)
+        if (wr_enabled) {
             return new TPX(this, target, pattern, bm);
+        }
 
         RatingMap::const_iterator r = map.find(pattern);
-        if (r != map.end()) {
 
-            if (Rating::DSR(r->second.dSR)) // target for which we don't see much improvement over time.
+        if (r != map.end()) {
+            if (Rating::DSR(r->second.dSR)) { // target for which we don't see much improvement over time.
                 return new TPX(this, target, pattern, bm);
-            else
+            } else {
                 return new T(this, target, pattern, bm, f_imdl);
-        } else
+            }
+        } else {
             return new T(this, target, pattern, bm, f_imdl);
+        }
     }
     void rate(_Fact *target, bool success, TPXMap &map, RatingMap &ratings);
 public:
@@ -130,7 +140,8 @@ public:
     View *inject_input(View *input); // inject a filtered input into the output groups starting from 0; return the view injected in the primary group.
     void inject_input(View *input, uint64_t start); // inject an unfiltered input into the output groups starting from start.
     /// inject a filtered input into the output groups.
-    inline void inject_input(View *input, _Fact *abstract_input, BindingMap *bm) {
+    inline void inject_input(View *input, _Fact *abstract_input, BindingMap *bm)
+    {
         View *primary_view = inject_input(input);
         cross_buffer.push_back(Input(primary_view, abstract_input, bm));
     }
@@ -138,23 +149,28 @@ public:
     /// inject in the primary group; models will be injected in the secondary group automatically.
     void inject_hlps(const std::vector<P<Code> > &hlps) const; // called by TPX; hlp is a mdl or a cst.
 
-    bool decompile_models() const {
+    bool decompile_models() const
+    {
         return _decompile_models;
     }
-    bool gtpx_on() const {
+    bool gtpx_on() const
+    {
         return _gtpx_on;
     }
-    bool ptpx_on() const {
+    bool ptpx_on() const
+    {
         return _ptpx_on;
     }
-    Group *get_primary_group() const {
+    Group *get_primary_group() const
+    {
         return output_groups[0];
     }
 
     /// copy inputs so they can be flagged independently by the tpxs that share the cross buffer
     void copy_cross_buffer(r_code::list<Input> &destination);
 
-    time_buffer<CInput, CInput::IsInvalidated> &get_cache() {
+    time_buffer<CInput, CInput::IsInvalidated> &get_cache()
+    {
         return cache;
     }
 };

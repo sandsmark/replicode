@@ -32,9 +32,11 @@
 #include "compiler.h"
 
 
-namespace r_comp {
+namespace r_comp
+{
 
-StructureMember::StructureMember() {
+StructureMember::StructureMember()
+{
 }
 
 StructureMember::StructureMember(_Read r,
@@ -45,69 +47,82 @@ StructureMember::StructureMember(_Read r,
     iteration(i),
     name(m)
 {
-
-    if (_read == &Compiler::read_any) type = ANY;
-    else if (_read == &Compiler::read_number) type = NUMBER;
-    else if (_read == &Compiler::read_timestamp) type = TIMESTAMP;
-    else if (_read == &Compiler::read_boolean) type = BOOLEAN;
-    else if (_read == &Compiler::read_string) type = STRING;
-    else if (_read == &Compiler::read_node) type = NODE_ID;
-    else if (_read == &Compiler::read_device) type = DEVICE_ID;
-    else if (_read == &Compiler::read_function) type = FUNCTION_ID;
-    else if (_read == &Compiler::read_expression) type = ANY;
-    else if (_read == &Compiler::read_set) type = ReturnType::SET;
-    else if (_read == &Compiler::read_class) type = ReturnType::CLASS;
+    if (_read == &Compiler::read_any) {
+        type = ANY;
+    } else if (_read == &Compiler::read_number) {
+        type = NUMBER;
+    } else if (_read == &Compiler::read_timestamp) {
+        type = TIMESTAMP;
+    } else if (_read == &Compiler::read_boolean) {
+        type = BOOLEAN;
+    } else if (_read == &Compiler::read_string) {
+        type = STRING;
+    } else if (_read == &Compiler::read_node) {
+        type = NODE_ID;
+    } else if (_read == &Compiler::read_device) {
+        type = DEVICE_ID;
+    } else if (_read == &Compiler::read_function) {
+        type = FUNCTION_ID;
+    } else if (_read == &Compiler::read_expression) {
+        type = ANY;
+    } else if (_read == &Compiler::read_set) {
+        type = ReturnType::SET;
+    } else if (_read == &Compiler::read_class) {
+        type = ReturnType::CLASS;
+    }
 }
 
-Class *StructureMember::get_class(Metadata *metadata) const {
-
+Class *StructureMember::get_class(Metadata *metadata) const
+{
     return _class == "" ? NULL : &metadata->classes.find(_class)->second;
 }
 
-ReturnType StructureMember::get_return_type() const {
-
+ReturnType StructureMember::get_return_type() const
+{
     return type;
 }
 
-bool StructureMember::used_as_expression() const {
-
+bool StructureMember::used_as_expression() const
+{
     return iteration == I_EXPRESSION;
 }
 
-StructureMember::Iteration StructureMember::getIteration() const {
-
+StructureMember::Iteration StructureMember::getIteration() const
+{
     return iteration;
 }
 
-_Read StructureMember::read() const {
-
+_Read StructureMember::read() const
+{
     return _read;
 }
 
-void StructureMember::write(uint32_t *storage) const {
-
-    if (_read == &Compiler::read_any)
+void StructureMember::write(uint32_t *storage) const
+{
+    if (_read == &Compiler::read_any) {
         storage[0] = R_ANY;
-    else if (_read == &Compiler::read_number)
+    } else if (_read == &Compiler::read_number) {
         storage[0] = R_NUMBER;
-    else if (_read == &Compiler::read_timestamp)
+    } else if (_read == &Compiler::read_timestamp) {
         storage[0] = R_TIMESTAMP;
-    else if (_read == &Compiler::read_boolean)
+    } else if (_read == &Compiler::read_boolean) {
         storage[0] = R_BOOLEAN;
-    else if (_read == &Compiler::read_string)
+    } else if (_read == &Compiler::read_string) {
         storage[0] = R_STRING;
-    else if (_read == &Compiler::read_node)
+    } else if (_read == &Compiler::read_node) {
         storage[0] = R_NODE;
-    else if (_read == &Compiler::read_device)
+    } else if (_read == &Compiler::read_device) {
         storage[0] = R_DEVICE;
-    else if (_read == &Compiler::read_function)
+    } else if (_read == &Compiler::read_function) {
         storage[0] = R_FUNCTION;
-    else if (_read == &Compiler::read_expression)
+    } else if (_read == &Compiler::read_expression) {
         storage[0] = R_EXPRESSION;
-    else if (_read == &Compiler::read_set)
+    } else if (_read == &Compiler::read_set) {
         storage[0] = R_SET;
-    else if (_read == &Compiler::read_class)
+    } else if (_read == &Compiler::read_class) {
         storage[0] = R_CLASS;
+    }
+
     uint64_t offset = 1;
     storage[offset++] = type;
     r_code::WriteString(storage + offset, _class);
@@ -119,18 +134,51 @@ void StructureMember::write(uint32_t *storage) const {
 void StructureMember::read(uint32_t *storage)
 {
     switch (storage[0]) {
-    case R_ANY: _read = &Compiler::read_any; break;
-    case R_NUMBER: _read = &Compiler::read_number; break;
-    case R_TIMESTAMP: _read = &Compiler::read_timestamp; break;
-    case R_BOOLEAN: _read = &Compiler::read_boolean; break;
-    case R_STRING: _read = &Compiler::read_string; break;
-    case R_NODE: _read = &Compiler::read_node; break;
-    case R_DEVICE: _read = &Compiler::read_device; break;
-    case R_FUNCTION: _read = &Compiler::read_function; break;
-    case R_EXPRESSION: _read = &Compiler::read_expression; break;
-    case R_SET: _read = &Compiler::read_set; break;
-    case R_CLASS: _read = &Compiler::read_class; break;
+    case R_ANY:
+        _read = &Compiler::read_any;
+        break;
+
+    case R_NUMBER:
+        _read = &Compiler::read_number;
+        break;
+
+    case R_TIMESTAMP:
+        _read = &Compiler::read_timestamp;
+        break;
+
+    case R_BOOLEAN:
+        _read = &Compiler::read_boolean;
+        break;
+
+    case R_STRING:
+        _read = &Compiler::read_string;
+        break;
+
+    case R_NODE:
+        _read = &Compiler::read_node;
+        break;
+
+    case R_DEVICE:
+        _read = &Compiler::read_device;
+        break;
+
+    case R_FUNCTION:
+        _read = &Compiler::read_function;
+        break;
+
+    case R_EXPRESSION:
+        _read = &Compiler::read_expression;
+        break;
+
+    case R_SET:
+        _read = &Compiler::read_set;
+        break;
+
+    case R_CLASS:
+        _read = &Compiler::read_class;
+        break;
     }
+
     uint64_t offset = 1;
     type = (ReturnType)storage[offset++];
     _class = r_code::ReadString(storage + offset);

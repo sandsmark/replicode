@@ -38,11 +38,13 @@
 #include "cst_controller.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class AutoFocusController;
 
-class Input {
+class Input
+{
 public:
     P<BindingMap> bindings; // contains the values for the abstraction.
     P<_Fact> abstraction;
@@ -56,16 +58,18 @@ public:
 
     static bool IsEligibleCause(r_exec::View *view);
 
-    class IsInvalidated { // for storage in time_buffers.
+    class IsInvalidated   // for storage in time_buffers.
+    {
     public:
-        bool operator()(Input &i, uint64_t time_reference, uint64_t thz) const {
-
+        bool operator()(Input &i, uint64_t time_reference, uint64_t thz) const
+        {
             return (time_reference - i.ijt > thz);
         }
     };
 };
 
-class CInput { // cached inputs.
+class CInput   // cached inputs.
+{
 public:
     P<BindingMap> bindings; // contains the values for the abstraction.
     P<_Fact> abstraction;
@@ -75,14 +79,16 @@ public:
     CInput(View *input, _Fact *abstraction, BindingMap *bindings): bindings(bindings), abstraction(abstraction), input(input), injected(false), ijt(input->get_ijt()) {}
     CInput(): bindings(NULL), abstraction(NULL), input(NULL), injected(false), ijt(0) {}
 
-    bool operator ==(const CInput &i) const {
+    bool operator ==(const CInput &i) const
+    {
         return input == i.input;
     }
 
-    class IsInvalidated { // for storage in time_buffers.
+    class IsInvalidated   // for storage in time_buffers.
+    {
     public:
-        bool operator()(CInput &i, uint64_t time_reference, uint64_t thz) const {
-
+        bool operator()(CInput &i, uint64_t time_reference, uint64_t thz) const
+        {
             return (time_reference - i.ijt > thz);
         }
     };
@@ -92,7 +98,8 @@ public:
 // Does nothing.
 // Used for wr_enabled productions, for well-rated productions or when model acqusiiton is disabled.
 class dll_export TPX:
-    public _Object {
+    public _Object
+{
 protected:
     AutoFocusController *auto_focus;
     P<_Fact> target; // goal or prediction target, or premise (CTPX); abstraction: lhs of a mdl for goals, rhs for predictions, premise for CTPX.
@@ -110,10 +117,12 @@ public:
     TPX(AutoFocusController *auto_focus, _Fact *target, _Fact *pattern, BindingMap *bindings);
     virtual ~TPX();
 
-    _Fact *get_pattern() const {
+    _Fact *get_pattern() const
+    {
         return abstracted_target;
     }
-    BindingMap *get_bindings() const {
+    BindingMap *get_bindings() const
+    {
         return target_bindings;
     }
 
@@ -125,11 +134,13 @@ public:
 class ICST;
 
 class dll_export _TPX:
-    public TPX {
+    public TPX
+{
 private:
     static const uint64_t InputsInitialSize = 16;
 protected:
-    class Component { // for building csts.
+    class Component   // for building csts.
+    {
     public:
         _Fact *object;
         bool discarded;
@@ -170,7 +181,8 @@ public:
 // M1 does not have template arguments.
 // Commands are ignored (CTPX' job).
 class dll_export GTPX: // target is the goal target.
-    public _TPX {
+    public _TPX
+{
 private:
     P<Fact> f_imdl; // that produced the goal.
 
@@ -196,7 +208,8 @@ public:
 // M1 does not have template arguments.
 // Commands are ignored (CTPX' job).
 class dll_export PTPX: // target is the prediction.
-    public _TPX {
+    public _TPX
+{
 private:
     P<Fact> f_imdl; // that produced the prediction (and for which the PTPX will find strong requirements).
 
@@ -221,7 +234,8 @@ public:
 // Guards on values (not only on timings) are computed: this is the only TPX that does so.
 // Inputs with SYNC_HOLD: I/O devices are expected to send changes on such inputs as soon as possible.
 class CTPX:
-    public _TPX {
+    public _TPX
+{
 private:
     bool stored_premise;
     P<View> premise;

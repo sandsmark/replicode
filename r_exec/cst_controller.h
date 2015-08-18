@@ -36,7 +36,8 @@
 #include "factory.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 // All inputs are expected to be synchronized (within the time tolerance).
 // The time value of each fact is therefore the same (within the time tolerance).
@@ -50,7 +51,8 @@ namespace r_exec {
 // output a prediction of icst instead of icst if at least one input is a prediction.
 // output as many predictions of icst as we got simulated predictions for different goals.
 class CSTOverlay:
-    public HLPOverlay {
+    public HLPOverlay
+{
 protected:
     uint64_t match_deadline; // before deadline after the last match.
     double lowest_cfd; // among the inputs (forward chaining).
@@ -81,7 +83,8 @@ public:
 // else
 // bind all patterns and look in the cache for positive evidences; for all bound patterns not matched in the cache, output a sub-goal (simulated or not, depending on the super-goal).
 class CSTController:
-    public HLPController {
+    public HLPController
+{
 private:
     Group *secondary_host;
     std::mutex m_mutex;

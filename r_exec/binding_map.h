@@ -35,7 +35,8 @@
 #include "CoreLibrary/dll.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class BindingMap;
 class AtomValue;
@@ -43,7 +44,8 @@ class StructureValue;
 class ObjectValue;
 
 class dll_export Value:
-    public _Object {
+    public _Object
+{
 protected:
     BindingMap *map;
     Value(BindingMap *map);
@@ -55,39 +57,48 @@ public:
     virtual Code *get_object() = 0;
     virtual uint16_t get_code_size() = 0;
 
-    virtual bool intersect(const Value *v) const {
+    virtual bool intersect(const Value *v) const
+    {
         return false;
     }
-    virtual bool _intersect(const AtomValue *v) const {
+    virtual bool _intersect(const AtomValue *v) const
+    {
         return false;
     }
-    virtual bool _intersect(const StructureValue *v) const {
+    virtual bool _intersect(const StructureValue *v) const
+    {
         return false;
     }
-    virtual bool _intersect(const ObjectValue *v) const {
+    virtual bool _intersect(const ObjectValue *v) const
+    {
         return false;
     }
 
-    virtual bool contains(const Atom a) const {
+    virtual bool contains(const Atom a) const
+    {
         return false;
     }
-    virtual bool contains(const Atom *s) const {
+    virtual bool contains(const Atom *s) const
+    {
         return false;
     }
-    virtual bool contains(const Code *o) const {
+    virtual bool contains(const Code *o) const
+    {
         return false;
     }
 };
 
 class dll_export BoundValue:
-    public Value {
+    public Value
+{
 protected:
     BoundValue(BindingMap *map);
 public:
 };
 
 class dll_export UnboundValue:
-    public Value {
+    public Value
+{
 private:
     uint8_t index;
 public:
@@ -103,7 +114,8 @@ public:
 };
 
 class dll_export AtomValue:
-    public BoundValue {
+    public BoundValue
+{
 private:
     Atom atom;
 public:
@@ -123,7 +135,8 @@ public:
 };
 
 class dll_export StructureValue:
-    public BoundValue {
+    public BoundValue
+{
 private:
     P<Code> structure;
     StructureValue(BindingMap *map, const Code *structure);
@@ -146,7 +159,8 @@ public:
 };
 
 class dll_export ObjectValue:
-    public BoundValue {
+    public BoundValue
+{
 private:
     const P<Code> object;
 public:
@@ -175,7 +189,8 @@ class _Fact;
 class Fact;
 
 class dll_export BindingMap:
-    public _Object {
+    public _Object
+{
     friend class UnboundValue;
 protected:
     std::vector<P<Value> > map; // indexed by vl-ptrs.
@@ -234,23 +249,28 @@ public:
     bool intersect(BindingMap *bm);
     bool is_fully_specified() const;
 
-    Atom *get_code(uint16_t i) const {
+    Atom *get_code(uint16_t i) const
+    {
         return map[i]->get_code();
     }
-    Code *get_object(uint16_t i) const {
+    Code *get_object(uint16_t i) const
+    {
         return map[i]->get_object();
     }
-    uint16_t get_fwd_after_index() const {
+    uint16_t get_fwd_after_index() const
+    {
         return fwd_after_index;
     }
-    uint16_t get_fwd_before_index() const {
+    uint16_t get_fwd_before_index() const
+    {
         return fwd_before_index;
     }
     bool scan_variable(uint16_t id) const; // return true if id<first_index or map[id] is not an UnboundValue.
 };
 
 class dll_export HLPBindingMap:
-    public BindingMap {
+    public BindingMap
+{
 private:
     int16_t bwd_after_index;
     int16_t bwd_before_index;

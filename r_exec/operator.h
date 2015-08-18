@@ -36,65 +36,80 @@
 #include "_context.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 // Wrapper class for evaluation contexts.
 // Template operator functions is not an option since some operators are defined in usr_operators.dll.
-class dll_export Context {
+class dll_export Context
+{
 private:
     _Context *implementation;
 public:
     Context(_Context *implementation): implementation(implementation) {}
-    virtual ~Context() {
+    virtual ~Context()
+    {
         delete implementation;
     }
 
-    _Context *get_implementation() const {
+    _Context *get_implementation() const
+    {
         return implementation;
     }
 
-    uint16_t getChildrenCount() const {
+    uint16_t getChildrenCount() const
+    {
         return implementation->getChildrenCount();
     }
-    Context getChild(uint16_t index) const {
+    Context getChild(uint16_t index) const
+    {
         return Context(implementation->_getChild(index));
     }
 
-    Context operator *() const {
+    Context operator *() const
+    {
         return Context(implementation->dereference());
     }
-    Context &operator =(const Context &c) {
-
+    Context &operator =(const Context &c)
+    {
         delete implementation;
         implementation = implementation->assign(c.get_implementation());
         return *this;
     }
 
-    bool operator ==(const Context &c) const {
+    bool operator ==(const Context &c) const
+    {
         return implementation->equal(c.get_implementation());
     }
-    bool operator !=(const Context &c) const {
+    bool operator !=(const Context &c) const
+    {
         return !implementation->equal(c.get_implementation());
     }
 
-    Atom &operator [](uint16_t i) const {
+    Atom &operator [](uint16_t i) const
+    {
         return implementation->get_atom(i);
     }
 
-    uint16_t setAtomicResult(Atom a) const {
+    uint16_t setAtomicResult(Atom a) const
+    {
         return implementation->setAtomicResult(a);
     }
-    uint16_t setTimestampResult(uint64_t t) const {
+    uint16_t setTimestampResult(uint64_t t) const
+    {
         return implementation->setTimestampResult(t);
     }
-    uint16_t setCompoundResultHead(Atom a) const {
+    uint16_t setCompoundResultHead(Atom a) const
+    {
         return implementation->setCompoundResultHead(a);
     }
-    uint16_t addCompoundResultPart(Atom a) const {
+    uint16_t addCompoundResultPart(Atom a) const
+    {
         return implementation->addCompoundResultPart(a);
     }
 
-    void trace() const {
+    void trace() const
+    {
         return implementation->trace();
     }
 };
@@ -103,7 +118,8 @@ bool red(const Context &context, uint16_t &index); // executive-dependent.
 
 bool syn(const Context &context, uint16_t &index);
 
-class Operator {
+class Operator
+{
 private:
     static r_code::vector<Operator> Operators; // indexed by opcodes.
 
@@ -111,29 +127,38 @@ private:
     bool (*_overload)(const Context &, uint16_t &);
 public:
     static void Register(uint16_t opcode, bool (*op)(const Context &, uint16_t &)); // first, register std operators; next register user-defined operators (may be registered as overloads).
-    static Operator Get(uint16_t opcode) {
+    static Operator Get(uint16_t opcode)
+    {
         return Operators[opcode];
     }
     Operator(): _operator(NULL), _overload(NULL) {}
     Operator(bool (*o)(const Context &, uint16_t &)): _operator(o), _overload(NULL) {}
     ~Operator() {}
 
-    void setOverload(bool (*o)(const Context &, uint16_t &)) {
+    void setOverload(bool (*o)(const Context &, uint16_t &))
+    {
         _overload = o;
     }
 
-    bool operator()(const Context &context, uint16_t &index) const {
-        if (_operator(context, index))
+    bool operator()(const Context &context, uint16_t &index) const
+    {
+        if (_operator(context, index)) {
             return true;
-        if (_overload)
+        }
+
+        if (_overload) {
             return _overload(context, index);
+        }
+
         return false;
     }
 
-    bool is_red() const {
+    bool is_red() const
+    {
         return _operator == red;
     }
-    bool is_syn() const {
+    bool is_syn() const
+    {
         return _operator == syn;
     }
 };

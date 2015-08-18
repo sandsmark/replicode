@@ -45,7 +45,8 @@
 #include "../r_code/list.h"
 #include "../r_comp/segments.h"
 
-namespace r_exec {
+namespace r_exec
+{
 
 // The rMem.
 // Maintains 2 pipes of jobs (injection, update, etc.). each job is processed asynchronously by instances of ReductionCore and TimeCore.
@@ -58,7 +59,8 @@ namespace r_exec {
 // - when an object is scheduled for propagation of sln changes and has no view anymore, the operation is cancelled.
 // Main processing in _Mem::update().
 class dll_export _Mem:
-    public r_code::Mem {
+    public r_code::Mem
+{
 public:
     typedef enum {
         NOT_STARTED = 0,
@@ -66,12 +68,12 @@ public:
         STOPPED = 2
     } State;
 protected:
-// Parameters::Init.
+    // Parameters::Init.
     uint64_t base_period;
     uint64_t reduction_core_count;
     uint64_t time_core_count;
 
-// Parameters::System.
+    // Parameters::System.
     double mdl_inertia_sr_thr;
     uint64_t mdl_inertia_cnt_thr;
     double tpx_dsr_thr;
@@ -85,45 +87,54 @@ protected:
     uint64_t primary_thz;
     uint64_t secondary_thz;
 
-// Parameters::Debug.
+    // Parameters::Debug.
     bool debug;
     uint64_t ntf_mk_res;
     uint64_t goal_pred_success_res;
 
-// Parameters::Run.
+    // Parameters::Run.
     uint64_t probe_level;
 
     template <class Type> struct JobQueue {
-        void pushJob(Type *job) {
+        void pushJob(Type *job)
+        {
             std::unique_lock<std::mutex> lock(m_pushMutex);
             m_mutex.lock();
+
             while (m_jobs.size() > 1024) { // while, because spurious wakeups
                 m_mutex.unlock();
                 m_canPushCondition.wait(lock);
                 m_mutex.lock();
             }
+
             m_jobs.push(job);
+
             if (m_jobs.size() == 1) {
                 m_canPopCondition.notify_all();
             }
+
             m_mutex.unlock();
         }
 
-        Type *popJob() {
+        Type *popJob()
+        {
             std::unique_lock<std::mutex> lock(m_popMutex);
             m_mutex.lock();
+
             while (m_jobs.size() < 1) { // while, because of spurious wakeups
                 m_mutex.unlock();
                 m_canPopCondition.wait(lock);
                 m_mutex.lock();
             }
+
             Type *r = m_jobs.front();
             m_jobs.pop();
+
             if (m_jobs.size() < 1024) {
                 m_canPushCondition.notify_all();
             }
-            m_mutex.unlock();
 
+            m_mutex.unlock();
             return r;
         }
 
@@ -144,7 +155,7 @@ protected:
 
     std::vector<std::thread> m_coreThreads;
 
-// Performance stats.
+    // Performance stats.
     uint64_t reduction_job_count;
     uint64_t reduction_job_avg_latency; // latency: popping time.-pushing time; the lower the better.
     uint64_t _reduction_job_avg_latency; // previous value.
@@ -184,7 +195,8 @@ protected:
 
     void _unpack_code(Code *hlp, uint16_t fact_object_index, Code *fact_object, uint16_t read_index) const;
 public:
-    static _Mem *Get() {
+    static _Mem *Get()
+    {
         return (_Mem *)Mem::Get();
     }
 
@@ -216,49 +228,65 @@ public:
               uint64_t probe_level,
               uint64_t traces);
 
-    uint64_t get_probe_level() const {
+    uint64_t get_probe_level() const
+    {
         return probe_level;
     }
-    double get_mdl_inertia_sr_thr() const {
+    double get_mdl_inertia_sr_thr() const
+    {
         return mdl_inertia_sr_thr;
     }
-    uint64_t get_mdl_inertia_cnt_thr() const {
+    uint64_t get_mdl_inertia_cnt_thr() const
+    {
         return mdl_inertia_cnt_thr;
     }
-    double get_tpx_dsr_thr() const {
+    double get_tpx_dsr_thr() const
+    {
         return tpx_dsr_thr;
     }
-    uint64_t get_min_sim_time_horizon() const {
+    uint64_t get_min_sim_time_horizon() const
+    {
         return min_sim_time_horizon;
     }
-    uint64_t get_max_sim_time_horizon() const {
+    uint64_t get_max_sim_time_horizon() const
+    {
         return max_sim_time_horizon;
     }
-    uint64_t get_sim_time_horizon(uint64_t horizon) const {
+    uint64_t get_sim_time_horizon(uint64_t horizon) const
+    {
         return horizon * sim_time_horizon;
     }
-    uint64_t get_tpx_time_horizon() const {
+    uint64_t get_tpx_time_horizon() const
+    {
         return tpx_time_horizon;
     }
-    uint64_t get_primary_thz() const {
+    uint64_t get_primary_thz() const
+    {
         return primary_thz;
     }
-    uint64_t get_secondary_thz() const {
+    uint64_t get_secondary_thz() const
+    {
         return secondary_thz;
     }
 
-    bool get_debug() const {
+    bool get_debug() const
+    {
         return debug;
     }
-    uint64_t get_ntf_mk_res() const {
+    uint64_t get_ntf_mk_res() const
+    {
         return ntf_mk_res;
     }
-    uint64_t get_goal_pred_success_res(Group *host, uint64_t now, uint64_t time_to_live) const {
-
-        if (debug)
+    uint64_t get_goal_pred_success_res(Group *host, uint64_t now, uint64_t time_to_live) const
+    {
+        if (debug) {
             return goal_pred_success_res;
-        if (time_to_live == 0)
+        }
+
+        if (time_to_live == 0) {
             return 1;
+        }
+
         return Utils::GetResilience(now, time_to_live, host->get_upr());
     }
 
@@ -274,18 +302,18 @@ public:
     /// call before start; no mod/set/eje will be executed (only inj);
     /// no cov at init time.
     bool load(std::vector<r_code::Code *> *objects, uint64_t stdin_oid, uint64_t stdout_oid, uint64_t self_oid);
-// return false on error.
+    // return false on error.
     uint64_t start(); // return the starting time.
     void stop(); // after stop() the content is cleared and one has to call load() and start() again.
 
-// Internal core processing ////////////////////////////////////////////////////////////////
+    // Internal core processing ////////////////////////////////////////////////////////////////
 
     _ReductionJob *popReductionJob();
     void pushReductionJob(_ReductionJob *j);
     TimeJob *popTimeJob();
     void pushTimeJob(TimeJob *j);
 
-// Called upon successful reduction.
+    // Called upon successful reduction.
     void inject(View *view);
     void inject_async(View *view);
     void inject_new_object(View *view);
@@ -297,43 +325,43 @@ public:
 
     void propagate_sln(Code *object, double change, double source_sln_thr);
 
-// Called by groups.
+    // Called by groups.
     void inject_copy(View *view, Group *destination); // for cov; NB: no cov for groups, r-groups, models, pgm or notifications.
 
-// Called by cores.
+    // Called by cores.
     void register_reduction_job_latency(uint64_t latency);
     void register_time_job_latency(uint64_t latency);
     void inject_perf_stats();
 
-// rMem to rMem.
-// The view must contain the destination group (either stdin or stdout) as its grp member.
-// To be redefined by object transport aware subcalsses.
+    // rMem to rMem.
+    // The view must contain the destination group (either stdin or stdout) as its grp member.
+    // To be redefined by object transport aware subcalsses.
     virtual void eject(View *view, uint16_t nodeID);
 
-// From rMem to I/O device.
-// To be redefined by object transport aware subcalsses.
+    // From rMem to I/O device.
+    // To be redefined by object transport aware subcalsses.
     virtual void eject(Code *command);
 
     virtual r_code::Code *_build_object(Atom head) const = 0;
     virtual r_code::Code *build_object(Atom head) const = 0;
 
-// unpacking of high-level patterns: upon loading or reception.
+    // unpacking of high-level patterns: upon loading or reception.
     void unpack_hlp(Code *hlp) const;
     Code *unpack_fact(Code *hlp, uint16_t fact_index) const;
     Code *unpack_fact_object(Code *hlp, uint16_t fact_object_index) const;
 
-// packing of high-level patterns: upon dynamic generation or transmission.
+    // packing of high-level patterns: upon dynamic generation or transmission.
     void pack_hlp(Code *hlp) const;
     void pack_fact(Code *fact, Code *hlp, uint16_t &write_index, std::vector<P<Code> > *references) const;
     void pack_fact_object(Code *fact_object, Code *hlp, uint16_t &write_index, std::vector<P<Code> > *references) const;
 
     Code *clone(Code *original) const; // shallow copy.
 
-// External device I/O ////////////////////////////////////////////////////////////////
+    // External device I/O ////////////////////////////////////////////////////////////////
     virtual r_comp::Image *get_objects() = 0; // create an image; fill with all objects; call only when stopped.
     r_comp::Image *get_models(); // create an image; fill with all models; call only when stopped.
 
-//std::vector<uint64> timings_report; // debug facility.
+    //std::vector<uint64> timings_report; // debug facility.
     r_comp::Metadata *metadata = nullptr;
     typedef enum {
         CST_IN = 0,
@@ -353,7 +381,8 @@ public:
 
 // _Mem that stores the objects as long as they are not invalidated.
 class dll_export MemStatic:
-    public _Mem {
+    public _Mem
+{
 private:
     std::mutex m_objectsMutex; // protects last_oid and objects.
     uint64_t last_oid;
@@ -371,7 +400,8 @@ public:
 
 // _Mem that does not store objects.
 class dll_export MemVolatile:
-    public _Mem {
+    public _Mem
+{
 private:
     std::atomic_int_fast64_t last_oid;
     uint64_t get_oid();
@@ -384,7 +414,8 @@ public:
 
     void delete_object(r_code::Code *object) {}
 
-    r_comp::Image *get_objects() {
+    r_comp::Image *get_objects()
+    {
         return NULL;
     }
 };
@@ -396,23 +427,24 @@ public:
 // Objects are built at reduction time as r_exec:LObjects and packed into instances of O when O is network-aware.
 // S is the super-class.
 template<class O, class S> class Mem:
-    public S {
+    public S
+{
 public:
     Mem();
     virtual ~Mem();
 
-// Called at load time.
+    // Called at load time.
     r_code::Code *build_object(r_code::SysObject *source) const;
 
-// Called at runtime.
+    // Called at runtime.
     r_code::Code *_build_object(Atom head) const;
     r_code::Code *build_object(Atom head) const;
 
-// Executive device functions ////////////////////////////////////////////////////////
+    // Executive device functions ////////////////////////////////////////////////////////
 
     Code *check_existence(Code *object);
 
-// Called by the communication device (I/O).
+    // Called by the communication device (I/O).
     void inject(O *object, View *view);
 };
 

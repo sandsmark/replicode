@@ -12,7 +12,8 @@
 #ifndef LSTMLAYER_H_
 #define LSTMLAYER_H_
 
-class LstmLayer {
+class LstmLayer
+{
 
 public:
     LstmLayer(int nCells, int nInputs, int nOutputs, int nBlocks);

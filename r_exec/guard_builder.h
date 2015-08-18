@@ -34,7 +34,8 @@
 #include "factory.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class GuardBuilder : public _Object
 {

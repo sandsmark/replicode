@@ -34,7 +34,8 @@
 #include "overlay.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 class PGMController;
 class InputLessPGMController;
@@ -43,7 +44,8 @@ class IPGMContext;
 // Overlays for input-less programs.
 // Base class for other programs (with inputs, anti-programs).
 class dll_export InputLessPGMOverlay:
-    public Overlay {
+    public Overlay
+{
     friend class PGMController;
     friend class InputLessPGMController;
     friend class IPGMContext;
@@ -71,7 +73,8 @@ public:
 // Overlay with inputs.
 // Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
 class dll_export PGMOverlay:
-    public InputLessPGMOverlay {
+    public InputLessPGMOverlay
+{
     friend class PGMController;
     friend class IPGMContext;
 private:
@@ -112,7 +115,8 @@ public:
     r_code::Code *getInputObject(uint16_t i) const;
     r_code::View *getInputView(uint16_t i) const;
 
-    uint64_t get_birth_time() const {
+    uint64_t get_birth_time() const
+    {
         return birth_time;
     }
 
@@ -123,7 +127,8 @@ public:
 // In addition, ReductionCores and signalling jobs can attempt to inject productions concurrently.
 // Usues the same mk.rdx as for InputLessPGMOverlays.
 class dll_export AntiPGMOverlay:
-    public PGMOverlay {
+    public PGMOverlay
+{
     friend class AntiPGMController;
 private:
     AntiPGMOverlay(Controller *c);

@@ -42,7 +42,8 @@
 
 using namespace core;
 
-namespace r_code {
+namespace r_code
+{
 
 // I/O from/to r_code::Image ////////////////////////////////////////////////////////////////////////
 
@@ -110,25 +111,29 @@ public:
     /// viewed object.
     P<Code> object;
 
-    View(): object(NULL) {
-
+    View(): object(NULL)
+    {
         references[0] = references[1] = NULL;
     }
 
-    View(SysView *source, Code *object) {
-
-        for (uint16_t i = 0; i < source->code.size(); ++i)
+    View(SysView *source, Code *object)
+    {
+        for (uint16_t i = 0; i < source->code.size(); ++i) {
             _code[i] = source->code[i];
+        }
+
         references[0] = references[1] = NULL;
         this->object = object;
     }
 
     virtual ~View() {}
 
-    Atom &code(uint16_t i) {
+    Atom &code(uint16_t i)
+    {
         return _code[i];
     }
-    Atom code(uint16_t i) const {
+    Atom code(uint16_t i) const
+    {
         return _code[i];
     }
 
@@ -140,30 +145,36 @@ public:
         SYNC_ONCE_AXIOM = 4
     } SyncMode;
 
-    SyncMode get_sync() const {
+    SyncMode get_sync() const
+    {
         return (SyncMode)(uint64_t)_code[VIEW_SYNC];
     }
-    uint64_t get_ijt() const {
+    uint64_t get_ijt() const
+    {
         return Utils::GetTimestamp(_code + _code[VIEW_IJT].asIndex());
     }
-    void set_ijt(uint64_t ijt) {
+    void set_ijt(uint64_t ijt)
+    {
         Utils::SetTimestamp(_code + _code[VIEW_IJT].asIndex(), ijt);
     }
 
     struct Hash {
-        size_t operator()(View *v) const {
+        size_t operator()(View *v) const
+        {
             return (size_t)(Code *)v->references[0]; // i.e. the group the view belongs to.
         }
     };
 
     struct Equal {
-        bool operator()(const View *lhs, const View *rhs) const {
+        bool operator()(const View *lhs, const View *rhs) const
+        {
             return lhs->references[0] == rhs->references[0];
         }
     };
 
     struct Less {
-        bool operator()(const View *lhs, const View *rhs) const {
+        bool operator()(const View *lhs, const View *rhs) const
+        {
             return lhs->get_ijt() < rhs->get_ijt();
         }
     };
@@ -175,31 +186,37 @@ protected:
 };
 
 class dll_export Code:
-    public _Object {
+    public _Object
+{
 public:
     static const int64_t null_storage_index = -1;
     static const uint64_t CodeMarkersInitialSize = 8;
 protected:
     int64_t storage_index; // -1: not sored; >0 index of the object in a vector-based container.
 
-    void load(SysObject *source) {
-
-        for (uint16_t i = 0; i < source->code.size(); ++i)
+    void load(SysObject *source)
+    {
+        for (uint16_t i = 0; i < source->code.size(); ++i) {
             code(i) = source->code[i];
+        }
+
         set_oid(source->oid);
     }
-    template<class V> View *build_view(SysView *source) {
-
+    template<class V> View *build_view(SysView *source)
+    {
         return new V(source, this);
     }
 public:
-    void set_stroage_index(int64_t i) {
+    void set_stroage_index(int64_t i)
+    {
         storage_index = i;
     }
-    bool is_registered() const {
+    bool is_registered() const
+    {
         return storage_index > null_storage_index;
     }
-    int64_t get_storage_index() const {
+    int64_t get_storage_index() const
+    {
         return storage_index;
     }
 
@@ -216,13 +233,16 @@ public:
     virtual void clear_references() = 0;
     virtual void set_references(std::vector<P<Code> > &new_references) = 0;
 
-    virtual bool is_compact() const {
+    virtual bool is_compact() const
+    {
         return false;
     }
-    virtual bool is_invalidated() {
+    virtual bool is_invalidated()
+    {
         return false;
     }
-    virtual bool invalidate() {
+    virtual bool invalidate()
+    {
         return false;
     }
 
@@ -236,101 +256,119 @@ public:
     virtual void acq_markers() {}
     virtual void rel_markers() {}
 
-    virtual double get_psln_thr() {
+    virtual double get_psln_thr()
+    {
         return 1;
     }
 
-    Code(): storage_index(null_storage_index) {
+    Code(): storage_index(null_storage_index)
+    {
         markers.reserve(CodeMarkersInitialSize);
     }
     virtual ~Code() {}
 
     virtual void mod(uint16_t member_index, float value) {};
     virtual void set(uint16_t member_index, float value) {};
-    virtual View *get_view(Code *group, bool lock) {
+    virtual View *get_view(Code *group, bool lock)
+    {
         return NULL;
     }
     virtual void add_reference(Code *object) {} // called only on local objects.
-    void remove_marker(Code *m) {
-
+    void remove_marker(Code *m)
+    {
         acq_markers();
         markers.remove(m);
         rel_markers();
     }
 
-    void trace() const {
-
+    void trace() const
+    {
         std::cout << "--------\n";
-        for (uint16_t i = 0; i < code_size(); ++i) {
 
+        for (uint16_t i = 0; i < code_size(); ++i) {
             std::cout << i << "\t";
             code(i).trace();
             std::cout << std::endl;
         }
+
         std::cout << "OID: " << get_oid() << std::endl;
     }
 };
 
 // Implementation for local objects (non distributed).
 class dll_export LObject:
-    public Code {
+    public Code
+{
 protected:
     uint64_t _oid;
     r_code::vector<Atom> _code;
     r_code::vector<P<Code> > _references;
 public:
     LObject(): Code() {}
-    LObject(SysObject *source): Code() {
-
+    LObject(SysObject *source): Code()
+    {
         load(source);
     }
     virtual ~LObject() {}
 
-    View *build_view(SysView *source) {
-
+    View *build_view(SysView *source)
+    {
         return Code::build_view<View>(source);
     }
 
-    uint64_t get_oid() const {
+    uint64_t get_oid() const
+    {
         return _oid;
     }
-    void set_oid(uint64_t oid) {
+    void set_oid(uint64_t oid)
+    {
         _oid = oid;
     }
 
-    const Atom &code(uint16_t i) const {
+    const Atom &code(uint16_t i) const
+    {
         return _code[i];
     }
-    Atom &code(uint16_t i) {
+    Atom &code(uint16_t i)
+    {
         return _code[i];
     }
-    uint16_t code_size() const {
+    uint16_t code_size() const
+    {
         return _code.size();
     }
-    void resize_code(uint16_t new_size) {
+    void resize_code(uint16_t new_size)
+    {
         _code.as_std()->resize(new_size);
     }
-    void set_reference(uint16_t i, Code *object) {
+    void set_reference(uint16_t i, Code *object)
+    {
         _references[i] = object;
     }
-    Code *get_reference(uint16_t i) const {
+    Code *get_reference(uint16_t i) const
+    {
         return _references[i];
     }
-    uint16_t references_size() const {
+    uint16_t references_size() const
+    {
         return _references.size();
     }
-    void clear_references() {
+    void clear_references()
+    {
         _references.as_std()->clear();
     }
-    void set_references(std::vector<P<Code> > &new_references) {
+    void set_references(std::vector<P<Code> > &new_references)
+    {
         (*_references.as_std()) = new_references;
     }
-    void add_reference(Code *object) {
+    void add_reference(Code *object)
+    {
         _references.push_back(object);
     }
 };
 
-class dll_export Mem {
+class dll_export Mem
+{
 protected:
     static Mem *Singleton;
     Mem();

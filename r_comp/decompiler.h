@@ -38,9 +38,11 @@
 #include "segments.h"
 
 
-namespace r_comp {
+namespace r_comp
+{
 
-class dll_export Decompiler {
+class dll_export Decompiler
+{
 private:
     r_comp::OutStream *out_stream;
     uint16_t indents; // in chars.
@@ -74,7 +76,7 @@ private:
     typedef void (Decompiler::*Renderer)(uint16_t);
     r_code::vector<Renderer> renderers; // indexed by opcodes; when not there, write_expression() is used.
 
-// Renderers.
+    // Renderers.
     void write_expression(uint16_t read_index); // default renderer.
     void write_group(uint16_t read_index);
     void write_marker(uint16_t read_index);
@@ -97,13 +99,13 @@ public:
 
     void init(r_comp::Metadata *metadata);
     uint64_t decompile(r_comp::Image *image,
-                     std::ostringstream *stream,
-                     uint64_t time_offset,
-                     bool ignore_named_objects); // decompiles the whole image; returns the number of objects.
+                       std::ostringstream *stream,
+                       uint64_t time_offset,
+                       bool ignore_named_objects); // decompiles the whole image; returns the number of objects.
     uint64_t decompile(r_comp::Image *image,
-                     std::ostringstream *stream,
-                     uint64_t time_offset,
-                     std::vector<SysObject *> &imported_objects); // idem, ignores named objects if in the imported object list.
+                       std::ostringstream *stream,
+                       uint64_t time_offset,
+                       std::vector<SysObject *> &imported_objects); // idem, ignores named objects if in the imported object list.
     uint64_t decompile_references(r_comp::Image *image); // initialize a reference table so that objects can be decompiled individually; returns the number of objects.
     void decompile_object(uint16_t object_index, std::ostringstream *stream, uint64_t time_offset); // decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
     void decompile_object(const std::string object_name, std::ostringstream *stream, uint64_t time_offset); // decompiles a single object given its name: use this function to follow references.

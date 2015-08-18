@@ -33,18 +33,19 @@
 #include "mdl_controller.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
 Monitor::Monitor(MDLController *controller,
                  BindingMap *bindings,
-                 Fact *target): _Object(), controller(controller) {
-
+                 Fact *target): _Object(), controller(controller)
+{
     this->bindings = bindings;
     this->target = target;
 }
 
-bool Monitor::is_alive() const {
-
+bool Monitor::is_alive() const
+{
     return !controller->is_invalidated() && controller->is_activated() && !target->is_invalidated();
 }
 }

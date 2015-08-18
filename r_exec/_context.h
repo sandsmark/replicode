@@ -37,12 +37,14 @@
 
 using namespace r_code;
 
-namespace r_exec {
+namespace r_exec
+{
 
 // Base class for evaluation contexts.
 // Subclasses: IPGMContext and HLPContext.
 // _Context * wrapped in Context, the latter used by operators.
-class dll_export _Context {
+class dll_export _Context
+{
 protected:
     Overlay *const overlay; // the overlay where the evaluation is performed; NULL when the context is dereferenced outside the original pgm or outside the value array.
     Atom *code; // the object's code, or the code in value array, or the view's code when the context is dereferenced from Atom::VIEW.
@@ -76,19 +78,24 @@ public:
 
     virtual _Context *dereference() const = 0;
 
-    void commit() const {
+    void commit() const
+    {
         overlay->commit();
     }
-    void rollback() const {
+    void rollback() const
+    {
         overlay->rollback();
     }
-    void patch_code(uint16_t location, Atom value) const {
+    void patch_code(uint16_t location, Atom value) const
+    {
         overlay->patch_code(location, value);
     }
-    void unpatch_code(uint16_t patch_index) const {
+    void unpatch_code(uint16_t patch_index) const
+    {
         overlay->unpatch_code(patch_index);
     }
-    uint16_t get_last_patch_index() const {
+    uint16_t get_last_patch_index() const
+    {
         return overlay->get_last_patch_index();
     }
 

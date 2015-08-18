@@ -21,10 +21,9 @@ int main(int argc, char *argv[])
 
     std::string testfile = argv[1];
     debug("compiler test") << "Testing compiler with file" << testfile;
-
-
     std::string tracefilename = testfile + ".trace";
     std::ifstream tracefile(tracefilename.c_str(), std::ios::binary);
+
     if (!tracefile.good()) {
         debug("compiler test") << "Unable to open .trace file" << tracefilename;
         return 1;
@@ -32,6 +31,7 @@ int main(int argc, char *argv[])
 
     std::string correct_trace( (std::istreambuf_iterator<char>(tracefile)),
                                (std::istreambuf_iterator<char>()));
+
     if (correct_trace.length() == 0) {
         debug("compiler test") << ".trace file is empty";
         return 2;
@@ -41,21 +41,20 @@ int main(int argc, char *argv[])
     r_comp::Metadata metadata;
 
     if (!r_exec::Init(USR_OPERATOR_PATH,
-                      []() -> uint64_t {
-                          return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-                      },
-                      USR_CLASSES_PATH,
-                      &image,
-                      &metadata)) {
+    []() -> uint64_t {
+    return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    },
+    USR_CLASSES_PATH,
+    &image,
+    &metadata)) {
         debug("compiler test") << "Unable to initialize metadata and image";
         return 3;
     }
-
     r_comp::Preprocessor preprocessor;
     r_comp::Compiler compiler(&image, &metadata);
     std::string error;
-
     r_comp::RepliStruct *root = preprocessor.process(testfile.c_str(), error, &metadata);
+
     if (error.length() != 0) {
         debug("compiler test") << "Error from preprocessor:" << error;
         return 4;
@@ -76,7 +75,8 @@ int main(int argc, char *argv[])
     std::ostringstream result_stream;
     std::cout.rdbuf(result_stream.rdbuf());
     r_code::vector<SysObject*> &objects = image.code_segment.objects;
-    for (size_t i=0;i<objects.size(); i++) {
+
+    for (size_t i = 0; i < objects.size(); i++) {
         objects[i]->trace();
     }
 
@@ -87,20 +87,16 @@ int main(int argc, char *argv[])
         debug("compiler test") << "Trace does not match expected trace" << result_stream.str().length() << correct_trace.length();
         std::ofstream outfile((testfile + ".trace.wrong").c_str(), std::ios::trunc);
         outfile << result_stream.str();
-
         r_comp::Decompiler decompiler;
         decompiler.init(&metadata);
         std::ostringstream decompiled_code;
         uint64_t decompiled_object_count = decompiler.decompile(&image, &decompiled_code, 0, false);
         debug("compiler test") << "decompiled objects count:" << decompiled_object_count << "image object count:" << image.code_segment.objects.size();
-
         std::ofstream decompilefile((testfile + ".decompiled.replicode").c_str(), std::ios::trunc);
         decompilefile << decompiled_code.rdbuf();
-
         return 7;
     }
 
     debug("compiler test") << "Test succeeded!";
-
     return 0;
 }

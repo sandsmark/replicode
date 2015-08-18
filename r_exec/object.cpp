@@ -33,10 +33,11 @@
 #include "opcodes.h"
 
 
-namespace r_exec {
+namespace r_exec
+{
 
-bool IsNotification(Code *object) {
-
+bool IsNotification(Code *object)
+{
     switch (object->code(0).getDescriptor()) {
     case Atom::MARKER:
         return object->code(0).asOpcode() == Opcodes::MkActChg ||
@@ -48,6 +49,7 @@ bool IsNotification(Code *object) {
                object->code(0).asOpcode() == Opcodes::MkNew ||
                object->code(0).asOpcode() == Opcodes::MkRdx ||
                object->code(0).asOpcode() == Opcodes::MkSlnChg;
+
     default:
         return false;
     }
