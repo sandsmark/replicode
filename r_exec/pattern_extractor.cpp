@@ -126,8 +126,8 @@ bool TPX::filter(View *input, _Fact *abstracted_input, BindingMap *bm)
         return false;
     }
 
-    for (uint64_t i = 0; i < new_maps.size(); ++i)
-        if (new_maps[i]->intersect(bm)) { //std::cout<<" lvl1"<<std::endl;
+    for (P<BindingMap> new_map : new_maps)
+        if (new_map->intersect(bm)) { //std::cout<<" lvl1"<<std::endl;
             return true;
         }
 
@@ -197,12 +197,12 @@ void _TPX::filter_icst_components(ICST *icst, uint64_t icst_index, std::vector<C
     uint64_t *found = new uint64_t[icst->components.size()];
 
     for (uint64_t j = 0; j < components.size(); ++j) {
-        for (uint64_t i = 0; i < icst->components.size(); ++i) {
+        for (P<_Fact> component : icst->components) {
             if (components[j].discarded) {
                 continue;
             }
 
-            if (components[j].object == icst->components[i]) {
+            if (components[j].object == component) {
                 found[found_component_count] = j;
                 ++found_component_count;
             }
@@ -302,8 +302,8 @@ _Fact *_TPX::find_f_icst(_Fact *component, uint16_t &component_index, Code *&cst
 
     uint64_t actual_size = 0;
 
-    for (uint64_t j = 0; j < components.size(); ++j) {
-        if (components[j].discarded) {
+    for (const Component &component : components) {
+        if (component.discarded) {
             continue;
         } else {
             ++actual_size;
@@ -318,8 +318,8 @@ _Fact *_TPX::find_f_icst(_Fact *component, uint16_t &component_index, Code *&cst
     r_code::list<Input>::iterator _i;
 
     for (_i = inputs.begin(); _i != inputs.end(); ++_i) { // flag the components so the tpx does not try them again.
-        for (uint64_t j = 0; j < components.size(); ++j) {
-            if (_i->input == components[j].object) {
+        for (const Component &component : components) {
+            if (_i->input == component.object) {
                 _i->eligible_cause = false;
             }
         }
@@ -338,15 +338,15 @@ Code *_TPX::build_cst(const std::vector<Component> &components, BindingMap *bm, 
     Code *cst = _Mem::Get()->build_object(Atom::CompositeState(Opcodes::Cst, CST_ARITY));
     uint16_t actual_component_count = 0;
 
-    for (uint16_t i = 0; i < components.size(); ++i) { // reference patterns;
-        if (components[i].discarded) {
+    for (const Component &component : components) { // reference patterns;
+        if (component.discarded) {
             continue;
         }
 
-        if (components[i].object == main_component) {
+        if (component.object == main_component) {
             cst->add_reference(abstracted_component);
         } else {
-            cst->add_reference(bm->abstract_object(components[i].object, true));
+            cst->add_reference(bm->abstract_object(component.object, true));
         }
 
         ++actual_component_count;
@@ -497,11 +497,11 @@ void GTPX::reduce(r_exec::View *input)   // input->object: f->success.
     _Fact *consequent = (_Fact *)input->object->get_reference(0)->get_reference(1);
     P<BindingMap> consequent_bm = new BindingMap();
 
-    for (uint64_t i = 0; i < predictions.size(); ++i) { // check if some models have successfully predicted the target: if so, abort.
+    for (P<_Fact> prediction : predictions) { // check if some models have successfully predicted the target: if so, abort.
         P<BindingMap> bm = new BindingMap(consequent_bm);
-        bm->reset_fwd_timings(predictions[i]);
+        bm->reset_fwd_timings(prediction);
 
-        if (bm->match_fwd_strict(predictions[i], consequent)) {
+        if (bm->match_fwd_strict(prediction, consequent)) {
             return;
         }
     }

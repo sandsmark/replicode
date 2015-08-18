@@ -178,8 +178,8 @@ Overlay *PrimaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLController
 
 bool PrimaryMDLOverlay::check_simulated_chaining(HLPBindingMap *bm, Fact *f_imdl, Pred *prediction)
 {
-    for (uint64_t i = 0; i < prediction->simulations.size(); ++i) {
-        switch (((MDLController *)controller)->retrieve_simulated_imdl_fwd(bm, f_imdl, prediction->simulations[i]->root)) {
+    for (P<Sim> simulation : prediction->simulations) {
+        switch (((MDLController *)controller)->retrieve_simulated_imdl_fwd(bm, f_imdl, simulation->root)) {
         case NO_R:
         case WR_ENABLED:
             return true;
@@ -1284,8 +1284,8 @@ void TopLevelMDLController::register_simulated_goal_outcome(Fact *goal, bool suc
 
     Pred *pred = new Pred(f_success_object, 1);
 
-    for (uint16_t i = 0; i < evidence_pred->simulations.size(); ++i) {
-        pred->simulations.push_back(evidence_pred->simulations[i]);
+    for (P<Sim> simulation : evidence_pred->simulations) {
+        pred->simulations.push_back(simulation);
     }
 
     Fact *f_pred = new Fact(pred, now, now, 1, 1);
@@ -1435,8 +1435,8 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
             }
         }
     } else { // no monitoring for simulated predictions.
-        for (uint16_t i = 0; i < prediction->simulations.size(); ++i) {
-            pred->simulations.push_back(prediction->simulations[i]);
+        for (P<Sim> simulation : prediction->simulations) {
+            pred->simulations.push_back(simulation);
         }
 
         HLPController::inject_prediction(production, confidence); // inject a simulated prediction in the primary group.

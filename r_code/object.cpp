@@ -96,15 +96,15 @@ void SysView::trace()
     std::cout << " reference set size: " << references.size() << std::endl;
     std::cout << "---code---" << std::endl;
 
-    for (size_t i = 0; i < code.size(); ++i) {
-        code[i].trace();
+    for (const Atom atom : code) {
+        atom.trace();
         std::cout << std::endl;
     }
 
     std::cout << "---reference set---" << std::endl;
 
-    for (size_t i = 0; i < references.size(); ++i) {
-        std::cout << references[i] << std::endl;
+    for (uint32_t reference : references) {
+        std::cout << reference << std::endl;
     }
 }
 
@@ -141,8 +141,8 @@ SysObject::SysObject(Code *source)
 
 SysObject::~SysObject()
 {
-    for (size_t i = 0; i < views.size(); ++i) {
-        delete views[i];
+    for (SysView *view : views) {
+        delete view;
     }
 }
 
@@ -216,8 +216,8 @@ size_t SysObject::get_size()
 {
     size_t view_set_size = 0;
 
-    for (size_t i = 0; i < views.size(); ++i) {
-        view_set_size += views[i]->get_size();
+    for (SysView *view : views) {
+        view_set_size += view->get_size();
     }
 
     return 5 + code.size() + references.size() + markers.size() + view_set_size;

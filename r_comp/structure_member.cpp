@@ -193,7 +193,7 @@ void StructureMember::read(uint32_t *storage)
     name = r_code::ReadString(storage + offset);
 }
 
-size_t StructureMember::get_size()
+size_t StructureMember::get_size() const
 {
     size_t size = 3; // read ID, return type, iteration
     size += r_code::GetStringSize(_class);

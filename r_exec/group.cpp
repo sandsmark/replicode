@@ -1099,9 +1099,9 @@ void Group::update(uint64_t planned_time)
     newly_salient_views.clear();
 
     // execute pending operations.
-    for (uint64_t i = 0; i < pending_operations.size(); ++i) {
-        pending_operations[i]->execute(this);
-        delete pending_operations[i];
+    for (Operation *pending_operation : pending_operations) {
+        pending_operation->execute(this);
+        delete pending_operation;
     }
 
     pending_operations.clear();
@@ -1165,16 +1165,16 @@ void Group::update(uint64_t planned_time)
     }
 
     if (state.is_c_active && state.is_c_salient) { // build signaling jobs for new ipgms.
-        for (uint64_t i = 0; i < new_controllers.size(); ++i) {
-            switch (new_controllers[i]->getObject()->code(0).getDescriptor()) {
+        for (Controller *new_controller : new_controllers) {
+            switch (new_controller->getObject()->code(0).getDescriptor()) {
             case Atom::INSTANTIATED_ANTI_PROGRAM: { // inject signaling jobs for |ipgm (tsc).
-                P<TimeJob> j = new AntiPGMSignalingJob((r_exec::View *)new_controllers[i]->getView(), now + Utils::GetTimestamp<Code>(new_controllers[i]->getObject(), IPGM_TSC));
+                P<TimeJob> j = new AntiPGMSignalingJob(new_controller->getView(), now + Utils::GetTimestamp<Code>(new_controller->getObject(), IPGM_TSC));
                 _Mem::Get()->pushTimeJob(j);
                 break;
             }
 
             case Atom::INSTANTIATED_INPUT_LESS_PROGRAM: { // inject a signaling job for an input-less pgm.
-                P<TimeJob> j = new InputLessPGMSignalingJob((r_exec::View *)new_controllers[i]->getView(), now + Utils::GetTimestamp<Code>(new_controllers[i]->getObject(), IPGM_TSC));
+                P<TimeJob> j = new InputLessPGMSignalingJob(new_controller->getView(), now + Utils::GetTimestamp<Code>(new_controller->getObject(), IPGM_TSC));
                 _Mem::Get()->pushTimeJob(j);
                 break;
             }
@@ -1322,10 +1322,11 @@ void Group::_initiate_sln_propagation(Code *object, double change, double source
 {
     if (fabs(change) > object->get_psln_thr()) {
         // prevent loops.
-        for (uint64_t i = 0; i < path.size(); ++i)
-            if (path[i] == object) {
+        for (Code  *node : path) {
+            if (node == object) {
                 return;
             }
+        }
 
         path.push_back(object);
 
@@ -1353,10 +1354,11 @@ void Group::_propagate_sln(Code *object, double change, double source_sln_thr, s
     }
 
     // prevent loops.
-    for (uint64_t i = 0; i < path.size(); ++i)
-        if (path[i] == object) {
+    for (Code *node : path) {
+        if (node == object) {
             return;
         }
+    }
 
     path.push_back(object);
     P<TimeJob> j = new SaliencyPropagationJob(object, change, source_sln_thr, 0);

@@ -472,8 +472,8 @@ PGMOverlay::PGMOverlay(PGMOverlay *original, uint16_t last_input_index, uint16_t
     memcpy(code, original->code, code_size * sizeof(r_code::Atom)); // copy patched code.
     Atom *original_code = &getObject()->get_reference(0)->code(0);
 
-    for (uint16_t i = 0; i < original->patch_indices.size(); ++i) { // unpatch code.
-        code[original->patch_indices[i]] = original_code[original->patch_indices[i]];
+    for (uint16_t patch_index : original->patch_indices) { // unpatch code.
+        code[patch_index] = original_code[patch_index];
     }
 
     this->value_commit_index = value_commit_index;
@@ -515,8 +515,8 @@ inline void PGMOverlay::reset()
 bool PGMOverlay::is_invalidated()
 {
     if (is_volatile) {
-        for (uint64_t i = 0; i < input_views.size(); ++i) {
-            if (input_views[i]->object->is_invalidated()) {
+        for (P<r_code::View> input_view : input_views) {
+            if (input_view->object->is_invalidated()) {
                 return (invalidated = 1);
             }
         }

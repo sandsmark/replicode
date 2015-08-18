@@ -253,8 +253,8 @@ uintptr_t Metadata::get_class_array_size()
 {
     size_t size = 1; // size of the array
 
-    for (size_t i = 0; i < classes_by_opcodes.size(); ++i) {
-        size += classes_by_opcodes[i].get_size();
+    for (const Class &c : classes_by_opcodes) {
+        size += c.get_size();
     }
 
     return size;
@@ -263,10 +263,9 @@ uintptr_t Metadata::get_class_array_size()
 uintptr_t Metadata::get_classes_size()
 {
     size_t size = 1; // size of the hash table
-    std::unordered_map<std::string, Class>::iterator it = classes.begin();
 
-    for (; it != classes.end(); ++it) {
-        size += r_code::GetStringSize(it->first) + 1;    // +1: index to the class in the class array
+    for (const auto &elem : classes) {
+        size += r_code::GetStringSize(elem.first) + 1;    // +1: index to the class in the class array
     }
 
     return size;
@@ -275,10 +274,9 @@ uintptr_t Metadata::get_classes_size()
 uintptr_t Metadata::get_sys_classes_size()
 {
     size_t size = 1; // size of the hash table
-    std::unordered_map<std::string, Class>::iterator it = sys_classes.begin();
 
-    for (; it != sys_classes.end(); ++it) {
-        size += r_code::GetStringSize(it->first) + 1;    // +1: index to the class in the class array
+    for (const auto &elem : sys_classes) {
+        size += r_code::GetStringSize(elem.first) + 1;    // +1: index to the class in the class array
     }
 
     return size;
@@ -288,8 +286,8 @@ size_t Metadata::get_class_names_size()
 {
     size_t size = 1; // size of the vector
 
-    for (size_t i = 0; i < class_names.size(); ++i) {
-        size += r_code::GetStringSize(class_names[i]);
+    for (const std::string & name : class_names) {
+        size += r_code::GetStringSize(name);
     }
 
     return size;
@@ -299,8 +297,8 @@ size_t Metadata::get_operator_names_size()
 {
     size_t size = 1; // size of the vector
 
-    for (size_t i = 0; i < operator_names.size(); ++i) {
-        size += r_code::GetStringSize(operator_names[i]);
+    for (const std::string &name : operator_names) {
+        size += r_code::GetStringSize(name);
     }
 
     return size;
@@ -310,8 +308,8 @@ size_t Metadata::get_function_names_size()
 {
     size_t size = 1; // size of the vector
 
-    for (size_t i = 0; i < function_names.size(); ++i) {
-        size += r_code::GetStringSize(function_names[i]);
+    for (const std::string &name : function_names) {
+        size += r_code::GetStringSize(name);
     }
 
     return size;
@@ -321,8 +319,8 @@ size_t Metadata::get_function_names_size()
 
 void ObjectMap::shift(uint32_t offset)
 {
-    for (size_t i = 0; i < objects.size(); ++i) {
-        objects[i] += offset;
+    for (uint32_t &object : objects) {
+        object += offset;
     }
 }
 
@@ -349,8 +347,8 @@ size_t ObjectMap::get_size() const
 
 CodeSegment::~CodeSegment()
 {
-    for (size_t i = 0; i < objects.size(); ++i) {
-        delete objects[i];
+    for (SysObject *object : objects) {
+        delete object;
     }
 }
 
@@ -358,9 +356,9 @@ void CodeSegment::write(uint32_t *data)
 {
     uint32_t offset = 0;
 
-    for (size_t i = 0; i < objects.size(); ++i) {
-        objects[i]->write(data + offset);
-        offset += objects[i]->get_size();
+    for (SysObject *object : objects) {
+        object->write(data + offset);
+        offset += object->get_size();
     }
 }
 
@@ -380,8 +378,8 @@ size_t CodeSegment::get_size()
 {
     size_t size = 0;
 
-    for (size_t i = 0; i < objects.size(); ++i) {
-        size += objects[i]->get_size();
+    for (SysObject *object : objects) {
+        size += object->get_size();
     }
 
     return size;

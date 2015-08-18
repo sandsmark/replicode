@@ -191,8 +191,8 @@ bool HLPController::become_invalidated()
         return true;
     }
 
-    for (uint16_t i = 0; i < controllers.size(); ++i) {
-        if (controllers[i] != nullptr && controllers[i]->is_invalidated()) {
+    for (P<HLPController> controller : controllers) {
+        if (controller != nullptr && controller->is_invalidated()) {
             kill_views();
             return true;
         }

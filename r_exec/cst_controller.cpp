@@ -118,8 +118,8 @@ void CSTOverlay::inject_production()
             ((CSTController *)controller)->inject_prediction(f_p_f_icst, lowest_cfd, time_to_live); // inject a f->pred->icst in the primary group, no rdx.
             OUTPUT(CST_OUT) << Utils::RelativeTime(Now()) << "				" << f_p_f_icst->get_oid() << " pred icst[" << controller->getObject()->get_oid() << "][";
 
-            for (uint64_t i = 0; i < inputs.size(); ++i) {
-                OUTPUT(CST_OUT) << " " << inputs[i]->get_oid();
+            for (P<_Fact> input : inputs) {
+                OUTPUT(CST_OUT) << " " << input->get_oid();
             }
 
             OUTPUT(CST_OUT) << std::endl;
@@ -127,8 +127,8 @@ void CSTOverlay::inject_production()
             ((CSTController *)controller)->inject_icst(f_icst, lowest_cfd, time_to_live); // inject f->icst in the primary and secondary groups, and in the output groups.
             OUTPUT(CST_OUT) << Utils::RelativeTime(Now()) << "				" << f_icst->get_oid() << " icst[" << controller->getObject()->get_oid() << "][";
 
-            for (uint64_t i = 0; i < inputs.size(); ++i) {
-                OUTPUT(CST_OUT) << " " << inputs[i]->get_oid();
+            for (P<_Fact> input : inputs) {
+                OUTPUT(CST_OUT) << " " << input->get_oid();
             }
 
             OUTPUT(CST_OUT) << "]" << std::endl;
@@ -171,8 +171,8 @@ void CSTOverlay::update(HLPBindingMap *map, _Fact *input, _Fact *bound_pattern)
         last_cfd = prediction->get_target()->get_cfd();
 
         if (prediction->is_simulation()) {
-            for (uint16_t i = 0; i < prediction->simulations.size(); ++i) {
-                simulations.insert(prediction->simulations[i]);
+            for (P<Sim> simulation : prediction->simulations) {
+                simulations.insert(simulation);
             }
         } else {
             predictions.insert(input);
@@ -193,8 +193,8 @@ bool CSTOverlay::reduce(View *input, CSTOverlay *&offspring)
         return false;
     }
 
-    for (uint16_t i = 0; i < inputs.size(); ++i) { // discard inputs that already matched.
-        if (((_Fact *)input->object) == inputs[i]) {
+    for (P<_Fact> currentInput : inputs) { // discard inputs that already matched.
+        if (((_Fact *)input->object) == currentInput) {
             offspring = nullptr;
             return false;
         }

@@ -65,10 +65,9 @@ _Mem::_Mem(): r_code::Mem(), state(NOT_STARTED), deleted(false)
 
 _Mem::~_Mem()
 {
-    for (uint64_t i = 0; i < DebugStreamCount; ++i)
-        if (debug_streams[i] != nullptr) {
-            delete debug_streams[i];
-        }
+    for (std::ostream *stream : debug_streams) {
+        delete stream;
+    }
 }
 
 void _Mem::init(uint64_t base_period,
@@ -122,11 +121,11 @@ void _Mem::init(uint64_t base_period,
     time_job_avg_latency = _time_job_avg_latency = 0;
     uint64_t mask = 1;
 
-    for (uint64_t i = 0; i < DebugStreamCount; ++i) {
+    for (auto & stream : debug_streams) {
         if (traces & mask) {
-            debug_streams[i] = nullptr;
+            stream = nullptr;
         } else {
-            debug_streams[i] = new NullOStream();
+            stream = new NullOStream();
         }
 
         mask <<= 1;
@@ -352,8 +351,8 @@ uint64_t _Mem::start()
         m_coreThreads.push_back(std::thread(&r_exec::runTimeCore));
     }
 
-    for (uint64_t i = 0; i < initial_reduction_jobs.size(); ++i) {
-        initial_reduction_jobs[i].second->inject_reduction_jobs(initial_reduction_jobs[i].first);
+    for (auto & initial_reduction_job : initial_reduction_jobs) {
+        initial_reduction_job.second->inject_reduction_jobs(initial_reduction_job.first);
     }
 
     return now;

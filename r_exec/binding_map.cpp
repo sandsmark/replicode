@@ -584,8 +584,8 @@ BindingMap &BindingMap::operator =(const BindingMap &source)
 {
     clear();
 
-    for (uint8_t i = 0; i < source.map.size(); ++i) {
-        map.push_back(source.map[i]->copy(this));
+    for (const core::P<Value> & value : source.map) {
+        map.push_back(value->copy(this));
     }
 
     first_index = source.first_index;
@@ -939,8 +939,8 @@ HLPBindingMap &HLPBindingMap::operator =(const HLPBindingMap &source)
 {
     clear();
 
-    for (uint8_t i = 0; i < source.map.size(); ++i) {
-        map.push_back(source.map[i]->copy(this));
+    for (core::P<Value> value : source.map) {
+        map.push_back(value->copy(this));
     }
 
     first_index = source.first_index;

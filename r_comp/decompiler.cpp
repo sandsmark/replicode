@@ -238,8 +238,8 @@ void Decompiler::decompile_object(uint16_t object_index, std::ostringstream *str
     } else { // decompiling on-the-fly: ignore named objects only if imported.
         bool imported = false;
 
-        for (uint64_t i = 0; i < imported_objects.size(); ++i) {
-            if (sys_object == imported_objects[i]) {
+        for (SysObject *object : imported_objects) {
+            if (sys_object == object) {
                 imported = true;
                 break;
             }

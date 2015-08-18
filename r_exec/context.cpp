@@ -704,8 +704,8 @@ bool IPGMContext::Red(const IPGMContext &context, uint16_t &index)
         // build the set of all productions in the value array.
         index = context.setCompoundResultHead(Atom::Set(production_indices.size()));
 
-        for (uint16_t i = 0; i < production_indices.size(); ++i) { // fill the set with iptrs to productions: the latter are copied in the value array.
-            context.addCompoundResultPart(Atom::IPointer(production_indices[i]));
+        for (uint16_t &production_index : production_indices) { // fill the set with iptrs to productions: the latter are copied in the value array.
+            context.addCompoundResultPart(Atom::IPointer(production_index));
         }
 
         //(*context).trace();

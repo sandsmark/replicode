@@ -115,10 +115,11 @@ ReturnType Class::get_member_type(const uint16_t index)
 
 Class *Class::get_member_class(Metadata *metadata, const std::string &name)
 {
-    for (uint16_t i = 0; i < things_to_read.size(); ++i)
-        if (things_to_read[i].name == name) {
-            return things_to_read[i].get_class(metadata);
+    for (const StructureMember &member : things_to_read) {
+        if (member.name == name) {
+            return member.get_class(metadata);
         }
+    }
 
     return nullptr;
 }
@@ -132,9 +133,9 @@ void Class::write(uint32_t *storage)
     storage[offset++] = use_as;
     storage[offset++] = things_to_read.size();
 
-    for (uint64_t i = 0; i < things_to_read.size(); ++i) {
-        things_to_read[i].write(storage + offset);
-        offset += things_to_read[i].get_size();
+    for (StructureMember &member : things_to_read) {
+        member.write(storage + offset);
+        offset += member.get_size();
     }
 }
 
@@ -155,13 +156,13 @@ void Class::read(uint32_t *storage)
     }
 }
 
-size_t Class::get_size()   // see segments.cpp for the RAM layout
+size_t Class::get_size() const  // see segments.cpp for the RAM layout
 {
     size_t size = 4; // atom, return type, usage, number of members
     size += r_code::GetStringSize(str_opcode);
 
-    for (size_t i = 0; i < things_to_read.size(); ++i) {
-        size += things_to_read[i].get_size();
+    for (const StructureMember &member : things_to_read) {
+        size += member.get_size();
     }
 
     return size;

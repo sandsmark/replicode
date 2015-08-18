@@ -601,15 +601,15 @@ bool Pred::is_invalidated()
         return true;
     }
 
-    for (uint64_t i = 0; i < simulations.size(); ++i) {
-        if (simulations[i]->is_invalidated()) {
+    for (P<Sim> simulation : simulations) {
+        if (simulation->is_invalidated()) {
             invalidate();
             return true;
         }
     }
 
-    for (uint64_t i = 0; i < grounds.size(); ++i) {
-        if (grounds[i]->is_invalidated()) {
+    for (P<_Fact> ground : grounds) {
+        if (ground->is_invalidated()) {
             invalidate();
             return true;
         }
@@ -625,13 +625,9 @@ bool Pred::is_invalidated()
 
 bool Pred::grounds_invalidated(_Fact *evidence)
 {
-    for (uint64_t i = 0; i < grounds.size(); ++i) {
-        switch (evidence->is_evidence(grounds[i])) {
-        case MATCH_SUCCESS_NEGATIVE:
+    for (P<_Fact> ground : grounds) {
+        if (evidence->is_evidence(ground) == MATCH_SUCCESS_NEGATIVE) {
             return true;
-
-        default:
-            break;
         }
     }
 
@@ -650,9 +646,9 @@ bool Pred::is_simulation() const
 
 Sim *Pred::get_simulation(Controller *root) const
 {
-    for (uint64_t i = 0; i < simulations.size(); ++i) {
-        if (simulations[i]->root == root) {
-            return simulations[i];
+    for (P<Sim> simulation : simulations) {
+        if (simulation->root == root) {
+            return simulation;
         }
     }
 
@@ -873,8 +869,8 @@ bool ICST::is_invalidated()
         return true;
     }
 
-    for (uint64_t i = 0; i < components.size(); ++i) {
-        if (components[i]->is_invalidated()) {
+    for (P<_Fact> component : components) {
+        if (component->is_invalidated()) {
             invalidate();
             //std::cout<<Time::ToString_seconds(Now()-Utils::GetTimeReference())<<" "<<std::hex<<this<<std::dec<<" icst invalidated"<<std::endl;
             return true;

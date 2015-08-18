@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
     std::cout.rdbuf(result_stream.rdbuf());
     r_code::vector<SysObject*> &objects = image.code_segment.objects;
 
-    for (size_t i = 0; i < objects.size(); i++) {
-        objects[i]->trace();
+    for (SysObject *object : objects) {
+        object->trace();
     }
 
     // Restore cout

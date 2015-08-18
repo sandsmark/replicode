@@ -1725,8 +1725,8 @@ bool Compiler::read_reference(RepliStruct *node, uint16_t write_index, uint16_t 
             current_object->code[extent_index++] = Atom::CPointer(v.size() + 1);
             current_object->code[extent_index++] = Atom::This();
 
-            for (uint16_t i = 0; i < v.size(); ++i) {
-                switch (v[i]) {
+            for (int16_t type : v) {
+                switch (type) {
                 case -1:
                     current_object->code[extent_index++] = Atom::View();
                     break;
@@ -1740,7 +1740,7 @@ bool Compiler::read_reference(RepliStruct *node, uint16_t write_index, uint16_t 
                     break;
 
                 default:
-                    current_object->code[extent_index++] = Atom::IPointer(v[i]);
+                    current_object->code[extent_index++] = Atom::IPointer(type);
                     break;
                 }
             }

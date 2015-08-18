@@ -92,8 +92,8 @@ void Overlay::rollback()
     Code *object = get_core_object();
     Atom *original_code = &object->code(0);
 
-    for (uint16_t i = 0; i < patch_indices.size(); ++i) { // upatch code.
-        code[patch_indices[i]] = original_code[patch_indices[i]];
+    for (uint16_t index : patch_indices) { // upatch code.
+        code[index] = original_code[index];
     }
 
     patch_indices.clear();

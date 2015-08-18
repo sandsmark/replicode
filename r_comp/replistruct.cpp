@@ -742,8 +742,8 @@ int64_t RepliStruct::process()
             }
 
             // check for sub structures containing macros
-            for (std::vector<RepliStruct*>::iterator iter2(structure->args.begin()), iter2End(structure->args.end()); iter2 != iter2End; ++iter2) {
-                if ((count = (*iter2)->process()) > 0) {
+            for (RepliStruct *substruct : structure->args) {
+                if ((count = (substruct)->process()) > 0) {
                     changes += count;
                 } else if (count < 0) {
                     return -1;
@@ -809,8 +809,8 @@ std::string RepliStruct::print() const
     case Condition:
         str = cmd;
 
-        for (std::vector<RepliStruct*>::const_iterator iter(args.begin()), iterEnd(args.end()); iter != iterEnd; ++iter) {
-            str += " " + (*iter)->print();
+        for (RepliStruct *arg : args) {
+            str += " " + arg->print();
         }
 
         if (type == Structure) {
@@ -833,8 +833,8 @@ std::string RepliStruct::print() const
         return label + "[" + str + "]" + tail;
 
     case Root:
-        for (std::vector<RepliStruct*>::const_iterator iter(args.begin()), iterEnd(args.end()); iter != iterEnd; ++iter) {
-            str += (*iter)->print();
+        for (RepliStruct *arg : args) {
+            str += arg->print();
         }
 
         return str;
@@ -914,8 +914,8 @@ std::ostream &operator<<(std::ostream &os, const RepliStruct &structure)
 
         os << structure.cmd;
 
-        for (std::vector<RepliStruct*>::const_iterator iter(structure.args.begin()), iterEnd(structure.args.end()); iter != iterEnd; ++iter) {
-            os << " " << (*iter);
+        for (RepliStruct *arg : structure.args) {
+            os << " " << arg;
         }
 
         if (structure.type == RepliStruct::Structure) {
@@ -943,8 +943,8 @@ std::ostream &operator<<(std::ostream &os, const RepliStruct &structure)
         break;
 
     case RepliStruct::Root:
-        for (std::vector<RepliStruct*>::const_iterator iter(structure.args.begin()), iterEnd(structure.args.end()); iter != iterEnd; ++iter) {
-            os << (*iter);    // << ";" << structure.fileName << ":" << structure.line << std::endl;
+        for (RepliStruct *arg : structure.args) {
+            os << arg;    // << ";" << structure.fileName << ":" << structure.line << std::endl;
         }
 
         break;
@@ -968,8 +968,8 @@ RepliStruct *RepliStruct::clone() const
     newStruct->line = line;
     newStruct->fileName = fileName;
 
-    for (std::vector<RepliStruct*>::const_iterator iter(args.begin()), iterEnd(args.end()); iter != iterEnd; ++iter) {
-        newStruct->args.push_back((*iter)->clone());
+    for (RepliStruct *arg : args) {
+        newStruct->args.push_back((arg)->clone());
     }
 
     return newStruct;
@@ -1001,8 +1001,8 @@ std::string RepliStruct::printError() const
         strError << ": " << error << std::endl;
     }
 
-    for (std::vector<RepliStruct*>::const_iterator iter(args.begin()), iterEnd(args.end()); iter != iterEnd; ++iter) {
-        strError << (*iter)->printError();
+    for (RepliStruct *arg : args) {
+        strError << arg->printError();
     }
 
     return strError.str();
@@ -1092,11 +1092,11 @@ RepliStruct *RepliStruct::findAtom(const std::string &name)
 {
     RepliStruct* structure;
 
-    for (std::vector<RepliStruct*>::iterator iter(args.begin()), iterEnd(args.end()); iter != iterEnd; ++iter) {
-        switch ((*iter)->type) {
+    for (RepliStruct *arg : args) {
+        switch (arg->type) {
         case Atom:
-            if ((*iter)->cmd.compare(name) == 0) {
-                return (*iter);
+            if (arg->cmd.compare(name) == 0) {
+                return arg;
             }
 
             break;
@@ -1104,7 +1104,7 @@ RepliStruct *RepliStruct::findAtom(const std::string &name)
         case Structure:
         case Set:
         case Development:
-            structure = (*iter)->findAtom(name);
+            structure = arg->findAtom(name);
 
             if (structure != nullptr) {
                 return structure;
