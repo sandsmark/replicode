@@ -94,12 +94,12 @@ bool UnboundValue::match(const Code *object, uint16_t index)
 
 Atom *UnboundValue::get_code()
 {
-    return NULL;
+    return nullptr;
 }
 
 Code *UnboundValue::get_object()
 {
-    return NULL;
+    return nullptr;
 }
 
 uint16_t UnboundValue::get_code_size()
@@ -135,7 +135,7 @@ Atom *AtomValue::get_code()
 
 Code *AtomValue::get_object()
 {
-    return NULL;
+    return nullptr;
 }
 
 uint16_t AtomValue::get_code_size()
@@ -232,7 +232,7 @@ Atom *StructureValue::get_code()
 
 Code *StructureValue::get_object()
 {
-    return NULL;
+    return nullptr;
 }
 
 uint16_t StructureValue::get_code_size()
@@ -408,7 +408,7 @@ _Fact *BindingMap::abstract_fact(_Fact *fact, _Fact *original, bool force_sync) 
 
 Code *BindingMap::abstract_object(Code *object, bool force_sync)   // abstract values as they are encountered.
 {
-    Code *abstracted_object = NULL;
+    Code *abstracted_object = nullptr;
     uint16_t opcode = object->code(0).asOpcode();
 
     if (opcode == Opcodes::Fact) {
@@ -864,7 +864,7 @@ bool BindingMap::scan_variable(uint16_t id) const
         return true;
     }
 
-    return (map[id]->get_code() != NULL);
+    return (map[id]->get_code() != nullptr);
 }
 
 bool BindingMap::intersect(BindingMap *bm)

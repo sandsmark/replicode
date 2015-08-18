@@ -36,7 +36,7 @@
 namespace r_exec
 {
 
-HLPContext::HLPContext(): _Context(NULL, 0, NULL, UNDEFINED)
+HLPContext::HLPContext(): _Context(nullptr, 0, nullptr, UNDEFINED)
 {
 }
 

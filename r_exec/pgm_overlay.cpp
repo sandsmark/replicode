@@ -235,7 +235,7 @@ bool InputLessPGMOverlay::inject_productions()
         }
     }
 
-    Code *mk_rdx = NULL;
+    Code *mk_rdx = nullptr;
     uint16_t ntf_grp_count = getView()->get_host()->get_ntf_grp_count();
     uint16_t write_index;
     uint16_t mk_rdx_prod_index;
@@ -370,7 +370,7 @@ bool InputLessPGMOverlay::inject_productions()
                         std::string msg = Utils::GetString(&(*args.getChild(3))[0]);
                         IPGMContext _objects = *args.getChild(4);
                         uint8_t object_count = _objects[0].getAtomCount();
-                        Code **objects = NULL;
+                        Code **objects = nullptr;
 
                         if (object_count) {
                             objects = new Code *[object_count];
@@ -525,7 +525,7 @@ Code *PGMOverlay::dereference_in_ptr(Atom a)
     }
 
     default: // shall never happen.
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -635,7 +635,7 @@ Overlay *PGMOverlay::reduce(r_exec::View *input)
 
     case IMPOSSIBLE:
     default:
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -786,10 +786,10 @@ Overlay *AntiPGMOverlay::reduce(r_exec::View *input)
         if (input_pattern_indices.size() == 0) { // all patterns matched.
             if (check_guards()) {
                 ((AntiPGMController *)controller)->restart();
-                return NULL;
+                return nullptr;
             } else {
                 rollback();
-                return NULL;
+                return nullptr;
             }
         } else {
             AntiPGMOverlay *offspring = new AntiPGMOverlay(this, input_index, value_commit_index);
@@ -802,7 +802,7 @@ Overlay *AntiPGMOverlay::reduce(r_exec::View *input)
 
     case IMPOSSIBLE:
     default:
-        return NULL;
+        return nullptr;
     }
 }
 }

@@ -62,8 +62,8 @@ Class::Class(Atom atom,
              std::string str_opcode,
              std::vector<StructureMember> r,
              ReturnType t): atom(atom),
-    str_opcode(str_opcode),
-    things_to_read(r),
+    str_opcode(std::move(str_opcode)),
+    things_to_read(std::move(r)),
     type(t),
     use_as(StructureMember::I_CLASS)
 {
@@ -86,7 +86,7 @@ bool Class::get_member_index(Metadata *metadata, std::string &name, uint16_t &in
             index = (has_offset() ? i + 1 : i); // in expressions the lead r-atom is at 0; in objects, members start at 1
 
             if (things_to_read[i].used_as_expression()) { // the class is: [::a-class]
-                p = NULL;
+                p = nullptr;
             } else {
                 p = things_to_read[i].get_class(metadata);
             }
@@ -114,7 +114,7 @@ Class *Class::get_member_class(Metadata *metadata, const std::string &name)
             return things_to_read[i].get_class(metadata);
         }
 
-    return NULL;
+    return nullptr;
 }
 
 void Class::write(uint32_t *storage)

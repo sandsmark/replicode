@@ -37,19 +37,19 @@
 
 namespace r_exec
 {
-View::View(): r_code::View(), controller(NULL)
+View::View(): r_code::View(), controller(nullptr)
 {
     _code[VIEW_OID].atom = GetOID();
     reset_ctrl_values();
 }
 
-View::View(r_code::SysView *source, r_code::Code *object): r_code::View(source, object), controller(NULL)
+View::View(r_code::SysView *source, r_code::Code *object): r_code::View(source, object), controller(nullptr)
 {
     _code[VIEW_OID].atom = GetOID();
     reset();
 }
 
-View::View(const View *view, bool new_OID): r_code::View(), controller(NULL)
+View::View(const View *view, bool new_OID): r_code::View(), controller(nullptr)
 {
     object = view->object;
     memcpy(_code, view->_code, VIEW_CODE_MAX_SIZE * sizeof(Atom) + 2 * sizeof(Code *)); // reference_set is contiguous to code; memcpy in one go.
@@ -58,7 +58,7 @@ View::View(const View *view, bool new_OID): r_code::View(), controller(NULL)
         _code[VIEW_OID].atom = GetOID();
     }
 
-    controller = NULL; // deprecated: controller=view->controller;
+    controller = nullptr; // deprecated: controller=view->controller;
     reset();
 }
 
@@ -68,7 +68,7 @@ View::View(SyncMode sync,
            int64_t res,
            Code *destination,
            Code *origin,
-           Code *object): r_code::View(), controller(NULL)
+           Code *object): r_code::View(), controller(nullptr)
 {
     code(VIEW_OPCODE) = Atom::SSet(Opcodes::View, VIEW_ARITY);
     init(sync, ijt, sln, res, destination, origin, object);
@@ -81,7 +81,7 @@ View::View(SyncMode sync,
            Code *destination,
            Code *origin,
            Code *object,
-           double act): r_code::View(), controller(NULL)
+           double act): r_code::View(), controller(nullptr)
 {
     code(VIEW_OPCODE) = Atom::SSet(Opcodes::PgmView, PGM_VIEW_ARITY);
     init(sync, ijt, sln, res, destination, origin, object);
@@ -347,7 +347,7 @@ double View::MorphChange(double change, double source_thr, double destination_th
     return destination_thr + change;
 }
 
-View::View(View *view, Group *group): r_code::View(), controller(NULL)
+View::View(View *view, Group *group): r_code::View(), controller(nullptr)
 {
     Group *source = view->get_host();
     object = view->object;
@@ -406,7 +406,7 @@ void View::reset_init_sln()
 
 void View::reset_init_act()
 {
-    if (object != NULL) {
+    if (object != nullptr) {
         initial_act = get_act();
     } else {
         initial_act = 0;

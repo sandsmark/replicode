@@ -35,7 +35,7 @@
 namespace r_comp
 {
 
-Decompiler::Decompiler(): out_stream(NULL), in_hlp(false), current_object(NULL), metadata(NULL), image(NULL)
+Decompiler::Decompiler(): out_stream(nullptr), in_hlp(false), current_object(nullptr), metadata(nullptr), image(nullptr)
 {
 }
 

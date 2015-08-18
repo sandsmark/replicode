@@ -111,7 +111,7 @@ void TDecompiler::decompile()
 TDecompiler::TDecompiler(uint64_t ostream_id, std::string header, r_comp::Metadata *m)
     : _Object(),
       ostream_id(ostream_id),
-      header(header),
+      header(std::move(header)),
       _thread(nullptr),
       spawned(0),
       metadata(m)

@@ -255,7 +255,7 @@ bool Compiler::read(RepliStruct *node, const StructureMember &m, bool enforce, u
         return (this->*m.read())(node, enforce, p, write_index, extent_index, write);
     }
 
-    return (this->*m.read())(node, enforce, NULL, write_index, extent_index, write);
+    return (this->*m.read())(node, enforce, nullptr, write_index, extent_index, write);
 }
 
 bool Compiler::getGlobalReferenceIndex(const std::string reference_name, const ReturnType t, ImageObject *object, uint16_t &index, Class *&_class)
@@ -428,11 +428,11 @@ bool Compiler::indirection(RepliStruct *node, Class *reference_class, std::strin
             type = ANY;
             indices->push_back(-1);
         } else if (name == "mks") {
-            fetched_class = NULL;
+            fetched_class = nullptr;
             type = SET;
             indices->push_back(-2);
         } else if (name == "vws") {
-            fetched_class = NULL;
+            fetched_class = nullptr;
             type = SET;
             indices->push_back(-3);
         } else if (!reference_class->get_member_index(_metadata, name, index, fetched_class)) {
@@ -495,11 +495,11 @@ bool Compiler::global_indirection(RepliStruct *node, std::vector<int16_t> &indic
             set_error(" error: vw is not accessible on global references", node);
             break;
         } else if (name == "mks") {
-            fetched_class = NULL;
+            fetched_class = nullptr;
             type = SET;
             indices.push_back(-2);
         } else if (name == "vws") {
-            fetched_class = NULL;
+            fetched_class = nullptr;
             type = SET;
             indices.push_back(-3);
         } else if (!reference_class->get_member_index(_metadata, name, index, fetched_class)) {
@@ -826,7 +826,7 @@ bool Compiler::set(RepliStruct *node, uint16_t write_index, uint16_t &extent_ind
     }
 
     for (size_t i = 0; i < node->args.size(); i++) {
-        if (!read_any(node->args[i], false, NULL, content_write_index + i, extent_index, write)) {
+        if (!read_any(node->args[i], false, nullptr, content_write_index + i, extent_index, write)) {
             set_error(" error: illegal element in set", node->args[i]);
             return false;
         }
@@ -910,7 +910,7 @@ bool Compiler::set(RepliStruct *node, const Class &p, uint16_t write_index, uint
             break;
 
         case StructureMember::I_DCLASS:
-            r = read_class(node->args[i], true, NULL, content_write_index + i, extent_index, write);
+            r = read_class(node->args[i], true, nullptr, content_write_index + i, extent_index, write);
             break;
         }
 
@@ -927,7 +927,7 @@ bool Compiler::set(RepliStruct *node, const Class &p, uint16_t write_index, uint
 
 bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)   // enforce always false, p always NULL.
 {
-    if (read_number(node, false, NULL, write_index, extent_index, write)) {
+    if (read_number(node, false, nullptr, write_index, extent_index, write)) {
         return true;
     }
 
@@ -935,7 +935,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
         return false;
     }
 
-    if (read_timestamp(node, false, NULL, write_index, extent_index, write)) {
+    if (read_timestamp(node, false, nullptr, write_index, extent_index, write)) {
         return true;
     }
 
@@ -943,7 +943,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
         return false;
     }
 
-    if (read_string(node, false, NULL, write_index, extent_index, write)) {
+    if (read_string(node, false, nullptr, write_index, extent_index, write)) {
         return true;
     }
 
@@ -951,7 +951,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
         return false;
     }
 
-    if (read_boolean(node, false, NULL, write_index, extent_index, write)) {
+    if (read_boolean(node, false, nullptr, write_index, extent_index, write)) {
         return true;
     }
 
@@ -959,7 +959,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
         return false;
     }
 
-    if (read_function(node, false, NULL, write_index, extent_index, write)) {
+    if (read_function(node, false, nullptr, write_index, extent_index, write)) {
         return true;
     }
 
@@ -967,7 +967,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
         return false;
     }
 
-    if (read_node(node, false, NULL, write_index, extent_index, write)) {
+    if (read_node(node, false, nullptr, write_index, extent_index, write)) {
         return true;
     }
 
@@ -975,7 +975,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
         return false;
     }
 
-    if (read_device(node, false, NULL, write_index, extent_index, write)) {
+    if (read_device(node, false, nullptr, write_index, extent_index, write)) {
         return true;
     }
 
@@ -983,7 +983,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
         return false;
     }
 
-    if (read_class(node, false, NULL, write_index, extent_index, write)) {
+    if (read_class(node, false, nullptr, write_index, extent_index, write)) {
         return true;
     }
 
@@ -991,7 +991,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
         return false;
     }
 
-    if (read_expression(node, false, NULL, write_index, extent_index, write)) {
+    if (read_expression(node, false, nullptr, write_index, extent_index, write)) {
         return true;
     }
 
@@ -999,7 +999,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
         return false;
     }
 
-    if (read_set(node, false, NULL, write_index, extent_index, write)) {
+    if (read_set(node, false, nullptr, write_index, extent_index, write)) {
         return true;
     }
 

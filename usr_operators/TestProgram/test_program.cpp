@@ -60,12 +60,12 @@ public:
     {
     }
 
-    Code *get_core_object() const
+    Code *get_core_object() const override
     {
         return getObject()->get_reference(0);
     }
 
-    void take_input(r_exec::View *input)
+    void take_input(r_exec::View *input) override
     {
         // Inputs are all types of objects - salient or that have become salient depending on their view's sync member.
         // Manual filtering may be needed instead of pattern-matching.

@@ -56,7 +56,7 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
     if (!stream.good()) {
         error = "unable to load file ";
         error += file;
-        return 0;
+        return nullptr;
     }
 
     root->reset(); // trims root from previously preprocessed objects.
@@ -66,13 +66,13 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
     if (root->parse(&stream, a, b) < 0) {
         error = root->printError();
         stream.close();
-        return 0;
+        return nullptr;
     }
 
     if (!stream.eof()) {
         error = "Code structure error: Unexpected EOF, unmatched ) or ].\n";
         stream.close();
-        return 0;
+        return nullptr;
     }
 
     int64_t pass = 0, total = 0, count;
@@ -85,7 +85,7 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
     if (count < 0) {
         error = root->printError();
         stream.close();
-        return 0;
+        return nullptr;
     }
 
     if (metadata) {
@@ -96,7 +96,7 @@ RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Meta
     stream.close();
 
     if (error.size() > 0) {
-        return 0;
+        return nullptr;
     }
 
     return root;

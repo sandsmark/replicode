@@ -101,14 +101,14 @@ Overlay *PrimaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLController
                 if (check_simulated_chaining(bm, f_imdl, prediction)) {
                     c_a = true;
                 } else {
-                    o = NULL;
+                    o = nullptr;
                     break;
                 }
             }
 
         case NO_R:
             if (((MDLController *)controller)->has_tpl_args()) { // there are tpl args, abort.
-                o = NULL;
+                o = nullptr;
                 break;
             } else {
                 f_imdl->get_reference(0)->code(I_HLP_WR_E) = Atom::Boolean(false);
@@ -119,7 +119,7 @@ Overlay *PrimaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLController
                 if (check_simulated_chaining(bm, f_imdl, prediction)) {
                     c_a = true;
                 } else {
-                    o = NULL;
+                    o = nullptr;
                     break;
                 }
             }
@@ -132,7 +132,7 @@ Overlay *PrimaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLController
                 o = this;
             } else {
                 //std::cout<<" guards failed\n";
-                o = NULL;
+                o = nullptr;
             }
 
             break;
@@ -140,10 +140,10 @@ Overlay *PrimaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLController
 
         // reset.
         delete[] code;
-        code = NULL;
+        code = nullptr;
         bindings = original_bindings;
 
-        if (f_p_f_imdl == NULL) { // i.e. if reduction not triggered a requirement.
+        if (f_p_f_imdl == nullptr) { // i.e. if reduction not triggered a requirement.
             store_evidence(input, prediction, simulation);
         }
 
@@ -151,14 +151,14 @@ Overlay *PrimaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLController
     }
 
     case MATCH_SUCCESS_NEGATIVE: // counter-evidence WRT the lhs.
-        if (f_p_f_imdl == NULL) { // i.e. if reduction not triggered a requirement.
+        if (f_p_f_imdl == nullptr) { // i.e. if reduction not triggered a requirement.
             store_evidence(input, prediction, simulation);
         }
 
     case MATCH_FAILURE:
     default:
         //std::cout<<" no match\n";
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -212,7 +212,7 @@ Overlay *SecondaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLControll
         case SR_DISABLED_NO_WR: // silent monitoring of a prediction that will not be injected.
         case NO_R:
             if (((MDLController *)controller)->has_tpl_args()) { // there are tpl args, abort.
-                o = NULL;
+                o = nullptr;
                 break;
             } else {
                 f_imdl->get_reference(0)->code(I_HLP_WR_E) = Atom::Boolean(false);
@@ -223,11 +223,11 @@ Overlay *SecondaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLControll
             if (evaluate_fwd_guards()) { // may update bindings.
                 //std::cout<<" match\n";
                 f_imdl->set_reference(0, bm->bind_pattern(f_imdl->get_reference(0))); // valuate f_imdl from updated bm.
-                ((SecondaryMDLController *)controller)->predict(bindings, input, NULL, true, r_p, ground);
+                ((SecondaryMDLController *)controller)->predict(bindings, input, nullptr, true, r_p, ground);
                 o = this;
             } else {
                 //std::cout<<" guards failed\n";
-                o = NULL;
+                o = nullptr;
             }
 
             break;
@@ -235,7 +235,7 @@ Overlay *SecondaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLControll
 
         // reset.
         delete[] code;
-        code = NULL;
+        code = nullptr;
         bindings = original_bindings;
         return o;
     }
@@ -244,7 +244,7 @@ Overlay *SecondaryMDLOverlay::reduce(_Fact *input, Fact *f_p_f_imdl, MDLControll
     case MATCH_FAILURE:
     default:
         //std::cout<<" no match\n";
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -275,7 +275,7 @@ MDLController::MDLController(r_code::View *view): HLPController(view)
     controllers.resize(2);
     Code *rhs_ihlp = rhs->get_reference(0);
     _is_requirement = NaR;
-    controllers[RHSController] = NULL;
+    controllers[RHSController] = nullptr;
     uint16_t opcode = rhs_ihlp->code(0).asOpcode();
 
     if (opcode == Opcodes::ICst ||
@@ -294,7 +294,7 @@ MDLController::MDLController(r_code::View *view): HLPController(view)
 
     Code *lhs_ihlp = lhs->get_reference(0);
     _is_reuse = false;
-    controllers[LHSController] = NULL;
+    controllers[LHSController] = nullptr;
     opcode = lhs_ihlp->code(0).asOpcode();
 
     if (opcode == Opcodes::ICst ||
@@ -650,7 +650,7 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
     uint64_t wr_count;
     uint64_t sr_count;
     uint64_t r_count = get_requirement_count(wr_count, sr_count);
-    ground = NULL;
+    ground = nullptr;
 
     if (!r_count) {
         return NO_R;
@@ -662,7 +662,7 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
     if (!sr_count) { // no strong req., some weak req.: true if there is one f->imdl complying with timings and bindings.
         wr_enabled = false;
 
-        if (ground != NULL) { // an imdl triggered the reduction of the cache.
+        if (ground != nullptr) { // an imdl triggered the reduction of the cache.
             r_p.first.controllers.push_back(req_controller);
             r_p.first.f_imdl = ground;
             r_p.first.chaining_was_allowed = true;
@@ -769,7 +769,7 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
                 }
             }
 
-            if (ground != NULL) { // an imdl triggered the reduction of the cache.
+            if (ground != nullptr) { // an imdl triggered the reduction of the cache.
                 double confidence = ground->get_pred()->get_target()->get_cfd();
 
                 if (confidence >= negative_cfd) {
@@ -823,7 +823,7 @@ ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl,
     uint64_t wr_count;
     uint64_t sr_count;
     uint64_t r_count = get_requirement_count(wr_count, sr_count);
-    ground = NULL;
+    ground = nullptr;
 
     if (!r_count) {
         return NO_R;
@@ -858,7 +858,7 @@ ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl,
         return r;
     } else {
         if (!wr_count) { // some strong req., no weak req.: true if there is no |f->imdl complying with timings and bindings.
-            ground = NULL;
+            ground = nullptr;
             std::lock_guard<std::mutex> guard(requirements.mutex);
             uint64_t now = Now();
             r_code::list<REntry>::const_iterator e;
@@ -936,7 +936,7 @@ void MDLController::register_requirement(_Fact *f_pred, RequirementsPair &r_p)
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-MDLController::REntry::REntry(): PEEntry(), controller(NULL), chaining_was_allowed(false)
+MDLController::REntry::REntry(): PEEntry(), controller(nullptr), chaining_was_allowed(false)
 {
 }
 
@@ -1035,7 +1035,7 @@ void PMDLController::register_predicted_goal_outcome(Fact *goal, HLPBindingMap *
                 uint64_t sim_thz = get_sim_thz(Now(), deadline);
                 Sim *new_sim = new Sim(SIM_ROOT, sim_thz, g->sim->super_goal, false, this);
                 g->sim = new_sim;
-                add_g_monitor(new GMonitor(this, bm, deadline, sim_thz, new_goal, f_imdl, NULL));
+                add_g_monitor(new GMonitor(this, bm, deadline, sim_thz, new_goal, f_imdl, nullptr));
                 inject_goal(bm, new_goal, f_imdl);
             }
         }
@@ -1112,7 +1112,7 @@ void TopLevelMDLController::reduce(r_exec::View *input)   // no lock.
         }
     } else {
         PrimaryMDLOverlay o(this, bindings);
-        o.reduce(input->object, NULL, NULL); // matching is used to fill up the cache (no predictions).
+        o.reduce(input->object, nullptr, nullptr); // matching is used to fill up the cache (no predictions).
         monitor_goals(input->object);
     }
 }
@@ -1144,7 +1144,7 @@ void TopLevelMDLController::abduce(HLPBindingMap *bm, Fact *super_goal, double c
 
             case MATCH_SUCCESS_NEGATIVE:
             case MATCH_FAILURE:
-                evidence = NULL;
+                evidence = nullptr;
                 break;
             }
 
@@ -1195,13 +1195,13 @@ void TopLevelMDLController::register_goal_outcome(Fact *goal, bool success, _Fac
     if (success) {
         goal_success = new Success(goal, evidence, 1);
         f_goal_success = new Fact(goal_success, now, now, 1, 1);
-        absentee = NULL;
+        absentee = nullptr;
     } else {
         if (!evidence) { // assert absence of the goal target.
             absentee = goal->get_goal()->get_target()->get_absentee();
             goal_success = new Success(goal, absentee, 1);
         } else {
-            absentee = NULL;
+            absentee = nullptr;
             goal_success = new Success(goal, evidence, 1);
         }
 
@@ -1236,7 +1236,7 @@ void TopLevelMDLController::register_drive_outcome(Fact *drive, bool success) co
 {
     drive->invalidate();
     uint64_t now = Now();
-    Code *drive_success = new Success(drive, NULL, 1);
+    Code *drive_success = new Success(drive, nullptr, 1);
     Code *f_drive_success;
 
     if (success) {
@@ -1407,7 +1407,7 @@ void PrimaryMDLController::predict(HLPBindingMap *bm, _Fact *input, Fact *f_imdl
 
             if (prediction) { // no rdx nor monitoring if the input was a prediction; case of a reuse: f_imdl becomes f->p->f_imdl.
                 Fact *pred_f_imdl = new Fact(new Pred(f_imdl, 1), now, now, 1, 1);
-                inject_prediction(production, pred_f_imdl, confidence, before - now, NULL);
+                inject_prediction(production, pred_f_imdl, confidence, before - now, nullptr);
                 OUTPUT(MDL_OUT) << Utils::RelativeTime(Now()) << "				mdl " << getObject()->get_oid() << ": " << input->get_oid() << " -> " << production->get_oid() << " pred " << bound_rhs->get_reference(0)->code(MK_VAL_VALUE).asFloat() << std::endl;
             } else {
                 Code *mk_rdx = new MkRdx(f_imdl, (Code *)input, production, 1, bindings);
@@ -1523,7 +1523,7 @@ void PrimaryMDLController::reduce(r_exec::View *input)   // no lock.
         }
     } else {
         PrimaryMDLOverlay o(this, bindings);
-        bool match = (o.reduce((_Fact *)input->object, NULL, NULL) != NULL);
+        bool match = (o.reduce((_Fact *)input->object, nullptr, nullptr) != nullptr);
 
         if (!match && !monitor_predictions((_Fact *)input->object) && !monitor_goals((_Fact *)input->object)) {
             assume((_Fact *)input->object);
@@ -1596,7 +1596,7 @@ void PrimaryMDLController::abduce(HLPBindingMap *bm, Fact *super_goal, bool oppo
 
             case NO_R:
                 if (sub_sim->mode == SIM_ROOT) {
-                    abduce_lhs(bm, super_goal, f_imdl, opposite, confidence, sub_sim, NULL, true);
+                    abduce_lhs(bm, super_goal, f_imdl, opposite, confidence, sub_sim, nullptr, true);
                 } else {
                     abduce_simulated_lhs(bm, super_goal, f_imdl, opposite, confidence, sub_sim);
                 }
@@ -1678,7 +1678,7 @@ void PrimaryMDLController::abduce_lhs(HLPBindingMap *bm, Fact *super_goal, Fact 
 
             case MATCH_SUCCESS_NEGATIVE:
             case MATCH_FAILURE:
-                evidence = NULL;
+                evidence = nullptr;
                 break;
             }
 
@@ -1942,7 +1942,7 @@ void PrimaryMDLController::register_goal_outcome(Fact *goal, bool success, _Fact
     if (success) {
         Code *success_object = new Success(goal, evidence, 1);
         f_success_object = new Fact(success_object, now, now, 1, 1);
-        absentee = NULL;
+        absentee = nullptr;
     } else {
         Code *success_object;
 
@@ -1951,7 +1951,7 @@ void PrimaryMDLController::register_goal_outcome(Fact *goal, bool success, _Fact
             success_object = new Success(goal, absentee, 1);
             OUTPUT(PRED_MON) << Utils::RelativeTime(now) << " " << getObject() << goal->get_oid() << " goal success" << std::endl;
         } else {
-            absentee = NULL;
+            absentee = nullptr;
             success_object = new Success(goal, evidence, 1);
             OUTPUT(PRED_MON) << Utils::RelativeTime(now) << " " << getObject() << goal->get_oid() << " goal failure" << std::endl;
         }
@@ -2212,7 +2212,7 @@ void SecondaryMDLController::reduce(r_exec::View *input)   // no lock.
     }
 
     SecondaryMDLOverlay o(this, bindings);
-    bool match = (o.reduce((_Fact *)input->object, NULL, NULL) != NULL); // forward chaining.
+    bool match = (o.reduce((_Fact *)input->object, nullptr, nullptr) != nullptr); // forward chaining.
 
     if (!match) {
         monitor_predictions((_Fact *)input->object);

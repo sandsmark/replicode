@@ -73,7 +73,7 @@ Class *Metadata::get_class(std::string &class_name)
         return &it->second;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 Class *Metadata::get_class(size_t opcode)

@@ -315,7 +315,7 @@ void AutoFocusController::reduce(r_exec::View *input)
             TPX *tpx;
             Goal *goal = ((_Fact *)production)->get_goal();
 
-            if (goal != NULL) { // build a tpx to find models like M:[A -> B] where B is the goal target.
+            if (goal != nullptr) { // build a tpx to find models like M:[A -> B] where B is the goal target.
                 pattern = (_Fact *)unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index + 1).asIndex()); // lhs.
                 tpx = build_tpx<GTPX>((_Fact *)production, pattern, bm, goal_ratings, f_ihlp, f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
                 goals.insert(std::pair<P<_Fact>, P<TPX> >((_Fact *)production, tpx));
@@ -323,7 +323,7 @@ void AutoFocusController::reduce(r_exec::View *input)
             } else {
                 Pred *pred = ((_Fact *)production)->get_pred();
 
-                if (pred != NULL) { // build a tpx to find models like M:[A -> |imdl M0] where M0 is the model that produced the prediction.
+                if (pred != nullptr) { // build a tpx to find models like M:[A -> |imdl M0] where M0 is the model that produced the prediction.
                     pattern = (_Fact *)unpacked_mdl->get_reference(unpacked_mdl->code(obj_set_index + 2).asIndex()); // rhs.
                     tpx = build_tpx<PTPX>((_Fact *)production, pattern, bm, prediction_ratings, f_ihlp, f_ihlp->get_reference(0)->code(I_HLP_WR_E).asBoolean());
                     predictions.insert(std::pair<P<_Fact>, P<TPX> >((_Fact *)production, tpx));
@@ -342,7 +342,7 @@ void AutoFocusController::reduce(r_exec::View *input)
                 _Fact *target = (_Fact *)payload->get_reference(0);
                 Goal *goal = target->get_goal();
 
-                if (goal != NULL) {
+                if (goal != nullptr) {
                     //rate(target,success,goals,goal_ratings);
                     notify(target, input, goals);
                 } else { // prediction.
@@ -388,7 +388,7 @@ void AutoFocusController::inject_hlps(const std::vector<P<Code> > &hlps) const
     std::vector<P<Code> >::const_iterator hlp;
 
     for (hlp = hlps.begin(); hlp != hlps.end(); ++hlp) {
-        View *view = new View(View::SYNC_ONCE, now, 0, -1, output_groups[0], NULL, *hlp, 1); // SYNC_ONCE,sln=0,res=forever,act=1.
+        View *view = new View(View::SYNC_ONCE, now, 0, -1, output_groups[0], nullptr, *hlp, 1); // SYNC_ONCE,sln=0,res=forever,act=1.
         view->references[0] = output_groups[0];
         views.push_back(view);
     }

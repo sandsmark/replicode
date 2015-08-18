@@ -48,7 +48,7 @@ _Mem::_Mem(): r_code::Mem(), state(NOT_STARTED), deleted(false)
 _Mem::~_Mem()
 {
     for (uint64_t i = 0; i < DebugStreamCount; ++i)
-        if (debug_streams[i] != NULL) {
+        if (debug_streams[i] != nullptr) {
             delete debug_streams[i];
         }
 }
@@ -106,7 +106,7 @@ void _Mem::init(uint64_t base_period,
 
     for (uint64_t i = 0; i < DebugStreamCount; ++i) {
         if (traces & mask) {
-            debug_streams[i] = NULL;
+            debug_streams[i] = nullptr;
         } else {
             debug_streams[i] = new NullOStream();
         }
@@ -117,7 +117,7 @@ void _Mem::init(uint64_t base_period,
 
 std::ostream &_Mem::Output(TraceLevel l)
 {
-    return (_Mem::Get()->debug_streams[l] == NULL ? std::cout : * (_Mem::Get()->debug_streams[l]));
+    return (_Mem::Get()->debug_streams[l] == nullptr ? std::cout : * (_Mem::Get()->debug_streams[l]));
 }
 
 ////////////////////////////////////////////////////////////////
@@ -292,14 +292,14 @@ uint64_t _Mem::start()
 
             // build signaling jobs for active input-less overlays.
             for (v = g->input_less_ipgm_views.begin(); v != g->input_less_ipgm_views.end(); ++v) {
-                if (v->second->controller != NULL && v->second->controller->is_activated()) {
+                if (v->second->controller != nullptr && v->second->controller->is_activated()) {
                     pushTimeJob(new InputLessPGMSignalingJob(v->second, now + Utils::GetTimestamp<Code>(v->second->object, IPGM_TSC)));
                 }
             }
 
             // build signaling jobs for active anti-pgm overlays.
             for (v = g->anti_ipgm_views.begin(); v != g->anti_ipgm_views.end(); ++v) {
-                if (v->second->controller != NULL && v->second->controller->is_activated()) {
+                if (v->second->controller != nullptr && v->second->controller->is_activated()) {
                     pushTimeJob(new AntiPGMSignalingJob(v->second, now + Utils::GetTimestamp<Code>(v->second->object, IPGM_TSC)));
                 }
             }
@@ -446,7 +446,7 @@ void _Mem::inject_null_program(Controller *c, Group *group, uint64_t time_to_liv
     Code *null_pgm = new LObject();
     null_pgm->code(0) = Atom::NullProgram(take_past_inputs);
     uint64_t res = Utils::GetResilience(now, time_to_live, group->get_upr() * Utils::GetBasePeriod());
-    View *view = new View(View::SYNC_ONCE, now, 0, res, group, NULL, null_pgm, 1);
+    View *view = new View(View::SYNC_ONCE, now, 0, res, group, nullptr, null_pgm, 1);
     view->controller = c;
     c->set_view(view);
     inject(view);
@@ -598,7 +598,7 @@ void _Mem::inject_perf_stats()
     // inject f->perf in stdin.
     uint64_t now = Now();
     Code *f_perf = new Fact(perf, now, now + perf_sampling_period, 1, 1);
-    View *view = new View(View::SYNC_ONCE, now, 1, 1, _stdin, NULL, f_perf); // sync front, sln=1, res=1.
+    View *view = new View(View::SYNC_ONCE, now, 1, 1, _stdin, nullptr, f_perf); // sync front, sln=1, res=1.
     inject(view);
 }
 

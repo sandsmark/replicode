@@ -72,7 +72,7 @@ public:
     typedef typename std::vector<T>::const_iterator const_iterator;
     iterator begin()
     {
-        return m_vector->begin();
+        return m_vector.begin();
     }
     const_iterator begin() const
     {

@@ -21,12 +21,12 @@ RepliStruct::RepliStruct(RepliStruct::Type type)
     this->type = type;
     this->fileName = GlobalFilename;
     line = GlobalLine;
-    parent = NULL;
+    parent = nullptr;
 }
 
 RepliStruct::~RepliStruct()
 {
-    parent = NULL;
+    parent = nullptr;
 }
 
 void RepliStruct::reset()
@@ -610,7 +610,7 @@ int64_t RepliStruct::process()
         macro = RepliMacros[cmd];
         newStruct = macro->expandMacro(this);
 
-        if (newStruct != NULL) {
+        if (newStruct != nullptr) {
             *this = *newStruct;
             delete(newStruct);
             changes++;
@@ -684,7 +684,7 @@ int64_t RepliStruct::process()
                 // Check for a load directive...
                 newStruct = loadReplicodeFile(structure->args.front()->cmd);
 
-                if (newStruct == NULL) {
+                if (newStruct == nullptr) {
                     structure->error += "Load: File '" + structure->args.front()->cmd + "' cannot be read! ";
                     return -1;
                 } else if ((loadError = newStruct->printError()).size() > 0) {
@@ -728,7 +728,7 @@ int64_t RepliStruct::process()
                 macro = RepliMacros[structure->cmd];
                 newStruct = macro->expandMacro(structure);
 
-                if (newStruct != NULL) {
+                if (newStruct != nullptr) {
                     *structure = *newStruct;
                     delete(newStruct);
                     changes++;
@@ -981,7 +981,7 @@ std::string RepliStruct::printError() const
         std::string com = cmd;
         RepliStruct* structure = parent;
 
-        while ((cmd.size() == 0) && (structure != NULL)) {
+        while ((cmd.size() == 0) && (structure != nullptr)) {
             com = structure->cmd;
             structure = structure->parent;
         }
@@ -1016,13 +1016,13 @@ RepliMacro::RepliMacro(const std::string &name, RepliStruct *src, RepliStruct *d
 RepliMacro::~RepliMacro()
 {
     name = "";
-    src = NULL;
-    dest = NULL;
+    src = nullptr;
+    dest = nullptr;
 }
 
 uint64_t RepliMacro::argCount()
 {
-    if (src == NULL) {
+    if (src == nullptr) {
         return 0;
     }
 
@@ -1031,29 +1031,29 @@ uint64_t RepliMacro::argCount()
 
 RepliStruct *RepliMacro::expandMacro(RepliStruct *oldStruct)
 {
-    if (src == NULL) {
+    if (src == nullptr) {
         error += "Macro '" + name + "' source not defined. ";
-        return NULL;
+        return nullptr;
     }
 
-    if (dest == NULL) {
+    if (dest == nullptr) {
         error += "Macro '" + name + "' destination not defined. ";
-        return NULL;
+        return nullptr;
     }
 
-    if (oldStruct == NULL) {
+    if (oldStruct == nullptr) {
         error += "Macro '" + name + "' cannot expand empty structure. ";
-        return NULL;
+        return nullptr;
     }
 
     if (oldStruct->cmd.compare(this->name) != 0) {
         error += "Macro '" + name + "' cannot expand structure with different name '" + oldStruct->cmd + "'. ";
-        return NULL;
+        return nullptr;
     }
 
     if ((src->args.size() > 0) && (src->args.size() != oldStruct->args.size())) {
         error += "Macro '" + name + "' requires " + std::to_string(src->args.size()) + " arguments, cannot expand structure with " + std::to_string(oldStruct->args.size()) + " arguments. ";
-        return NULL;
+        return nullptr;
     }
 
     RepliStruct* newStruct;
@@ -1077,7 +1077,7 @@ RepliStruct *RepliMacro::expandMacro(RepliStruct *oldStruct)
         // find the Atom inside newStruct with the name of iSrc->cmd
         findStruct = newStruct->findAtom((*iSrc)->cmd);
 
-        if (findStruct != NULL) {
+        if (findStruct != nullptr) {
             // overwrite data in findStruct with the matching one from old
             *findStruct = *(*iOld);
         }
@@ -1104,7 +1104,7 @@ RepliStruct *RepliStruct::findAtom(const std::string &name)
         case Development:
             structure = (*iter)->findAtom(name);
 
-            if (structure != NULL) {
+            if (structure != nullptr) {
                 return structure;
             }
 
@@ -1115,7 +1115,7 @@ RepliStruct *RepliStruct::findAtom(const std::string &name)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

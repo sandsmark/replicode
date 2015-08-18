@@ -48,6 +48,6 @@ Callbacks::Callback Callbacks::Get(std::string &callback_name)
         return it->second;
     }
 
-    return NULL;
+    return nullptr;
 }
 }

@@ -128,7 +128,7 @@ bool ModelBase::MEntry::Match(Code *lhs, Code *rhs)
     return true;
 }
 
-ModelBase::MEntry::MEntry(): mdl(NULL), touch_time(0), hash_code(0)
+ModelBase::MEntry::MEntry(): mdl(nullptr), touch_time(0), hash_code(0)
 {
 }
 
@@ -171,7 +171,7 @@ bool ModelBase::MEntry::match(const MEntry &e) const   // at this point both mod
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ModelBase *ModelBase::Singleton = NULL;
+ModelBase *ModelBase::Singleton = nullptr;
 
 ModelBase *ModelBase::Get()
 {
@@ -234,7 +234,7 @@ Code *ModelBase::check_existence(Code *mdl)
         black_list.erase(m);
         mEntry.touch_time = Now();
         black_list.emplace(mEntry);
-        return NULL;
+        return nullptr;
     }
 
     m = white_list.find(e);
@@ -263,7 +263,7 @@ void ModelBase::check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1)
         black_list.erase(m);
         mEntry.touch_time = Now();
         black_list.emplace(mEntry);
-        _m0 = _m1 = NULL;
+        _m0 = _m1 = nullptr;
         return;
     }
 
@@ -290,7 +290,7 @@ void ModelBase::check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1)
         black_list.erase(m);
         mEntry.touch_time = Now();
         black_list.emplace(mEntry);
-        _m1 = NULL;
+        _m1 = nullptr;
         return;
     }
 

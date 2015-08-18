@@ -110,7 +110,7 @@ void PMonitor::update(uint64_t &next_target)   // executed by a time core, upon 
 {
     if (!target->is_invalidated()) { // received nothing matching the target's object so far (neither positively nor negatively).
         if (rate_failures) {
-            controller->register_pred_outcome(target, false, NULL, 1, rate_failures);
+            controller->register_pred_outcome(target, false, nullptr, 1, rate_failures);
         }
     }
 

@@ -52,7 +52,7 @@ bool Input::IsEligibleCause(r_exec::View *view)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TPX::TPX(AutoFocusController *auto_focus, _Fact *target, _Fact *pattern, BindingMap *bindings): _Object(), auto_focus(auto_focus), target(target), target_bindings(bindings), abstracted_target(pattern), cst_hook(NULL)   // called by GTPX and PTPX's ctor.
+TPX::TPX(AutoFocusController *auto_focus, _Fact *target, _Fact *pattern, BindingMap *bindings): _Object(), auto_focus(auto_focus), target(target), target_bindings(bindings), abstracted_target(pattern), cst_hook(nullptr)   // called by GTPX and PTPX's ctor.
 {
     if (bindings->is_fully_specified()) { // get a hook on a cst controller so we get icsts from it: this is needed if the target is an underspecified icst.
         Code *target_payload = target->get_reference(0)->get_reference(0)->get_reference(0);
@@ -134,7 +134,7 @@ bool TPX::filter(View *input, _Fact *abstracted_input, BindingMap *bm)
 
         return true;
     } else {
-        if (cst_hook != NULL) {
+        if (cst_hook != nullptr) {
             cst_hook->take_input(input);
         }
 
@@ -225,7 +225,7 @@ _Fact *_TPX::_find_f_icst(_Fact *component, uint16_t &component_index)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 _Fact *_TPX::find_f_icst(_Fact *component, uint16_t &component_index)
@@ -233,7 +233,7 @@ _Fact *_TPX::find_f_icst(_Fact *component, uint16_t &component_index)
     uint16_t opcode = component->get_reference(0)->code(0).asOpcode();
 
     if (opcode == Opcodes::Cmd || opcode == Opcodes::IMdl) { // cmds/imdls cannot be components of a cst.
-        return NULL;
+        return nullptr;
     }
 
     return _find_f_icst(component, component_index);
@@ -244,14 +244,14 @@ _Fact *_TPX::find_f_icst(_Fact *component, uint16_t &component_index, Code *&cst
     uint16_t opcode = component->get_reference(0)->code(0).asOpcode();
 
     if (opcode == Opcodes::Cmd || opcode == Opcodes::IMdl) { // cmds/imdls cannot be components of a cst.
-        cst = NULL;
-        return NULL;
+        cst = nullptr;
+        return nullptr;
     }
 
     _Fact *f_icst = _find_f_icst(component, component_index);
 
-    if (f_icst != NULL) {
-        cst = NULL;
+    if (f_icst != nullptr) {
+        cst = nullptr;
         return f_icst;
     }
 
@@ -290,8 +290,8 @@ _Fact *_TPX::find_f_icst(_Fact *component, uint16_t &component_index, Code *&cst
     }
 
     if (actual_size <= 1) { // contains at most only the provided component.
-        cst = NULL;
-        return NULL;
+        cst = nullptr;
+        return nullptr;
     }
 
     r_code::list<Input>::iterator _i;
@@ -524,14 +524,14 @@ void GTPX::reduce(r_exec::View *input)   // input->object: f->success.
         Code *new_cst;
         _Fact *f_icst = find_f_icst(cause.input, cause_index, new_cst);
 
-        if (f_icst == NULL) {
+        if (f_icst == nullptr) {
             if (build_mdl(cause.input, consequent, guard_builder, period)) {
                 inject_hlps(analysis_starting_time);
             }
         } else {
             Code *unpacked_cst;
 
-            if (new_cst == NULL) {
+            if (new_cst == nullptr) {
                 Code *cst = f_icst->get_reference(0)->get_reference(0);
                 unpacked_cst = cst->get_reference(cst->references_size() - CST_HIDDEN_REFS); // the cst is packed, retrieve the pattern from the unpacked code.
             } else {
@@ -554,11 +554,11 @@ bool GTPX::build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builde
     P<BindingMap> bm = new BindingMap();
     uint16_t write_index;
     P<Code> m0 = build_mdl_head(bm, 0, cause, consequent, write_index);
-    guard_builder->build(m0, NULL, cause, write_index);
+    guard_builder->build(m0, nullptr, cause, write_index);
     build_mdl_tail(m0, write_index);
     Code *_m0 = ModelBase::Get()->check_existence(m0);
 
-    if (_m0 == NULL) {
+    if (_m0 == nullptr) {
         return false;
     } else if (_m0 == m0) {
         mdls.push_back(m0);
@@ -573,11 +573,11 @@ bool GTPX::build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, Gua
     P<BindingMap> bm = new BindingMap();
     uint16_t write_index;
     P<Code> m0 = build_mdl_head(bm, 0, f_icst, consequent, write_index);
-    guard_builder->build(m0, NULL, cause_pattern, write_index);
+    guard_builder->build(m0, nullptr, cause_pattern, write_index);
     build_mdl_tail(m0, write_index);
     Code *_m0 = ModelBase::Get()->check_existence(m0);
 
-    if (_m0 == NULL) {
+    if (_m0 == nullptr) {
         return false;
     } else if (_m0 == m0) {
         if (new_cst) {
@@ -659,14 +659,14 @@ void PTPX::reduce(r_exec::View *input)
         Code *new_cst;
         _Fact *f_icst = find_f_icst(cause.input, cause_index, new_cst);
 
-        if (f_icst == NULL) {
+        if (f_icst == nullptr) {
             if (build_mdl(cause.input, consequent, guard_builder, period)) {
                 inject_hlps(analysis_starting_time);
             }
         } else {
             Code *unpacked_cst;
 
-            if (new_cst == NULL) {
+            if (new_cst == nullptr) {
                 Code *cst = f_icst->get_reference(0)->get_reference(0);
                 unpacked_cst = cst->get_reference(cst->references_size() - CST_HIDDEN_REFS); // the cst is packed, retrieve the pattern from the unpacked code.
             } else {
@@ -687,11 +687,11 @@ bool PTPX::build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builde
     P<BindingMap> bm = new BindingMap();
     uint16_t write_index;
     P<Code> m0 = build_mdl_head(bm, 0, cause, consequent, write_index);
-    guard_builder->build(m0, NULL, cause, write_index);
+    guard_builder->build(m0, nullptr, cause, write_index);
     build_mdl_tail(m0, write_index);
     Code *_m0 = ModelBase::Get()->check_existence(m0);
 
-    if (_m0 == NULL) {
+    if (_m0 == nullptr) {
         return false;
     } else if (_m0 == m0) {
         mdls.push_back(m0);
@@ -706,11 +706,11 @@ bool PTPX::build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, Gua
     P<BindingMap> bm = new BindingMap();
     uint16_t write_index;
     P<Code> m0 = build_mdl_head(bm, 0, f_icst, consequent, write_index);
-    guard_builder->build(m0, NULL, cause_pattern, write_index);
+    guard_builder->build(m0, nullptr, cause_pattern, write_index);
     build_mdl_tail(m0, write_index);
     Code *_m0 = ModelBase::Get()->check_existence(m0);
 
-    if (_m0 == NULL) {
+    if (_m0 == nullptr) {
         return false;
     } else if (_m0 == m0) {
         if (new_cst) {
@@ -812,7 +812,7 @@ void CTPX::reduce(r_exec::View *input)
         }
 
         if (need_guard) {
-            if ((guard_builder = find_guard_builder(cause.input, consequent, period)) == NULL) {
+            if ((guard_builder = find_guard_builder(cause.input, consequent, period)) == nullptr) {
                 continue;
             }
         } else {
@@ -822,7 +822,7 @@ void CTPX::reduce(r_exec::View *input)
         uint16_t cause_index;
         _Fact *f_icst = find_f_icst(cause.input, cause_index);
 
-        if (f_icst == NULL) { // m0:[premise.value premise.after premise.before][cause->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
+        if (f_icst == nullptr) { // m0:[premise.value premise.after premise.before][cause->consequent] and m1:[lhs1->imdl m0[...][...]] with lhs1 either the premise or an icst containing the premise.
             if (build_mdl(cause.input, consequent, guard_builder, period)) {
                 inject_hlps(analysis_starting_time);
             }
@@ -922,7 +922,7 @@ GuardBuilder *CTPX::find_guard_builder(_Fact *cause, _Fact *consequent, uint64_t
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 // m0:[premise.value premise.after premise.before][cause->consequent].
@@ -935,7 +935,7 @@ bool CTPX::build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builde
     bm->init(target, FACT_BEFORE);
     uint16_t write_index;
     P<Code> m0 = build_mdl_head(bm, 3, cause, consequent, write_index);
-    guard_builder->build(m0, NULL, cause, write_index);
+    guard_builder->build(m0, nullptr, cause, write_index);
     build_mdl_tail(m0, write_index);
     //std::cout<<Utils::RelativeTime(Now())<<" found --------------------- M0\n";
     return build_requirement(bm, m0, period); // existence checks performed there.
@@ -951,7 +951,7 @@ bool CTPX::build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, Gua
     bm->init(target, FACT_BEFORE);
     uint16_t write_index;
     Code *m0 = build_mdl_head(bm, 3, f_icst, consequent, write_index);
-    guard_builder->build(m0, NULL, cause_pattern, write_index);
+    guard_builder->build(m0, nullptr, cause_pattern, write_index);
     build_mdl_tail(m0, write_index);
     return build_requirement(bm, m0, period); // existence checks performed there.
 }
@@ -962,7 +962,7 @@ bool CTPX::build_requirement(HLPBindingMap *bm, Code *m0, uint64_t period)   // 
     Code *new_cst;
     _Fact *f_icst = find_f_icst(target, premise_index, new_cst);
 
-    if (f_icst == NULL) { //std::cout<<Utils::RelativeTime(Now())<<" failed xxxxxxxxx M1 / 0\n";
+    if (f_icst == nullptr) { //std::cout<<Utils::RelativeTime(Now())<<" failed xxxxxxxxx M1 / 0\n";
         return false;
     }
 
@@ -971,7 +971,7 @@ bool CTPX::build_requirement(HLPBindingMap *bm, Code *m0, uint64_t period)   // 
     Utils::SetIndirectTimestamp<Code>(f_im0, FACT_BEFORE, f_icst->get_before());
     Code *unpacked_cst;
 
-    if (new_cst == NULL) {
+    if (new_cst == nullptr) {
         Code *cst = f_icst->get_reference(0)->get_reference(0);
         unpacked_cst = cst->get_reference(cst->references_size() - CST_HIDDEN_REFS); // the cst is packed, retrieve the pattern from the unpacked code.
     } else {
@@ -983,22 +983,22 @@ bool CTPX::build_requirement(HLPBindingMap *bm, Code *m0, uint64_t period)   // 
     uint16_t write_index;
     P<Code> m1 = build_mdl_head(_bm, 0, f_icst, f_im0, write_index);
     P<GuardBuilder> guard_builder = new GuardBuilder();
-    guard_builder->build(m1, premise_pattern, NULL, write_index);
+    guard_builder->build(m1, premise_pattern, nullptr, write_index);
     build_mdl_tail(m1, write_index);
     Code *_m0;
     Code *_m1;
     ModelBase::Get()->check_existence(m0, m1, _m0, _m1);
 
-    if (_m1 == NULL) {
+    if (_m1 == nullptr) {
         return false;
     } else if (_m1 == m1) {
-        if (_m0 == NULL) {
+        if (_m0 == nullptr) {
             return false;
         } else if (_m0 == m0) {
             mdls.push_back(m0);
         }
 
-        if (new_cst != NULL) {
+        if (new_cst != nullptr) {
             csts.push_back(new_cst);
         }
 

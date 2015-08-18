@@ -339,7 +339,7 @@ int main(int argc, char **argv)
         image->object_names.symbols = image->object_names.symbols;
 
         if (settings.write_objects) {
-            write_to_file(image, settings.objects_path, settings.test_objects ? &decompiler : NULL, starting_time);
+            write_to_file(image, settings.objects_path, settings.test_objects ? &decompiler : nullptr, starting_time);
         }
 
         if (settings.decompile_objects && (!settings.write_objects || !settings.test_objects)) {
@@ -367,7 +367,7 @@ int main(int argc, char **argv)
         image->object_names.symbols = image->object_names.symbols;
 
         if (settings.write_models) {
-            write_to_file(image, settings.models_path, settings.test_models ? &decompiler : NULL, starting_time);
+            write_to_file(image, settings.models_path, settings.test_models ? &decompiler : nullptr, starting_time);
         }
 
         if (settings.decompile_models && (!settings.write_models || !settings.test_models)) {

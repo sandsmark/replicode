@@ -167,7 +167,7 @@ IPGMContext IPGMContext::operator *() const
 
     case Atom::R_PTR: {
         Code *o = object->get_reference((*this)[0].asIndex());
-        return IPGMContext(o, NULL, &o->code(0), 0, NULL, REFERENCE);
+        return IPGMContext(o, nullptr, &o->code(0), 0, nullptr, REFERENCE);
     }
 
     case Atom::C_PTR: {
@@ -177,7 +177,7 @@ IPGMContext IPGMContext::operator *() const
             switch ((*this)[i].getDescriptor()) {
             case Atom::VIEW: // accessible only for this and input objects.
                 if (c.view) {
-                    c = IPGMContext(c.getObject(), c.view, &c.view->code(0), 0, NULL, VIEW);
+                    c = IPGMContext(c.getObject(), c.view, &c.view->code(0), 0, nullptr, VIEW);
                 } else {
                     return IPGMContext();
                 }
@@ -205,7 +205,7 @@ IPGMContext IPGMContext::operator *() const
 
     case Atom::VIEW: // never a reference, always in a cptr.
         if (overlay && object == overlay->getObject()) {
-            return IPGMContext(object, view, &view->code(0), 0, NULL, VIEW);
+            return IPGMContext(object, view, &view->code(0), 0, nullptr, VIEW);
         }
 
         return *this;
@@ -225,13 +225,13 @@ IPGMContext IPGMContext::operator *() const
     case Atom::IN_OBJ_PTR: {
         Code *input_object = ((PGMOverlay *)overlay)->getInputObject((*this)[0].asInputIndex());
         View *input_view = (r_exec::View*)((PGMOverlay *)overlay)->getInputView((*this)[0].asInputIndex());
-        return *IPGMContext(input_object, input_view, &input_object->code(0), (*this)[0].asIndex(), NULL, REFERENCE);
+        return *IPGMContext(input_object, input_view, &input_object->code(0), (*this)[0].asIndex(), nullptr, REFERENCE);
     }
 
     case Atom::D_IN_OBJ_PTR: {
         IPGMContext parent = *IPGMContext(object, view, code, (*this)[0].asRelativeIndex(), (InputLessPGMOverlay *)overlay, data);
         Code *parent_object = parent.object;
-        return *IPGMContext(parent_object, NULL, &parent_object->code(0), (*this)[0].asIndex(), NULL, REFERENCE);
+        return *IPGMContext(parent_object, nullptr, &parent_object->code(0), (*this)[0].asIndex(), nullptr, REFERENCE);
     }
 
     case Atom::PROD_PTR:
@@ -430,7 +430,7 @@ dereference:
 void IPGMContext::getMember(void *&object, uint64_t &view_oid, ObjectType &object_type, int16_t &member_index) const
 {
     if ((*this)[0].getDescriptor() != Atom::I_PTR) { // ill-formed mod/set expression.
-        object = NULL;
+        object = nullptr;
         object_type = TYPE_UNDEFINED;
         member_index = 0;
         return;
@@ -439,7 +439,7 @@ void IPGMContext::getMember(void *&object, uint64_t &view_oid, ObjectType &objec
     IPGMContext cptr = IPGMContext(this->object, view, code, (*this)[0].asIndex(), (InputLessPGMOverlay *)overlay, data); // dereference manually (1 offset) to retain the cptr as is.
 
     if (cptr[0].getDescriptor() != Atom::C_PTR) { // ill-formed mod/set expression.
-        object = NULL;
+        object = nullptr;
         object_type = TYPE_UNDEFINED;
         member_index = 0;
         return;
@@ -450,7 +450,7 @@ void IPGMContext::getMember(void *&object, uint64_t &view_oid, ObjectType &objec
 
     for (uint16_t i = 2; i < atom_count; ++i) { // stop before the last iptr.
         if (cptr[i].getDescriptor() == Atom::VIEW) {
-            c = IPGMContext(c.getObject(), c.view, &c.view->code(0), 0, NULL, VIEW);
+            c = IPGMContext(c.getObject(), c.view, &c.view->code(0), 0, nullptr, VIEW);
         } else {
             c = *c.getChild(cptr[i].asIndex());
         }
@@ -489,7 +489,7 @@ void IPGMContext::getMember(void *&object, uint64_t &view_oid, ObjectType &objec
         break;
 
     default: // atomic value or ill-formed mod/set expression.
-        object = NULL;
+        object = nullptr;
         object_type = TYPE_UNDEFINED;
         return;
     }

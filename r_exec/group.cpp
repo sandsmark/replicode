@@ -569,7 +569,7 @@ View *Group::get_view_for_object(uint64_t OID)
         return it->second;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void Group::reset_ctrl_values()
@@ -1825,7 +1825,7 @@ void Group::delete_view(std::unordered_map<uint64_t, P<View> >::const_iterator &
 
 Group *Group::get_secondary_group()
 {
-    Group *secondary = NULL;
+    Group *secondary = nullptr;
     r_code::list<Code *>::const_iterator m;
     acq_markers();
 

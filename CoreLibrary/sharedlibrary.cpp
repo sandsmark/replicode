@@ -47,11 +47,11 @@ SharedLibrary *SharedLibrary::New(const char *fileName)
         return sl;
     } else {
         delete sl;
-        return NULL;
+        return nullptr;
     }
 }
 
-SharedLibrary::SharedLibrary(): library(NULL)
+SharedLibrary::SharedLibrary(): library(nullptr)
 {
 }
 
@@ -88,7 +88,7 @@ SharedLibrary *SharedLibrary::load(const char *fileName)
 
     if (!library) {
         std::cout << "> Error: unable to load shared library " << fileName << " :" << dlerror() << std::endl;
-        return NULL;
+        return nullptr;
     }
 
 #endif

@@ -491,7 +491,7 @@ Pred *_Fact::get_pred() const
         return (Pred *)pred;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 Goal *_Fact::get_goal() const
@@ -502,7 +502,7 @@ Goal *_Fact::get_goal() const
         return (Goal *)goal;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 uint64_t _Fact::get_after() const
@@ -647,20 +647,20 @@ Sim *Pred::get_simulation(Controller *root) const
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////
 
-Goal::Goal(): LObject(), sim(NULL), ground(NULL)
+Goal::Goal(): LObject(), sim(nullptr), ground(nullptr)
 {
 }
 
-Goal::Goal(SysObject *source): LObject(source), sim(NULL), ground(NULL)
+Goal::Goal(SysObject *source): LObject(source), sim(nullptr), ground(nullptr)
 {
 }
 
-Goal::Goal(_Fact *target, Code *actor, double psln_thr): LObject(), sim(NULL), ground(NULL)
+Goal::Goal(_Fact *target, Code *actor, double psln_thr): LObject(), sim(nullptr), ground(nullptr)
 {
     code(0) = Atom::Object(Opcodes::Goal, GOAL_ARITY);
     code(GOAL_TARGET) = Atom::RPointer(0);
@@ -672,7 +672,7 @@ Goal::Goal(_Fact *target, Code *actor, double psln_thr): LObject(), sim(NULL), g
 
 bool Goal::invalidate()   // return false when was not invalidated, true otherwise.
 {
-    if (sim != NULL) {
+    if (sim != nullptr) {
         sim->invalidate();
     }
 
@@ -685,7 +685,7 @@ bool Goal::is_invalidated()
         return true;
     }
 
-    if (sim != NULL && sim->super_goal != NULL && sim->super_goal->is_invalidated()) {
+    if (sim != nullptr && sim->super_goal != nullptr && sim->super_goal->is_invalidated()) {
         invalidate();
         return true;
     }
@@ -695,7 +695,7 @@ bool Goal::is_invalidated()
 
 bool Goal::ground_invalidated(_Fact *evidence)
 {
-    if (ground != NULL) {
+    if (ground != nullptr) {
         return ground->get_pred()->grounds_invalidated(evidence);
     }
 
@@ -704,7 +704,7 @@ bool Goal::ground_invalidated(_Fact *evidence)
 
 bool Goal::is_requirement() const
 {
-    if (sim != NULL && sim->is_requirement) {
+    if (sim != nullptr && sim->is_requirement) {
         return true;
     }
 
@@ -718,7 +718,7 @@ bool Goal::is_self_goal() const
 
 bool Goal::is_drive() const
 {
-    return (sim == NULL && is_self_goal());
+    return (sim == nullptr && is_self_goal());
 }
 
 _Fact *Goal::get_target() const
@@ -744,7 +744,7 @@ double Goal::get_strength(uint64_t now) const
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Sim::Sim(): _Object(), invalidated(0), is_requirement(false), opposite(false), super_goal(NULL), root(NULL), sol(NULL), sol_cfd(0), sol_before(0)
+Sim::Sim(): _Object(), invalidated(0), is_requirement(false), opposite(false), super_goal(nullptr), root(nullptr), sol(nullptr), sol_cfd(0), sol_before(0)
 {
 }
 
@@ -752,7 +752,7 @@ Sim::Sim(Sim *s): _Object(), invalidated(0), is_requirement(false), opposite(s->
 {
 }
 
-Sim::Sim(SimMode mode, uint64_t thz, Fact *super_goal, bool opposite, Controller *root): _Object(), invalidated(0), is_requirement(false), opposite(opposite), mode(mode), thz(thz), super_goal(super_goal), root(root), sol(NULL), sol_cfd(0), sol_before(0)
+Sim::Sim(SimMode mode, uint64_t thz, Fact *super_goal, bool opposite, Controller *root): _Object(), invalidated(0), is_requirement(false), opposite(opposite), mode(mode), thz(thz), super_goal(super_goal), root(root), sol(nullptr), sol_cfd(0), sol_before(0)
 {
 }
 
@@ -771,7 +771,7 @@ bool Sim::is_invalidated()
         return true;
     }
 
-    if (super_goal != NULL && super_goal->is_invalidated()) {
+    if (super_goal != nullptr && super_goal->is_invalidated()) {
         invalidate();
         return true;
     }
@@ -781,11 +781,11 @@ bool Sim::is_invalidated()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-MkRdx::MkRdx(): LObject(), bindings(NULL)
+MkRdx::MkRdx(): LObject(), bindings(nullptr)
 {
 }
 
-MkRdx::MkRdx(SysObject *source): LObject(source), bindings(NULL)
+MkRdx::MkRdx(SysObject *source): LObject(source), bindings(nullptr)
 {
 }
 

@@ -49,18 +49,18 @@ CPPPrograms::Program CPPPrograms::Get(std::string &pgm_name)
         return it->second;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 Controller *CPPPrograms::New(std::string &pgm_name, r_code::View *view)
 {
     CPPPrograms::Program pgm = Get(pgm_name);
 
-    if (pgm != NULL) {
+    if (pgm != nullptr) {
         return pgm(view);
     } else {
         std::cerr << "c++ program '" << pgm_name << "' could not be found\n";
-        return NULL;
+        return nullptr;
     }
 }
 }

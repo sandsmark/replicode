@@ -174,13 +174,13 @@ void CSTOverlay::update(HLPBindingMap *map, _Fact *input, _Fact *bound_pattern)
 bool CSTOverlay::reduce(View *input, CSTOverlay *&offspring)
 {
     if (input->object->is_invalidated()) {
-        offspring = NULL;
+        offspring = nullptr;
         return false;
     }
 
     for (uint16_t i = 0; i < inputs.size(); ++i) { // discard inputs that already matched.
         if (((_Fact *)input->object) == inputs[i]) {
-            offspring = NULL;
+            offspring = nullptr;
             return false;
         }
     }
@@ -203,7 +203,7 @@ bool CSTOverlay::reduce(View *input, CSTOverlay *&offspring)
     }
 
     P<HLPBindingMap> bm = new HLPBindingMap();
-    _Fact *bound_pattern = NULL;
+    _Fact *bound_pattern = nullptr;
     r_code::list<P<_Fact> >::const_iterator p;
 
     for (p = patterns.begin(); p != patterns.end(); ++p) {
@@ -236,14 +236,14 @@ bool CSTOverlay::reduce(View *input, CSTOverlay *&offspring)
                     update(bm, (_Fact *)input->object, bound_pattern);
                     inject_production();
                     invalidate();
-                    offspring = NULL;
+                    offspring = nullptr;
                     store_evidence(input->object, prediction, simulation);
                     return true;
                 } else {
                     //std::cout<<" guards failed\n";
                     delete[] code;
-                    code = NULL;
-                    offspring = NULL;
+                    code = nullptr;
+                    offspring = nullptr;
                     return false;
                 }
             } else { // guards already evaluated, full match.
@@ -251,7 +251,7 @@ bool CSTOverlay::reduce(View *input, CSTOverlay *&offspring)
                 update(bm, (_Fact *)input->object, bound_pattern);
                 inject_production();
                 invalidate();
-                offspring = NULL;
+                offspring = nullptr;
                 store_evidence(input->object, prediction, simulation);
                 return true;
             }
@@ -263,7 +263,7 @@ bool CSTOverlay::reduce(View *input, CSTOverlay *&offspring)
         }
     } else {
         //std::cout<<" no match\n";
-        offspring = NULL;
+        offspring = nullptr;
         return false;
     }
 }

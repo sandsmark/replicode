@@ -122,7 +122,7 @@ GMonitor::GMonitor(PMDLController *controller,
                                f_imdl),
     predicted_evidence(predicted_evidence)   // goal is f0->g->f1->object.
 {
-    injected_goal = (predicted_evidence == NULL);
+    injected_goal = (predicted_evidence == nullptr);
     MonitoringJob<GMonitor> *j = new MonitoringJob<GMonitor>(this, simulating ? sim_thz : deadline);
     _Mem::Get()->pushTimeJob(j);
 }
@@ -154,7 +154,7 @@ void GMonitor::commit()   // the purpose is to invalidate damaging simulations; 
         }
     }
 
-    Sim *best_sol = NULL;
+    Sim *best_sol = nullptr;
 
     for (sol = sim_successes.optional_solutions.begin(); sol != sim_successes.optional_solutions.end(); ++sol) { // find the best optional solution left.
         if ((*sol).second->is_invalidated()) {
@@ -193,7 +193,7 @@ bool GMonitor::reduce(_Fact *input)   // executed by a reduction core; invalidat
     if (!injected_goal) {
         if (predicted_evidence && predicted_evidence->is_invalidated()) { // the predicted evidence was wrong.
             ((PMDLController *)controller)->register_predicted_goal_outcome(target, bindings, f_imdl, false, injected_goal); // report a predicted failure; this will inject the goal.
-            predicted_evidence = NULL;
+            predicted_evidence = nullptr;
             injected_goal = true;
             return false;
         }
@@ -250,7 +250,7 @@ bool GMonitor::reduce(_Fact *input)   // executed by a reduction core; invalidat
 
             case MATCH_SUCCESS_NEGATIVE:
                 ((PMDLController *)controller)->register_predicted_goal_outcome(target, bindings, f_imdl, false, injected_goal); // report a predicted failure; this may invalidate the target.
-                predicted_evidence = NULL;
+                predicted_evidence = nullptr;
                 injected_goal = true;
                 return target->is_invalidated();
 
@@ -295,7 +295,7 @@ void GMonitor::update(uint64_t &next_target)   // executed by a time core.
         commit();
         next_target = deadline;
     } else {
-        ((PMDLController *)controller)->register_goal_outcome(target, false, NULL);
+        ((PMDLController *)controller)->register_goal_outcome(target, false, nullptr);
         ((PMDLController *)controller)->remove_g_monitor(this);
         next_target = 0;
     }
@@ -314,7 +314,7 @@ RMonitor::RMonitor(PrimaryMDLController *controller,
                                sim_thz,
                                goal,
                                f_imdl,
-                               NULL)   // goal is f0->g->f1->object.
+                               nullptr)   // goal is f0->g->f1->object.
 {
     MonitoringJob<RMonitor> *j = new MonitoringJob<RMonitor>(this, deadline);
     _Mem::Get()->pushTimeJob(j);
@@ -330,7 +330,7 @@ bool RMonitor::signal(bool simulation)
         if (((PrimaryMDLController *)controller)->check_simulated_imdl(target, bindings, target->get_goal()->sim->root)) {
             ((PMDLController *)controller)->register_simulated_goal_outcome(target, true, target);    // report a simulated success.
         } else {
-            ((PMDLController *)controller)->register_simulated_goal_outcome(target, false, NULL);    // report a simulated failure.
+            ((PMDLController *)controller)->register_simulated_goal_outcome(target, false, nullptr);    // report a simulated failure.
         }
 
         return false;
@@ -384,7 +384,7 @@ void RMonitor::update(uint64_t &next_target)
         commit();
         next_target = deadline;
     } else {
-        ((PMDLController *)controller)->register_goal_outcome(target, false, NULL);
+        ((PMDLController *)controller)->register_goal_outcome(target, false, nullptr);
         ((PMDLController *)controller)->remove_r_monitor(this);
         next_target = 0;
     }
@@ -520,8 +520,8 @@ bool SRMonitor::signal(bool simulation)
             ((PMDLController *)controller)->register_simulated_goal_outcome(target, true, target);    // report a simulated success.
         }
     } else {
-        if (((PrimaryMDLController *)controller)->check_simulated_imdl(target, bindings, NULL)) {
-            ((PMDLController *)controller)->register_simulated_goal_outcome(target, false, NULL);    // report a simulated failure.
+        if (((PrimaryMDLController *)controller)->check_simulated_imdl(target, bindings, nullptr)) {
+            ((PMDLController *)controller)->register_simulated_goal_outcome(target, false, nullptr);    // report a simulated failure.
         }
     }
 

@@ -148,7 +148,7 @@ MatchResult HLPController::check_evidences(_Fact *target, _Fact *&evidence)
         }
     }
 
-    evidence = NULL;
+    evidence = nullptr;
     return r;
 }
 
@@ -176,7 +176,7 @@ MatchResult HLPController::check_predicted_evidences(_Fact *target, _Fact *&evid
         }
     }
 
-    evidence = NULL;
+    evidence = nullptr;
     return r;
 }
 
@@ -187,7 +187,7 @@ bool HLPController::become_invalidated()
     }
 
     for (uint16_t i = 0; i < controllers.size(); ++i) {
-        if (controllers[i] != NULL && controllers[i]->is_invalidated()) {
+        if (controllers[i] != nullptr && controllers[i]->is_invalidated()) {
             kill_views();
             return true;
         }
@@ -219,7 +219,7 @@ bool HLPController::is_orphan()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-HLPController::EEntry::EEntry(): evidence(NULL)
+HLPController::EEntry::EEntry(): evidence(nullptr)
 {
 }
 

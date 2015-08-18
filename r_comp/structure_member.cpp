@@ -43,9 +43,9 @@ StructureMember::StructureMember(_Read r,
                                  std::string m,
                                  std::string p,
                                  Iteration i): _read(r),
-    _class(p),
+    _class(std::move(p)),
     iteration(i),
-    name(m)
+    name(std::move(m))
 {
     if (_read == &Compiler::read_any) {
         type = ANY;
@@ -74,7 +74,7 @@ StructureMember::StructureMember(_Read r,
 
 Class *StructureMember::get_class(Metadata *metadata) const
 {
-    return _class == "" ? NULL : &metadata->classes.find(_class)->second;
+    return _class == "" ? nullptr : &metadata->classes.find(_class)->second;
 }
 
 ReturnType StructureMember::get_return_type() const
