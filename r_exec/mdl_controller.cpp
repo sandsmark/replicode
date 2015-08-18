@@ -29,11 +29,25 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "mdl_controller.h"
-#include "mem.h"
-#include "model_base.h"
-#include "reduction_job.tpl.h"
-#include "overlay.tpl.h"
 
+#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
+#include <r_code/atom.h>            // for Atom
+#include <r_code/object.h>          // for Code, View::::SYNC_ONCE
+#include <r_code/replicode_defs.h>  // for I_HLP_WR_E, MDL_SR, MDL_CNT, etc
+#include <r_exec/binding_map.h>     // for HLPBindingMap, etc
+#include <r_exec/factory.h>         // for Fact, _Fact, Pred, Goal, Sim, etc
+#include <r_exec/g_monitor.h>       // for _GMonitor, GMonitor, RMonitor, etc
+#include <r_exec/group.h>           // for Group
+#include <r_exec/mdl_controller.h>  // for PrimaryMDLController, etc
+#include <r_exec/model_base.h>      // for ModelBase
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::IMdl, etc
+#include <r_exec/overlay.h>         // for Controller
+#include <r_exec/p_monitor.h>       // for PMonitor
+#include <r_exec/view.h>            // for View, NotificationView
+#include <ostream>                  // for operator<<, basic_ostream, etc
+#include <string>                   // for operator<<, char_traits, etc
+
+#include <r_exec/overlay.tpl.h>     // for __take_input4
 
 namespace r_exec
 {

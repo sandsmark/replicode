@@ -29,7 +29,15 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "auto_focus.h"
-#include "../r_exec/auto_focus.h"
+
+#include <r_exec/auto_focus.h>  // for AutoFocusController
+
+namespace r_code {
+class View;
+}  // namespace r_code
+namespace r_exec {
+class Controller;
+}  // namespace r_exec
 
 
 r_exec::Controller *auto_focus(r_code::View *view)

@@ -29,10 +29,17 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "context.h"
-#include "pgm_overlay.h"
-#include "operator.h"
-#include "opcodes.h"
-#include "mem.h"
+
+#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
+#include <r_code/replicode_defs.h>  // for IPGM_ARITY, VIEW_CODE_MAX_SIZE, etc
+#include <r_code/vector.h>          // for vector
+#include <r_exec/context.h>         // for IPGMContext, etc
+#include <r_exec/group.h>           // for Group
+#include <r_exec/mem.h>             // for _Mem
+#include <stdlib.h>                 // for exit
+#include <cstdint>                  // for uint16_t, uintptr_t, int16_t, etc
+
+#include "CoreLibrary/debug.h"      // for debug, DebugStream
 
 
 using namespace r_code;

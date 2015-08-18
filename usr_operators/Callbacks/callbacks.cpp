@@ -30,11 +30,14 @@
 
 #include "callbacks.h"
 
-#include "r_exec/mem.h"
-#include "CoreLibrary/debug.h"
+#include <r_code/object.h>      // for Code
+#include <iostream>             // for operator<<, basic_ostream, cout, etc
+#include <string>               // for char_traits, operator<<
+
+#include "CoreLibrary/debug.h"  // for DebugStream
 
 
-bool print(uint64_t t, bool suspended, const char *msg, uint8_t object_count, Code **objects)   // return true to resume the executive (applies when called from a suspend call, i.e. suspended==true).
+bool print(uint64_t t, bool suspended, const char *msg, uint8_t object_count, r_code::Code **objects)   // return true to resume the executive (applies when called from a suspend call, i.e. suspended==true).
 {
     std::cout << DebugStream::timestamp(t) << ": " << msg << std::endl;
 

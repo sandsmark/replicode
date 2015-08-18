@@ -30,6 +30,17 @@
 
 #include "cpp_programs.h"
 
+#include <r_exec/cpp_programs.h>  // for CPPPrograms, CPPPrograms::Program
+#include <iostream>               // for operator<<, basic_ostream, cerr, etc
+#include <utility>                // for pair
+
+namespace r_code {
+class View;
+}  // namespace r_code
+namespace r_exec {
+class Controller;
+}  // namespace r_exec
+
 
 namespace r_exec
 {

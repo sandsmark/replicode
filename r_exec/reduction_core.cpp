@@ -29,8 +29,10 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "reduction_core.h"
-#include "mem.h"
-#include "init.h"
+
+#include <r_exec/init.h>           // for Now
+#include <r_exec/mem.h>            // for _Mem
+#include <r_exec/reduction_job.h>  // for _ReductionJob
 
 
 namespace r_exec

@@ -29,12 +29,30 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "group.h"
-#include "factory.h"
-#include "mem.h"
-#include "pgm_controller.h"
-#include "cst_controller.h"
-#include "mdl_controller.h"
-#include <math.h>
+
+#include <math.h>                   // for fabs
+#include <r_code/atom.h>            // for Atom, Atom::::COMPOSITE_STATE, etc
+#include <r_code/list.h>            // for list<>::const_iterator, list, etc
+#include <r_code/replicode_defs.h>  // for GRP_ACT_THR, GRP_C_ACT, etc
+#include <r_code/utils.h>           // for Utils, Utils::MaxTime
+#include <r_exec/cpp_programs.h>    // for CPPPrograms
+#include <r_exec/cst_controller.h>  // for CSTController
+#include <r_exec/factory.h>         // for MkActChg, MkHighAct, MkHighSln, etc
+#include <r_exec/group.h>           // for Group, Group::GroupState, etc
+#include <r_exec/init.h>            // for Now
+#include <r_exec/mdl_controller.h>  // for MDLController, etc
+#include <r_exec/mem.h>             // for _Mem, OUTPUT
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::MkGrpPair
+#include <r_exec/overlay.h>         // for Controller
+#include <r_exec/pgm_controller.h>  // for AntiPGMController, PGMController, etc
+#include <r_exec/time_job.h>        // for AntiPGMSignalingJob, etc
+#include <cstdint>                  // for uint64_t, uint16_t, uint32_t
+#include <ostream>                  // for operator<<, basic_ostream, etc
+#include <string>                   // for operator<<, char_traits, string
+#include <unordered_set>            // for unordered_set
+#include <utility>                  // for pair
+
+#include "CoreLibrary/debug.h"      // for DebugStream, debug
 
 
 namespace r_exec

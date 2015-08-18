@@ -31,8 +31,6 @@
 #ifndef domain_h
 #define domain_h
 
-#include "binding_map.h"
-
 
 namespace r_exec
 {

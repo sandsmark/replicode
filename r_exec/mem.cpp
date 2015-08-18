@@ -29,11 +29,29 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "mem.h"
-#include "mdl_controller.h"
-#include "model_base.h"
 
-#include "time_core.h"
-#include "reduction_core.h"
+#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
+#include <r_code/replicode_defs.h>  // for HLP_FWD_GUARDS, HLP_OUT_GRPS, etc
+#include <r_comp/segments.h>        // for Image
+#include <r_exec/factory.h>         // for Fact, Perf
+#include <r_exec/init.h>            // for Now
+#include <r_exec/mem.h>             // for _Mem, MemStatic, MemVolatile, etc
+#include <r_exec/model_base.h>      // for ModelBase
+#include <r_exec/object.h>          // for LObject
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::AntiFact, etc
+#include <r_exec/overlay.h>         // for Controller
+#include <r_exec/reduction_core.h>  // for runReductionCore
+#include <r_exec/reduction_job.h>   // for AsyncInjectionJob, etc
+#include <r_exec/time_core.h>       // for runTimeCore
+#include <r_exec/time_job.h>        // for EInjectionJob, InjectionJob, etc
+#include <r_exec/view.h>            // for View
+#include <iostream>                 // for ostream, cout
+#include <set>                      // for multiset
+#include <unordered_map>            // for _Node_const_iterator, etc
+#include <unordered_set>            // for unordered_set, etc
+#include <utility>                  // for pair
+
+#include "CoreLibrary/debug.h"      // for debug, DebugStream
 
 
 namespace r_exec

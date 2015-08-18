@@ -31,16 +31,24 @@
 #ifndef view_h
 #define view_h
 
-#include "r_code/object.h"
-#include "overlay.h"
-#include "CoreLibrary/dll.h"
+#include <r_code/atom.h>            // for Atom
+#include <r_code/object.h>          // for View::SyncMode, View
+#include <r_code/replicode_defs.h>  // for VIEW_CTRL_0, VIEW_CTRL_1
+#include <stdint.h>                 // for uint64_t, int64_t, uint16_t, etc
+#include <mutex>                    // for mutex
+
+#include "CoreLibrary/base.h"       // for P
+#include "CoreLibrary/dll.h"        // for dll_export
+
+namespace r_exec {
+class Controller;
+}  // namespace r_exec
 
 
 namespace r_exec
 {
 
 class Group;
-class LObject;
 
 // OID is hidden at _code[VIEW_OID].
 // Shared resources:
@@ -98,16 +106,16 @@ public:
          uint64_t ijt,
          double sln,
          int64_t res,
-         Code *host,
-         Code *origin,
-         Code *object); // regular view; res set to -1 means forever.
+         r_code::Code *host,
+         r_code::Code *origin,
+         r_code::Code *object); // regular view; res set to -1 means forever.
     View(SyncMode sync,
          uint64_t ijt,
          double sln,
          int64_t res,
-         Code *host,
-         Code *origin,
-         Code *object,
+         r_code::Code *host,
+         r_code::Code *origin,
+         r_code::Code *object,
          double act); // pgm/mdl view; res set to -1 means forever.
     ~View();
 
@@ -168,7 +176,7 @@ class dll_export NotificationView:
     public View
 {
 public:
-    NotificationView(Code *origin, Code *destination, Code *marker); // res=1, sln=1.
+    NotificationView(r_code::Code *origin, r_code::Code *destination, r_code::Code *marker); // res=1, sln=1.
 
     bool isNotification() const;
 };

@@ -29,9 +29,20 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "hlp_overlay.h"
-#include "hlp_controller.h"
-#include "hlp_context.h"
-#include "mem.h"
+
+#include <r_code/atom.h>            // for Atom, Atom::::ASSIGN_PTR, etc
+#include <r_code/replicode_defs.h>  // for HLP_BWD_GUARDS, HLP_FWD_GUARDS
+#include <r_exec/hlp_context.h>     // for HLPContext
+#include <r_exec/hlp_controller.h>  // for HLPController
+#include <r_exec/hlp_overlay.h>     // for HLPOverlay
+#include <r_exec/init.h>            // for Now
+
+namespace r_code {
+class Code;
+}  // namespace r_code
+namespace r_exec {
+class _Fact;
+}  // namespace r_exec
 
 
 namespace r_exec

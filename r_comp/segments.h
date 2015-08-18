@@ -31,13 +31,25 @@
 #ifndef segments_h
 #define segments_h
 
-#include "r_code/object.h"
-#include "r_code/list.h"
-#include <CoreLibrary/sharedlibrary.h>
+#include <CoreLibrary/sharedlibrary.h>  // for SharedLibrary
+#include <r_code/vector.h>              // for vector
+#include <r_comp/class.h>               // for Class
+#include <stddef.h>                     // for size_t
+#include <stdint.h>                     // for uint32_t, uint16_t, etc
+#include <string>                       // for string
+#include <unordered_map>                // for unordered_map
 
-#include "class.h"
+#include "CoreLibrary/dll.h"            // for dll_export
 
-#include <unordered_map>
+namespace core {
+template <class C> class P;
+}  // namespace core
+namespace r_code {
+class Code;
+class Mem;
+class SysObject;
+template <typename T> class list;
+}  // namespace r_code
 
 
 using namespace r_code;
@@ -187,10 +199,10 @@ public:
     }
 
     /// called by the rMem.
-    void add_objects(r_code::list<P<r_code::Code> > &objects);
+    void add_objects(r_code::list<core::P<r_code::Code> > &objects);
 
     /// called by any r_exec code for decompiling on the fly.
-    void add_objects_full(r_code::list<P<r_code::Code> > &objects);
+    void add_objects_full(r_code::list<core::P<r_code::Code> > &objects);
 
     template<class I> I *serialize()
     {

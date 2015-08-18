@@ -1,14 +1,15 @@
 #include "inifile.h"
-#include "debug.h"
 
-#include "debug.h"
+#include <ctype.h>     // for isspace
+#include <stddef.h>    // for size_t
+#include <wordexp.h>   // for wordexp, wordexp_t
+#include <algorithm>   // for find_if
+#include <fstream>     // for ifstream, basic_istream
+#include <functional>  // for unary_negate, pointer_to_unary_function, not1, etc
+#include <stdexcept>   // for invalid_argument
+#include <string>      // for basic_string, string, operator==, stod, stoi, etc
 
-#include <fstream>
-#include <algorithm>
-#include <iostream>
-#include <string>
-#include <stdexcept>
-#include <wordexp.h>
+#include "debug.h"     // for DebugStream, debug
 
 static inline std::string trim(std::string string)
 {

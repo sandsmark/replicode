@@ -31,9 +31,14 @@
 #ifndef monitor_h
 #define monitor_h
 
-#include "binding_map.h"
-#include "factory.h"
 
+#include "CoreLibrary/base.h"  // for P, _Object
+
+namespace r_exec {
+class BindingMap;
+class Fact;
+class _Fact;
+}  // namespace r_exec
 
 namespace r_exec
 {
@@ -41,11 +46,11 @@ namespace r_exec
 class MDLController;
 
 class Monitor:
-    public _Object
+    public core::_Object
 {
 protected:
-    P<BindingMap> bindings;
-    P<Fact> target; // f->g or f->p.
+    core::P<BindingMap> bindings;
+    core::P<Fact> target; // f->g or f->p.
 
     MDLController *controller;
 

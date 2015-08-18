@@ -31,17 +31,23 @@
 #ifndef r_exec_object_h
 #define r_exec_object_h
 
-#include "r_code/object.h"
-#include "view.h"
-#include "opcodes.h"
 
-#include <list>
 
+
+#include <r_code/object.h>    // for View, LObject, Code
+#include <r_exec/opcodes.h>   // for Opcodes, Opcodes::Ent
+#include <r_exec/view.h>      // for View
+#include <stddef.h>           // for size_t, NULL
+#include <stdint.h>           // for uint16_t, uint64_t
+#include <mutex>              // for mutex
+#include <unordered_map>      // for operator!=
+
+#include "CoreLibrary/dll.h"  // for dll_export
 
 namespace r_exec
 {
 
-dll_export bool IsNotification(Code *object);
+dll_export bool IsNotification(r_code::Code *object);
 
 // Shared resources:
 // views: accessed by Mem::injectNow (via various sub calls) and Mem::update.
@@ -64,9 +70,9 @@ protected:
 public:
     virtual ~Object(); // un-registers from the rMem's object_register.
 
-    r_code::View *build_view(SysView *source)
+    r_code::View *build_view(r_code::SysView *source)
     {
-        return Code::build_view<r_exec::View>(source);
+        return r_code::Code::build_view<r_exec::View>(source);
     }
 
     virtual bool is_invalidated();
@@ -97,7 +103,7 @@ public:
     void set(uint16_t member_index, float value);
     void mod(uint16_t member_index, float value);
 
-    View *get_view(Code *group, bool lock); // returns the found view if any, NULL otherwise.
+    r_code::View *get_view(r_code::Code *group, bool lock); // returns the found view if any, NULL otherwise.
 
     void kill();
 
@@ -166,5 +172,6 @@ public:
 };
 }
 
+#include <r_exec/object.tpl.h>
 
 #endif

@@ -30,8 +30,20 @@
 
 #include "guard_builder.h"
 
+#include <r_code/atom.h>            // for Atom
+#include <r_code/object.h>          // for Code
+#include <r_code/replicode_defs.h>  // for FACT_AFTER, FACT_BEFORE, etc
+#include <r_code/utils.h>           // for Utils
+#include <r_exec/factory.h>         // for _Fact
+#include <r_exec/guard_builder.h>   // for CmdGuardBuilder, etc
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::Sub, etc
+
 namespace r_exec
 {
+
+using r_code::Atom;
+using r_code::Code;
+using r_code::Utils;
 
 GuardBuilder::GuardBuilder() :
     _Object()

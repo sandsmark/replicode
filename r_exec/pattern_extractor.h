@@ -31,12 +31,28 @@
 #ifndef pattern_extractor_h
 #define pattern_extractor_h
 
-#include "../r_code/time_buffer.h"
 
-#include "binding_map.h"
-#include "guard_builder.h"
-#include "cst_controller.h"
 
+
+#include <r_code/list.h>         // for list
+#include <r_exec/binding_map.h>  // for BindingMap
+#include <r_exec/factory.h>      // for _Fact
+#include <r_exec/view.h>         // for View
+#include <stddef.h>              // for NULL
+#include <stdint.h>              // for uint64_t, uint16_t
+#include <string>                // for string
+#include <vector>                // for vector
+
+#include "CoreLibrary/base.h"    // for P, _Object
+#include "CoreLibrary/dll.h"     // for dll_export
+
+namespace r_code {
+class Code;
+}  // namespace r_code
+namespace r_exec {
+class CSTController;
+class GuardBuilder;
+}  // namespace r_exec
 
 namespace r_exec
 {
@@ -130,8 +146,6 @@ public:
     virtual void signal(View *input) const;
     virtual void ack_pred_success(_Fact *predicted_f);
 };
-
-class ICST;
 
 class dll_export _TPX:
     public TPX

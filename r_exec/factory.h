@@ -31,9 +31,25 @@
 #ifndef factory_h
 #define factory_h
 
-#include "binding_map.h"
-#include "overlay.h"
-#include "CoreLibrary/dll.h"
+#include <r_code/atom.h>         // for Atom
+#include <r_exec/binding_map.h>  // for MatchResult
+#include <r_exec/object.h>       // for LObject
+#include <stddef.h>              // for size_t
+#include <stdint.h>              // for uint64_t, uint16_t, int64_t
+#include <vector>                // for vector
+
+#include "CoreLibrary/base.h"    // for P, _Object
+#include "CoreLibrary/dll.h"     // for dll_export
+
+namespace r_code {
+class Code;
+class Mem;
+class SysObject;
+}  // namespace r_code
+namespace r_exec {
+class Controller;
+class Fact;
+}  // namespace r_exec
 
 
 namespace r_exec
@@ -101,20 +117,20 @@ public:
     MkActChg(r_code::Mem *m, Code *object, double value);
 };
 
-class Pred;
 class Goal;
+class Pred;
 
 class dll_export _Fact:
     public LObject
 {
 private:
-    static bool MatchAtom(Atom lhs, Atom rhs);
+    static bool MatchAtom(r_code::Atom lhs, r_code::Atom rhs);
     static bool MatchStructure(const Code *lhs, uint16_t lhs_base_index, uint16_t lhs_index, const Code *rhs, uint16_t rhs_index);
     static bool Match(const Code *lhs, uint16_t lhs_base_index, uint16_t lhs_index, const Code *rhs, uint16_t rhs_index, uint16_t lhs_arity);
     static bool CounterEvidence(const Code *lhs, const Code *rhs);
 protected:
     _Fact();
-    _Fact(SysObject *source);
+    _Fact(r_code::SysObject *source);
     _Fact(_Fact *f);
     _Fact(uint16_t opcode, Code *object, uint64_t after, uint64_t before, double confidence, double psln_thr);
 public:
@@ -188,7 +204,7 @@ class dll_export Fact:
 public:
     void *operator new(size_t s);
     Fact();
-    Fact(SysObject *source);
+    Fact(r_code::SysObject *source);
     Fact(Fact *f);
     Fact(Code *object, uint64_t after, uint64_t before, double confidence, double psln_thr);
 };
@@ -200,7 +216,7 @@ class dll_export AntiFact:
 public:
     void *operator new(size_t s);
     AntiFact();
-    AntiFact(SysObject *source);
+    AntiFact(r_code::SysObject *source);
     AntiFact(AntiFact *f);
     AntiFact(Code *object, uint64_t after, uint64_t before, double confidence, double psln_thr);
 };
@@ -223,7 +239,7 @@ class dll_export Pred:
 {
 public:
     Pred();
-    Pred(SysObject *source);
+    Pred(r_code::SysObject *source);
     Pred(_Fact *target, double psln_thr);
 
     bool is_invalidated();
@@ -243,7 +259,7 @@ class dll_export Goal:
 {
 public:
     Goal();
-    Goal(SysObject *source);
+    Goal(r_code::SysObject *source);
     Goal(_Fact *target, Code *actor, double psln_thr);
 
     bool invalidate();
@@ -270,7 +286,7 @@ class dll_export MkRdx:
 {
 public:
     MkRdx();
-    MkRdx(SysObject *source);
+    MkRdx(r_code::SysObject *source);
     MkRdx(Code *imdl_fact, Code *input, Code *output, double psln_thr, BindingMap *binding_map); // for mdl.
 
     P<BindingMap> bindings; // NULL when produced by programs.
@@ -297,7 +313,7 @@ class dll_export ICST:
 {
 public:
     ICST();
-    ICST(SysObject *source);
+    ICST(r_code::SysObject *source);
 
     bool is_invalidated();
 

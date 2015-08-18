@@ -31,10 +31,30 @@
 #ifndef cst_controller_h
 #define cst_controller_h
 
-#include "hlp_overlay.h"
-#include "hlp_controller.h"
-#include "factory.h"
 
+#include <r_code/utils.h>           // for PHash
+#include <r_exec/hlp_controller.h>  // for HLPController
+#include <r_exec/hlp_overlay.h>     // for HLPOverlay
+#include <stdint.h>                 // for uint64_t
+#include <mutex>                    // for mutex
+#include <unordered_set>            // for unordered_set
+#include <vector>                   // for vector
+
+#include "CoreLibrary/base.h"       // for P
+
+namespace r_code {
+class Code;
+class View;
+}  // namespace r_code
+namespace r_exec {
+class Controller;
+class Fact;
+class Group;
+class HLPBindingMap;
+class Sim;
+class View;
+class _Fact;
+}  // namespace r_exec
 
 namespace r_exec
 {

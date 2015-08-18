@@ -29,11 +29,13 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "utils.h"
-#include "object.h"
 
-#include <cmath>
-#include <string.h>
-#include <CoreLibrary/debug.h>
+#include <CoreLibrary/debug.h>  // for DebugStream
+#include <r_code/object.h>      // for Code
+#include <r_code/utils.h>       // for Utils
+#include <string.h>             // for memcpy
+#include <cmath>                // for fabs
+#include <cstdlib>              // for abs
 
 namespace r_code
 {

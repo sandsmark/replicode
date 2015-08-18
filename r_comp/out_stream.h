@@ -32,6 +32,7 @@
 #define out_stream_h
 
 #include <iostream>
+#include <sstream> // For ostringstream
 
 #include "../r_code/vector.h"
 

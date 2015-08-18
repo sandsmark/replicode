@@ -29,11 +29,23 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "model_base.h"
-#include "mem.h"
+
+#include <r_code/atom.h>            // for Atom, Atom::::MARKER, etc
+#include <r_code/list.h>            // for list
+#include <r_code/object.h>          // for Code
+#include <r_code/replicode_defs.h>  // for CMD_FUNCTION, HLP_TPL_ARGS, etc
+#include <r_exec/factory.h>         // for _Fact
+#include <r_exec/init.h>            // for Now
+#include <r_exec/mem.h>             // for _Mem
+#include <r_exec/model_base.h>      // for ModelBase, ModelBase::MdlSet, etc
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::Ent, etc
 
 
 namespace r_exec
 {
+
+using r_code::Atom;
+using r_code::Code;
 
 uint64_t ModelBase::MEntry::_ComputeHashCode(_Fact *component)   // 14 bits: [fact or |fact (1)|type (3)|data (10)].
 {

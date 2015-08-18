@@ -29,9 +29,20 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "preprocessor.h"
-#include "compiler.h"
-#include <string>
-#include <list>
+
+#include <r_code/atom.h>          // for Atom
+#include <r_code/vector.h>        // for vector
+#include <r_comp/class.h>         // for Class, Class::Type, etc
+#include <r_comp/compiler.h>      // for Compiler
+#include <r_comp/preprocessor.h>  // for Preprocessor, etc
+#include <r_comp/replistruct.h>   // for RepliStruct, etc
+#include <r_comp/segments.h>      // for Metadata
+#include <stdio.h>                // for sprintf
+#include <fstream>                // for char_traits
+#include <istream>                // for ifstream
+#include <list>                   // for list
+#include <string>                 // for string, operator==, basic_string, etc
+#include <utility>                // for pair
 
 
 namespace r_comp
@@ -48,7 +59,7 @@ Preprocessor::~Preprocessor()
     delete root;
 }
 
-RepliStruct *Preprocessor::process(const char* file, string& error, r_comp::Metadata* metadata)
+RepliStruct *Preprocessor::process(const char* file, std::string& error, r_comp::Metadata* metadata)
 {
     RepliStruct::GlobalFilename = file;
     std::ifstream stream(file);
@@ -360,7 +371,7 @@ void Preprocessor::initialize(Metadata *metadata)
                 atom = Atom::CompositeState(m_classOpcode, members.size());
             } else if (class_name == "mdl") {
                 atom = Atom::Model(m_classOpcode, members.size());
-            } else if (class_name.find("mk.") != string::npos) {
+            } else if (class_name.find("mk.") != std::string::npos) {
                 atom = Atom::Marker(m_classOpcode, members.size());
             } else {
                 atom = Atom::Object(m_classOpcode, members.size());

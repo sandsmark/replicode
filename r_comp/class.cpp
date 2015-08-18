@@ -29,7 +29,13 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "class.h"
-#include "segments.h"
+
+#include <ext/alloc_traits.h>  // for __alloc_traits<>::value_type
+#include <r_code/image.h>      // for GetStringSize, ReadString, etc
+#include <r_comp/class.h>      // for Class
+#include <r_comp/segments.h>   // for Metadata
+#include <unordered_map>       // for _Node_iterator, unordered_map
+#include <utility>             // for move, pair
 
 
 namespace r_comp

@@ -31,8 +31,8 @@
 #ifndef r_code_h
 #define r_code_h
 
-#include "image.h"
 
+#include "CoreLibrary/dll.h"  // for dll_export
 
 extern "C" {
     void dll_export Init();

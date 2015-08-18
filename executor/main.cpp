@@ -28,11 +28,37 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <r_comp/decompiler.h>
-#include <r_exec/mem.h>
-#include <r_exec/init.h>
-#include <r_code/image_impl.h>
-#include "settings.h"
+#include <r_code/atom.h>            // for Atom
+#include <r_code/image.h>           // for Image
+#include <r_code/image_impl.h>      // for ImageImpl
+#include <r_code/object.h>          // for Code, View, View::::SYNC_ONCE
+#include <r_code/replicode_defs.h>  // for VIEW_ARITY, VIEW_HOST, VIEW_IJT, etc
+#include <r_code/utils.h>           // for Utils
+#include <r_code/vector.h>          // for vector
+#include <r_comp/decompiler.h>      // for Decompiler
+#include <r_comp/segments.h>        // for Image, ObjectNames, Metadata
+#include <r_exec/factory.h>         // for Fact
+#include <r_exec/init.h>            // for Now, Compile, Init
+#include <r_exec/mem.h>             // for _Mem, Mem, MemStatic, etc
+#include <r_exec/object.h>          // for LObject
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::MkVal
+#include <r_exec/view.h>            // for View, View::ViewOpcode
+#include <stdint.h>                 // for uint64_t, uint16_t, uintptr_t
+#include <stdlib.h>                 // for srand
+#include <chrono>                   // for microseconds, duration_cast, etc
+#include <fstream>                  // for ofstream, ostream, ifstream, etc
+#include <iostream>                 // for cout, operator|, ios_base, etc
+#include <ratio>                    // for ratio
+#include <string>                   // for string, operator==, basic_string, etc
+#include <thread>                   // for sleep_for
+#include <type_traits>              // for enable_if<>::type
+#include <unordered_map>            // for unordered_map, etc
+#include <utility>                  // for pair
+#include <sstream>                  // for ostringstream
+
+
+#include "CoreLibrary/debug.h"      // for debug, DebugStream
+#include "settings.h"               // for Settings
 //#include "CoreLibrary/utils.h"
 
 static bool fileExists(const char *fileName)
@@ -198,7 +224,7 @@ void decompile(Decompiler &decompiler, r_comp::Image *image, uint64_t time_offse
 
 void write_to_file(r_comp::Image *image, std::string &image_path, Decompiler *decompiler, uint64_t time_offset)
 {
-    ofstream output(image_path.c_str(), ios::binary | ios::out);
+    std::ofstream output(image_path.c_str(), std::ios::binary | std::ios::out);
     r_code::Image<r_code::ImageImpl> *i = image->serialize<r_code::Image<r_code::ImageImpl> >();
     r_code::Image<r_code::ImageImpl>::Write(i, output);
     output.close();
@@ -208,7 +234,7 @@ void write_to_file(r_comp::Image *image, std::string &image_path, Decompiler *de
         return;
     }
 
-    ifstream input(image_path.c_str(), ios::binary | ios::in);
+    std::ifstream input(image_path.c_str(), std::ios::binary | std::ios::in);
 
     if (!input.good()) {
         return;

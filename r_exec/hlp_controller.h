@@ -31,12 +31,24 @@
 #ifndef hlp_controller_h
 #define hlp_controller_h
 
-#include "overlay.h"
-#include "binding_map.h"
-#include "g_monitor.h"
-#include "group.h"
-#include "init.h"
 
+#include <r_code/list.h>            // for list
+#include <r_code/object.h>          // for Code
+#include <r_code/replicode_defs.h>  // for MDL_HIDDEN_REFS
+#include <r_exec/binding_map.h>     // for MatchResult
+#include <r_exec/factory.h>         // for _Fact
+#include <r_exec/init.h>            // for Now
+#include <r_exec/overlay.h>         // for OController
+#include <r_exec/view.h>            // for View
+#include <stdint.h>                 // for uint64_t, uint16_t
+#include <mutex>                    // for mutex, lock_guard
+#include <vector>                   // for vector
+
+#include "CoreLibrary/base.h"       // for P
+
+namespace r_exec {
+class Group;
+}  // namespace r_exec
 
 namespace r_exec
 {

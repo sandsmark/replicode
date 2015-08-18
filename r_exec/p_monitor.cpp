@@ -29,8 +29,16 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "p_monitor.h"
-#include "mem.h"
-#include "mdl_controller.h"
+
+#include <r_code/utils.h>           // for Utils
+#include <r_exec/binding_map.h>     // for ::MATCH_FAILURE, etc
+#include <r_exec/factory.h>         // for Fact, _Fact, Pred
+#include <r_exec/mdl_controller.h>  // for MDLController
+#include <r_exec/mem.h>             // for _Mem
+#include <r_exec/p_monitor.h>       // for PMonitor
+#include <r_exec/time_job.h>        // for MonitoringJob
+
+#include "CoreLibrary/base.h"       // for P
 
 
 namespace r_exec

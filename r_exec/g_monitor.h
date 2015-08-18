@@ -31,8 +31,18 @@
 #ifndef g_monitor_h
 #define g_monitor_h
 
-#include "monitor.h"
 
+#include <r_exec/factory.h>    // for SimMode
+#include <r_exec/monitor.h>    // for Monitor
+#include <stdint.h>            // for uint64_t
+#include <list>                // for list
+#include <utility>             // for pair
+
+#include "CoreLibrary/base.h"  // for P
+
+namespace r_exec {
+class BindingMap;
+}  // namespace r_exec
 
 namespace r_exec
 {

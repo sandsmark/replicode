@@ -30,11 +30,15 @@
 
 #include "usr_operators.h"
 
-#include <r_exec/init.h>
-
-#include <iostream>
-#include <cmath>
 #include <string.h>
+#include <string>
+
+#include "Operators/operators.h"
+#include "CoreLibrary/debug.h"
+
+namespace r_comp {
+class Metadata;
+}  // namespace r_comp
 
 void Init(r_comp::Metadata *metadata)
 {

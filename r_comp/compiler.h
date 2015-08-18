@@ -31,12 +31,27 @@
 #ifndef compiler_h
 #define compiler_h
 
-#include <fstream>
-#include <sstream>
 
-#include "out_stream.h"
-#include "segments.h"
 
+
+#include <r_comp/class.h>             // for Class
+#include <r_comp/segments.h>          // for Reference
+#include <r_comp/structure_member.h>  // for ReturnType
+#include <stdint.h>                   // for uint16_t, int16_t, uint32_t, etc
+#include <string>                     // for string
+#include <unordered_map>              // for unordered_map
+#include <vector>                     // for vector
+
+#include "CoreLibrary/dll.h"          // for dll_export
+
+namespace r_code {
+class ImageObject;
+}  // namespace r_code
+namespace r_comp {
+class Image;
+class Metadata;
+class Reference;
+}  // namespace r_comp
 
 using namespace r_code;
 

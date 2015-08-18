@@ -29,10 +29,25 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "cst_controller.h"
-#include "mem.h"
-#include "hlp_context.h"
-#include "overlay.tpl.h"
-#include "reduction_job.tpl.h"
+
+#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
+#include <r_code/atom.h>            // for Atom
+#include <r_code/list.h>            // for list<>::const_iterator, list, etc
+#include <r_code/object.h>          // for Code, View::::SYNC_ONCE
+#include <r_code/replicode_defs.h>  // for CST_OBJS, GRP_SLN_THR
+#include <r_exec/binding_map.h>     // for HLPBindingMap, ::MATCH_FAILURE, etc
+#include <r_exec/cst_controller.h>  // for CSTOverlay, CSTController
+#include <r_exec/factory.h>         // for _Fact, Fact, Pred, Goal, Sim, etc
+#include <r_exec/group.h>           // for Group
+#include <r_exec/init.h>            // for Now
+#include <r_exec/mem.h>             // for _Mem, OUTPUT
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::ICst, etc
+#include <r_exec/overlay.h>         // for Overlay, Controller
+#include <r_exec/view.h>            // for View, NotificationView
+#include <ostream>                  // for operator<<, basic_ostream, etc
+#include <string>                   // for operator<<, allocator, etc
+
+#include <r_exec/overlay.tpl.h>     // for __take_input
 
 
 namespace r_exec

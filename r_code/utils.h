@@ -31,9 +31,14 @@
 #ifndef r_code_utils_h
 #define r_code_utils_h
 
-#include "atom.h"
-#include "CoreLibrary/base.h"
-#include <iostream>
+#include <r_code/atom.h>       // for Atom
+#include <stddef.h>            // for size_t, NULL
+#include <stdint.h>            // for uint64_t, uint16_t, uint8_t, int64_t, etc
+#include <iostream>            // for char_traits, ostream
+#include <string>              // for string
+
+#include "CoreLibrary/base.h"  // for P
+#include "CoreLibrary/dll.h"   // for dll_export
 
 using namespace core;
 

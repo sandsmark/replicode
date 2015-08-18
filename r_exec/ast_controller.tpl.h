@@ -32,6 +32,7 @@
 #include "mem.h"
 #include "factory.h"
 #include "auto_focus.h"
+#include "init.h"
 
 
 namespace r_exec

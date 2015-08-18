@@ -30,6 +30,12 @@
 
 #include "_context.h"
 
+#include <r_code/utils.h>     // for Utils
+#include <r_code/vector.h>    // for vector
+#include <r_exec/_context.h>  // for _Context, _Context::::MKS, etc
+#include <iostream>           // for operator<<, cout, ostream, etc
+#include <vector>             // for allocator, vector
+
 
 namespace r_exec
 {

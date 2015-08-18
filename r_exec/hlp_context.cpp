@@ -29,8 +29,15 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "hlp_context.h"
-#include "operator.h"
-#include "opcodes.h"
+
+#include <r_code/object.h>       // for Code
+#include <r_code/vector.h>       // for vector
+#include <r_exec/binding_map.h>  // for HLPBindingMap
+#include <r_exec/hlp_context.h>  // for HLPContext
+#include <r_exec/operator.h>     // for Operator, Context
+#include <r_exec/overlay.h>      // for Overlay
+
+#include "CoreLibrary/base.h"    // for P
 
 
 namespace r_exec

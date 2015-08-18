@@ -30,7 +30,20 @@
 
 #include "decompiler.h"
 
-#include <assert.h>
+#include <r_code/atom.h>            // for Atom, Atom::::WILDCARD, etc
+#include <r_code/object.h>          // for ImageObject, SysObject, SysView
+#include <r_code/replicode_defs.h>  // for VIEW_CODE_MAX_SIZE
+#include <r_code/utils.h>           // for Utils
+#include <r_comp/class.h>           // for Class
+#include <r_comp/decompiler.h>      // for Decompiler, Decompiler::Renderer
+#include <r_comp/out_stream.h>      // for OutStream
+#include <r_comp/segments.h>        // for Metadata, Image, CodeSegment, etc
+#include <stddef.h>                 // for size_t
+#include <stdio.h>                  // for sprintf
+#include <cstdint>                  // for uint16_t, uint64_t, uint32_t, etc
+#include <utility>                  // for pair
+
+#include "CoreLibrary/debug.h"      // for DebugStream
 
 namespace r_comp
 {

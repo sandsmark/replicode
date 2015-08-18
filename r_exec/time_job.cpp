@@ -29,8 +29,14 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "time_job.h"
-#include "pgm_controller.h"
-#include "mem.h"
+
+#include <r_code/object.h>          // for Code
+#include <r_exec/group.h>           // for Group
+#include <r_exec/mem.h>             // for _Mem
+#include <r_exec/overlay.h>         // for Controller
+#include <r_exec/pgm_controller.h>  // for AntiPGMController, etc
+#include <r_exec/time_job.h>        // for TimeJob, SaliencyPropagationJob, etc
+#include <r_exec/view.h>            // for View
 
 
 namespace r_exec

@@ -31,14 +31,14 @@
 #ifndef SHAREDLIBRARY_H
 #define SHAREDLIBRARY_H
 
-#include "dll.h"
+#include <stddef.h>  // for NULL
+#include <iostream>  // for operator<<, basic_ostream, char_traits, cout, etc
 
-#include <mutex>
-#include <iostream>
+#include "dll.h"     // for core_dll
 
 
 #if !defined(WIN32) || !defined(WIN64)
-#include <dlfcn.h>
+#include <dlfcn.h>   // for dlerror, dlsym
 #endif
 
 namespace utils

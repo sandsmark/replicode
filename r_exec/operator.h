@@ -31,10 +31,16 @@
 #ifndef operator_h
 #define operator_h
 
-#include "../r_code/object.h"
 
-#include "_context.h"
 
+
+#include <r_code/atom.h>      // for Atom
+#include <r_code/vector.h>    // for vector
+#include <r_exec/_context.h>  // for _Context
+#include <stddef.h>           // for NULL
+#include <stdint.h>           // for uint16_t, uint64_t
+
+#include "CoreLibrary/dll.h"  // for dll_export
 
 namespace r_exec
 {

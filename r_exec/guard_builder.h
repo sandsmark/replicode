@@ -31,19 +31,28 @@
 #ifndef guard_builder_h
 #define guard_builder_h
 
-#include "factory.h"
 
+#include <stdint.h>            // for uint16_t, uint64_t
+
+#include "CoreLibrary/base.h"  // for _Object
+
+namespace r_code {
+class Code;
+}  // namespace r_code
+namespace r_exec {
+class _Fact;
+}  // namespace r_exec
 
 namespace r_exec
 {
 
-class GuardBuilder : public _Object
+class GuardBuilder : public core::_Object
 {
 public:
     GuardBuilder();
     virtual ~GuardBuilder();
 
-    virtual void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
+    virtual void build(r_code::Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 };
 
 // fwd: t2=t0+period, t3=t1+period.
@@ -54,11 +63,11 @@ public:
     TimingGuardBuilder(uint64_t period);
     virtual ~TimingGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
+    void build(r_code::Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
 
 protected:
-    void write_guard(Code *mdl, uint16_t l, uint16_t r, uint16_t opcode, uint64_t offset, uint16_t &write_index, uint16_t &extent_index) const;
-    void _build(Code *mdl, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
+    void write_guard(r_code::Code *mdl, uint16_t l, uint16_t r, uint16_t opcode, uint64_t offset, uint16_t &write_index, uint16_t &extent_index) const;
+    void _build(r_code::Code *mdl, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
 
     uint64_t period;
 };
@@ -71,10 +80,10 @@ public:
     SGuardBuilder(uint64_t period, uint64_t offset);
     ~SGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
+    void build(r_code::Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
 
 private:
-    void _build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
+    void _build(r_code::Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
 
     uint64_t offset; // period-(speed.after-t0).
 };
@@ -86,10 +95,10 @@ public:
     NoArgCmdGuardBuilder(uint64_t period, uint64_t offset, uint64_t cmd_duration);
     ~NoArgCmdGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
+    void build(r_code::Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
 
 protected:
-    void _build(Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
+    void _build(r_code::Code *mdl, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
 
     uint64_t offset;
     uint64_t cmd_duration;
@@ -106,8 +115,8 @@ protected:
 
     uint16_t cmd_arg_index;
 
-    void _build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
-    void _build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
+    void _build(r_code::Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
+    void _build(r_code::Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 
 };
 
@@ -119,7 +128,7 @@ public:
     MCGuardBuilder(uint64_t period, double cmd_arg_index);
     ~MCGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
+    void build(r_code::Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
 };
 
 // fwd: q1=q0+cmd_arg.
@@ -130,7 +139,7 @@ public:
     ACGuardBuilder(uint64_t period, uint16_t cmd_arg_index);
     ~ACGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
+    void build(r_code::Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
 };
 
 // bwd: cause.after=t2-offset, cause.before=t3-offset.
@@ -142,8 +151,8 @@ public:
 protected:
     ConstGuardBuilder(uint64_t period, double constant, uint64_t offset);
 
-    void _build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
-    void _build(Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
+    void _build(r_code::Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, uint16_t q0, uint16_t t0, uint16_t t1, uint16_t &write_index) const;
+    void _build(r_code::Code *mdl, uint16_t fwd_opcode, uint16_t bwd_opcode, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const;
 
     double constant;
     uint64_t offset;
@@ -157,7 +166,7 @@ public:
     MGuardBuilder(uint64_t period, double constant, uint64_t offset);
     ~MGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
+    void build(r_code::Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
 };
 
 // fwd: q1=q0+constant.
@@ -168,7 +177,7 @@ public:
     AGuardBuilder(uint64_t period, double constant, uint64_t offset);
     ~AGuardBuilder();
 
-    void build(Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
+    void build(r_code::Code *mdl, _Fact *premise_pattern, _Fact *cause_pattern, uint16_t &write_index) const override;
 };
 
 } // namespace r_exec

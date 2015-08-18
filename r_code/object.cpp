@@ -29,9 +29,10 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "object.h"
-#include "replicode_defs.h"
 
-#include <iostream>
+#include <r_code/object.h>  // for SysObject, SysView, Code, View, Mem, etc
+#include <cstdint>          // for uint32_t
+#include <iostream>         // for operator<<, cout, ostream, endl, etc
 
 
 namespace r_code

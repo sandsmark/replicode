@@ -31,8 +31,15 @@
 #ifndef auto_focus_proxy_h
 #define auto_focus_proxy_h
 
-#include "../r_exec/overlay.h"
 
+#include "CoreLibrary/dll.h"  // for dll_export
+
+namespace r_code {
+class View;
+}  // namespace r_code
+namespace r_exec {
+class Controller;
+}  // namespace r_exec
 
 extern "C" {
     r_exec::Controller dll_export *auto_focus(r_code::View *view);

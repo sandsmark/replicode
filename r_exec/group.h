@@ -31,17 +31,25 @@
 #ifndef group_h
 #define group_h
 
-#include <set>
+#include <r_code/object.h>     // for View, View::Less
+#include <r_exec/object.h>     // for LObject
+#include <r_exec/view.h>       // for View
+#include <stddef.h>            // for size_t, NULL
+#include <stdint.h>            // for uint64_t, uint16_t, uint8_t, int64_t, etc
+#include <mutex>               // for mutex
+#include <set>                 // for multiset
+#include <unordered_map>       // for unordered_map, etc
+#include <vector>              // for vector
 
-#include "object.h"
-#include "view.h"
-#include <unordered_map>
+#include "CoreLibrary/base.h"  // for P
+#include "CoreLibrary/dll.h"   // for dll_export
+
+namespace r_exec {
+class Controller;
+}  // namespace r_exec
 
 namespace r_exec
 {
-
-class _Mem;
-class HLPController;
 
 // Shared resources:
 // all parameters: accessed by Mem::update and reduction cores (via overlay mod/set).
@@ -463,7 +471,5 @@ public:
 };
 }
 
-
-#include "object.tpl.h"
 
 #endif

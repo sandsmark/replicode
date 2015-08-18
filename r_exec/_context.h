@@ -31,9 +31,12 @@
 #ifndef _context_h
 #define _context_h
 
-#include "../r_code/atom.h"
-#include "overlay.h"
 
+#include <r_code/atom.h>      // for Atom
+#include <r_exec/overlay.h>   // for Overlay
+#include <stdint.h>           // for uint16_t, uint64_t
+
+#include "CoreLibrary/dll.h"  // for dll_export
 
 using namespace r_code;
 

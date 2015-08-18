@@ -31,10 +31,22 @@
 #ifndef ast_controller_h
 #define ast_controller_h
 
-#include "overlay.h"
-#include "factory.h"
-#include "pattern_extractor.h"
 
+#include <r_exec/overlay.h>      // for OController
+#include <stdint.h>              // for uint64_t
+#include <mutex>                 // for mutex
+
+#include "CoreLibrary/base.h"    // for P
+
+namespace r_code {
+class Code;
+}  // namespace r_code
+namespace r_exec {
+class AutoFocusController;
+class CTPX;
+class View;
+class _Fact;
+}  // namespace r_exec
 
 namespace r_exec
 {
@@ -105,8 +117,6 @@ public:
 };
 }
 
-
 #include "ast_controller.tpl.h"
-
 
 #endif

@@ -29,10 +29,23 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "pgm_controller.h"
-#include "mem.h"
-#include "overlay.tpl.h"
-#include "reduction_job.tpl.h"
 
+#include <r_code/atom.h>            // for Atom
+#include <r_code/list.h>            // for list<>::const_iterator, list, etc
+#include <r_code/replicode_defs.h>  // for IPGM_RUN, IPGM_TSC
+#include <r_code/utils.h>           // for Utils
+#include <r_exec/group.h>           // for Group
+#include <r_exec/init.h>            // for Now
+#include <r_exec/mem.h>             // for _Mem
+#include <r_exec/pgm_controller.h>  // for AntiPGMController, PGMController, etc
+#include <r_exec/pgm_overlay.h>     // for AntiPGMOverlay, etc
+#include <r_exec/time_job.h>        // for AntiPGMSignalingJob, etc
+#include <r_exec/view.h>            // for View
+#include <stdint.h>                 // for uint64_t
+
+#include "CoreLibrary/base.h"       // for P
+
+#include <r_exec/overlay.tpl.h>     // for __take_input
 
 namespace r_exec
 {

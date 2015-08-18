@@ -29,7 +29,13 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "structure_member.h"
-#include "compiler.h"
+
+#include <r_code/image.h>             // for GetStringSize, ReadString, etc
+#include <r_comp/compiler.h>          // for Compiler
+#include <r_comp/segments.h>          // for Metadata
+#include <r_comp/structure_member.h>  // for StructureMember, ReturnType, etc
+#include <unordered_map>              // for _Node_iterator, unordered_map
+#include <utility>                    // for move, pair
 
 
 namespace r_comp

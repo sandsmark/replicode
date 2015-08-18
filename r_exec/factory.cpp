@@ -29,8 +29,17 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "factory.h"
-#include "mdl_controller.h"
-#include "mem.h"
+
+#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
+#include <r_code/object.h>          // for Code
+#include <r_code/replicode_defs.h>  // for FACT_ARITY, MK_VAL_VALUE, etc
+#include <r_code/utils.h>           // for Utils
+#include <r_exec/factory.h>         // for _Fact, Goal, Pred, Sim, MkRdx, etc
+#include <r_exec/mem.h>             // for _Mem
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::AntiFact, etc
+#include <r_exec/overlay.h>         // for Controller
+#include <iostream>                 // for operator<<, basic_ostream, etc
+#include <string>                   // for operator<<, char_traits
 
 
 namespace r_exec

@@ -31,15 +31,22 @@
 #ifndef init_h
 #define init_h
 
-#include "r_code/list.h"
+#include <r_code/list.h>       // for list
+#include <stdint.h>            // for uint64_t
+#include <string>              // for string
+#include <thread>              // for thread
+#include <vector>              // for vector
 
-#include "r_comp/segments.h"
-#include "r_comp/compiler.h"
-#include "r_comp/preprocessor.h"
+#include "CoreLibrary/base.h"  // for P, _Object
+#include "CoreLibrary/dll.h"   // for dll_export
 
-#include "CoreLibrary/dll.h"
-
-#include <thread>
+namespace r_code {
+class Code;
+}  // namespace r_code
+namespace r_comp {
+class Image;
+class Metadata;
+}  // namespace r_comp
 
 namespace r_exec
 {
@@ -57,12 +64,12 @@ extern dll_export uint64_t(*Now)();
 
 // Both functions add the compiled object to Seed.code_image.
 // Source files: use ANSI encoding (not Unicode).
-bool Compile(const char* filename, string& error, r_comp::Image *image, r_comp::Metadata *metadata, bool compile_metadata = false);
+bool Compile(const char* filename, std::string& error, r_comp::Image *image, r_comp::Metadata *metadata, bool compile_metadata = false);
 
 // Threaded decompiler, for decompiling on the fly asynchronously.
 // Named objects are referenced but not decompiled.
 class dll_export TDecompiler:
-    public _Object
+    public core::_Object
 {
 private:
     static const uint64_t ObjectsInitialSize = 16;
@@ -71,7 +78,7 @@ private:
 
     uint64_t ostream_id; // 0 is std::cout.
     std::string header;
-    r_code::list<P<Code> > objects;
+    r_code::list<core::P<r_code::Code> > objects;
     std::thread *_thread;
     volatile uint64_t spawned;
     r_comp::Metadata *metadata;
@@ -80,9 +87,9 @@ public:
     TDecompiler(uint64_t ostream_id, std::string header, r_comp::Metadata *metadata);
     ~TDecompiler();
 
-    void add_object(Code *object);
-    void add_objects(const r_code::list<P<Code> > &objects);
-    void add_objects(const std::vector<P<Code> > &objects);
+    void add_object(r_code::Code *object);
+    void add_objects(const r_code::list<core::P<r_code::Code> > &objects);
+    void add_objects(const std::vector<core::P<r_code::Code> > &objects);
     void runDecompiler();
 };
 

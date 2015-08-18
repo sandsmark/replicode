@@ -31,15 +31,25 @@
 #ifndef time_job_h
 #define time_job_h
 
-#include "group.h"
-#include "pgm_overlay.h"
-#include "CoreLibrary/debug.h"
+#include <stdint.h>             // for uint64_t, int64_t
+
+#include "CoreLibrary/base.h"   // for P, _Object
+#include "CoreLibrary/debug.h"  // for DebugStream, debug
+#include "CoreLibrary/dll.h"    // for dll_export
+
+namespace r_code {
+class Code;
+}  // namespace r_code
+namespace r_exec {
+class Group;
+class View;
+}  // namespace r_exec
 
 namespace r_exec
 {
 
 class dll_export TimeJob:
-    public _Object
+    public core::_Object
 {
 protected:
     TimeJob(uint64_t target_time);
@@ -61,7 +71,7 @@ class dll_export UpdateJob:
     public TimeJob
 {
 public:
-    P<Group> group;
+    core::P<Group> group;
     UpdateJob(Group *g, uint64_t ijt);
     bool update();
     void report(int64_t lag) const;
@@ -73,7 +83,7 @@ class dll_export SignalingJob:
 protected:
     SignalingJob(View *v, uint64_t ijt);
 public:
-    P<View> view;
+    core::P<View> view;
     bool is_alive() const;
 };
 
@@ -99,7 +109,7 @@ class dll_export InjectionJob:
     public TimeJob
 {
 public:
-    P<View> view;
+    core::P<View> view;
     InjectionJob(View *v, uint64_t ijt);
     bool update();
     void report(int64_t lag) const;
@@ -109,7 +119,7 @@ class dll_export EInjectionJob:
     public TimeJob
 {
 public:
-    P<View> view;
+    core::P<View> view;
     EInjectionJob(View *v, uint64_t ijt);
     bool update();
     void report(int64_t lag) const;
@@ -119,10 +129,10 @@ class dll_export SaliencyPropagationJob:
     public TimeJob
 {
 public:
-    P<Code> object;
+    core::P<r_code::Code> object;
     double sln_change;
     double source_sln_thr;
-    SaliencyPropagationJob(Code *o, double sln_change, double source_sln_thr, uint64_t ijt);
+    SaliencyPropagationJob(r_code::Code *o, double sln_change, double source_sln_thr, uint64_t ijt);
     bool update();
     void report(int64_t lag) const;
 };
@@ -139,7 +149,7 @@ template<class M> class MonitoringJob:
     public TimeJob
 {
 public:
-    P<M> monitor;
+    core::P<M> monitor;
     MonitoringJob(M *monitor, uint64_t deadline): TimeJob(deadline), monitor(monitor) {}
     bool update()
     {

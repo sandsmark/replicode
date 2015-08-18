@@ -31,10 +31,15 @@
 #ifndef callbacks_h
 #define callbacks_h
 
-#include <unordered_map>
+#include <stdint.h>           // for uint64_t, uint8_t
+#include <string>             // for string
+#include <unordered_map>      // for unordered_map
 
-#include "overlay.h"
-#include "CoreLibrary/dll.h"
+#include "CoreLibrary/dll.h"  // for dll_export
+
+namespace r_code {
+class Code;
+}  // namespace r_code
 
 namespace r_exec
 {
@@ -42,7 +47,7 @@ namespace r_exec
 class dll_export Callbacks
 {
 public:
-    typedef bool (*Callback)(uint64_t, bool, const char *, uint8_t, Code **);
+    typedef bool (*Callback)(uint64_t, bool, const char *, uint8_t, r_code::Code **);
 private:
     static std::unordered_map<std::string, Callback> _Callbacks;
 public:

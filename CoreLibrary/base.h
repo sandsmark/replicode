@@ -31,9 +31,9 @@
 #ifndef core_base_h
 #define core_base_h
 
-#include <cstdlib>
-#include <atomic>
-#include "dll.h"
+#include <atomic>        // for atomic_int_fast64_t
+
+#include "dll.h"         // for core_dll
 
 
 namespace core

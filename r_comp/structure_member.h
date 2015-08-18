@@ -31,13 +31,9 @@
 #ifndef structure_member_h
 #define structure_member_h
 
-#include <string>
-
-#include "r_code/image.h"
-#include "r_code/atom.h"
-
-
-using namespace r_code;
+#include <stddef.h>  // for size_t
+#include <stdint.h>  // for uint16_t, uint32_t
+#include <string>    // for allocator, string, operator+, basic_string, etc
 
 namespace r_comp
 {
@@ -100,6 +96,7 @@ inline std::string returntype_string(const ReturnType type)
 typedef bool (Compiler::*_Read)(RepliStruct *, bool, const Class *, uint16_t, uint16_t &, bool); // reads from the stream and writes in an object.
 
 class Metadata;
+
 class StructureMember
 {
 public:

@@ -29,9 +29,14 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "overlay.h"
-#include "mem.h"
 
-#include <string.h>
+#include <r_code/replicode_defs.h>  // for ICPP_PGM_TSC, IPGM_TSC
+#include <r_code/utils.h>           // for Utils
+#include <r_exec/mem.h>             // for _Mem
+#include <r_exec/overlay.h>         // for Overlay, Controller, OController
+#include <r_exec/view.h>            // for View
+#include <string.h>                 // for memcpy
+#include <cstdint>                  // for uint16_t
 
 #define MAX_VALUE_SIZE 128
 

@@ -31,18 +31,26 @@
 #ifndef ipgm_context_h
 #define ipgm_context_h
 
-#include "r_code/atom.h"
-#include "r_code/utils.h"
-#include "object.h"
-#include "_context.h"
-#include "pgm_overlay.h"
-#include "operator.h"
 
+#include <r_code/atom.h>         // for Atom, Atom::::IN_OBJ_PTR, etc
+#include <r_code/list.h>         // for list<>::const_iterator, list, etc
+#include <r_code/object.h>       // for Code, View, View::Hash
+#include <r_exec/_context.h>     // for _Context::::REFERENCE, etc
+#include <r_exec/opcodes.h>      // for Opcodes, Opcodes::AntiPgm, etc
+#include <r_exec/operator.h>     // for Operator
+#include <r_exec/overlay.h>      // for Overlay
+#include <r_exec/pgm_overlay.h>  // for InputLessPGMOverlay, PGMOverlay
+#include <r_exec/view.h>         // for View
+#include <stddef.h>              // for NULL
+#include <stdint.h>              // for uint16_t, int64_t, int16_t, etc
+#include <unordered_set>         // for unordered_set, etc
+#include <vector>                // for vector
+
+#include "CoreLibrary/base.h"    // for P
+#include "CoreLibrary/dll.h"     // for dll_export
 
 namespace r_exec
 {
-
-class InputLessPGMOverlay;
 
 // Evaluation context.
 class dll_export IPGMContext:

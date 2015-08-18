@@ -31,14 +31,20 @@
 #ifndef preprocessor_h
 #define preprocessor_h
 
-#include "replistruct.h"
-#include "segments.h"
-#include <istream>
-#include <sstream>
-#include <fstream>
-#include <list>
+#include <r_comp/structure_member.h>  // for ReturnType
+#include <stddef.h>                   // for NULL
+#include <stdint.h>                   // for uint16_t
+#include <list>                       // for list
+#include <string>                     // for string
+#include <unordered_map>              // for unordered_map
+#include <vector>                     // for vector
 
-using namespace r_code;
+#include "CoreLibrary/dll.h"          // for dll_export
+
+namespace r_comp {
+class Metadata;
+class RepliStruct;
+}  // namespace r_comp
 
 namespace r_comp
 {

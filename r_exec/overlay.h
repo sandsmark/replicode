@@ -31,12 +31,16 @@
 #ifndef overlay_h
 #define overlay_h
 
-#include "r_code/object.h"
+#include <r_code/atom.h>       // for Atom
+#include <r_code/list.h>       // for list
+#include <r_code/object.h>     // for View
+#include <r_code/vector.h>     // for vector
+#include <stdint.h>            // for uint16_t, uint64_t
+#include <mutex>               // for mutex
+#include <vector>              // for vector
 
-#include "CoreLibrary/dll.h"
-#include "CoreLibrary/base.h"
-
-#include <mutex>
+#include "CoreLibrary/base.h"  // for P, _Object
+#include "CoreLibrary/dll.h"   // for dll_export
 
 using namespace r_code;
 
@@ -120,10 +124,6 @@ public:
 
     void debug(View *input) {}
 };
-
-class _Context;
-class IPGMContext;
-class HLPContext;
 
 class dll_export Overlay:
     public _Object

@@ -29,14 +29,27 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "pgm_overlay.h"
-#include "pgm_controller.h"
-#include "mem.h"
-#include "group.h"
-#include "opcodes.h"
-#include "context.h"
-#include "callbacks.h"
 
-#include <string.h>
+#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
+#include <r_code/object.h>          // for Code, View, View::::SYNC_ONCE
+#include <r_code/replicode_defs.h>  // for MK_RDX_ARITY, IPGM_ARGS, etc
+#include <r_code/utils.h>           // for Utils
+#include <r_code/vector.h>          // for vector
+#include <r_exec/callbacks.h>       // for Callbacks, Callbacks::Callback
+#include <r_exec/context.h>         // for IPGMContext, etc
+#include <r_exec/factory.h>         // for Fact
+#include <r_exec/group.h>           // for Group, Group::Mod, Group::Set
+#include <r_exec/init.h>            // for Now
+#include <r_exec/mem.h>             // for _Mem
+#include <r_exec/object.h>          // for LObject
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::Eject, etc
+#include <r_exec/pgm_controller.h>  // for AntiPGMController, PGMController
+#include <r_exec/pgm_overlay.h>     // for PGMOverlay, InputLessPGMOverlay, etc
+#include <r_exec/view.h>            // for View, NotificationView
+#include <string.h>                 // for memcpy
+#include <cstdint>                  // for uint16_t, int16_t, uint64_t, etc
+#include <mutex>                    // for lock_guard, mutex
+#include <string>                   // for allocator, string
 
 // pgm layout:
 //

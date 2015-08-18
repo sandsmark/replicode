@@ -29,9 +29,18 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "g_monitor.h"
-#include "mem.h"
-#include "mdl_controller.h"
-#include "factory.h"
+
+#include <r_code/atom.h>            // for Atom
+#include <r_code/object.h>          // for Code
+#include <r_code/replicode_defs.h>  // for SUCCESS_OBJ
+#include <r_exec/binding_map.h>     // for ::MATCH_FAILURE, etc
+#include <r_exec/g_monitor.h>       // for GMonitor, RMonitor, SRMonitor, etc
+#include <r_exec/init.h>            // for Now
+#include <r_exec/mdl_controller.h>  // for PMDLController, etc
+#include <r_exec/mem.h>             // for _Mem
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::Success
+#include <r_exec/time_job.h>        // for MonitoringJob
+#include <iostream>                 // for operator<<, cerr, ostream
 
 
 namespace r_exec

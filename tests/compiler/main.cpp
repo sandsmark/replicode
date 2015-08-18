@@ -1,13 +1,22 @@
-#include <r_exec/init.h>
-#include <r_comp/preprocessor.h>
-#include <r_comp/compiler.h>
-#include <r_comp/decompiler.h>
-#include <CoreLibrary/debug.h>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <chrono>
+#include <CoreLibrary/debug.h>    // for debug, DebugStream
+#include <r_code/object.h>        // for SysObject
+#include <r_code/vector.h>        // for vector
+#include <r_comp/compiler.h>      // for Compiler
+#include <r_comp/decompiler.h>    // for Decompiler
+#include <r_comp/preprocessor.h>  // for Preprocessor
+#include <r_comp/segments.h>      // for Image, CodeSegment, Metadata
+#include <r_exec/init.h>          // for Init
+#include <stddef.h>               // for size_t
+#include <stdint.h>               // for uint64_t
+#include <chrono>                 // for microseconds, duration_cast, etc
+#include <iostream>               // for istreambuf_iterator, ostringstream, etc
+#include <sstream>
+#include <string>                 // for allocator, string, basic_string, etc
+#include <type_traits>            // for enable_if<>::type
+
+namespace r_comp {
+class RepliStruct;
+}  // namespace r_comp
 
 #define USR_OPERATOR_PATH "../../build/usr_operators/libusr_operators.so"
 #define USR_CLASSES_PATH  "user.classes.replicode"
@@ -71,7 +80,7 @@ int main(int argc, char *argv[])
     }
 
     // Redirect cout (the trace)
-    streambuf *old_cout = std::cout.rdbuf();
+    std::streambuf *old_cout = std::cout.rdbuf();
     std::ostringstream result_stream;
     std::cout.rdbuf(result_stream.rdbuf());
     r_code::vector<SysObject*> &objects = image.code_segment.objects;

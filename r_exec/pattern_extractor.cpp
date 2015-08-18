@@ -28,12 +28,33 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "auto_focus.h"
-#include "reduction_job.h"
-#include "reduction_job.tpl.h"
-#include "mem.h"
-#include "model_base.h"
-#include "CoreLibrary/debug.h"
+#include <ext/alloc_traits.h>          // for __alloc_traits<>::value_type
+#include <r_code/atom.h>               // for Atom
+#include <r_code/list.h>               // for list<>::const_iterator, list, etc
+#include <r_code/object.h>             // for Code, View::::SYNC_AXIOM, etc
+#include <r_code/replicode_defs.h>     // for FACT_AFTER, MK_VAL_VALUE, etc
+#include <r_code/time_buffer.h>        // for time_buffer<>::iterator, etc
+#include <r_code/utils.h>              // for Utils
+#include <r_exec/auto_focus.h>         // for AutoFocusController
+#include <r_exec/binding_map.h>        // for BindingMap, HLPBindingMap
+#include <r_exec/cst_controller.h>     // for CSTController
+#include <r_exec/factory.h>            // for _Fact, ICST, Fact
+#include <r_exec/group.h>              // for Group
+#include <r_exec/guard_builder.h>      // for GuardBuilder, etc
+#include <r_exec/init.h>               // for TDecompiler, Now
+#include <r_exec/mem.h>                // for _Mem
+#include <r_exec/model_base.h>         // for ModelBase
+#include <r_exec/opcodes.h>            // for Opcodes, Opcodes::ICst, etc
+#include <r_exec/pattern_extractor.h>  // for CTPX, Input, GTPX, PTPX, _TPX, etc
+#include <r_exec/reduction_job.h>      // for ReductionJob
+#include <r_exec/view.h>               // for View
+#include <stdio.h>                     // for snprintf
+#include <cstdint>                     // for uint64_t, uint16_t
+#include <string>                      // for allocator, string, operator+, etc
+#include <vector>                      // for vector, etc
+
+#include "CoreLibrary/base.h"          // for P, _Object
+#include "CoreLibrary/debug.h"         // for DebugStream
 
 namespace r_exec
 {

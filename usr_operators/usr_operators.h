@@ -31,9 +31,14 @@
 #ifndef usr_operators_h
 #define usr_operators_h
 
-#include <r_comp/segments.h>
-#include "types.h"
 
+#include <stdint.h>           // for uint16_t
+
+#include "CoreLibrary/dll.h"  // for dll_export
+
+namespace r_comp {
+class Metadata;
+}  // namespace r_comp
 
 extern "C" {
     void dll_export Init(r_comp::Metadata *metadata); // The metadata contains the opcodes
@@ -53,11 +58,6 @@ extern "C" {
     uint16_t dll_export GetCallbackCount();
     void dll_export GetCallbackName(char *callback_name);
 }
-
-#include "./Operators/operators.h"
-#include "./TestProgram/test_program.h"
-#include "./Correlator/correlator.h"
-#include "./Callbacks/callbacks.h"
 
 
 #endif

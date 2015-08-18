@@ -30,6 +30,8 @@
 
 #include "opcodes.h"
 
+#include <r_exec/opcodes.h>  // for Opcodes
+
 
 namespace r_exec
 {

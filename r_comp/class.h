@@ -31,13 +31,19 @@
 #ifndef class_h
 #define class_h
 
-#include "structure_member.h"
-#include <vector>
+#include <r_code/atom.h>              // for Atom
+#include <r_comp/structure_member.h>  // for ::ANY, ReturnType, etc
+#include <stddef.h>                   // for size_t
+#include <stdint.h>                   // for uint16_t, uint32_t, uint64_t
+#include <string>                     // for string
+#include <vector>                     // for vector
+
+namespace r_comp {
+class Metadata;
+}  // namespace r_comp
 
 namespace r_comp
 {
-
-class Compiler;
 
 class Class
 {
@@ -48,7 +54,7 @@ public:
     static const char *Type;
 
     Class(ReturnType t = ANY);
-    Class(Atom atom,
+    Class(r_code::Atom atom,
           std::string str_opcode,
           std::vector<StructureMember> r,
           ReturnType t = ANY);
@@ -58,7 +64,7 @@ public:
     std::string get_member_name(uint64_t index); // for decompilation
     ReturnType get_member_type(const uint16_t index);
     Class *get_member_class(Metadata *metadata, const std::string &name);
-    Atom atom;
+    r_code::Atom atom;
     std::string str_opcode; // unused for anything but objects, markers and operators.
     std::vector<StructureMember> things_to_read;
     ReturnType type; // ANY for non-operators.

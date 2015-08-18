@@ -1,10 +1,12 @@
 #include "replistruct.h"
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-#include <string>
+#include <r_comp/replistruct.h>  // for RepliStruct, RepliMacro, etc
+#include <stdlib.h>              // for atoi
+#include <algorithm>             // for find
+#include <iostream>              // for operator<<, istream, ostream, etc
+#include <string>                // for string, allocator, operator+, etc
+#include <fstream>               // for ifstream
+#include <sstream>               // for stringstream
 
 namespace r_comp
 {

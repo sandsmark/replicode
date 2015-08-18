@@ -29,13 +29,13 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "operator.h"
-#include "context.h"
-#include "mem.h"
-#include "init.h"
-#include "opcodes.h"
-#include "group.h"
-#include "r_code/utils.h"
-#include <math.h>
+
+#include <math.h>             // for fabs, exp, log, log10, pow
+#include <r_code/utils.h>     // for Utils
+#include <r_exec/context.h>   // for IPGMContext
+#include <r_exec/init.h>      // for Now
+#include <r_exec/operator.h>  // for Context, Operator
+#include <stdlib.h>           // for rand
 
 
 namespace r_exec

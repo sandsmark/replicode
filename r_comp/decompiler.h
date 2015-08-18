@@ -31,11 +31,25 @@
 #ifndef decompiler_h
 #define decompiler_h
 
-#include <fstream>
-#include <sstream>
+#include <r_code/vector.h>    // for vector
+#include <stdint.h>           // for uint16_t, uint64_t
+#include <fstream>            // for ostringstream
+#include <string>             // for string
+#include <unordered_map>      // for unordered_map
+#include <unordered_set>      // for unordered_set
+#include <vector>             // for vector
 
-#include "out_stream.h"
-#include "segments.h"
+#include "CoreLibrary/dll.h"  // for dll_export
+
+namespace r_code {
+class ImageObject;
+class SysObject;
+}  // namespace r_code
+namespace r_comp {
+class Image;
+class Metadata;
+class OutStream;
+}  // namespace r_comp
 
 
 namespace r_comp
@@ -51,7 +65,7 @@ private:
     bool hlp_postfix;
     bool horizontal_set;
 
-    ImageObject *current_object;
+    r_code::ImageObject *current_object;
 
     r_comp::Metadata *metadata;
     r_comp::Image *image;
@@ -92,7 +106,7 @@ private:
     bool partial_decompilation; // used when decompiling on-the-fly.
     bool ignore_named_objects;
     std::unordered_set<uint16_t> named_objects;
-    std::vector<SysObject *> imported_objects; // referenced objects added to the image that were not in the original list of objects to be decompiled.
+    std::vector<r_code::SysObject *> imported_objects; // referenced objects added to the image that were not in the original list of objects to be decompiled.
 public:
     Decompiler();
     ~Decompiler();
@@ -105,7 +119,7 @@ public:
     uint64_t decompile(r_comp::Image *image,
                        std::ostringstream *stream,
                        uint64_t time_offset,
-                       std::vector<SysObject *> &imported_objects); // idem, ignores named objects if in the imported object list.
+                       std::vector<r_code::SysObject *> &imported_objects); // idem, ignores named objects if in the imported object list.
     uint64_t decompile_references(r_comp::Image *image); // initialize a reference table so that objects can be decompiled individually; returns the number of objects.
     void decompile_object(uint16_t object_index, std::ostringstream *stream, uint64_t time_offset); // decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
     void decompile_object(const std::string object_name, std::ostringstream *stream, uint64_t time_offset); // decompiles a single object given its name: use this function to follow references.

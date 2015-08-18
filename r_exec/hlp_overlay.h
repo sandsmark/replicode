@@ -31,14 +31,24 @@
 #ifndef hlp_overlay_h
 #define hlp_overlay_h
 
-#include "overlay.h"
-#include "binding_map.h"
 
+#include <r_code/list.h>         // for list
+#include <r_exec/binding_map.h>  // for HLPBindingMap
+#include <r_exec/overlay.h>      // for Overlay
+#include <stdint.h>              // for uint16_t
+
+#include "CoreLibrary/base.h"    // for P
+
+namespace r_code {
+class Atom;
+class Code;
+}  // namespace r_code
+namespace r_exec {
+class _Fact;
+}  // namespace r_exec
 
 namespace r_exec
 {
-
-class HLPContext;
 
 // HLP: high-level patterns.
 class HLPOverlay:

@@ -28,8 +28,11 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <r_exec/reduction_job.h>
+
 namespace r_exec
 {
+// TODO nuke this
 template<class C> void Controller::__take_input(r_exec::View *input)   // utility: to be called by sub-classes.
 {
     ReductionJob<C> *j = new ReductionJob<C>(input/*_view*/, (C *)this);

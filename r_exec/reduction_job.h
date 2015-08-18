@@ -31,9 +31,12 @@
 #ifndef reduction_job_h
 #define reduction_job_h
 
-#include "overlay.h"
-#include "object.h"
 
+#include <r_exec/view.h>       // for View
+#include <stdint.h>            // for uint64_t
+
+#include "CoreLibrary/base.h"  // for P, _Object
+#include "CoreLibrary/dll.h"   // for dll_export
 
 namespace r_exec
 {
@@ -90,5 +93,7 @@ public:
     bool update(uint64_t now);
 };
 }
+
+#include <r_exec/reduction_job.tpl.h>
 
 #endif

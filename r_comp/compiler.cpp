@@ -29,9 +29,19 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "compiler.h"
-#include "replistruct.h"
-#include <string.h>
-#include <assert.h>
+
+#include <r_code/atom.h>         // for Atom, Atom::::DEVICE, Atom::::NODE, etc
+#include <r_code/object.h>       // for ImageObject, SysObject, SysView
+#include <r_code/vector.h>       // for vector
+#include <r_comp/compiler.h>     // for Compiler, Compiler::State
+#include <r_comp/replistruct.h>  // for RepliStruct, RepliStruct::Type::Set, etc
+#include <r_comp/segments.h>     // for Metadata, Reference, Image, etc
+#include <stddef.h>              // for size_t
+#include <stdlib.h>              // for strtoll, strtod, strtoull
+#include <cstdint>               // for uint16_t, int16_t, uint32_t, etc
+#include <fstream>               // for char_traits
+#include <stdexcept>             // for invalid_argument
+#include <utility>               // for pair
 
 
 namespace r_comp
@@ -284,7 +294,7 @@ bool Compiler::addLocalReference(const std::string reference_name, const uint16_
     // cast detection.
     size_t pos = reference_name.find('#');
 
-    if (pos != string::npos) {
+    if (pos != std::string::npos) {
         std::string class_name = reference_name.substr(pos + 1);
         std::string ref_name = reference_name.substr(0, pos);
         std::unordered_map<std::string, Class>::iterator it = _metadata->classes.find(class_name);

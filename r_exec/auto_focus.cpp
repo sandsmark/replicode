@@ -29,10 +29,24 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "auto_focus.h"
-#include "ast_controller.h"
-#include "overlay.tpl.h"
-#include "reduction_job.tpl.h"
-#include "CoreLibrary/debug.h"
+
+#include <r_code/atom.h>            // for Atom
+#include <r_code/list.h>            // for list
+#include <r_code/object.h>          // for Code, View::::SYNC_ONCE, etc
+#include <r_code/replicode_defs.h>  // for VIEW_RES, I_HLP_WR_E, VIEW_SYNC, etc
+#include <r_exec/ast_controller.h>  // for HASTController, PASTController
+#include <r_exec/auto_focus.h>      // for AutoFocusController, etc
+#include <r_exec/binding_map.h>     // for BindingMap
+#include <r_exec/group.h>           // for Group
+#include <r_exec/init.h>            // for Now
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::AntiFact, etc
+#include <r_exec/view.h>            // for View
+#include <mutex>                    // for lock_guard, mutex
+#include <string>                   // for string, allocator
+
+
+#include <r_exec/overlay.tpl.h>     // for __take_input
+
 
 namespace r_exec
 {

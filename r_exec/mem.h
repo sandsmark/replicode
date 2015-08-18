@@ -31,19 +31,34 @@
 #ifndef mem_h
 #define mem_h
 
-#include "reduction_job.h"
-#include "time_job.h"
-#include "pgm_overlay.h"
-#include "binding_map.h"
-#include "CoreLibrary/dll.h"
+#include <r_code/atom.h>       // for Atom
+#include <r_code/list.h>       // for list
+#include <r_code/object.h>     // for Mem
+#include <r_code/utils.h>      // for Utils
+#include <r_exec/group.h>      // for Group
+#include <stddef.h>            // for NULL
+#include <stdint.h>            // for uint64_t, uint16_t, int64_t
+#include <atomic>              // for atomic, atomic_int_fast64_t
+#include <condition_variable>  // for condition_variable
+#include <iosfwd>              // for ostream
+#include <mutex>               // for mutex, unique_lock
+#include <queue>               // for queue
+#include <thread>              // for thread
+#include <vector>              // for vector
 
-#include <list>
-#include <atomic>
-#include <thread>
-#include <queue>
-#include <condition_variable>
-#include "../r_code/list.h"
-#include "../r_comp/segments.h"
+#include "CoreLibrary/base.h"  // for P
+#include "CoreLibrary/dll.h"   // for dll_export
+
+namespace r_comp {
+class Image;
+class Metadata;
+}  // namespace r_comp
+namespace r_exec {
+class Controller;
+class TimeJob;
+class View;
+class _ReductionJob;
+}  // namespace r_exec
 
 namespace r_exec
 {
@@ -171,29 +186,29 @@ protected:
     std::mutex m_stateMutex;
 
 
-    r_code::list<P<Code> > objects; // store objects in order of injection: holds the initial objects (and dynamically created ones if MemStatic is used).
+    r_code::list<core::P<r_code::Code> > objects; // store objects in order of injection: holds the initial objects (and dynamically created ones if MemStatic is used).
 
     P<Group> _root; // holds everything.
-    Code *_stdin;
-    Code *_stdout;
-    Code *_self;
+    r_code::Code *_stdin;
+    r_code::Code *_stdout;
+    r_code::Code *_self;
 
     std::vector<Group *> initial_groups; // convenience; cleared after start();
 
     void init_timings(uint64_t now) const;
 
-    void store(Code *object);
+    void store(r_code::Code *object);
     virtual void set_last_oid(int64_t oid) = 0;
     virtual void bind(View *view) = 0;
 
     bool deleted;
 
     static const uint64_t DebugStreamCount = 8;
-    ostream *debug_streams[8];
+    std::ostream *debug_streams[8];
 
     _Mem();
 
-    void _unpack_code(Code *hlp, uint16_t fact_object_index, Code *fact_object, uint16_t read_index) const;
+    void _unpack_code(r_code::Code *hlp, uint16_t fact_object_index, r_code::Code *fact_object, uint16_t read_index) const;
 public:
     static _Mem *Get()
     {
@@ -287,13 +302,13 @@ public:
             return 1;
         }
 
-        return Utils::GetResilience(now, time_to_live, host->get_upr());
+        return r_code::Utils::GetResilience(now, time_to_live, host->get_upr());
     }
 
-    Code *get_root() const;
-    Code *get_stdin() const;
-    Code *get_stdout() const;
-    Code *get_self() const;
+    r_code::Code *get_root() const;
+    r_code::Code *get_stdin() const;
+    r_code::Code *get_stdout() const;
+    r_code::Code *get_self() const;
 
     State check_state(); // called by delegates after waiting in case stop() is called in the meantime.
     void start_core(); // called upon creation of a delegate.
@@ -317,13 +332,13 @@ public:
     void inject(View *view);
     void inject_async(View *view);
     void inject_new_object(View *view);
-    void inject_existing_object(View *view, Code *object, Group *host);
+    void inject_existing_object(View *view, r_code::Code *object, Group *host);
     void inject_null_program(Controller *c, Group *group, uint64_t time_to_live, bool take_past_inputs); // build a view v (ijt=now, act=1, sln=0, res according to time_to_live in the group), attach c to v, inject v in the group.
     void inject_hlps(std::vector<View *> views, Group *destination);
     void inject_notification(View *view, bool lock);
-    virtual Code *check_existence(Code *object) = 0; // returns the existing object if any, or object otherwise: in the latter case, packing may occur.
+    virtual r_code::Code *check_existence(r_code::Code *object) = 0; // returns the existing object if any, or object otherwise: in the latter case, packing may occur.
 
-    void propagate_sln(Code *object, double change, double source_sln_thr);
+    void propagate_sln(r_code::Code *object, double change, double source_sln_thr);
 
     // Called by groups.
     void inject_copy(View *view, Group *destination); // for cov; NB: no cov for groups, r-groups, models, pgm or notifications.
@@ -340,22 +355,22 @@ public:
 
     // From rMem to I/O device.
     // To be redefined by object transport aware subcalsses.
-    virtual void eject(Code *command);
+    virtual void eject(r_code::Code *command);
 
-    virtual r_code::Code *_build_object(Atom head) const = 0;
-    virtual r_code::Code *build_object(Atom head) const = 0;
+    virtual r_code::Code *_build_object(r_code::Atom head) const = 0;
+    virtual r_code::Code *build_object(r_code::Atom head) const = 0;
 
     // unpacking of high-level patterns: upon loading or reception.
-    void unpack_hlp(Code *hlp) const;
-    Code *unpack_fact(Code *hlp, uint16_t fact_index) const;
-    Code *unpack_fact_object(Code *hlp, uint16_t fact_object_index) const;
+    void unpack_hlp(r_code::Code *hlp) const;
+    r_code::Code *unpack_fact(r_code::Code *hlp, uint16_t fact_index) const;
+    r_code::Code *unpack_fact_object(r_code::Code *hlp, uint16_t fact_object_index) const;
 
     // packing of high-level patterns: upon dynamic generation or transmission.
-    void pack_hlp(Code *hlp) const;
-    void pack_fact(Code *fact, Code *hlp, uint16_t &write_index, std::vector<P<Code> > *references) const;
-    void pack_fact_object(Code *fact_object, Code *hlp, uint16_t &write_index, std::vector<P<Code> > *references) const;
+    void pack_hlp(r_code::Code *hlp) const;
+    void pack_fact(r_code::Code *fact, r_code::Code *hlp, uint16_t &write_index, std::vector<core::P<r_code::Code> > *references) const;
+    void pack_fact_object(r_code::Code *fact_object, r_code::Code *hlp, uint16_t &write_index, std::vector<core::P<r_code::Code> > *references) const;
 
-    Code *clone(Code *original) const; // shallow copy.
+    r_code::Code *clone(r_code::Code *original) const; // shallow copy.
 
     // External device I/O ////////////////////////////////////////////////////////////////
     virtual r_comp::Image *get_objects() = 0; // create an image; fill with all objects; call only when stopped.
@@ -437,12 +452,12 @@ public:
     r_code::Code *build_object(r_code::SysObject *source) const;
 
     // Called at runtime.
-    r_code::Code *_build_object(Atom head) const;
-    r_code::Code *build_object(Atom head) const;
+    r_code::Code *_build_object(r_code::Atom head) const;
+    r_code::Code *build_object(r_code::Atom head) const;
 
     // Executive device functions ////////////////////////////////////////////////////////
 
-    Code *check_existence(Code *object);
+    r_code::Code *check_existence(r_code::Code *object);
 
     // Called by the communication device (I/O).
     void inject(O *object, View *view);
@@ -450,8 +465,6 @@ public:
 
 }
 
-
-#include "mem.tpl.h"
-
+#include <r_exec/mem.tpl.h>
 
 #endif

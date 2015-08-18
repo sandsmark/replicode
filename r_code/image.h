@@ -31,12 +31,13 @@
 #ifndef r_code_image_h
 #define r_code_image_h
 
-#include "CoreLibrary/dll.h"
+#include <stddef.h>           // for size_t
+#include <stdint.h>           // for uint32_t, uint64_t
+#include <fstream>            // for ifstream, ofstream
+#include <string>             // for string
 
-#include <fstream>
+#include "CoreLibrary/dll.h"  // for dll_export
 
-
-using namespace std;
 
 namespace r_comp
 {
@@ -99,8 +100,8 @@ template<class I> class Image:
 public:
     static Image<I> *Build(uint64_t timestamp, size_t map_size, size_t code_size, size_t names_size);
     // file IO
-    static Image<I> *Read(ifstream &stream);
-    static void Write(Image<I> *image, ofstream &stream);
+    static Image<I> *Read(std::ifstream &stream);
+    static void Write(Image<I> *image, std::ofstream &stream);
 
     Image();
     ~Image();
@@ -126,8 +127,6 @@ void dll_export WriteString(uint32_t *data, const std::string &string);
 std::string dll_export ReadString(uint32_t *data);
 }
 
-
 #include "image.tpl.h"
-
 
 #endif

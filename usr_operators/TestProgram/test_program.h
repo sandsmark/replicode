@@ -31,9 +31,15 @@
 #ifndef test_program_h
 #define test_program_h
 
-#include "../types.h"
-#include "r_exec/overlay.h"
 
+#include "CoreLibrary/dll.h"  // for dll_export
+
+namespace r_code {
+class View;
+}  // namespace r_code
+namespace r_exec {
+class Controller;
+}  // namespace r_exec
 
 extern "C" {
     r_exec::Controller dll_export *test_program(r_code::View *view);

@@ -31,11 +31,15 @@
 #ifndef hlp_context_h
 #define hlp_context_h
 
-#include "../r_code/object.h"
 
-#include "_context.h"
-#include "hlp_overlay.h"
 
+
+#include <r_code/atom.h>         // for Atom
+#include <r_exec/_context.h>     // for _Context::::STEM, _Context, etc
+#include <r_exec/hlp_overlay.h>  // for HLPOverlay
+#include <stdint.h>              // for uint16_t
+
+#include "CoreLibrary/dll.h"     // for dll_export
 
 namespace r_exec
 {

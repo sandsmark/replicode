@@ -30,7 +30,16 @@
 
 #include "test_program.h"
 
-#include "r_exec/mem.h"
+#include <r_code/atom.h>            // for Atom
+#include <r_code/object.h>          // for Code
+#include <r_code/replicode_defs.h>  // for ICPP_PGM_ARGS
+#include <r_exec/overlay.h>         // for Controller
+#include <stdint.h>                 // for uint16_t
+#include <iostream>                 // for operator<<, basic_ostream, etc
+
+namespace r_exec {
+class View;
+}  // namespace r_exec
 
 
 // Sample c++ user-defined program.

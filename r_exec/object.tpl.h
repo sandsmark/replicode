@@ -63,7 +63,7 @@ template<class C, class U> bool Object<C, U>::invalidate()
     this->views.clear();
     rel_views();
 
-    if (this->code(0).getDescriptor() == Atom::MARKER) {
+    if (this->code(0).getDescriptor() == r_code::Atom::MARKER) {
         for (uint16_t i = 0; i < this->references_size(); ++i) {
             this->get_reference(i)->remove_marker(this);
         }
@@ -105,7 +105,7 @@ template<class C, class U> void Object<C, U>::mod(uint16_t member_index, float v
     }
 
     std::lock_guard<std::mutex> guard(m_pslnThrMutex);
-    this->code(member_index) = Atom::Float(v);
+    this->code(member_index) = r_code::Atom::Float(v);
 }
 
 template<class C, class U> void Object<C, U>::set(uint16_t member_index, float value)
@@ -115,10 +115,10 @@ template<class C, class U> void Object<C, U>::set(uint16_t member_index, float v
     }
 
     std::lock_guard<std::mutex> guard(m_pslnThrMutex);
-    this->code(member_index) = Atom::Float(value);
+    this->code(member_index) = r_code::Atom::Float(value);
 }
 
-template<class C, class U> View *Object<C, U>::get_view(Code *group, bool lock)
+template<class C, class U> r_code::View *Object<C, U>::get_view(r_code::Code *group, bool lock)
 {
     if (lock) {
         acq_views();

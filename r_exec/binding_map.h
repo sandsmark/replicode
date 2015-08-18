@@ -31,30 +31,39 @@
 #ifndef binding_map_h
 #define binding_map_h
 
-#include "object.h"
-#include "CoreLibrary/dll.h"
+#include <ext/alloc_traits.h>  // for __alloc_traits<>::value_type
+#include <r_code/atom.h>       // for r_code::Atom
+#include <stdint.h>            // for uint16_t, uint64_t, int16_t, uint8_t
+#include <vector>              // for vector
+
+#include "CoreLibrary/base.h"  // for P, _Object
+#include "CoreLibrary/dll.h"   // for dll_export
+
+namespace r_code {
+class Code;
+}  // namespace r_code
 
 
 namespace r_exec
 {
 
-class BindingMap;
 class AtomValue;
-class StructureValue;
+class BindingMap;
 class ObjectValue;
+class StructureValue;
 
 class dll_export Value:
-    public _Object
+    public core::_Object
 {
 protected:
     BindingMap *map;
     Value(BindingMap *map);
 public:
     virtual Value *copy(BindingMap *map) const = 0;
-    virtual void valuate(Code *destination, uint16_t write_index, uint16_t &extent_index) const = 0;
-    virtual bool match(const Code *object, uint16_t index) = 0;
-    virtual Atom *get_code() = 0;
-    virtual Code *get_object() = 0;
+    virtual void valuate(r_code::Code *destination, uint16_t write_index, uint16_t &extent_index) const = 0;
+    virtual bool match(const r_code::Code *object, uint16_t index) = 0;
+    virtual r_code::Atom *get_code() = 0;
+    virtual r_code::Code *get_object() = 0;
     virtual uint16_t get_code_size() = 0;
 
     virtual bool intersect(const Value *v) const
@@ -74,15 +83,15 @@ public:
         return false;
     }
 
-    virtual bool contains(const Atom a) const
+    virtual bool contains(const r_code::Atom a) const
     {
         return false;
     }
-    virtual bool contains(const Atom *s) const
+    virtual bool contains(const r_code::Atom *s) const
     {
         return false;
     }
-    virtual bool contains(const Code *o) const
+    virtual bool contains(const r_code::Code *o) const
     {
         return false;
     }
@@ -106,10 +115,10 @@ public:
     ~UnboundValue();
 
     Value *copy(BindingMap *map) const;
-    void valuate(Code *destination, uint16_t write_index, uint16_t &extent_index) const;
-    bool match(const Code *object, uint16_t index);
-    Atom *get_code();
-    Code *get_object();
+    void valuate(r_code::Code *destination, uint16_t write_index, uint16_t &extent_index) const;
+    bool match(const r_code::Code *object, uint16_t index);
+    r_code::Atom *get_code();
+    r_code::Code *get_object();
     uint16_t get_code_size();
 };
 
@@ -117,66 +126,66 @@ class dll_export AtomValue:
     public BoundValue
 {
 private:
-    Atom atom;
+    r_code::Atom atom;
 public:
-    AtomValue(BindingMap *map, Atom atom);
+    AtomValue(BindingMap *map, r_code::Atom atom);
 
     Value *copy(BindingMap *map) const;
-    void valuate(Code *destination, uint16_t write_index, uint16_t &extent_index) const;
-    bool match(const Code *object, uint16_t index);
-    Atom *get_code();
-    Code *get_object();
+    void valuate(r_code::Code *destination, uint16_t write_index, uint16_t &extent_index) const;
+    bool match(const r_code::Code *object, uint16_t index);
+    r_code::Atom *get_code();
+    r_code::Code *get_object();
     uint16_t get_code_size();
 
     bool intersect(const Value *v) const;
     bool _intersect(const AtomValue *v) const;
 
-    bool contains(const Atom a) const;
+    bool contains(const r_code::Atom a) const;
 };
 
 class dll_export StructureValue:
     public BoundValue
 {
 private:
-    P<Code> structure;
-    StructureValue(BindingMap *map, const Code *structure);
+    core::P<r_code::Code> structure;
+    StructureValue(BindingMap *map, const r_code::Code *structure);
 public:
-    StructureValue(BindingMap *map, const Code *source, uint16_t structure_index);
-    StructureValue(BindingMap *map, Atom *source, uint16_t structure_index);
+    StructureValue(BindingMap *map, const r_code::Code *source, uint16_t structure_index);
+    StructureValue(BindingMap *map, r_code::Atom *source, uint16_t structure_index);
     StructureValue(BindingMap *map, uint64_t time);
 
     Value *copy(BindingMap *map) const;
-    void valuate(Code *destination, uint16_t write_index, uint16_t &extent_index) const;
-    bool match(const Code *object, uint16_t index);
-    Atom *get_code();
-    Code *get_object();
+    void valuate(r_code::Code *destination, uint16_t write_index, uint16_t &extent_index) const;
+    bool match(const r_code::Code *object, uint16_t index);
+    r_code::Atom *get_code();
+    r_code::Code *get_object();
     uint16_t get_code_size();
 
     bool intersect(const Value *v) const;
     bool _intersect(const StructureValue *v) const;
 
-    bool contains(const Atom *s) const;
+    bool contains(const r_code::Atom *s) const;
 };
 
 class dll_export ObjectValue:
     public BoundValue
 {
 private:
-    const P<Code> object;
+    const core::P<r_code::Code> object;
 public:
-    ObjectValue(BindingMap *map, Code *object);
+    ObjectValue(BindingMap *map, r_code::Code *object);
 
     Value *copy(BindingMap *map) const;
-    void valuate(Code *destination, uint16_t write_index, uint16_t &extent_index) const;
-    bool match(const Code *object, uint16_t index);
-    Atom *get_code();
-    Code *get_object();
+    void valuate(r_code::Code *destination, uint16_t write_index, uint16_t &extent_index) const;
+    bool match(const r_code::Code *object, uint16_t index);
+    r_code::Atom *get_code();
+    r_code::Code *get_object();
     uint16_t get_code_size();
 
     bool intersect(const Value *v) const;
     bool _intersect(const ObjectValue *v) const;
 
-    bool contains(const Code *o) const;
+    bool contains(const r_code::Code *o) const;
 };
 
 typedef enum {
@@ -185,15 +194,15 @@ typedef enum {
     MATCH_FAILURE = 2
 } MatchResult;
 
-class _Fact;
 class Fact;
+class _Fact;
 
 class dll_export BindingMap:
-    public _Object
+    public core::_Object
 {
     friend class UnboundValue;
 protected:
-    std::vector<P<Value> > map; // indexed by vl-ptrs.
+    std::vector<core::P<Value> > map; // indexed by vl-ptrs.
 
     uint64_t unbound_values;
 
@@ -205,12 +214,12 @@ protected:
 
     bool match_timings(uint64_t stored_after, uint64_t stored_before, uint64_t after, uint64_t before, uint64_t destination_after_index, uint64_t destination_before_index);
     bool match_fwd_timings(const _Fact *f_object, const _Fact *f_pattern);
-    bool match(const Code *object, uint16_t o_base_index, uint16_t o_index, const Code *pattern, uint16_t p_index, uint16_t o_arity);
+    bool match(const r_code::Code *object, uint16_t o_base_index, uint16_t o_index, const r_code::Code *pattern, uint16_t p_index, uint16_t o_arity);
 
-    void abstract_member(Code *object, uint16_t index, Code *abstracted_object, uint16_t write_index, uint16_t &extent_index);
-    Atom get_atom_variable(Atom a);
-    Atom get_structure_variable(Code *object, uint16_t index);
-    Atom get_object_variable(Code *object);
+    void abstract_member(r_code::Code *object, uint16_t index, r_code::Code *abstracted_object, uint16_t write_index, uint16_t &extent_index);
+    r_code::Atom get_atom_variable(r_code::Atom a);
+    r_code::Atom get_structure_variable(r_code::Code *object, uint16_t index);
+    r_code::Atom get_object_variable(r_code::Code *object);
 public:
     BindingMap();
     BindingMap(const BindingMap *source);
@@ -222,11 +231,11 @@ public:
 
     virtual void clear();
 
-    void init(Code *object, uint16_t index);
+    void init(r_code::Code *object, uint16_t index);
 
     _Fact *abstract_f_ihlp(_Fact *fact) const; // for icst and imdl.
     _Fact *abstract_fact(_Fact *fact, _Fact *original, bool force_sync);
-    Code *abstract_object(Code *object, bool force_sync);
+    r_code::Code *abstract_object(r_code::Code *object, bool force_sync);
 
     void reset_fwd_timings(_Fact *reference_fact); // reset after and before from the timings of the reference object.
 
@@ -236,24 +245,24 @@ public:
     uint64_t get_fwd_after() const; // assumes the timings are valuated.
     uint64_t get_fwd_before() const; // idem.
 
-    bool match_object(const Code *object, const Code *pattern);
-    bool match_structure(const Code *object, uint16_t o_base_index, uint16_t o_index, const Code *pattern, uint16_t p_index);
-    bool match_atom(Atom o_atom, Atom p_atom);
+    bool match_object(const r_code::Code *object, const r_code::Code *pattern);
+    bool match_structure(const r_code::Code *object, uint16_t o_base_index, uint16_t o_index, const r_code::Code *pattern, uint16_t p_index);
+    bool match_atom(r_code::Atom o_atom, r_code::Atom p_atom);
 
     void bind_variable(BoundValue *value, uint8_t id);
-    void bind_variable(Atom *code, uint8_t id, uint16_t value_index, Atom *intermediate_results);
+    void bind_variable(r_code::Atom *code, uint8_t id, uint16_t value_index, r_code::Atom *intermediate_results);
 
-    Atom *get_value_code(uint16_t id);
+    r_code::Atom *get_value_code(uint16_t id);
     uint16_t get_value_code_size(uint16_t id);
 
     bool intersect(BindingMap *bm);
     bool is_fully_specified() const;
 
-    Atom *get_code(uint16_t i) const
+    r_code::Atom *get_code(uint16_t i) const
     {
         return map[i]->get_code();
     }
-    Code *get_object(uint16_t i) const
+    r_code::Code *get_object(uint16_t i) const
     {
         return map[i]->get_object();
     }
@@ -277,8 +286,8 @@ private:
 
     bool match_bwd_timings(const _Fact *f_object, const _Fact *f_pattern);
 
-    bool need_binding(Code *pattern) const;
-    void init_from_pattern(const Code *source, int16_t position); // first source is f->obj.
+    bool need_binding(r_code::Code *pattern) const;
+    void init_from_pattern(const r_code::Code *source, int16_t position); // first source is f->obj.
 public:
     HLPBindingMap();
     HLPBindingMap(const HLPBindingMap *source);
@@ -289,10 +298,10 @@ public:
     void load(const HLPBindingMap *source);
     void clear();
 
-    void init_from_hlp(const Code *hlp);
+    void init_from_hlp(const r_code::Code *hlp);
     void init_from_f_ihlp(const _Fact *f_ihlp);
-    Fact *build_f_ihlp(Code *hlp, uint16_t opcode, bool wr_enabled) const; // return f->ihlp.
-    Code *bind_pattern(Code *pattern) const;
+    Fact *build_f_ihlp(r_code::Code *hlp, uint16_t opcode, bool wr_enabled) const; // return f->ihlp.
+    r_code::Code *bind_pattern(r_code::Code *pattern) const;
 
     void reset_bwd_timings(_Fact *reference_fact); // idem for the last 2 unbound variables (i.e. timings of the second pattern in a mdl).
 

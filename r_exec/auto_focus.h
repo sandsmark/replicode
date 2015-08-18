@@ -31,13 +31,34 @@
 #ifndef auto_focus_h
 #define auto_focus_h
 
-#include "../r_code/time_buffer.h"
 
-#include "overlay.h"
-#include "group.h"
-#include "pattern_extractor.h"
-#include "mem.h"
 
+
+#include <r_code/time_buffer.h>        // for time_buffer
+#include <r_code/utils.h>              // for PHash
+#include <r_exec/factory.h>            // for _Fact
+#include <r_exec/mem.h>                // for _Mem
+#include <r_exec/overlay.h>            // for Controller
+#include <r_exec/pattern_extractor.h>  // for CInput, Input, etc
+#include <stddef.h>                    // for size_t
+#include <stdint.h>                    // for uint64_t
+#include <unordered_map>               // for operator!=, unordered_map, etc
+#include <utility>                     // for pair
+#include <vector>                      // for vector
+
+#include "CoreLibrary/base.h"          // for P
+#include "CoreLibrary/dll.h"           // for dll_export
+
+namespace r_code {
+class Code;
+class View;
+template <typename T> class list;
+}  // namespace r_code
+namespace r_exec {
+class BindingMap;
+class Group;
+class View;
+}  // namespace r_exec
 
 namespace r_exec
 {

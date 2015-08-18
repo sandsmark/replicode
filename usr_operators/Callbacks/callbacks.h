@@ -31,11 +31,17 @@
 #ifndef callbacks_h
 #define callbacks_h
 
-#include "../types.h"
 
+#include <stdint.h>           // for uint64_t, uint8_t
+
+#include "CoreLibrary/dll.h"  // for dll_export
+
+namespace r_code {
+class Code;
+}  // namespace r_code
 
 extern "C" {
-    bool dll_export print(uint64_t t, bool suspended, const char *msg, uint8_t object_count, Code **objects);
+    bool dll_export print(uint64_t t, bool suspended, const char *msg, uint8_t object_count, r_code::Code **objects);
 }
 
 

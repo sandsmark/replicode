@@ -31,8 +31,16 @@
 #ifndef pgm_controller_h
 #define pgm_controller_h
 
-#include "pgm_overlay.h"
 
+#include <r_code/object.h>    // for Code
+#include <r_exec/overlay.h>   // for OController
+#include <mutex>              // for mutex
+
+#include "CoreLibrary/dll.h"  // for dll_export
+
+namespace r_exec {
+class View;
+}  // namespace r_exec
 
 namespace r_exec
 {

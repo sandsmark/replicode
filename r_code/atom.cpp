@@ -30,7 +30,9 @@
 
 #include "atom.h"
 
-#include <iostream>
+#include <r_code/atom.h>  // for Atom, Atom::::COMPOSITE_STATE, etc
+#include <iostream>       // for operator<<, cout, ostream, basic_ostream, etc
+#include <string>         // for string
 
 
 namespace r_code

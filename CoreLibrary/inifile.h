@@ -1,8 +1,9 @@
 #ifndef INIFILE_H
 #define INIFILE_H
 
-#include <unordered_map>
-#include <string>
+#include <stdint.h>       // for uint64_t
+#include <string>         // for string
+#include <unordered_map>  // for unordered_map
 
 namespace utils
 {

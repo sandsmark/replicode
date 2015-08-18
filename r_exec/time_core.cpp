@@ -29,10 +29,13 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "time_core.h"
-#include "mem.h"
-#include "init.h"
 
-#include <chrono>
+#include <r_exec/init.h>      // for Now
+#include <r_exec/mem.h>       // for _Mem, _Mem::::RUNNING
+#include <r_exec/time_job.h>  // for TimeJob
+#include <stdint.h>           // for int64_t
+#include <chrono>             // for duration, steady_clock, microseconds, etc
+#include <thread>             // for thread, sleep_until
 
 namespace r_exec
 {

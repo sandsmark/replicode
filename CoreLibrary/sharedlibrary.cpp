@@ -30,12 +30,6 @@
 
 #include "sharedlibrary.h"
 
-#include <algorithm>
-#include <cctype>
-#include <chrono>
-#include <sys/time.h>
-#include <string.h>
-
 namespace utils
 {
 

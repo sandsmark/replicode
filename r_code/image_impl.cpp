@@ -30,6 +30,8 @@
 
 #include "image_impl.h"
 
+#include <r_code/image_impl.h>  // for ImageImpl
+
 
 namespace r_code
 {

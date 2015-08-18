@@ -29,20 +29,35 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "init.h"
-#include "object.h"
-#include "operator.h"
-#include "cpp_programs.h"
-#include "callbacks.h"
-#include "opcodes.h"
-#include "overlay.h"
-#include "mem.h"
 
-#include "r_comp/decompiler.h"
-#include "r_comp/preprocessor.h"
+#include <r_code/atom.h>                // for Atom
+#include <r_code/object.h>              // for Code
+#include <r_comp/class.h>               // for Class
+#include <r_comp/compiler.h>            // for Compiler
+#include <r_comp/decompiler.h>          // for Decompiler
+#include <r_comp/preprocessor.h>        // for Preprocessor
+#include <r_comp/replistruct.h>         // for RepliStruct
+#include <r_comp/segments.h>            // for Metadata, Image
+#include <r_exec/callbacks.h>           // for Callbacks
+#include <r_exec/cpp_programs.h>        // for CPPPrograms
+#include <r_exec/init.h>                // for TDecompiler, etc
+#include <r_exec/opcodes.h>             // for Opcodes, Opcodes::Add, etc
+#include <r_exec/operator.h>            // for Operator, add, dis, div, e10, etc
+#include <r_exec/view.h>                // for View, View::ViewOpcode
+#include <stdlib.h>                     // for exit
+#include <string.h>                     // for memset
+#include <cstdint>                      // for uint16_t, uint64_t, uint8_t
+#include <iostream>                     // for operator<<, basic_ostream, etc
+#include <unordered_map>                // for unordered_map, etc
+#include <utility>                      // for pair, move
+#include <sstream>                      // for ostringstream
 
-#include "CoreLibrary/sharedlibrary.h"
+#include "CoreLibrary/debug.h"          // for debug, DebugStream
+#include "CoreLibrary/sharedlibrary.h"  // for SharedLibrary
 
-#include <string.h>
+namespace r_exec {
+class Controller;
+}  // namespace r_exec
 
 namespace r_exec
 {

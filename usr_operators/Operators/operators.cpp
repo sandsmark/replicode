@@ -30,8 +30,12 @@
 
 #include "operators.h"
 
-#include "r_exec/init.h"
-#include "r_exec/mem.h"
+#include <math.h>             // for sqrt
+#include <r_code/atom.h>      // for Atom
+#include <r_comp/segments.h>  // for Metadata
+#include <cstdint>            // for uint16_t
+#include <string>             // for string
+#include <unordered_map>      // for unordered_map
 
 
 uint16_t Vec3Opcode;

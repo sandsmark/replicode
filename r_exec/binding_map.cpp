@@ -28,13 +28,23 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "mem.h"
+#include <r_code/object.h>          // for Code, LObject
+#include <r_code/replicode_defs.h>  // for FACT_AFTER, FACT_BEFORE, etc
+#include <r_code/utils.h>           // for Utils
+#include <r_exec/binding_map.h>     // for HLPBindingMap, BindingMap, etc
+#include <r_exec/factory.h>         // for _Fact, Fact, AntiFact
+#include <r_exec/mem.h>             // for _Mem
+#include <r_exec/opcodes.h>         // for Opcodes, Opcodes::Ent, etc
+
 #include "binding_map.h"
-#include "factory.h"
 
 
 namespace r_exec
 {
+
+using r_code::Atom;
+using r_code::Code;
+using r_code::Utils;
 
 Value::Value(BindingMap *map): _Object(), map(map)
 {

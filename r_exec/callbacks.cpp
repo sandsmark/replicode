@@ -30,6 +30,9 @@
 
 #include	"callbacks.h"
 
+#include <r_exec/callbacks.h>  // for Callbacks, Callbacks::Callback
+#include <utility>             // for pair
+
 namespace r_exec
 {
 

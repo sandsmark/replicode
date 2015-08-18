@@ -31,9 +31,17 @@
 #ifndef cpp_programs_h
 #define cpp_programs_h
 
-#include <unordered_map>
+#include <string>             // for string
+#include <unordered_map>      // for unordered_map
 
-#include "overlay.h"
+#include "CoreLibrary/dll.h"  // for dll_export
+
+namespace r_code {
+class View;
+}  // namespace r_code
+namespace r_exec {
+class Controller;
+}  // namespace r_exec
 
 namespace r_exec
 {

@@ -29,11 +29,16 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "view.h"
-#include "group.h"
-#include "mem.h"
 
-#include <limits>
-#include <string.h>
+#include <r_code/utils.h>    // for Utils
+#include <r_exec/group.h>    // for Group
+#include <r_exec/mem.h>      // for _Mem
+#include <r_exec/opcodes.h>  // for Opcodes, Opcodes::PgmView, etc
+#include <r_exec/overlay.h>  // for Controller
+#include <r_exec/view.h>     // for View, NotificationView
+#include <string.h>          // for memcpy
+#include <limits>            // for numeric_limits
+#include <unordered_set>     // for unordered_set
 
 namespace r_exec
 {

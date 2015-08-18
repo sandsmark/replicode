@@ -31,13 +31,39 @@
 #ifndef mdl_controller_h
 #define mdl_controller_h
 
-#include "hlp_overlay.h"
-#include "hlp_controller.h"
-#include "p_monitor.h"
-#include "factory.h"
-#include "reduction_job.h"
-#include "mem.h"
 
+#include <r_code/list.h>            // for list
+#include <r_code/utils.h>           // for PHash
+#include <r_exec/hlp_controller.h>  // for ChainingStatus, etc
+#include <r_exec/hlp_overlay.h>     // for HLPOverlay
+#include <r_exec/init.h>            // for Now
+#include <r_exec/mem.h>             // for _Mem
+#include <r_exec/reduction_job.h>   // for BatchReductionJob
+#include <stdint.h>                 // for uint64_t
+#include <mutex>                    // for mutex, lock_guard
+#include <unordered_map>            // for unordered_map
+#include <utility>                  // for pair
+#include <vector>                   // for vector
+
+#include "CoreLibrary/base.h"       // for P
+
+namespace r_code {
+class Code;
+class View;
+}  // namespace r_code
+namespace r_exec {
+class Controller;
+class Fact;
+class HLPBindingMap;
+class MDLController;
+class Overlay;
+class PMonitor;
+class Pred;
+class Sim;
+class View;
+class _Fact;
+class _GMonitor;
+}  // namespace r_exec
 
 namespace r_exec
 {
@@ -78,6 +104,7 @@ public:
 };
 
 class MDLController;
+
 class Requirements
 {
 public:

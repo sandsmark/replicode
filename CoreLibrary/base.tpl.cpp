@@ -31,7 +31,7 @@
 namespace core
 {
 
-template<class C> inline P<C>::P(): object(NULL)
+template<class C> inline P<C>::P(): object(nullptr)
 {
 }
 

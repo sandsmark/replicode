@@ -29,17 +29,17 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "object.h"
-#include "group.h"
-#include "opcodes.h"
+
+#include <r_code/atom.h>  // for Atom, Atom::::MARKER
 
 
 namespace r_exec
 {
 
-bool IsNotification(Code *object)
+bool IsNotification(r_code::Code *object)
 {
     switch (object->code(0).getDescriptor()) {
-    case Atom::MARKER:
+    case r_code::Atom::MARKER:
         return object->code(0).asOpcode() == Opcodes::MkActChg ||
                object->code(0).asOpcode() == Opcodes::MkHighAct ||
                object->code(0).asOpcode() == Opcodes::MkHighSln ||

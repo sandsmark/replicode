@@ -31,8 +31,15 @@
 #ifndef p_monitor_h
 #define p_monitor_h
 
-#include "monitor.h"
 
+#include <r_exec/monitor.h>  // for Monitor
+#include <stdint.h>          // for uint64_t
+
+namespace r_exec {
+class BindingMap;
+class Fact;
+class _Fact;
+}  // namespace r_exec
 
 namespace r_exec
 {

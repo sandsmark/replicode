@@ -31,13 +31,24 @@
 #ifndef model_base_h
 #define model_base_h
 
-#include "factory.h"
 
+#include <stddef.h>            // for size_t
+#include <stdint.h>            // for uint64_t
+#include <mutex>               // for mutex
+#include <unordered_set>       // for unordered_set
+
+#include "CoreLibrary/base.h"  // for P
+
+namespace r_code {
+class Code;
+template <typename T> class list;
+}  // namespace r_code
+namespace r_exec {
+class _Fact;
+}  // namespace r_exec
 
 namespace r_exec
 {
-
-class _Mem;
 
 /// TPX guess models: this list is meant for TPXs to (a) avoid re-guessing known failed models and,
 /// (b) avoid producing the same models in case they run concurrently.
@@ -58,16 +69,16 @@ private:
     class MEntry
     {
     private:
-        static bool Match(Code *lhs, Code *rhs);
+        static bool Match(r_code::Code *lhs, r_code::Code *rhs);
         /// use for lhs/rhs.
         static uint64_t _ComputeHashCode(_Fact *component);
     public:
-        static uint64_t ComputeHashCode(Code *mdl, bool packed);
+        static uint64_t ComputeHashCode(r_code::Code *mdl, bool packed);
 
         MEntry();
-        MEntry(Code *mdl, bool packed);
+        MEntry(r_code::Code *mdl, bool packed);
 
-        P<Code> mdl;
+        core::P<r_code::Code> mdl;
         /// last time the mdl was successfully compared to.
         uint64_t touch_time;
         uint64_t hash_code;
@@ -116,23 +127,23 @@ public:
 
     /// called by _Mem::load(); models with no views go to the black_list.
     /// @variable mdl is already packed.
-    void load(Code *mdl);
-    void get_models(r_code::list<P<Code> > &models); // white_list first, black_list next.
+    void load(r_code::Code *mdl);
+    void get_models(r_code::list<core::P<r_code::Code> > &models); // white_list first, black_list next.
 
     /// caveat: @variable mdl is unpacked; return (a) NULL if the model is in the black list, (b) a model in the white list if the @variable mdl has been registered there or (c) the @variable mdl itself if not in the model base, in which case the @variable mdl is added to the white list.
-    Code *check_existence(Code *mdl);
+    r_code::Code *check_existence(r_code::Code *mdl);
 
     /// @varible m1 is a requirement on @variable m0; @variable _m0 and @variable _m1 are the return values as defined above; @variable m0 added only if @variable m1 is not black listed.
     /// @variable m0 and @variable m1 unpacked.
-    void check_existence(Code *m0, Code *m1, Code *&_m0, Code *&_m1);
+    void check_existence(r_code::Code *m0, r_code::Code *m1, r_code::Code *&_m0, r_code::Code *&_m1);
 
     /// moves the mdl from the white to the black list; happens to bad models.
     /// @variable mdl is packed.
-    void register_mdl_failure(Code *mdl);
+    void register_mdl_failure(r_code::Code *mdl);
 
     /// deletes the mdl from the white list; happen to models that have been unused for primary_thz.
     /// @variable mdl is packed.
-    void register_mdl_timeout(Code *mdl);
+    void register_mdl_timeout(r_code::Code *mdl);
 };
 }
 

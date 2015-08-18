@@ -29,8 +29,13 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "hlp_controller.h"
-#include "hlp_overlay.h"
-#include "mem.h"
+
+#include <r_code/atom.h>            // for Atom
+#include <r_exec/group.h>           // for Group
+#include <r_exec/hlp_controller.h>  // for HLPController, etc
+#include <r_exec/hlp_overlay.h>     // for HLPOverlay
+#include <r_exec/mem.h>             // for _Mem
+#include <atomic>                   // for atomic_int_fast64_t
 
 
 namespace r_exec

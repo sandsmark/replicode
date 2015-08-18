@@ -1,17 +1,19 @@
 #ifndef REPLISTRUCT_H
 #define REPLISTRUCT_H
 
-#include <cstdint>
-#include <string>
-#include <list>
-#include <unordered_map>
-#include <vector>
+#include <cstdint>        // for uint64_t, int64_t
+#include <iosfwd>         // for ostream, istream
+#include <list>           // for list
+#include <string>         // for string, basic_string, allocator
+#include <unordered_map>  // for unordered_map
+#include <vector>         // for vector
 
 namespace r_comp
 {
 
-class RepliMacro;
 class RepliCondition;
+class RepliMacro;
+
 class RepliStruct
 {
 public:

@@ -29,7 +29,9 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "reduction_job.h"
-#include "mem.h"
+
+#include <r_exec/mem.h>            // for _Mem
+#include <r_exec/reduction_job.h>  // for BatchReductionJob, ReductionJob, etc
 
 
 namespace r_exec
@@ -37,19 +39,6 @@ namespace r_exec
 
 _ReductionJob::_ReductionJob(): _Object()
 {
-}
-
-template <class _P> bool ReductionJob<_P>::update(uint64_t now)
-{
-    _Mem::Get()->register_reduction_job_latency(now - ijt);
-    processor->reduce(input);
-    return true;
-}
-template<class _P, class T, class C> bool BatchReductionJob<_P, T, C>::update(uint64_t now)
-{
-    _Mem::Get()->register_reduction_job_latency(now - ijt);
-    processor->reduce_batch(trigger, controller);
-    return true;
 }
 
 ////////////////////////////////////////////////////////////

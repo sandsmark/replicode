@@ -30,8 +30,20 @@
 
 #include "segments.h"
 
-#include <iostream>
-#include <string.h>
+#include <r_code/atom.h>            // for Atom, Atom::::COMPOSITE_STATE, etc
+#include <r_code/image.h>           // for GetStringSize, ReadString, etc
+#include <r_code/list.h>            // for list<>::const_iterator, list, etc
+#include <r_code/object.h>          // for SysObject, Code, View, SysView, etc
+#include <r_code/replicode_defs.h>  // for CST_HIDDEN_REFS, MDL_HIDDEN_REFS
+#include <r_comp/segments.h>        // for Metadata, Image, CodeSegment, etc
+#include <string.h>                 // for memcpy
+#include <cstdint>                  // for uint32_t, uintptr_t, uint64_t, etc
+#include <unordered_set>            // for unordered_set<>::const_iterator, etc
+#include <utility>                  // for pair
+#include <vector>                   // for vector
+
+#include "CoreLibrary/base.h"       // for P
+#include "CoreLibrary/debug.h"      // for DebugStream, debug
 
 
 namespace r_comp

@@ -28,10 +28,13 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "p_monitor.h"
-#include "mem.h"
-#include "mdl_controller.h"
 
+#include <r_exec/binding_map.h>     // for BindingMap
+#include <r_exec/factory.h>         // for Fact
+#include <r_exec/mdl_controller.h>  // for MDLController
+#include <r_exec/monitor.h>         // for Monitor
+
+#include "CoreLibrary/base.h"       // for P, _Object
 
 namespace r_exec
 {

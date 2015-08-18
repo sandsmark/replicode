@@ -31,16 +31,19 @@
 #ifndef r_code_object_h
 #define r_code_object_h
 
-#include "atom.h"
-#include "vector.h"
-#include "list.h"
-#include "replicode_defs.h"
-#include "utils.h"
+#include <r_code/atom.h>            // for Atom
+#include <r_code/list.h>            // for list
+#include <r_code/replicode_defs.h>  // for VIEW_IJT, VIEW_CODE_MAX_SIZE, etc
+#include <r_code/utils.h>           // for Utils
+#include <r_code/vector.h>          // for vector
+#include <stddef.h>                 // for NULL, size_t
+#include <stdint.h>                 // for uint16_t, uint32_t, uint64_t, etc
+#include <iostream>                 // for operator<<, cout, ostream, etc
+#include <unordered_set>            // for unordered_set
+#include <vector>                   // for vector, allocator
 
-#include "CoreLibrary/base.h"
-#include <unordered_set>
-
-using namespace core;
+#include "CoreLibrary/base.h"       // for P, _Object
+#include "CoreLibrary/dll.h"        // for dll_export
 
 namespace r_code
 {
@@ -100,8 +103,6 @@ private:
 };
 
 // Interfaces for r_exec classes ////////////////////////////////////////////////////////////////////////
-
-class Object;
 
 class dll_export View : public _Object
 {

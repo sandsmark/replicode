@@ -31,15 +31,26 @@
 #ifndef pgm_overlay_h
 #define pgm_overlay_h
 
-#include "overlay.h"
 
+#include <r_code/atom.h>       // for Atom
+#include <r_code/list.h>       // for list
+#include <r_exec/overlay.h>    // for Overlay
+#include <stdint.h>            // for uint16_t, int16_t, uint64_t
+#include <vector>              // for vector
+
+#include "CoreLibrary/base.h"  // for P
+#include "CoreLibrary/dll.h"   // for dll_export
+
+namespace r_code {
+class Code;
+class View;
+}  // namespace r_code
+namespace r_exec {
+class View;
+}  // namespace r_exec
 
 namespace r_exec
 {
-
-class PGMController;
-class InputLessPGMController;
-class IPGMContext;
 
 // Overlays for input-less programs.
 // Base class for other programs (with inputs, anti-programs).

@@ -31,8 +31,14 @@
 #ifndef operators_h
 #define operators_h
 
-#include "../types.h"
-#include <r_comp/segments.h>
+#include <r_exec/operator.h>  // for Context
+#include <stdint.h>           // for uint16_t
+
+#include "CoreLibrary/dll.h"  // for dll_export
+
+namespace r_comp {
+class Metadata;
+}  // namespace r_comp
 
 extern "C" {
     bool dll_export add(const r_exec::Context &context, uint16_t &index);

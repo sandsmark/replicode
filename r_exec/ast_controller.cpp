@@ -29,11 +29,18 @@
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ast_controller.h"
-#include "mem.h"
-#include "factory.h"
-#include "auto_focus.h"
-#include "overlay.tpl.h"
-#include "reduction_job.tpl.h"
+
+#include <r_exec/ast_controller.h>      // for PASTController, etc
+#include <r_exec/binding_map.h>         // for ::MATCH_FAILURE, etc
+#include <r_exec/factory.h>             // for _Fact
+#include <r_exec/pattern_extractor.h>   // for CTPX
+
+#include <r_exec/overlay.tpl.h>         // for __take_input
+
+namespace r_exec {
+class AutoFocusController;
+class View;
+}  // namespace r_exec
 
 namespace r_exec
 {
