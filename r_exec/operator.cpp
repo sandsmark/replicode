@@ -71,10 +71,7 @@ bool rnd(const Context &context, uint16_t &index)
         return false;
     }
 
-    /*Random r;double rng=range[0].asFloat();
-    double result=r(range[0].asFloat());
-    result/=ULONG_MAX;*/
-    float result = (((double)(rand() % 100)) / 100) * range[0].asFloat();
+    const float result = (rand() / (double)RAND_MAX) * (range[0].asFloat() * 0.99);
     index = context.setAtomicResult(Atom::Float(result));
     return true;
 }
