@@ -300,7 +300,7 @@ bool Init(const char *user_operator_library_path,
 
     // load class Opcodes.
     View::ViewOpcode = opcodes["view"];
-    Opcodes::View    = opcodes["view"];//.find("view")->second;
+    Opcodes::View    = opcodes["view"];
     Opcodes::PgmView = opcodes["pgm_view"];
     Opcodes::GrpView = opcodes["grp_view"];
     Opcodes::Ent     = opcodes["ent"];
@@ -411,8 +411,7 @@ bool Init(const char *user_operator_library_path,
     uint16_t operatorCount = GetOperatorCount();
 
     for (uint16_t i = 0; i < operatorCount; ++i) {
-        char op_name[256];
-        memset(op_name, 0, 256);
+        char op_name[256] = { 0 };
         GetOperatorName(op_name, i);
         std::unordered_map<std::string, uint16_t>::iterator it = opcodes.find(op_name);
 
