@@ -31,7 +31,7 @@
 #ifndef settings_h
 #define settings_h
 
-#include <CoreLibrary/inifile.h>
+#include "inifile.h"
 #include <CoreLibrary/debug.h>
 #include <thread>
 

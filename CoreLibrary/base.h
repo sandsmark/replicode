@@ -39,7 +39,26 @@
 namespace core
 {
 
-class _Object;
+//class P;
+
+
+// Root smart-pointable object class.
+class core_dll _Object
+{
+    template<class C> friend class P;
+    friend class _P;
+protected:
+    std::atomic_int_fast64_t refCount;
+    _Object() : refCount(0) {}
+public:
+    virtual ~_Object() {}
+    void incRef() { ++refCount; }
+    virtual void decRef() {
+        if (--refCount) {
+            delete this;
+        }
+    }
+};
 
 // Smart pointer (ref counting, deallocates when ref count<=0).
 // No circular refs (use std c++ ptrs).
@@ -50,47 +69,94 @@ template<class C> class P
 private:
     _Object *object;
 public:
-    P();
-    P(C *o);
-    P(const P<C> &p);
-    ~P();
-    C *operator ->() const;
+    inline P() : object(nullptr) {}
+    inline P(C *o) : object(o) {}
+    inline P(const P<C> &p) : object(p.object)
+    {
+        if (object) {
+            object->incRef();
+        }
+    }
+    inline ~P() {
+        if (object) {
+            object->decRef();
+        }
+    }
+
+    C *operator ->() const
+    {
+        return (C *)object;
+    }
+
     template<class D> operator D *() const
     {
         return (D *)object;
     }
-    bool operator ==(C *c) const;
-    bool operator !=(C *c) const;
-    bool operator <(C *c) const;
-    bool operator >(C *c) const;
-    bool operator !() const;
-    template<class D> bool operator ==(P<D> &p) const;
-    template<class D> bool operator !=(P<D> &p) const;
-    P<C> &operator =(C *c);
-    P<C> &operator =(const P<C> &p);
-    template<class D> P<C> &operator =(const P<D> &p);
+
+    bool operator ==(C *c) const
+    {
+        return object == c;
+    }
+
+    bool operator !=(C *c) const
+    {
+        return object != c;
+    }
+
+    bool operator !() const
+    {
+        return !object;
+    }
+
+    template<class D> bool operator ==(P<D> &p) const
+    {
+        return object == p.object;
+    }
+
+    template<class D> bool operator !=(P<D> &p) const
+    {
+        return object != p.object;
+    }
+
+    P<C> &operator =(C *c)
+    {
+        if (object == c) {
+            return *this;
+        }
+
+        if (object) {
+            object->decRef();
+        }
+
+        object = c;
+
+        if (object) {
+            object->incRef();
+        }
+
+        return *this;
+    }
+
+    P<C> &operator =(const P<C> &p)
+    {
+        return this->operator =((C *)p.object);
+    }
+
+    template<class D> P<C> &operator =(const P<D> &p)
+    {
+        return this->operator =((C *)p.object);
+    }
+
+
+    //bool operator <(C *c) const;
+    //bool operator >(C *c) const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Root smart-pointable object class.
-class core_dll _Object
-{
-    template<class C> friend class P;
-    friend class _P;
-protected:
-    std::atomic_int_fast64_t refCount;
-    _Object();
-public:
-    virtual ~_Object();
-    void incRef();
-    virtual void decRef();
-};
 
 }
 
-
-#include "base.tpl.cpp"
 
 
 #endif

@@ -9,7 +9,7 @@
 #include <stdexcept>   // for invalid_argument
 #include <string>      // for basic_string, string, operator==, stod, stoi, etc
 
-#include "debug.h"     // for DebugStream, debug
+#include "CoreLibrary/debug.h"     // for DebugStream, debug
 
 static inline std::string trim(std::string string)
 {
