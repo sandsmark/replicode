@@ -269,19 +269,19 @@ int main(int argc, char **argv)
     using namespace std::chrono;
 
     if (!r_exec::Init(settings.usr_operator_path.c_str(),
-    []() -> uint64_t {
-    return duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count();
-    },
-    settings.usr_class_path.c_str(),
-    &seed,
-    &metadata)) {
+                      []() -> uint64_t {
+                         return duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count();
+                      },
+                      settings.usr_class_path.c_str(),
+                      &seed,
+                      &metadata)) {
         return 2;
     }
     srand(r_exec::Now());
     debug("main") << "compiling source...";
     std::string error;
 
-    if (!r_exec::Compile(settings.source_file_name.c_str(), error, &seed, &metadata)) {
+    if (!r_exec::Compile(settings.source_file_name.c_str(), error, &seed, &metadata, false)) {
         std::cerr << " <- " << error << std::endl;
         return 3;
     }

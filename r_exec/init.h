@@ -64,7 +64,7 @@ extern dll_export uint64_t(*Now)();
 
 // Both functions add the compiled object to Seed.code_image.
 // Source files: use ANSI encoding (not Unicode).
-bool Compile(const char* filename, std::string& error, r_comp::Image *image, r_comp::Metadata *metadata, bool compile_metadata = false);
+bool Compile(const char* filename, std::string& error, r_comp::Image *image, r_comp::Metadata *metadata, bool compile_metadata);
 
 // Threaded decompiler, for decompiling on the fly asynchronously.
 // Named objects are referenced but not decompiled.

@@ -31,7 +31,6 @@
 #ifndef segments_h
 #define segments_h
 
-#include <CoreLibrary/sharedlibrary.h>  // for SharedLibrary
 #include <r_code/vector.h>              // for vector
 #include <r_comp/class.h>               // for Class
 #include <stddef.h>                     // for size_t
@@ -101,7 +100,6 @@ public:
     /// Classes indexed by opcodes; used to retrieve member names; registers all classes (incl. set classes).
     r_code::vector<Class> classes_by_opcodes;
     std::unordered_map<std::string, uint16_t> opcodes;
-    utils::SharedLibrary user_operator_library;
 
     Class *get_class(std::string &class_name);
     Class *get_class(size_t opcode);

@@ -53,7 +53,95 @@
 #include <sstream>                      // for ostringstream
 
 #include "CoreLibrary/debug.h"          // for debug, DebugStream
-#include "CoreLibrary/sharedlibrary.h"  // for SharedLibrary
+
+#if !defined(WIN32) || !defined(WIN64)
+#include <dlfcn.h>   // for dlerror, dlsym
+#endif
+
+// Shared library
+
+namespace { // local only to this file
+#if defined(WIN32) || defined(WIN64)
+typedef HINSTANCE shared_object;
+#else
+typedef void* shared_object;
+#endif
+
+class SharedLibrary
+{
+private:
+    shared_object library;
+public:
+    static SharedLibrary *New(const char *fileName);
+    SharedLibrary() : library(nullptr) {}
+    ~SharedLibrary()
+    {
+        #if defined(WIN32) || defined(WIN64)
+
+        if (library) {
+            FreeLibrary(library);
+        }
+
+        #else
+        if (library) {
+            dlclose(library);
+        }
+        #endif
+    }
+
+    SharedLibrary *load(const char *fileName)
+    {
+    #if defined(WIN32) || defined(WIN64)
+        library = LoadLibrary(TEXT(fileName));
+
+        if (!library) {
+            DWORD error = GetLastError();
+            std::cerr << "> Error: unable to load shared library " << fileName << " :" << error << std::endl;
+            return NULL;
+        }
+
+    #else
+        library = dlopen(fileName, RTLD_NOW | RTLD_GLOBAL);
+
+        if (!library) {
+            std::cout << "> Error: unable to load shared library " << fileName << " :" << dlerror() << std::endl;
+            return nullptr;
+        }
+
+    #endif
+        return this;
+    }
+
+    template<typename T> T getFunction(const char *functionName)
+    {
+        T function = NULL;
+#if defined(WIN32) || defined(WIN64)
+
+        if (library) {
+            function = (T)GetProcAddress(library, functionName);
+
+            if (!function) {
+                DWORD error = GetLastError();
+                std::cerr << "GetProcAddress > Error: " << error << std::endl;
+            }
+        }
+
+#else
+
+        if (library) {
+            function = T(dlsym(library, functionName));
+
+            if (!function) {
+                std::cout << "> Error: unable to find symbol " << functionName << " :" << dlerror() << std::endl;
+            }
+        }
+
+#endif
+        return function;
+    }
+}; // class SharedLibrary
+} // anonymous namespace
+
 
 namespace r_exec {
 class Controller;
@@ -378,29 +466,31 @@ bool Init(const char *user_operator_library_path,
         return true;
     }
 
+    SharedLibrary user_operator_library;
+
     // load usr operators and c++ programs.
-    if (!(metadata->user_operator_library.load(user_operator_library_path))) {
+    if (!(user_operator_library.load(user_operator_library_path))) {
         return false;
     }
 
     // Operators.
     typedef uint16_t(*OpcodeRetriever)(const char *);
     typedef void (*UserInit)(r_comp::Metadata * metadata);
-    UserInit _Init = metadata->user_operator_library.getFunction<UserInit>("Init");
+    UserInit _Init = user_operator_library.getFunction<UserInit>("Init");
 
     if (!_Init) {
         return false;
     }
 
     typedef uint16_t(*UserGetOperatorCount)();
-    UserGetOperatorCount GetOperatorCount = metadata->user_operator_library.getFunction<UserGetOperatorCount>("GetOperatorCount");
+    UserGetOperatorCount GetOperatorCount = user_operator_library.getFunction<UserGetOperatorCount>("GetOperatorCount");
 
     if (!GetOperatorCount) {
         return false;
     }
 
     typedef void (*UserGetOperatorName)(char *op_name, int op_index);
-    UserGetOperatorName GetOperatorName = metadata->user_operator_library.getFunction<UserGetOperatorName>("GetOperatorName");
+    UserGetOperatorName GetOperatorName = user_operator_library.getFunction<UserGetOperatorName>("GetOperatorName");
 
     if (!GetOperatorName) {
         return false;
@@ -420,7 +510,7 @@ bool Init(const char *user_operator_library_path,
             exit(-1);
         }
 
-        UserOperator op = metadata->user_operator_library.getFunction<UserOperator>(op_name);
+        UserOperator op = user_operator_library.getFunction<UserOperator>(op_name);
 
         if (!op) {
             return false;
@@ -431,14 +521,14 @@ bool Init(const char *user_operator_library_path,
 
     // C++ programs.
     typedef uint16_t(*UserGetProgramCount)();
-    UserGetProgramCount GetProgramCount = metadata->user_operator_library.getFunction<UserGetProgramCount>("GetProgramCount");
+    UserGetProgramCount GetProgramCount = user_operator_library.getFunction<UserGetProgramCount>("GetProgramCount");
 
     if (!GetProgramCount) {
         return false;
     }
 
     typedef void (*UserGetProgramName)(char *);
-    UserGetProgramName GetProgramName = metadata->user_operator_library.getFunction<UserGetProgramName>("GetProgramName");
+    UserGetProgramName GetProgramName = user_operator_library.getFunction<UserGetProgramName>("GetProgramName");
 
     if (!GetProgramName) {
         return false;
@@ -452,7 +542,7 @@ bool Init(const char *user_operator_library_path,
         memset(pgm_name, 0, 256);
         GetProgramName(pgm_name);
         std::string _pgm_name = pgm_name;
-        UserProgram pgm = metadata->user_operator_library.getFunction<UserProgram>(pgm_name);
+        UserProgram pgm = user_operator_library.getFunction<UserProgram>(pgm_name);
 
         if (!pgm) {
             return false;
@@ -463,14 +553,14 @@ bool Init(const char *user_operator_library_path,
 
     // Callbacks.
     typedef uint16_t(*UserGetCallbackCount)();
-    UserGetCallbackCount GetCallbackCount = metadata->user_operator_library.getFunction<UserGetCallbackCount>("GetCallbackCount");
+    UserGetCallbackCount GetCallbackCount = user_operator_library.getFunction<UserGetCallbackCount>("GetCallbackCount");
 
     if (!GetCallbackCount) {
         return false;
     }
 
     typedef void (*UserGetCallbackName)(char *);
-    UserGetCallbackName GetCallbackName = metadata->user_operator_library.getFunction<UserGetCallbackName>("GetCallbackName");
+    UserGetCallbackName GetCallbackName = user_operator_library.getFunction<UserGetCallbackName>("GetCallbackName");
 
     if (!GetCallbackName) {
         return false;
@@ -484,7 +574,7 @@ bool Init(const char *user_operator_library_path,
         memset(callback_name, 0, 256);
         GetCallbackName(callback_name);
         std::string _callback_name = callback_name;
-        UserCallback callback = metadata->user_operator_library.getFunction<UserCallback>(callback_name);
+        UserCallback callback = user_operator_library.getFunction<UserCallback>(callback_name);
 
         if (!callback) {
             return false;
