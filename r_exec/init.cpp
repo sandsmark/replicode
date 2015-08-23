@@ -142,6 +142,7 @@ public:
 }; // class SharedLibrary
 } // anonymous namespace
 
+static SharedLibrary user_operator_library;
 
 namespace r_exec {
 class Controller;
@@ -465,8 +466,6 @@ bool Init(const char *user_operator_library_path,
     if (!user_operator_library_path) { // when no rMem is used.
         return true;
     }
-
-    SharedLibrary user_operator_library;
 
     // load usr operators and c++ programs.
     if (!(user_operator_library.load(user_operator_library_path))) {
