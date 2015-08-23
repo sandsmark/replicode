@@ -723,6 +723,7 @@ int64_t RepliStruct::process()
 
                 // now we have replaced the !load line with the loaded lines
                 changes++;
+                delete newStruct;
             }
         } else { // a Structure, Set, Atom or Development
             if (s_macros.find(structure->cmd) != s_macros.end()) {
