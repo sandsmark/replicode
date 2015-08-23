@@ -503,7 +503,7 @@ bool Compiler::global_indirection(RepliStruct *node, std::vector<int16_t> &indic
 
         if (name == "vw") {
             set_error(" error: vw is not accessible on global references", node);
-            break;
+            return false;
         } else if (name == "mks") {
             fetched_class = nullptr;
             type = SET;
