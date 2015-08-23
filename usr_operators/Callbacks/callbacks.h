@@ -34,14 +34,14 @@
 
 #include <stdint.h>           // for uint64_t, uint8_t
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;
 }  // namespace r_code
 
 extern "C" {
-    bool dll_export print(uint64_t t, bool suspended, const char *msg, uint8_t object_count, r_code::Code **objects);
+    bool REPLICODE_EXPORT print(uint64_t t, bool suspended, const char *msg, uint8_t object_count, r_code::Code **objects);
 }
 
 

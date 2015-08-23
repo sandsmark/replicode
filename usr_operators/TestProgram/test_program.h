@@ -32,7 +32,7 @@
 #define test_program_h
 
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_code {
 class View;
@@ -42,7 +42,7 @@ class Controller;
 }  // namespace r_exec
 
 extern "C" {
-    r_exec::Controller dll_export *test_program(r_code::View *view);
+    r_exec::Controller REPLICODE_EXPORT *test_program(r_code::View *view);
 }
 
 

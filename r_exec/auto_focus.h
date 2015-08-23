@@ -47,7 +47,7 @@
 #include <vector>                      // for vector
 
 #include "CoreLibrary/base.h"          // for P
-#include "CoreLibrary/dll.h"           // for dll_export
+#include "CoreLibrary/dll.h"           // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;
@@ -63,7 +63,7 @@ class View;
 namespace r_exec
 {
 
-class dll_export AutoFocusController:
+class REPLICODE_EXPORT AutoFocusController:
     public Controller
 {
 private:

@@ -39,7 +39,7 @@
 #include <vector>              // for vector
 
 #include "CoreLibrary/base.h"  // for P
-#include "CoreLibrary/dll.h"   // for dll_export
+#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;
@@ -54,7 +54,7 @@ namespace r_exec
 
 // Overlays for input-less programs.
 // Base class for other programs (with inputs, anti-programs).
-class dll_export InputLessPGMOverlay:
+class REPLICODE_EXPORT InputLessPGMOverlay:
     public Overlay
 {
     friend class PGMController;
@@ -83,7 +83,7 @@ public:
 
 // Overlay with inputs.
 // Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
-class dll_export PGMOverlay:
+class REPLICODE_EXPORT PGMOverlay:
     public InputLessPGMOverlay
 {
     friend class PGMController;
@@ -137,7 +137,7 @@ public:
 // Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
 // In addition, ReductionCores and signalling jobs can attempt to inject productions concurrently.
 // Usues the same mk.rdx as for InputLessPGMOverlays.
-class dll_export AntiPGMOverlay:
+class REPLICODE_EXPORT AntiPGMOverlay:
     public PGMOverlay
 {
     friend class AntiPGMController;

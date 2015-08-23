@@ -42,7 +42,7 @@
 #include <vector>              // for vector
 
 #include "CoreLibrary/base.h"  // for P
-#include "CoreLibrary/dll.h"   // for dll_export
+#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
 
 namespace r_exec {
 class Controller;
@@ -55,7 +55,7 @@ namespace r_exec
 // all parameters: accessed by Mem::update and reduction cores (via overlay mod/set).
 // all views: accessed by Mem::update and reduction cores.
 // viewing_groups: accessed by Mem::injectNow and Mem::update.
-class dll_export Group:
+class REPLICODE_EXPORT Group:
     public LObject
 {
 private:

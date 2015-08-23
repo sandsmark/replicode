@@ -47,7 +47,7 @@
 #include <vector>              // for vector
 
 #include "CoreLibrary/base.h"  // for P
-#include "CoreLibrary/dll.h"   // for dll_export
+#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
 
 namespace r_comp {
 class Image;
@@ -73,7 +73,7 @@ namespace r_exec
 // - when an object is scheduled for injection and the target group does not exist anymore (or is invalidated), the injection is cancelled.
 // - when an object is scheduled for propagation of sln changes and has no view anymore, the operation is cancelled.
 // Main processing in _Mem::update().
-class dll_export _Mem:
+class REPLICODE_EXPORT _Mem:
     public r_code::Mem
 {
 public:
@@ -395,7 +395,7 @@ public:
 #define OUTPUT(c) _Mem::Output(_Mem::c)
 
 // _Mem that stores the objects as long as they are not invalidated.
-class dll_export MemStatic:
+class REPLICODE_EXPORT MemStatic:
     public _Mem
 {
 private:
@@ -414,7 +414,7 @@ public:
 };
 
 // _Mem that does not store objects.
-class dll_export MemVolatile:
+class REPLICODE_EXPORT MemVolatile:
     public _Mem
 {
 private:

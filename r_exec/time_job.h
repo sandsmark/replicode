@@ -35,7 +35,7 @@
 
 #include "CoreLibrary/base.h"   // for P, _Object
 #include "CoreLibrary/debug.h"  // for DebugStream, debug
-#include "CoreLibrary/dll.h"    // for dll_export
+#include "CoreLibrary/dll.h"    // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;
@@ -48,7 +48,7 @@ class View;
 namespace r_exec
 {
 
-class dll_export TimeJob:
+class REPLICODE_EXPORT TimeJob:
     public core::_Object
 {
 protected:
@@ -67,7 +67,7 @@ public:
     virtual void report(int64_t lag) const;
 };
 
-class dll_export UpdateJob:
+class REPLICODE_EXPORT UpdateJob:
     public TimeJob
 {
 public:
@@ -77,7 +77,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class dll_export SignalingJob:
+class REPLICODE_EXPORT SignalingJob:
     public TimeJob
 {
 protected:
@@ -87,7 +87,7 @@ public:
     bool is_alive() const;
 };
 
-class dll_export AntiPGMSignalingJob:
+class REPLICODE_EXPORT AntiPGMSignalingJob:
     public SignalingJob
 {
 public:
@@ -96,7 +96,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class dll_export InputLessPGMSignalingJob:
+class REPLICODE_EXPORT InputLessPGMSignalingJob:
     public SignalingJob
 {
 public:
@@ -105,7 +105,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class dll_export InjectionJob:
+class REPLICODE_EXPORT InjectionJob:
     public TimeJob
 {
 public:
@@ -115,7 +115,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class dll_export EInjectionJob:
+class REPLICODE_EXPORT EInjectionJob:
     public TimeJob
 {
 public:
@@ -125,7 +125,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class dll_export SaliencyPropagationJob:
+class REPLICODE_EXPORT SaliencyPropagationJob:
     public TimeJob
 {
 public:
@@ -137,7 +137,7 @@ public:
     void report(int64_t lag) const;
 };
 
-class dll_export ShutdownTimeCore:
+class REPLICODE_EXPORT ShutdownTimeCore:
     public TimeJob
 {
 public:
@@ -170,7 +170,7 @@ public:
     }
 };
 
-class dll_export PerfSamplingJob:
+class REPLICODE_EXPORT PerfSamplingJob:
     public TimeJob
 {
 public:

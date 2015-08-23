@@ -42,7 +42,7 @@
 #include <unordered_map>              // for unordered_map
 #include <vector>                     // for vector
 
-#include "CoreLibrary/dll.h"          // for dll_export
+#include "CoreLibrary/dll.h"          // for REPLICODE_EXPORT
 
 namespace r_code {
 class ImageObject;
@@ -60,7 +60,7 @@ namespace r_comp
 
 class RepliStruct;
 
-class dll_export Compiler
+class REPLICODE_EXPORT Compiler
 {
 
     std::string error;

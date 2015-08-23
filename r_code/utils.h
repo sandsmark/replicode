@@ -38,7 +38,7 @@
 #include <string>              // for string
 
 #include "CoreLibrary/base.h"  // for P
-#include "CoreLibrary/dll.h"   // for dll_export
+#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
 
 using namespace core;
 
@@ -69,7 +69,7 @@ public:
 
 class Code;
 
-class dll_export Utils
+class REPLICODE_EXPORT Utils
 {
 private:
     static uint64_t TimeReference; // starting time.

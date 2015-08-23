@@ -35,7 +35,7 @@
 #include <string>             // for string
 #include <unordered_map>      // for unordered_map
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;
@@ -44,7 +44,7 @@ class Code;
 namespace r_exec
 {
 
-class dll_export Callbacks
+class REPLICODE_EXPORT Callbacks
 {
 public:
     typedef bool (*Callback)(uint64_t, bool, const char *, uint8_t, r_code::Code **);

@@ -39,12 +39,12 @@
 #include <r_exec/hlp_overlay.h>  // for HLPOverlay
 #include <stdint.h>              // for uint16_t
 
-#include "CoreLibrary/dll.h"     // for dll_export
+#include "CoreLibrary/dll.h"     // for REPLICODE_EXPORT
 
 namespace r_exec
 {
 
-class dll_export HLPContext:
+class REPLICODE_EXPORT HLPContext:
     public _Context
 {
 public:

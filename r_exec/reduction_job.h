@@ -36,12 +36,12 @@
 #include <stdint.h>            // for uint64_t
 
 #include "CoreLibrary/base.h"  // for P, _Object
-#include "CoreLibrary/dll.h"   // for dll_export
+#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
 
 namespace r_exec
 {
 
-class dll_export _ReductionJob:
+class REPLICODE_EXPORT _ReductionJob:
     public _Object
 {
 protected:
@@ -77,14 +77,14 @@ public:
     bool update(uint64_t now);
 };
 
-class dll_export ShutdownReductionCore:
+class REPLICODE_EXPORT ShutdownReductionCore:
     public _ReductionJob
 {
 public:
     bool update(uint64_t now);
 };
 
-class dll_export AsyncInjectionJob:
+class REPLICODE_EXPORT AsyncInjectionJob:
     public _ReductionJob
 {
 public:

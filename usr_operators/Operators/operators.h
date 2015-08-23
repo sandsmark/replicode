@@ -34,17 +34,17 @@
 #include <r_exec/operator.h>  // for Context
 #include <stdint.h>           // for uint16_t
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_comp {
 class Metadata;
 }  // namespace r_comp
 
 extern "C" {
-    bool dll_export add(const r_exec::Context &context, uint16_t &index);
-    bool dll_export sub(const r_exec::Context &context, uint16_t &index);
-    bool dll_export mul(const r_exec::Context &context, uint16_t &index);
-    bool dll_export dis(const r_exec::Context &context, uint16_t &index);
+    bool REPLICODE_EXPORT add(const r_exec::Context &context, uint16_t &index);
+    bool REPLICODE_EXPORT sub(const r_exec::Context &context, uint16_t &index);
+    bool REPLICODE_EXPORT mul(const r_exec::Context &context, uint16_t &index);
+    bool REPLICODE_EXPORT dis(const r_exec::Context &context, uint16_t &index);
 }
 
 class Operators

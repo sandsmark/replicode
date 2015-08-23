@@ -39,7 +39,7 @@
 #include <unordered_map>              // for unordered_map
 #include <vector>                     // for vector
 
-#include "CoreLibrary/dll.h"          // for dll_export
+#include "CoreLibrary/dll.h"          // for REPLICODE_EXPORT
 
 namespace r_comp {
 class Metadata;
@@ -48,7 +48,7 @@ class RepliStruct;
 
 namespace r_comp
 {
-class dll_export Preprocessor
+class REPLICODE_EXPORT Preprocessor
 {
 public:
     RepliStruct *root;

@@ -40,7 +40,7 @@
 #include <vector>              // for vector
 
 #include "CoreLibrary/base.h"  // for P, _Object
-#include "CoreLibrary/dll.h"   // for dll_export
+#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
 
 using namespace r_code;
 
@@ -52,7 +52,7 @@ class View;
 // Upon invocation of take_input() the overlays older than tsc are killed, assuming stc>0; otherwise, overlays live unitl the ipgm dies.
 // Controllers are built at loading time and at the view's injection time.
 // Derived classes must expose a function: void reduce(r_code::View*input); (called by reduction jobs).
-class dll_export Controller:
+class REPLICODE_EXPORT Controller:
     public _Object
 {
 protected:
@@ -125,7 +125,7 @@ public:
     void debug(View *input) {}
 };
 
-class dll_export Overlay:
+class REPLICODE_EXPORT Overlay:
     public _Object
 {
     friend class _Context;
@@ -186,7 +186,7 @@ public:
     r_code::Code *build_object(Atom head) const;
 };
 
-class dll_export OController:
+class REPLICODE_EXPORT OController:
     public Controller
 {
 protected:

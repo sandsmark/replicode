@@ -34,29 +34,29 @@
 
 #include <stdint.h>           // for uint16_t
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_comp {
 class Metadata;
 }  // namespace r_comp
 
 extern "C" {
-    void dll_export Init(r_comp::Metadata *metadata); // The metadata contains the opcodes
+    void REPLICODE_EXPORT Init(r_comp::Metadata *metadata); // The metadata contains the opcodes
 
     // Operators //////////////////////////////////////////////////////////////////////////////
 
-    uint16_t dll_export GetOperatorCount();
-    void dll_export GetOperatorName(char *op_name, int op_index);
+    uint16_t REPLICODE_EXPORT GetOperatorCount();
+    void REPLICODE_EXPORT GetOperatorName(char *op_name, int op_index);
 
     // CPP Programs //////////////////////////////////////////////////////////////////////////////
 
-    uint16_t dll_export GetProgramCount();
-    void dll_export GetProgramName(char *pgm_name);
+    uint16_t REPLICODE_EXPORT GetProgramCount();
+    void REPLICODE_EXPORT GetProgramName(char *pgm_name);
 
     // Callbacks //////////////////////////////////////////////////////////////////////////////
 
-    uint16_t dll_export GetCallbackCount();
-    void dll_export GetCallbackName(char *callback_name);
+    uint16_t REPLICODE_EXPORT GetCallbackCount();
+    void REPLICODE_EXPORT GetCallbackName(char *callback_name);
 }
 
 

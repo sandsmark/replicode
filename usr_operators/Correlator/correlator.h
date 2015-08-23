@@ -9,7 +9,7 @@
 
 
 extern "C" {
-    r_exec::Controller dll_export *correlator(r_code::View *view);
+    r_exec::Controller REPLICODE_EXPORT *correlator(r_code::View *view);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

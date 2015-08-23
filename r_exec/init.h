@@ -38,7 +38,7 @@
 #include <vector>              // for vector
 
 #include "CoreLibrary/base.h"  // for P, _Object
-#include "CoreLibrary/dll.h"   // for dll_export
+#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;
@@ -52,15 +52,15 @@ namespace r_exec
 {
 
 // Time base; either Time::Get or network-aware synced time.
-extern dll_export uint64_t(*Now)();
+extern REPLICODE_EXPORT uint64_t(*Now)();
 
 // Loaded once for all.
 // Results from the compilation of user.classes.replicode.
 // The latter contains all class definitions and all shared objects (e.g. ontology); does not contain any dynamic (res!=forever) objects.
-//extern dll_export r_comp::Metadata Metadata;
-//extern dll_export r_comp::Image Seed;
-//dll_export r_comp::Metadata *getMetadata();
-//dll_export r_comp::Image *getSeed();
+//extern REPLICODE_EXPORT r_comp::Metadata Metadata;
+//extern REPLICODE_EXPORT r_comp::Image Seed;
+//REPLICODE_EXPORT r_comp::Metadata *getMetadata();
+//REPLICODE_EXPORT r_comp::Image *getSeed();
 
 // Both functions add the compiled object to Seed.code_image.
 // Source files: use ANSI encoding (not Unicode).
@@ -68,7 +68,7 @@ bool Compile(const char* filename, std::string& error, r_comp::Image *image, r_c
 
 // Threaded decompiler, for decompiling on the fly asynchronously.
 // Named objects are referenced but not decompiled.
-class dll_export TDecompiler:
+class REPLICODE_EXPORT TDecompiler:
     public core::_Object
 {
 private:
@@ -100,7 +100,7 @@ public:
 // (c) the stream pool management (PipeOStream::Open(), PipeOStream::Close() and PipeOStream::Get()) shall be decoupled from this implementation (it's an IDE feature),
 // (d) PipeOStream shall be based on std::ostringstream instead of std::ostream with a refined std::stringbuf (override sync() to write in the pipe).
 #if defined(WIN32) || defined(WIN64)
-class dll_export PipeOStream:
+class REPLICODE_EXPORT PipeOStream:
     public std::ostream
 {
 private:
@@ -128,7 +128,7 @@ public:
 
 // Initialize Now, compile user.classes.replicode, builds the Seed and loads the user-defined operators.
 // Return false in case of a problem (e.g. file not found, operator not found, etc.).
-bool dll_export Init(const char *user_operator_library_path,
+bool REPLICODE_EXPORT Init(const char *user_operator_library_path,
                      uint64_t(*time_base)(),
                      const char *seed_path,
                      r_comp::Image *seed,

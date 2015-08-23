@@ -36,7 +36,7 @@
 #include <r_exec/overlay.h>   // for OController
 #include <mutex>              // for mutex
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_exec {
 class View;
@@ -45,7 +45,7 @@ class View;
 namespace r_exec
 {
 
-class dll_export _PGMController:
+class REPLICODE_EXPORT _PGMController:
     public OController
 {
 protected:
@@ -62,7 +62,7 @@ public:
 
 // TimeCores holding InputLessPGMSignalingJob trigger the injection of the productions.
 // No overlays.
-class dll_export InputLessPGMController:
+class REPLICODE_EXPORT InputLessPGMController:
     public _PGMController
 {
 public:
@@ -77,7 +77,7 @@ private:
 };
 
 // Controller for programs with inputs.
-class dll_export PGMController:
+class REPLICODE_EXPORT PGMController:
     public _PGMController
 {
 public:
@@ -92,7 +92,7 @@ public:
 
 // Signaled by TimeCores (holding AntiPGMSignalingJob).
 // Possible recursive locks: signal_anti_pgm()->overlay->inject_productions()->mem->inject()->injectNow()->inject_reduction_jobs()->overlay->take_input().
-class dll_export AntiPGMController:
+class REPLICODE_EXPORT AntiPGMController:
     public _PGMController
 {
 private:

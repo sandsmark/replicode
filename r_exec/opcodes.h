@@ -39,7 +39,7 @@ namespace r_exec
 {
 
 // Opcodes are initialized by Init().
-class dll_export Opcodes
+class REPLICODE_EXPORT Opcodes
 {
 public:
     static uint16_t View;

@@ -39,7 +39,7 @@
 namespace r_code
 {
 
-class dll_export ImageImpl
+class REPLICODE_EXPORT ImageImpl
 {
 private:
     /// [object map|code segment|object names]

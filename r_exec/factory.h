@@ -39,7 +39,7 @@
 #include <vector>                // for vector
 
 #include "CoreLibrary/base.h"    // for P, _Object
-#include "CoreLibrary/dll.h"     // for dll_export
+#include "CoreLibrary/dll.h"     // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;
@@ -61,56 +61,56 @@ namespace r_exec
 // They are not used to propagate saliency changes.
 // They are encoded as Atom::Object instead of Atom::Marker.
 
-class dll_export MkNew:
+class REPLICODE_EXPORT MkNew:
     public LObject
 {
 public:
     MkNew(r_code::Mem *m, Code *object);
 };
 
-class dll_export MkLowRes:
+class REPLICODE_EXPORT MkLowRes:
     public LObject
 {
 public:
     MkLowRes(r_code::Mem *m, Code *object);
 };
 
-class dll_export MkLowSln:
+class REPLICODE_EXPORT MkLowSln:
     public LObject
 {
 public:
     MkLowSln(r_code::Mem *m, Code *object);
 };
 
-class dll_export MkHighSln:
+class REPLICODE_EXPORT MkHighSln:
     public LObject
 {
 public:
     MkHighSln(r_code::Mem *m, Code *object);
 };
 
-class dll_export MkLowAct:
+class REPLICODE_EXPORT MkLowAct:
     public LObject
 {
 public:
     MkLowAct(r_code::Mem *m, Code *object);
 };
 
-class dll_export MkHighAct:
+class REPLICODE_EXPORT MkHighAct:
     public LObject
 {
 public:
     MkHighAct(r_code::Mem *m, Code *object);
 };
 
-class dll_export MkSlnChg:
+class REPLICODE_EXPORT MkSlnChg:
     public LObject
 {
 public:
     MkSlnChg(r_code::Mem *m, Code *object, double value);
 };
 
-class dll_export MkActChg:
+class REPLICODE_EXPORT MkActChg:
     public LObject
 {
 public:
@@ -120,7 +120,7 @@ public:
 class Goal;
 class Pred;
 
-class dll_export _Fact:
+class REPLICODE_EXPORT _Fact:
     public LObject
 {
 private:
@@ -168,7 +168,7 @@ typedef enum {
     SIM_MANDATORY = 2
 } SimMode;
 
-class dll_export Sim:
+class REPLICODE_EXPORT Sim:
     public _Object
 {
 private:
@@ -198,7 +198,7 @@ public:
 // Caveat: instances of Fact can becone instances of AntiFact (set_opposite() upon MATCH_SUCCESS_NEGATIVE during backward chaining).
 // In particular, is_fact() and is_anti_fact() are based on the opcode, not on the class.
 // Do not store any data in this class.
-class dll_export Fact:
+class REPLICODE_EXPORT Fact:
     public _Fact
 {
 public:
@@ -210,7 +210,7 @@ public:
 };
 
 // Caveat: as for Fact.
-class dll_export AntiFact:
+class REPLICODE_EXPORT AntiFact:
     public _Fact
 {
 public:
@@ -234,7 +234,7 @@ public:
 //
 // Invalidation checks are performed at both _take_input() time and reduce() time as the invalidation may occur during the transit in the pipe.
 
-class dll_export Pred:
+class REPLICODE_EXPORT Pred:
     public LObject
 {
 public:
@@ -254,7 +254,7 @@ public:
     Sim *get_simulation(Controller *root) const; // return true if there is a simulation for the goal.
 };
 
-class dll_export Goal:
+class REPLICODE_EXPORT Goal:
     public LObject
 {
 public:
@@ -281,7 +281,7 @@ public:
     double get_strength(uint64_t now) const; // goal->target->cfd/(before-now).
 };
 
-class dll_export MkRdx:
+class REPLICODE_EXPORT MkRdx:
     public LObject
 {
 public:
@@ -292,7 +292,7 @@ public:
     P<BindingMap> bindings; // NULL when produced by programs.
 };
 
-class dll_export Success:
+class REPLICODE_EXPORT Success:
     public LObject
 {
 public:
@@ -300,7 +300,7 @@ public:
     Success(_Fact *object, _Fact *evidence, double psln_thr);
 };
 
-class dll_export Perf:
+class REPLICODE_EXPORT Perf:
     public LObject
 {
 public:
@@ -308,7 +308,7 @@ public:
     Perf(uint64_t reduction_job_avg_latency, int64_t d_reduction_job_avg_latency, uint64_t time_job_avg_latency, int64_t d_time_job_avg_latency);
 };
 
-class dll_export ICST:
+class REPLICODE_EXPORT ICST:
     public LObject
 {
 public:

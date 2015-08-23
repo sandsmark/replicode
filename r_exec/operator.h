@@ -40,14 +40,14 @@
 #include <stddef.h>           // for NULL
 #include <stdint.h>           // for uint16_t, uint64_t
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_exec
 {
 
 // Wrapper class for evaluation contexts.
 // Template operator functions is not an option since some operators are defined in usr_operators.dll.
-class dll_export Context
+class REPLICODE_EXPORT Context
 {
 private:
     _Context *implementation;

@@ -38,7 +38,7 @@
 #include <string>                       // for string
 #include <unordered_map>                // for unordered_map
 
-#include "CoreLibrary/dll.h"            // for dll_export
+#include "CoreLibrary/dll.h"            // for REPLICODE_EXPORT
 
 namespace core {
 template <class C> class P;
@@ -70,7 +70,7 @@ public:
 // Both images are equivalent, the latter being easier to work with (uses vectors instead of a contiguous structure, that is r_code::Image::data).
 // All read(word32*,uint64_t)/write(word32*) functions defined in the classes below perfom read/write operations in an r_code::Image::data.
 
-class dll_export Metadata
+class REPLICODE_EXPORT Metadata
 {
 private:
     size_t get_class_array_size();
@@ -109,7 +109,7 @@ public:
     size_t get_size();
 };
 
-class dll_export ObjectMap
+class REPLICODE_EXPORT ObjectMap
 {
 public:
     r_code::vector<uint32_t> objects;
@@ -121,7 +121,7 @@ public:
     size_t get_size() const;
 };
 
-class dll_export CodeSegment
+class REPLICODE_EXPORT CodeSegment
 {
 public:
     r_code::vector<SysObject *> objects;
@@ -141,7 +141,7 @@ public:
  *  - Symbol length
  *  - Symbol characters
  */
-class dll_export ObjectNames
+class REPLICODE_EXPORT ObjectNames
 {
 public:
     /// Indexed by objects' OIDs.
@@ -154,7 +154,7 @@ public:
     size_t get_size();
 };
 
-class dll_export Image
+class REPLICODE_EXPORT Image
 {
 private:
     size_t map_offset;

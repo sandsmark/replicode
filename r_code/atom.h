@@ -43,7 +43,7 @@ namespace r_code
 // Indices on 12 bits.
 // Element count on 8 bits.
 // To define bigger constructs (e.g. large matrices), define hooks to RAM (and derive classes from Object).
-class dll_export Atom
+class REPLICODE_EXPORT Atom
 {
 private: // trace utilities.
     static uint8_t Members_to_go;

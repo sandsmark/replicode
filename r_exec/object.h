@@ -42,12 +42,12 @@
 #include <mutex>              // for mutex
 #include <unordered_map>      // for operator!=
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_exec
 {
 
-dll_export bool IsNotification(r_code::Code *object);
+REPLICODE_EXPORT bool IsNotification(r_code::Code *object);
 
 // Shared resources:
 // views: accessed by Mem::injectNow (via various sub calls) and Mem::update.
@@ -151,7 +151,7 @@ public:
 // Used for r-code that does not travel across networks (groups and notifications) or when the rMem is not distributed.
 // Markers are killed when at least one of their references dies (held by their views).
 // Marker deletion is performed by registering pending delete operations in the groups they are projected onto.
-class dll_export LObject:
+class REPLICODE_EXPORT LObject:
     public Object<r_code::LObject, LObject>
 {
 public:

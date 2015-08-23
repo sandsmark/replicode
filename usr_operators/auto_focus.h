@@ -32,7 +32,7 @@
 #define auto_focus_proxy_h
 
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_code {
 class View;
@@ -42,7 +42,7 @@ class Controller;
 }  // namespace r_exec
 
 extern "C" {
-    r_exec::Controller dll_export *auto_focus(r_code::View *view);
+    r_exec::Controller REPLICODE_EXPORT *auto_focus(r_code::View *view);
 }
 
 

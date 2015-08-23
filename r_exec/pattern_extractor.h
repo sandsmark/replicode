@@ -44,7 +44,7 @@
 #include <vector>                // for vector
 
 #include "CoreLibrary/base.h"    // for P, _Object
-#include "CoreLibrary/dll.h"     // for dll_export
+#include "CoreLibrary/dll.h"     // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;
@@ -113,7 +113,7 @@ public:
 // Targeted Pattern eXtractor.
 // Does nothing.
 // Used for wr_enabled productions, for well-rated productions or when model acqusiiton is disabled.
-class dll_export TPX:
+class REPLICODE_EXPORT TPX:
     public _Object
 {
 protected:
@@ -147,7 +147,7 @@ public:
     virtual void ack_pred_success(_Fact *predicted_f);
 };
 
-class dll_export _TPX:
+class REPLICODE_EXPORT _TPX:
     public TPX
 {
 private:
@@ -194,7 +194,7 @@ public:
 // Models produced are of the form: M1[cause -> goal_target], where cause can be an imdl and goal_target can be an imdl.
 // M1 does not have template arguments.
 // Commands are ignored (CTPX' job).
-class dll_export GTPX: // target is the goal target.
+class REPLICODE_EXPORT GTPX: // target is the goal target.
     public _TPX
 {
 private:
@@ -221,7 +221,7 @@ public:
 // Models produced are of the form: M1[cause -> |imdl M0] where M0 is the model that produced the failed prediction and cause can be an imdl.
 // M1 does not have template arguments.
 // Commands are ignored (CTPX' job).
-class dll_export PTPX: // target is the prediction.
+class REPLICODE_EXPORT PTPX: // target is the prediction.
     public _TPX
 {
 private:

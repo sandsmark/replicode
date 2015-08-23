@@ -43,14 +43,14 @@
 #include <vector>                   // for vector, allocator
 
 #include "CoreLibrary/base.h"       // for P, _Object
-#include "CoreLibrary/dll.h"        // for dll_export
+#include "CoreLibrary/dll.h"        // for REPLICODE_EXPORT
 
 namespace r_code
 {
 
 // I/O from/to r_code::Image ////////////////////////////////////////////////////////////////////////
 
-class dll_export ImageObject
+class REPLICODE_EXPORT ImageObject
 {
 public:
     r_code::vector<Atom> code;
@@ -64,7 +64,7 @@ public:
 
 class View;
 
-class dll_export SysView : public ImageObject
+class REPLICODE_EXPORT SysView : public ImageObject
 {
 public:
     SysView();
@@ -80,7 +80,7 @@ class Code;
 
 #define UNDEFINED_OID 0xFFFFFFFF
 
-class dll_export SysObject : public ImageObject
+class REPLICODE_EXPORT SysObject : public ImageObject
 {
 public:
     r_code::vector<uint32_t> markers; // indexes in the relocation segment
@@ -104,7 +104,7 @@ private:
 
 // Interfaces for r_exec classes ////////////////////////////////////////////////////////////////////////
 
-class dll_export View : public _Object
+class REPLICODE_EXPORT View : public _Object
 {
 public:
     /// does not include the viewed object; no smart pointer here (a view is held by a group and holds a ref to said group in references[0]).
@@ -186,7 +186,7 @@ protected:
     Atom _code[VIEW_CODE_MAX_SIZE];
 };
 
-class dll_export Code:
+class REPLICODE_EXPORT Code:
     public _Object
 {
 public:
@@ -297,7 +297,7 @@ public:
 };
 
 // Implementation for local objects (non distributed).
-class dll_export LObject:
+class REPLICODE_EXPORT LObject:
     public Code
 {
 protected:
@@ -368,7 +368,7 @@ public:
     }
 };
 
-class dll_export Mem
+class REPLICODE_EXPORT Mem
 {
 protected:
     static Mem *Singleton;

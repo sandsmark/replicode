@@ -39,7 +39,7 @@
 #include <unordered_set>      // for unordered_set
 #include <vector>             // for vector
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_code {
 class ImageObject;
@@ -55,7 +55,7 @@ class OutStream;
 namespace r_comp
 {
 
-class dll_export Decompiler
+class REPLICODE_EXPORT Decompiler
 {
 private:
     r_comp::OutStream *out_stream;

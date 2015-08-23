@@ -32,10 +32,10 @@
 #define r_code_h
 
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 extern "C" {
-    void dll_export Init();
+    void REPLICODE_EXPORT Init();
 }
 
 

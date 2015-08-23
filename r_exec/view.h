@@ -38,7 +38,7 @@
 #include <mutex>                    // for mutex
 
 #include "CoreLibrary/base.h"       // for P
-#include "CoreLibrary/dll.h"        // for dll_export
+#include "CoreLibrary/dll.h"        // for REPLICODE_EXPORT
 
 namespace r_exec {
 class Controller;
@@ -53,7 +53,7 @@ class Group;
 // OID is hidden at _code[VIEW_OID].
 // Shared resources:
 // none: all mod/set operations are pushed on the group and executed at update time.
-class dll_export View:
+class REPLICODE_EXPORT View:
     public r_code::View
 {
 private:
@@ -172,7 +172,7 @@ private:
     std::mutex m_groupMutex;
 };
 
-class dll_export NotificationView:
+class REPLICODE_EXPORT NotificationView:
     public View
 {
 public:

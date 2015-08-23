@@ -32,9 +32,9 @@
 #define core_types_h
 
 #if defined(WIN32) || defined(WIN64)
-#define dll_export __declspec(dllexport)
+#define REPLICODE_EXPORT __declspec(dllexport)
 #else
-#define dll_export __attribute__((visibility("default")))
+#define REPLICODE_EXPORT __attribute__((visibility("default")))
 #endif
 
 #endif

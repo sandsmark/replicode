@@ -36,7 +36,7 @@
 #include <r_exec/overlay.h>   // for Overlay
 #include <stdint.h>           // for uint16_t, uint64_t
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 using namespace r_code;
 
@@ -46,7 +46,7 @@ namespace r_exec
 // Base class for evaluation contexts.
 // Subclasses: IPGMContext and HLPContext.
 // _Context * wrapped in Context, the latter used by operators.
-class dll_export _Context
+class REPLICODE_EXPORT _Context
 {
 protected:
     Overlay *const overlay; // the overlay where the evaluation is performed; NULL when the context is dereferenced outside the original pgm or outside the value array.

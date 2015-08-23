@@ -34,7 +34,7 @@
 #include <string>             // for string
 #include <unordered_map>      // for unordered_map
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 namespace r_code {
 class View;
@@ -46,7 +46,7 @@ class Controller;
 namespace r_exec
 {
 
-class dll_export CPPPrograms
+class REPLICODE_EXPORT CPPPrograms
 {
 public:
     typedef Controller *(*Program)(r_code::View *);

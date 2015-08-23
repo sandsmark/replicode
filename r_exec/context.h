@@ -47,13 +47,13 @@
 #include <vector>                // for vector
 
 #include "CoreLibrary/base.h"    // for P
-#include "CoreLibrary/dll.h"     // for dll_export
+#include "CoreLibrary/dll.h"     // for REPLICODE_EXPORT
 
 namespace r_exec
 {
 
 // Evaluation context.
-class dll_export IPGMContext:
+class REPLICODE_EXPORT IPGMContext:
     public _Context
 {
 private:

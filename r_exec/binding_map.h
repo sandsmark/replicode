@@ -37,7 +37,7 @@
 #include <vector>              // for vector
 
 #include "CoreLibrary/base.h"  // for P, _Object
-#include "CoreLibrary/dll.h"   // for dll_export
+#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;
@@ -52,7 +52,7 @@ class BindingMap;
 class ObjectValue;
 class StructureValue;
 
-class dll_export Value:
+class REPLICODE_EXPORT Value:
     public core::_Object
 {
 protected:
@@ -97,7 +97,7 @@ public:
     }
 };
 
-class dll_export BoundValue:
+class REPLICODE_EXPORT BoundValue:
     public Value
 {
 protected:
@@ -105,7 +105,7 @@ protected:
 public:
 };
 
-class dll_export UnboundValue:
+class REPLICODE_EXPORT UnboundValue:
     public Value
 {
 private:
@@ -122,7 +122,7 @@ public:
     uint16_t get_code_size();
 };
 
-class dll_export AtomValue:
+class REPLICODE_EXPORT AtomValue:
     public BoundValue
 {
 private:
@@ -143,7 +143,7 @@ public:
     bool contains(const r_code::Atom a) const;
 };
 
-class dll_export StructureValue:
+class REPLICODE_EXPORT StructureValue:
     public BoundValue
 {
 private:
@@ -167,7 +167,7 @@ public:
     bool contains(const r_code::Atom *s) const;
 };
 
-class dll_export ObjectValue:
+class REPLICODE_EXPORT ObjectValue:
     public BoundValue
 {
 private:
@@ -197,7 +197,7 @@ typedef enum {
 class Fact;
 class _Fact;
 
-class dll_export BindingMap:
+class REPLICODE_EXPORT BindingMap:
     public core::_Object
 {
     friend class UnboundValue;
@@ -277,7 +277,7 @@ public:
     bool scan_variable(uint16_t id) const; // return true if id<first_index or map[id] is not an UnboundValue.
 };
 
-class dll_export HLPBindingMap:
+class REPLICODE_EXPORT HLPBindingMap:
     public BindingMap
 {
 private:

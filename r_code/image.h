@@ -36,7 +36,7 @@
 #include <fstream>            // for ifstream, ofstream
 #include <string>             // for string
 
-#include "CoreLibrary/dll.h"  // for dll_export
+#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
 
 
 namespace r_comp
@@ -119,12 +119,12 @@ public:
 
 /// Returns the number of word32 needed to encode the string
 /// String content is aligned on 4 bytes boundaries; string length heads the structure
-size_t dll_export GetStringSize(const std::string &s);
+size_t REPLICODE_EXPORT GetStringSize(const std::string &s);
 
 /// Writes the string to \a data, null-terminated
-void dll_export WriteString(uint32_t *data, const std::string &string);
+void REPLICODE_EXPORT WriteString(uint32_t *data, const std::string &string);
 /// Reads a null-terminated string from \a data
-std::string dll_export ReadString(uint32_t *data);
+std::string REPLICODE_EXPORT ReadString(uint32_t *data);
 }
 
 #include "image.tpl.h"
