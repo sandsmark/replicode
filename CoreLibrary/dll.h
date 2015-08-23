@@ -32,18 +32,9 @@
 #define core_types_h
 
 #if defined(WIN32) || defined(WIN64)
-#if defined CORELIBRARY_EXPORTS
-#define core_dll __declspec(dllexport)
-#else
-#define core_dll __declspec(dllimport)
-#endif
 #define dll_export __declspec(dllexport)
-#define dll_import __declspec(dllimport)
 #else
-#define core_dll
 #define dll_export __attribute__((visibility("default")))
-#define dll_import __attribute__((visibility("default")))
-#define cdecl
 #endif
 
 #endif

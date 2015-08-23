@@ -43,7 +43,7 @@ namespace core
 
 
 // Root smart-pointable object class.
-class core_dll _Object
+class _Object
 {
     template<class C> friend class P;
     friend class _P;
