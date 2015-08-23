@@ -25,6 +25,8 @@ target_link_libraries(replicode r_exec r_comp r_code dl pthread rt)
 
 install(FILES replicode_common.h DESTINATION include)
 
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+
 enable_testing()
 
 foreach(test_file
