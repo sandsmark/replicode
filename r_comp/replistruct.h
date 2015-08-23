@@ -17,9 +17,9 @@ class RepliMacro;
 class RepliStruct
 {
 public:
-    static std::unordered_map<std::string, RepliMacro *> RepliMacros;
-    static std::unordered_map<std::string, int64_t> Counters;
-    static std::list<RepliCondition *> Conditions;
+    static std::unordered_map<std::string, RepliMacro *> s_macros;
+    static std::unordered_map<std::string, int64_t> s_counters;
+    static std::list<RepliCondition *> s_conditions;
     static uint64_t GlobalLine;
     static std::string GlobalFilename;
 

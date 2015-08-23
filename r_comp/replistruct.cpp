@@ -11,9 +11,9 @@
 namespace r_comp
 {
 
-std::unordered_map<std::string, RepliMacro *> RepliStruct::RepliMacros;
-std::unordered_map<std::string, int64_t> RepliStruct::Counters;
-std::list<RepliCondition *> RepliStruct::Conditions;
+std::unordered_map<std::string, RepliMacro *> RepliStruct::s_macros;
+std::unordered_map<std::string, int64_t> RepliStruct::s_counters;
+std::list<RepliCondition *> RepliStruct::s_conditions;
 uint64_t RepliStruct::GlobalLine = 1;
 std::string RepliStruct::GlobalFilename;
 
@@ -600,16 +600,16 @@ int64_t RepliStruct::process()
     std::string loadError;
 
     // expand Counters in all structures
-    if (Counters.find(cmd) != Counters.end()) {
+    if (s_counters.find(cmd) != s_counters.end()) {
         // expand the counter
-        cmd = std::to_string(Counters[cmd]++);
+        cmd = std::to_string(s_counters[cmd]++);
         changes++;
     }
 
     // expand Macros in all structures
-    if (RepliMacros.find(cmd) != RepliMacros.end()) {
+    if (s_macros.find(cmd) != s_macros.end()) {
         // expand the macro
-        macro = RepliMacros[cmd];
+        macro = s_macros[cmd];
         newStruct = macro->expandMacro(this);
 
         if (newStruct != nullptr) {
@@ -634,25 +634,25 @@ int64_t RepliStruct::process()
         if (structure->type == Condition) {
             if (structure->cmd.compare("!ifdef") == 0) {
                 cond = new RepliCondition(structure->args.front()->cmd, false);
-                Conditions.push_back(cond);
+                s_conditions.push_back(cond);
             } else if (structure->cmd.compare("!ifundef") == 0) {
                 cond = new RepliCondition(structure->args.front()->cmd, true);
-                Conditions.push_back(cond);
+                s_conditions.push_back(cond);
             } else if (structure->cmd.compare("!else") == 0) {
                 // reverse the current condition
-                Conditions.back()->reverse();
+                s_conditions.back()->reverse();
             } else if (structure->cmd.compare("!endif") == 0) {
-                Conditions.pop_back();
+                s_conditions.pop_back();
             }
 
             return 0;
         }
 
         // Check Conditions to see if we are active at the moment
-        for (std::list<RepliCondition*>::const_iterator iCon(Conditions.begin()), iConEnd(Conditions.end()); iCon != iConEnd; ++iCon) {
+        for (std::list<RepliCondition*>::const_iterator iCon(s_conditions.begin()), iConEnd(s_conditions.end()); iCon != iConEnd; ++iCon) {
             // if just one active condition is not active we will ignore the current line
             // until we get an !else or !endif
-            if (!((*iCon)->isActive(RepliMacros, Counters))) {
+            if (!((*iCon)->isActive(s_macros, s_counters))) {
                 return 0;
             }
         }
@@ -661,9 +661,9 @@ int64_t RepliStruct::process()
             if (structure->cmd.compare("!counter") == 0) {
                 // register the counter
                 if (structure->args.size() > 1) {
-                    Counters[structure->args.front()->cmd] = atoi(structure->args.back()->cmd.c_str());
+                    s_counters[structure->args.front()->cmd] = atoi(structure->args.back()->cmd.c_str());
                 } else {
-                    Counters[structure->args.front()->cmd] = 0;
+                    s_counters[structure->args.front()->cmd] = 0;
                 }
             } else if (structure->cmd.compare("!def") == 0) {
                 // check second sub structure only containing macros
@@ -677,11 +677,11 @@ int64_t RepliStruct::process()
 
                 // register the macro
                 macro = new RepliMacro(structure->args.front()->cmd, structure->args.front(), structure->args.back());
-                RepliMacros[macro->name] = macro;
+                s_macros[macro->name] = macro;
             } else if (structure->cmd.compare("!undef") == 0) {
                 // remove the counter or macro
-                RepliMacros.erase(RepliMacros.find(structure->args.front()->cmd));
-                Counters.erase(Counters.find(structure->args.front()->cmd));
+                s_macros.erase(s_macros.find(structure->args.front()->cmd));
+                s_counters.erase(s_counters.find(structure->args.front()->cmd));
             } else if (structure->cmd.compare("!load") == 0) {
                 // Check for a load directive...
                 newStruct = loadReplicodeFile(structure->args.front()->cmd);
@@ -725,9 +725,9 @@ int64_t RepliStruct::process()
                 changes++;
             }
         } else { // a Structure, Set, Atom or Development
-            if (RepliMacros.find(structure->cmd) != RepliMacros.end()) {
+            if (s_macros.find(structure->cmd) != s_macros.end()) {
                 // expand the macro
-                macro = RepliMacros[structure->cmd];
+                macro = s_macros[structure->cmd];
                 newStruct = macro->expandMacro(structure);
 
                 if (newStruct != nullptr) {
@@ -752,9 +752,9 @@ int64_t RepliStruct::process()
         }
 
         // expand Counters in all structures
-        if (Counters.find(structure->cmd) != Counters.end()) {
+        if (s_counters.find(structure->cmd) != s_counters.end()) {
             // expand the counter
-            structure->cmd = std::to_string(Counters[structure->cmd]++);
+            structure->cmd = std::to_string(s_counters[structure->cmd]++);
             changes++;
         }
     }
