@@ -593,10 +593,7 @@ bool RepliStruct::parseDirective(std::istream *stream, uint64_t &curIndent, uint
 
 int64_t RepliStruct::process()
 {
-    int64_t changes = 0, count;
-    RepliStruct *structure, *newStruct, *tempStruct;
-    RepliMacro* macro;
-    RepliCondition* cond;
+    int64_t changes = 0;
     std::string loadError;
 
     // expand Counters in all structures
@@ -609,18 +606,18 @@ int64_t RepliStruct::process()
     // expand Macros in all structures
     if (s_macros.find(cmd) != s_macros.end()) {
         // expand the macro
-        macro = s_macros[cmd];
-        newStruct = macro->expandMacro(this);
+        RepliMacro *macro = s_macros[cmd];
+        RepliStruct *newStruct = macro->expandMacro(this);
 
-        if (newStruct != nullptr) {
-            *this = *newStruct;
-            delete(newStruct);
-            changes++;
-        } else {
+        if (newStruct == nullptr) {
             error = macro->error;
             macro->error = "";
             return -1;
         }
+
+        *this = *newStruct;
+        delete newStruct;
+        changes++;
     }
 
     if (args.size() == 0) {
@@ -628,15 +625,15 @@ int64_t RepliStruct::process()
     }
 
     for (std::vector<RepliStruct*>::iterator iter(args.begin()), iterEnd(args.end()); iter != iterEnd; ++iter) {
-        structure = (*iter);
+        RepliStruct *structure = (*iter);
 
         // printf("Processing %s with %d args...\n", structure->cmd.c_str(), structure->args.size());
         if (structure->type == Condition) {
             if (structure->cmd.compare("!ifdef") == 0) {
-                cond = new RepliCondition(structure->args.front()->cmd, false);
+                RepliCondition *cond = new RepliCondition(structure->args.front()->cmd, false);
                 s_conditions.push_back(cond);
             } else if (structure->cmd.compare("!ifundef") == 0) {
-                cond = new RepliCondition(structure->args.front()->cmd, true);
+                RepliCondition *cond = new RepliCondition(structure->args.front()->cmd, true);
                 s_conditions.push_back(cond);
             } else if (structure->cmd.compare("!else") == 0) {
                 // reverse the current condition
@@ -667,6 +664,7 @@ int64_t RepliStruct::process()
                 }
             } else if (structure->cmd.compare("!def") == 0) {
                 // check second sub structure only containing macros
+                int count = 0;
                 while ((count = structure->args.back()->process()) > 0) {
                     changes += count;
                 }
@@ -676,7 +674,7 @@ int64_t RepliStruct::process()
                 }
 
                 // register the macro
-                macro = new RepliMacro(structure->args.front()->cmd, structure->args.front(), structure->args.back());
+                RepliMacro *macro = new RepliMacro(structure->args.front()->cmd, structure->args.front(), structure->args.back());
                 s_macros[macro->name] = macro;
             } else if (structure->cmd.compare("!undef") == 0) {
                 // remove the counter or macro
@@ -684,20 +682,20 @@ int64_t RepliStruct::process()
                 s_counters.erase(s_counters.find(structure->args.front()->cmd));
             } else if (structure->cmd.compare("!load") == 0) {
                 // Check for a load directive...
-                newStruct = loadReplicodeFile(structure->args.front()->cmd);
+                RepliStruct *newStruct = loadReplicodeFile(structure->args.front()->cmd);
 
                 if (newStruct == nullptr) {
                     structure->error += "Load: File '" + structure->args.front()->cmd + "' cannot be read! ";
                     return -1;
                 } else if ((loadError = newStruct->printError()).size() > 0) {
                     structure->error = loadError;
-                    delete(newStruct);
+                    delete newStruct;
                     return -1;
                 }
 
                 // Insert new data into current args
                 // save location
-                tempStruct = (*iter);
+                RepliStruct *tempStruct = (*iter);
                 // insert new structures
                 args.insert(++iter, newStruct->args.begin(), newStruct->args.end());
                 // reinit iterator and find location again
@@ -728,23 +726,24 @@ int64_t RepliStruct::process()
         } else { // a Structure, Set, Atom or Development
             if (s_macros.find(structure->cmd) != s_macros.end()) {
                 // expand the macro
-                macro = s_macros[structure->cmd];
-                newStruct = macro->expandMacro(structure);
+                RepliMacro *macro = s_macros[structure->cmd];
+                RepliStruct *newStruct = macro->expandMacro(structure);
 
-                if (newStruct != nullptr) {
-                    *structure = *newStruct;
-                    delete(newStruct);
-                    changes++;
-                } else {
+                if (newStruct == nullptr) {
                     structure->error = macro->error;
                     macro->error = "";
                     return -1;
                 }
+
+                *structure = *newStruct;
+                delete newStruct;
+                changes++;
             }
 
             // check for sub structures containing macros
             for (RepliStruct *substruct : structure->args) {
-                if ((count = (substruct)->process()) > 0) {
+                int count = substruct->process();
+                if (count > 0) {
                     changes += count;
                 } else if (count < 0) {
                     return -1;
