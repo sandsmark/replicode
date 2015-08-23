@@ -41,8 +41,8 @@
 #include <unordered_map>       // for unordered_map, etc
 #include <vector>              // for vector
 
-#include "CoreLibrary/base.h"  // for P
-#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for P
+#include <replicode_common.h>   // for REPLICODE_EXPORT
 
 namespace r_exec {
 class Controller;

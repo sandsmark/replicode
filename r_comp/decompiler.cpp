@@ -43,7 +43,7 @@
 #include <cstdint>                  // for uint16_t, uint64_t, uint32_t, etc
 #include <utility>                  // for pair
 
-#include "CoreLibrary/debug.h"      // for DebugStream
+#include <replicode_common.h>      // for DebugStream
 
 namespace r_comp
 {

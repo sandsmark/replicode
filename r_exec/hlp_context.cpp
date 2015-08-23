@@ -37,7 +37,7 @@
 #include <r_exec/operator.h>     // for Operator, Context
 #include <r_exec/overlay.h>      // for Overlay
 
-#include "CoreLibrary/base.h"    // for P
+#include <replicode_common.h>    // for P
 
 
 namespace r_exec

@@ -40,7 +40,7 @@
 #include <unordered_set>            // for unordered_set
 #include <vector>                   // for vector
 
-#include "CoreLibrary/base.h"       // for P
+#include <replicode_common.h>       // for P
 
 namespace r_code {
 class Code;

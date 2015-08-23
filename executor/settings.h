@@ -32,7 +32,7 @@
 #define settings_h
 
 #include "inifile.h"
-#include <CoreLibrary/debug.h>
+#include <replicode_common.h>
 #include <thread>
 
 class Settings

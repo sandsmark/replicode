@@ -39,7 +39,7 @@
 #include <stdlib.h>                 // for exit
 #include <cstdint>                  // for uint16_t, uintptr_t, int16_t, etc
 
-#include "CoreLibrary/debug.h"      // for debug, DebugStream
+#include <replicode_common.h>      // for debug, DebugStream
 
 
 using namespace r_code;

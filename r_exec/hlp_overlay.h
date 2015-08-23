@@ -37,7 +37,7 @@
 #include <r_exec/overlay.h>      // for Overlay
 #include <stdint.h>              // for uint16_t
 
-#include "CoreLibrary/base.h"    // for P
+#include <replicode_common.h>    // for P
 
 namespace r_code {
 class Atom;

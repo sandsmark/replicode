@@ -36,7 +36,7 @@
 #include <r_exec/overlay.h>   // for OController
 #include <mutex>              // for mutex
 
-#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for REPLICODE_EXPORT
 
 namespace r_exec {
 class View;

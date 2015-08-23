@@ -38,7 +38,7 @@
 #include <list>                // for list
 #include <utility>             // for pair
 
-#include "CoreLibrary/base.h"  // for P
+#include <replicode_common.h>  // for P
 
 namespace r_exec {
 class BindingMap;

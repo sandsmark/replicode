@@ -38,7 +38,7 @@
 #include <r_exec/p_monitor.h>       // for PMonitor
 #include <r_exec/time_job.h>        // for MonitoringJob
 
-#include "CoreLibrary/base.h"       // for P
+#include <replicode_common.h>       // for P
 
 
 namespace r_exec

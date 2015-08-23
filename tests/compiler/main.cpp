@@ -1,4 +1,4 @@
-#include <CoreLibrary/debug.h>    // for debug, DebugStream
+#include <replicode_common.h>    // for debug, DebugStream
 #include <r_code/object.h>        // for SysObject
 #include <r_code/vector.h>        // for vector
 #include <r_comp/compiler.h>      // for Compiler

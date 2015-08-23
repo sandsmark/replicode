@@ -57,9 +57,8 @@
 #include <sstream>                  // for ostringstream
 
 
-#include "CoreLibrary/debug.h"      // for debug, DebugStream
+#include <replicode_common.h>      // for debug, DebugStream
 #include "settings.h"               // for Settings
-//#include "CoreLibrary/utils.h"
 
 static bool fileExists(const char *fileName)
 {

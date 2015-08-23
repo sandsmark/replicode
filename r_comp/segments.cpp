@@ -42,8 +42,8 @@
 #include <utility>                  // for pair
 #include <vector>                   // for vector
 
-#include "CoreLibrary/base.h"       // for P
-#include "CoreLibrary/debug.h"      // for DebugStream, debug
+#include <replicode_common.h>       // for P
+#include <replicode_common.h>      // for DebugStream, debug
 
 
 namespace r_comp

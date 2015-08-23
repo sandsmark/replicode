@@ -40,7 +40,7 @@
 #include <stddef.h>           // for NULL
 #include <stdint.h>           // for uint16_t, uint64_t
 
-#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for REPLICODE_EXPORT
 
 namespace r_exec
 {

@@ -32,7 +32,7 @@
 #define auto_focus_proxy_h
 
 
-#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for REPLICODE_EXPORT
 
 namespace r_code {
 class View;

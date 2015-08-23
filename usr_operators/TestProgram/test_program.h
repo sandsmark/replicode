@@ -32,7 +32,7 @@
 #define test_program_h
 
 
-#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for REPLICODE_EXPORT
 
 namespace r_code {
 class View;

@@ -31,7 +31,7 @@
 #ifndef r_code_atom_h
 #define r_code_atom_h
 
-#include "CoreLibrary/dll.h"
+#include <replicode_common.h>
 
 #include <cstdint>
 #include <cstddef>

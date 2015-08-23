@@ -31,7 +31,7 @@
 #ifndef opcodes_h
 #define opcodes_h
 
-#include "CoreLibrary/dll.h"
+#include <replicode_common.h>
 
 #include <cstdint>
 

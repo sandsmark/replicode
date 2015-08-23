@@ -34,7 +34,7 @@
 #include <string>
 
 #include "Operators/operators.h"
-#include "CoreLibrary/debug.h"
+#include <replicode_common.h>
 
 namespace r_comp {
 class Metadata;

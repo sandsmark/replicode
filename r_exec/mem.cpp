@@ -51,7 +51,7 @@
 #include <unordered_set>            // for unordered_set, etc
 #include <utility>                  // for pair
 
-#include "CoreLibrary/debug.h"      // for debug, DebugStream
+#include <replicode_common.h>      // for debug, DebugStream
 
 
 namespace r_exec

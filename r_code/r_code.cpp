@@ -30,7 +30,7 @@
 
 #include "r_code.h"
 
-#include "CoreLibrary/debug.h"  // for debug, DebugStream
+#include <replicode_common.h>  // for debug, DebugStream
 
 void Init()
 {

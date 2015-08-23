@@ -36,8 +36,8 @@
 #include <stdint.h>            // for uint16_t, uint64_t, int16_t, uint8_t
 #include <vector>              // for vector
 
-#include "CoreLibrary/base.h"  // for P, _Object
-#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for P, _Object
+#include <replicode_common.h>   // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;

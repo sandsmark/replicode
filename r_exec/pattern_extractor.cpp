@@ -53,8 +53,8 @@
 #include <string>                      // for allocator, string, operator+, etc
 #include <vector>                      // for vector, etc
 
-#include "CoreLibrary/base.h"          // for P, _Object
-#include "CoreLibrary/debug.h"         // for DebugStream
+#include <replicode_common.h>          // for P, _Object
+#include <replicode_common.h>         // for DebugStream
 
 namespace r_exec
 {

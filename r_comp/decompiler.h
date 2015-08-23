@@ -39,7 +39,7 @@
 #include <unordered_set>      // for unordered_set
 #include <vector>             // for vector
 
-#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for REPLICODE_EXPORT
 
 namespace r_code {
 class ImageObject;

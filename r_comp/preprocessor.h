@@ -39,7 +39,7 @@
 #include <unordered_map>              // for unordered_map
 #include <vector>                     // for vector
 
-#include "CoreLibrary/dll.h"          // for REPLICODE_EXPORT
+#include <replicode_common.h>          // for REPLICODE_EXPORT
 
 namespace r_comp {
 class Metadata;

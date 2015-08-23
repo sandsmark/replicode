@@ -42,7 +42,7 @@
 #include <mutex>              // for mutex
 #include <unordered_map>      // for operator!=
 
-#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for REPLICODE_EXPORT
 
 namespace r_exec
 {

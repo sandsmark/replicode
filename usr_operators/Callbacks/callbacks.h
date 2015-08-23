@@ -34,7 +34,7 @@
 
 #include <stdint.h>           // for uint64_t, uint8_t
 
-#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for REPLICODE_EXPORT
 
 namespace r_code {
 class Code;

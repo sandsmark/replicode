@@ -52,7 +52,7 @@
 #include <utility>                      // for pair, move
 #include <sstream>                      // for ostringstream
 
-#include "CoreLibrary/debug.h"          // for debug, DebugStream
+#include <replicode_common.h>          // for debug, DebugStream
 
 #if !defined(WIN32) || !defined(WIN64)
 #include <dlfcn.h>   // for dlerror, dlsym
@@ -150,7 +150,7 @@ class Controller;
 namespace r_exec
 {
 
-dll_export uint64_t(*Now)();
+REPLICODE_EXPORT uint64_t(*Now)();
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 

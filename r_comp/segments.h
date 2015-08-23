@@ -38,7 +38,7 @@
 #include <string>                       // for string
 #include <unordered_map>                // for unordered_map
 
-#include "CoreLibrary/dll.h"            // for REPLICODE_EXPORT
+#include <replicode_common.h>            // for REPLICODE_EXPORT
 
 namespace core {
 template <class C> class P;

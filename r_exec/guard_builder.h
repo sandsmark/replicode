@@ -34,7 +34,7 @@
 
 #include <stdint.h>            // for uint16_t, uint64_t
 
-#include "CoreLibrary/base.h"  // for _Object
+#include <replicode_common.h>  // for _Object
 
 namespace r_code {
 class Code;

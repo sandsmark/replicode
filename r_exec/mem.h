@@ -46,8 +46,8 @@
 #include <thread>              // for thread
 #include <vector>              // for vector
 
-#include "CoreLibrary/base.h"  // for P
-#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for P
+#include <replicode_common.h>   // for REPLICODE_EXPORT
 
 namespace r_comp {
 class Image;

@@ -32,7 +32,7 @@
 #define monitor_h
 
 
-#include "CoreLibrary/base.h"  // for P, _Object
+#include <replicode_common.h>  // for P, _Object
 
 namespace r_exec {
 class BindingMap;

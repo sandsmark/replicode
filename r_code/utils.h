@@ -37,8 +37,8 @@
 #include <iostream>            // for char_traits, ostream
 #include <string>              // for string
 
-#include "CoreLibrary/base.h"  // for P
-#include "CoreLibrary/dll.h"   // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for P
+#include <replicode_common.h>   // for REPLICODE_EXPORT
 
 using namespace core;
 

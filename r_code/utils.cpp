@@ -30,7 +30,7 @@
 
 #include "utils.h"
 
-#include <CoreLibrary/debug.h>  // for DebugStream
+#include <replicode_common.h>  // for DebugStream
 #include <r_code/object.h>      // for Code
 #include <r_code/utils.h>       // for Utils
 #include <string.h>             // for memcpy

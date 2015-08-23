@@ -42,8 +42,8 @@
 #include <unordered_set>            // for unordered_set
 #include <vector>                   // for vector, allocator
 
-#include "CoreLibrary/base.h"       // for P, _Object
-#include "CoreLibrary/dll.h"        // for REPLICODE_EXPORT
+#include <replicode_common.h>       // for P, _Object
+#include <replicode_common.h>        // for REPLICODE_EXPORT
 
 namespace r_code
 {

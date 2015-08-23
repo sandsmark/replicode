@@ -36,7 +36,7 @@
 #include <stdint.h>              // for uint64_t
 #include <mutex>                 // for mutex
 
-#include "CoreLibrary/base.h"    // for P
+#include <replicode_common.h>    // for P
 
 namespace r_code {
 class Code;

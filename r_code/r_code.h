@@ -32,7 +32,7 @@
 #define r_code_h
 
 
-#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for REPLICODE_EXPORT
 
 extern "C" {
     void REPLICODE_EXPORT Init();

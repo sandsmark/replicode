@@ -30,7 +30,7 @@
 
 #include <iostream>
 #include "atom.h"
-#include "CoreLibrary/debug.h"
+#include <replicode_common.h>
 
 
 namespace r_code

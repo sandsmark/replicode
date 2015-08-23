@@ -44,7 +44,7 @@
 #include <mutex>                    // for mutex, lock_guard
 #include <vector>                   // for vector
 
-#include "CoreLibrary/base.h"       // for P
+#include <replicode_common.h>       // for P
 
 namespace r_exec {
 class Group;

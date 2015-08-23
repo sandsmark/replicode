@@ -34,7 +34,7 @@
 #include <r_exec/operator.h>  // for Context
 #include <stdint.h>           // for uint16_t
 
-#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for REPLICODE_EXPORT
 
 namespace r_comp {
 class Metadata;

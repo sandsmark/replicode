@@ -36,7 +36,7 @@
 #include <fstream>            // for ifstream, ofstream
 #include <string>             // for string
 
-#include "CoreLibrary/dll.h"  // for REPLICODE_EXPORT
+#include <replicode_common.h>  // for REPLICODE_EXPORT
 
 
 namespace r_comp

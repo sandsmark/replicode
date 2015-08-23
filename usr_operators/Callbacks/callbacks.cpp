@@ -34,7 +34,7 @@
 #include <iostream>             // for operator<<, basic_ostream, cout, etc
 #include <string>               // for char_traits, operator<<
 
-#include "CoreLibrary/debug.h"  // for DebugStream
+#include <replicode_common.h>  // for DebugStream
 
 
 bool print(uint64_t t, bool suspended, const char *msg, uint8_t object_count, r_code::Code **objects)   // return true to resume the executive (applies when called from a suspend call, i.e. suspended==true).

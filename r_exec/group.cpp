@@ -52,7 +52,7 @@
 #include <unordered_set>            // for unordered_set
 #include <utility>                  // for pair
 
-#include "CoreLibrary/debug.h"      // for DebugStream, debug
+#include <replicode_common.h>      // for DebugStream, debug
 
 
 namespace r_exec
