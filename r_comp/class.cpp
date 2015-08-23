@@ -30,7 +30,6 @@
 
 #include "class.h"
 
-#include <ext/alloc_traits.h>  // for __alloc_traits<>::value_type
 #include <r_code/image.h>      // for GetStringSize, ReadString, etc
 #include <r_comp/class.h>      // for Class
 #include <r_comp/segments.h>   // for Metadata

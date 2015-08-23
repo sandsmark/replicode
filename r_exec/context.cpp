@@ -30,7 +30,6 @@
 
 #include "context.h"
 
-#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
 #include <r_code/replicode_defs.h>  // for IPGM_ARITY, VIEW_CODE_MAX_SIZE, etc
 #include <r_code/vector.h>          // for vector
 #include <r_exec/context.h>         // for IPGMContext, etc

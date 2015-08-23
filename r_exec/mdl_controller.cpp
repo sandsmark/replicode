@@ -30,7 +30,6 @@
 
 #include "mdl_controller.h"
 
-#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
 #include <r_code/atom.h>            // for Atom
 #include <r_code/object.h>          // for Code, View::::SYNC_ONCE
 #include <r_code/replicode_defs.h>  // for I_HLP_WR_E, MDL_SR, MDL_CNT, etc

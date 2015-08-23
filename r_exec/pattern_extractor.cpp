@@ -28,7 +28,6 @@
 //	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <ext/alloc_traits.h>          // for __alloc_traits<>::value_type
 #include <r_code/atom.h>               // for Atom
 #include <r_code/list.h>               // for list<>::const_iterator, list, etc
 #include <r_code/object.h>             // for Code, View::::SYNC_AXIOM, etc

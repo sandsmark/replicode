@@ -30,7 +30,6 @@
 
 #include "factory.h"
 
-#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
 #include <r_code/object.h>          // for Code
 #include <r_code/replicode_defs.h>  // for FACT_ARITY, MK_VAL_VALUE, etc
 #include <r_code/utils.h>           // for Utils

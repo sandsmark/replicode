@@ -30,7 +30,6 @@
 
 #include "mem.h"
 
-#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
 #include <r_code/replicode_defs.h>  // for HLP_FWD_GUARDS, HLP_OUT_GRPS, etc
 #include <r_comp/segments.h>        // for Image
 #include <r_exec/factory.h>         // for Fact, Perf

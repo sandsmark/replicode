@@ -30,7 +30,6 @@
 
 #include "pgm_overlay.h"
 
-#include <ext/alloc_traits.h>       // for __alloc_traits<>::value_type
 #include <r_code/object.h>          // for Code, View, View::::SYNC_ONCE
 #include <r_code/replicode_defs.h>  // for MK_RDX_ARITY, IPGM_ARGS, etc
 #include <r_code/utils.h>           // for Utils

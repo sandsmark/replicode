@@ -31,7 +31,6 @@
 #ifndef binding_map_h
 #define binding_map_h
 
-#include <ext/alloc_traits.h>  // for __alloc_traits<>::value_type
 #include <r_code/atom.h>       // for r_code::Atom
 #include <stdint.h>            // for uint16_t, uint64_t, int16_t, uint8_t
 #include <vector>              // for vector
