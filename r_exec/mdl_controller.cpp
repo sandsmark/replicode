@@ -997,8 +997,13 @@ void PMDLController::inject_goal(HLPBindingMap *bm, Fact *goal, Fact *f_imdl) co
     int64_t resilience = _Mem::Get()->get_goal_pred_success_res(primary_grp, now, before - now);
     View *view = new View(View::SYNC_ONCE, now, 1, resilience, primary_grp, primary_grp, goal); // SYNC_ONCE,res=resilience.
     _Mem::Get()->inject(view);
-    MkRdx *mk_rdx = new MkRdx(f_imdl, goal->get_goal()->get_super_goal(), goal, 1, bm);
     uint16_t out_group_count = get_rdx_out_group_count();
+
+    if (out_group_count == 0) {
+        return;
+    }
+
+    MkRdx *mk_rdx = new MkRdx(f_imdl, goal->get_goal()->get_super_goal(), goal, 1, bm);
 
     for (uint16_t i = 0; i < out_group_count; ++i) {
         Group *out_group = (Group *)get_out_group(i);
