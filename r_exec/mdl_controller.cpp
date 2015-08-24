@@ -492,9 +492,8 @@ ChainingStatus MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap *bm, Fac
             double negative_cfd = 0;
             std::lock_guard<std::mutex> guard(requirements.mutex);
             uint64_t now = Now();
-            r_code::list<REntry>::const_iterator e;
 
-            for (e = simulated_requirements.negative_evidences.begin(); e != simulated_requirements.negative_evidences.end();) {
+            for (auto e = simulated_requirements.negative_evidences.begin(); e != simulated_requirements.negative_evidences.end();) {
                 if ((*e).is_too_old(now)) { // garbage collection.
                     e = simulated_requirements.negative_evidences.erase(e);
                 } else if ((*e).is_out_of_range(now)) {
@@ -514,7 +513,7 @@ ChainingStatus MDLController::retrieve_simulated_imdl_fwd(HLPBindingMap *bm, Fac
                 }
             }
 
-            for (e = simulated_requirements.positive_evidences.begin(); e != simulated_requirements.positive_evidences.end();) {
+            for (auto e = simulated_requirements.positive_evidences.begin(); e != simulated_requirements.positive_evidences.end();) {
                 if ((*e).is_too_old(now)) { // garbage collection.
                     e = simulated_requirements.positive_evidences.erase(e);
                 } else if ((*e).is_out_of_range(now)) {
@@ -900,9 +899,8 @@ ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl,
             double negative_cfd = 0;
             std::lock_guard<std::mutex> guard(requirements.mutex);
             uint64_t now = Now();
-            r_code::list<REntry>::const_iterator e;
 
-            for (e = requirements.negative_evidences.begin(); e != requirements.negative_evidences.end();) {
+            for (auto e = requirements.negative_evidences.begin(); e != requirements.negative_evidences.end();) {
                 if ((*e).is_too_old(now)) { // garbage collection.
                     e = requirements.negative_evidences.erase(e);
                 } else {
@@ -918,7 +916,7 @@ ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl,
                 }
             }
 
-            for (e = requirements.positive_evidences.begin(); e != requirements.positive_evidences.end();) {
+            for (auto e = requirements.positive_evidences.begin(); e != requirements.positive_evidences.end();) {
                 if ((*e).is_too_old(now)) { // garbage collection.
                     e = requirements.positive_evidences.erase(e);
                 } else {
