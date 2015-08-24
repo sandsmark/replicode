@@ -57,7 +57,9 @@ View::View(r_code::SysView *source, r_code::Code *object): r_code::View(source, 
 View::View(const View *view, bool new_OID): r_code::View(), controller(nullptr)
 {
     object = view->object;
-    memcpy(_code, view->_code, VIEW_CODE_MAX_SIZE * sizeof(Atom) + 2 * sizeof(Code *)); // reference_set is contiguous to code; memcpy in one go.
+    memcpy(_code, view->_code, VIEW_CODE_MAX_SIZE * sizeof(Atom));
+    references[0] = view->references[0];
+    references[1] = view->references[1];
 
     if (new_OID) {
         _code[VIEW_OID].atom = GetOID();
