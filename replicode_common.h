@@ -56,7 +56,7 @@ public:
     virtual ~_Object() {}
     void incRef() { ++refCount; }
     virtual void decRef() {
-        if (--refCount) {
+        if (--refCount == 0) {
             delete this;
         }
     }
@@ -72,7 +72,13 @@ private:
     _Object *object;
 public:
     inline P() : object(nullptr) {}
-    inline P(C *o) : object(o) {}
+    inline P(C *o) : object(o)
+    {
+        if (object) {
+            object->incRef();
+        }
+    }
+
     inline P(const P<C> &p) : object(p.object)
     {
         if (object) {
@@ -148,10 +154,6 @@ public:
     {
         return this->operator =((C *)p.object);
     }
-
-
-    //bool operator <(C *c) const;
-    //bool operator >(C *c) const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
