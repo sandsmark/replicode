@@ -538,8 +538,8 @@ void GTPX::reduce(r_exec::View *input)   // input->object: f->success.
             continue;
         }
 
-        guard_builder = new TimingGuardBuilder(period); // TODO: use the durations.
         period = consequent->get_after() - cause.input->get_after();
+        guard_builder = new TimingGuardBuilder(period); // TODO: use the durations.
         uint16_t cause_index;
         Code *new_cst;
         _Fact *f_icst = find_f_icst(cause.input, cause_index, new_cst);
