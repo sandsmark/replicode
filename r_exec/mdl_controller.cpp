@@ -2014,6 +2014,7 @@ void PrimaryMDLController::register_simulated_goal_outcome(Fact *goal, bool succ
     Group *primary_host = get_host();
     int64_t resilience = _Mem::Get()->get_goal_pred_success_res(primary_host, now, 0);
     View *view = new View(View::SYNC_ONCE, now, 1, resilience, primary_host, primary_host, f_pred);
+    _Mem::Get()->inject(view);
 }
 
 void PrimaryMDLController::rate_model(bool success)
