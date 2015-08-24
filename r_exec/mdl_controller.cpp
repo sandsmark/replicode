@@ -719,116 +719,120 @@ ChainingStatus MDLController::retrieve_imdl_fwd(HLPBindingMap *bm, Fact *f_imdl,
         }
 
         return r;
-    } else {
-        if (!wr_count) { // some strong req., no weak req.: true if there is no |f->imdl complying with timings and bindings.
-            wr_enabled = false;
-            r = WR_ENABLED;
-            std::lock_guard<std::mutex> guard(requirements.mutex);
-            uint64_t now = Now();
-            r_code::list<REntry>::const_iterator e;
+    }
+    if (!wr_count) { // some strong req., no weak req.: true if there is no |f->imdl complying with timings and bindings.
+        wr_enabled = false;
+        r = WR_ENABLED;
+        std::lock_guard<std::mutex> guard(requirements.mutex);
+        uint64_t now = Now();
+        r_code::list<REntry>::const_iterator e;
 
-            for (e = requirements.negative_evidences.begin(); e != requirements.negative_evidences.end();) {
-                if ((*e).is_too_old(now)) { // garbage collection.
-                    e = requirements.positive_evidences.erase(e);
-                } else if ((*e).is_out_of_range(now)) {
-                    ++e;
-                } else {
-                    _Fact *_f_imdl = (*e).evidence->get_pred()->get_target();
-                    HLPBindingMap _original = original; // matching updates the bm; always start afresh.
+        for (e = requirements.negative_evidences.begin(); e != requirements.negative_evidences.end();) {
+            if ((*e).is_too_old(now)) { // garbage collection.
+                e = requirements.positive_evidences.erase(e);
+            } else if ((*e).is_out_of_range(now)) {
+                ++e;
+            } else {
+                _Fact *_f_imdl = (*e).evidence->get_pred()->get_target();
+                HLPBindingMap _original = original; // matching updates the bm; always start afresh.
 
-                    if (_original.match_fwd_lenient(_f_imdl, f_imdl) == MATCH_SUCCESS_NEGATIVE) { // tpl args will be valuated in bm.
-                        if (r == WR_ENABLED && (*e).chaining_was_allowed) { // first match.
-                            r = SR_DISABLED_NO_WR;
-                        }
-
-                        r_p.second.controllers.push_back((*e).controller);
-                        r_p.second.f_imdl = _f_imdl;
-                        r_p.second.chaining_was_allowed = (*e).chaining_was_allowed;
+                if (_original.match_fwd_lenient(_f_imdl, f_imdl) == MATCH_SUCCESS_NEGATIVE) { // tpl args will be valuated in bm.
+                    if (r == WR_ENABLED && (*e).chaining_was_allowed) { // first match.
+                        r = SR_DISABLED_NO_WR;
                     }
 
-                    ++e;
+                    r_p.second.controllers.push_back((*e).controller);
+                    r_p.second.f_imdl = _f_imdl;
+                    r_p.second.chaining_was_allowed = (*e).chaining_was_allowed;
                 }
+
+                ++e;
+            }
+        }
+
+        return r;
+    }
+
+    // some strong req. and some weak req.: true if among the entries complying with timings and bindings, the youngest |f->imdl is weaker than the youngest f->imdl.
+    r = NO_R;
+    std::lock_guard<std::mutex> guard(requirements.mutex);
+    double negative_cfd = 0;
+    uint64_t now = Now();
+
+    for (auto e = requirements.negative_evidences.begin(); e != requirements.negative_evidences.end();) {
+        if ((*e).is_too_old(now)) { // garbage collection.
+            e = requirements.negative_evidences.erase(e);
+        } else if ((*e).is_out_of_range(now)) {
+            ++e;
+        } else {
+            _Fact *_f_imdl = (*e).evidence->get_pred()->get_target();
+            HLPBindingMap _original = original; // matching updates the bm; always start afresh.
+
+            if (_original.match_fwd_lenient(_f_imdl, f_imdl) == MATCH_SUCCESS_NEGATIVE) {
+                if (r == NO_R && (*e).chaining_was_allowed) { // first match.
+                    negative_cfd = (*e).confidence;
+                    r = SR_DISABLED_NO_WR;
+                }
+
+                r_p.second.controllers.push_back((*e).controller);
+                r_p.second.f_imdl = _f_imdl;
+                r_p.second.chaining_was_allowed = (*e).chaining_was_allowed;
             }
 
-            return r;
-        } else { // some strong req. and some weak req.: true if among the entries complying with timings and bindings, the youngest |f->imdl is weaker than the youngest f->imdl.
-            r = NO_R;
-            std::lock_guard<std::mutex> guard(requirements.mutex);
-            double negative_cfd = 0;
-            uint64_t now = Now();
-            r_code::list<REntry>::const_iterator e;
-
-            for (e = requirements.negative_evidences.begin(); e != requirements.negative_evidences.end();) {
-                if ((*e).is_too_old(now)) { // garbage collection.
-                    e = requirements.negative_evidences.erase(e);
-                } else if ((*e).is_out_of_range(now)) {
-                    ++e;
-                } else {
-                    _Fact *_f_imdl = (*e).evidence->get_pred()->get_target();
-                    HLPBindingMap _original = original; // matching updates the bm; always start afresh.
-
-                    if (_original.match_fwd_lenient(_f_imdl, f_imdl) == MATCH_SUCCESS_NEGATIVE) {
-                        if (r == NO_R && (*e).chaining_was_allowed) { // first match.
-                            negative_cfd = (*e).confidence;
-                            r = SR_DISABLED_NO_WR;
-                        }
-
-                        r_p.second.controllers.push_back((*e).controller);
-                        r_p.second.f_imdl = _f_imdl;
-                        r_p.second.chaining_was_allowed = (*e).chaining_was_allowed;
-                    }
-
-                    ++e;
-                }
-            }
-
-            if (ground != nullptr) { // an imdl triggered the reduction of the cache.
-                double confidence = ground->get_pred()->get_target()->get_cfd();
-
-                if (confidence >= negative_cfd) {
-                    r = WR_ENABLED;
-                    r_p.first.controllers.push_back(req_controller);
-                    r_p.first.f_imdl = ground;
-                    r_p.first.chaining_was_allowed = true;
-                    wr_enabled = true;
-                }
-
-                return r;
-            } else for (e = requirements.positive_evidences.begin(); e != requirements.positive_evidences.end();) {
-                    if ((*e).is_too_old(now)) { // garbage collection.
-                        e = requirements.positive_evidences.erase(e);
-                    } else if ((*e).is_out_of_range(now)) {
-                        ++e;
-                    } else {
-                        _Fact *_f_imdl = (*e).evidence->get_pred()->get_target();
-                        HLPBindingMap _original = original; // matching updates the bm; always start afresh.
-
-                        if (_original.match_fwd_strict(_f_imdl, f_imdl)) {
-                            if (r != WR_ENABLED && (*e).chaining_was_allowed) { // first siginificant match.
-                                if ((*e).confidence >= negative_cfd) {
-                                    r = WR_ENABLED;
-                                    ground = (*e).evidence;
-                                    wr_enabled = true;
-                                } else {
-                                    r = SR_DISABLED_WR;
-                                    wr_enabled = false;
-                                }
-
-                                bm->load(&_original);
-                            }
-
-                            r_p.first.controllers.push_back((*e).controller);
-                            r_p.first.f_imdl = _f_imdl;
-                            r_p.first.chaining_was_allowed = (*e).chaining_was_allowed;
-                        }
-
-                        ++e;
-                    }
-                }
-
-            return r;
+            ++e;
         }
     }
+
+    if (ground != nullptr) { // an imdl triggered the reduction of the cache.
+        double confidence = ground->get_pred()->get_target()->get_cfd();
+
+        if (confidence >= negative_cfd) {
+            r = WR_ENABLED;
+            r_p.first.controllers.push_back(req_controller);
+            r_p.first.f_imdl = ground;
+            r_p.first.chaining_was_allowed = true;
+            wr_enabled = true;
+        }
+
+        return r;
+    }
+
+    for (auto e = requirements.positive_evidences.begin(); e != requirements.positive_evidences.end();) {
+        if ((*e).is_too_old(now)) { // garbage collection.
+            e = requirements.positive_evidences.erase(e);
+            continue;
+        }
+
+        if ((*e).is_out_of_range(now)) {
+            ++e;
+        }
+
+        _Fact *_f_imdl = (*e).evidence->get_pred()->get_target();
+        HLPBindingMap _original = original; // matching updates the bm; always start afresh.
+
+        if (_original.match_fwd_strict(_f_imdl, f_imdl)) {
+            if (r != WR_ENABLED && (*e).chaining_was_allowed) { // first siginificant match.
+                if ((*e).confidence >= negative_cfd) {
+                    r = WR_ENABLED;
+                    ground = (*e).evidence;
+                    wr_enabled = true;
+                } else {
+                    r = SR_DISABLED_WR;
+                    wr_enabled = false;
+                }
+
+                bm->load(&_original);
+            }
+
+            r_p.first.controllers.push_back((*e).controller);
+            r_p.first.f_imdl = _f_imdl;
+            r_p.first.chaining_was_allowed = (*e).chaining_was_allowed;
+        }
+
+        ++e;
+    }
+
+    return r;
 }
 
 ChainingStatus MDLController::retrieve_imdl_bwd(HLPBindingMap *bm, Fact *f_imdl, Fact *&ground)
