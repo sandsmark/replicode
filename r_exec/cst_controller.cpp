@@ -345,7 +345,7 @@ void CSTController::reduce(r_exec::View *input)
 
         if (goal_target->code(0).asOpcode() == Opcodes::ICst && goal_target->get_reference(0) == getObject()) { // f is f->icst; produce as many sub-goals as there are patterns in the cst.
             if (!get_requirement_count()) { // models will attempt to produce the icst
-                P<HLPBindingMap> bm = new HLPBindingMap(bm);
+                P<HLPBindingMap> bm = new HLPBindingMap;
                 bm->init_from_f_ihlp(goal_target);
 
                 if (evaluate_bwd_guards(bm)) { // leaves the controller constant: no need to protect; bm may be updated.
