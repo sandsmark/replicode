@@ -42,6 +42,7 @@
 #include <fstream>               // for char_traits
 #include <stdexcept>             // for invalid_argument
 #include <utility>               // for pair
+#include <sstream>               // for istringstream
 
 
 namespace r_comp
@@ -1047,19 +1048,15 @@ bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint
     }
 
     if (node->cmd != "" && !startsWith(node->cmd, "0x") && !endsWith(node->cmd, "us")) { // Make sure it isn't a hex num or a timestamp
-        try {
-            // Fuck the STL, all this for a string::toint();
-            char *p;
-            double n = std::strtod(node->cmd.c_str(), &p);
-
-            if (*p == 0) {
-                if (write) {
-                    current_object->code[write_index] = Atom::Float(n);
-                }
-
-                return true;
+        std::istringstream stream(node->cmd);
+        stream.imbue(std::locale("C"));
+        double num;
+        stream >> num;
+        if (!stream.fail()) {
+            if (write) {
+                current_object->code[write_index] = Atom::Float(num);
             }
-        } catch (const std::invalid_argument &ia) {
+            return true;
         }
     }
 
