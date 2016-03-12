@@ -79,7 +79,6 @@ private:
 
     std::unordered_map<uint16_t, std::string> object_names; // in the form class_namexxx where xxx is an integer representing the order of appearence of the object in the image; or: user-defined names when they are provided.
     std::unordered_map<std::string, uint16_t> object_indices; // inverted version of the object_names.
-    std::string get_object_name(uint16_t index); // retrieves the name of an object.
 
     void write_indent(uint16_t i);
     void write_expression_head(uint16_t read_index); // decodes the leading atom of an expression.
@@ -123,6 +122,7 @@ public:
     uint64_t decompile_references(r_comp::Image *image); // initialize a reference table so that objects can be decompiled individually; returns the number of objects.
     void decompile_object(uint16_t object_index, std::ostringstream *stream, uint64_t time_offset); // decompiles a single object; object_index is the position of the object in the vector returned by Image::getObject.
     void decompile_object(const std::string object_name, std::ostringstream *stream, uint64_t time_offset); // decompiles a single object given its name: use this function to follow references.
+    std::string get_object_name(uint16_t index); // retrieves the name of an object.
 };
 }
 
