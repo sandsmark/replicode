@@ -127,12 +127,14 @@ public:
         decompilation_file_path = settingsFile.getString("Objects", "decompilation_file_path", "../Test/decompiled.replicode");
         ignore_named_objects = settingsFile.getBool("Objects", "ignore_named_objects", false);
         write_objects = settingsFile.getBool("Objects", "write_objects", false);
+        objects_path = settingsFile.getString("Objects", "objects_path", "objects.image");
         test_objects = settingsFile.getBool("Objects", "test_objects", false);
         run_time = settingsFile.getInt("Run", "run_time", 10080);
         probe_level = settingsFile.getInt("Run", "probe_level", 2);
         get_models = settingsFile.getBool("Models", "get_models", false);
         decompile_models = settingsFile.getBool("Models", "decompile_models", false);
         ignore_named_models = settingsFile.getBool("Models", "ignore_named_models", false);
+        models_path = settingsFile.getString("Models", "models_path", "models.image");
         write_models = settingsFile.getBool("Models", "write_models", false);
         test_models = settingsFile.getBool("Models", "test_models", false);
         return true;
