@@ -249,10 +249,10 @@ void Decompiler::decompile_object(uint16_t object_index, std::ostringstream *str
             if (named_objects.find(sys_object->oid) != named_objects.end()) {
                 return;
             } else {
-                *out_stream << "imported ";
+                *out_stream << "imported\n";
             }
         } else if (sys_object->oid != 0xFFFFFFFF) {
-            *out_stream << sys_object->oid << " ";
+//            *out_stream << "oid: " << sys_object->oid << "\n";
         }
     }
 
