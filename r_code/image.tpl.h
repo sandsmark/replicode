@@ -44,6 +44,11 @@ template<class I> Image<I> *Image<I>::Build(uint64_t timestamp, size_t map_size,
 
 template<class I> Image<I> *Image<I>::Read(std::ifstream &stream)
 {
+    if (!stream.is_open()) {
+        std::cerr << "Can't read from non-open file" << std::endl;
+        return nullptr;
+    }
+
     uint64_t timestamp;
     size_t map_size;
     size_t code_size;
@@ -53,7 +58,7 @@ template<class I> Image<I> *Image<I>::Read(std::ifstream &stream)
     stream.read((char *)&code_size, sizeof(size_t));
     stream.read((char *)&names_size, sizeof(size_t));
     Image *image = Build(timestamp, map_size, code_size, names_size);
-    stream.read((char *)image->data(), image->get_size() * sizeof(uintptr_t));
+    stream.read((char *)image->data(), image->get_size() * sizeof(uint32_t));
     return image;
 }
 
@@ -67,7 +72,7 @@ template<class I> void Image<I>::Write(Image<I> *image, std::ofstream &stream)
     stream.write((char *)&map_size, sizeof(size_t));
     stream.write((char *)&code_size, sizeof(size_t));
     stream.write((char *)&names_size, sizeof(size_t));
-    stream.write((char *)image->data(), image->get_size()*sizeof(uintptr_t));
+    stream.write((char *)image->data(), image->get_size()*sizeof(uint32_t));
 }
 
 template<class I> Image<I>::Image(): I()
