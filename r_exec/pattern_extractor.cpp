@@ -999,7 +999,7 @@ bool CTPX::build_requirement(HLPBindingMap *bm, Code *m0, uint64_t period)   // 
     }
 
     _Fact *premise_pattern = (_Fact *)unpacked_cst->get_reference(premise_index);
-    P<BindingMap> _bm = new BindingMap();
+    P<HLPBindingMap> _bm = new HLPBindingMap();
     uint16_t write_index;
     P<Code> m1 = build_mdl_head(_bm, 0, f_icst, f_im0, write_index);
     P<GuardBuilder> guard_builder = new GuardBuilder();
