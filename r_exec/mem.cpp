@@ -970,7 +970,6 @@ r_comp::Image *MemStatic::get_objects()
 {
     r_comp::Image *image = new r_comp::Image();
     image->timestamp = Now();
-    std::lock_guard<std::mutex> guard(m_objectsMutex);
     image->add_objects(objects);
     return image;
 }
