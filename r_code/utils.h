@@ -158,6 +158,21 @@ public:
     static int64_t GetGroupResilience(double resilience, double origin_upr, double destination_upr); // express the res in destination group, given the res in origin group.
 
     static std::string RelativeTime(uint64_t t);
+
+    // String helpers
+    static bool StartsWith(const std::string &haystack, const std::string &needle)
+    {
+        return (haystack.find(needle) == 0);
+    }
+
+    static bool EndsWith(const std::string &haystack, const std::string &needle)
+    {
+        if (haystack.length() < needle.length()) {
+            return false;
+        }
+
+        return (haystack.rfind(needle) == (haystack.length() - needle.length()));
+    }
 };
 }
 

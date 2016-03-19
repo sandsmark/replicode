@@ -50,20 +50,6 @@ namespace r_comp
 
 static bool Output = true;
 
-bool startsWith(const std::string &haystack, const std::string &needle)
-{
-    return (haystack.find(needle) == 0);
-}
-
-bool endsWith(const std::string &haystack, const std::string &needle)
-{
-    if (haystack.length() < needle.length()) {
-        return false;
-    }
-
-    return (haystack.rfind(needle) == (haystack.length() - needle.length()));
-}
-
 Compiler::Compiler(Image *_image, Metadata *_metadata)
 {
     this->_image = _image;
@@ -376,7 +362,7 @@ bool Compiler::hlp_reference(RepliStruct *node, uint16_t &index)
 
 bool Compiler::this_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType returnType)
 {
-    if (!startsWith(node->cmd, "this.")) {
+    if (!Utils::StartsWith(node->cmd, "this.")) {
         return false;
     }
 
@@ -587,7 +573,7 @@ bool Compiler::sys_object(RepliStruct *node, Class &p)
 
 bool Compiler::marker(RepliStruct *node, Class &p)
 {
-    if (!startsWith(node->cmd, "mk.")) {
+    if (!Utils::StartsWith(node->cmd, "mk.")) {
         return false;
     }
 
@@ -1047,7 +1033,7 @@ bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint
         return true;
     }
 
-    if (node->cmd != "" && !startsWith(node->cmd, "0x") && !endsWith(node->cmd, "us")) { // Make sure it isn't a hex num or a timestamp
+    if (node->cmd != "" && !Utils::StartsWith(node->cmd, "0x") && !Utils::EndsWith(node->cmd, "us")) { // Make sure it isn't a hex num or a timestamp
         std::istringstream stream(node->cmd);
         stream.imbue(std::locale("C"));
         double num;
@@ -1144,7 +1130,7 @@ bool Compiler::read_timestamp(RepliStruct *node, bool enforce, const Class *p, u
         return true;
     }
 
-    if (endsWith(node->cmd, "us")) {
+    if (Utils::EndsWith(node->cmd, "us")) {
         std::string number = node->cmd.substr(0, node->cmd.find("us"));
 
         try {
@@ -1269,7 +1255,7 @@ bool Compiler::read_node(RepliStruct *node, bool enforce, const Class *p, uint16
         return true;
     }
 
-    if (startsWith(node->cmd, "0x")) {
+    if (Utils::StartsWith(node->cmd, "0x")) {
         try {
             char *p;
             uint64_t h = std::strtoll(node->cmd.c_str(), &p, 16);
@@ -1324,7 +1310,7 @@ bool Compiler::read_device(RepliStruct *node, bool enforce, const Class *p, uint
         return true;
     }
 
-    if (startsWith(node->cmd, "0x")) {
+    if (Utils::StartsWith(node->cmd, "0x")) {
         try {
             char *p;
             uintptr_t h = std::strtoll(node->cmd.c_str(), &p, 16);
@@ -1653,7 +1639,7 @@ bool Compiler::read_nil_st(RepliStruct *node, uint16_t write_index, uint16_t &ex
 
 bool Compiler::read_variable(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write, const Class p)
 {
-    if (!endsWith(node->cmd, ":") || startsWith(node->cmd, ":") || node->type != RepliStruct::Atom) {
+    if (!Utils::EndsWith(node->cmd, ":") || Utils::StartsWith(node->cmd, ":") || node->type != RepliStruct::Atom) {
         return false;
     }
 
