@@ -15,7 +15,7 @@ add_subdirectory(r_exec)
 add_subdirectory(usr_operators)
 add_subdirectory(tests)
 
-add_executable(replicode executor/main.cpp executor/inifile.cpp)
+add_executable(replicode executor/main.cpp executor/inifile.cpp replicode_common.h)
 set_property(TARGET replicode PROPERTY CXX_STANDARD 11)
 set_property(TARGET replicode PROPERTY CXX_STANDARD_REQUIRED ON)
 

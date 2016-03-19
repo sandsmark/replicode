@@ -76,7 +76,7 @@ set(r_exec_HDR
     view.h
     )
 
-add_library(r_exec SHARED ${r_exec_SRC})
+add_library(r_exec SHARED ${r_exec_SRC} ${r_exec_HDR})
 target_link_libraries(r_exec ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
 set_property(TARGET r_exec PROPERTY CXX_STANDARD 11)
 set_property(TARGET r_exec PROPERTY CXX_STANDARD_REQUIRED ON)

@@ -21,7 +21,7 @@ set(r_code_HDR
     vector.h
 )
 
-add_library(r_code SHARED ${r_code_SRC})
+add_library(r_code SHARED ${r_code_SRC} ${r_code_HDR})
 set_property(TARGET r_code PROPERTY CXX_STANDARD 11)
 set_property(TARGET r_code PROPERTY CXX_STANDARD_REQUIRED ON)
 install(TARGETS r_code DESTINATION lib)

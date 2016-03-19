@@ -19,7 +19,7 @@ set(r_comp_HDR
     )
 
 
-add_library(r_comp SHARED ${r_comp_SRC})
+add_library(r_comp SHARED ${r_comp_SRC} ${r_comp_HDR})
 set_property(TARGET r_comp PROPERTY CXX_STANDARD 11)
 set_property(TARGET r_comp PROPERTY CXX_STANDARD_REQUIRED ON)
 install(TARGETS r_comp DESTINATION lib)
