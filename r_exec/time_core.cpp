@@ -55,7 +55,7 @@ void delegatedCoreWait(TimeJob *job)
     do {
         std::this_thread::sleep_until(steady_clock::time_point(microseconds(job->target_time - last_lag)));
 
-        if (R_LIKELY(!job->is_alive())) {
+        if (R_UNLIKELY(!job->is_alive())) {
             break;
         }
 
