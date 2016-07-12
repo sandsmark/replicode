@@ -97,7 +97,11 @@ void runTimeCore()
 
             if (job->target_time == 0) {// means ASAP. Control jobs (shutdown) are caught here.
                 run = job->update();
-                continue;
+                if (run) {
+                    continue;
+                } else {
+                    break;
+                }
             }
 
             int64_t waitTime = job->target_time - Now();
