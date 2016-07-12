@@ -44,6 +44,9 @@
 namespace core
 {
 
+#define R_LIKELY(x)      __builtin_expect(!!(x), 1)
+#define R_UNLIKELY(x)    __builtin_expect(!!(x), 0)
+
 // Root smart-pointable object class.
 class _Object
 {
