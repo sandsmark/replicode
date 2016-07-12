@@ -172,12 +172,20 @@ public:
     inline DebugStream(const std::string area)
     {
         s_debugSection.lock();
+#if COLOR_DEBUG
         std::cout << "\033[1;34m" << area << "\033[1;37m>\033[1;32m";
+#else
+        std::cout << area;
+#endif
     }
 
     ~DebugStream()
     {
+#if COLOR_DEBUG
         std::cout << "\033[0m" << std::endl;
+#else
+        std::cout << std::endl;
+#endif
         s_debugSection.unlock();
     }
 
