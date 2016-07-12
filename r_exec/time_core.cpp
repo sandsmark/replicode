@@ -36,6 +36,7 @@
 #include <stdint.h>           // for int64_t
 #include <chrono>             // for duration, steady_clock, microseconds, etc
 #include <thread>             // for thread, sleep_until
+#include <atomic>
 
 namespace r_exec
 {
@@ -47,8 +48,12 @@ void delegatedCoreWait(TimeJob *job)
     _Mem::Get()->start_core();
     bool run = true;
 
+    static std::atomic<int64_t> last_lag;
+
+    static const float smoothing_factor = 0.1;
+
     do {
-        std::this_thread::sleep_until(steady_clock::time_point(microseconds(job->target_time)));
+        std::this_thread::sleep_until(steady_clock::time_point(microseconds(job->target_time - last_lag)));
 
         if (!job->is_alive()) {
             break;
@@ -61,9 +66,9 @@ void delegatedCoreWait(TimeJob *job)
         int64_t lag = Now() - job->target_time;
         run = job->update();
 
-        if (lag > 0) {
-            job->report(lag);
-        }
+        job->report(lag);
+
+        last_lag = smoothing_factor * lag + (1.0 - smoothing_factor) * last_lag;
     } while(job->shouldRunAgain() && run);
 
     delete job;
