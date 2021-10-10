@@ -91,12 +91,11 @@ r_exec::View *build_view(uint64_t time, Code* rstdin)   // this is application d
 Code *make_object(r_exec::_Mem *mem, Code* rstdin, double i)
 {
     Code *object = new r_exec::LObject(mem);
-    //object->code(0)=Atom::Marker(r_exec::GetOpcode("mk.val"),4); // Caveat: arity does not include the opcode.
-    object->code(0) = Atom::Marker(r_exec::Opcodes::MkVal, 4); // Caveat: arity does not include the opcode.
-    object->code(1) = Atom::RPointer(0);
-    object->code(2) = Atom::RPointer(1);
-    object->code(3) = Atom::Float(i);
-    object->code(4) = Atom::Float(1); // psln_thr.
+    object->code(0) = Atom::Marker(r_exec::Opcodes::MkVal, MK_VAL_ARITY); // Caveat: arity does not include the opcode.
+    object->code(MK_VAL_OBJ) = Atom::RPointer(0);
+    object->code(MK_VAL_ATTR) = Atom::RPointer(1);
+    object->code(MK_VAL_VALUE) = Atom::Float(i);
+    object->code(MK_VAL_PSLN_THR) = Atom::Float(1); // psln_thr.
     object->set_reference(0, rstdin);
     object->set_reference(1, rstdin);
     return object;
