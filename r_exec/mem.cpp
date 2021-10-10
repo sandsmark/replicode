@@ -64,6 +64,7 @@ _Mem::_Mem(): r_code::Mem(), state(NOT_STARTED), deleted(false)
 
 _Mem::~_Mem()
 {
+    objects.clear();
     for (std::ostream *stream : debug_streams) {
         delete stream;
     }
@@ -407,6 +408,7 @@ _ReductionJob *_Mem::popReductionJob()
 void _Mem::pushReductionJob(_ReductionJob *j)
 {
     if (state == STOPPED) {
+        delete j;
         return;
     }
 
@@ -426,6 +428,7 @@ TimeJob *_Mem::popTimeJob()
 void _Mem::pushTimeJob(r_exec::TimeJob *j)
 {
     if (state == STOPPED) {
+        delete j;
         return;
     }
 
@@ -493,12 +496,14 @@ void _Mem::inject_new_object(View *view)
 void _Mem::inject(View *view)
 {
     if (view->object->is_invalidated()) {
+        delete view;
         return;
     }
 
     Group *host = view->get_host();
 
     if (host->is_invalidated()) {
+        delete view;
         return;
     }
 

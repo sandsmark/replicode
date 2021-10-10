@@ -71,6 +71,7 @@ void delegatedCoreWait(TimeJob *job)
         last_lag = smoothing_factor * lag + (1.0 - smoothing_factor) * last_lag;
     } while(job->shouldRunAgain() && run);
 
+    delete job->thread;
     delete job;
     _Mem::Get()->shutdown_core();
 }
@@ -107,8 +108,8 @@ void runTimeCore()
             int64_t waitTime = job->target_time - Now();
 
             if (waitTime > 0) { // early: spawn a delegate to wait for the due time; delegate will die when done.
-                std::thread *delegatedCoreThread = new std::thread(delegatedCoreWait, job);
-                delegatedCoreThread->detach();
+                job->thread = new std::thread(delegatedCoreWait, job);
+                job->thread->detach();
                 _Mem::Get()->register_time_job_latency(waitTime);
                 job = nullptr;
                 break; // get a new job

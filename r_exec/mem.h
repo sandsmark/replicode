@@ -111,6 +111,16 @@ protected:
     uint64_t probe_level;
 
     template <class Type> struct JobQueue {
+        ~JobQueue()
+        {
+            m_mutex.lock();
+            while (!m_jobs.empty()) {
+                delete m_jobs.front();
+                m_jobs.pop();
+            }
+            m_mutex.unlock();
+        }
+
         void pushJob(Type *job)
         {
             std::unique_lock<std::mutex> lock(m_pushMutex);

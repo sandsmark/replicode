@@ -37,6 +37,10 @@
 #include <replicode_common.h>  // for DebugStream, debug
 #include <replicode_common.h>    // for REPLICODE_EXPORT
 
+namespace std {
+class thread;
+}
+
 namespace r_code {
 class Code;
 }  // namespace r_code
@@ -54,6 +58,7 @@ class REPLICODE_EXPORT TimeJob:
 protected:
     TimeJob(uint64_t target_time);
 public:
+    std::thread *thread = nullptr;
     uint64_t target_time; // absolute deadline; 0 means ASAP.
     virtual bool update() = 0; // next_target: absolute deadline; 0 means no more waiting; return false to shutdown the time core.
     virtual bool is_alive() const
