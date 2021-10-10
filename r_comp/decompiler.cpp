@@ -181,7 +181,7 @@ uint64_t Decompiler::decompile_references(r_comp::Image *image)
 {
     std::unordered_map<const Class *, uint16_t> object_ID_per_class;
 
-    for (const auto c : metadata->sys_classes) {
+    for (const std::pair<const std::string, Class> &c : metadata->sys_classes) {
         object_ID_per_class[&c.second] = 0;
     }
 

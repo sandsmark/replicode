@@ -295,6 +295,7 @@ bool IPGMContext::evaluate_no_dereference(uint16_t &result_index) const
             result_index = index;
             return true;
         }
+        return false;
 
     case Atom::MARKER:
     case Atom::INSTANTIATED_PROGRAM:

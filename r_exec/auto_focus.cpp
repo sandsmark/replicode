@@ -205,6 +205,10 @@ inline View *AutoFocusController::inject_input(View *input)
         }
 
         break;
+    case View::SYNC_ONCE_AXIOM:
+        std::cerr << "Unhandled sync once axiom";
+        exit(1);
+        break;
     }
 
     if (_trace_injections) {

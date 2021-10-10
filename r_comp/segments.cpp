@@ -42,6 +42,8 @@
 #include <utility>                  // for pair
 #include <vector>                   // for vector
 
+#include <cassert>
+
 #include <replicode_common.h>       // for P
 #include <replicode_common.h>      // for DebugStream, debug
 
