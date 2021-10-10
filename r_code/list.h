@@ -315,10 +315,8 @@ public:
     {
         return const_iterator(this, used_cells_head);
     }
-    const_iterator &end() const
-    {
-        return end_iterator;
-    }
+    iterator end() { return iterator(); }
+    const_iterator end() const { return end_iterator; }
     iterator erase(iterator &i)
     {
         return iterator(this, _erase(i._cell)); // no check for i._cell==null.
