@@ -64,6 +64,10 @@ _Mem::_Mem(): r_code::Mem(), state(NOT_STARTED), deleted(false)
 
 _Mem::~_Mem()
 {
+    std::cout << "cores left:" << std::to_string(m_coreCount) << std::endl;
+    for (const auto &o : objects) {
+        std::cout << "refcount" << o.object->refCount << std::endl;
+    }
     objects.clear();
     for (std::ostream *stream : debug_streams) {
         delete stream;

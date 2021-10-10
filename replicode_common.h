@@ -53,13 +53,16 @@ class _Object
     template<class C> friend class P;
     friend class _P;
 protected:
-    std::atomic_int_fast64_t refCount;
     _Object() : refCount(0) {}
 public:
+    std::atomic_int_fast64_t refCount;
     virtual ~_Object() {}
+
+private:
     void incRef() { ++refCount; }
-    virtual void decRef() {
-        if (--refCount == 0) {
+    void decRef() {
+        refCount--;
+        if (refCount <= 0) {
             delete this;
         }
     }
@@ -72,8 +75,9 @@ public:
 template<class C> class P
 {
 private:
-    _Object *object;
 public:
+    _Object *object;
+
     inline P() : object(nullptr) {}
     inline P(C *o) : object(o)
     {
