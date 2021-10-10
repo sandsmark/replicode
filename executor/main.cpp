@@ -269,7 +269,7 @@ int main(int argc, char **argv)
 
     if (!r_exec::Init(settings.usr_operator_path.c_str(),
                       []() -> uint64_t {
-                         return duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count();
+                         return duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch()).count();
                       },
                       settings.usr_class_path.c_str(),
                       &seed,

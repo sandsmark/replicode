@@ -48,12 +48,14 @@ void delegatedCoreWait(TimeJob *job)
     _Mem::Get()->start_core();
     bool run = true;
 
-    static std::atomic<int64_t> last_lag;
+    static std::atomic_int64_t last_lag;
 
-    static const float smoothing_factor = 0.1;
+    static constexpr float smoothing_factor = 0.1;
 
     do {
-        std::this_thread::sleep_until(steady_clock::time_point(microseconds(job->target_time - last_lag)));
+        if (job->target_time > 0) {
+            std::this_thread::sleep_until(high_resolution_clock::time_point(microseconds(job->target_time - last_lag)));
+        }
 
         if (R_UNLIKELY(!job->is_alive())) {
             break;
@@ -63,7 +65,7 @@ void delegatedCoreWait(TimeJob *job)
             break;
         }
 
-        int64_t lag = Now() - job->target_time;
+        int64_t lag = job->target_time ? Now() - job->target_time : 0;
         run = job->update();
 
         job->report(lag);
