@@ -108,9 +108,9 @@ protected:
     MatchResult __match(r_exec::View *input, uint16_t pattern_index); // return SUCCESS upon a successful match, IMPOSSIBLE if the input is not of the right class, FAILURE otherwise.
 
     Code *dereference_in_ptr(Atom a);
-    void patch_input_code(uint16_t pgm_code_index, uint16_t input_index, uint16_t input_code_index, int16_t parent_index = -1);
+    void patch_input_code(uint16_t pgm_code_index, uint16_t input_index, uint16_t input_code_index, int16_t parent_index = -1) override;
 
-    virtual Code *get_mk_rdx(uint16_t &extent_index) const;
+    Code *get_mk_rdx(uint16_t &extent_index) const override;
 
     void init();
 
@@ -119,9 +119,9 @@ protected:
 public:
     virtual ~PGMOverlay();
 
-    void reset();
+    void reset() override;
 
-    virtual Overlay *reduce(r_exec::View *input); // called upon the processing of a reduction job.
+    virtual Overlay *reduce_view(r_exec::View *input) override; // called upon the processing of a reduction job.
 
     r_code::Code *getInputObject(uint16_t i) const;
     r_code::View *getInputView(uint16_t i) const;
@@ -131,7 +131,7 @@ public:
         return birth_time;
     }
 
-    bool is_invalidated();
+    bool is_invalidated() override;
 };
 
 // Several ReductionCores can attempt to reduce the same overlay simultaneously (each with a different input).
@@ -147,7 +147,7 @@ private:
 public:
     ~AntiPGMOverlay();
 
-    Overlay *reduce(r_exec::View *input); // called upon the processing of a reduction job.
+    Overlay *reduce_view(r_exec::View *input) override; // called upon the processing of a reduction job.
 };
 }
 

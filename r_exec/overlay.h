@@ -163,7 +163,7 @@ public:
     virtual ~Overlay();
 
     virtual void reset(); // reset to original state.
-    virtual Overlay *reduce(r_exec::View *input); // returns an offspring in case of a match.
+    virtual Overlay *reduce_view(r_exec::View *input); // returns an offspring in case of a match.
 
     void invalidate()
     {
@@ -183,7 +183,7 @@ public:
         return ((Controller *)controller)->getView();
     }
 
-    r_code::Code *build_object(Atom head) const;
+    static r_code::Code *build_object(Atom head);
 };
 
 class REPLICODE_EXPORT OController:

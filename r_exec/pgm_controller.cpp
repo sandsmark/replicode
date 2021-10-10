@@ -144,7 +144,7 @@ void PGMController::reduce(r_exec::View *input)
                     o = overlays.erase(o);
                 } else {
                     //void *oo=*o;
-                    Overlay *offspring = (*o)->reduce(input);
+                    Overlay *offspring = (*o)->reduce_view(input);
 
                     if (offspring) {
                         overlays.push_front(offspring);
@@ -167,7 +167,7 @@ void PGMController::reduce(r_exec::View *input)
             if ((*o)->is_invalidated()) {
                 o = overlays.erase(o);
             } else {
-                Overlay *offspring = (*o)->reduce(input);
+                Overlay *offspring = (*o)->reduce_view(input);
 
                 if (offspring) {
                     overlays.push_front(offspring);
@@ -208,7 +208,7 @@ void AntiPGMController::reduce(r_exec::View *input)
         if ((*o)->is_invalidated()) {
             o = overlays.erase(o);
         } else {
-            Overlay *offspring = (*o)->reduce(input);
+            Overlay *offspring = (*o)->reduce_view(input);
 
             if (successful_match) { // the controller has been restarted: reset the overlay and kill all others
                 Overlay *overlay = *o;

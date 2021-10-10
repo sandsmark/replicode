@@ -138,12 +138,14 @@ void Overlay::unpatch_code(uint16_t patch_index)
     patch_indices.resize(patch_index);
 }
 
-Overlay *Overlay::reduce(r_exec::View *input)
+Overlay *Overlay::reduce_view(r_exec::View *input)
 {
+    (void)input;
+
     return nullptr;
 }
 
-r_code::Code *Overlay::build_object(Atom head) const
+r_code::Code *Overlay::build_object(Atom head)
 {
     return _Mem::Get()->build_object(head);
 }
@@ -187,7 +189,7 @@ void Controller::_take_input(r_exec::View *input)   // called by groups at updat
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-OController::OController(r_code::View *view): Controller(view)
+OController::OController(r_code::View *view_): Controller(view_)
 {
 }
 

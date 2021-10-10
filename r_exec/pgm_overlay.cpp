@@ -606,7 +606,7 @@ void PGMOverlay::patch_input_code(uint16_t pgm_code_index, uint16_t input_index,
     }
 }
 
-Overlay *PGMOverlay::reduce(r_exec::View *input)
+Overlay *PGMOverlay::reduce_view(r_exec::View *input)
 {
     uint16_t input_index;
 
@@ -789,7 +789,7 @@ inline AntiPGMOverlay::~AntiPGMOverlay()
 {
 }
 
-Overlay *AntiPGMOverlay::reduce(r_exec::View *input)
+Overlay *AntiPGMOverlay::reduce_view(r_exec::View *input)
 {
     uint16_t input_index;
 

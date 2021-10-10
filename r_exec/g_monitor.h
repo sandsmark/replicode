@@ -84,9 +84,13 @@ protected:
               uint64_t sim_thz,
               Fact *goal,
               Fact *f_imdl); // goal is f0->g->f1->object.
+
+    virtual void update(uint64_t &next_target) = 0;
+
 public:
     virtual bool signal(bool simulation)
     {
+        (void)simulation;
         return false;
     }
 };
@@ -133,8 +137,8 @@ public:
              Fact *f_imdl,
              _Fact *predicted_evidence); // goal is f0->g->f1->object.
 
-    virtual bool reduce(_Fact *input); // returning true will remove the monitor form the controller.
-    virtual void update(uint64_t &next_target);
+    bool reduce(_Fact *input) override; // returning true will remove the monitor form the controller.
+    void update(uint64_t &next_target) override;
 };
 
 // Monitors actual requirements.
@@ -156,9 +160,9 @@ public:
              Fact *goal,
              Fact *f_imdl);
 
-    bool reduce(_Fact *input);
-    void update(uint64_t &next_target);
-    bool signal(bool simulation);
+    bool reduce(_Fact *input) override;
+    void update(uint64_t &next_target) override;
+    bool signal(bool simulation) override;
 };
 
 // Monitors simulated goals.
@@ -174,8 +178,8 @@ public:
               Fact *goal,
               Fact *f_imdl); // goal is f0->g->f1->object.
 
-    bool reduce(_Fact *input);
-    void update(uint64_t &next_target);
+    bool reduce(_Fact *input) override;
+    void update(uint64_t &next_target) override;
 };
 
 // Monitors simulated requirements.
@@ -190,9 +194,9 @@ public:
               Fact *goal,
               Fact *f_imdl);
 
-    bool reduce(_Fact *input);
-    void update(uint64_t &next_target);
-    bool signal(bool simulation);
+    bool reduce(_Fact *input) override;
+    void update(uint64_t &next_target) override;
+    bool signal(bool simulation) override;
 };
 
 // Case A: target==actual goal and target!=f_imdl: simulations have been produced for all sub-goals.
