@@ -96,7 +96,7 @@ void SysView::trace()
     std::cout << " reference set size: " << references.size() << std::endl;
     std::cout << "---code---" << std::endl;
 
-    for (const Atom atom : code) {
+    for (const Atom &atom : code) {
         atom.trace();
         std::cout << std::endl;
     }
