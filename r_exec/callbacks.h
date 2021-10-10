@@ -51,7 +51,7 @@ public:
 private:
     static std::unordered_map<std::string, Callback> _Callbacks;
 public:
-    static void Register(std::string &callback_name, Callback callback);
+    static void Register(const std::string &callback_name, Callback callback);
     static Callback Get(std::string &callback_name);
 };
 }

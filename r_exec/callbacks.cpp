@@ -38,7 +38,7 @@ namespace r_exec
 
 std::unordered_map<std::string, Callbacks::Callback> Callbacks::_Callbacks;
 
-void Callbacks::Register(std::string &callback_name, Callback callback)
+void Callbacks::Register(const std::string &callback_name, Callback callback)
 {
     _Callbacks[callback_name] = callback;
 }
