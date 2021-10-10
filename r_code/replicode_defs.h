@@ -138,6 +138,7 @@
 #define MK_VAL_OBJ 1
 #define MK_VAL_ATTR 2
 #define MK_VAL_VALUE 3
+#define MK_VAL_PSLN_THR 4
 #define MK_VAL_ARITY 4
 
 
