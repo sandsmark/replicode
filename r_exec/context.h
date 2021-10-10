@@ -319,7 +319,7 @@ public:
     IPGMContext(): _Context(NULL, 0, NULL, UNDEFINED), object(NULL), view(NULL) {} // undefined context (happens when accessing the view of an object when it has not been provided).
     IPGMContext(Code *object, View *view, Atom *code, uint16_t index, InputLessPGMOverlay *const overlay, Data data = STEM): _Context(code, index, overlay, data), object(object), view(view) {}
     IPGMContext(Code *object, uint16_t index): _Context(&object->code(0), index, NULL, REFERENCE), object(object), view(NULL) {}
-    IPGMContext(Code *object, Data data): _Context(&object->code(0), index, NULL, data), object(object), view(NULL) {}
+    IPGMContext(Code *object, Data data): _Context(&object->code(0), 0, NULL, data), object(object), view(NULL) {}
 
     // _Context implementation.
     _Context *assign(const _Context *c)
