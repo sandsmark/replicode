@@ -322,15 +322,15 @@ int main(int argc, char **argv)
               settings.goal_pred_success_resilience,
               settings.probe_level,
               settings.trace_levels);
-    uint64_t stdin_oid;
+    uint64_t stdin_oid = 0;
     std::string stdin_symbol("stdin");
-    uint64_t stdout_oid;
+    uint64_t stdout_oid = 0;
     std::string stdout_symbol("stdout");
-    uint64_t self_oid;
+    uint64_t self_oid = 0;
     std::string self_symbol("self");
     std::unordered_map<uintptr_t, std::string>::const_iterator n;
 
-    for (const auto symbol : seed.object_names.symbols) {
+    for (const auto &symbol : seed.object_names.symbols) {
         if (symbol.second == stdin_symbol) {
             stdin_oid = symbol.first;
         } else if (symbol.second == stdout_symbol) {
