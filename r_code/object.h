@@ -376,7 +376,7 @@ protected:
 public:
     static Mem *Get();
 
-    virtual Code *build_object(SysObject *source) const = 0;
+    virtual Code *duplicate_object(SysObject *source) const = 0;
     virtual void delete_object(Code *object) = 0;
 };
 }

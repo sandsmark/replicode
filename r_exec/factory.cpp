@@ -532,7 +532,7 @@ void _Fact::trace() const
 
 void *Fact::operator new(size_t s)
 {
-    return _Mem::Get()->_build_object(Atom::Object(Opcodes::Fact, FACT_ARITY));
+    return _Mem::Get()->allocate_object(Atom::Object(Opcodes::Fact, FACT_ARITY));
 }
 
 Fact::Fact(): _Fact()
@@ -556,7 +556,7 @@ Fact::Fact(Code *object, uint64_t after, uint64_t before, double confidence, dou
 
 void *AntiFact::operator new(size_t s)
 {
-    return _Mem::Get()->_build_object(Atom::Object(Opcodes::AntiFact, FACT_ARITY));
+    return _Mem::Get()->allocate_object(Atom::Object(Opcodes::AntiFact, FACT_ARITY));
 }
 
 AntiFact::AntiFact(): _Fact()

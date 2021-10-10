@@ -367,7 +367,7 @@ public:
     // To be redefined by object transport aware subcalsses.
     virtual void eject(r_code::Code *command);
 
-    virtual r_code::Code *_build_object(r_code::Atom head) const = 0;
+    virtual r_code::Code *allocate_object(r_code::Atom head) const = 0;
     virtual r_code::Code *build_object(r_code::Atom head) const = 0;
 
     // unpacking of high-level patterns: upon loading or reception.
@@ -459,10 +459,10 @@ public:
     virtual ~Mem();
 
     // Called at load time.
-    r_code::Code *build_object(r_code::SysObject *source) const;
+    r_code::Code *duplicate_object(r_code::SysObject *source) const;
 
     // Called at runtime.
-    r_code::Code *_build_object(r_code::Atom head) const;
+    r_code::Code *allocate_object(r_code::Atom head) const;
     r_code::Code *build_object(r_code::Atom head) const;
 
     // Executive device functions ////////////////////////////////////////////////////////

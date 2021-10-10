@@ -57,7 +57,7 @@ template<class O, class S> Mem<O, S>::~Mem()
 
 ////////////////////////////////////////////////////////////////
 
-template<class O, class S> r_code::Code *Mem<O, S>::build_object(r_code::SysObject *source) const
+template<class O, class S> r_code::Code *Mem<O, S>::duplicate_object(r_code::SysObject *source) const
 {
     Atom head = source->code[0];
 
@@ -98,7 +98,7 @@ template<class O, class S> r_code::Code *Mem<O, S>::build_object(r_code::SysObje
     }
 }
 
-template<class O, class S> r_code::Code *Mem<O, S>::_build_object(Atom head) const
+template<class O, class S> r_code::Code *Mem<O, S>::allocate_object(Atom head) const
 {
     r_code::Code *object = new O();
     object->code(0) = head;

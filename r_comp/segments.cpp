@@ -647,7 +647,7 @@ void Image::get_objects(Mem *mem, r_code::vector<Code *> &ram_objects)
     debug("image") << "number of objects: " << code_segment.objects.size();
 
     for (size_t i = 0; i < code_segment.objects.size(); ++i) {
-        ram_objects[i] = mem->build_object(code_segment.objects[i]);
+        ram_objects[i] = mem->duplicate_object(code_segment.objects[i]);
     }
 
     unpack_objects(ram_objects);
