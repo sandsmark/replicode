@@ -535,7 +535,7 @@ void Image::add_object(Code *object)
     }
 
     uintptr_t _object = (uintptr_t)object;
-    sys_object->references[0] = (_object & 0x00000000FFFFFFF);
+    sys_object->references[0] = (_object & UINT32_MAX);
     sys_object->references[1] = (_object >> 32);
 }
 
@@ -585,8 +585,8 @@ void Image::add_object_full(Code *object)
     }
 
     object->rel_views();
-    uint64_t _object = uint64_t(object);
-    sys_object->references[0] = (_object & 0x00000000FFFFFFF);
+    uintptr_t _object = uintptr_t(object);
+    sys_object->references[0] = (_object & UINT32_MAX);
     sys_object->references[1] = (_object >> 32);
 }
 
@@ -595,10 +595,11 @@ void Image::build_references()
     Code *object;
     SysObject *sys_object;
 
-    for (size_t i = 0; i < code_segment.objects.as_std()->size(); ++i) {
+    for (size_t i = 0; i < code_segment.objects.size(); ++i) {
         sys_object = code_segment.objects[i];
+        assert(sys_object->references.size() >= 2);
         uintptr_t _object = sys_object->references[0];
-        _object |= (uint64_t(sys_object->references[1]) << 32);
+        _object |= (uintptr_t(sys_object->references[1]) << 32);
         object = (Code *)_object;
         sys_object->references.as_std()->clear();
         build_references(sys_object, object);

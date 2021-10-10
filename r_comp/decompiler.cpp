@@ -251,7 +251,7 @@ void Decompiler::decompile_object(uint16_t object_index, std::ostringstream *str
             } else {
                 *out_stream << "imported\n";
             }
-        } else if (sys_object->oid != 0xFFFFFFFF) {
+        } else if (sys_object->oid != UINT32_MAX) {
 //            *out_stream << "oid: " << sys_object->oid << "\n";
         }
     }

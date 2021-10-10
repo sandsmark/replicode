@@ -867,7 +867,7 @@ bool Compiler::set(RepliStruct::Ptr node, const Class &p, uint16_t write_index, 
         extent_index += element_count;
     }
 
-    uint32_t arity = 0xFFFFFFFF;
+    uint32_t arity = UINT32_MAX;
 
     if (p.use_as == StructureMember::I_CLASS) { // undefined arity for unstructured sets.
         arity = p.atom.getAtomCount();
@@ -878,7 +878,7 @@ bool Compiler::set(RepliStruct::Ptr node, const Class &p, uint16_t write_index, 
             }
     }
 
-    if (node->args.size() != arity && arity != 0xFFFFFFFF) {
+    if (node->args.size() != arity && arity != UINT32_MAX) {
         if (state.no_arity_check) {
             state.no_arity_check = false;
         } else {
@@ -1142,7 +1142,7 @@ bool Compiler::read_timestamp(RepliStruct::Ptr node, bool enforce, const Class *
                     current_object->code[write_index] = Atom::IPointer(extent_index);
                     current_object->code[extent_index++] = Atom::Timestamp();
                     current_object->code[extent_index++] = ts >> 32;
-                    current_object->code[extent_index++] = (ts & 0x00000000FFFFFFFF);
+                    current_object->code[extent_index++] = (ts & UINT32_MAX);
                 }
 
                 return true;
@@ -1549,8 +1549,8 @@ bool Compiler::read_nil_us(RepliStruct::Ptr node, uint16_t write_index, uint16_t
         if (write) {
             current_object->code[write_index] = Atom::IPointer(extent_index);
             current_object->code[extent_index++] = Atom::UndefinedTimestamp();
-            current_object->code[extent_index++] = 0xFFFFFFFF;
-            current_object->code[extent_index++] = 0xFFFFFFFF;
+            current_object->code[extent_index++] = UINT32_MAX;
+            current_object->code[extent_index++] = UINT32_MAX;
         }
 
         return true;

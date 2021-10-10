@@ -98,14 +98,14 @@ void Utils::SetTimestamp(Atom *iptr, uint64_t t)
 {
     iptr[0] = Atom::Timestamp();
     iptr[1].atom = t >> 32;
-    iptr[2].atom = t & 0x00000000FFFFFFFF;
+    iptr[2].atom = t & UINT32_MAX;
 }
 
 void Utils::SetTimestamp(Code *object, uint16_t index, uint64_t t)
 {
     object->code(index) = Atom::Timestamp();
     object->code(++index) = Atom(t >> 32);
-    object->code(++index) = Atom(t & 0x00000000FFFFFFFF);
+    object->code(++index) = Atom(t & UINT32_MAX);
 }
 
 std::string Utils::GetString(const Atom *iptr)
