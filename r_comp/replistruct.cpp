@@ -11,11 +11,17 @@
 namespace r_comp
 {
 
-std::unordered_map<std::string, RepliMacro *> RepliStruct::s_macros;
+std::unordered_map<std::string, RepliMacro::Ptr> RepliStruct::s_macros;
 std::unordered_map<std::string, int64_t> RepliStruct::s_counters;
 std::list<RepliCondition *> RepliStruct::s_conditions;
 uint64_t RepliStruct::GlobalLine = 1;
 std::string RepliStruct::GlobalFilename;
+
+void RepliStruct::cleanup()
+{
+    s_macros.clear();
+}
+
 
 RepliStruct::RepliStruct(RepliStruct::Type type)
 {
@@ -34,7 +40,7 @@ RepliStruct::~RepliStruct()
 void RepliStruct::reset()
 {
     GlobalLine = 1;
-    std::vector<RepliStruct*>::iterator arg;
+    std::vector<std::shared_ptr<RepliStruct>>::iterator arg;
 
     for (arg = args.begin(); arg != args.end();) {
         switch ((*arg)->type) {
@@ -81,7 +87,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
 {
     char c = 0, lastc = 0, lastcc, tc;
     std::string str, label;
-    RepliStruct* subStruct;
+    std::shared_ptr<RepliStruct> subStruct;
     int64_t paramCount = 0;
     int64_t returnIndent = 0;
     bool expectSet = false;
@@ -100,7 +106,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
 
         case '!':
             if (this->type == Root) {
-                subStruct = new RepliStruct(Directive);
+                subStruct = std::make_shared<RepliStruct>(Directive);
                 subStruct->parent = this;
                 args.push_back(subStruct);
 
@@ -134,7 +140,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                 // Are we in a set
                 if (expectSet) {
                     // Add new sub structure
-                    subStruct = new RepliStruct(Set);
+                    subStruct = std::make_shared<RepliStruct>(Set);
                     subStruct->parent = this;
                     subStruct->label = label;
                     label = "";
@@ -156,7 +162,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                 }
                 // or a parenthesis
                 else {
-                    subStruct = new RepliStruct(Structure);
+                    subStruct = std::make_shared<RepliStruct>(Structure);
                     args.push_back(subStruct);
                     returnIndent = subStruct->parse(stream, curIndent, prevIndent);
                     expectSet = false;
@@ -176,7 +182,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
             } else if (curIndent < prevIndent) {
                 if (str.size() > 0) {
                     if ((cmd.size() > 0) || (type == Set)) {
-                        subStruct = new RepliStruct(Atom);
+                        subStruct = std::make_shared<RepliStruct>(Atom);
                         subStruct->parent = this;
                         args.push_back(subStruct);
                         subStruct->cmd = str;
@@ -197,7 +203,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                 // act as if we met a space
                 if (str.size() > 0) {
                     if ((cmd.size() > 0) || (type == Set) || (type == Root)) {
-                        subStruct = new RepliStruct(Atom);
+                        subStruct = std::make_shared<RepliStruct>(Atom);
                         subStruct->parent = this;
                         args.push_back(subStruct);
                         subStruct->cmd = str;
@@ -241,7 +247,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                         }
                     }
 
-                    subStruct = new RepliStruct(Atom);
+                    subStruct = std::make_shared<RepliStruct>(Atom);
                     subStruct->parent = this;
                     args.push_back(subStruct);
                     subStruct->cmd = str;
@@ -266,7 +272,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                     label = str;
                     str = "";
                 } else if ((cmd.size() > 0) || (type == Set)) {
-                    subStruct = new RepliStruct(Atom);
+                    subStruct = std::make_shared<RepliStruct>(Atom);
                     subStruct->parent = this;
                     args.push_back(subStruct);
                     subStruct->cmd = str;
@@ -281,7 +287,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                 }
             }
 
-            subStruct = new RepliStruct(Structure);
+            subStruct = std::make_shared<RepliStruct>(Structure);
             subStruct->label = label;
             label = "";
             subStruct->parent = this;
@@ -315,7 +321,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
             // We met a boundary, act as ' '
             if (str.size() > 0) {
                 if ((cmd.size() > 0) || (type == Set)) {
-                    subStruct = new RepliStruct(Atom);
+                    subStruct = std::make_shared<RepliStruct>(Atom);
                     subStruct->parent = this;
                     args.push_back(subStruct);
                     subStruct->cmd = str;
@@ -340,7 +346,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                     label = str;
                     str = "";
                 } else if ((cmd.size() > 0) || (type == Set)) {
-                    subStruct = new RepliStruct(Atom);
+                    subStruct = std::make_shared<RepliStruct>(Atom);
                     subStruct->parent = this;
                     args.push_back(subStruct);
                     subStruct->cmd = str;
@@ -355,7 +361,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                 }
             }
 
-            subStruct = new RepliStruct(Development);
+            subStruct = std::make_shared<RepliStruct>(Development);
             subStruct->label = label;
             label = "";
             subStruct->parent = this;
@@ -389,7 +395,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
             // We met a boundary, act as ' '
             if (str.size() > 0) {
                 if ((cmd.size() > 0) || (type == Set) || (type == Development)) { // Modification from Eric to have the Development treat tpl vars as atoms instead of a Development.cmd
-                    subStruct = new RepliStruct(Atom);
+                    subStruct = std::make_shared<RepliStruct>(Atom);
                     subStruct->parent = this;
                     args.push_back(subStruct);
                     subStruct->cmd = str;
@@ -438,7 +444,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                     }
 
                     // create empty set
-                    subStruct = new RepliStruct(Set);
+                    subStruct = std::make_shared<RepliStruct>(Set);
                     subStruct->parent = this;
                     subStruct->label = label;
                     args.push_back(subStruct);
@@ -447,7 +453,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                 // Check for scenario 'xxx['
                 if (str.size() > 0) {
                     if ((cmd.size() > 0) || (type == Set)) {
-                        subStruct = new RepliStruct(Atom);
+                        subStruct = std::make_shared<RepliStruct>(Atom);
                         subStruct->parent = this;
                         args.push_back(subStruct);
                         subStruct->cmd = str;
@@ -462,7 +468,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
                     }
                 }
 
-                subStruct = new RepliStruct(Set);
+                subStruct = std::make_shared<RepliStruct>(Set);
                 subStruct->parent = this;
                 subStruct->label = label;
                 label = "";
@@ -489,7 +495,7 @@ int64_t RepliStruct::parse(std::istream *stream, uint64_t &curIndent, uint64_t &
             // We met a boundary, act as ' '
             if (str.size() > 0) {
                 if ((cmd.size() > 0) || (type == Set)) {
-                    subStruct = new RepliStruct(Atom);
+                    subStruct = std::make_shared<RepliStruct>(Atom);
                     subStruct->parent = this;
                     args.push_back(subStruct);
                     subStruct->cmd = str;
@@ -606,8 +612,8 @@ int64_t RepliStruct::process()
     // expand Macros in all structures
     if (s_macros.find(cmd) != s_macros.end()) {
         // expand the macro
-        RepliMacro *macro = s_macros[cmd];
-        RepliStruct *newStruct = macro->expandMacro(this);
+        RepliMacro::Ptr macro = s_macros[cmd];
+        RepliStruct::Ptr newStruct = macro->expandMacro(this);
 
         if (newStruct == nullptr) {
             error = macro->error;
@@ -616,7 +622,7 @@ int64_t RepliStruct::process()
         }
 
         *this = *newStruct;
-        delete newStruct;
+        newStruct.reset();
         changes++;
     }
 
@@ -624,8 +630,8 @@ int64_t RepliStruct::process()
         return changes;
     }
 
-    for (std::vector<RepliStruct*>::iterator iter(args.begin()), iterEnd(args.end()); iter != iterEnd; ++iter) {
-        RepliStruct *structure = (*iter);
+    for (std::vector<std::shared_ptr<RepliStruct>>::iterator iter(args.begin()), iterEnd(args.end()); iter != iterEnd; ++iter) {
+        std::shared_ptr<RepliStruct> structure = (*iter);
 
         // printf("Processing %s with %d args...\n", structure->cmd.c_str(), structure->args.size());
         if (structure->type == Condition) {
@@ -674,7 +680,7 @@ int64_t RepliStruct::process()
                 }
 
                 // register the macro
-                RepliMacro *macro = new RepliMacro(structure->args.front()->cmd, structure->args.front(), structure->args.back());
+                RepliMacro::Ptr macro = std::make_shared<RepliMacro>(structure->args.front()->cmd, structure->args.front(), structure->args.back());
                 s_macros[macro->name] = macro;
             } else if (structure->cmd.compare("!undef") == 0) {
                 // remove the counter or macro
@@ -682,20 +688,19 @@ int64_t RepliStruct::process()
                 s_counters.erase(s_counters.find(structure->args.front()->cmd));
             } else if (structure->cmd.compare("!load") == 0) {
                 // Check for a load directive...
-                RepliStruct *newStruct = loadReplicodeFile(structure->args.front()->cmd);
+                RepliStruct::Ptr newStruct = loadReplicodeFile(structure->args.front()->cmd);
 
                 if (newStruct == nullptr) {
                     structure->error += "Load: File '" + structure->args.front()->cmd + "' cannot be read! ";
                     return -1;
                 } else if ((loadError = newStruct->printError()).size() > 0) {
                     structure->error = loadError;
-                    delete newStruct;
                     return -1;
                 }
 
                 // Insert new data into current args
                 // save location
-                RepliStruct *tempStruct = (*iter);
+                RepliStruct::Ptr tempStruct = (*iter);
                 // insert new structures
                 args.insert(++iter, newStruct->args.begin(), newStruct->args.end());
                 // reinit iterator and find location again
@@ -721,13 +726,12 @@ int64_t RepliStruct::process()
 
                 // now we have replaced the !load line with the loaded lines
                 changes++;
-                delete newStruct;
             }
         } else { // a Structure, Set, Atom or Development
             if (s_macros.find(structure->cmd) != s_macros.end()) {
                 // expand the macro
-                RepliMacro *macro = s_macros[structure->cmd];
-                RepliStruct *newStruct = macro->expandMacro(structure);
+                RepliMacro::Ptr macro = s_macros[structure->cmd];
+                RepliStruct::Ptr newStruct = macro->expandMacro(structure.get());
 
                 if (newStruct == nullptr) {
                     structure->error = macro->error;
@@ -736,12 +740,11 @@ int64_t RepliStruct::process()
                 }
 
                 *structure = *newStruct;
-                delete newStruct;
                 changes++;
             }
 
             // check for sub structures containing macros
-            for (RepliStruct *substruct : structure->args) {
+            for (RepliStruct::Ptr substruct : structure->args) {
                 int count = substruct->process();
                 if (count > 0) {
                     changes += count;
@@ -762,13 +765,13 @@ int64_t RepliStruct::process()
     return changes;
 }
 
-RepliStruct *RepliStruct::loadReplicodeFile(const std::string &filename)
+RepliStruct::Ptr RepliStruct::loadReplicodeFile(const std::string &filename)
 {
     int oldLine = GlobalLine;
     std::string oldFile = GlobalFilename;
     GlobalLine = 1;
     GlobalFilename = filename;
-    RepliStruct* newRoot = new RepliStruct(Root);
+    RepliStruct::Ptr newRoot = std::make_shared<RepliStruct>(Root);
     std::ifstream loadStream(filename.c_str());
 
     if (loadStream.bad() || loadStream.fail() || loadStream.eof()) {
@@ -809,7 +812,7 @@ std::string RepliStruct::print() const
     case Condition:
         str = cmd;
 
-        for (RepliStruct *arg : args) {
+        for (RepliStruct::Ptr arg : args) {
             str += " " + arg->print();
         }
 
@@ -822,7 +825,7 @@ std::string RepliStruct::print() const
         }
 
     case Set:
-        for (std::vector<RepliStruct*>::const_iterator iter(args.begin()), last(args.end()), iterEnd(last--); iter != iterEnd; ++iter) {
+        for (std::vector<RepliStruct::Ptr>::const_iterator iter(args.begin()), last(args.end()), iterEnd(last--); iter != iterEnd; ++iter) {
             str += (*iter)->print();
 
             if (iter != last) {
@@ -833,7 +836,7 @@ std::string RepliStruct::print() const
         return label + "[" + str + "]" + tail;
 
     case Root:
-        for (RepliStruct *arg : args) {
+        for (RepliStruct::Ptr arg : args) {
             str += arg->print();
         }
 
@@ -846,7 +849,7 @@ std::string RepliStruct::print() const
     return str;
 }
 
-std::ostream &operator<<(std::ostream &os, RepliStruct *structure)
+std::ostream &operator<<(std::ostream &os, RepliStruct::Ptr structure)
 {
     return operator<<(os, *structure);
 }
@@ -914,7 +917,7 @@ std::ostream &operator<<(std::ostream &os, const RepliStruct &structure)
 
         os << structure.cmd;
 
-        for (RepliStruct *arg : structure.args) {
+        for (RepliStruct::Ptr arg : structure.args) {
             os << " " << arg;
         }
 
@@ -930,7 +933,7 @@ std::ostream &operator<<(std::ostream &os, const RepliStruct &structure)
         os << structure.label << "[";
 
         if (structure.args.size() > 0) {
-            for (std::vector<RepliStruct*>::const_iterator iter(structure.args.begin()), last(structure.args.end()), iterEnd(last--); iter != iterEnd; ++iter) {
+            for (std::vector<RepliStruct::Ptr>::const_iterator iter(structure.args.begin()), last(structure.args.end()), iterEnd(last--); iter != iterEnd; ++iter) {
                 os << (*iter);
 
                 if (iter != last) {
@@ -943,7 +946,7 @@ std::ostream &operator<<(std::ostream &os, const RepliStruct &structure)
         break;
 
     case RepliStruct::Root:
-        for (RepliStruct *arg : structure.args) {
+        for (RepliStruct::Ptr arg : structure.args) {
             os << arg;    // << ";" << structure.fileName << ":" << structure.line << std::endl;
         }
 
@@ -957,9 +960,9 @@ std::ostream &operator<<(std::ostream &os, const RepliStruct &structure)
     return os;
 }
 
-RepliStruct *RepliStruct::clone() const
+RepliStruct::Ptr RepliStruct::clone() const
 {
-    RepliStruct* newStruct = new RepliStruct(type);
+    RepliStruct::Ptr newStruct = std::make_shared<RepliStruct>(type);
     newStruct->cmd = cmd;
     newStruct->label = label;
     newStruct->tail = tail;
@@ -968,7 +971,7 @@ RepliStruct *RepliStruct::clone() const
     newStruct->line = line;
     newStruct->fileName = fileName;
 
-    for (RepliStruct *arg : args) {
+    for (RepliStruct::Ptr arg : args) {
         newStruct->args.push_back((arg)->clone());
     }
 
@@ -1001,14 +1004,14 @@ std::string RepliStruct::printError() const
         strError << ": " << error << std::endl;
     }
 
-    for (RepliStruct *arg : args) {
+    for (RepliStruct::Ptr arg : args) {
         strError << arg->printError();
     }
 
     return strError.str();
 }
 
-RepliMacro::RepliMacro(const std::string &name, RepliStruct *src, RepliStruct *dest)
+RepliMacro::RepliMacro(const std::string &name, RepliStruct::Ptr src, RepliStruct::Ptr dest)
 {
     this->name = name;
     this->src = src;
@@ -1031,7 +1034,7 @@ uint64_t RepliMacro::argCount()
     return src->args.size();
 }
 
-RepliStruct *RepliMacro::expandMacro(RepliStruct *oldStruct)
+RepliStruct::Ptr RepliMacro::expandMacro(RepliStruct *oldStruct)
 {
     if (src == nullptr) {
         error += "Macro '" + name + "' source not defined. ";
@@ -1058,7 +1061,7 @@ RepliStruct *RepliMacro::expandMacro(RepliStruct *oldStruct)
         return nullptr;
     }
 
-    RepliStruct* newStruct;
+    RepliStruct::Ptr newStruct;
 
     // Special case of macros without args, just copy in the args from oldStruct
     if ((src->args.size() == 0) && (oldStruct->args.size() > 0)) {
@@ -1071,10 +1074,10 @@ RepliStruct *RepliMacro::expandMacro(RepliStruct *oldStruct)
         newStruct->label = oldStruct->label;
     }
 
-    RepliStruct *findStruct;
-    std::vector<RepliStruct*>::const_iterator iOld(oldStruct->args.begin());
+    RepliStruct::Ptr findStruct;
+    std::vector<RepliStruct::Ptr>::const_iterator iOld(oldStruct->args.begin());
 
-    for (std::vector<RepliStruct*>::const_iterator iSrc(src->args.begin()), iSrcEnd(src->args.end()); iSrc != iSrcEnd; ++iSrc, ++iOld) {
+    for (std::vector<RepliStruct::Ptr>::const_iterator iSrc(src->args.begin()), iSrcEnd(src->args.end()); iSrc != iSrcEnd; ++iSrc, ++iOld) {
         // printf("looking for '%s'\n", (*iSrc)->cmd.c_str());
         // find the Atom inside newStruct with the name of iSrc->cmd
         findStruct = newStruct->findAtom((*iSrc)->cmd);
@@ -1088,11 +1091,11 @@ RepliStruct *RepliMacro::expandMacro(RepliStruct *oldStruct)
     return newStruct;
 }
 
-RepliStruct *RepliStruct::findAtom(const std::string &name)
+RepliStruct::Ptr RepliStruct::findAtom(const std::string &name)
 {
-    RepliStruct* structure;
+    RepliStruct::Ptr structure;
 
-    for (RepliStruct *arg : args) {
+    for (RepliStruct::Ptr arg : args) {
         switch (arg->type) {
         case Atom:
             if (arg->cmd.compare(name) == 0) {
@@ -1138,7 +1141,7 @@ bool RepliCondition::reverse()
     return true;
 }
 
-bool RepliCondition::isActive(std::unordered_map<std::string, RepliMacro *> &RepliMacros, std::unordered_map<std::string, int64_t> &Counters)
+bool RepliCondition::isActive(std::unordered_map<std::string, RepliMacro::Ptr> &RepliMacros, std::unordered_map<std::string, int64_t> &Counters)
 {
     bool foundIt = (RepliMacros.find(name) != RepliMacros.end());
 

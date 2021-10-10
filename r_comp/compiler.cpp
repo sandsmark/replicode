@@ -73,7 +73,7 @@ std::string Compiler::getError()
     return m_errorFile + ":" + std::to_string(m_errorLine) + ": " + error;
 }
 
-void Compiler::set_error(const std::string &s, RepliStruct *node)
+void Compiler::set_error(const std::string &s, RepliStruct::Ptr node)
 {
     if (!err && Output) {
         m_errorFile = node->fileName;
@@ -83,7 +83,7 @@ void Compiler::set_error(const std::string &s, RepliStruct *node)
     }
 }
 
-void Compiler::set_arity_error(RepliStruct *node, uint16_t expected, uint16_t got)
+void Compiler::set_arity_error(RepliStruct::Ptr node, uint16_t expected, uint16_t got)
 {
     set_error("got " + std::to_string(got) +
               " elements, expected " + std::to_string(expected) +
@@ -104,14 +104,14 @@ void Compiler::set_arity_error(RepliStruct *node, uint16_t expected, uint16_t go
   ...
   */
 
-bool Compiler::compile(RepliStruct *root, bool trace)
+bool Compiler::compile(RepliStruct::Ptr root, bool trace)
 {
     this->err = false;
     this->trace = trace;
     current_object_index = _image->object_map.objects.size();
 
-    for (std::vector<RepliStruct*>::iterator iter = root->args.begin(); iter != root->args.end(); iter++) {
-        RepliStruct *node = *iter;
+    for (std::vector<RepliStruct::Ptr >::iterator iter = root->args.begin(); iter != root->args.end(); iter++) {
+        RepliStruct::Ptr node = *iter;
 
         if (node->type == RepliStruct::Directive) {
             continue;
@@ -124,7 +124,7 @@ bool Compiler::compile(RepliStruct *root, bool trace)
             return false;
         }
 
-        RepliStruct *view = *iter;
+        RepliStruct::Ptr view = *iter;
 
         if (!read_sys_object(node, view)) {
             return false;
@@ -136,7 +136,7 @@ bool Compiler::compile(RepliStruct *root, bool trace)
     return !err;
 }
 
-bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
+bool Compiler::read_sys_object(RepliStruct::Ptr node, RepliStruct::Ptr view)
 {
     if (node->type != RepliStruct::Structure) {
         set_error("expected expression", node);
@@ -217,7 +217,7 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
         current_class.use_as = StructureMember::I_CLASS;
         uint16_t count = 0;
 
-        for (RepliStruct *argNode : view->args) {
+        for (RepliStruct::Ptr argNode : view->args) {
             current_object = new SysView();
             uint16_t extent_index = 0;
 
@@ -245,7 +245,7 @@ bool Compiler::read_sys_object(RepliStruct *node, RepliStruct *view)
     return true;
 }
 
-bool Compiler::read(RepliStruct *node, const StructureMember &m, bool enforce, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read(RepliStruct::Ptr node, const StructureMember &m, bool enforce, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (Class *p = m.get_class(_metadata)) {
         p->use_as = m.getIteration();
@@ -322,7 +322,7 @@ uint8_t Compiler::get_hlp_reference(std::string reference_name)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool Compiler::local_reference(RepliStruct *node, uint16_t &index, const ReturnType t)
+bool Compiler::local_reference(RepliStruct::Ptr node, uint16_t &index, const ReturnType t)
 {
     std::unordered_map<std::string, Reference>::iterator it = local_references.find(node->cmd);
 
@@ -334,7 +334,7 @@ bool Compiler::local_reference(RepliStruct *node, uint16_t &index, const ReturnT
     return false;
 }
 
-bool Compiler::global_reference(RepliStruct *node, uint16_t &index, const ReturnType t)
+bool Compiler::global_reference(RepliStruct::Ptr node, uint16_t &index, const ReturnType t)
 {
     if (node->cmd == "") {
         return false;
@@ -344,7 +344,7 @@ bool Compiler::global_reference(RepliStruct *node, uint16_t &index, const Return
     return getGlobalReferenceIndex(node->cmd, t, current_object, index, unused);
 }
 
-bool Compiler::hlp_reference(RepliStruct *node, uint16_t &index)
+bool Compiler::hlp_reference(RepliStruct::Ptr node, uint16_t &index)
 {
     if (node->label != "") {
         return false;
@@ -360,7 +360,7 @@ bool Compiler::hlp_reference(RepliStruct *node, uint16_t &index)
     return false;
 }
 
-bool Compiler::this_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType returnType)
+bool Compiler::this_indirection(RepliStruct::Ptr node, std::vector<int16_t> &indices, const ReturnType returnType)
 {
     if (!Utils::StartsWith(node->cmd, "this.")) {
         return false;
@@ -379,7 +379,7 @@ bool Compiler::this_indirection(RepliStruct *node, std::vector<int16_t> &indices
     return indirection(node, reference_class, path, &indices, returnType);
 }
 
-bool Compiler::local_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType expected_type, uint32_t &cast_opcode)
+bool Compiler::local_indirection(RepliStruct::Ptr node, std::vector<int16_t> &indices, const ReturnType expected_type, uint32_t &cast_opcode)
 {
     std::string path = node->cmd;
     size_t pos = path.find(".");
@@ -410,7 +410,7 @@ bool Compiler::local_indirection(RepliStruct *node, std::vector<int16_t> &indice
     return indirection(node, reference_class, path, &indices, expected_type);
 }
 
-bool Compiler::indirection(RepliStruct *node, Class *reference_class, std::string path, std::vector<int16_t> *indices, const ReturnType expected_type)
+bool Compiler::indirection(RepliStruct::Ptr node, Class *reference_class, std::string path, std::vector<int16_t> *indices, const ReturnType expected_type)
 {
     uint16_t index;
     Class *fetched_class;
@@ -461,7 +461,7 @@ bool Compiler::indirection(RepliStruct *node, Class *reference_class, std::strin
     }
 }
 
-bool Compiler::global_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType expected_type)
+bool Compiler::global_indirection(RepliStruct::Ptr node, std::vector<int16_t> &indices, const ReturnType expected_type)
 {
     std::string path = node->cmd;
     size_t pos = path.find(".");
@@ -534,7 +534,7 @@ bool Compiler::global_indirection(RepliStruct *node, std::vector<int16_t> &indic
     }
 }
 
-bool Compiler::object(RepliStruct *node, Class &p)
+bool Compiler::object(RepliStruct::Ptr node, Class &p)
 {
     if (sys_object(node, p)) {
         return true;
@@ -550,12 +550,12 @@ bool Compiler::object(RepliStruct *node, Class &p)
     return true;
 }
 
-bool Compiler::is_object(RepliStruct *node, const Class &p)
+bool Compiler::is_object(RepliStruct::Ptr node, const Class &p)
 {
     return (node->cmd == p.str_opcode);
 }
 
-bool Compiler::sys_object(RepliStruct *node, Class &p)
+bool Compiler::sys_object(RepliStruct::Ptr node, Class &p)
 {
     if (node->type != RepliStruct::Set) {
         return false;
@@ -571,7 +571,7 @@ bool Compiler::sys_object(RepliStruct *node, Class &p)
     return true;
 }
 
-bool Compiler::marker(RepliStruct *node, Class &p)
+bool Compiler::marker(RepliStruct::Ptr node, Class &p)
 {
     if (!Utils::StartsWith(node->cmd, "mk.")) {
         return false;
@@ -587,7 +587,7 @@ bool Compiler::marker(RepliStruct *node, Class &p)
     return true;
 }
 
-bool Compiler::op(RepliStruct *node, Class &p, const ReturnType t)
+bool Compiler::op(RepliStruct::Ptr node, Class &p, const ReturnType t)
 {
     std::unordered_map<std::string, Class>::const_iterator it = _metadata->classes.find(node->cmd);
 
@@ -599,12 +599,12 @@ bool Compiler::op(RepliStruct *node, Class &p, const ReturnType t)
     return true;
 }
 
-bool Compiler::is_op(RepliStruct *node, const Class &p)
+bool Compiler::is_op(RepliStruct::Ptr node, const Class &p)
 {
     return (node->cmd == p.str_opcode);
 }
 
-bool Compiler::function(RepliStruct *node, Class &p)
+bool Compiler::function(RepliStruct::Ptr node, Class &p)
 {
     std::unordered_map<std::string, Class>::const_iterator it = _metadata->classes.find(node->cmd);
 
@@ -616,7 +616,7 @@ bool Compiler::function(RepliStruct *node, Class &p)
     return true;
 }
 
-bool Compiler::expression_head(RepliStruct *node, Class &p, const ReturnType t)
+bool Compiler::expression_head(RepliStruct::Ptr node, Class &p, const ReturnType t)
 {
     if (t == ANY) {
         if (!object(node, p)) {
@@ -633,7 +633,7 @@ bool Compiler::expression_head(RepliStruct *node, Class &p, const ReturnType t)
     return true;
 }
 
-bool Compiler::is_expression_head(RepliStruct *node, const Class &p)
+bool Compiler::is_expression_head(RepliStruct::Ptr node, const Class &p)
 {
     if (is_object(node, p) || is_op(node, p)) {
         return true;
@@ -642,7 +642,7 @@ bool Compiler::is_expression_head(RepliStruct *node, const Class &p)
     }
 }
 
-bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write)  // arity>0.
+bool Compiler::expression_tail(RepliStruct::Ptr node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write)  // arity>0.
 {
     bool entered_pattern;
     uint16_t pattern_end_index;
@@ -687,7 +687,7 @@ bool Compiler::expression_tail(RepliStruct *node, const Class &p, uint16_t write
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool Compiler::expression(RepliStruct *node, const ReturnType t, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::expression(RepliStruct::Ptr node, const ReturnType t, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->type != RepliStruct::Structure) {
         return false;
@@ -742,7 +742,7 @@ bool Compiler::expression(RepliStruct *node, const ReturnType t, uint16_t write_
     return true;
 }
 
-bool Compiler::expression(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::expression(RepliStruct::Ptr node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     bool lbl = false;
     std::string label;
@@ -791,7 +791,7 @@ bool Compiler::expression(RepliStruct *node, const Class &p, uint16_t write_inde
     return true;
 }
 
-bool Compiler::set(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::set(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->type != RepliStruct::Set) {
         return false;
@@ -832,7 +832,7 @@ bool Compiler::set(RepliStruct *node, uint16_t write_index, uint16_t &extent_ind
     return true;
 }
 
-bool Compiler::set(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::set(RepliStruct::Ptr node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     bool lbl = false;
     std::string label;
@@ -922,7 +922,7 @@ bool Compiler::set(RepliStruct *node, const Class &p, uint16_t write_index, uint
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)   // enforce always false, p always NULL.
+bool Compiler::read_any(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)   // enforce always false, p always NULL.
 {
     if (read_number(node, false, nullptr, write_index, extent_index, write)) {
         return true;
@@ -1007,7 +1007,7 @@ bool Compiler::read_any(RepliStruct *node, bool enforce, const Class *p, uint16_
     return false;
 }
 
-bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)   // p always NULL
+bool Compiler::read_number(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)   // p always NULL
 {
     if (read_nil_nb(node, write_index, extent_index, write)) {
         return true;
@@ -1062,7 +1062,7 @@ bool Compiler::read_number(RepliStruct *node, bool enforce, const Class *p, uint
     return false;
 }
 
-bool Compiler::read_boolean(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)   // p always NULL
+bool Compiler::read_boolean(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)   // p always NULL
 {
     if (read_nil_bl(node, write_index, extent_index, write)) {
         return true;
@@ -1108,7 +1108,7 @@ bool Compiler::read_boolean(RepliStruct *node, bool enforce, const Class *p, uin
     return false;
 }
 
-bool Compiler::read_timestamp(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_timestamp(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (read_nil_us(node, write_index, extent_index, write)) {
         return true;
@@ -1167,7 +1167,7 @@ bool Compiler::read_timestamp(RepliStruct *node, bool enforce, const Class *p, u
     return false;
 }
 
-bool Compiler::read_string(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write) // p always NULL
+bool Compiler::read_string(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write) // p always NULL
 {
     if (read_nil_st(node, write_index, extent_index, write)) {
         return true;
@@ -1233,7 +1233,7 @@ bool Compiler::read_string(RepliStruct *node, bool enforce, const Class *p, uint
     return false;
 }
 
-bool Compiler::read_node(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write) // p always NULL
+bool Compiler::read_node(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write) // p always NULL
 {
     if (read_nil_nid(node, write_index, extent_index, write)) {
         return true;
@@ -1288,7 +1288,7 @@ bool Compiler::read_node(RepliStruct *node, bool enforce, const Class *p, uint16
     return false;
 }
 
-bool Compiler::read_device(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write) // p always NULL.
+bool Compiler::read_device(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write) // p always NULL.
 {
     if (read_nil_did(node, write_index, extent_index, write)) {
         return true;
@@ -1343,7 +1343,7 @@ bool Compiler::read_device(RepliStruct *node, bool enforce, const Class *p, uint
     return false;
 }
 
-bool Compiler::read_function(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write) // p always NULL
+bool Compiler::read_function(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write) // p always NULL
 {
     if (read_nil_fid(node, write_index, extent_index, write)) {
         return true;
@@ -1391,7 +1391,7 @@ bool Compiler::read_function(RepliStruct *node, bool enforce, const Class *p, ui
     return false;
 }
 
-bool Compiler::read_expression(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_expression(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (read_nil(node, write_index, extent_index, write)) {
         return true;
@@ -1447,7 +1447,7 @@ bool Compiler::read_expression(RepliStruct *node, bool enforce, const Class *p, 
     return false;
 }
 
-bool Compiler::read_set(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_set(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (read_nil_set(node, write_index, extent_index, write)) {
         return true;
@@ -1477,7 +1477,7 @@ bool Compiler::read_set(RepliStruct *node, bool enforce, const Class *p, uint16_
     return false;
 }
 
-bool Compiler::read_class(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)   // p always NULL.
+bool Compiler::read_class(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write)   // p always NULL.
 {
     if (node->label != "") {
         std::string label = node->label.substr(0, node->label.size() - 1);
@@ -1503,7 +1503,7 @@ bool Compiler::read_class(RepliStruct *node, bool enforce, const Class *p, uint1
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool Compiler::read_nil(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_nil(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "nil") {
         if (write) {
@@ -1516,7 +1516,7 @@ bool Compiler::read_nil(RepliStruct *node, uint16_t write_index, uint16_t &exten
     return false;
 }
 
-bool Compiler::read_nil_set(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_nil_set(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "|[]") {
         if (write) {
@@ -1530,7 +1530,7 @@ bool Compiler::read_nil_set(RepliStruct *node, uint16_t write_index, uint16_t &e
     return false;
 }
 
-bool Compiler::read_nil_nb(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_nil_nb(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "|nb") {
         if (write) {
@@ -1543,7 +1543,7 @@ bool Compiler::read_nil_nb(RepliStruct *node, uint16_t write_index, uint16_t &ex
     return false;
 }
 
-bool Compiler::read_nil_us(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_nil_us(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "|ms") {
         if (write) {
@@ -1559,7 +1559,7 @@ bool Compiler::read_nil_us(RepliStruct *node, uint16_t write_index, uint16_t &ex
     return false;
 }
 
-bool Compiler::read_forever_nb(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_forever_nb(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "forever") {
         if (write) {
@@ -1572,7 +1572,7 @@ bool Compiler::read_forever_nb(RepliStruct *node, uint16_t write_index, uint16_t
     return false;
 }
 
-bool Compiler::read_nil_nid(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_nil_nid(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "|nid") {
         if (write) {
@@ -1585,7 +1585,7 @@ bool Compiler::read_nil_nid(RepliStruct *node, uint16_t write_index, uint16_t &e
     return false;
 }
 
-bool Compiler::read_nil_did(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_nil_did(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "|did") {
         if (write) {
@@ -1598,7 +1598,7 @@ bool Compiler::read_nil_did(RepliStruct *node, uint16_t write_index, uint16_t &e
     return false;
 }
 
-bool Compiler::read_nil_fid(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_nil_fid(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "|fid") {
         if (write) {
@@ -1611,7 +1611,7 @@ bool Compiler::read_nil_fid(RepliStruct *node, uint16_t write_index, uint16_t &e
     return false;
 }
 
-bool Compiler::read_nil_bl(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_nil_bl(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "|bl") {
         if (write) {
@@ -1624,7 +1624,7 @@ bool Compiler::read_nil_bl(RepliStruct *node, uint16_t write_index, uint16_t &ex
     return false;
 }
 
-bool Compiler::read_nil_st(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_nil_st(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "|st") {
         if (write) {
@@ -1637,7 +1637,7 @@ bool Compiler::read_nil_st(RepliStruct *node, uint16_t write_index, uint16_t &ex
     return false;
 }
 
-bool Compiler::read_variable(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write, const Class p)
+bool Compiler::read_variable(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write, const Class p)
 {
     if (!Utils::EndsWith(node->cmd, ":") || Utils::StartsWith(node->cmd, ":") || node->type != RepliStruct::Atom) {
         return false;
@@ -1672,7 +1672,7 @@ bool Compiler::read_variable(RepliStruct *node, uint16_t write_index, uint16_t &
     return true;
 }
 
-bool Compiler::read_reference(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write, const ReturnType t)
+bool Compiler::read_reference(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write, const ReturnType t)
 {
     uint16_t index;
 
@@ -1801,7 +1801,7 @@ bool Compiler::read_reference(RepliStruct *node, uint16_t write_index, uint16_t 
     return false;
 }
 
-bool Compiler::read_wildcard(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_wildcard(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == ":") {
         if (state.pattern_lvl) {
@@ -1819,7 +1819,7 @@ bool Compiler::read_wildcard(RepliStruct *node, uint16_t write_index, uint16_t &
     return false;
 }
 
-bool Compiler::read_tail_wildcard(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write)
+bool Compiler::read_tail_wildcard(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write)
 {
     if (node->cmd == "::") {
         if (state.pattern_lvl) {

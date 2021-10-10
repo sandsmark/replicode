@@ -51,15 +51,14 @@ namespace r_comp
 
 Preprocessor::Preprocessor()
 {
-    root = new RepliStruct(RepliStruct::Root);
+    root = std::make_shared<RepliStruct>(RepliStruct::Root);
 }
 
 Preprocessor::~Preprocessor()
 {
-    delete root;
 }
 
-RepliStruct *Preprocessor::process(const char* file, std::string& error, r_comp::Metadata* metadata)
+RepliStruct::Ptr Preprocessor::process(const char* file, std::string& error, r_comp::Metadata* metadata)
 {
     RepliStruct::GlobalFilename = file;
     std::ifstream stream(file);
@@ -113,9 +112,9 @@ RepliStruct *Preprocessor::process(const char* file, std::string& error, r_comp:
     return root;
 }
 
-bool Preprocessor::isTemplateClass(RepliStruct *replistruct)
+bool Preprocessor::isTemplateClass(RepliStruct::Ptr replistruct)
 {
-    for (RepliStruct *childstruct : replistruct->args) {
+    for (RepliStruct::Ptr childstruct : replistruct->args) {
         std::string name;
         std::string type;
 
@@ -146,7 +145,7 @@ bool Preprocessor::isTemplateClass(RepliStruct *replistruct)
 
 bool Preprocessor::isSet(std::string className)
 {
-    for(RepliStruct *replistruct : root->args) {
+    for(RepliStruct::Ptr replistruct : root->args) {
         if (replistruct->type != RepliStruct::Directive || replistruct->cmd != "!class") {
             continue;
         }
@@ -163,7 +162,7 @@ bool Preprocessor::isSet(std::string className)
     return false;
 }
 
-void Preprocessor::instantiateClass(RepliStruct *tpl_class, std::vector<RepliStruct *> &tpl_args, std::string &instantiated_class_name)
+void Preprocessor::instantiateClass(RepliStruct::Ptr tpl_class, std::vector<RepliStruct::Ptr> &tpl_args, std::string &instantiated_class_name)
 {
     static uint64_t LastClassID = 0;
     // remove the trailing [].
@@ -175,9 +174,9 @@ void Preprocessor::instantiateClass(RepliStruct *tpl_class, std::vector<RepliStr
     sprintf(buffer, "%lu", LastClassID++);
     instantiated_class_name += buffer;
     std::vector<StructureMember> members;
-    std::list<RepliStruct *> _tpl_args;
+    std::list<RepliStruct::Ptr> _tpl_args;
 
-    for (RepliStruct *replistruct : tpl_args) {
+    for (RepliStruct::Ptr replistruct : tpl_args) {
         _tpl_args.push_back(replistruct);
     }
 
@@ -187,7 +186,7 @@ void Preprocessor::instantiateClass(RepliStruct *tpl_class, std::vector<RepliStr
     ++m_classOpcode;
 }
 
-void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct *m, std::list<RepliStruct *> &tpl_args, bool instantiate)
+void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct::Ptr m, std::list<RepliStruct::Ptr> &tpl_args, bool instantiate)
 {
     size_t p;
     std::string name;
@@ -241,7 +240,7 @@ void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct 
         } else if (type == Class::Expression) {
             members.push_back(StructureMember(&Compiler::read_expression, name));
         } else if (type == "~") {
-            RepliStruct *_m = tpl_args.back();
+            RepliStruct::Ptr _m = tpl_args.back();
             tpl_args.pop_back();
 
             switch (_m->type) {
@@ -265,14 +264,14 @@ void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct 
         break;
 
     case RepliStruct::Structure: { // template instantiation; (*m)->cmd is the template class, (*m)->args are the actual parameters.
-        RepliStruct *template_class = m_templateClasses.find(m->cmd)->second;
+        RepliStruct::Ptr template_class = m_templateClasses.find(m->cmd)->second;
 
         if (instantiate) {
             std::string instantiated_class_name;
             instantiateClass(template_class, m->args, instantiated_class_name);
             members.push_back(StructureMember(&Compiler::read_set, m->label.substr(0, m->label.length() - 1), instantiated_class_name, StructureMember::I_CLASS));
         } else {
-            for (RepliStruct *replistruct : m->args) {// append the passed args to the ones held by m.
+            for (RepliStruct::Ptr replistruct : m->args) {// append the passed args to the ones held by m.
                 tpl_args.push_back(replistruct);
             }
 
@@ -291,14 +290,14 @@ void Preprocessor::getMember(std::vector<StructureMember> &members, RepliStruct 
     }
 }
 
-void Preprocessor::getMembers(RepliStruct *s, std::vector<StructureMember> &members, std::list<RepliStruct *> &tpl_args, bool instantiate)
+void Preprocessor::getMembers(RepliStruct::Ptr s, std::vector<StructureMember> &members, std::list<RepliStruct::Ptr> &tpl_args, bool instantiate)
 {
-    for (RepliStruct *childstruct : s->args) {
+    for (RepliStruct::Ptr childstruct : s->args) {
         getMember(members, childstruct, tpl_args, instantiate);
     }
 }
 
-ReturnType Preprocessor::getReturnType(RepliStruct *s)
+ReturnType Preprocessor::getReturnType(RepliStruct::Ptr s)
 {
     if (s->tail == ":nb") {
         return NUMBER;
@@ -334,12 +333,12 @@ void Preprocessor::initialize(Metadata *metadata)
     metadata->classes[std::string(Class::Type)] = Class(Atom::Object(m_classOpcode, 0), Class::Type, r_type); // to read object types in expressions and sets.
     ++m_classOpcode;
 
-    for (RepliStruct *replistruct : root->args) {
+    for (RepliStruct::Ptr replistruct : root->args) {
         if (replistruct->type != RepliStruct::Directive) {
             continue;
         }
 
-        RepliStruct *s = replistruct->args.front();
+        RepliStruct::Ptr s = replistruct->args.front();
         std::vector<StructureMember> members;
 
         if (replistruct->cmd == "!class") {
@@ -357,7 +356,7 @@ void Preprocessor::initialize(Metadata *metadata)
                 continue;
             }
 
-            std::list<RepliStruct *> tpl_args;
+            std::list<RepliStruct::Ptr> tpl_args;
             getMembers(s, members, tpl_args, false);
             Atom atom;
 
@@ -406,7 +405,7 @@ void Preprocessor::initialize(Metadata *metadata)
 
             ++m_classOpcode;
         } else if (replistruct->cmd == "!op") {
-            std::list<RepliStruct *> tpl_args;
+            std::list<RepliStruct::Ptr> tpl_args;
             getMembers(s, members, tpl_args, false);
             ReturnType return_type = getReturnType(s);
             std::string operator_name = s->cmd;

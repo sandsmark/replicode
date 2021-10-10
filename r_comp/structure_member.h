@@ -34,6 +34,7 @@
 #include <stddef.h>  // for size_t
 #include <stdint.h>  // for uint16_t, uint32_t
 #include <string>    // for allocator, string, operator+, basic_string, etc
+#include <memory>
 
 namespace r_comp
 {
@@ -93,7 +94,7 @@ inline std::string returntype_string(const ReturnType type)
     }
 }
 
-typedef bool (Compiler::*_Read)(RepliStruct *, bool, const Class *, uint16_t, uint16_t &, bool); // reads from the stream and writes in an object.
+typedef bool (Compiler::*_Read)(std::shared_ptr<RepliStruct>, bool, const Class *, uint16_t, uint16_t &, bool); // reads from the stream and writes in an object.
 
 class Metadata;
 

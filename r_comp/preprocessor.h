@@ -32,6 +32,7 @@
 #define preprocessor_h
 
 #include <r_comp/structure_member.h>  // for ReturnType
+#include <r_comp/replistruct.h>
 #include <stddef.h>                   // for NULL
 #include <stdint.h>                   // for uint16_t
 #include <list>                       // for list
@@ -51,11 +52,11 @@ namespace r_comp
 class REPLICODE_EXPORT Preprocessor
 {
 public:
-    RepliStruct *root;
+    RepliStruct::Ptr root;
 
     Preprocessor();
     ~Preprocessor();
-    RepliStruct *process(const char *file, // if an ifstream, stream must be open.
+    RepliStruct::Ptr process(const char *file, // if an ifstream, stream must be open.
                          std::string &error, // set when function fails, e.g. returns false.
                          Metadata *metadata = NULL); // process will fill class_image, or use the exiting one if NULL.
 
@@ -66,17 +67,17 @@ private:
         T_SET = 2
     };
 
-    void instantiateClass(RepliStruct *tpl_class, std::vector<RepliStruct *> &tpl_args, std::string &instantiated_class_name);
+    void instantiateClass(RepliStruct::Ptr tpl_class, std::vector<RepliStruct::Ptr> &tpl_args, std::string &instantiated_class_name);
     bool isSet(std::string className);
-    bool isTemplateClass(RepliStruct* replistruct);
-    void getMember(std::vector<StructureMember> &members, RepliStruct *m, std::list<RepliStruct *> &tpl_args, bool instantiate);
-    void getMembers(RepliStruct *s, std::vector<StructureMember> &members, std::list<RepliStruct *> &tpl_args, bool instantiate);
-    ReturnType getReturnType(RepliStruct *s);
+    bool isTemplateClass(RepliStruct::Ptr replistruct);
+    void getMember(std::vector<StructureMember> &members, RepliStruct::Ptr m, std::list<RepliStruct::Ptr> &tpl_args, bool instantiate);
+    void getMembers(RepliStruct::Ptr s, std::vector<StructureMember> &members, std::list<RepliStruct::Ptr> &tpl_args, bool instantiate);
+    ReturnType getReturnType(RepliStruct::Ptr s);
     void initialize(Metadata *metadata); // init definition_segment
 
     Metadata *m_metadata;
     uint16_t m_classOpcode; // shared with sys_classes
-    std::unordered_map<std::string, RepliStruct *> m_templateClasses;
+    std::unordered_map<std::string, RepliStruct::Ptr> m_templateClasses;
 };
 }
 

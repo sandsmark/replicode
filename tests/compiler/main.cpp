@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     r_comp::Preprocessor preprocessor;
     r_comp::Compiler compiler(&image, &metadata);
     std::string error;
-    r_comp::RepliStruct *root = preprocessor.process(testfile.c_str(), error, &metadata);
+    r_comp::RepliStruct::Ptr root = preprocessor.process(testfile.c_str(), error, &metadata);
 
     if (error.length() != 0) {
         debug("compiler test") << "Error from preprocessor:" << error;

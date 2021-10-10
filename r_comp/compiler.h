@@ -37,6 +37,7 @@
 #include <r_comp/class.h>             // for Class
 #include <r_comp/segments.h>          // for Reference
 #include <r_comp/structure_member.h>  // for ReturnType
+#include <r_comp/replistruct.h>
 #include <stdint.h>                   // for uint16_t, int16_t, uint32_t, etc
 #include <string>                     // for string
 #include <unordered_map>              // for unordered_map
@@ -89,8 +90,8 @@ class REPLICODE_EXPORT Compiler
     State save_state(); // called before trying to read an expression.
     void restore_state(State s); // called after failing to read an expression.
 
-    void set_error(const std::string &s, RepliStruct *node);
-    void set_arity_error(RepliStruct *node, uint16_t expected, uint16_t got);
+    void set_error(const std::string &s, RepliStruct::Ptr node);
+    void set_arity_error(RepliStruct::Ptr node, uint16_t expected, uint16_t got);
 
     /// labels and variables declared inside objects (cleared before parsing each sys-object): translate to value pointers.
     std::unordered_map<std::string, Reference> local_references;
@@ -107,61 +108,61 @@ class REPLICODE_EXPORT Compiler
     uint8_t get_hlp_reference(std::string reference_name);
 
     // Utility.
-    bool read_nil(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_nil_set(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_nil_nb(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_nil_us(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_forever_nb(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_nil_nid(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_nil_did(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_nil_fid(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_nil_bl(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_nil_st(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_variable(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write, const Class p);
-    bool read_reference(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write, const ReturnType t);
-    bool read_wildcard(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_tail_wildcard(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_nil(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_nil_set(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_nil_nb(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_nil_us(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_forever_nb(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_nil_nid(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_nil_did(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_nil_fid(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_nil_bl(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_nil_st(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_variable(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write, const Class p);
+    bool read_reference(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write, const ReturnType t);
+    bool read_wildcard(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_tail_wildcard(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write);
 
     bool err; // set to true when parsing fails in the functions below.
 
     // All functions below return false (a) upon eof or, (b) when the class structure is not matched; in both cases, characters are pushed back.
 
     // Lexical units.
-    bool local_reference(RepliStruct *node, uint16_t &index, const ReturnType t); // must conform to t; indicates if the ref is to ba valuated in the value array (in_pattern set to true).
-    bool global_reference(RepliStruct *node, uint16_t &index, const ReturnType t); // no conformance: return type==ANY.
-    bool hlp_reference(RepliStruct *node, uint16_t &index);
+    bool local_reference(RepliStruct::Ptr node, uint16_t &index, const ReturnType t); // must conform to t; indicates if the ref is to ba valuated in the value array (in_pattern set to true).
+    bool global_reference(RepliStruct::Ptr node, uint16_t &index, const ReturnType t); // no conformance: return type==ANY.
+    bool hlp_reference(RepliStruct::Ptr node, uint16_t &index);
 
     /// Helper function for this_indirection, local_indirection, global_indirection
     /// Parses \a path, e. g. "f.vw.ijt", and puts the result into \a indices.
-    bool indirection(RepliStruct *node, Class *reference_class, std::string path, std::vector<int16_t> *indices, const ReturnType t);
-    bool this_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType t); // ex: this.res.
-    bool local_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType expected_type, uint32_t &cast_opcode); // ex: p.res where p is a label/variable declared within the object; cast_opcode=0x0FFF if no cast.
-    bool global_indirection(RepliStruct *node, std::vector<int16_t> &indices, const ReturnType t); // ex: p.res where p is a label/variable declared outside the object.
+    bool indirection(RepliStruct::Ptr node, Class *reference_class, std::string path, std::vector<int16_t> *indices, const ReturnType t);
+    bool this_indirection(RepliStruct::Ptr node, std::vector<int16_t> &indices, const ReturnType t); // ex: this.res.
+    bool local_indirection(RepliStruct::Ptr node, std::vector<int16_t> &indices, const ReturnType expected_type, uint32_t &cast_opcode); // ex: p.res where p is a label/variable declared within the object; cast_opcode=0x0FFF if no cast.
+    bool global_indirection(RepliStruct::Ptr node, std::vector<int16_t> &indices, const ReturnType t); // ex: p.res where p is a label/variable declared outside the object.
 
-    bool object(RepliStruct *node, Class &p); // looks first in sys_objects, then in objects.
-    bool is_object(RepliStruct *node, const Class &p); // must conform to p.
-    bool sys_object(RepliStruct *node, Class &p); // looks only in sys_objects.
-    bool marker(RepliStruct *node, Class &p);
-    bool op(RepliStruct *node, Class &p, const ReturnType t); // operator; must conform to t. return true if type matches t or ANY.
-    bool is_op(RepliStruct *node, const Class &p); // must conform to p.
-    bool function(RepliStruct *node, Class &p); // device function.
-    bool expression_head(RepliStruct *node, Class &p, const ReturnType t); // starts from the first element; arity does not count the head; must conform to t.
-    bool is_expression_head(RepliStruct *node, const Class &p); // starts from the first element; arity does not count the head; must conform to p.
-    bool expression_tail(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write); // starts from the second element; must conform to p.
+    bool object(RepliStruct::Ptr node, Class &p); // looks first in sys_objects, then in objects.
+    bool is_object(RepliStruct::Ptr node, const Class &p); // must conform to p.
+    bool sys_object(RepliStruct::Ptr node, Class &p); // looks only in sys_objects.
+    bool marker(RepliStruct::Ptr node, Class &p);
+    bool op(RepliStruct::Ptr node, Class &p, const ReturnType t); // operator; must conform to t. return true if type matches t or ANY.
+    bool is_op(RepliStruct::Ptr node, const Class &p); // must conform to p.
+    bool function(RepliStruct::Ptr node, Class &p); // device function.
+    bool expression_head(RepliStruct::Ptr node, Class &p, const ReturnType t); // starts from the first element; arity does not count the head; must conform to t.
+    bool is_expression_head(RepliStruct::Ptr node, const Class &p); // starts from the first element; arity does not count the head; must conform to p.
+    bool expression_tail(RepliStruct::Ptr node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write); // starts from the second element; must conform to p.
 
     // Structural units; check for heading labels.
-    bool expression(RepliStruct *node, const ReturnType t, uint16_t write_index, uint16_t &extent_index, bool write); // must conform to t.
-    bool expression(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write); // must conform to p.
-    bool set(RepliStruct *node, uint16_t write_index, uint16_t &extent_index, bool write); // no conformance, i.e. set of anything. [ ] is illegal; use |[] instead, or [nil].
-    bool set(RepliStruct *node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write); // must conform to p. for class defs like member-name:[member-list] or !class (name[] member-list).
+    bool expression(RepliStruct::Ptr node, const ReturnType t, uint16_t write_index, uint16_t &extent_index, bool write); // must conform to t.
+    bool expression(RepliStruct::Ptr node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write); // must conform to p.
+    bool set(RepliStruct::Ptr node, uint16_t write_index, uint16_t &extent_index, bool write); // no conformance, i.e. set of anything. [ ] is illegal; use |[] instead, or [nil].
+    bool set(RepliStruct::Ptr node, const Class &p, uint16_t write_index, uint16_t &extent_index, bool write); // must conform to p. for class defs like member-name:[member-list] or !class (name[] member-list).
 
-    bool read(RepliStruct *node, const StructureMember &m, bool enforce, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read(RepliStruct::Ptr node, const StructureMember &m, bool enforce, uint16_t write_index, uint16_t &extent_index, bool write);
 
-    bool read_sys_object(RepliStruct *node, RepliStruct *view); // compiles one object; return false when there is an error.
+    bool read_sys_object(RepliStruct::Ptr node, RepliStruct::Ptr view); // compiles one object; return false when there is an error.
 public:
     Compiler(r_comp::Image *_image, r_comp::Metadata *_metadata);
 
-    bool compile(RepliStruct *rootNode,
+    bool compile(RepliStruct::Ptr rootNode,
                  bool trace); // set when compile() fails, e.g. returns false.
 
     std::string getError();
@@ -174,17 +175,17 @@ public:
     // write_index: the index where the r-atom shall be written (atomic data), or where an internal pointer to a structure shall be written (structural data).
     // extent_index: the index where to write data belonging to a structure (the internal pointer is written at write_index).
     // write: when false, no writing in code->data is performed (needed by set_element_count()).
-    bool read_any(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write); // calls all of the functions below.
-    bool read_number(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_timestamp(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write); // p always NULL
-    bool read_boolean(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_string(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_node(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_device(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_function(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_expression(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_set(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
-    bool read_class(RepliStruct *node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_any(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write); // calls all of the functions below.
+    bool read_number(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_timestamp(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write); // p always NULL
+    bool read_boolean(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_string(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_node(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_device(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_function(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_expression(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_set(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
+    bool read_class(RepliStruct::Ptr node, bool enforce, const Class *p, uint16_t write_index, uint16_t &extent_index, bool write);
 };
 }
 

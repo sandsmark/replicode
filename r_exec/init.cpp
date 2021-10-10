@@ -173,7 +173,7 @@ bool Compile(const char* filename,
 
     debug("init") << "compiling file: " << filename;
     r_comp::Preprocessor preprocessor;
-    r_comp::RepliStruct *root = preprocessor.process(filename, error, compile_metadata ? metadata : nullptr);
+    r_comp::RepliStruct::Ptr root = preprocessor.process(filename, error, compile_metadata ? metadata : nullptr);
 
     if (!root) {
         error.insert(0, "Preprocessor: " + preprocessor.root->fileName + ":" + std::to_string(preprocessor.root->line) + " ");

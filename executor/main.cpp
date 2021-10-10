@@ -37,6 +37,7 @@
 #include <r_code/vector.h>          // for vector
 #include <r_comp/decompiler.h>      // for Decompiler
 #include <r_comp/segments.h>        // for Image, ObjectNames, Metadata
+#include <r_comp/replistruct.h>
 #include <r_exec/factory.h>         // for Fact
 #include <r_exec/init.h>            // for Now, Compile, Init
 #include <r_exec/mem.h>             // for _Mem, Mem, MemStatic, etc
@@ -410,6 +411,7 @@ int main(int argc, char **argv)
         delete image;
         //std::cout<<"get_models(): "<<probe.us()<<"us"<<std::endl;
     }
+    RepliStruct::cleanup();
 
     delete mem;
 #if defined(WIN32) || defined(WIN64)
