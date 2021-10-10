@@ -143,7 +143,7 @@ public:
     }
 
     virtual bool take_input(View *view, _Fact *abstracted_input, BindingMap *bm);
-    virtual void signal(View *input) const;
+    virtual void signal(View *input);
     virtual void ack_pred_success(_Fact *predicted_f);
 };
 
@@ -205,14 +205,14 @@ private:
     bool build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builder, uint64_t period);
     bool build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, GuardBuilder *guard_builder, uint64_t period, Code *new_cst);
 
-    std::string get_header() const;
+    std::string get_header() const override;
 public:
     GTPX(AutoFocusController *auto_focus, _Fact *target, _Fact *pattern, BindingMap *bindings, Fact *f_imdl);
     ~GTPX();
 
-    bool take_input(View *input, _Fact *abstracted_input, BindingMap *bm);
-    void signal(View *input) const;
-    void ack_pred_success(_Fact *predicted_f);
+    bool take_input(View *input, _Fact *abstracted_input, BindingMap *bm) override;
+    void signal(View *input) override;
+    void ack_pred_success(_Fact *predicted_f) override;
     void reduce(View *input); // input is v->f->success(target,input) or v->|f->success(target,input).
 };
 
@@ -230,12 +230,12 @@ private:
     bool build_mdl(_Fact *cause, _Fact *consequent, GuardBuilder *guard_builder, uint64_t period);
     bool build_mdl(_Fact *f_icst, _Fact *cause_pattern, _Fact *consequent, GuardBuilder *guard_builder, uint64_t period, Code *new_cst);
 
-    std::string get_header() const;
+    std::string get_header() const override;
 public:
     PTPX(AutoFocusController *auto_focus, _Fact *target, _Fact *pattern, BindingMap *bindings, Fact *f_imdl);
     ~PTPX();
 
-    void signal(View *input) const;
+    void signal(View *input) override;
     void reduce(View *input); // input is v->f->success(target,input) or v->|f->success(target,input).
 };
 
@@ -262,14 +262,14 @@ private:
 
     bool build_requirement(HLPBindingMap *bm, Code *m0, uint64_t period);
 
-    std::string get_header() const;
+    std::string get_header() const override;
 public:
     CTPX(AutoFocusController *auto_focus, View *premise);
     ~CTPX();
 
     void store_input(r_exec::View *input);
     void reduce(r_exec::View *input); // asynchronous: build models of value change if not aborted asynchronously by ASTControllers.
-    void signal(r_exec::View *input); // spawns mdl/cst building (reduce()).
+    void signal(r_exec::View *input) override; // spawns mdl/cst building (reduce()).
 };
 }
 

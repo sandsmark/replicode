@@ -101,7 +101,7 @@ bool TPX::take_input(View *input, _Fact *abstracted_input, BindingMap *bm)
     return filter(input, abstracted_input, bm);
 }
 
-void TPX::signal(View *input) const   // input->object is f->success or|f->success.
+void TPX::signal(View *input)   // input->object is f->success or|f->success.
 {
     //std::cout<<Utils::RelativeTime(Now())<<" "<<input->object->get_reference(0)->get_reference(1)->get_oid()<<": end of focus["<<target->get_oid()<<"]\n";
 }
@@ -474,7 +474,7 @@ bool GTPX::take_input(View *input, _Fact *abstracted_input, BindingMap *bm)   //
     return true;
 }
 
-void GTPX::signal(View *input) const   // will be erased from the AF map upon return. P<> kept in reduction job.
+void GTPX::signal(View *input)   // will be erased from the AF map upon return. P<> kept in reduction job.
 {
     if (!auto_focus->gtpx_on()) {
         return;
@@ -626,7 +626,7 @@ PTPX::~PTPX()
 {
 }
 
-void PTPX::signal(View *input) const   // will be erased from the AF map upon return. P<> kept in reduction job.
+void PTPX::signal(View *input)   // will be erased from the AF map upon return. P<> kept in reduction job.
 {
     if (!auto_focus->ptpx_on()) {
         return;
