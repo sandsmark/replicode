@@ -43,6 +43,7 @@ bool IniFile::readFile(std::string filename)
     wordexp_t exp_res;
     wordexp(filename.c_str(), &exp_res, 0);
     file.open(exp_res.we_wordv[0]);
+    wordfree(&exp_res);
 
     if (!file.is_open()) {
         debug("inifile") << "unable to open file" << filename;
