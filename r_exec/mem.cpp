@@ -386,7 +386,7 @@ void _Mem::stop()
 
     std::unique_lock<std::mutex> lock(m_coreCountMutex);
 
-    if (m_coreCount > 0) {
+    while (m_coreCount > 0) {
         m_coresRunning.wait(lock);
     }
 
