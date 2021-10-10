@@ -132,7 +132,7 @@ class REPLICODE_EXPORT Overlay:
     friend class IPGMContext;
     friend class HLPContext;
 protected:
-    volatile uint64_t invalidated;
+    std::atomic_uint64_t invalidated;
 
     Controller *controller;
 
